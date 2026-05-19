@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% set active_page = "knowledge" %}
+{% block title %}ナレッジ - open-karte{% endblock %}
+{% block content %}
+<div x-data="knowledgePage()" x-init="init()" x-cloak>
+  <h1 class="text-2xl font-bold mb-4">ナレッジ</h1>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+    <form @submit.prevent="search()" class="flex gap-2 items-end flex-wrap">
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs text-gray-500 mb-1">キーワード</label>
+        <input type="text" x-model="q" placeholder="例: リモート、住所変更、結婚"
+               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div class="w-48">
+        <label class="block text-xs text-gray-500 mb-1">カテゴリ</label>
+        <select x-model="category"
+                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">（すべて）</option>
+          <template x-for="c in categories" :key="c">
+            <option :value="c" x-text="c"></option>
+          </template>
+        </select>
+      </div>
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">検索</button>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg border border-gray-200">
+        <div class="px-4 py-2 border-b border-gray-100 text-xs text-gray-500">
+          <span x-text="rows.length"></span> 件
+        </div>
+        <ul class="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto">
+          <template x-for="r in rows" :key="r.id">
+            <li>
+              <button @click="open(r.id)"
+                      class="w-full text-left px-4 py-3 hover:bg-blue-50"
+                      :class="selected && selected.id===r.id && 'bg-blue-50'">
+                <div class="text-xs text-gray-500" x-text="r.category"></div>
+                <div class="font-medium text-sm" x-text="r.title"></div>
+                <div class="text-xs text-gray-500 truncate mt-0.5" x-text="r.snippet"></div>
+              </button>
+            </li>
+          </template>
+        </ul>
+        <div x-show="!rows.length" class="px-4 py-6 text-center text-gray-500 text-sm">該当なし。</div>
+      </div>
+    </div>
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-lg border border-gray-200 p-5 min-h-[300px]">
+        <div x-show="!selected" class="text-gray-500 text-sm">左の一覧から記事を選択してください。</div>
+        <div x-show="selected" x-cloak>
+          <div class="text-xs text-gray-500" x-text="selected?.category + ' · ' + (selected?.tags||'')"></div>
+          <h2 class="text-xl font-bold mt-1 mb-3" x-text="selected?.title"></h2>
+          <div class="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed" x-text="selected?.body_md"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function knowledgePage() {
+  return {
+    q: '',
+    category: '',
+    rows: [],
+    selected: null,
+    categories: ['ライフイベント', '勤務制度', 'セキュリティ', '経費', '人事評価', '労務', 'IT'],
+    async init() {
+      if (!Auth.requireAuth()) return;
+      await this.search();
+    },
+    async search() {
+      const params = new URLSearchParams();
+      if (this.q) params.set('q', this.q);
+      if (this.category) params.set('category', this.category);
+      try { this.rows = await Auth.json('/knowledge?' + params.toString()); }
+      catch { this.rows = []; }
+      this.selected = null;
+    },
+    async open(id) {
+      try { this.selected = await Auth.json('/knowledge/' + id); } catch {}
+    },
+  };
+}
+</script>
+{% endblock %}

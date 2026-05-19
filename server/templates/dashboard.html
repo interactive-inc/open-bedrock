@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+{% block title %}ダッシュボード - open-karte{% endblock %}
+{% block content %}
+<div x-data="dashboardPage()" x-init="init()" x-cloak>
+  <h1 class="text-2xl font-bold mb-1">ダッシュボード</h1>
+  <p class="text-gray-600 text-sm mb-6">
+    こんにちは、<span class="font-medium" x-text="(me && me.name) || ''"></span>さん。
+  </p>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <a href="/app/applications" class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:bg-blue-50">
+      <div class="text-xs text-gray-500">自分の申請（承認待ち）</div>
+      <div class="text-3xl font-bold mt-1 text-blue-700" x-text="(dash.my_pending_applications ?? '-')"></div>
+    </a>
+    <a href="/app/inbox" class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:bg-blue-50">
+      <div class="text-xs text-gray-500">承認すべき申請</div>
+      <div class="text-3xl font-bold mt-1 text-blue-700" x-text="(dash.open_inbox_count_for_me ?? '-')"></div>
+    </a>
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="text-xs text-gray-500">公開中の社内公募</div>
+      <div class="text-3xl font-bold mt-1" x-text="(dash.open_career_postings ?? '-')"></div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+      <div class="text-xs text-gray-500">回答受付中のサーベイ</div>
+      <div class="text-3xl font-bold mt-1" x-text="(dash.open_surveys ?? '-')"></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-1 bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+      <h2 class="font-semibold mb-3">自分の情報</h2>
+      <dl class="text-sm grid grid-cols-3 gap-y-2" x-show="me">
+        <dt class="text-gray-500">氏名</dt><dd class="col-span-2" x-text="me?.name"></dd>
+        <dt class="text-gray-500">メール</dt><dd class="col-span-2 break-all" x-text="me?.email"></dd>
+        <dt class="text-gray-500">所属</dt><dd class="col-span-2" x-text="me?.dept_name || '-'"></dd>
+        <dt class="text-gray-500">役職</dt><dd class="col-span-2" x-text="me?.position || '-'"></dd>
+        <dt class="text-gray-500">ロール</dt><dd class="col-span-2"><span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded" x-text="roleLabel(me?.role)"></span></dd>
+        <dt class="text-gray-500">社員コード</dt><dd class="col-span-2" x-text="me?.code"></dd>
+      </dl>
+    </div>
+
+    <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+      <h2 class="font-semibold mb-3">部署別人数</h2>
+      <div class="space-y-2" x-show="dash.headcount_by_dept">
+        <template x-for="[dept, n] in Object.entries(dash.headcount_by_dept || {})" :key="dept">
+          <div class="flex items-center gap-2">
+            <div class="w-32 shrink-0 text-sm" x-text="dept"></div>
+            <div class="flex-1 bg-gray-100 rounded h-4 relative overflow-hidden">
+              <div class="bg-blue-500 h-full" :style="'width:' + Math.min(100, n * 20) + '%'"></div>
+            </div>
+            <div class="w-10 text-right text-sm font-medium" x-text="n"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4"
+         x-show="(dash.recent_batch_jobs || []).length > 0" x-cloak>
+      <h2 class="font-semibold mb-3">最近のバッチジョブ</h2>
+      <div class="text-sm space-y-1">
+        <template x-for="b in (dash.recent_batch_jobs || []).slice(0,5)" :key="b.id">
+          <div class="flex items-center justify-between border-b border-gray-100 last:border-0 py-1.5">
+            <div class="truncate">
+              <span class="font-medium" x-text="b.name"></span>
+              <span class="text-xs text-gray-500 ml-2" x-text="fmt(b.started_at)"></span>
+            </div>
+            <span class="text-xs px-2 py-0.5 rounded"
+                  :class="b.status==='success' ? 'bg-green-100 text-green-700'
+                          : b.status==='running' ? 'bg-yellow-100 text-yellow-700'
+                          : b.status==='failed' ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'"
+                  x-text="batchStatusLabel(b.status)"></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+      <h2 class="font-semibold mb-3">クイックアクション</h2>
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <a href="/app/applications" class="block px-3 py-3 border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300">
+          <div class="font-medium">📝 申請を出す</div>
+          <div class="text-xs text-gray-500 mt-0.5">住所変更・経費精算など</div>
+        </a>
+        <a href="/app/inbox" class="block px-3 py-3 border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300">
+          <div class="font-medium">📥 承認待ちを処理</div>
+          <div class="text-xs text-gray-500 mt-0.5">受信箱を開く</div>
+        </a>
+        <a href="/app/knowledge" class="block px-3 py-3 border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300">
+          <div class="font-medium">📚 ナレッジ検索</div>
+          <div class="text-xs text-gray-500 mt-0.5">規程・ガイドを探す</div>
+        </a>
+        <a href="/docs" target="_blank" class="block px-3 py-3 border border-gray-200 rounded hover:bg-gray-50">
+          <div class="font-medium">🔧 API ドキュメント</div>
+          <div class="text-xs text-gray-500 mt-0.5">Swagger UI（開発者向け）</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function dashboardPage() {
+  return {
+    me: null,
+    dash: {},
+    async init() {
+      if (!Auth.requireAuth()) return;
+      this.me = Auth.me();
+      try { this.me = await Auth.json('/me'); Auth.setMe(this.me); } catch {}
+      try { this.dash = await Auth.json('/dashboard'); } catch (e) { this.dash = {}; }
+    },
+    roleLabel, fmt, batchStatusLabel,
+  };
+}
+</script>
+{% endblock %}

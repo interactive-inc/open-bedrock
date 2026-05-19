@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ログイン - open-karte</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <style>[x-cloak]{display:none!important}</style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-md" x-data="loginPage()" x-cloak>
+    <div class="text-center mb-6">
+      <h1 class="text-3xl font-bold text-blue-700">open-karte</h1>
+      <p class="text-gray-600 text-sm mt-1">社内HR統合プラットフォーム</p>
+    </div>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-semibold mb-4">ログイン</h2>
+      <form @submit.prevent="submit()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+          <input type="email" x-model="email" required autocomplete="username"
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+          <input type="password" x-model="password" required autocomplete="current-password"
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div x-show="error" x-cloak class="text-red-600 text-sm" x-text="error"></div>
+        <button type="submit" :disabled="loading"
+                class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-2 rounded">
+          <span x-show="!loading">ログイン</span>
+          <span x-show="loading" x-cloak>ログイン中…</span>
+        </button>
+      </form>
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <div class="text-xs text-gray-500 mb-2">テストアカウント（クリックで自動入力）:</div>
+        <div class="flex flex-wrap gap-1">
+          <template x-for="a in accounts" :key="a">
+            <button type="button" @click="fill(a)"
+                    class="text-xs px-2 py-1 border border-gray-300 rounded hover:bg-gray-100"
+                    x-text="a"></button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function loginPage() {
+      return {
+        email: '',
+        password: '',
+        error: '',
+        loading: false,
+        accounts: ['admin', 'hr', 'manager', 'engineer-a', 'engineer-b', 'sales', 'finance'],
+        fill(a) { this.email = a + '@inta.co.jp'; this.password = a; },
+        async submit() {
+          this.error = '';
+          this.loading = true;
+          try {
+            const r = await fetch('/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: this.email, password: this.password }),
+            });
+            if (!r.ok) {
+              const data = await r.json().catch(() => ({}));
+              this.error = data.detail || 'ログインに失敗しました';
+              return;
+            }
+            const { access_token } = await r.json();
+            localStorage.setItem('open-karte:token', access_token);
+            // /me を取得してキャッシュ
+            const meRes = await fetch('/me', { headers: { 'Authorization': 'Bearer ' + access_token } });
+            if (meRes.ok) {
+              localStorage.setItem('open-karte:me', await meRes.text());
+            }
+            const next = new URLSearchParams(location.search).get('next') || '/app/dashboard';
+            location.href = next;
+          } catch (e) {
+            this.error = '通信エラー: ' + e.message;
+          } finally {
+            this.loading = false;
+          }
+        },
+      };
+    }
+  </script>
+</body>
+</html>

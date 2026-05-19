@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "talent-hr": {
+      "command": "REPLACE_WITH/talent/.venv/bin/python",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "REPLACE_WITH/talent",
+      "env": {
+        "TALENT_API": "http://127.0.0.1:8000",
+        "TALENT_TOKEN": "REPLACE_WITH_BEARER_TOKEN"
+      }
+    }
+  }
+}

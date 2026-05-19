@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% set active_page = "applications" %}
+{% block title %}申請 - open-karte{% endblock %}
+{% block content %}
+<div x-data="applicationsPage()" x-init="init()" x-cloak>
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold">申請</h1>
+    <div class="flex gap-2 text-sm">
+      <button @click="tab='new'" :class="tab==='new' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300'"
+              class="px-3 py-1.5 rounded">＋ 新規申請</button>
+      <button @click="tab='mine'" :class="tab==='mine' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300'"
+              class="px-3 py-1.5 rounded">自分の申請</button>
+    </div>
+  </div>
+
+  <!-- === 新規申請 === -->
+  <div x-show="tab==='new'" x-cloak>
+    <!-- テンプレ一覧 -->
+    <div x-show="!selected" x-cloak>
+      <p class="text-sm text-gray-600 mb-3">提出したい申請テンプレートを選んでください。</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <template x-for="t in templates" :key="t.code">
+          <button @click="select(t)"
+                  class="text-left bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow">
+            <div class="text-xs text-gray-500" x-text="t.category"></div>
+            <div class="font-semibold mt-0.5" x-text="t.name"></div>
+            <div class="text-xs text-gray-500 mt-1 truncate" x-text="t.code + ' · ' + (t.description||'')"></div>
+          </button>
+        </template>
+      </div>
+      <div x-show="!templates.length" class="text-gray-500 text-sm">テンプレートがありません。</div>
+    </div>
+
+    <!-- 入力フォーム（選択後） -->
+    <div x-show="selected" x-cloak class="bg-white rounded-lg border border-gray-200 p-5">
+      <button @click="reset()" class="text-sm text-blue-600 hover:underline mb-2">← テンプレート選択に戻る</button>
+      <div class="mb-1 text-xs text-gray-500" x-text="selected && (selected.code + ' · ' + selected.category)"></div>
+      <h2 class="text-lg font-semibold mb-1" x-text="selected && selected.name"></h2>
+      <p class="text-sm text-gray-600 mb-4" x-text="selected && selected.description"></p>
+
+      <form @submit.prevent="submit()" class="space-y-4">
+        <template x-for="(field, key) in fields" :key="key">
+          <div>
+            <label class="block text-sm font-medium mb-1">
+              <span x-text="field.title || key"></span>
+              <span x-show="isRequired(key)" class="text-red-600 ml-0.5">*</span>
+            </label>
+            <template x-if="field.type==='number' || field.type==='integer'">
+              <input type="number" x-model="payload[key]" :step="field.type==='integer'?1:'any'"
+                     :required="isRequired(key)"
+                     class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </template>
+            <template x-if="field.type!=='number' && field.type!=='integer'">
+              <input type="text" x-model="payload[key]" :required="isRequired(key)"
+                     class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </template>
+          </div>
+        </template>
+
+        <div x-show="error" class="text-red-600 text-sm" x-text="error"></div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="submit" :disabled="submitting"
+                  class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-4 py-2 rounded">
+            <span x-show="!submitting">提出</span>
+            <span x-show="submitting" x-cloak>送信中…</span>
+          </button>
+          <button type="button" @click="reset()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- === 自分の申請 === -->
+  <div x-show="tab==='mine'" x-cloak>
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 text-xs">
+          <tr>
+            <th class="text-left px-3 py-2">ID</th>
+            <th class="text-left px-3 py-2">テンプレート</th>
+            <th class="text-left px-3 py-2">状態</th>
+            <th class="text-left px-3 py-2">承認ステップ</th>
+            <th class="text-left px-3 py-2">提出日時</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="a in mine" :key="a.id">
+            <tr class="border-t border-gray-100">
+              <td class="px-3 py-2 text-gray-500" x-text="a.id"></td>
+              <td class="px-3 py-2 font-medium" x-text="a.template_name"></td>
+              <td class="px-3 py-2">
+                <span class="text-xs px-2 py-0.5 rounded"
+                      :class="a.status==='approved' ? 'bg-green-100 text-green-700'
+                              : a.status==='rejected' ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'"
+                      x-text="appStatusLabel(a.status)"></span>
+              </td>
+              <td class="px-3 py-2" x-text="a.current_step"></td>
+              <td class="px-3 py-2 text-gray-500" x-text="fmt(a.created_at)"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <div x-show="!mine.length" class="px-3 py-6 text-center text-gray-500 text-sm">提出した申請はありません。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function applicationsPage() {
+  return {
+    tab: 'new',
+    templates: [],
+    mine: [],
+    selected: null,
+    fields: {},
+    required: [],
+    payload: {},
+    submitting: false,
+    error: '',
+    async init() {
+      if (!Auth.requireAuth()) return;
+      try { this.templates = await Auth.json('/templates'); } catch {}
+      try { this.mine = await Auth.json('/applications'); } catch {}
+    },
+    select(t) {
+      this.selected = t;
+      this.fields = (t.schema_json && t.schema_json.properties) || {};
+      this.required = (t.schema_json && t.schema_json.required) || [];
+      this.payload = {};
+      this.error = '';
+    },
+    isRequired(k) { return this.required.includes(k); },
+    reset() { this.selected = null; this.fields = {}; this.required = []; this.payload = {}; this.error = ''; },
+    async submit() {
+      this.error = '';
+      this.submitting = true;
+      // 数値型はそのまま number で送る (x-model は string なので変換)
+      const body = {};
+      for (const [k, v] of Object.entries(this.payload)) {
+        if (v === '' || v == null) continue;
+        const f = this.fields[k] || {};
+        if (f.type === 'number') body[k] = Number(v);
+        else if (f.type === 'integer') body[k] = parseInt(v, 10);
+        else body[k] = v;
+      }
+      try {
+        const r = await Auth.json('/applications', {
+          method: 'POST',
+          body: JSON.stringify({ template_code: this.selected.code, payload: body }),
+        });
+        alert('申請を提出しました (id=' + r.id + ')');
+        this.tab = 'mine';
+        this.reset();
+        this.mine = await Auth.json('/applications');
+      } catch (e) {
+        this.error = (e.data && (e.data.detail || JSON.stringify(e.data))) || e.message;
+      } finally {
+        this.submitting = false;
+      }
+    },
+    fmt, appStatusLabel,
+  };
+}
+</script>
+{% endblock %}
