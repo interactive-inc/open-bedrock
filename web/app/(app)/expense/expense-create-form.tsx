@@ -1,0 +1,94 @@
+"use client"
+
+import { useActionState } from "react"
+import { toast } from "sonner"
+import { submitExpenseAction } from "@/app/(app)/expense/actions"
+import type { ExpenseSubmitFormState } from "@/app/(app)/expense/actions"
+import { Button } from "@/components/ui/button"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
+const initialState: ExpenseSubmitFormState = { ok: false, error: null }
+
+// 経費申請フォーム。カテゴリ・金額・利用日・任意メモを native form で送る。
+// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+export function ExpenseCreateForm() {
+  const action = useActionState(submitExpenseAction, initialState)
+
+  const state = action[0]
+
+  const dispatch = action[1]
+
+  const isPending = action[2]
+
+  // form action に渡すラッパ。Server Action の結果をその場で toast する。
+  async function handleAction(formData: FormData): Promise<void> {
+    const result = await submitExpenseAction(state, formData)
+
+    if (result.ok) {
+      toast.success("経費を申請しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    dispatch(formData)
+  }
+
+  return (
+    <form action={handleAction}>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="expense-category">カテゴリ</FieldLabel>
+
+          <select
+            id="expense-category"
+            name="category"
+            defaultValue="transport"
+            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          >
+            <option value="transport">交通費</option>
+            <option value="supplies">備品</option>
+            <option value="entertainment">交際費</option>
+            <option value="books">書籍</option>
+            <option value="other">その他</option>
+          </select>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="expense-amount">金額（円）</FieldLabel>
+
+          <Input
+            id="expense-amount"
+            name="amount"
+            type="number"
+            min={1}
+            step={1}
+            placeholder="3000"
+            required
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="expense-spent-at">利用日</FieldLabel>
+
+          <Input id="expense-spent-at" name="spent_at" type="date" required />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="expense-note">メモ（任意）</FieldLabel>
+
+          <Textarea id="expense-note" name="note" rows={3} placeholder="用途や相手先など" />
+        </Field>
+
+        {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
+
+        <Field orientation="horizontal">
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "申請中..." : "経費を申請"}
+          </Button>
+        </Field>
+      </FieldGroup>
+    </form>
+  )
+}

@@ -1,0 +1,76 @@
+import Link from "next/link"
+import { getGoalList } from "@/lib/api/get-goal-list"
+import { Badge } from "@/components/ui/badge"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+type Props = {
+  period: string | null
+  employeeId: string | null
+}
+
+// 目標一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
+// 各行は詳細 (/goals/[id]) へのリンクで、status はバッジ表示する。
+export async function GoalList(props: Props) {
+  const employeeId = props.employeeId !== null ? Number(props.employeeId) : null
+
+  const goals = await getGoalList({
+    period: props.period,
+    employeeId: employeeId !== null && Number.isInteger(employeeId) ? employeeId : null,
+  })
+
+  if (goals instanceof Error) {
+    return <p className="text-sm text-destructive">目標の取得に失敗しました</p>
+  }
+
+  if (goals.length === 0) {
+    return <p className="text-sm text-muted-foreground">目標がありません</p>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>期間</TableHead>
+          <TableHead>タイトル</TableHead>
+          <TableHead>KPI</TableHead>
+          <TableHead className="text-right">ウェイト</TableHead>
+          <TableHead>ステータス</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {goals.map((goal) => (
+          <TableRow key={goal.id}>
+            <TableCell>{goal.period}</TableCell>
+
+            <TableCell>
+              <Link
+                href={`/goals/${goal.id}`}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {goal.title}
+              </Link>
+            </TableCell>
+
+            <TableCell className="text-muted-foreground">{goal.kpi ?? "-"}</TableCell>
+
+            <TableCell className="text-right">{goal.weight}</TableCell>
+
+            <TableCell>
+              <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
+                {goal.status}
+              </Badge>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
