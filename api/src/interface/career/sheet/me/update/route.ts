@@ -1,0 +1,47 @@
+import { UpdateMyCareerSheet } from "@/application/career/update-my-career-sheet"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { z } from "zod"
+
+// PUT /career/sheet/me — 本人のキャリアシートを登録・更新
+export const PUT = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      goals_text: z.string().nullable().optional(),
+      strengths_text: z.string().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const updated = await new UpdateMyCareerSheet(c).run({
+      employeeId: session.employeeId,
+      goalsText: json.goals_text ?? null,
+      strengthsText: json.strengths_text ?? null,
+      now: c.env.NOW ?? new Date().toISOString(),
+    })
+
+    if (updated instanceof Error) {
+      throw new InternalError("failed to update career sheet")
+    }
+
+    const responseBody = {
+      employee_id: updated.employeeId,
+      goals_text: updated.goalsText,
+      strengths_text: updated.strengthsText,
+      updated_at: updated.updatedAt,
+    }
+
+    return c.json(responseBody, 200)
+  },
+)

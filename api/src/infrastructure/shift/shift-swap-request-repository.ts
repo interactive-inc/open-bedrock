@@ -1,0 +1,64 @@
+import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
+import type { Context } from "@/env"
+import { shiftSwapRequests } from "@/schema"
+import { eq } from "drizzle-orm"
+
+export class ShiftSwapRequestRepository {
+  constructor(private readonly c: Context) {}
+
+  async findById(swapRequestId: number): Promise<ShiftSwapRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(shiftSwapRequests)
+        .where(eq(shiftSwapRequests.id, swapRequestId))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ShiftSwapRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load shift_swap_request")
+    }
+  }
+
+  async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | Error> {
+    try {
+      const rows = await this.c.var.database
+        .insert(shiftSwapRequests)
+        .values({
+          requesterEmployeeId: swapRequest.requesterEmployeeId,
+          targetEmployeeId: swapRequest.targetEmployeeId,
+          date: swapRequest.date,
+          note: swapRequest.note,
+          status: swapRequest.status,
+          approvedAt: swapRequest.approvedAt,
+        })
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to insert shift swap request")
+        : ShiftSwapRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to insert shift swap request")
+    }
+  }
+
+  async update(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(shiftSwapRequests)
+        .set({ status: swapRequest.status, approvedAt: swapRequest.approvedAt })
+        .where(eq(shiftSwapRequests.id, swapRequest.id))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ShiftSwapRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to approve shift swap request")
+    }
+  }
+}

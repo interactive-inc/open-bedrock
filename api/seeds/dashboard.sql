@@ -1,0 +1,8 @@
+-- dashboard ドメインの seed
+-- dashboard は独自テーブルを持たない横断的な読み取り集計ドメインのため、投入する行はない。
+-- 集計対象のテーブルは各ドメインの seed が所有・投入する:
+--   employees    … seeds/employee.sql
+--   goals        … seeds/goal.sql
+--   applications … seeds/application.sql
+--   surveys      … seeds/survey.sql
+-- 重複投入を避けるため、本ファイルには INSERT 文を置かない。

@@ -1,0 +1,70 @@
+import { RegisterAsset } from "@/application/asset/register-asset"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
+import {
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
+import { z } from "zod"
+
+// POST /assets — 新規資産の登録（権限が必要）
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      code: z.string().min(1),
+      name: z.string().min(1),
+      kind: z.enum(["pc", "monitor", "furniture", "other"]),
+      serial: z.string().optional(),
+      purchased_on: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const created = await new RegisterAsset(c).run({
+      viewerRole: session.role,
+      asset: {
+        code: json.code,
+        name: json.name,
+        kind: json.kind,
+        serial: json.serial ?? null,
+        purchasedOn: json.purchased_on ?? null,
+      },
+    })
+
+    if (created instanceof Error) {
+      throw new InternalError("failed to create asset")
+    }
+
+    if ("reason" in created) {
+      if (created.reason === "forbidden") {
+        throw new ForbiddenError()
+      }
+
+      throw new ConflictError("asset code already exists")
+    }
+
+    const responseBody = {
+      code: created.code,
+      name: created.name,
+      kind: created.kind,
+      serial: created.serial,
+      purchased_on: created.purchasedOn,
+      status: created.status,
+      holder_employee_id: created.holderEmployeeId,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)

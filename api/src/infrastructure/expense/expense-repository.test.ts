@@ -1,0 +1,96 @@
+import { Expense } from "@/domain/expense/expense"
+import { ExpenseApproval } from "@/domain/expense/expense-approval"
+import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { describe, expect, test } from "bun:test"
+
+describe("ExpenseRepository", () => {
+  test("create then findById round-trips the expense", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ExpenseRepository(context)
+
+    const created = await repository.create(
+      Expense.create({
+        employeeId: 1,
+        category: "transport",
+        amount: 1200,
+        spentAt: "2026-01-01",
+        note: "テスト経費",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toBeInstanceOf(Expense)
+
+    if (created instanceof Error || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    const found = await repository.findById(created.id)
+
+    expect(found).toBeInstanceOf(Expense)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findById failed")
+    }
+
+    expect(found.amount).toBe(1200)
+    expect(found.status).toBe("pending")
+  })
+
+  test("update persists the status change", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ExpenseRepository(context)
+
+    const created = await repository.create(
+      Expense.create({
+        employeeId: 1,
+        category: "transport",
+        amount: 1200,
+        spentAt: "2026-01-01",
+        note: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error) {
+      throw created
+    }
+
+    const updated = await repository.update(created.withStatus("approved"))
+
+    expect(updated).toBeInstanceOf(Expense)
+
+    if (updated instanceof Error || updated === null) {
+      throw new Error("update failed")
+    }
+
+    expect(updated.status).toBe("approved")
+  })
+
+  test("addApproval persists an approval record for the expense", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ExpenseRepository(context)
+
+    const approval = await repository.addApproval(
+      ExpenseApproval.create({
+        expenseId: 1,
+        approverId: 2,
+        action: "approve",
+        comment: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    expect(approval).toBeInstanceOf(ExpenseApproval)
+
+    if (approval instanceof Error) {
+      throw approval
+    }
+
+    expect(approval.action).toBe("approve")
+  })
+})
