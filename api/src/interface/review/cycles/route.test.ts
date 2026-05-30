@@ -1,0 +1,93 @@
+import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedReviewCycles } from "@/infrastructure/seed/seed-review-cycles"
+import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { createTestToken } from "@/interface/shared/test/create-test-token"
+import { loadSchema } from "@/interface/shared/test/load-schema"
+import { requestWithContext } from "@/interface/shared/test/request-with-context"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { z } from "zod"
+
+const jwtSecret = "review-cycles-list-route-test-secret"
+
+const reviewCycleResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  period: z.string(),
+  status: z.enum(["draft", "open", "closed"]),
+  due_date: z.string().nullable(),
+})
+
+async function createTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "review_cycles",
+    seedReviewCycles.map((cycle) => ({
+      id: cycle.id,
+      title: cycle.title,
+      period: cycle.period,
+      status: cycle.status,
+      due_date: cycle.dueDate,
+    })),
+  )
+
+  return db
+}
+
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
+async function request(
+  path: string,
+  token: string | null,
+  method?: string,
+  body?: unknown,
+): Promise<Response> {
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+}
+
+describe("GET /review-cycles", () => {
+  test("returns 200 with all cycles", async () => {
+    const response = await request("/review-cycles", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(reviewCycleResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(3)
+    }
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request("/review-cycles", null)
+
+    expect(response.status).toBe(401)
+  })
+})

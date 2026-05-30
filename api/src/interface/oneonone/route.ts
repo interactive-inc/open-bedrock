@@ -1,0 +1,104 @@
+import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { employees, oneOnOnes } from "@/schema"
+import { zValidator } from "@hono/zod-validator"
+import { aliasedTable, eq, or } from "drizzle-orm"
+import { z } from "zod"
+
+const members = aliasedTable(employees, "members")
+
+const managers = aliasedTable(employees, "managers")
+
+// GET /oneonone — 本人が参加した 1on1 の履歴（参加者名込み）
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  const rows = await c.var.database
+    .select({ oneOnOne: oneOnOnes, memberName: members.name, managerName: managers.name })
+    .from(oneOnOnes)
+    .leftJoin(members, eq(members.id, oneOnOnes.memberId))
+    .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
+    .where(
+      or(eq(oneOnOnes.memberId, session.employeeId), eq(oneOnOnes.managerId, session.employeeId)),
+    )
+
+  const responseBody = rows.map((row) => ({
+    id: row.oneOnOne.id,
+    held_at: row.oneOnOne.heldAt,
+    member_name: row.memberName ?? "",
+    manager_name: row.managerName ?? "",
+    topics: row.oneOnOne.topics,
+    manager_note: row.oneOnOne.managerNote,
+    next_action: row.oneOnOne.nextAction,
+  }))
+
+  return c.json(responseBody, 200)
+})
+
+// POST /oneonone — マネージャーが 1on1 を記録する
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      member_email: z.string().min(1),
+      topics: z.string().nullable().optional(),
+      manager_note: z.string().nullable().optional(),
+      next_action: z.string().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const created = await new CreateOneOnOne(c).run({
+      memberEmail: json.member_email,
+      managerId: session.employeeId,
+      heldAt: c.env.NOW ?? new Date().toISOString(),
+      topics: json.topics ?? null,
+      managerNote: json.manager_note ?? null,
+      nextAction: json.next_action ?? null,
+    })
+
+    if (created instanceof Error) {
+      throw new InternalError("failed to create one-on-one")
+    }
+
+    if ("reason" in created) {
+      throw new NotFoundError("member not found")
+    }
+
+    const nameRows = await c.var.database
+      .select({ memberName: members.name, managerName: managers.name })
+      .from(oneOnOnes)
+      .leftJoin(members, eq(members.id, oneOnOnes.memberId))
+      .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
+      .where(eq(oneOnOnes.id, created.id))
+      .limit(1)
+
+    const nameRow = nameRows.at(0)
+
+    const responseBody = {
+      id: created.id,
+      held_at: created.heldAt,
+      member_name: nameRow?.memberName ?? "",
+      manager_name: nameRow?.managerName ?? "",
+      topics: created.topics,
+      manager_note: created.managerNote,
+      next_action: created.nextAction,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)

@@ -1,0 +1,106 @@
+import { describe, expect, test } from "bun:test"
+import { seedEmployeeSkills } from "@/infrastructure/seed/seed-employee-skills"
+import { seedSkills } from "@/infrastructure/seed/seed-skills"
+import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { createTestToken } from "@/interface/shared/test/create-test-token"
+import { loadSchema } from "@/interface/shared/test/load-schema"
+import { requestWithContext } from "@/interface/shared/test/request-with-context"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { z } from "zod"
+
+const jwtSecret = "skills-list-route-test-secret"
+
+const skillResponseSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  category: z.string(),
+})
+
+async function createTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "skills",
+    seedSkills.map((skill) => ({
+      code: skill.code,
+      name: skill.name,
+      category: skill.category,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "employee_skills",
+    seedEmployeeSkills.map((employeeSkill) => ({
+      employee_id: employeeSkill.employeeId,
+      skill_code: employeeSkill.skillCode,
+      level: employeeSkill.level,
+      years: employeeSkill.years,
+      note: employeeSkill.note,
+    })),
+  )
+
+  return db
+}
+
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
+async function request(props: {
+  path: string
+  token: string | null
+  method?: string
+  body?: unknown
+}): Promise<Response> {
+  return requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path: props.path,
+    token: props.token,
+    method: props.method,
+    body: props.body,
+  })
+}
+
+describe("GET /skills", () => {
+  test("returns 200 with a bare array of skills", async () => {
+    const response = await request({ path: "/skills", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(skillResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(12)
+    }
+  })
+
+  test("filters by q keyword", async () => {
+    const response = await request({ path: "/skills?q=react", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(skillResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.code).toBe("react")
+    }
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({ path: "/skills", token: null })
+
+    expect(response.status).toBe(401)
+  })
+})

@@ -1,0 +1,39 @@
+import { canDecideLeave } from "@/domain/leave/can-decide-leave"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { employees, leaveRequests } from "@/schema"
+import { eq } from "drizzle-orm"
+
+// GET /leave/requests/inbox — 承認権限者向けの承認待ち一覧
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  if (canDecideLeave(session.role) === false) {
+    throw new ForbiddenError()
+  }
+
+  const rows = await c.var.database
+    .select({ leaveRequest: leaveRequests, applicantName: employees.name })
+    .from(leaveRequests)
+    .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
+    .where(eq(leaveRequests.status, "pending"))
+
+  const responseBody = rows.map((row) => ({
+    id: row.leaveRequest.id,
+    applicant_name: row.applicantName ?? "",
+    leave_type: row.leaveRequest.leaveType,
+    start_date: row.leaveRequest.startDate,
+    end_date: row.leaveRequest.endDate,
+    days: row.leaveRequest.days,
+    reason: row.leaveRequest.reason,
+    status: row.leaveRequest.status,
+    created_at: row.leaveRequest.createdAt,
+  }))
+
+  return c.json(responseBody, 200)
+})

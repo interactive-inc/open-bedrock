@@ -1,0 +1,70 @@
+import { canManageShift } from "@/domain/shift/can-manage-shift"
+import { ShiftAssignment } from "@/domain/shift/shift-assignment"
+import type { Context } from "@/env"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
+import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
+
+export type Input = {
+  viewerRole: string
+  employeeCode: string
+  patternCode: string
+  date: string
+  note: string | null
+}
+
+export type Forbidden = { reason: "forbidden" }
+
+export type EmployeeNotFound = { reason: "employee_not_found" }
+
+export type PatternNotFound = { reason: "pattern_not_found" }
+
+/**
+ * 権限・社員・パターンを確認して下書きのシフト割当を作る。
+ */
+export class CreateShiftAssignment {
+  constructor(private readonly c: Context) {}
+
+  async run(
+    input: Input,
+  ): Promise<ShiftAssignment | Forbidden | EmployeeNotFound | PatternNotFound | Error> {
+    if (canManageShift(input.viewerRole) === false) {
+      return { reason: "forbidden" }
+    }
+
+    const employeeRepository = new EmployeeRepository(this.c)
+
+    const employee = await employeeRepository.findByCode(input.employeeCode)
+
+    if (employee instanceof Error) {
+      return employee
+    }
+
+    if (employee === null) {
+      return { reason: "employee_not_found" }
+    }
+
+    const patternRepository = new ShiftPatternRepository(this.c)
+
+    const pattern = await patternRepository.findByCode(input.patternCode)
+
+    if (pattern instanceof Error) {
+      return pattern
+    }
+
+    if (pattern === null) {
+      return { reason: "pattern_not_found" }
+    }
+
+    const assignmentRepository = new ShiftAssignmentRepository(this.c)
+
+    const assignment = ShiftAssignment.create({
+      employeeId: employee.id,
+      patternId: pattern.id,
+      date: input.date,
+      note: input.note,
+    })
+
+    return assignmentRepository.create(assignment)
+  }
+}

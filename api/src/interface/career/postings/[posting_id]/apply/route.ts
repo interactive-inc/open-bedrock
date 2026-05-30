@@ -1,0 +1,67 @@
+import { ApplyToCareerPosting } from "@/application/career/apply-to-career-posting"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
+import { z } from "zod"
+
+const postingIdSchema = z.coerce.number().int().positive()
+
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      message: z.string().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const postingId = postingIdSchema.safeParse(c.req.param("posting_id"))
+
+    if (postingId.success === false) {
+      throw new BadRequestError("invalid posting id")
+    }
+
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const view = await new ApplyToCareerPosting(c).run({
+      postingId: postingId.data,
+      applicantId: session.employeeId,
+      message: json.message ?? null,
+    })
+
+    if (view instanceof Error) {
+      throw new InternalError("failed to create application")
+    }
+
+    if ("reason" in view) {
+      if (view.reason === "already_applied") {
+        throw new ConflictError("already applied")
+      }
+
+      throw new NotFoundError("posting not found")
+    }
+
+    const responseBody = {
+      id: view.id,
+      posting_id: view.postingId,
+      applicant_id: view.applicantId,
+      message: view.message,
+      status: view.status,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)
