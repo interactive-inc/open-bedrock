@@ -1,64 +1,21 @@
-PYTHON ?= python3
-PORT   ?= 8000
-VENV   := .venv
-PY     := $(VENV)/bin/python
-PIP    := $(VENV)/bin/pip
-
-.PHONY: help venv install verify seed reseed run cli mcp smoketest feature-test clean
+.PHONY: help dev cli designer pm
 
 help:
-	@echo "社内HR統合システム - 主な make ターゲット"
-	@echo "  make install    venv作成 + 依存インストール"
-	@echo "  make seed       サンプルデータ投入 (talent.db 新規作成)"
-	@echo "  make reseed     既存DBを破棄して再シード"
-	@echo "  make run        APIサーバ起動 (http://127.0.0.1:$(PORT))"
-	@echo "  make smoketest  E2E動作確認 (TestClient)"
-	@echo "  make feature-test  フィーチャートグル動作確認"
-	@echo "  make cli        CLIヘルプ"
-	@echo "  make mcp        MCPサーバ起動"
-	@echo "  make clean      生成物を削除"
+	@echo "open-karte - 主な make ターゲット"
+	@echo "  make dev        bun install して portless で全アプリを起動"
+	@echo "  make cli        CLI ヘルプを表示 (bun)"
+	@echo "  make designer   プロダクトデザイナーのエージェントを起動 (claude)"
+	@echo "  make pm         PM エージェントを funnel 経由で起動 (claude-funnel)"
 
-$(VENV)/bin/activate:
-	$(PYTHON) -m venv $(VENV)
-	$(PY) -m pip install --upgrade pip
-	$(PIP) install -r requirements.txt
-	$(PIP) install email-validator
+dev:
+	bun install
+	portless
 
-install: $(VENV)/bin/activate verify
+cli:
+	bun cli/index.ts --help
 
-# 依存パッケージが入っているか確認。欠けていれば pip install をやり直す。
-verify:
-	@$(PY) -c "import fastapi, uvicorn, sqlalchemy, click, mcp" 2>/dev/null \
-	  && echo "✓ deps OK ($(VENV))" \
-	  || (echo "⚠ deps missing — reinstalling..." && \
-	      $(PIP) install -r requirements.txt && \
-	      $(PIP) install email-validator && \
-	      echo "✓ deps OK ($(VENV))")
+designer:
+	claude --agent product-designer
 
-seed: install
-	$(PY) -m server.seed
-
-reseed: install
-	rm -f talent.db talent.db-journal
-	$(PY) -m server.seed
-
-run: install
-	@test -f talent.db || $(MAKE) seed
-	$(PY) -m uvicorn server.main:app --reload --host 127.0.0.1 --port $(PORT)
-
-cli: install
-	$(PY) -m cli.talent --help
-
-mcp: install
-	$(PY) -m mcp_server.server
-
-smoketest: install
-	@test -f talent.db || $(MAKE) seed
-	$(PY) scripts/smoketest.py
-
-feature-test: install
-	$(PY) scripts/feature_toggle_test.py
-
-clean:
-	rm -rf $(VENV) talent.db talent.db-journal
-	find . -name __pycache__ -type d -exec rm -rf {} +
+pm:
+	bunx funnel claude --agent pm

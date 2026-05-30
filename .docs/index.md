@@ -22,22 +22,23 @@
 
 ## 原則
 
-- 同じ業務を API と CLI の複数インタフェースから実行できるようにする
-- CLI は引数をローカルの HTTP リクエストに変換し、バックエンド API を叩く設計に揃える
+- 同じ業務を api と karte コマンドと web の複数インタフェースから実行できるようにする
+- Claude などの AI から CLI で呼ばれることを前提に設計する
+- 給与・税・労務のような重い計算や法的判定は持たず、外部に委ねる
 
 ## やらないこと
 
-- 未確認: 明示的なスコープ外の定義はコードから読み取れない
+- 給与・税・労務の計算や法的判定。これらは外部に委ねる
 
 ## 技術スタック
 
-- bun: 理由: CLI の実行環境として採用
-- Hono: 理由: API と CLI の双方で同一のルーティング基盤を使うため
-- Cloudflare Workers と wrangler: 理由: API サーバのランタイムとデプロイ手段
-- Next.js: 理由: web ワークスペースのフロントエンド基盤
-- Zod と zod-validator: 理由: CLI ルートの入力検証
-- 注記: CLI が叩くバックエンド本体は FastAPI 製サーバとして参照されるが、このリポジトリには含まれない
+- bun: 理由: モノレポと CLI の実行環境
+- Hono: 理由: api と cli の双方で同一のルーティング基盤を使うため
+- Cloudflare Workers と wrangler: 理由: api のランタイムとデプロイ手段
+- Cloudflare D1 と Drizzle ORM: 理由: api のデータ永続化
+- Next.js: 理由: web のフロントエンド基盤
+- Zod と zod-validator: 理由: 入力検証と型生成
 
 ## 重要な判断履歴
 
-- 旧構成は Python 製であり、現行は TypeScript のモノレポへ移行中。詳細は [[001-python-to-ts-monorepo|Python から TS モノレポへの移行]] を参照
+- 旧構成は Python 製であり、TypeScript のモノレポへ移行済み。詳細は [[001-python-to-ts-monorepo|Python から TS モノレポへの移行]] を参照
