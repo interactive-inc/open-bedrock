@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "funnel": {
+      "command": "funnel",
+      "args": ["mcp"]
+    }
+  }
+}

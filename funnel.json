@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/@interactive-inc/claude-funnel/funnel.schema.json",
+  "channels": [
+    {
+      "name": "open-karte",
+      "connectors": [
+        {
+          "type": "slack",
+          "name": "slack",
+          "env": {
+            "botToken": "SLACK_BOT_TOKEN",
+            "appToken": "SLACK_APP_TOKEN"
+          }
+        }
+      ]
+    }
+  ],
+  "profiles": [
+    {
+      "channel": "open-karte",
+      "options": ["--brief", "--agent", "pm"],
+      "env": {
+        "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+      }
+    }
+  ]
+}

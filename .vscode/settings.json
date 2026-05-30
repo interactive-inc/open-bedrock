@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+    ".claude/agent-memory-local": true,
+    ".claude/scheduled_tasks.lock": true,
+    ".claude/worktrees": true,
+    "**/.next": true,
+    "**/bun.lock": true,
+    "**/next-env.d.ts": true,
+    "**/node_modules": true,
+    "**/tsconfig.tsbuildinfo": true,
+    "skills-lock.json": true
+  }
+}

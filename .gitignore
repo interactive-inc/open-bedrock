@@ -1,9 +1,22 @@
-.venv/
-__pycache__/
-*.pyc
-talent.db
-talent.db-journal
-*.log
-.DS_Store
+# Claude
+/.claude/scheduled_tasks.lock
+/.claude/agent-memory-local
+/.claude/worktrees
+# サブエージェントのメモリ（マシン固有の中間生成物。どの階層でも無視）
+**/.claude/agent-memory
+
+# Env
+.env.local
+
+# Node.js
 node_modules/
-~/.talent/
+dist/
+
+# Cloudflare
+.wrangler/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
