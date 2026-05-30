@@ -1,0 +1,16 @@
+import { createClient } from "@/lib/api/hc-client"
+
+// GET /applications/:id。申請 1 件の詳細（payload を含む）。
+export async function getApplicationDetail(id: number) {
+  const client = await createClient()
+
+  const response = await client.applications[":id"].$get({
+    param: { id: String(id) },
+  })
+
+  if (response.status >= 400) {
+    return new Error("failed to load application detail")
+  }
+
+  return response.json()
+}
