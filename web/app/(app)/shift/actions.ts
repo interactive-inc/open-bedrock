@@ -186,25 +186,3 @@ export async function createShiftPatternAction(
 
   return { ok: true, error: null }
 }
-
-// シフト交代承認 Server Action（特権ロール）。hidden input の swap_request_id を受け取る。
-export async function approveShiftSwapRequestAction(
-  _previousState: ShiftFormState,
-  formData: FormData,
-): Promise<ShiftFormState> {
-  const swapRequestId = Number(formData.get("swap_request_id"))
-
-  if (Number.isInteger(swapRequestId) === false) {
-    return { ok: false, error: "交代申請 ID が不正です" }
-  }
-
-  const approved = await approveShiftSwapRequest(swapRequestId)
-
-  if (approved instanceof Error) {
-    return { ok: false, error: "交代申請の承認に失敗しました" }
-  }
-
-  revalidatePath("/shift")
-
-  return { ok: true, error: null }
-}
