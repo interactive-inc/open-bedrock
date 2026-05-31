@@ -1,20 +1,24 @@
-# Python 実装から TypeScript モノレポへ移行する
+# 001-Python から TypeScript モノレポへ移行する
+
+最終更新: 2026-05-31
 
 ## 状況
 
-初期の open-karte はサーバ(FastAPI)と CLI とMCPサーバを Python で実装していた。現行リポジトリでは api と cli と web を TypeScript の bun モノレポとして構成し直す移行が進んでいる。移行の意思決定の背景はコードからは読み取れないため、ここでは観測された事実のみを記録する。
+[[index|open-karte]]の旧構成は Python 製だった。api・cli・web を1つの基盤として束ね、Claude などの AI から CLI でも操作できることを目指す中で、言語と実行環境を再選定する必要があった。
 
 ## 判断
 
-api と cli と web を npm workspaces のモノレポにまとめ、CLI は Hono と bun、API は Hono と Cloudflare Workers、web は Next.js で実装する方針に揃える。CLI は旧 talent.py と同じく ~/.talent/config.json とバックエンド API を前提とする設計を踏襲する。
+Python 構成を廃し、TypeScript のモノレポへ移行する。api は Hono + Cloudflare Workers、cli は Hono + bun、web は Next.js + React で構成し、3ワークスペースを bun workspaces で束ねる。
 
 ## 理由
 
-- Python 実装の継続: 未確認。移行理由はコードから読み取れない
-- TypeScript モノレポの採用: API と CLI で同一の Hono ルーティング基盤を共有でき、bun で統一的に実行できる
+- api と cli で同一のルーティング基盤(Hono)を共有でき、同じ業務を複数インタフェースから実行する原則に沿う
+- web と api を同一言語にすることで型と入力検証(Zod)を端から端まで通せる
+- 却下した選択肢: Python を維持する。言語が web と分かれ、ルーティング基盤を共有できず、型の一貫性も得にくいため却下した
+- 却下した選択肢: api と web を別リポジトリに分ける。同じ業務を複数インタフェースから提供する設計でコードと型の共有が難しくなるため却下した
 
 ## 結果
 
-- CLI は引数をローカル HTTP リクエストに変換し Hono ルートで処理する設計になった。詳細は [[features|機能一覧]] を参照
-- api と web は現状スキャフォールドで、業務機能は未実装。CLI が叩くバックエンド本体はこのリポジトリに含まれない
-- トレードオフ: 旧 Python 実装と新 TypeScript 実装が併存する移行期にあり、両者の統合方針は未確認
+- 全ワークスペースが TypeScript に統一され、型と検証を共有できる
+- トレードオフ: Cloudflare Workers の制約(ランタイム・実行時間)に api の設計が縛られる
+- 本決定時点では雛形のみで実コードは未実装。具体的な機能は[[backlogs/index|バックログ]]から着手する

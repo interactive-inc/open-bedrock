@@ -1,39 +1,32 @@
 # Architecture
 
-bun workspaces による TypeScript モノレポ。api と cli と web の3ワークスペースで構成する。
+実コードは未実装。以下は[[index|方向性]]に基づく想定構成であり、実装が進んだらコードを正として更新する。
 
 ## Runtime
 
-api は Cloudflare Workers(wrangler)上で動作する。cli は bun で動作する。web は Next.js で動作する。
+api は Cloudflare Workers (wrangler) 上で動かす想定。cli は bun のローカルプロセスで動かす想定。
 
-## Layers
+## Rendering
 
-api は domain と application と infrastructure と interface の4層で構成する。interface は Next.js App Router 記法(route.ts と動的セグメント [param])でルートを定義し、app.ts が :param に対応づけて登録する。
-
-## Data
-
-api は Cloudflare D1(SQLite)を Drizzle ORM 経由で読み書きする。スキーマは api/src/schema.ts に集約する。
+web は Next.js App Router。サーバコンポーネント主体で、必要な箇所のみクライアントコンポーネントとする想定。
 
 ## Data Fetching
 
-cli は引数をローカルの HTTP リクエストに変換し、内部の Hono ルートで処理したうえで、api を叩く。接続先は既定で http://127.0.0.1:8787、環境変数 KARTE_API で上書きできる。web は Hono の型付きクライアント(hc)で api を叩く。
+api は Hono のルーティングで HTTP を受ける。web と cli は api を HTTP 経由で呼ぶ。
 
 ## Authentication
 
-ログインで取得した JWT トークンを Authorization ヘッダに Bearer トークンとして付与する。cli はトークンを ~/.karte/config.json に保存する。web は httpOnly cookie に保持する。api は jose でトークンを検証する。
+未確定。認証方式は今後の意思決定で定める。
 
 ## Styling
 
-web は Tailwind CSS と shadcn で構成する。
+web は Tailwind と shadcn を用いる想定。
 
 ## 構成図
 
 ```mermaid
 flowchart LR
-  user[利用者] --> cli[karte]
-  cli -->|HTTP Bearer| api[api Hono on Workers]
-  user --> web[web Next.js]
-  web -->|HTTP Bearer| api
-  api --> db[(Cloudflare D1)]
-  config[~/.karte/config.json] --- cli
+  cli[karte CLI] -->|HTTP POST| api[api / Hono]
+  web[web / Next.js] -->|HTTP| api
+  api --> d1[(Cloudflare D1)]
 ```
