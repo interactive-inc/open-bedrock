@@ -33,9 +33,7 @@ export default factory.createHandlers(
 
     if (query["base-url"]) config.base_url = query["base-url"]
 
-    await saveConfig(config)
-
-    const client = await createClient()
+    const client = await createClient(config.base_url)
 
     const response = await client.auth.login.$post({
       json: { email: query.email, password: query.password },

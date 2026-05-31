@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 
 export const help = `karte onboarding templates [--kind join|leave]`
@@ -27,14 +26,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    const cols = ["code", "name", "kind", "task_count"]
-
-    return c.text(
-      table(
-        cols,
-        rows.map((row) => cols.map((col) => String(row[col as keyof typeof row]))),
-        `オンボーディングテンプレ (${rows.length}件)`,
-      ),
-    )
+    return c.json(rows)
   },
 )

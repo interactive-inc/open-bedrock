@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -25,14 +24,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    const cols = ["id", "effective_date", "previous_base_salary", "new_base_salary", "reason"]
-
-    return c.text(
-      table(
-        cols,
-        rows.map((row) => cols.map((col) => String(row[col as keyof typeof row]))),
-        `給与改定履歴 (${rows.length}件)`,
-      ),
-    )
+    return c.json(rows)
   },
 )

@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { pretty } from "@/lib/render/table"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -28,6 +27,6 @@ export default factory.createHandlers(
 
     const result = await response.json()
 
-    return c.text(pretty(result))
+    return c.json(result)
   },
 )

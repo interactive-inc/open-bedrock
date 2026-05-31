@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { pretty } from "@/lib/render/table"
 import { factory } from "@/factory"
 
 export const help = `karte dashboard — ダッシュボード集計`
@@ -17,6 +16,6 @@ export default factory.createHandlers(
 
     const summary = await response.json()
 
-    return c.text(pretty(summary))
+    return c.json(summary)
   },
 )

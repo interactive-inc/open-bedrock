@@ -1,10 +1,14 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 
-export const help = `karte app templates — 申請テンプレート一覧`
+export const help = `karte app templates — 申請テンプレート一覧
+
+usage:
+  karte app templates [--category <category>]
+
+詳細は karte app template <code> で確認できます。`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 
@@ -12,8 +16,6 @@ export default factory.createHandlers(json(), async (c) => {
   const query = c.req.valid("json")
 
   if (query.help) return c.text(help)
-
-  const cols = ["code", "name", "category", "description"]
 
   const client = await createClient()
 
@@ -23,16 +25,5 @@ export default factory.createHandlers(json(), async (c) => {
 
   const rows = await response.json()
 
-  return c.text(
-    table(
-      cols,
-      rows.map((row) => [
-        String(row.code),
-        String(row.name),
-        String(row.category),
-        String(row.description ?? "").slice(0, 40),
-      ]),
-      `申請テンプレート (${rows.length}件)`,
-    ),
-  )
+  return c.json(rows)
 })
