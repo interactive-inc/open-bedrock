@@ -22,21 +22,15 @@ export function SalaryRevisionCreateForm() {
 
   const isPending = action[2]
 
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await createSalaryRevisionAction(state, formData)
-
-    if (result.ok) {
-      toast.success("給与改定を作成しました")
-    } else if (result.error !== null) {
-      toast.error(result.error)
-    }
-
-    dispatch(formData)
+  // 直前の送信結果を描画時に通知する。state が変わるたびに評価される。
+  if (state.ok) {
+    toast.success("給与改定を作成しました")
+  } else if (state.error !== null) {
+    toast.error(state.error)
   }
 
   return (
-    <form action={handleAction}>
+    <form action={dispatch}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="revision-employee-code">社員コード</FieldLabel>
