@@ -52,6 +52,10 @@ export class LeaveRequestRepository {
 
   async update(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
+      if (leaveRequest.id === null) {
+        return new Error("cannot update unsaved leave request")
+      }
+
       const rows = await this.c.var.database
         .update(leaveRequests)
         .set({

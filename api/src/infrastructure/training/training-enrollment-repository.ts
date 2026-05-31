@@ -72,6 +72,10 @@ export class TrainingEnrollmentRepository {
 
   async update(trainingEnrollment: TrainingEnrollment): Promise<TrainingEnrollment | null | Error> {
     try {
+      if (trainingEnrollment.id === null) {
+        return new Error("cannot update unsaved training enrollment")
+      }
+
       const rows = await this.c.var.database
         .update(trainingEnrollments)
         .set({

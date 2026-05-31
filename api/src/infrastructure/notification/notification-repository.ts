@@ -50,6 +50,10 @@ export class NotificationRepository {
 
   async update(notification: Notification): Promise<Notification | null | Error> {
     try {
+      if (notification.id === null) {
+        return new Error("cannot update unsaved notification")
+      }
+
       const rows = await this.c.var.database
         .update(notifications)
         .set({ isRead: notification.isRead ? 1 : 0 })

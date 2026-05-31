@@ -10,6 +10,7 @@ import { and, asc, eq } from "drizzle-orm"
 import {
   BadRequestError,
   ForbiddenError,
+  InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
@@ -86,6 +87,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   })
 
   const view = toReviewResultView(cycle, forms)
+
+  if (view instanceof Error) {
+    throw new InternalError(view.message)
+  }
 
   const body = {
     cycle_id: view.cycleId,

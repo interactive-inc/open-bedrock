@@ -48,6 +48,10 @@ export class ShiftSwapRequestRepository {
 
   async update(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
+      if (swapRequest.id === null) {
+        return new Error("cannot update unsaved shift swap request")
+      }
+
       const rows = await this.c.var.database
         .update(shiftSwapRequests)
         .set({ status: swapRequest.status, approvedAt: swapRequest.approvedAt })

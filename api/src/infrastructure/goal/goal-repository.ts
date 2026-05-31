@@ -46,6 +46,10 @@ export class GoalRepository {
 
   async update(goal: Goal): Promise<Goal | null | Error> {
     try {
+      if (goal.id === null) {
+        return new Error("cannot update unsaved goal")
+      }
+
       const rows = await this.c.var.database
         .update(goals)
         .set({ status: goal.status })

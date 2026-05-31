@@ -47,6 +47,10 @@ export class ShiftAssignmentRepository {
 
   async update(assignment: ShiftAssignment): Promise<ShiftAssignment | null | Error> {
     try {
+      if (assignment.id === null) {
+        return new Error("cannot update unsaved shift assignment")
+      }
+
       const rows = await this.c.var.database
         .update(shiftAssignments)
         .set({ publishedAt: assignment.publishedAt })
