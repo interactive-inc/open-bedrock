@@ -6,6 +6,7 @@ import {
   Boxes,
   Briefcase,
   CalendarClock,
+  ClipboardCheck,
   ClipboardList,
   Coins,
   FileText,
@@ -69,6 +70,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
     heading: "業務",
     items: [
       { label: "目標", href: "/goals", icon: Target },
+      { label: "評価", href: "/review", icon: ClipboardCheck },
       { label: "申請", href: "/applications", icon: Inbox },
       { label: "経費", href: "/expense", icon: Coins },
       { label: "休暇", href: "/leave", icon: Plane },
