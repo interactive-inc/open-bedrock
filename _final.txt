@@ -1,0 +1,9 @@
+=== grep shift nav ===
+9:  CalendarDays,
+79:      { label: "シフト", href: "/shift", icon: CalendarDays },
+=== vp check ===
+[1m[94mpass:[39m[0m All 963 files are correctly formatted [2m(422ms, 10 threads)[0m
+[1m[94mpass:[39m[0m Found no warnings or lint errors in 902 files [2m(909ms, 10 threads)[0m
+VP_CHECK_EXIT=0
+=== remove committed temp ===
+rm '_out.txt'
