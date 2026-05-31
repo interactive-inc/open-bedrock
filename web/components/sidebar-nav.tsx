@@ -14,10 +14,12 @@ import {
   LayoutDashboard,
   MessagesSquare,
   Plane,
+  ReceiptText,
   Sparkles,
   Target,
   TimerReset,
   Users,
+  Wallet,
   Workflow,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -65,6 +67,13 @@ const navGroups: ReadonlyArray<NavGroup> = [
       { label: "経費", href: "/expense", icon: Coins },
       { label: "休暇", href: "/leave", icon: Plane },
       { label: "勤怠", href: "/attendance", icon: TimerReset },
+    ],
+  },
+  {
+    heading: "お金",
+    items: [
+      { label: "給与明細", href: "/payroll", icon: ReceiptText },
+      { label: "給与管理", href: "/payroll/admin", icon: Wallet },
     ],
   },
   {
