@@ -96,6 +96,14 @@ import surveyAnswerHandler from "@/app/survey/answer/[survey_id]/route"
 import surveyHandler from "@/app/survey/route"
 import surveyListHandler from "@/app/survey/list/route"
 import surveySummaryHandler from "@/app/survey/summary/[survey_id]/route"
+import trainingCompleteHandler from "@/app/training/complete/[id]/route"
+import trainingCourseHandler from "@/app/training/course/[code]/route"
+import trainingCourseCreateHandler from "@/app/training/course-create/route"
+import trainingCoursesHandler from "@/app/training/courses/route"
+import trainingEnrollHandler from "@/app/training/enroll/route"
+import trainingEnrollmentsHandler from "@/app/training/enrollments/route"
+import trainingHandler from "@/app/training/route"
+import trainingMineHandler from "@/app/training/mine/route"
 import whoamiHandler from "@/app/whoami/route"
 
 const base = factory.createApp()
@@ -230,6 +238,15 @@ routes.post("/review/cycle/create", ...reviewCycleCreateHandler)
 routes.post("/review/mine", ...reviewMineHandler)
 routes.post("/review/submit/:form_id?", ...reviewSubmitHandler)
 routes.post("/review/results/:cycle_id?/:employee_code?", ...reviewResultsHandler)
+
+routes.post("/training", ...trainingHandler)
+routes.post("/training/courses", ...trainingCoursesHandler)
+routes.post("/training/course/:code?", ...trainingCourseHandler)
+routes.post("/training/course-create", ...trainingCourseCreateHandler)
+routes.post("/training/enrollments", ...trainingEnrollmentsHandler)
+routes.post("/training/mine", ...trainingMineHandler)
+routes.post("/training/enroll", ...trainingEnrollHandler)
+routes.post("/training/complete/:id?", ...trainingCompleteHandler)
 
 routes.post("/batch", ...batchHandler)
 routes.post("/dashboard", ...dashboardHandler)
