@@ -59,6 +59,10 @@ export class ReviewCycleRepository {
 
   async update(reviewCycle: ReviewCycle): Promise<ReviewCycle | null | Error> {
     try {
+      if (reviewCycle.id === null) {
+        return new Error("cannot update unsaved review cycle")
+      }
+
       const rows = await this.c.var.database
         .update(reviewCycles)
         .set({ status: reviewCycle.status })

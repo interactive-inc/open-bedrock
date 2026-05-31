@@ -48,6 +48,10 @@ export class ExpenseRepository {
 
   async update(expense: Expense): Promise<Expense | null | Error> {
     try {
+      if (expense.id === null) {
+        return new Error("cannot update unsaved expense")
+      }
+
       const rows = await this.c.var.database
         .update(expenses)
         .set({ status: expense.status })

@@ -49,6 +49,10 @@ export class ApplicationRepository {
 
   async update(application: Application): Promise<Application | null | Error> {
     try {
+      if (application.id === null) {
+        return new Error("cannot update unsaved application")
+      }
+
       const rows = await this.c.var.database
         .update(applications)
         .set({ status: application.status, currentStep: application.currentStep })
