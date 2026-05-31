@@ -1,8 +1,8 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import type { LucideIcon } from "lucide-react"
 import {
+  Bell,
   Boxes,
   Briefcase,
   CalendarClock,
@@ -22,7 +22,9 @@ import {
   Wallet,
   Workflow,
 } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -31,6 +33,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
+type Props = {
+  unreadNotificationCount: number
+}
 
 type NavItem = {
   label: string
@@ -93,12 +99,16 @@ const navGroups: ReadonlyArray<NavGroup> = [
   },
   {
     heading: "システム",
-    items: [{ label: "バッチ", href: "/batch", icon: Workflow }],
+    items: [
+      { label: "バッチ", href: "/batch", icon: Workflow },
+      { label: "通知", href: "/notifications", icon: Bell },
+    ],
   },
 ]
 
 // usePathname でアクティブ状態を判定するため Client Component として切り出したサイドバーナビ。
-export function SidebarNav() {
+// 通知メニューには未読件数の Badge を添える。
+export function SidebarNav(props: Props) {
   const pathname = usePathname()
 
   return (
@@ -123,6 +133,10 @@ export function SidebarNav() {
                     >
                       <Icon />
                       <span>{item.label}</span>
+
+                      {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
+                        <Badge className="ml-auto">{props.unreadNotificationCount}</Badge>
+                      ) : null}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )

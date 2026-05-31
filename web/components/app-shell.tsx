@@ -1,6 +1,5 @@
 "use client"
 
-import type { MeResponse } from "@/lib/api/types/auth-types"
 import { AppHeader } from "@/components/app-header"
 import { SidebarNav } from "@/components/sidebar-nav"
 import {
@@ -11,11 +10,13 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import type { MeResponse } from "@/lib/api/types/auth-types"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
   onLogout: () => void
+  unreadNotificationCount: number
 }
 
 // サイドバー開閉状態を持つアプリ全体シェル。md 以上は固定表示、sm 以下は offcanvas トグル。
@@ -35,7 +36,7 @@ export function AppShell(props: Props) {
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarNav />
+          <SidebarNav unreadNotificationCount={props.unreadNotificationCount} />
         </SidebarContent>
 
         <SidebarFooter>
