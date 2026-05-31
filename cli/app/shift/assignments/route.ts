@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte shift assignments [--from <date>] [--to <date>] [--department-code <c>] [--employee-code <c>] — シフト割当一覧`
+export const help = `karte shift assignments [--from <date>] [--to <date>] [--department-code <c>] — シフト割当一覧`
 
 export default factory.createHandlers(
   zValidator(
@@ -13,7 +13,6 @@ export default factory.createHandlers(
       from: z.string().optional(),
       to: z.string().optional(),
       "department-code": z.string().optional(),
-      "employee-code": z.string().optional(),
     }),
   ),
   async (c) => {
@@ -27,8 +26,7 @@ export default factory.createHandlers(
       query: {
         from: query.from,
         to: query.to,
-        department_code: query["department-code"],
-        employee_code: query["employee-code"],
+        dept_code: query["department-code"],
       },
     })
 

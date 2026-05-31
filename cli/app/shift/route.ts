@@ -3,7 +3,7 @@ import { factory } from "@/factory"
 export const help = `karte shift — シフト割当 + パターン + 交代申請
 
 usage:
-  karte shift assignments [--from <date>] [--to <date>] [--department-code <c>] [--employee-code <c>]  割当一覧
+  karte shift assignments [--from <date>] [--to <date>] [--department-code <c>]  割当一覧
   karte shift mine                                              自分の割当一覧
   karte shift assign --employee-code <c> --date <date> --pattern-code <c> [--note <n>]  割当作成（管理者）
   karte shift publish <id>                                      割当公開

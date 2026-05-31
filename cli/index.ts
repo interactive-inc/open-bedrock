@@ -44,7 +44,7 @@ commands:
   training mine               自分の受講一覧
   training enroll             受講申込 (--course [--employee-code --due])
   training complete <id>      受講完了 (--score)
-  shift assignments           シフト割当一覧 (--from --to --department-code --employee-code)
+  shift assignments           シフト割当一覧 (--from --to --department-code)
   shift mine                  自分のシフト割当一覧
   shift assign                シフト割当作成 (--employee-code --date --pattern-code [--note])
   shift publish <id>          シフト割当を公開
