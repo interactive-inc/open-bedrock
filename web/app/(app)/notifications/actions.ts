@@ -1,122 +1,117 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { createNotification } from "@/lib/api/create-notification";
-import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read";
-import { markNotificationRead } from "@/lib/api/mark-notification-read";
-import type { NotificationKind } from "@/lib/api/types/notification-types";
+import { revalidatePath } from "next/cache"
+import { createNotification } from "@/lib/api/create-notification"
+import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
+import { markNotificationRead } from "@/lib/api/mark-notification-read"
+import type { NotificationKind } from "@/lib/api/types/notification-types"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type NotificationFormState = {
-	ok: boolean;
-	error: string | null;
-};
+  ok: boolean
+  error: string | null
+}
 
 // 指定通知の既読化 Server Action。hidden input の notification_id を受け取る。
 export async function markNotificationReadAction(
-	_previousState: NotificationFormState,
-	formData: FormData,
+  _previousState: NotificationFormState,
+  formData: FormData,
 ): Promise<NotificationFormState> {
-	const idValue = formData.get("notification_id");
+  const idValue = formData.get("notification_id")
 
-	const notificationId = Number(idValue);
+  const notificationId = Number(idValue)
 
-	if (Number.isInteger(notificationId) === false) {
-		return { ok: false, error: "通知 ID が不正です" };
-	}
+  if (Number.isInteger(notificationId) === false) {
+    return { ok: false, error: "通知 ID が不正です" }
+  }
 
-	const result = await markNotificationRead(notificationId);
+  const result = await markNotificationRead(notificationId)
 
-	if (result instanceof Error) {
-		return { ok: false, error: "既読化に失敗しました" };
-	}
+  if (result instanceof Error) {
+    return { ok: false, error: "既読化に失敗しました" }
+  }
 
-	revalidatePath("/notifications");
+  revalidatePath("/notifications")
 
-	return { ok: true, error: null };
+  return { ok: true, error: null }
 }
 
 // 全件既読化 Server Action。
 export async function markAllNotificationsReadAction(
-	_previousState: NotificationFormState,
+  _previousState: NotificationFormState,
 ): Promise<NotificationFormState> {
-	const result = await markAllNotificationsRead();
+  const result = await markAllNotificationsRead()
 
-	if (result instanceof Error) {
-		return { ok: false, error: "全件既読化に失敗しました" };
-	}
+  if (result instanceof Error) {
+    return { ok: false, error: "全件既読化に失敗しました" }
+  }
 
-	revalidatePath("/notifications");
+  revalidatePath("/notifications")
 
-	return { ok: true, error: null };
+  return { ok: true, error: null }
 }
 
 // FormData の kind を NotificationKind に正規化する。未知の値は announcement。
-function toNotificationKind(
-	value: FormDataEntryValue | null,
-): NotificationKind {
-	if (value === "task") {
-		return "task";
-	}
+function toNotificationKind(value: FormDataEntryValue | null): NotificationKind {
+  if (value === "task") {
+    return "task"
+  }
 
-	if (value === "approval_request") {
-		return "approval_request";
-	}
+  if (value === "approval_request") {
+    return "approval_request"
+  }
 
-	if (value === "approval_result") {
-		return "approval_result";
-	}
+  if (value === "approval_result") {
+    return "approval_result"
+  }
 
-	if (value === "reminder") {
-		return "reminder";
-	}
+  if (value === "reminder") {
+    return "reminder"
+  }
 
-	return "announcement";
+  return "announcement"
 }
 
 // 通知作成 Server Action（特権ロール）。recipient_employee_code/kind/title 必須、body 任意。
 export async function createNotificationAction(
-	_previousState: NotificationFormState,
-	formData: FormData,
+  _previousState: NotificationFormState,
+  formData: FormData,
 ): Promise<NotificationFormState> {
-	const recipientCodeValue = formData.get("recipient_employee_code");
+  const recipientCodeValue = formData.get("recipient_employee_code")
 
-	const recipientEmployeeCode =
-		typeof recipientCodeValue === "string" ? recipientCodeValue.trim() : "";
+  const recipientEmployeeCode =
+    typeof recipientCodeValue === "string" ? recipientCodeValue.trim() : ""
 
-	if (recipientEmployeeCode === "") {
-		return { ok: false, error: "宛先の社員コードを入力してください" };
-	}
+  if (recipientEmployeeCode === "") {
+    return { ok: false, error: "宛先の社員コードを入力してください" }
+  }
 
-	const kind = toNotificationKind(formData.get("kind"));
+  const kind = toNotificationKind(formData.get("kind"))
 
-	const titleValue = formData.get("title");
+  const titleValue = formData.get("title")
 
-	const title = typeof titleValue === "string" ? titleValue.trim() : "";
+  const title = typeof titleValue === "string" ? titleValue.trim() : ""
 
-	if (title === "") {
-		return { ok: false, error: "タイトルを入力してください" };
-	}
+  if (title === "") {
+    return { ok: false, error: "タイトルを入力してください" }
+  }
 
-	const bodyValue = formData.get("body");
+  const bodyValue = formData.get("body")
 
-	const body =
-		typeof bodyValue === "string" && bodyValue.trim() !== ""
-			? bodyValue.trim()
-			: null;
+  const body = typeof bodyValue === "string" && bodyValue.trim() !== "" ? bodyValue.trim() : null
 
-	const created = await createNotification({
-		recipient_employee_code: recipientEmployeeCode,
-		kind: kind,
-		title: title,
-		body: body,
-	});
+  const created = await createNotification({
+    recipient_employee_code: recipientEmployeeCode,
+    kind: kind,
+    title: title,
+    body: body,
+  })
 
-	if (created instanceof Error) {
-		return { ok: false, error: "通知の作成に失敗しました" };
-	}
+  if (created instanceof Error) {
+    return { ok: false, error: "通知の作成に失敗しました" }
+  }
 
-	revalidatePath("/notifications");
+  revalidatePath("/notifications")
 
-	return { ok: true, error: null };
+  return { ok: true, error: null }
 }
