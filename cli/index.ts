@@ -37,6 +37,13 @@ commands:
   career sheet-update         キャリアシート更新 (--data <file>)
   career postings             社内公募一覧
   career apply <id>           公募に応募 (--message)
+  training courses            研修コース一覧 (--category --status)
+  training course <code>      研修コース詳細
+  training course-create      研修コース作成 (--code --title --category [--description --duration --required])
+  training enrollments        受講一覧 (--employee-code)
+  training mine               自分の受講一覧
+  training enroll             受講申込 (--course [--employee-code --due])
+  training complete <id>      受講完了 (--score)
   batch                       バッチ状況
   dashboard                   ダッシュボード集計
 
