@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { approveShiftSwapRequest } from "@/lib/api/approve-shift-swap-request"
 import { createShiftAssignment } from "@/lib/api/create-shift-assignment"
 import { createShiftPattern } from "@/lib/api/create-shift-pattern"
 import { createShiftSwapRequest } from "@/lib/api/create-shift-swap-request"
