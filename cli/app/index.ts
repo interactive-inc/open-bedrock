@@ -88,6 +88,15 @@ import reviewSubmitHandler from "@/app/review/submit/[form_id]/route"
 import roomAvailHandler from "@/app/room/avail/route"
 import roomHandler from "@/app/room/route"
 import roomReserveHandler from "@/app/room/reserve/route"
+import shiftAssignHandler from "@/app/shift/assign/route"
+import shiftAssignmentsHandler from "@/app/shift/assignments/route"
+import shiftHandler from "@/app/shift/route"
+import shiftMineHandler from "@/app/shift/mine/route"
+import shiftPatternCreateHandler from "@/app/shift/pattern-create/route"
+import shiftPatternsHandler from "@/app/shift/patterns/route"
+import shiftPublishHandler from "@/app/shift/publish/[id]/route"
+import shiftSwapApproveHandler from "@/app/shift/swap-approve/[id]/route"
+import shiftSwapHandler from "@/app/shift/swap/route"
 import skillHandler from "@/app/skill/route"
 import skillListHandler from "@/app/skill/list/route"
 import skillMineHandler from "@/app/skill/mine/route"
@@ -247,6 +256,16 @@ routes.post("/training/enrollments", ...trainingEnrollmentsHandler)
 routes.post("/training/mine", ...trainingMineHandler)
 routes.post("/training/enroll", ...trainingEnrollHandler)
 routes.post("/training/complete/:id?", ...trainingCompleteHandler)
+
+routes.post("/shift", ...shiftHandler)
+routes.post("/shift/assignments", ...shiftAssignmentsHandler)
+routes.post("/shift/mine", ...shiftMineHandler)
+routes.post("/shift/assign", ...shiftAssignHandler)
+routes.post("/shift/publish/:id?", ...shiftPublishHandler)
+routes.post("/shift/patterns", ...shiftPatternsHandler)
+routes.post("/shift/pattern-create", ...shiftPatternCreateHandler)
+routes.post("/shift/swap", ...shiftSwapHandler)
+routes.post("/shift/swap-approve/:id?", ...shiftSwapApproveHandler)
 
 routes.post("/batch", ...batchHandler)
 routes.post("/dashboard", ...dashboardHandler)

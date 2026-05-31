@@ -44,6 +44,14 @@ commands:
   training mine               自分の受講一覧
   training enroll             受講申込 (--course [--employee-code --due])
   training complete <id>      受講完了 (--score)
+  shift assignments           シフト割当一覧 (--from --to --department-code)
+  shift mine                  自分のシフト割当一覧
+  shift assign                シフト割当作成 (--employee-code --date --pattern-code [--note])
+  shift publish <id>          シフト割当を公開
+  shift patterns              シフトパターン一覧
+  shift pattern-create        シフトパターン作成 (--code --name --start --end [--break])
+  shift swap                  シフト交代申請 (--target-employee-code --date [--note])
+  shift swap-approve <id>     シフト交代申請を承認
   batch                       バッチ状況
   dashboard                   ダッシュボード集計
 
