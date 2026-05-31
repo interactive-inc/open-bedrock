@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -36,20 +35,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    const cols = ["id", "name", "capacity", "available", "conflicts"]
-
-    return c.text(
-      table(
-        cols,
-        rows.map((row) => [
-          String(row.room.id),
-          String(row.room.name),
-          String(row.room.capacity),
-          row.available ? "○" : "×",
-          (row.conflicts ?? []).map((conflict) => conflict.purpose ?? "").join(", "),
-        ]),
-        "会議室空き状況",
-      ),
-    )
+    return c.json(rows)
   },
 )

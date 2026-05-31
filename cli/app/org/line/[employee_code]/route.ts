@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -17,8 +16,6 @@ export default factory.createHandlers(
 
     if (!employeeCode) throw new UsageError("引数 <employee_code> が必要です")
 
-    const cols = ["depth", "employee_code", "employee_name", "position"]
-
     const client = await createClient()
 
     const response = await client.org["reporting-line"][":employee_code"].$get({
@@ -27,12 +24,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    return c.text(
-      table(
-        cols,
-        rows.map((row) => cols.map((col) => String(row[col as keyof typeof row]))),
-        `${employeeCode} のレポートライン (${rows.length}件)`,
-      ),
-    )
+    return c.json(rows)
   },
 )

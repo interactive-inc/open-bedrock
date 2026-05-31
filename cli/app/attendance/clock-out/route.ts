@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { pretty } from "@/lib/render/table"
 import { factory } from "@/factory"
 
 export const help = `karte attendance clock-out [--note <n>]`
@@ -23,6 +22,6 @@ export default factory.createHandlers(
 
     const response = await client.attendance["clock-out"].$post()
 
-    return c.text(pretty(await response.json()))
+    return c.json(await response.json())
   },
 )

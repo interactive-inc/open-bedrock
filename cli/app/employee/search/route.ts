@@ -1,12 +1,12 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 
-export const help = `karte employee search — 社員検索`
+export const help = `karte employee search — 社員検索
 
-const COLS = ["code", "name", "dept_name", "position", "email", "status", "role"]
+usage:
+  karte employee search [--q <キーワード>] [--dept <部署名>] [--status active|leave|retired]`
 
 export default factory.createHandlers(
   zValidator(
@@ -31,12 +31,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    return c.text(
-      table(
-        COLS,
-        rows.map((row) => COLS.map((col) => String(row[col as keyof typeof row]))),
-        `社員検索結果 (${rows.length}件)`,
-      ),
-    )
+    return c.json(rows)
   },
 )

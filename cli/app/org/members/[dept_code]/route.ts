@@ -1,7 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { table } from "@/lib/render/table"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -17,8 +16,6 @@ export default factory.createHandlers(
 
     if (!deptCode) throw new UsageError("引数 <dept_code> が必要です")
 
-    const cols = ["employee_code", "employee_name", "position", "is_manager"]
-
     const client = await createClient()
 
     const response = await client.org.departments[":code"].members.$get({
@@ -27,12 +24,6 @@ export default factory.createHandlers(
 
     const rows = await response.json()
 
-    return c.text(
-      table(
-        cols,
-        rows.map((row) => cols.map((col) => String(row[col as keyof typeof row]))),
-        `${deptCode} のメンバー (${rows.length}件)`,
-      ),
-    )
+    return c.json(rows)
   },
 )
