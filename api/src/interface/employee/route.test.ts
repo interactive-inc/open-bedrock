@@ -110,6 +110,34 @@ describe("GET /employees", () => {
     }
   })
 
+  test("treats % as a literal so it cannot match every employee", async () => {
+    const response = await request("/employees?q=%25", await adminToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
+  test("treats _ as a literal so it cannot match a single character", async () => {
+    const response = await request("/employees?q=_", await adminToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
   test("filters by department name via dept", async () => {
     const response = await request("/employees?dept=Engineering", await adminToken())
 

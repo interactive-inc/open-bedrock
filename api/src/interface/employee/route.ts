@@ -1,9 +1,10 @@
 import { factory } from "@/lib/factory"
+import { likeKeyword } from "@/interface/shared/like-keyword"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, eq, like, or } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 export const GET = factory.createHandlers(
@@ -22,12 +23,10 @@ export const GET = factory.createHandlers(
     const conditions: Array<SQL> = []
 
     if (query.q !== undefined) {
-      const keyword = `%${query.q}%`
-
       const keywordMatch = or(
-        like(employees.name, keyword),
-        like(employees.code, keyword),
-        like(employees.email, keyword),
+        likeKeyword(employees.name, query.q),
+        likeKeyword(employees.code, query.q),
+        likeKeyword(employees.email, query.q),
       )
 
       if (keywordMatch !== undefined) {
