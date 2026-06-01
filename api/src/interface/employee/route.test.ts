@@ -65,7 +65,7 @@ describe("GET /employees", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(9)
+      expect(parsed.data.length).toBe(11)
 
       const lead = parsed.data.find((employee) => employee.code === "E001")
 
@@ -163,6 +163,36 @@ describe("GET /employees", () => {
 
     if (parsed.success) {
       expect(parsed.data.length).toBe(9)
+    }
+  })
+
+  test("filters by status leave", async () => {
+    const response = await request("/employees?status=leave", await adminToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.code).toBe("E017")
+    }
+  })
+
+  test("filters by status retired", async () => {
+    const response = await request("/employees?status=retired", await adminToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.code).toBe("E018")
     }
   })
 
