@@ -84,7 +84,7 @@ import * as shiftAssignmentPublishRoute from "@/interface/shift/assignments/[id]
 import * as shiftPatternCreateRoute from "@/interface/shift/patterns/create-route"
 import * as shiftPatternListRoute from "@/interface/shift/patterns/route"
 import * as shiftSwapRequestApproveRoute from "@/interface/shift/swap-requests/[id]/approve/route"
-import * as shiftSwapRequestCreateRoute from "@/interface/shift/swap-requests/route"
+import * as shiftSwapRequestRoute from "@/interface/shift/swap-requests/route"
 import * as skillListRoute from "@/interface/skill/skills/route"
 import * as skillMeRoute from "@/interface/skill/skills/me/route"
 import * as skillMeUpdateRoute from "@/interface/skill/skills/me/update/route"
@@ -201,7 +201,8 @@ export const app = factory
   .get("/shift/patterns", ...shiftPatternListRoute.GET)
   .post("/shift/patterns", ...shiftPatternCreateRoute.POST)
   .post("/shift/swap-requests/:id/approve", ...shiftSwapRequestApproveRoute.POST)
-  .post("/shift/swap-requests", ...shiftSwapRequestCreateRoute.POST)
+  .get("/shift/swap-requests", ...shiftSwapRequestRoute.GET)
+  .post("/shift/swap-requests", ...shiftSwapRequestRoute.POST)
   .post("/review-cycles", ...reviewCycleCreateRoute.POST)
   .get("/review-cycles", ...reviewCycleListRoute.GET)
   .post("/review-cycles/:cycle_id/close", ...reviewCycleCloseRoute.POST)
