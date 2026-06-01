@@ -1,9 +1,57 @@
 import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-request"
+import { canApproveShiftSwap } from "@/domain/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
+import { employees, shiftSwapRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
+import { eq } from "drizzle-orm"
+import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
+
+// GET /shift/swap-requests — 承認権限者向けの保留中のシフト交代申請一覧
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  if (canApproveShiftSwap(session.role) === false) {
+    throw new ForbiddenError()
+  }
+
+  const requester = alias(employees, "requester")
+  const target = alias(employees, "target")
+
+  const rows = await c.var.database
+    .select({
+      swapRequest: shiftSwapRequests,
+      requesterCode: requester.code,
+      targetCode: target.code,
+    })
+    .from(shiftSwapRequests)
+    .leftJoin(requester, eq(requester.id, shiftSwapRequests.requesterEmployeeId))
+    .leftJoin(target, eq(target.id, shiftSwapRequests.targetEmployeeId))
+    .where(eq(shiftSwapRequests.status, "pending"))
+
+  const responseBody = rows.map((row) => ({
+    id: row.swapRequest.id,
+    requester_employee_code: row.requesterCode ?? "",
+    target_employee_code: row.targetCode ?? "",
+    date: row.swapRequest.date,
+    note: row.swapRequest.note,
+    status: row.swapRequest.status,
+    approved_at: row.swapRequest.approvedAt,
+  }))
+
+  return c.json(responseBody, 200)
+})
 
 // POST /shift/swap-requests — 認証された本人がシフト交代を申請する
 export const POST = factory.createHandlers(
