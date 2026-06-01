@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS employees (
   dept_id INTEGER,
   dept_name TEXT,
   position TEXT,
-  status TEXT NOT NULL
+  status TEXT NOT NULL CHECK (status IN ('active', 'leave', 'retired'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_employees_code ON employees (code);

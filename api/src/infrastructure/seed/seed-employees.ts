@@ -10,7 +10,7 @@ type SeedEmployee = {
   deptId: number | null
   deptName: string | null
   position: string | null
-  status: string
+  status: "active" | "leave" | "retired"
 }
 
 export const seedEmployees: ReadonlyArray<SeedEmployee> = [
@@ -23,6 +23,8 @@ export const seedEmployees: ReadonlyArray<SeedEmployee> = [
   buildEmployee(10, "E010", "Gray Ellis", 4, "Sales", "Sales Staff", "member"),
   buildEmployee(13, "E013", "Harper Quinn", 5, "Customer Success", "CS Manager", "member"),
   buildEmployee(16, "E016", "Indi Vaughn", 6, "Administration", "Admin Manager", "member"),
+  buildEmployee(17, "E017", "Jordan Pike", 2, "Human Resources", "HR Staff", "member", "leave"),
+  buildEmployee(18, "E018", "Kris Nolan", 4, "Sales", "Sales Staff", "member", "retired"),
 ]
 
 function buildEmployee(
@@ -33,6 +35,7 @@ function buildEmployee(
   deptName: string,
   position: string,
   role: string,
+  status: "active" | "leave" | "retired" = "active",
 ): SeedEmployee {
   return {
     id,
@@ -44,6 +47,6 @@ function buildEmployee(
     deptId,
     deptName,
     position,
-    status: "active",
+    status,
   }
 }
