@@ -83,6 +83,58 @@ async function request(props: RequestProps): Promise<Response> {
   })
 }
 
+const pendingSwapRequestSchema = z.object({
+  id: z.number(),
+  requester_employee_code: z.string(),
+  target_employee_code: z.string(),
+  date: z.string(),
+  note: z.string().nullable(),
+  status: z.string(),
+  approved_at: z.string().nullable(),
+})
+
+describe("GET /shift/swap-requests", () => {
+  test("an approver gets only pending requests with employee codes", async () => {
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: await tokenFor(1, "admin"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(pendingSwapRequestSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data).toHaveLength(1)
+      expect(parsed.data[0]?.id).toBe(1)
+      expect(parsed.data[0]?.status).toBe("pending")
+      expect(parsed.data[0]?.requester_employee_code).toBe("E005")
+      expect(parsed.data[0]?.target_employee_code).toBe("E004")
+      expect(parsed.data[0]?.note).toBe("Medical appointment")
+    }
+  })
+
+  test("returns 403 for a non-approver role", async () => {
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: await tokenFor(5, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: null,
+    })
+
+    expect(response.status).toBe(401)
+  })
+})
+
 describe("POST /shift/swap-requests", () => {
   test("any authenticated user files a swap request and returns 201", async () => {
     const response = await request({
