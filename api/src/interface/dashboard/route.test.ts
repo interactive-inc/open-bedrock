@@ -104,7 +104,7 @@ describe("GET /dashboard", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_count).toBe(9)
+      expect(parsed.data.employee_count).toBe(11)
       expect(parsed.data.open_goal_count).toBe(5)
       expect(parsed.data.pending_application_count).toBe(3)
       expect(parsed.data.open_survey_count).toBe(2)

@@ -12,7 +12,7 @@ export const employees = sqliteTable("employees", {
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
   position: text("position"),
-  status: text("status").notNull(),
+  status: text("status").notNull().$type<"active" | "leave" | "retired">(),
 })
 
 export type EmployeeRow = InferSelectModel<typeof employees>
