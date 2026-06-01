@@ -99,6 +99,20 @@ describe("GET /knowledge", () => {
     }
   })
 
+  test("treats % as a literal so it cannot match every article", async () => {
+    const response = await request("/knowledge?q=%25", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/knowledge", null)
 
