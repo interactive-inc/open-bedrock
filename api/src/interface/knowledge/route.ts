@@ -1,7 +1,8 @@
 import { factory } from "@/lib/factory"
+import { likeKeyword } from "@/interface/shared/like-keyword"
 import { knowledgeArticles } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, eq, like, or, sql } from "drizzle-orm"
+import { and, eq, or, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -16,12 +17,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   if (keyword !== null) {
-    const pattern = `%${keyword}%`
-
     const keywordMatch = or(
-      like(knowledgeArticles.title, pattern),
-      like(knowledgeArticles.bodyMd, pattern),
-      like(sql`COALESCE(${knowledgeArticles.tags}, '')`, pattern),
+      likeKeyword(knowledgeArticles.title, keyword),
+      likeKeyword(knowledgeArticles.bodyMd, keyword),
+      likeKeyword(sql`COALESCE(${knowledgeArticles.tags}, '')`, keyword),
     )
 
     if (keywordMatch !== undefined) {
