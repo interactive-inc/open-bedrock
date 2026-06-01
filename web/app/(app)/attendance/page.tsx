@@ -7,6 +7,8 @@ import { MyAttendanceList } from "@/app/(app)/attendance/my-attendance-list"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "勤怠" }
+
 type Props = {
   searchParams: Promise<{ month?: string; from?: string; to?: string }>
 }

@@ -14,6 +14,8 @@ import { getMe } from "@/lib/api/get-me"
 import { getSalaryRevisions } from "@/lib/api/get-salary-revisions"
 import { canManagePayroll } from "@/lib/payroll/can-manage-payroll"
 
+export const metadata = { title: "給与改定" }
+
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 // 給与改定履歴画面。自分の社員コードで改定履歴を RSC で取得しテーブル表示する。

@@ -7,6 +7,8 @@ import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
+export const metadata = { title: "通知" }
+
 // 通知画面。自分宛ての通知一覧を RSC で取得して表示し、特権ロールには作成フォームを併設する。
 // 作成は api 側でも特権ロール限定のため、非特権ロールには作成フォームを出さない。
 export default async function NotificationsPage() {

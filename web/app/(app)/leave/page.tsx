@@ -6,6 +6,8 @@ import { MyLeaveRequestsTable } from "@/app/(app)/leave/my-leave-requests-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "休暇" }
+
 // 休暇画面。残日数カード・申請フォーム・自分の申請一覧を並べる RSC。
 // 承認者は承認 inbox へ遷移できる。
 export default function LeavePage() {

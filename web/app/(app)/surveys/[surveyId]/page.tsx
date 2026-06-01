@@ -6,6 +6,8 @@ import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/survey-ques
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { Button } from "@/components/ui/button"
 
+export const metadata = { title: "サーベイ回答" }
+
 type Props = {
   // Next.js 16 では params は Promise なので await して使う。
   params: Promise<{ surveyId: string }>

@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { SurveyListTable } from "@/app/(app)/surveys/survey-list-table"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "サーベイ" }
+
 // アンケート一覧画面 (/surveys)。
 // 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
 export default function SurveysPage() {

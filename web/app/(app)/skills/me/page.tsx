@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "自分のスキル" }
+
 // /skills/me 自分のスキル画面。本人の登録済みスキル一覧と、登録/更新フォームを並べる。
 export default function MySkillsPage() {
   return (

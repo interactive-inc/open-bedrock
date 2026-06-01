@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { DashboardSummaryCards } from "@/app/(app)/dashboard/dashboard-summary-cards"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "ダッシュボード" }
+
 // Dashboard 画面。非同期サマリは Suspense 境界で Skeleton をフォールバックにする。
 export default function DashboardPage() {
   return (

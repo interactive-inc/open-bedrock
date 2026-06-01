@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getAssetByCode } from "@/lib/api/get-asset-by-code"
 
+export const metadata = { title: "備品詳細" }
+
 type Props = {
   params: Promise<{ code: string }>
 }

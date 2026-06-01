@@ -3,6 +3,8 @@ import Link from "next/link"
 import { OrgMembersTable } from "@/app/(app)/org/departments/[code]/org-members-table"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "部署メンバー" }
+
 type Props = {
   params: Promise<{ code: string }>
 }

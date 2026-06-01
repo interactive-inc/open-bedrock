@@ -14,6 +14,8 @@ import {
 import { getExpenseInbox } from "@/lib/api/get-expense-inbox"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
 
+export const metadata = { title: "承認待ちの経費" }
+
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 // 経費承認 inbox 画面。承認者向けに承認待ちの経費を RSC で取得し一覧表示する。

@@ -16,6 +16,8 @@ import { getMyExpenses } from "@/lib/api/get-my-expenses"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
 import { ExpenseCreateForm } from "@/app/(app)/expense/expense-create-form"
 
+export const metadata = { title: "経費" }
+
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 // 自分の経費一覧画面。RSC でサーバ取得し、テーブル表示する。申請フォームも併設。

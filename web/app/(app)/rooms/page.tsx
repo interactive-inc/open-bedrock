@@ -4,6 +4,8 @@ import { RoomAvailabilitySection } from "@/app/(app)/rooms/room-availability-sec
 import { Skeleton } from "@/components/ui/skeleton"
 import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
 
+export const metadata = { title: "会議室" }
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
 }

@@ -13,6 +13,8 @@ import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 
+export const metadata = { title: "シフト" }
+
 // シフト画面。自分の担当シフト・シフトパターン一覧を RSC で取得して表示し、交代申請フォームを併設する。
 // 特権ロールには割当の横断一覧・割当作成・パターン作成フォームを追加で表示する。
 export default async function ShiftPage() {

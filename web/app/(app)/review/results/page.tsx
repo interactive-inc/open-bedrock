@@ -18,6 +18,8 @@ import { getReviewResults } from "@/lib/api/get-review-results"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
+export const metadata = { title: "評価結果" }
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }

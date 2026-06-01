@@ -5,6 +5,8 @@ import { AttendanceFilterForm } from "@/app/(app)/attendance/attendance-filter-f
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "勤怠（全体）" }
+
 type Props = {
   searchParams: Promise<{ employee_id?: string; from?: string; to?: string }>
 }

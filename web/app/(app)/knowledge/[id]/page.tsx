@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getKnowledgeDetail } from "@/lib/api/get-knowledge-detail"
 
+export const metadata = { title: "ナレッジ詳細" }
+
 type Props = {
   params: Promise<{ id: string }>
 }

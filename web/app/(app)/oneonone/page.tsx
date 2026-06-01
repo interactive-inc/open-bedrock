@@ -3,6 +3,8 @@ import { OneOnOneCreateForm } from "@/app/(app)/oneonone/oneonone-create-form"
 import { OneOnOneList } from "@/app/(app)/oneonone/oneonone-list"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "1on1" }
+
 // 1on1 画面。記録作成フォームと履歴一覧を並べる RSC。
 // 一覧は本人参加分を取得するため動的レンダリングになる。
 export default function OneOnOnePage() {

@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { BatchJobList } from "@/app/(app)/batch/batch-job-list"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "バッチ" }
+
 // バッチジョブ状況一覧（/batch）画面。ジョブ名 / 状態 / 最終実行を一覧表示する RSC。
 // データ取得は子の非同期 RSC に委譲し、ここでは Suspense でフォールバックを出す。
 export default function BatchPage() {

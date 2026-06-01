@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "オンボーディング" }
+
 // オンボーディング画面。テンプレ一覧・自分のタスク・割当フォームを Suspense 境界で並べる。
 export default function OnboardingPage() {
   return (

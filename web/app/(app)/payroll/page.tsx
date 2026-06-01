@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table"
 import { getMyPayslips } from "@/lib/api/get-my-payslips"
 
+export const metadata = { title: "給与明細" }
+
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 // 給与明細画面。自分の給与明細一覧を RSC で取得しテーブル表示する。

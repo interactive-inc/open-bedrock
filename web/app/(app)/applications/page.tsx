@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table"
 import { getMyApplications } from "@/lib/api/get-my-applications"
 
+export const metadata = { title: "申請" }
+
 // 自分の申請一覧画面。RSC でサーバ取得し、テーブル表示する。
 export default function MyApplicationsPage() {
   return (
