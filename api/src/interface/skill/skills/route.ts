@@ -1,7 +1,8 @@
 import { factory } from "@/lib/factory"
+import { likeKeyword } from "@/interface/shared/like-keyword"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { skills } from "@/schema"
-import { and, eq, like, or } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -12,9 +13,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const conditions: Array<SQL> = []
 
   if (q !== null) {
-    const keyword = `%${q}%`
-
-    const keywordMatch = or(like(skills.name, keyword), like(skills.code, keyword))
+    const keywordMatch = or(likeKeyword(skills.name, q), likeKeyword(skills.code, q))
 
     if (keywordMatch !== undefined) {
       conditions.push(keywordMatch)

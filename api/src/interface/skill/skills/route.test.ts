@@ -98,6 +98,35 @@ describe("GET /skills", () => {
     }
   })
 
+  test("treats % as a literal so it cannot match every skill", async () => {
+    const response = await request({ path: "/skills?q=%25", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(skillResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
+  test("treats _ as a literal so it matches only codes containing an underscore", async () => {
+    const response = await request({ path: "/skills?q=_", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(skillResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.every((skill) => skill.code.includes("_"))).toBe(true)
+      expect(parsed.data.length).toBeLessThan(12)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/skills", token: null })
 
