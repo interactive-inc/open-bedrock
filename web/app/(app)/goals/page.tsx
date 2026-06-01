@@ -4,6 +4,8 @@ import { GoalCreateForm } from "@/app/(app)/goals/goal-create-form"
 import { GoalList } from "@/app/(app)/goals/goal-list"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "目標" }
+
 type Props = {
   searchParams: Promise<{ period?: string; employee_id?: string }>
 }

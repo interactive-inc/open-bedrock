@@ -3,6 +3,8 @@ import { KnowledgeResultList } from "@/app/(app)/knowledge/knowledge-result-list
 import { KnowledgeSearchForm } from "@/app/(app)/knowledge/knowledge-search-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "ナレッジ" }
+
 type Props = {
   searchParams: Promise<{ q?: string; category?: string }>
 }

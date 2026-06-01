@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
 import { canManagePayroll } from "@/lib/payroll/can-manage-payroll"
 
+export const metadata = { title: "給与管理" }
+
 // 給与管理画面（特権ロール向け）。給与明細の発行と給与改定の作成フォームを並べる RSC。
 // 非特権ロールには注意書きを出す（実発行は api 側でも 403 で弾かれる）。
 export default async function PayrollAdminPage() {

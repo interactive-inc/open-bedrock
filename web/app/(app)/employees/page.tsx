@@ -7,6 +7,8 @@ import type {
   EmployeeStatusFilter,
 } from "@/lib/api/types/employee-search-filter"
 
+export const metadata = { title: "従業員" }
+
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
 }

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getApplicationTemplate } from "@/lib/api/get-application-template"
 
+export const metadata = { title: "申請テンプレート詳細" }
+
 type Props = {
   params: Promise<{ code: string }>
 }

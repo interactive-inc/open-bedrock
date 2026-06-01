@@ -4,6 +4,8 @@ import { getGoalList } from "@/lib/api/get-goal-list"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+export const metadata = { title: "目標詳細" }
+
 type Props = {
   params: Promise<{ id: string }>
 }

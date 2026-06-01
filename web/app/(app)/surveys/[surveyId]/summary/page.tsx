@@ -4,6 +4,8 @@ import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summar
 import { getSurveySummary } from "@/lib/api/get-survey-summary"
 import { Button } from "@/components/ui/button"
 
+export const metadata = { title: "サーベイ集計" }
+
 type Props = {
   // Next.js 16 では params は Promise なので await して使う。
   params: Promise<{ surveyId: string }>

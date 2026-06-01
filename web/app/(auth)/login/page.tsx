@@ -1,6 +1,8 @@
 import { LoginForm } from "@/app/(auth)/login/login-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
+export const metadata = { title: "ログイン" }
+
 // /login 画面の RSC ラッパ。フォーム本体は Client Component に委譲する。
 export default function LoginPage() {
   return (

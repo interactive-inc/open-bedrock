@@ -10,6 +10,8 @@ import { getMyReviewForms } from "@/lib/api/get-my-review-forms"
 import { getReviewCycles } from "@/lib/api/get-review-cycles"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
+export const metadata = { title: "評価" }
+
 // 評価サイクル画面。サイクル一覧と自分の評価フォームを RSC で取得して表示する。
 // 特権ロールにはサイクル作成・結果検索フォームを併設する。
 export default async function ReviewPage() {

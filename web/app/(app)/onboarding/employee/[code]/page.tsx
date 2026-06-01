@@ -3,6 +3,8 @@ import Link from "next/link"
 import { OnboardingEmployeeView } from "@/app/(app)/onboarding/employee/[code]/onboarding-employee-view"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "オンボーディング" }
+
 type Props = {
   params: Promise<{ code: string }>
 }

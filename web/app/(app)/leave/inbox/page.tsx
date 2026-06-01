@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table"
 import { getLeaveInbox } from "@/lib/api/get-leave-inbox"
 
+export const metadata = { title: "承認待ちの休暇" }
+
 // 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
 export default function LeaveInboxPage() {
   return (

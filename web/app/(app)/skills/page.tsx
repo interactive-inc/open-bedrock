@@ -5,6 +5,8 @@ import { SkillTable } from "@/app/(app)/skills/skill-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "スキル" }
+
 type Props = {
   searchParams: Promise<{ q?: string; category?: string }>
 }

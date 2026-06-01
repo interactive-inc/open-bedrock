@@ -3,6 +3,8 @@ import { CareerPostingsSection } from "@/app/(app)/career/career-postings-sectio
 import { CareerSheetSection } from "@/app/(app)/career/career-sheet-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "キャリア" }
+
 // キャリア画面。本人のキャリアシート編集と社内公募一覧・応募を 1 画面に集約する。
 // 各セクションは非同期 RSC を Suspense 境界で囲み Skeleton をフォールバックにする。
 export default function CareerPage() {

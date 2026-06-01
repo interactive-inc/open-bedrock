@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table"
 import { getAssetList } from "@/lib/api/get-asset-list"
 
+export const metadata = { title: "備品" }
+
 type Props = {
   searchParams: Promise<{ kind?: string; status?: string }>
 }

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getPayslipDetail } from "@/lib/api/get-payslip-detail"
 
+export const metadata = { title: "給与明細詳細" }
+
 type Props = {
   params: Promise<{ id: string }>
 }

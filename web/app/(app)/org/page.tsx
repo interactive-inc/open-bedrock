@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { OrgTreeView } from "@/app/(app)/org/org-tree-view"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "組織" }
+
 // 組織図トップ（部署ツリー /org/tree）。ツリー取得は Suspense 境界で Skeleton をフォールバックにする。
 export default function OrgPage() {
   return (

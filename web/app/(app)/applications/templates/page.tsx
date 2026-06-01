@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getApplicationTemplates } from "@/lib/api/get-application-templates"
 
+export const metadata = { title: "申請テンプレート" }
+
 // 申請テンプレ一覧画面。カード表示し、各テンプレ詳細へ遷移できる。
 export default function ApplicationTemplatesPage() {
   return (

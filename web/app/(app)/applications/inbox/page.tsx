@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table"
 import { getApplicationInbox } from "@/lib/api/get-application-inbox"
 
+export const metadata = { title: "承認待ちの申請" }
+
 // 承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
 export default function ApplicationInboxPage() {
   return (

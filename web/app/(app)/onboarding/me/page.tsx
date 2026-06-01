@@ -3,6 +3,8 @@ import { MyTasksList } from "@/app/(app)/onboarding/my-tasks-list"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
+export const metadata = { title: "自分のオンボーディング" }
+
 // 自分のオンボーディングタスク一覧画面（/onboarding/me）。
 export default function OnboardingMePage() {
   return (
