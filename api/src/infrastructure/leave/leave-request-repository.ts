@@ -73,4 +73,42 @@ export class LeaveRequestRepository {
       return error instanceof Error ? error : new Error("failed to update leave_request")
     }
   }
+
+  // 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
+  async revise(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
+    try {
+      if (leaveRequest.id === null) {
+        return new Error("cannot revise unsaved leave request")
+      }
+
+      const rows = await this.c.var.database
+        .update(leaveRequests)
+        .set({
+          leaveType: leaveRequest.leaveType,
+          startDate: leaveRequest.startDate,
+          endDate: leaveRequest.endDate,
+          days: leaveRequest.days,
+          reason: leaveRequest.reason,
+        })
+        .where(eq(leaveRequests.id, leaveRequest.id))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : LeaveRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to revise leave_request")
+    }
+  }
+
+  // 休暇申請を削除する。
+  async delete(leaveRequestId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(leaveRequests).where(eq(leaveRequests.id, leaveRequestId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete leave_request")
+    }
+  }
 }

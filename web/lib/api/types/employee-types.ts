@@ -8,3 +8,30 @@ export type EmployeeResponse = {
   status: string
   role: string
 }
+
+// 在籍状況。api の status enum と同形。
+export type EmployeeStatus = "active" | "leave" | "retired"
+
+// POST /employees のリクエストボディ。
+export type EmployeeCreateRequest = {
+  code: string
+  name: string
+  email: string
+  password: string
+  role: string
+  dept_id?: number | null
+  dept_name?: string | null
+  position?: string | null
+  status: EmployeeStatus
+}
+
+// PUT /employees/:code のリクエストボディ。
+export type EmployeeUpdateRequest = {
+  name: string
+  email: string
+  role: string
+  dept_id?: number | null
+  dept_name?: string | null
+  position?: string | null
+  status: EmployeeStatus
+}

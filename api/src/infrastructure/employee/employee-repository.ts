@@ -4,6 +4,19 @@ import { employees } from "@/schema"
 import { eq, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
+// 新規従業員の登録に必要な値。id は DB が採番するため含めない。
+export type NewEmployee = {
+  code: string
+  name: string
+  email: string
+  passwordHash: string
+  role: string
+  deptId: number | null
+  deptName: string | null
+  position: string | null
+  status: "active" | "leave" | "retired"
+}
+
 export class EmployeeRepository {
   constructor(private readonly c: Context) {}
 
@@ -28,6 +41,68 @@ export class EmployeeRepository {
       return row === undefined ? null : Employee.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load employee")
+    }
+  }
+
+  // 新規従業員を登録し、採番後の行を返す。
+  async create(newEmployee: NewEmployee): Promise<Employee | Error> {
+    try {
+      const rows = await this.c.var.database
+        .insert(employees)
+        .values({
+          code: newEmployee.code,
+          name: newEmployee.name,
+          email: newEmployee.email,
+          passwordHash: newEmployee.passwordHash,
+          role: newEmployee.role,
+          deptId: newEmployee.deptId,
+          deptName: newEmployee.deptName,
+          position: newEmployee.position,
+          status: newEmployee.status,
+        })
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? new Error("failed to insert employee") : Employee.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to insert employee")
+    }
+  }
+
+  // 氏名・メール・ロール・部署・役職・在籍状況を更新する。code と認証情報には触れない。
+  async updateProfile(employee: Employee): Promise<Employee | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(employees)
+        .set({
+          name: employee.name,
+          email: employee.email,
+          role: employee.role,
+          deptId: employee.deptId,
+          deptName: employee.deptName,
+          position: employee.position,
+          status: employee.status,
+        })
+        .where(eq(employees.code, employee.code))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Employee.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update employee")
+    }
+  }
+
+  // 従業員を削除する。
+  async delete(code: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(employees).where(eq(employees.code, code))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete employee")
     }
   }
 }

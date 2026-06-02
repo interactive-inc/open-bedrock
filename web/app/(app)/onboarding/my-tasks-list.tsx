@@ -1,5 +1,6 @@
 import { getOnboardingMe } from "@/lib/api/get-onboarding-me"
 import { CompleteTaskButton } from "@/app/(app)/onboarding/complete-task-button"
+import { UncompleteTaskButton } from "@/app/(app)/onboarding/uncomplete-task-button"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/table"
 
 // GET /onboarding/me を取得して自分のタスク一覧を描画する非同期 RSC。
-// pending のタスクには完了ボタンを出す。
+// pending のタスクには完了ボタン、done のタスクには取り消しボタンを出す。
 export async function MyTasksList() {
   const tasks = await getOnboardingMe()
 
@@ -51,7 +52,11 @@ export async function MyTasksList() {
               {task.status === "pending" ? (
                 <CompleteTaskButton taskId={task.id} />
               ) : (
-                <span className="text-xs text-muted-foreground">{task.completed_at ?? "—"}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="text-xs text-muted-foreground">{task.completed_at ?? "—"}</span>
+
+                  <UncompleteTaskButton taskId={task.id} />
+                </div>
               )}
             </TableCell>
           </TableRow>

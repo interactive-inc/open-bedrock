@@ -103,4 +103,27 @@ export class LeaveRequest implements Props {
       decidedComment: props.decidedComment,
     })
   }
+
+  // pending の申請のみ変更・取り下げできる。決定済みは不可。
+  get isModifiable(): boolean {
+    return this.status === "pending"
+  }
+
+  // 申請内容（種別・期間・日数・理由）を差し替えた新しい申請を返す。
+  withRevised(props: {
+    leaveType: "annual" | "special"
+    startDate: string
+    endDate: string
+    days: number
+    reason: string | null
+  }): LeaveRequest {
+    return new LeaveRequest({
+      ...this.props,
+      leaveType: props.leaveType,
+      startDate: props.startDate,
+      endDate: props.endDate,
+      days: props.days,
+      reason: props.reason,
+    })
+  }
 }

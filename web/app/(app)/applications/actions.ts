@@ -1,0 +1,90 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { updateApplication } from "@/lib/api/update-application"
+import { withdrawApplication } from "@/lib/api/withdraw-application"
+
+// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+export type ApplicationActionState = {
+  ok: boolean
+  error: string | null
+}
+
+// 申請内容更新 Server Action。application_id と payload(JSON 文字列) が必須。
+// 審査済みや本人以外は api がエラーを返す。成功時は /applications を revalidate する。
+export async function updateApplicationAction(
+  previousState: ApplicationActionState,
+  formData: FormData,
+): Promise<ApplicationActionState> {
+  const applicationId = toApplicationId(formData.get("application_id"))
+
+  if (applicationId === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const payload = toPayload(formData.get("payload"))
+
+  if (payload instanceof Error) {
+    return { ok: false, error: "申請内容は JSON 形式で入力してください" }
+  }
+
+  const updated = await updateApplication(applicationId, payload)
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "申請の更新に失敗しました（審査済みの可能性があります）" }
+  }
+
+  revalidatePath("/applications")
+
+  return { ok: true, error: null }
+}
+
+// 申請取り下げ Server Action。application_id が必須。成功時は /applications を revalidate する。
+export async function withdrawApplicationAction(
+  previousState: ApplicationActionState,
+  formData: FormData,
+): Promise<ApplicationActionState> {
+  const applicationId = toApplicationId(formData.get("application_id"))
+
+  if (applicationId === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const withdrawn = await withdrawApplication(applicationId)
+
+  if (withdrawn instanceof Error) {
+    return { ok: false, error: "申請の取り下げに失敗しました" }
+  }
+
+  revalidatePath("/applications")
+
+  return { ok: true, error: null }
+}
+
+// application_id の FormData 値を正の整数へ。不正値は null。
+function toApplicationId(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string" || value === "") {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  if (Number.isInteger(parsed) === false || parsed <= 0) {
+    return null
+  }
+
+  return parsed
+}
+
+// payload の FormData 値(JSON 文字列) を unknown へ。解析できなければ Error。
+function toPayload(value: FormDataEntryValue | null): unknown | Error {
+  if (typeof value !== "string" || value.trim() === "") {
+    return new Error("payload is empty")
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch (error) {
+    return error instanceof Error ? error : new Error("invalid payload json")
+  }
+}

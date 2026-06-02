@@ -1,3 +1,4 @@
+import type { OneOnOneRow } from "@/schema"
 import { z } from "zod"
 
 const zProps = z.object({
@@ -45,6 +46,33 @@ export class OneOnOne implements Props {
       memberId: props.memberId,
       managerId: props.managerId,
       heldAt: props.heldAt,
+      topics: props.topics,
+      managerNote: props.managerNote,
+      nextAction: props.nextAction,
+    })
+  }
+
+  // DB の行から復元する。
+  static fromRow(row: OneOnOneRow): OneOnOne {
+    return new OneOnOne({
+      id: row.id,
+      memberId: row.memberId,
+      managerId: row.managerId,
+      heldAt: row.heldAt,
+      topics: row.topics,
+      managerNote: row.managerNote,
+      nextAction: row.nextAction,
+    })
+  }
+
+  // 記録内容（議題・上長メモ・次のアクション）を差し替えた新しい記録を返す。
+  withRecord(props: {
+    topics: string | null
+    managerNote: string | null
+    nextAction: string | null
+  }): OneOnOne {
+    return new OneOnOne({
+      ...this.props,
       topics: props.topics,
       managerNote: props.managerNote,
       nextAction: props.nextAction,

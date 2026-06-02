@@ -1,0 +1,149 @@
+"use client"
+
+import { useActionState, useState } from "react"
+import {
+  updateCareerApplicationAction,
+  withdrawCareerApplicationAction,
+} from "@/app/(app)/career/actions"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import type { CareerApplication } from "@/lib/api/types/career-types"
+
+type Props = {
+  applications: ReadonlyArray<CareerApplication>
+}
+
+const statusLabels: Record<CareerApplication["status"], string> = {
+  applied: "選考中",
+  accepted: "合格",
+  rejected: "不合格",
+}
+
+// 自分の公募応募一覧。選考中の応募だけ変更（Dialog）と取り下げを許可する表示コンポーネント。
+export function MyApplicationsList(props: Props) {
+  if (props.applications.length === 0) {
+    return <p className="text-sm text-muted-foreground">応募はありません</p>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>公募 ID</TableHead>
+          <TableHead>メッセージ</TableHead>
+          <TableHead>状態</TableHead>
+          <TableHead className="text-right">操作</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {props.applications.map((application) => (
+          <TableRow key={application.id}>
+            <TableCell className="font-medium">{application.posting_id}</TableCell>
+
+            <TableCell>{application.message ?? "-"}</TableCell>
+
+            <TableCell>
+              <Badge variant="secondary">{statusLabels[application.status]}</Badge>
+            </TableCell>
+
+            <TableCell>
+              <div className="flex justify-end gap-2">
+                {application.status === "applied" ? (
+                  <UpdateApplicationDialog application={application} />
+                ) : null}
+
+                {application.status === "applied" ? (
+                  <WithdrawApplicationButton applicationId={application.id} />
+                ) : null}
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+// 応募メッセージ変更フォームを Dialog で開く。
+function UpdateApplicationDialog(props: { application: CareerApplication }) {
+  const [open, setOpen] = useState(false)
+
+  const [state, formAction, pending] = useActionState(updateCareerApplicationAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>応募メッセージを変更</DialogTitle>
+
+          <DialogDescription>選考中の応募のみ変更できます。</DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="flex flex-col gap-4">
+          <input type="hidden" name="application_id" value={props.application.id} />
+
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="update_application_message">応募メッセージ</FieldLabel>
+
+              <Textarea
+                id="update_application_message"
+                name="message"
+                rows={3}
+                defaultValue={props.application.message ?? ""}
+              />
+            </Field>
+          </FieldGroup>
+
+          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+
+          <Button type="submit" disabled={pending}>
+            変更を保存
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+function WithdrawApplicationButton(props: { applicationId: number }) {
+  const [state, formAction, pending] = useActionState(withdrawCareerApplicationAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="application_id" value={props.applicationId} />
+
+      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+        取り下げ
+      </Button>
+    </form>
+  )
+}

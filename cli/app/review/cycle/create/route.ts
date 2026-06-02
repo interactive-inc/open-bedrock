@@ -23,16 +23,15 @@ export default factory.createHandlers(
 
     if (!query.title || !query.period) throw new UsageError("--title と --period が必要です")
 
-    const payload: Record<string, unknown> = {
-      title: query.title,
-      period: query.period,
-    }
-
-    if (query.due) payload.dueDate = query.due
-
     const client = await createClient()
 
-    const response = await client["review-cycles"].$post({ json: payload })
+    const response = await client["review-cycles"].$post({
+      json: {
+        title: query.title,
+        period: query.period,
+        dueDate: query.due,
+      },
+    })
 
     return c.json(await response.json())
   },

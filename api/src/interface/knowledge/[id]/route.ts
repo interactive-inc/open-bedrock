@@ -1,8 +1,17 @@
+import { DeleteKnowledgeArticle } from "@/application/knowledge/delete-knowledge-article"
+import { UpdateKnowledgeArticle } from "@/application/knowledge/update-knowledge-article"
 import { factory } from "@/lib/factory"
 import { knowledgeArticles } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BadRequestError, NotFoundError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { eq } from "drizzle-orm"
+import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 const articleIdSchema = z.coerce.number().int().positive()
@@ -35,4 +44,98 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   return c.json(responseBody, 200)
+})
+
+// PUT /knowledge/:id — ナレッジ記事の表題・カテゴリ・タグ・本文を更新（作成者のみ）
+export const PUT = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1),
+      category: z.string().min(1),
+      tags: z.string().nullable().optional(),
+      body_md: z.string().min(1),
+    }),
+  ),
+  async (c) => {
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
+
+    const parsedId = articleIdSchema.safeParse(c.req.param("id"))
+
+    if (parsedId.success === false) {
+      throw new BadRequestError("invalid knowledge id")
+    }
+
+    const json = c.req.valid("json")
+
+    const article = await new UpdateKnowledgeArticle(c).run({
+      articleId: parsedId.data,
+      authorId: viewer.employeeId,
+      title: json.title,
+      category: json.category,
+      tags: json.tags ?? null,
+      bodyMd: json.body_md,
+    })
+
+    if (article instanceof Error) {
+      throw new InternalError("failed to update knowledge")
+    }
+
+    if ("reason" in article) {
+      if (article.reason === "article_not_found") {
+        throw new NotFoundError("knowledge not found")
+      }
+
+      throw new ForbiddenError("not the author")
+    }
+
+    const responseBody = {
+      id: article.id,
+      title: article.title,
+      category: article.category,
+      tags: article.tags,
+      body_md: article.bodyMd,
+    }
+
+    return c.json(responseBody, 200)
+  },
+)
+
+// DELETE /knowledge/:id — ナレッジ記事を削除（作成者のみ）
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const parsedId = articleIdSchema.safeParse(c.req.param("id"))
+
+  if (parsedId.success === false) {
+    throw new BadRequestError("invalid knowledge id")
+  }
+
+  const result = await new DeleteKnowledgeArticle(c).run({
+    articleId: parsedId.data,
+    authorId: viewer.employeeId,
+  })
+
+  if (result instanceof Error) {
+    throw new InternalError("failed to delete knowledge")
+  }
+
+  if (result.reason === "article_not_found") {
+    throw new NotFoundError("knowledge not found")
+  }
+
+  if (result.reason === "not_author") {
+    throw new ForbiddenError("not the author")
+  }
+
+  return c.body(null, 204)
 })

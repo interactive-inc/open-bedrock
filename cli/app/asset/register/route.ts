@@ -26,20 +26,31 @@ export default factory.createHandlers(
     if (!query.code || !query.name || !query.kind)
       throw new UsageError("--code と --name と --kind が必要です")
 
-    const payload: Record<string, unknown> = {
-      code: query.code,
-      name: query.name,
-      kind: query.kind,
-    }
+    const kind = toKind(query.kind)
 
-    if (query.serial) payload.serial = query.serial
-
-    if (query["purchased-on"]) payload.purchased_on = query["purchased-on"]
+    if (kind === null) throw new UsageError("--kind は pc|monitor|furniture|other のいずれか")
 
     const client = await createClient()
 
-    const response = await client.assets.$post({ json: payload })
+    const response = await client.assets.$post({
+      json: {
+        code: query.code,
+        name: query.name,
+        kind: kind,
+        serial: query.serial,
+        purchased_on: query["purchased-on"],
+      },
+    })
 
     return c.json(await response.json())
   },
 )
+
+// --kind の文字列を許容値に絞る。不正値は null。
+function toKind(value: string): "pc" | "monitor" | "furniture" | "other" | null {
+  if (value === "pc" || value === "monitor" || value === "furniture" || value === "other") {
+    return value
+  }
+
+  return null
+}

@@ -1,9 +1,20 @@
+import { UpdateApplication } from "@/application/application/update-application"
+import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { toApplicationId } from "@/domain/application/to-application-id"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
-import { BadRequestError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
+import { z } from "zod"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -49,4 +60,87 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   return c.json(responseBody, 200)
+})
+
+// PUT /applications/:id — 本人が申請内容（payload）を更新（pending のみ）
+export const PUT = factory.createHandlers(
+  verifyBearer,
+  zValidator("json", z.object({ payload: z.unknown() })),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const applicationId = toApplicationId(c.req.param("id") ?? "")
+
+    if (applicationId === null) {
+      throw new BadRequestError("invalid application id")
+    }
+
+    const body = c.req.valid("json")
+
+    const updated = await new UpdateApplication(c).run({
+      applicationId: applicationId,
+      applicantId: session.employeeId,
+      payload: body.payload,
+    })
+
+    if (updated instanceof Error) {
+      throw new InternalError("failed to update application")
+    }
+
+    if ("reason" in updated) {
+      if (updated.reason === "application_not_found") {
+        throw new NotFoundError("application not found")
+      }
+
+      if (updated.reason === "not_applicant") {
+        throw new ForbiddenError("not the applicant")
+      }
+
+      throw new ConflictError("application is already decided")
+    }
+
+    return c.json({ id: updated.id, status: updated.status, payload: updated.payload }, 200)
+  },
+)
+
+// DELETE /applications/:id — 本人が申請を取り下げ（pending のみ）
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  const applicationId = toApplicationId(c.req.param("id") ?? "")
+
+  if (applicationId === null) {
+    throw new BadRequestError("invalid application id")
+  }
+
+  const result = await new WithdrawApplication(c).run({
+    applicationId: applicationId,
+    applicantId: session.employeeId,
+  })
+
+  if (result instanceof Error) {
+    throw new InternalError("failed to withdraw application")
+  }
+
+  if (result.reason === "application_not_found") {
+    throw new NotFoundError("application not found")
+  }
+
+  if (result.reason === "not_applicant") {
+    throw new ForbiddenError("not the applicant")
+  }
+
+  if (result.reason === "not_pending") {
+    throw new ConflictError("application is already decided")
+  }
+
+  return c.body(null, 204)
 })

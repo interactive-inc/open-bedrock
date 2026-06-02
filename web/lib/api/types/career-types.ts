@@ -33,3 +33,7 @@ export type CareerApplication = {
 export type CareerApplyRequest = {
   message: string | null
 }
+
+export type CareerApplicationUpdateRequest = {
+  message: string | null
+}

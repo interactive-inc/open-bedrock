@@ -1,0 +1,114 @@
+"use client"
+
+import { useActionState, useState } from "react"
+import { deleteGoalAction, updateGoalAction } from "@/app/(app)/goals/actions"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import type { GoalResponse } from "@/lib/api/types/goal-types"
+
+type Props = {
+  goal: GoalResponse
+}
+
+// 目標一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる client コンポーネント。
+export function GoalRowActions(props: Props) {
+  return (
+    <div className="flex justify-end gap-2">
+      <UpdateGoalDialog goal={props.goal} />
+
+      <DeleteGoalButton goalId={props.goal.id} />
+    </div>
+  )
+}
+
+// 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。
+function UpdateGoalDialog(props: { goal: GoalResponse }) {
+  const [open, setOpen] = useState(false)
+
+  const [state, formAction, pending] = useActionState(updateGoalAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>目標を変更</DialogTitle>
+
+          <DialogDescription>期間・タイトル・KPI・ウェイトを変更します。</DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="flex flex-col gap-4">
+          <input type="hidden" name="goalId" value={props.goal.id} />
+
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="update_period">期間</FieldLabel>
+
+              <Input id="update_period" name="period" defaultValue={props.goal.period} />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_title">タイトル</FieldLabel>
+
+              <Input id="update_title" name="title" defaultValue={props.goal.title} />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_kpi">KPI</FieldLabel>
+
+              <Input id="update_kpi" name="kpi" defaultValue={props.goal.kpi ?? ""} />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_weight">ウェイト</FieldLabel>
+
+              <Input
+                id="update_weight"
+                name="weight"
+                type="number"
+                defaultValue={props.goal.weight}
+              />
+            </Field>
+          </FieldGroup>
+
+          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+
+          <Button type="submit" disabled={pending}>
+            変更を保存
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// 目標削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+function DeleteGoalButton(props: { goalId: number }) {
+  const [state, formAction, pending] = useActionState(deleteGoalAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="goalId" value={props.goalId} />
+
+      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+        削除
+      </Button>
+    </form>
+  )
+}

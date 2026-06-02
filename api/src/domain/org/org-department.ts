@@ -27,11 +27,19 @@ export class OrgDepartment implements Props {
     Object.assign(this, props)
   }
 
+  static create(props: Props) {
+    return new OrgDepartment(props)
+  }
+
   updateOrder(order: number) {
     return new OrgDepartment({ ...this.props, order })
   }
 
   updateManager(managerEmployeeCode: string | null) {
     return new OrgDepartment({ ...this.props, managerEmployeeCode })
+  }
+
+  withParent(parentCode: string | null) {
+    return new OrgDepartment({ ...this.props, parentCode })
   }
 }
