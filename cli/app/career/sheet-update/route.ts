@@ -7,6 +7,12 @@ import { UsageError } from "@/lib/errors"
 
 export const help = `karte career sheet-update --data <file>`
 
+// --data の JSON は unknown のため、API の PUT body 形に検証してから渡す。
+const careerSheetUpdateSchema = z.object({
+  goals_text: z.string().nullish(),
+  strengths_text: z.string().nullish(),
+})
+
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), data: z.string().optional() })),
   async (c) => {
@@ -16,7 +22,7 @@ export default factory.createHandlers(
 
     if (!query.data) throw new UsageError("--data <file> が必要です")
 
-    const payload = await readJsonFile(query.data)
+    const payload = careerSheetUpdateSchema.parse(await readJsonFile(query.data))
 
     const client = await createClient()
 

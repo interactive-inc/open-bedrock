@@ -38,7 +38,7 @@ export function CourseList(props: Props) {
 
       <TableBody>
         {props.courses.map((course) => {
-          const isEnrolled = props.enrolledCourseIds.includes(course.id)
+          const isEnrolled = course.id !== null && props.enrolledCourseIds.includes(course.id)
 
           return (
             <TableRow key={course.id}>

@@ -83,7 +83,8 @@ export async function createShiftAssignmentAction(
 
   const noteValue = formData.get("note")
 
-  const note = typeof noteValue === "string" && noteValue.trim() !== "" ? noteValue.trim() : null
+  const note =
+    typeof noteValue === "string" && noteValue.trim() !== "" ? noteValue.trim() : undefined
 
   const created = await createShiftAssignment({
     employee_code: employeeCode,

@@ -1,11 +1,12 @@
 // api/src/interface/review の route ハンドラのレスポンス/リクエストと同形の手書き type。
 // api と疎結合に保つため z.infer を import せずここで独立に定義する。
 
-export type ReviewCycleStatus = "draft" | "open" | "closed"
+// status / reviewer_type は API 上 DB の text 列をそのまま返すため string。
+export type ReviewCycleStatus = string
 
-export type ReviewerType = "self" | "manager" | "peer" | "subordinate"
+export type ReviewerType = string
 
-export type ReviewFormStatus = "pending" | "submitted"
+export type ReviewFormStatus = string
 
 // GET /review-cycles の各要素。POST /review-cycles, open/close のレスポンスも同形。
 export type ReviewCycleResponse = {
@@ -39,7 +40,8 @@ export type ReviewFormResponse = {
 // POST /review-forms/:form_id/submit のリクエスト body。
 export type ReviewFormSubmitRequest = {
   score: number | null
-  answers: ReadonlyArray<unknown>
+  // api 側の json バリデータは可変配列を要求するため readonly にしない。
+  answers: Array<unknown>
   comment: string | null
 }
 
