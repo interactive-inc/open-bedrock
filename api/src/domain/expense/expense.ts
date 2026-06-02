@@ -78,4 +78,20 @@ export class Expense implements Props {
   withStatus(status: Props["status"]) {
     return new Expense({ ...this.props, status })
   }
+
+  // 申請内容（種別・金額・利用日・備考）を変更した新しい経費申請を返す。
+  withDetails(props: {
+    category: Props["category"]
+    amount: number
+    spentAt: string
+    note: string | null
+  }) {
+    return new Expense({
+      ...this.props,
+      category: props.category,
+      amount: props.amount,
+      spentAt: props.spentAt,
+      note: props.note,
+    })
+  }
 }

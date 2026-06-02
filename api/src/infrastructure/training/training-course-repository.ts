@@ -62,4 +62,30 @@ export class TrainingCourseRepository {
       return error instanceof Error ? error : new Error("failed to insert training_course")
     }
   }
+
+  // 研修コースの内容と状態を更新する。code をキーに更新し、更新後の行を返す。
+  async update(trainingCourse: TrainingCourse): Promise<TrainingCourse | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(trainingCourses)
+        .set({
+          title: trainingCourse.title,
+          description: trainingCourse.description,
+          durationMinutes: trainingCourse.durationMinutes,
+          category: trainingCourse.category,
+          isRequired: trainingCourse.isRequired,
+          status: trainingCourse.status,
+        })
+        .where(eq(trainingCourses.code, trainingCourse.code))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to update training_course")
+        : TrainingCourse.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update training_course")
+    }
+  }
 }

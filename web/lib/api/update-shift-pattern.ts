@@ -1,0 +1,29 @@
+import { createClient } from "@/lib/api/hc-client"
+import type { ShiftPatternResponse } from "@/lib/api/types/shift-types"
+
+export type ShiftPatternUpdateRequest = {
+  code: string
+  name: string
+  start_time: string
+  end_time: string
+  break_minutes: number
+}
+
+// PUT /shift/patterns/:id。特権ロールがシフトパターンの内容を変更する。
+export async function updateShiftPattern(
+  id: number,
+  request: ShiftPatternUpdateRequest,
+): Promise<ShiftPatternResponse | Error> {
+  const client = await createClient()
+
+  const response = await client.shift.patterns[":id"].$put({
+    param: { id: String(id) },
+    json: request,
+  })
+
+  if (response.status >= 400) {
+    return new Error("failed to update shift pattern")
+  }
+
+  return response.json()
+}

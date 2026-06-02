@@ -1,9 +1,13 @@
+import { CreateKnowledgeArticle } from "@/application/knowledge/create-knowledge-article"
 import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
 import { knowledgeArticles } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { and, eq, or, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const keyword = c.req.query("q") ?? null
@@ -42,3 +46,49 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   return c.json(responseBody, 200)
 })
+
+// POST /knowledge — ナレッジ記事を新規作成（作成者は本人）
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1),
+      category: z.string().min(1),
+      tags: z.string().nullable().optional(),
+      body_md: z.string().min(1),
+    }),
+  ),
+  async (c) => {
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const article = await new CreateKnowledgeArticle(c).run({
+      title: json.title,
+      category: json.category,
+      tags: json.tags ?? null,
+      bodyMd: json.body_md,
+      authorId: viewer.employeeId,
+      createdAt: new Date().toISOString(),
+    })
+
+    if (article instanceof Error) {
+      throw new InternalError("failed to create knowledge")
+    }
+
+    const responseBody = {
+      id: article.id,
+      title: article.title,
+      category: article.category,
+      tags: article.tags,
+      body_md: article.bodyMd,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)

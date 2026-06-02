@@ -72,4 +72,20 @@ export class Goal implements Props {
   withStatus(status: Props["status"]) {
     return new Goal({ ...this.props, status })
   }
+
+  // 目標の定義（期間・タイトル・KPI・重み）を差し替えた写しを返す。
+  withDetails(props: {
+    period: Props["period"]
+    title: Props["title"]
+    kpi: Props["kpi"]
+    weight: Props["weight"]
+  }) {
+    return new Goal({
+      ...this.props,
+      period: props.period,
+      title: props.title,
+      kpi: props.kpi,
+      weight: props.weight,
+    })
+  }
 }

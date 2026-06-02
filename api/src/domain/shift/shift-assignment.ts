@@ -66,4 +66,18 @@ export class ShiftAssignment implements Props {
   withPublished(publishedAt: string) {
     return new ShiftAssignment({ ...this.props, publishedAt })
   }
+
+  // パターン・日付・備考を変更した新しい割当を返す。
+  withDetails(props: {
+    patternId: number | null
+    date: string
+    note: string | null
+  }): ShiftAssignment {
+    return new ShiftAssignment({
+      ...this.props,
+      patternId: props.patternId,
+      date: props.date,
+      note: props.note,
+    })
+  }
 }

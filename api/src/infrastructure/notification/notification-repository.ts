@@ -86,4 +86,15 @@ export class NotificationRepository {
       return error instanceof Error ? error : new Error("failed to mark notifications read")
     }
   }
+
+  // 通知を1件削除する。
+  async delete(notificationId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(notifications).where(eq(notifications.id, notificationId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete notification")
+    }
+  }
 }

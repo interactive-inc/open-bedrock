@@ -1,0 +1,151 @@
+import { GetCareerApplication } from "@/application/career/get-career-application"
+import { UpdateMyCareerApplication } from "@/application/career/update-my-career-application"
+import { WithdrawCareerApplication } from "@/application/career/withdraw-career-application"
+import type { CareerApplication } from "@/domain/career/career-application"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+
+const applicationIdSchema = z.coerce.number().int().positive()
+
+// 応募をレスポンス用の snake_case に整形する。
+function toResponseBody(application: CareerApplication) {
+  return {
+    id: application.id,
+    posting_id: application.postingId,
+    applicant_id: application.applicantId,
+    message: application.message,
+    status: application.status,
+  }
+}
+
+// GET /career/applications/:id — 応募の詳細（本人のみ）
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+  if (applicationId.success === false) {
+    throw new BadRequestError("invalid application id")
+  }
+
+  const application = await new GetCareerApplication(c).run({
+    applicationId: applicationId.data,
+    applicantId: viewer.employeeId,
+  })
+
+  if (application instanceof Error) {
+    throw new InternalError("failed to load application")
+  }
+
+  if ("reason" in application) {
+    if (application.reason === "application_not_found") {
+      throw new NotFoundError("application not found")
+    }
+
+    throw new ForbiddenError("not the applicant")
+  }
+
+  return c.json(toResponseBody(application), 200)
+})
+
+// PUT /career/applications/:id — 応募メッセージを変更（本人のみ・選考前のみ）
+export const PUT = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      message: z.string().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
+
+    const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+    if (applicationId.success === false) {
+      throw new BadRequestError("invalid application id")
+    }
+
+    const json = c.req.valid("json")
+
+    const application = await new UpdateMyCareerApplication(c).run({
+      applicationId: applicationId.data,
+      applicantId: viewer.employeeId,
+      message: json.message ?? null,
+    })
+
+    if (application instanceof Error) {
+      throw new InternalError("failed to update application")
+    }
+
+    if ("reason" in application) {
+      if (application.reason === "application_not_found") {
+        throw new NotFoundError("application not found")
+      }
+
+      if (application.reason === "not_applicant") {
+        throw new ForbiddenError("not the applicant")
+      }
+
+      throw new ConflictError("the application is already decided")
+    }
+
+    return c.json(toResponseBody(application), 200)
+  },
+)
+
+// DELETE /career/applications/:id — 応募を取り下げ（本人のみ・選考前のみ）
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+  if (applicationId.success === false) {
+    throw new BadRequestError("invalid application id")
+  }
+
+  const result = await new WithdrawCareerApplication(c).run({
+    applicationId: applicationId.data,
+    applicantId: viewer.employeeId,
+  })
+
+  if (result instanceof Error) {
+    throw new InternalError("failed to withdraw application")
+  }
+
+  if (result.reason === "application_not_found") {
+    throw new NotFoundError("application not found")
+  }
+
+  if (result.reason === "not_applicant") {
+    throw new ForbiddenError("not the applicant")
+  }
+
+  if (result.reason === "application_decided") {
+    throw new ConflictError("the application is already decided")
+  }
+
+  return c.body(null, 204)
+})

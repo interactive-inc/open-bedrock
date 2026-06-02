@@ -2,7 +2,7 @@ import { Survey } from "@/domain/survey/survey"
 import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import { surveyResponses, surveys } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 export class SurveyRepository {
   constructor(private readonly c: Context) {}
@@ -45,6 +45,72 @@ export class SurveyRepository {
       return SurveyResponse.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to insert survey response")
+    }
+  }
+
+  // 回答 id で1件取得する。存在しなければ null。
+  async findResponseById(responseId: number): Promise<SurveyResponse | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(surveyResponses)
+        .where(eq(surveyResponses.id, responseId))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : SurveyResponse.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load survey response")
+    }
+  }
+
+  // 回答者本人の回答を提出時刻の昇順で返す。
+  async findResponsesByRespondentId(
+    respondentId: number,
+  ): Promise<ReadonlyArray<SurveyResponse> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(surveyResponses)
+        .where(eq(surveyResponses.respondentId, respondentId))
+        .orderBy(asc(surveyResponses.submittedAt))
+
+      return rows.map((row) => SurveyResponse.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load survey responses")
+    }
+  }
+
+  // 回答内容と提出時刻を更新する。
+  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | Error> {
+    if (response.id === null) {
+      return new Error("survey response id is required")
+    }
+
+    try {
+      await this.c.var.database
+        .update(surveyResponses)
+        .set({
+          answersJson: JSON.stringify(response.answersJson),
+          submittedAt: response.submittedAt,
+        })
+        .where(eq(surveyResponses.id, response.id))
+
+      return response
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update survey response")
+    }
+  }
+
+  // 回答を削除する。
+  async deleteResponse(responseId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(surveyResponses).where(eq(surveyResponses.id, responseId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete survey response")
     }
   }
 

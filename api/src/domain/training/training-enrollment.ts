@@ -75,6 +75,14 @@ export class TrainingEnrollment implements Props {
       score,
     })
   }
+
+  // 受講期限を変更した新しい受講登録を返す。
+  withRescheduled(dueDate: string | null): TrainingEnrollment {
+    return new TrainingEnrollment({
+      ...this.props,
+      dueDate,
+    })
+  }
 }
 
 function toEnrollmentStatus(status: string): "enrolled" | "completed" | "failed" {

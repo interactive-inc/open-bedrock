@@ -97,3 +97,31 @@ describe("GET /career/sheet/me", () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe("DELETE /career/sheet/me", () => {
+  test("deletes the sheet and returns 204", async () => {
+    const response = await request({
+      path: "/career/sheet/me",
+      token: await tokenForEmployee(5),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(204)
+  })
+
+  test("returns 204 even when no sheet is registered", async () => {
+    const response = await request({
+      path: "/career/sheet/me",
+      token: await tokenForEmployee(1),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(204)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({ path: "/career/sheet/me", token: null, method: "DELETE" })
+
+    expect(response.status).toBe(401)
+  })
+})

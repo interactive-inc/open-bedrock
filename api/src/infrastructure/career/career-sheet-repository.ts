@@ -1,9 +1,21 @@
 import { CareerSheet } from "@/domain/career/career-sheet"
 import type { Context } from "@/env"
 import { careerSheets } from "@/schema"
+import { eq } from "drizzle-orm"
 
 export class CareerSheetRepository {
   constructor(private readonly c: Context) {}
+
+  // 社員のキャリアシートを削除する。未登録でもエラーにしない。
+  async deleteByEmployeeId(employeeId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(careerSheets).where(eq(careerSheets.employeeId, employeeId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete career_sheet")
+    }
+  }
 
   async upsert(careerSheet: CareerSheet): Promise<CareerSheet | Error> {
     try {

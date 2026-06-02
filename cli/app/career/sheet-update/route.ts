@@ -16,7 +16,9 @@ export default factory.createHandlers(
 
     if (!query.data) throw new UsageError("--data <file> が必要です")
 
-    const payload = await readJsonFile(query.data)
+    const raw = await readJsonFile(query.data)
+
+    const payload = toSheetPayload(raw)
 
     const client = await createClient()
 
@@ -27,3 +29,22 @@ export default factory.createHandlers(
     return c.json(sheet)
   },
 )
+
+// 読み込んだ任意 JSON から career sheet の更新ボディ(goals_text/strengths_text)を取り出す。
+function toSheetPayload(raw: unknown): {
+  goals_text?: string | null
+  strengths_text?: string | null
+} {
+  if (typeof raw !== "object" || raw === null) {
+    return {}
+  }
+
+  const goals = "goals_text" in raw ? raw.goals_text : null
+
+  const strengths = "strengths_text" in raw ? raw.strengths_text : null
+
+  return {
+    goals_text: typeof goals === "string" ? goals : null,
+    strengths_text: typeof strengths === "string" ? strengths : null,
+  }
+}

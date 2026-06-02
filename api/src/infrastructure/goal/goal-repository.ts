@@ -1,7 +1,7 @@
 import { Goal } from "@/domain/goal/goal"
 import type { Context } from "@/env"
 import { goals } from "@/schema"
-import { eq } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 
 export class GoalRepository {
   constructor(private readonly c: Context) {}
@@ -19,6 +19,21 @@ export class GoalRepository {
       return row === undefined ? null : Goal.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load goal")
+    }
+  }
+
+  // 社員本人の目標を id の昇順で返す。
+  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<Goal> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(goals)
+        .where(eq(goals.employeeId, employeeId))
+        .orderBy(asc(goals.id))
+
+      return rows.map((row) => Goal.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load goals")
     }
   }
 
@@ -52,7 +67,13 @@ export class GoalRepository {
 
       const rows = await this.c.var.database
         .update(goals)
-        .set({ status: goal.status })
+        .set({
+          period: goal.period,
+          title: goal.title,
+          kpi: goal.kpi,
+          weight: goal.weight,
+          status: goal.status,
+        })
         .where(eq(goals.id, goal.id))
         .returning()
 
@@ -60,7 +81,18 @@ export class GoalRepository {
 
       return row === undefined ? null : Goal.fromRow(row)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update goal status")
+      return error instanceof Error ? error : new Error("failed to update goal")
+    }
+  }
+
+  // 目標を削除する。
+  async delete(goalId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(goals).where(eq(goals.id, goalId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete goal")
     }
   }
 }

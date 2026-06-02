@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { CareerPostingsSection } from "@/app/(app)/career/career-postings-section"
 import { CareerSheetSection } from "@/app/(app)/career/career-sheet-section"
+import { MyApplicationsSection } from "@/app/(app)/career/my-applications-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "キャリア" }
@@ -23,6 +24,14 @@ export default function CareerPage() {
 
         <Suspense fallback={<CareerPostingsSkeleton />}>
           <CareerPostingsSection />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-semibold">自分の応募</h2>
+
+        <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+          <MyApplicationsSection />
         </Suspense>
       </section>
     </div>

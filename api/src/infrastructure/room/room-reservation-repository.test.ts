@@ -29,6 +29,7 @@ describe("RoomReservationRepository", () => {
       roomId: 1,
       startAt: "2026-01-01T10:30:00.000Z",
       endAt: "2026-01-01T11:30:00.000Z",
+      excludeReservationId: null,
     })
 
     expect(overlapping).not.toBeInstanceOf(Error)
