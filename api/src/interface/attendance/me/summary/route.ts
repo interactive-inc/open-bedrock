@@ -51,7 +51,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     month: summary.month,
     work_days: summary.workDays,
     total_work_minutes: summary.totalWorkMinutes,
-    total_overtime_minutes: summary.totalOvertimeMinutes,
   }
 
   return c.json(responseBody, 200)

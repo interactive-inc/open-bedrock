@@ -1,4 +1,4 @@
--- 勤怠記録（出勤・退勤の打刻と労働・残業時間）
+-- 勤怠記録（出勤・退勤の打刻と労働時間）
 CREATE TABLE IF NOT EXISTS attendance_records (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   employee_id INTEGER NOT NULL,
@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS attendance_records (
   clock_in_at TEXT,
   clock_out_at TEXT,
   work_minutes INTEGER,
-  overtime_minutes INTEGER,
   note TEXT,
   status TEXT NOT NULL
 );

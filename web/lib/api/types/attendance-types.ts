@@ -10,7 +10,6 @@ export type AttendanceRecord = {
   clockInAt: string | null
   clockOutAt: string | null
   workMinutes: number | null
-  overtimeMinutes: number | null
   status: string
 }
 
@@ -21,7 +20,6 @@ export type AttendanceSummary = {
   month: string
   work_days: number
   total_work_minutes: number
-  total_overtime_minutes: number
 }
 
 // GET /attendance /attendance/me のクエリ。null のキーは送信されない。

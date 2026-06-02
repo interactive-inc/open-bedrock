@@ -8,7 +8,7 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 
-// POST /attendance/clock-out — 本人の退勤を打刻し労働・残業時間を確定する
+// POST /attendance/clock-out — 本人の退勤を打刻し労働時間を確定する
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -40,7 +40,6 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     clock_in_at: record.clockInAt,
     clock_out_at: record.clockOutAt,
     work_minutes: record.workMinutes,
-    overtime_minutes: record.overtimeMinutes,
     status: record.status,
   }
 
