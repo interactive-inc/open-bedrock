@@ -1,7 +1,8 @@
 // api/src/payroll の route ハンドラのレスポンス/リクエストと同形の手書き type。
 // api と疎結合に保つため z.infer を import せずここで独立に定義する。
 
-export type PayslipStatus = "draft" | "issued"
+// status は API 上 DB の text 列をそのまま返すため string。
+export type PayslipStatus = string
 
 // GET /payslips/me の各要素（自分の給与明細一覧）。
 export type PayslipMineResponse = {
@@ -54,5 +55,6 @@ export type SalaryRevisionCreateRequest = {
   employee_code: string
   effective_date: string
   new_base_salary: number
-  reason: string | null
+  // api 側は .optional()（string | undefined）のため null ではなく省略可能にする。
+  reason?: string
 }
