@@ -14,20 +14,27 @@ const initialState: PayrollAdminFormState = { ok: false, error: null }
 // 給与改定の作成フォーム。社員コード・適用日・改定後基本給・任意の理由を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function SalaryRevisionCreateForm() {
-  const action = useActionState(createSalaryRevisionAction, initialState)
+  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
+  const action = useActionState(
+    async (previousState: PayrollAdminFormState, formData: FormData) => {
+      const next = await createSalaryRevisionAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("給与改定を作成しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialState,
+  )
 
   const state = action[0]
 
   const dispatch = action[1]
 
   const isPending = action[2]
-
-  // 直前の送信結果を描画時に通知する。state が変わるたびに評価される。
-  if (state.ok) {
-    toast.success("給与改定を作成しました")
-  } else if (state.error !== null) {
-    toast.error(state.error)
-  }
 
   return (
     <form action={dispatch}>
