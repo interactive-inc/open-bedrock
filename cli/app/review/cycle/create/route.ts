@@ -23,7 +23,7 @@ export default factory.createHandlers(
 
     if (!query.title || !query.period) throw new UsageError("--title と --period が必要です")
 
-    const payload: Record<string, unknown> = {
+    const payload: { title: string; period: string; dueDate?: string } = {
       title: query.title,
       period: query.period,
     }

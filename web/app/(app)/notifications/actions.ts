@@ -98,7 +98,8 @@ export async function createNotificationAction(
 
   const bodyValue = formData.get("body")
 
-  const body = typeof bodyValue === "string" && bodyValue.trim() !== "" ? bodyValue.trim() : null
+  const body =
+    typeof bodyValue === "string" && bodyValue.trim() !== "" ? bodyValue.trim() : undefined
 
   const created = await createNotification({
     recipient_employee_code: recipientEmployeeCode,

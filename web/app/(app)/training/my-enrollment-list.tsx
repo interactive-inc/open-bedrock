@@ -60,7 +60,7 @@ export function MyEnrollmentList(props: Props) {
               </TableCell>
 
               <TableCell className="text-right">
-                {enrollment.status === "enrolled" ? (
+                {enrollment.status === "enrolled" && enrollment.id !== null ? (
                   <CompleteEnrollmentButton enrollmentId={enrollment.id} />
                 ) : (
                   <span className="text-xs text-muted-foreground">—</span>

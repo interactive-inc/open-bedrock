@@ -79,7 +79,7 @@ export function ShiftAssignmentList(props: Props) {
             <TableCell className="text-right">
               {props.canManage && assignment.published_at === null ? (
                 <form action={publishDispatch}>
-                  <input type="hidden" name="assignment_id" value={assignment.id} />
+                  <input type="hidden" name="assignment_id" value={assignment.id ?? ""} />
 
                   <Button type="submit" variant="secondary" size="sm" disabled={isPublishing}>
                     公開する

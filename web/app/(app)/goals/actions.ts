@@ -33,7 +33,7 @@ export async function createGoalAction(
 
   const kpiValue = formData.get("kpi")
 
-  const kpi = typeof kpiValue === "string" && kpiValue !== "" ? kpiValue : null
+  const kpi = typeof kpiValue === "string" && kpiValue !== "" ? kpiValue : undefined
 
   const goal = await createGoal({ period, title, weight, kpi })
 
