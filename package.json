@@ -7,7 +7,11 @@
     "web"
   ],
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "build:api-types": "bun run --filter api build:types",
+    "typecheck": "bun run build:api-types && bun run --filter web check && bun run --filter cli check",
+    "check": "vp check"
+  },
   "devDependencies": {
     "@interactive-inc/claude-funnel": "^0.26.1",
     "vite-plus": "^0.1.23"
