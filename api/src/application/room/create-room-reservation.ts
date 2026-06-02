@@ -25,6 +25,7 @@ export class CreateRoomReservation {
       roomId: command.roomId,
       startAt: command.startAt,
       endAt: command.endAt,
+      excludeReservationId: null,
     })
 
     if (overlapping instanceof Error) {
