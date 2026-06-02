@@ -14,19 +14,24 @@ const initialState: ShiftFormState = { ok: false, error: null }
 // シフト割当の作成フォーム（特権ロール向け）。社員コード・パターンコード・対象日・備考を送る。
 // 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
 export function ShiftAssignmentCreateForm() {
-  const action = useActionState(createShiftAssignmentAction, initialState)
+  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
+  const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {
+    const next = await createShiftAssignmentAction(previousState, formData)
+
+    if (next.ok) {
+      toast.success("シフトを割り当てました")
+    } else if (next.error !== null) {
+      toast.error(next.error)
+    }
+
+    return next
+  }, initialState)
 
   const state = action[0]
 
   const dispatch = action[1]
 
   const isPending = action[2]
-
-  if (state.ok) {
-    toast.success("シフトを割り当てました")
-  } else if (state.error !== null) {
-    toast.error(state.error)
-  }
 
   return (
     <form action={dispatch}>

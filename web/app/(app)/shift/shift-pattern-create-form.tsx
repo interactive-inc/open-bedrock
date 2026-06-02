@@ -13,19 +13,24 @@ const initialState: ShiftFormState = { ok: false, error: null }
 // シフトパターンの作成フォーム（特権ロール向け）。コード・名前・開始/終了時刻・休憩時間を送る。
 // 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
 export function ShiftPatternCreateForm() {
-  const action = useActionState(createShiftPatternAction, initialState)
+  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
+  const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {
+    const next = await createShiftPatternAction(previousState, formData)
+
+    if (next.ok) {
+      toast.success("シフトパターンを作成しました")
+    } else if (next.error !== null) {
+      toast.error(next.error)
+    }
+
+    return next
+  }, initialState)
 
   const state = action[0]
 
   const dispatch = action[1]
 
   const isPending = action[2]
-
-  if (state.ok) {
-    toast.success("シフトパターンを作成しました")
-  } else if (state.error !== null) {
-    toast.error(state.error)
-  }
 
   return (
     <form action={dispatch}>
