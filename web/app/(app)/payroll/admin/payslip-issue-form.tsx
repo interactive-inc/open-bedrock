@@ -13,20 +13,27 @@ const initialState: PayrollAdminFormState = { ok: false, error: null }
 // 給与明細の発行フォーム。社員コード・対象期間・基本給・手当・控除を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function PayslipIssueForm() {
-  const action = useActionState(issuePayslipAction, initialState)
+  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
+  const action = useActionState(
+    async (previousState: PayrollAdminFormState, formData: FormData) => {
+      const next = await issuePayslipAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("給与明細を発行しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialState,
+  )
 
   const state = action[0]
 
   const dispatch = action[1]
 
   const isPending = action[2]
-
-  // 直前の送信結果を描画時に通知する。state が変わるたびに評価される。
-  if (state.ok) {
-    toast.success("給与明細を発行しました")
-  } else if (state.error !== null) {
-    toast.error(state.error)
-  }
 
   return (
     <form action={dispatch}>
