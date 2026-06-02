@@ -16,7 +16,6 @@ const attendanceRecordResponseSchema = z.object({
   clock_in_at: z.string().nullable(),
   clock_out_at: z.string().nullable(),
   work_minutes: z.number().nullable(),
-  overtime_minutes: z.number().nullable(),
   status: z.string(),
 })
 
@@ -33,7 +32,6 @@ async function createTestDb(): Promise<D1Database> {
       clock_in_at: record.clockInAt,
       clock_out_at: record.clockOutAt,
       work_minutes: record.workMinutes,
-      overtime_minutes: record.overtimeMinutes,
       status: record.status,
     })),
   )
@@ -72,7 +70,7 @@ function send(props: SendProps): Promise<Response> {
 }
 
 describe("POST /attendance/clock-out", () => {
-  test("clock-in then clock-out computes work and overtime minutes", async () => {
+  test("clock-in then clock-out computes work minutes", async () => {
     const db = await createTestDb()
 
     const token = await tokenFor(10, "member")
@@ -106,7 +104,6 @@ describe("POST /attendance/clock-out", () => {
     if (parsed.success) {
       expect(parsed.data.status).toBe("closed")
       expect(parsed.data.work_minutes).toBe(570)
-      expect(parsed.data.overtime_minutes).toBe(90)
       expect(parsed.data.clock_out_at).toBe("2026-05-29T18:30:00Z")
     }
   })

@@ -5,15 +5,13 @@ export type SeedAttendanceRecord = {
   clockInAt: string | null
   clockOutAt: string | null
   workMinutes: number | null
-  overtimeMinutes: number | null
   status: string
 }
 
 // seed-employees の既存社員 id（5, 9 など member）に紐付ける。
-// status は "closed"（退勤済・workMinutes/overtimeMinutes 確定）と
-// "open"（出勤中・退勤前なので clockOutAt/workMinutes/overtimeMinutes は null）の2系統。
+// status は "closed"（退勤済・workMinutes 確定）と
+// "open"（出勤中・退勤前なので clockOutAt/workMinutes は null）の2系統。
 // workDate は "YYYY-MM-DD"、clockInAt/clockOutAt は ISO8601。
-// overtimeMinutes は所定 480 分（8時間）超過分。
 export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   {
     id: 1,
@@ -22,7 +20,6 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     clockInAt: "2026-05-25T09:00:00Z",
     clockOutAt: "2026-05-25T18:00:00Z",
     workMinutes: 540,
-    overtimeMinutes: 60,
     status: "closed",
   },
   {
@@ -32,7 +29,6 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     clockInAt: "2026-05-26T09:00:00Z",
     clockOutAt: "2026-05-26T17:30:00Z",
     workMinutes: 510,
-    overtimeMinutes: 30,
     status: "closed",
   },
   {
@@ -42,7 +38,6 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     clockInAt: "2026-05-25T10:00:00Z",
     clockOutAt: "2026-05-25T18:00:00Z",
     workMinutes: 480,
-    overtimeMinutes: 0,
     status: "closed",
   },
   {
@@ -52,7 +47,6 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     clockInAt: "2026-05-29T09:15:00Z",
     clockOutAt: null,
     workMinutes: null,
-    overtimeMinutes: null,
     status: "open",
   },
 ]

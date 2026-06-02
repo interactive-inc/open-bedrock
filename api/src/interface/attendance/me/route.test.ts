@@ -16,7 +16,6 @@ const attendanceRecordResponseSchema = z.object({
   clock_in_at: z.string().nullable(),
   clock_out_at: z.string().nullable(),
   work_minutes: z.number().nullable(),
-  overtime_minutes: z.number().nullable(),
   status: z.string(),
 })
 
@@ -33,7 +32,6 @@ async function createTestDb(): Promise<D1Database> {
       clock_in_at: record.clockInAt,
       clock_out_at: record.clockOutAt,
       work_minutes: record.workMinutes,
-      overtime_minutes: record.overtimeMinutes,
       status: record.status,
     })),
   )

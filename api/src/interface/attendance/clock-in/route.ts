@@ -44,7 +44,6 @@ export const POST = factory.createHandlers(
       clock_in_at: record.clockInAt,
       clock_out_at: record.clockOutAt,
       work_minutes: record.workMinutes,
-      overtime_minutes: record.overtimeMinutes,
       status: record.status,
     }
 

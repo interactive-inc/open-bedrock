@@ -329,7 +329,7 @@ export const assetLendings = sqliteTable("asset_lendings", {
 
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>
 
-// 勤怠記録（出勤・退勤の打刻と労働・残業時間）。id は AUTOINCREMENT。
+// 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。
 export const attendanceRecords = sqliteTable("attendance_records", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
@@ -337,7 +337,6 @@ export const attendanceRecords = sqliteTable("attendance_records", {
   clockInAt: text("clock_in_at"),
   clockOutAt: text("clock_out_at"),
   workMinutes: integer("work_minutes"),
-  overtimeMinutes: integer("overtime_minutes"),
   note: text("note"),
   status: text("status").notNull(),
 })

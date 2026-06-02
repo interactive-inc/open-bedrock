@@ -1,5 +1,4 @@
 import type { AttendanceRecord } from "@/domain/attendance/attendance-record"
-import { toOvertimeMinutes } from "@/domain/attendance/to-overtime-minutes"
 import { toWorkMinutes } from "@/domain/attendance/to-work-minutes"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
@@ -14,7 +13,7 @@ export type NotClockedIn = { reason: "not_clocked_in" }
 export type AttendanceNotFound = { reason: "attendance_not_found" }
 
 /**
- * 退勤を打刻する。出勤中の記録に労働・残業時間を確定する。
+ * 退勤を打刻する。出勤中の記録に労働時間を確定する。
  */
 export class ClockOut {
   constructor(private readonly c: Context) {}
@@ -43,7 +42,6 @@ export class ClockOut {
       open.withClosed({
         clockOutAt: command.now,
         workMinutes,
-        overtimeMinutes: toOvertimeMinutes(workMinutes),
       }),
     )
 
