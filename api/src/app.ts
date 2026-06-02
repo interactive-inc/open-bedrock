@@ -77,6 +77,8 @@ import * as reviewFormMeRoute from "@/interface/review/forms/me/route"
 import * as reviewFormSubmitRoute from "@/interface/review/forms/[form_id]/submit/route"
 import * as roomAvailabilityRoute from "@/interface/room/availability/route"
 import * as roomReservationCreateRoute from "@/interface/room/reservations/route"
+import * as roomReservationDetailRoute from "@/interface/room/reservations/[id]/route"
+import * as roomReservationMineRoute from "@/interface/room/reservations/me/route"
 import * as shiftAssignmentCreateRoute from "@/interface/shift/assignments/create-route"
 import * as shiftAssignmentListRoute from "@/interface/shift/assignments/route"
 import * as shiftAssignmentMeRoute from "@/interface/shift/assignments/me/route"
@@ -137,6 +139,10 @@ export const app = factory
   .get("/knowledge", ...knowledgeListRoute.GET)
   .get("/rooms/availability", ...roomAvailabilityRoute.GET)
   .post("/rooms/reservations", ...roomReservationCreateRoute.POST)
+  .get("/rooms/reservations/me", ...roomReservationMineRoute.GET)
+  .get("/rooms/reservations/:id", ...roomReservationDetailRoute.GET)
+  .put("/rooms/reservations/:id", ...roomReservationDetailRoute.PUT)
+  .delete("/rooms/reservations/:id", ...roomReservationDetailRoute.DELETE)
   .get("/skills/me", ...skillMeRoute.GET)
   .put("/skills/me", ...skillMeUpdateRoute.PUT)
   .get("/skills", ...skillListRoute.GET)

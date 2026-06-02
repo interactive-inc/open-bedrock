@@ -45,3 +45,20 @@ export type RoomReservationCreated = {
   endAt: string
   purpose: string | null
 }
+
+// GET /rooms/reservations/me と /rooms/reservations/:id のレスポンス要素。api は snake_case で返す。
+export type RoomReservationResponse = {
+  id: string
+  room_id: number
+  reserver_id: number
+  start_at: string
+  end_at: string
+  purpose: string | null
+}
+
+// PUT /rooms/reservations/:id のリクエストボディ。
+export type RoomReservationUpdateRequest = {
+  start_at: string
+  end_at: string
+  purpose: string | null
+}

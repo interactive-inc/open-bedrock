@@ -1,12 +1,14 @@
 import { RoomReservation } from "@/domain/room/room-reservation"
 import type { Context } from "@/env"
 import { roomReservations } from "@/schema"
-import { and, eq, gt, lt } from "drizzle-orm"
+import { and, asc, eq, gt, lt, ne } from "drizzle-orm"
 
 type OverlapQuery = {
   roomId: number
   startAt: string
   endAt: string
+  // 変更時に自分自身の予約を重複対象から除外するための予約 id。
+  excludeReservationId: string | null
 }
 
 export class RoomReservationRepository {
@@ -22,12 +24,46 @@ export class RoomReservationRepository {
             eq(roomReservations.roomId, query.roomId),
             lt(roomReservations.startAt, query.endAt),
             gt(roomReservations.endAt, query.startAt),
+            query.excludeReservationId === null
+              ? undefined
+              : ne(roomReservations.id, query.excludeReservationId),
           ),
         )
 
       return rows.map((row) => RoomReservation.fromRow(row))
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load room_reservations")
+    }
+  }
+
+  // 予約者本人の予約を開始時刻の昇順で返す。
+  async findByReserverId(reserverId: number): Promise<ReadonlyArray<RoomReservation> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(roomReservations)
+        .where(eq(roomReservations.reserverId, reserverId))
+        .orderBy(asc(roomReservations.startAt))
+
+      return rows.map((row) => RoomReservation.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load room_reservations")
+    }
+  }
+
+  // 予約 id で1件取得する。存在しなければ null。
+  async findById(id: string): Promise<RoomReservation | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(roomReservations)
+        .where(eq(roomReservations.id, id))
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : RoomReservation.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load room_reservation")
     }
   }
 
@@ -45,6 +81,35 @@ export class RoomReservationRepository {
       return reservation
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to save room_reservation")
+    }
+  }
+
+  // 予約の開始終了時刻と用途を更新する。
+  async update(reservation: RoomReservation): Promise<RoomReservation | Error> {
+    try {
+      await this.c.var.database
+        .update(roomReservations)
+        .set({
+          startAt: reservation.startAt,
+          endAt: reservation.endAt,
+          purpose: reservation.purpose,
+        })
+        .where(eq(roomReservations.id, reservation.id))
+
+      return reservation
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update room_reservation")
+    }
+  }
+
+  // 予約を削除する。
+  async delete(id: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(roomReservations).where(eq(roomReservations.id, id))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete room_reservation")
     }
   }
 }
