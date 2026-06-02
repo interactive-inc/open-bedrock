@@ -37,7 +37,8 @@ export type GoalCreateRequest = {
   period: string
   title: string
   weight: number
-  kpi: string | null
+  // api 側は .optional()（string | undefined）のため null ではなく省略可能にする。
+  kpi?: string
 }
 
 // POST /goals/:goalId/evaluations のリクエストボディ。

@@ -13,7 +13,7 @@ export default factory.createHandlers(
       help: z.string().optional(),
       code: z.string().optional(),
       name: z.string().optional(),
-      kind: z.string().optional(),
+      kind: z.enum(["pc", "monitor", "furniture", "other"]).optional(),
       serial: z.string().optional(),
       "purchased-on": z.string().optional(),
     }),
@@ -26,7 +26,13 @@ export default factory.createHandlers(
     if (!query.code || !query.name || !query.kind)
       throw new UsageError("--code と --name と --kind が必要です")
 
-    const payload: Record<string, unknown> = {
+    const payload: {
+      code: string
+      name: string
+      kind: "pc" | "monitor" | "furniture" | "other"
+      serial?: string
+      purchased_on?: string
+    } = {
       code: query.code,
       name: query.name,
       kind: query.kind,
