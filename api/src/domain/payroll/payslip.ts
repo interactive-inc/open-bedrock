@@ -80,4 +80,22 @@ export class Payslip implements Props {
       status: row.status === "draft" ? "draft" : "issued",
     })
   }
+
+  // 期間と金額を訂正した新しい給与明細を返す。金額は渡された値をそのまま記録する。
+  withCorrected(props: {
+    period: string
+    baseSalary: number
+    allowances: number
+    deductions: number
+    netPay: number
+  }): Payslip {
+    return new Payslip({
+      ...this.props,
+      period: props.period,
+      baseSalary: props.baseSalary,
+      allowances: props.allowances,
+      deductions: props.deductions,
+      netPay: props.netPay,
+    })
+  }
 }

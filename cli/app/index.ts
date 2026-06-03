@@ -166,6 +166,31 @@ import antisocialCheckMineHandler from "@/app/antisocial-check/mine/route"
 import antisocialCheckShowHandler from "@/app/antisocial-check/show/route"
 import antisocialCheckUpdateHandler from "@/app/antisocial-check/update/route"
 import antisocialCheckCancelHandler from "@/app/antisocial-check/cancel/route"
+import appTemplateCreateHandler from "@/app/app/template-create/route"
+import appTemplateUpdateHandler from "@/app/app/template-update/route"
+import appTemplateDeleteHandler from "@/app/app/template-delete/route"
+import roomsListHandler from "@/app/rooms/list/route"
+import roomsShowHandler from "@/app/rooms/show/[room_id]/route"
+import roomsCreateHandler from "@/app/rooms/create/route"
+import roomsUpdateHandler from "@/app/rooms/update/[room_id]/route"
+import roomsDeleteHandler from "@/app/rooms/delete/[room_id]/route"
+import surveyCreateHandler from "@/app/survey/create/route"
+import surveyUpdateHandler from "@/app/survey/survey-update/[survey_id]/route"
+import surveyDeleteHandler from "@/app/survey/survey-delete/[survey_id]/route"
+import careerPostingShowHandler from "@/app/career/posting/[posting_id]/route"
+import careerPostingCreateHandler from "@/app/career/posting-create/route"
+import careerPostingUpdateHandler from "@/app/career/posting-update/route"
+import careerPostingDeleteHandler from "@/app/career/posting-delete/route"
+import onboardingTemplateCreateHandler from "@/app/onboarding/template-create/route"
+import onboardingTemplateUpdateHandler from "@/app/onboarding/template-update/route"
+import onboardingTemplateDeleteHandler from "@/app/onboarding/template-delete/route"
+import onboardingTemplateShowHandler from "@/app/onboarding/template/[code]/route"
+import payrollCorrectHandler from "@/app/payroll/correct/route"
+import payrollCancelHandler from "@/app/payroll/cancel/route"
+import salaryRevisionCorrectHandler from "@/app/salary-revision/correct/route"
+import salaryRevisionCancelHandler from "@/app/salary-revision/cancel/route"
+import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
+import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
 
 const base = factory.createApp()
 
@@ -373,5 +398,30 @@ routes.post("/antisocial-check/mine", ...antisocialCheckMineHandler)
 routes.post("/antisocial-check/show", ...antisocialCheckShowHandler)
 routes.post("/antisocial-check/update", ...antisocialCheckUpdateHandler)
 routes.post("/antisocial-check/cancel", ...antisocialCheckCancelHandler)
+routes.post("/app/template-create", ...appTemplateCreateHandler)
+routes.post("/app/template-update", ...appTemplateUpdateHandler)
+routes.post("/app/template-delete", ...appTemplateDeleteHandler)
+routes.post("/rooms/list", ...roomsListHandler)
+routes.post("/rooms/create", ...roomsCreateHandler)
+routes.post("/rooms/show/:room_id?", ...roomsShowHandler)
+routes.post("/rooms/update/:room_id?", ...roomsUpdateHandler)
+routes.post("/rooms/delete/:room_id?", ...roomsDeleteHandler)
+routes.post("/survey/create", ...surveyCreateHandler)
+routes.post("/survey/survey-update/:survey_id?", ...surveyUpdateHandler)
+routes.post("/survey/survey-delete/:survey_id?", ...surveyDeleteHandler)
+routes.post("/career/posting-create", ...careerPostingCreateHandler)
+routes.post("/career/posting-update", ...careerPostingUpdateHandler)
+routes.post("/career/posting-delete", ...careerPostingDeleteHandler)
+routes.post("/career/posting/:posting_id?", ...careerPostingShowHandler)
+routes.post("/onboarding/template-create", ...onboardingTemplateCreateHandler)
+routes.post("/onboarding/template-update", ...onboardingTemplateUpdateHandler)
+routes.post("/onboarding/template-delete", ...onboardingTemplateDeleteHandler)
+routes.post("/onboarding/template/:code?", ...onboardingTemplateShowHandler)
+routes.post("/payroll/correct", ...payrollCorrectHandler)
+routes.post("/payroll/cancel", ...payrollCancelHandler)
+routes.post("/salary-revision/correct", ...salaryRevisionCorrectHandler)
+routes.post("/salary-revision/cancel", ...salaryRevisionCancelHandler)
+routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
+routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
 
 export const app = routes

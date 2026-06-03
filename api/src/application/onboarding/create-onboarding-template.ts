@@ -1,0 +1,52 @@
+import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
+import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
+import type { Context } from "@/env"
+import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+
+export type Command = {
+  viewerRole: string
+  code: string
+  name: string
+  kind: "join" | "leave"
+  description: string | null
+}
+
+export type Forbidden = { reason: "forbidden" }
+
+export type TemplateCodeConflict = { reason: "template_code_conflict" }
+
+/**
+ * 管理権限を持つ者が新しいオンボーディングテンプレートを作成する。
+ */
+export class CreateOnboardingTemplate {
+  constructor(private readonly c: Context) {}
+
+  async run(
+    command: Command,
+  ): Promise<OnboardingTemplate | Forbidden | TemplateCodeConflict | Error> {
+    const templateRepository = new OnboardingTemplateRepository(this.c)
+
+    if (canManageOnboarding(command.viewerRole) === false) {
+      return { reason: "forbidden" }
+    }
+
+    const existing = await templateRepository.findByCode(command.code)
+
+    if (existing instanceof Error) {
+      return existing
+    }
+
+    if (existing !== null) {
+      return { reason: "template_code_conflict" }
+    }
+
+    const template = OnboardingTemplate.create({
+      code: command.code,
+      name: command.name,
+      kind: command.kind,
+      description: command.description,
+    })
+
+    return templateRepository.create(template)
+  }
+}

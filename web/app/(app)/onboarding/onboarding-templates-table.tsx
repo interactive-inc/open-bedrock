@@ -1,3 +1,4 @@
+import { TemplateManagement } from "@/app/(app)/onboarding/template-management"
 import { getOnboardingTemplates } from "@/lib/api/get-onboarding-templates"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -30,6 +31,7 @@ export async function OnboardingTemplatesTable() {
           <TableHead>種別</TableHead>
           <TableHead>説明</TableHead>
           <TableHead className="text-right">タスク数</TableHead>
+          <TableHead className="text-right">操作</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -49,6 +51,18 @@ export async function OnboardingTemplatesTable() {
             <TableCell className="text-muted-foreground">{template.description ?? "—"}</TableCell>
 
             <TableCell className="text-right">{template.task_count}</TableCell>
+
+            <TableCell className="text-right">
+              <TemplateManagement
+                template={{
+                  code: template.code,
+                  name: template.name,
+                  kind: template.kind,
+                  description: template.description,
+                  task_count: template.task_count,
+                }}
+              />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

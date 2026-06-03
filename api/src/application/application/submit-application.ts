@@ -46,6 +46,10 @@ export class SubmitApplication {
       return { reason: "template_not_found" }
     }
 
+    if (template.id === null) {
+      return new Error("template id is not assigned")
+    }
+
     const created = await applicationRepository.create(
       Application.create({
         templateId: template.id,

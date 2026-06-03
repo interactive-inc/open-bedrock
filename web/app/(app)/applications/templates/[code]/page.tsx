@@ -1,10 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SubmitApplicationForm } from "@/app/(app)/applications/templates/[code]/submit-application-form"
+import { TemplateManagement } from "@/app/(app)/applications/templates/template-management"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getApplicationTemplate } from "@/lib/api/get-application-template"
+import { getMe } from "@/lib/api/get-me"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 
 export const metadata = { title: "申請テンプレート詳細" }
 
@@ -22,6 +25,11 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
     notFound()
   }
 
+  const currentUser = await getMe()
+
+  const canManage =
+    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -37,6 +45,8 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
           テンプレ一覧へ
         </Button>
       </div>
+
+      {canManage ? <TemplateManagement template={template} /> : null}
 
       <Card className="p-0 gap-0">
         <div className="flex flex-col gap-2 p-4">

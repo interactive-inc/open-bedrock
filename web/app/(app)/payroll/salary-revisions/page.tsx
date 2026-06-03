@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SalaryRevisionRowActions } from "@/app/(app)/payroll/salary-revisions/salary-revision-row-actions"
 import { getMe } from "@/lib/api/get-me"
 import { getSalaryRevisions } from "@/lib/api/get-salary-revisions"
 import { canManagePayroll } from "@/lib/payroll/can-manage-payroll"
@@ -72,6 +73,7 @@ async function SalaryRevisionsTable() {
           <TableHead>改定前基本給</TableHead>
           <TableHead>改定後基本給</TableHead>
           <TableHead>理由</TableHead>
+          <TableHead className="text-right">操作</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -89,6 +91,10 @@ async function SalaryRevisionsTable() {
             </TableCell>
 
             <TableCell className="text-muted-foreground">{revision.reason ?? "-"}</TableCell>
+
+            <TableCell>
+              <SalaryRevisionRowActions revision={revision} />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

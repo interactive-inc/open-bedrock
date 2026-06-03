@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { PayslipCorrectForm } from "@/app/(app)/payroll/admin/payslip-correct-form"
 import { PayslipIssueForm } from "@/app/(app)/payroll/admin/payslip-issue-form"
 import { SalaryRevisionCreateForm } from "@/app/(app)/payroll/admin/salary-revision-create-form"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,16 @@ export default async function PayrollAdminPage() {
 
             <CardContent>
               <SalaryRevisionCreateForm />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>給与明細を訂正・取消</CardTitle>
+            </CardHeader>
+
+            <CardContent>
+              <PayslipCorrectForm />
             </CardContent>
           </Card>
         </div>

@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { CreateTemplateForm } from "@/app/(app)/onboarding/create-template-form"
 import { OnboardingTemplatesTable } from "@/app/(app)/onboarding/onboarding-templates-table"
 import { MyTasksList } from "@/app/(app)/onboarding/my-tasks-list"
 import { AssignFormSection } from "@/app/(app)/onboarding/assign-form-section"
@@ -32,6 +33,18 @@ export default function OnboardingPage() {
           <Suspense fallback={<Skeleton className="h-40 w-full" />}>
             <OnboardingTemplatesTable />
           </Suspense>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>テンプレート作成</CardTitle>
+
+          <CardDescription>管理権限でオンボーディングテンプレートを追加する</CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <CreateTemplateForm />
         </CardContent>
       </Card>
 
