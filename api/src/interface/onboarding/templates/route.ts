@@ -1,7 +1,15 @@
+import { CreateOnboardingTemplate } from "@/application/onboarding/create-onboarding-template"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
+import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 
@@ -40,3 +48,56 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   return c.json(body, 200)
 })
+
+// POST /onboarding/templates — テンプレートを新規作成（管理権限のみ）
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      code: z.string().min(1),
+      name: z.string().min(1),
+      kind: z.enum(["join", "leave"]),
+      description: z.string().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const created = await new CreateOnboardingTemplate(c).run({
+      viewerRole: session.role,
+      code: json.code,
+      name: json.name,
+      kind: json.kind,
+      description: json.description ?? null,
+    })
+
+    if (created instanceof Error) {
+      throw new InternalError("failed to create onboarding template")
+    }
+
+    if ("reason" in created) {
+      if (created.reason === "forbidden") {
+        throw new ForbiddenError()
+      }
+
+      throw new ConflictError("template code already exists")
+    }
+
+    const responseBody = {
+      id: created.id,
+      code: created.code,
+      name: created.name,
+      kind: created.kind,
+      description: created.description,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)

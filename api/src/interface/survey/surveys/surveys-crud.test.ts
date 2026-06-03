@@ -1,0 +1,287 @@
+import { describe, expect, test } from "bun:test"
+import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
+import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
+import { databaseMiddleware } from "@/interface/shared/database-middleware"
+import { HTTPException } from "hono/http-exception"
+import { contextStorage } from "hono/context-storage"
+import { createTestToken } from "@/interface/shared/test/create-test-token"
+import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { loadSchema } from "@/interface/shared/test/load-schema"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
+import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
+import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
+import * as surveyResponseCreateRoute from "@/interface/survey/surveys/[survey_id]/responses/route"
+import * as surveySummaryRoute from "@/interface/survey/surveys/[survey_id]/summary/route"
+import type { Bindings } from "@/env"
+import { factory } from "@/lib/factory"
+import { z } from "zod"
+
+const surveyResponseSchema = z.object({
+  id: z.number().nullable(),
+  title: z.string(),
+  status: z.enum(["open", "closed"]),
+  questions_json: z.array(z.unknown()),
+})
+
+const jwtSecret = "survey-surveys-crud-test-secret"
+
+// app.ts は共有のため編集できない。本テスト用に同じミドルウェア構成の隔離 app を組む。
+// 固有パス（responses/summary）を :survey_id より前に登録し、衝突しないことも確かめる。
+const testApp = factory
+  .createApp()
+  .use("*", contextStorage())
+  .use("*", databaseMiddleware)
+  .onError((error, c) => {
+    if (error instanceof HTTPException) {
+      return c.json({ error: error.message }, error.status)
+    }
+
+    return c.json({ error: "internal server error" }, 500)
+  })
+  .get("/surveys/:survey_id/summary", ...surveySummaryRoute.GET)
+  .post("/surveys/:survey_id/responses", ...surveyResponseCreateRoute.POST)
+  .post("/surveys", ...surveyCreateRoute.POST)
+  .put("/surveys/:survey_id", ...surveyDetailRoute.PUT)
+  .delete("/surveys/:survey_id", ...surveyDetailRoute.DELETE)
+
+async function createTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "surveys",
+    seedSurveys.map((survey) => ({
+      id: survey.id,
+      title: survey.title,
+      status: survey.status,
+      questions_json: JSON.stringify(survey.questionsJson),
+    })),
+  )
+
+  await seedD1(
+    db,
+    "survey_responses",
+    seedSurveyResponses.map((response) => ({
+      id: response.id,
+      survey_id: response.surveyId,
+      respondent_id: response.respondentId,
+      answers_json: JSON.stringify(response.answersJson),
+      submitted_at: response.submittedAt,
+    })),
+  )
+
+  return db
+}
+
+// 管理権限ロール。
+function adminToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 1,
+    email: "you+e001@example.com",
+    role: "admin",
+  })
+}
+
+// 一般ロール（管理権限なし）。
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 99,
+    email: "you+e099@example.com",
+    role: "member",
+  })
+}
+
+async function request(props: {
+  path: string
+  token: string | null
+  method?: string
+  body?: unknown
+}): Promise<Response> {
+  const headers: Record<string, string> = {}
+
+  if (props.token !== null) {
+    headers.Authorization = `Bearer ${props.token}`
+  }
+
+  if (props.body !== undefined) {
+    headers["content-type"] = "application/json"
+  }
+
+  const bindings: Bindings = {
+    DB: await createTestDb(),
+    JWT_SECRET: jwtSecret,
+    NOW: "2026-01-01T00:00:00.000Z",
+  }
+
+  return testApp.request(
+    props.path,
+    {
+      method: props.method ?? "GET",
+      headers,
+      body: props.body === undefined ? undefined : JSON.stringify(props.body),
+    },
+    bindings,
+  )
+}
+
+describe("POST /surveys", () => {
+  test("creates a survey and returns 201 with a generated id", async () => {
+    const response = await request({
+      path: "/surveys",
+      token: await adminToken(),
+      method: "POST",
+      body: {
+        title: "New Onboarding Survey",
+        status: "open",
+        questions_json: [{ id: "q1", type: "text", text: "How was your first week?" }],
+      },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = surveyResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.id).not.toBeNull()
+      expect(parsed.data.title).toBe("New Onboarding Survey")
+      expect(parsed.data.questions_json.length).toBe(1)
+    }
+  })
+
+  test("returns 403 for a non-admin", async () => {
+    const response = await request({
+      path: "/surveys",
+      token: await memberToken(),
+      method: "POST",
+      body: { title: "X", status: "open", questions_json: [] },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 400 when title is missing", async () => {
+    const response = await request({
+      path: "/surveys",
+      token: await adminToken(),
+      method: "POST",
+      body: { status: "open", questions_json: [] },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({
+      path: "/surveys",
+      token: null,
+      method: "POST",
+      body: { title: "X", status: "open", questions_json: [] },
+    })
+
+    expect(response.status).toBe(401)
+  })
+})
+
+describe("PUT /surveys/:survey_id", () => {
+  test("updates a survey and returns 200", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        title: "Updated Engagement Survey",
+        status: "closed",
+        questions_json: [{ id: "q1", type: "scale", text: "Updated", min: 1, max: 5 }],
+      },
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = surveyResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.title).toBe("Updated Engagement Survey")
+      expect(parsed.data.status).toBe("closed")
+    }
+  })
+
+  test("returns 403 for a non-admin", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await memberToken(),
+      method: "PUT",
+      body: { title: "X", status: "open", questions_json: [] },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 404 for an unknown survey", async () => {
+    const response = await request({
+      path: "/surveys/9999",
+      token: await adminToken(),
+      method: "PUT",
+      body: { title: "X", status: "open", questions_json: [] },
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when status is invalid", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await adminToken(),
+      method: "PUT",
+      body: { title: "X", status: "paused", questions_json: [] },
+    })
+
+    expect(response.status).toBe(400)
+  })
+})
+
+describe("DELETE /surveys/:survey_id", () => {
+  test("deletes a survey and returns 204", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await adminToken(),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(204)
+  })
+
+  test("returns 403 for a non-admin", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await memberToken(),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 404 for an unknown survey", async () => {
+    const response = await request({
+      path: "/surveys/9999",
+      token: await adminToken(),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: null,
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(401)
+  })
+})

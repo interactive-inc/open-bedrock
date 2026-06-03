@@ -3,12 +3,35 @@
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ReviewFormState } from "@/app/(app)/review/actions"
-import { closeReviewCycleAction, openReviewCycleAction } from "@/app/(app)/review/actions"
+import {
+  closeReviewCycleAction,
+  deleteReviewCycleAction,
+  openReviewCycleAction,
+} from "@/app/(app)/review/actions"
+import { ReviewCycleEditForm } from "@/app/(app)/review/review-cycle-edit-form"
 import { toCycleStatusLabel } from "@/app/(app)/review/to-cycle-status-label"
 import { toCycleStatusVariant } from "@/app/(app)/review/to-cycle-status-variant"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import type { ReviewCycleResponse } from "@/lib/api/types/review-types"
 
 type Props = {
@@ -36,6 +59,20 @@ export function ReviewCycleList(props: Props) {
   const closeDispatch = closeAction[1]
 
   const isClosing = closeAction[2]
+
+  const deleteAction = useActionState(deleteReviewCycleAction, initialState)
+
+  const deleteState = deleteAction[0]
+
+  const deleteDispatch = deleteAction[1]
+
+  const isDeleting = deleteAction[2]
+
+  if (deleteState.ok) {
+    toast.success("サイクルを削除しました")
+  } else if (deleteState.error !== null) {
+    toast.error(deleteState.error)
+  }
 
   if (openState.ok) {
     toast.success("サイクルを開始しました")
@@ -95,6 +132,58 @@ export function ReviewCycleList(props: Props) {
                     </Button>
                   </form>
                 ) : null}
+
+                <Dialog>
+                  <DialogTrigger
+                    render={<Button type="button" variant="outline" size="sm" data-icon="edit" />}
+                  >
+                    編集
+                  </DialogTrigger>
+
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>評価サイクルを編集</DialogTitle>
+                    </DialogHeader>
+
+                    <ReviewCycleEditForm cycle={cycle} />
+                  </DialogContent>
+                </Dialog>
+
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        data-icon="trash"
+                        disabled={isDeleting}
+                      />
+                    }
+                  >
+                    削除
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>評価サイクルを削除しますか？</AlertDialogTitle>
+
+                      <AlertDialogDescription>
+                        この操作は取り消せません。サイクル「{cycle.title}」を削除します。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+
+                      <form action={deleteDispatch}>
+                        <input type="hidden" name="cycle_id" value={cycle.id} />
+
+                        <AlertDialogAction type="submit">削除する</AlertDialogAction>
+                      </form>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ) : null}
           </CardContent>

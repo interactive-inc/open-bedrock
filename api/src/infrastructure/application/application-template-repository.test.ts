@@ -42,4 +42,99 @@ describe("ApplicationTemplateRepository", () => {
 
     expect(found).toBeNull()
   })
+
+  test("create inserts a template and assigns an id", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationTemplateRepository(context)
+
+    const created = await repository.create(
+      ApplicationTemplate.create({
+        code: "leave",
+        name: "休暇申請",
+        category: "attendance",
+        description: null,
+        schemaJson: { type: "object" },
+        approverRoles: ["manager"],
+      }),
+    )
+
+    expect(created).toBeInstanceOf(ApplicationTemplate)
+
+    if (created instanceof Error) {
+      throw new Error("create failed")
+    }
+
+    expect(created.id).not.toBeNull()
+    expect(created.code).toBe("leave")
+  })
+
+  test("update changes the content keyed by code", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "expense",
+        name: "経費申請",
+        category: "expense",
+        description: null,
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+
+    const repository = new ApplicationTemplateRepository(context)
+
+    const current = await repository.findByCode("expense")
+
+    if (current instanceof Error || current === null) {
+      throw new Error("findByCode failed")
+    }
+
+    const updated = await repository.update(
+      current.withDetails({
+        name: "経費精算",
+        category: "accounting",
+        description: "更新",
+        schemaJson: { type: "object" },
+        approverRoles: ["admin"],
+      }),
+    )
+
+    expect(updated).toBeInstanceOf(ApplicationTemplate)
+
+    if (updated instanceof Error) {
+      throw new Error("update failed")
+    }
+
+    expect(updated.name).toBe("経費精算")
+    expect(updated.approverRoles).toEqual(["admin"])
+  })
+
+  test("delete removes the template", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "expense",
+        name: "経費申請",
+        category: "expense",
+        description: null,
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+
+    const repository = new ApplicationTemplateRepository(context)
+
+    const deleted = await repository.delete("expense")
+
+    expect(deleted).toBeNull()
+
+    const found = await repository.findByCode("expense")
+
+    expect(found).toBeNull()
+  })
 })

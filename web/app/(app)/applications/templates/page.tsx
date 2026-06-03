@@ -1,15 +1,24 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { Card } from "@/components/ui/card"
+import { CreateTemplateForm } from "@/app/(app)/applications/templates/create-template-form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getApplicationTemplates } from "@/lib/api/get-application-templates"
+import { getMe } from "@/lib/api/get-me"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 
 export const metadata = { title: "申請テンプレート" }
 
 // 申請テンプレ一覧画面。カード表示し、各テンプレ詳細へ遷移できる。
-export default function ApplicationTemplatesPage() {
+// 管理権限にはテンプレート作成フォームを追加で表示する。
+export default async function ApplicationTemplatesPage() {
+  const currentUser = await getMe()
+
+  const canManage =
+    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -23,6 +32,18 @@ export default function ApplicationTemplatesPage() {
       <Suspense fallback={<TemplatesSkeleton />}>
         <TemplatesGrid />
       </Suspense>
+
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>テンプレートを作成</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <CreateTemplateForm />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

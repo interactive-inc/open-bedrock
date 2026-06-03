@@ -1,0 +1,42 @@
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+import { createClient } from "@/lib/http/hc-client"
+import { factory } from "@/factory"
+import { UsageError } from "@/lib/errors"
+
+export const help = `karte review cycle update --id <id> --title <t> --period <p> [--due <d>]`
+
+export default factory.createHandlers(
+  zValidator(
+    "json",
+    z.object({
+      help: z.string().optional(),
+      id: z.string().optional(),
+      title: z.string().optional(),
+      period: z.string().optional(),
+      due: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    const query = c.req.valid("json")
+
+    if (query.help) return c.text(help)
+
+    if (!query.id || !query.title || !query.period) {
+      throw new UsageError("--id と --title と --period が必要です")
+    }
+
+    const client = await createClient()
+
+    const response = await client["review-cycles"][":cycle_id"].$put({
+      param: { cycle_id: query.id },
+      json: {
+        title: query.title,
+        period: query.period,
+        dueDate: query.due,
+      },
+    })
+
+    return c.json(await response.json())
+  },
+)

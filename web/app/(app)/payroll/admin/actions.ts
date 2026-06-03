@@ -1,6 +1,10 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cancelPayslip } from "@/lib/api/cancel-payslip"
+import { cancelSalaryRevision } from "@/lib/api/cancel-salary-revision"
+import { correctPayslip } from "@/lib/api/correct-payslip"
+import { correctSalaryRevision } from "@/lib/api/correct-salary-revision"
 import { createSalaryRevision } from "@/lib/api/create-salary-revision"
 import { issuePayslip } from "@/lib/api/issue-payslip"
 
@@ -99,6 +103,144 @@ export async function createSalaryRevisionAction(
 
   if (created instanceof Error) {
     return { ok: false, error: "給与改定の作成に失敗しました" }
+  }
+
+  revalidatePath("/payroll/salary-revisions")
+
+  return { ok: true, error: null }
+}
+
+// 給与明細の訂正 Server Action。payslip_id/period/base_salary/net_pay 必須、手当・控除は任意。
+// 金額は api 側で再計算せず、入力値をそのまま記録する。
+export async function correctPayslipAction(
+  previousState: PayrollAdminFormState,
+  formData: FormData,
+): Promise<PayrollAdminFormState> {
+  const payslipId = Number(formData.get("payslip_id"))
+
+  if (!Number.isInteger(payslipId) || payslipId <= 0) {
+    return { ok: false, error: "給与明細 ID を入力してください" }
+  }
+
+  const periodValue = formData.get("period")
+
+  const period = typeof periodValue === "string" ? periodValue.trim() : ""
+
+  if (period === "") {
+    return { ok: false, error: "対象期間を入力してください" }
+  }
+
+  const baseSalary = Number(formData.get("base_salary"))
+
+  if (!Number.isFinite(baseSalary) || baseSalary < 0) {
+    return { ok: false, error: "基本給は 0 以上の数で入力してください" }
+  }
+
+  const netPay = Number(formData.get("net_pay"))
+
+  if (!Number.isFinite(netPay) || netPay < 0) {
+    return { ok: false, error: "差引支給額は 0 以上の数で入力してください" }
+  }
+
+  const corrected = await correctPayslip(payslipId, {
+    period: period,
+    base_salary: baseSalary,
+    allowances: toNonNegativeNumber(formData.get("allowances")),
+    deductions: toNonNegativeNumber(formData.get("deductions")),
+    net_pay: netPay,
+  })
+
+  if (corrected instanceof Error) {
+    return { ok: false, error: "給与明細の訂正に失敗しました" }
+  }
+
+  revalidatePath("/payroll")
+
+  return { ok: true, error: null }
+}
+
+// 給与明細の取消 Server Action。payslip_id 必須。記録の削除のみを行う。
+export async function cancelPayslipAction(
+  previousState: PayrollAdminFormState,
+  formData: FormData,
+): Promise<PayrollAdminFormState> {
+  const payslipId = Number(formData.get("payslip_id"))
+
+  if (!Number.isInteger(payslipId) || payslipId <= 0) {
+    return { ok: false, error: "給与明細 ID を入力してください" }
+  }
+
+  const cancelled = await cancelPayslip(payslipId)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: "給与明細の取消に失敗しました" }
+  }
+
+  revalidatePath("/payroll")
+
+  return { ok: true, error: null }
+}
+
+// 給与改定の訂正 Server Action。id/effective_date/new_base_salary 必須、理由は任意。
+export async function correctSalaryRevisionAction(
+  previousState: PayrollAdminFormState,
+  formData: FormData,
+): Promise<PayrollAdminFormState> {
+  const salaryRevisionId = Number(formData.get("id"))
+
+  if (!Number.isInteger(salaryRevisionId) || salaryRevisionId <= 0) {
+    return { ok: false, error: "対象の給与改定が不正です" }
+  }
+
+  const effectiveDateValue = formData.get("effective_date")
+
+  const effectiveDate = typeof effectiveDateValue === "string" ? effectiveDateValue : ""
+
+  if (effectiveDate === "") {
+    return { ok: false, error: "適用日を入力してください" }
+  }
+
+  const newBaseSalary = Number(formData.get("new_base_salary"))
+
+  if (!Number.isFinite(newBaseSalary) || newBaseSalary < 0) {
+    return { ok: false, error: "改定後基本給は 0 以上の数で入力してください" }
+  }
+
+  const reasonValue = formData.get("reason")
+
+  const reason =
+    typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : null
+
+  const corrected = await correctSalaryRevision(salaryRevisionId, {
+    effective_date: effectiveDate,
+    new_base_salary: newBaseSalary,
+    reason: reason,
+  })
+
+  if (corrected instanceof Error) {
+    return { ok: false, error: "給与改定の訂正に失敗しました" }
+  }
+
+  revalidatePath("/payroll/salary-revisions")
+
+  return { ok: true, error: null }
+}
+
+// 給与改定の取消 Server Action。id 必須。記録を削除する。
+export async function cancelSalaryRevisionAction(
+  previousState: PayrollAdminFormState,
+  formData: FormData,
+): Promise<PayrollAdminFormState> {
+  const salaryRevisionId = Number(formData.get("id"))
+
+  if (!Number.isInteger(salaryRevisionId) || salaryRevisionId <= 0) {
+    return { ok: false, error: "対象の給与改定が不正です" }
+  }
+
+  const cancelled = await cancelSalaryRevision(salaryRevisionId)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: "給与改定の取消に失敗しました" }
   }
 
   revalidatePath("/payroll/salary-revisions")

@@ -24,6 +24,13 @@ export type ReviewCycleCreateRequest = {
   dueDate: string | null
 }
 
+// PUT /review-cycles/:cycle_id のリクエスト body（管理者がサイクルの題目・期間・締切を更新）。
+export type ReviewCycleUpdateRequest = {
+  title: string
+  period: string
+  dueDate: string | null
+}
+
 // GET /review-forms/me の各要素。POST /review-forms/:form_id/submit のレスポンスも同形。
 export type ReviewFormResponse = {
   id: number

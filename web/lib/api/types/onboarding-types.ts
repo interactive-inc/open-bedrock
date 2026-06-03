@@ -15,6 +15,31 @@ export type OnboardingTemplate = {
   task_count: number
 }
 
+// GET /onboarding/templates/:code のレスポンス、POST /onboarding/templates・PUT のレスポンスも同形。
+// id は作成/更新ルートが整形して返すため number、未採番の保険として null を含める。
+export type OnboardingTemplateDetail = {
+  id: number | null
+  code: string
+  name: string
+  kind: string
+  description: string | null
+}
+
+// POST /onboarding/templates のリクエスト body（管理権限がテンプレートを作成する）。
+export type OnboardingTemplateCreateRequest = {
+  code: string
+  name: string
+  kind: OnboardingKind
+  description: string | null
+}
+
+// PUT /onboarding/templates/:code のリクエスト body（code は変更されない）。
+export type OnboardingTemplateUpdateRequest = {
+  name: string
+  kind: OnboardingKind
+  description: string | null
+}
+
 // GET /onboarding/me / 各 assignment 配下のタスク。
 export type OnboardingTask = {
   id: number
