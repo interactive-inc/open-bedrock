@@ -1,0 +1,57 @@
+import { CreateBusinessTrip } from "@/application/business-trip/create-business-trip"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      destination: z.string().min(1),
+      start_date: z.string().min(1),
+      end_date: z.string().min(1),
+      purpose: z.string().min(1),
+      estimated_cost: z.number().int().nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
+
+    const json = c.req.valid("json")
+
+    const businessTrip = await new CreateBusinessTrip(c).run({
+      travelerId: viewer.employeeId,
+      destination: json.destination,
+      startDate: json.start_date,
+      endDate: json.end_date,
+      purpose: json.purpose,
+      estimatedCost: json.estimated_cost ?? null,
+      createdAt: c.env.NOW ?? new Date().toISOString(),
+    })
+
+    if (businessTrip instanceof Error) {
+      throw new InternalError("failed to create business trip")
+    }
+
+    const responseBody = {
+      id: businessTrip.id,
+      traveler_id: businessTrip.travelerId,
+      destination: businessTrip.destination,
+      start_date: businessTrip.startDate,
+      end_date: businessTrip.endDate,
+      purpose: businessTrip.purpose,
+      estimated_cost: businessTrip.estimatedCost,
+      status: businessTrip.status,
+      created_at: businessTrip.createdAt,
+    }
+
+    return c.json(responseBody, 201)
+  },
+)

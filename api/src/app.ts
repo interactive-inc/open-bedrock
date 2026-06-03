@@ -26,6 +26,12 @@ import * as attendanceMeSummaryRoute from "@/interface/attendance/me/summary/rou
 import * as authLoginRoute from "@/interface/auth/login/route"
 import * as authMeRoute from "@/interface/auth/me/route"
 import * as batchRoute from "@/interface/batch/route"
+import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
+import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
+import * as businessTripMineRoute from "@/interface/business-trip/business-trips/me/route"
+import * as rentalReservationCreateRoute from "@/interface/rental/reservations/route"
+import * as rentalReservationDetailRoute from "@/interface/rental/reservations/[id]/route"
+import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/route"
 import * as careerPostingApplyRoute from "@/interface/career/postings/[posting_id]/apply/route"
 import * as careerPostingListRoute from "@/interface/career/postings/route"
 import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
@@ -299,6 +305,16 @@ export const app = factory
   .delete("/expenses/:id", ...expenseDetailRoute.DELETE)
   .put("/training/courses/:code", ...trainingCourseDetailRoute.PUT)
   .delete("/training/courses/:code", ...trainingCourseDetailRoute.DELETE)
+  .post("/business-trips", ...businessTripCreateRoute.POST)
+  .get("/business-trips/me", ...businessTripMineRoute.GET)
+  .get("/business-trips/:id", ...businessTripDetailRoute.GET)
+  .put("/business-trips/:id", ...businessTripDetailRoute.PUT)
+  .delete("/business-trips/:id", ...businessTripDetailRoute.DELETE)
+  .post("/rentals", ...rentalReservationCreateRoute.POST)
+  .get("/rentals/me", ...rentalReservationMineRoute.GET)
+  .get("/rentals/:id", ...rentalReservationDetailRoute.GET)
+  .put("/rentals/:id", ...rentalReservationDetailRoute.PUT)
+  .delete("/rentals/:id", ...rentalReservationDetailRoute.DELETE)
 
 export type AppType = typeof app
 
