@@ -537,6 +537,35 @@ export const surveyResponses = sqliteTable("survey_responses", {
 
 export type SurveyResponseRow = InferSelectModel<typeof surveyResponses>
 
+// 出張申請（行き先・期間・目的・概算費用の記録。金額の計算や判定は持たず記録のみ）
+export const businessTrips = sqliteTable("business_trips", {
+  id: text("id").primaryKey(),
+  travelerId: integer("traveler_id").notNull(),
+  destination: text("destination").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  purpose: text("purpose").notNull(),
+  estimatedCost: integer("estimated_cost"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type BusinessTripRow = InferSelectModel<typeof businessTrips>
+
+// 物のレンタル予約（外部からの貸与品の予約申請。期間と用途を記録）
+export const rentalReservations = sqliteTable("rental_reservations", {
+  id: text("id").primaryKey(),
+  requesterId: integer("requester_id").notNull(),
+  itemName: text("item_name").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  purpose: text("purpose"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type RentalReservationRow = InferSelectModel<typeof rentalReservations>
+
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
 export const schema = {
   employees,
@@ -581,4 +610,6 @@ export const schema = {
   employeeSkills,
   surveys,
   surveyResponses,
+  businessTrips,
+  rentalReservations,
 }

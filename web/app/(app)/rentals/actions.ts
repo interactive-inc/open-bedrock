@@ -1,0 +1,133 @@
+"use server"
+
+import { revalidatePath } from "next/cache"
+import { cancelRentalReservation } from "@/lib/api/cancel-rental-reservation"
+import { createRentalReservation } from "@/lib/api/create-rental-reservation"
+import { updateRentalReservation } from "@/lib/api/update-rental-reservation"
+
+// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+export type RentalReservationActionState = {
+  ok: boolean
+  error: string | null
+}
+
+// レンタル予約申請 Server Action。item_name/start_date/end_date 必須、purpose は任意。
+// 成功時は /rentals を revalidate して一覧へ反映する。
+export async function createRentalReservationAction(
+  previousState: RentalReservationActionState,
+  formData: FormData,
+): Promise<RentalReservationActionState> {
+  const itemName = toText(formData.get("item_name"))
+
+  if (itemName === null) {
+    return { ok: false, error: "品名を入力してください" }
+  }
+
+  const startDate = toText(formData.get("start_date"))
+
+  const endDate = toText(formData.get("end_date"))
+
+  if (startDate === null) {
+    return { ok: false, error: "開始日を入力してください" }
+  }
+
+  if (endDate === null) {
+    return { ok: false, error: "終了日を入力してください" }
+  }
+
+  if (endDate < startDate) {
+    return { ok: false, error: "終了日は開始日以降にしてください" }
+  }
+
+  const created = await createRentalReservation({
+    item_name: itemName,
+    start_date: startDate,
+    end_date: endDate,
+    purpose: toText(formData.get("purpose")),
+  })
+
+  if (created instanceof Error) {
+    return { ok: false, error: "予約の申請に失敗しました" }
+  }
+
+  revalidatePath("/rentals")
+
+  return { ok: true, error: null }
+}
+
+// レンタル予約変更 Server Action。reservation_id/item_name/start_date/end_date 必須、purpose は任意。
+// 本人以外の変更は api がエラーを返す。成功時は /rentals を revalidate する。
+export async function updateRentalReservationAction(
+  previousState: RentalReservationActionState,
+  formData: FormData,
+): Promise<RentalReservationActionState> {
+  const reservationId = toText(formData.get("reservation_id"))
+
+  if (reservationId === null) {
+    return { ok: false, error: "予約を特定できませんでした" }
+  }
+
+  const itemName = toText(formData.get("item_name"))
+
+  const startDate = toText(formData.get("start_date"))
+
+  const endDate = toText(formData.get("end_date"))
+
+  if (itemName === null) {
+    return { ok: false, error: "品名を入力してください" }
+  }
+
+  if (startDate === null || endDate === null) {
+    return { ok: false, error: "開始日と終了日を入力してください" }
+  }
+
+  if (endDate < startDate) {
+    return { ok: false, error: "終了日は開始日以降にしてください" }
+  }
+
+  const updated = await updateRentalReservation(reservationId, {
+    item_name: itemName,
+    start_date: startDate,
+    end_date: endDate,
+    purpose: toText(formData.get("purpose")),
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "予約の変更に失敗しました" }
+  }
+
+  revalidatePath("/rentals")
+
+  return { ok: true, error: null }
+}
+
+// レンタル予約取消 Server Action。reservation_id 必須。成功時は /rentals を revalidate する。
+export async function cancelRentalReservationAction(
+  previousState: RentalReservationActionState,
+  formData: FormData,
+): Promise<RentalReservationActionState> {
+  const reservationId = toText(formData.get("reservation_id"))
+
+  if (reservationId === null) {
+    return { ok: false, error: "予約を特定できませんでした" }
+  }
+
+  const cancelled = await cancelRentalReservation(reservationId)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: "予約の取消に失敗しました" }
+  }
+
+  revalidatePath("/rentals")
+
+  return { ok: true, error: null }
+}
+
+// FormData 値を trim した文字列へ。未入力や空文字は null。
+function toText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
+  }
+
+  return value.trim()
+}

@@ -16,6 +16,7 @@ import {
   Inbox,
   LayoutDashboard,
   MessagesSquare,
+  Package,
   Plane,
   ReceiptText,
   Sparkles,
@@ -100,6 +101,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
     heading: "リソース",
     items: [
       { label: "会議室", href: "/rooms", icon: CalendarClock },
+      { label: "レンタル", href: "/rentals", icon: Package },
       { label: "備品", href: "/assets", icon: Boxes },
     ],
   },
