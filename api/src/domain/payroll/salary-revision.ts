@@ -69,4 +69,19 @@ export class SalaryRevision implements Props {
       createdAt: row.createdAt,
     })
   }
+
+  // 改定後基本給を訂正した新しい給与改定を返す。
+  withNewBaseSalary(newBaseSalary: number): SalaryRevision {
+    return new SalaryRevision({ ...this.props, newBaseSalary })
+  }
+
+  // 適用日を訂正した新しい給与改定を返す。
+  withEffectiveDate(effectiveDate: string): SalaryRevision {
+    return new SalaryRevision({ ...this.props, effectiveDate })
+  }
+
+  // 理由を訂正した新しい給与改定を返す。
+  withReason(reason: string | null): SalaryRevision {
+    return new SalaryRevision({ ...this.props, reason })
+  }
 }

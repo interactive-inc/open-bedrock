@@ -62,3 +62,25 @@ export type RoomReservationUpdateRequest = {
   end_at: string
   purpose: string | null
 }
+
+// GET /rooms・GET /rooms/:id のレスポンス要素（会議室マスタ 1 件）。
+export type RoomResponse = {
+  id: number
+  name: string
+  capacity: number
+  location: string | null
+}
+
+// POST /rooms のリクエストボディ。location は値なし可。
+export type RoomCreateRequest = {
+  name: string
+  capacity: number
+  location: string | null
+}
+
+// PUT /rooms/:id のリクエストボディ。location は値なし可。
+export type RoomUpdateRequest = {
+  name: string
+  capacity: number
+  location: string | null
+}

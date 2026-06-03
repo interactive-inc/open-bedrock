@@ -40,6 +40,29 @@ export type PayslipIssueRequest = {
   deductions: number
 }
 
+// PUT /payslips/:id のリクエスト body（特権ロールが期間と金額を訂正）。
+// 金額は api 側で再計算せず、渡された値をそのまま記録する。
+export type PayslipCorrectRequest = {
+  period: string
+  base_salary: number
+  allowances: number
+  deductions: number
+  net_pay: number
+}
+
+// PUT /payslips/:id のレスポンス（訂正後の給与明細）。詳細と同形。
+export type PayslipCorrectResponse = {
+  id: number | null
+  employee_id: number
+  period: string
+  base_salary: number
+  allowances: number
+  deductions: number
+  net_pay: number
+  issued_at: string | null
+  status: string
+}
+
 // GET /salary-revisions/:employee_code の各要素（給与改定履歴）。
 export type SalaryRevisionResponse = {
   id: number
@@ -59,4 +82,12 @@ export type SalaryRevisionCreateRequest = {
   new_base_salary: number
   // api 側は .optional()（string | undefined）のため null ではなく省略可能にする。
   reason?: string
+}
+
+// PUT /salary-revisions/:id のリクエスト body（特権ロールが既存の改定を訂正）。
+// 金額は api 側で再計算せず、渡された値をそのまま記録する。reason は api 側で nullable。
+export type SalaryRevisionCorrectRequest = {
+  effective_date: string
+  new_base_salary: number
+  reason: string | null
 }

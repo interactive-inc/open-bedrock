@@ -68,3 +68,18 @@ export type SurveySummary = {
   response_count: number
   questions: ReadonlyArray<SurveyQuestionSummary>
 }
+
+// POST /surveys のリクエストボディ（管理者ロールのみ）。
+// questions_json は設問定義の配列。api 側で内容を検証する。
+export type CreateSurveyRequest = {
+  title: string
+  status: "open" | "closed"
+  questions_json: ReadonlyArray<unknown>
+}
+
+// PUT /surveys/:survey_id のリクエストボディ（管理者ロールのみ）。
+export type UpdateSurveyRequest = {
+  title: string
+  status: "open" | "closed"
+  questions_json: ReadonlyArray<unknown>
+}

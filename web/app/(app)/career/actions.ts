@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { applyCareerPosting } from "@/lib/api/apply-career-posting"
+import { createCareerPosting } from "@/lib/api/create-career-posting"
+import { deleteCareerPosting } from "@/lib/api/delete-career-posting"
 import { updateCareerApplication } from "@/lib/api/update-career-application"
+import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
 
@@ -129,6 +132,142 @@ export async function withdrawCareerApplicationAction(
   revalidatePath("/career")
 
   return { ok: true, error: null }
+}
+
+// 管理ロール向け公募操作の共通の戻り値。ok=成功 / error=表示するエラー文言。
+export type CareerPostingFormState = {
+  ok: boolean
+  error: string | null
+}
+
+// 公募作成の Server Action（管理ロール）。title 必須、部署・必要スキルは任意。
+export async function createCareerPostingAction(
+  previousState: CareerPostingFormState,
+  formData: FormData,
+): Promise<CareerPostingFormState> {
+  const title = toText(formData.get("title"))
+
+  if (title === null) {
+    return { ok: false, error: "公募名を入力してください" }
+  }
+
+  const deptId = toOptionalId(formData.get("dept_id"))
+
+  if (deptId === "invalid") {
+    return { ok: false, error: "部署IDは整数で入力してください" }
+  }
+
+  const created = await createCareerPosting({
+    title: title,
+    dept_id: deptId,
+    dept_name: toText(formData.get("dept_name")),
+    required_skills: toText(formData.get("required_skills")),
+    status: toPostingStatus(formData.get("status")),
+  })
+
+  if (created instanceof Error) {
+    return { ok: false, error: "公募の作成に失敗しました" }
+  }
+
+  revalidatePath("/career")
+
+  return { ok: true, error: null }
+}
+
+// 公募変更の Server Action（管理ロール）。posting_id は hidden、内容は各 input で受け取る。
+export async function updateCareerPostingAction(
+  previousState: CareerPostingFormState,
+  formData: FormData,
+): Promise<CareerPostingFormState> {
+  const postingId = toPostingId(formData.get("posting_id"))
+
+  if (postingId === null) {
+    return { ok: false, error: "公募を特定できませんでした" }
+  }
+
+  const title = toText(formData.get("title"))
+
+  if (title === null) {
+    return { ok: false, error: "公募名を入力してください" }
+  }
+
+  const deptId = toOptionalId(formData.get("dept_id"))
+
+  if (deptId === "invalid") {
+    return { ok: false, error: "部署IDは整数で入力してください" }
+  }
+
+  const updated = await updateCareerPosting(postingId, {
+    title: title,
+    dept_id: deptId,
+    dept_name: toText(formData.get("dept_name")),
+    required_skills: toText(formData.get("required_skills")),
+    status: toPostingStatus(formData.get("status")),
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "公募の変更に失敗しました" }
+  }
+
+  revalidatePath("/career")
+
+  return { ok: true, error: null }
+}
+
+// 公募削除の Server Action（管理ロール）。posting_id を hidden で受け取る。
+export async function deleteCareerPostingAction(
+  previousState: CareerPostingFormState,
+  formData: FormData,
+): Promise<CareerPostingFormState> {
+  const postingId = toPostingId(formData.get("posting_id"))
+
+  if (postingId === null) {
+    return { ok: false, error: "公募を特定できませんでした" }
+  }
+
+  const deleted = await deleteCareerPosting(postingId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "公募の削除に失敗しました" }
+  }
+
+  revalidatePath("/career")
+
+  return { ok: true, error: null }
+}
+
+// 文字列フィールドを取り出す。空文字や非文字列は null。
+function toText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  return trimmed === "" ? null : trimmed
+}
+
+// 任意の整数 ID フィールド。未入力は null、整数でなければ "invalid"。
+function toOptionalId(value: FormDataEntryValue | null): number | null | "invalid" {
+  const text = toText(value)
+
+  if (text === null) {
+    return null
+  }
+
+  const parsed = Number(text)
+
+  return Number.isInteger(parsed) ? parsed : "invalid"
+}
+
+// status フィールドを open/closed に正規化する。closed 以外は open。
+function toPostingStatus(value: FormDataEntryValue | null): "open" | "closed" {
+  return value === "closed" ? "closed" : "open"
+}
+
+// posting_id の FormData 値を正の整数へ。未入力や不正値は null。
+function toPostingId(value: FormDataEntryValue | null): number | null {
+  return toApplicationId(value)
 }
 
 // application_id の FormData 値を正の整数へ。未入力や不正値は null。

@@ -33,6 +33,7 @@ import * as rentalReservationCreateRoute from "@/interface/rental/reservations/r
 import * as rentalReservationDetailRoute from "@/interface/rental/reservations/[id]/route"
 import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/route"
 import * as careerPostingApplyRoute from "@/interface/career/postings/[posting_id]/apply/route"
+import * as careerPostingDetailRoute from "@/interface/career/postings/[posting_id]/route"
 import * as careerPostingListRoute from "@/interface/career/postings/route"
 import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
@@ -146,6 +147,14 @@ import * as yearEndAdjustmentMineRoute from "@/interface/year-end-adjustment/yea
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
+import * as applicationTemplateCreateRoute from "@/interface/application/templates/create-route"
+import * as roomMasterListRoute from "@/interface/room/rooms/route"
+import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
+import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
+import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
+import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates/[code]/route"
+import * as payrollSalaryRevisionDetailRoute from "@/interface/payroll/salary-revisions/[id]/route"
+import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
@@ -199,7 +208,11 @@ export const app = factory
   .post("/surveys/:survey_id/responses", ...surveyResponseCreateRoute.POST)
   .get("/surveys", ...surveyListRoute.GET)
   .get("/career/postings", ...careerPostingListRoute.GET)
+  .post("/career/postings", ...careerPostingListRoute.POST)
   .post("/career/postings/:posting_id/apply", ...careerPostingApplyRoute.POST)
+  .get("/career/postings/:posting_id", ...careerPostingDetailRoute.GET)
+  .put("/career/postings/:posting_id", ...careerPostingDetailRoute.PUT)
+  .delete("/career/postings/:posting_id", ...careerPostingDetailRoute.DELETE)
   .get("/career/sheet/me", ...careerSheetMeRoute.GET)
   .put("/career/sheet/me", ...careerSheetMeUpdateRoute.PUT)
   .get("/assets/lent/me", ...assetLentMeRoute.GET)
@@ -363,6 +376,27 @@ export const app = factory
   .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)
   .put("/antisocial-checks/:id", ...antisocialCheckDetailRoute.PUT)
   .delete("/antisocial-checks/:id", ...antisocialCheckDetailRoute.DELETE)
+  .post("/templates", ...applicationTemplateCreateRoute.POST)
+  .put("/templates/:code", ...applicationTemplateDetailRoute.PUT)
+  .delete("/templates/:code", ...applicationTemplateDetailRoute.DELETE)
+  .get("/rooms", ...roomMasterListRoute.GET)
+  .post("/rooms", ...roomMasterListRoute.POST)
+  .get("/rooms/:id", ...roomMasterDetailRoute.GET)
+  .put("/rooms/:id", ...roomMasterDetailRoute.PUT)
+  .delete("/rooms/:id", ...roomMasterDetailRoute.DELETE)
+  .post("/surveys", ...surveyCreateRoute.POST)
+  .put("/surveys/:survey_id", ...surveyDetailRoute.PUT)
+  .delete("/surveys/:survey_id", ...surveyDetailRoute.DELETE)
+  .post("/onboarding/templates", ...onboardingTemplateListRoute.POST)
+  .get("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.GET)
+  .put("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.PUT)
+  .delete("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.DELETE)
+  .put("/payslips/:id", ...payrollPayslipDetailRoute.PUT)
+  .delete("/payslips/:id", ...payrollPayslipDetailRoute.DELETE)
+  .put("/salary-revisions/:id", ...payrollSalaryRevisionDetailRoute.PUT)
+  .delete("/salary-revisions/:id", ...payrollSalaryRevisionDetailRoute.DELETE)
+  .put("/review-cycles/:cycle_id", ...reviewCycleEditRoute.PUT)
+  .delete("/review-cycles/:cycle_id", ...reviewCycleEditRoute.DELETE)
 
 export type AppType = typeof app
 

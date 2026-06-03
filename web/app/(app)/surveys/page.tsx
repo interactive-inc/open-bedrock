@@ -1,5 +1,7 @@
+import Link from "next/link"
 import { Suspense } from "react"
 import { SurveyListTable } from "@/app/(app)/surveys/survey-list-table"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "サーベイ" }
@@ -9,7 +11,13 @@ export const metadata = { title: "サーベイ" }
 export default function SurveysPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">サーベイ</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">サーベイ</h1>
+
+        <Button variant="outline" render={<Link href="/surveys/manage" />}>
+          管理
+        </Button>
+      </div>
 
       <Suspense fallback={<SurveyListSkeleton />}>
         <SurveyListTable />
