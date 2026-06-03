@@ -14,7 +14,6 @@ const attendanceSummaryResponseSchema = z.object({
   month: z.string(),
   work_days: z.number(),
   total_work_minutes: z.number(),
-  total_overtime_minutes: z.number(),
 })
 
 async function createTestDb(): Promise<D1Database> {
@@ -30,7 +29,6 @@ async function createTestDb(): Promise<D1Database> {
       clock_in_at: record.clockInAt,
       clock_out_at: record.clockOutAt,
       work_minutes: record.workMinutes,
-      overtime_minutes: record.overtimeMinutes,
       status: record.status,
     })),
   )
@@ -68,7 +66,6 @@ describe("GET /attendance/me/summary", () => {
       expect(parsed.data.month).toBe("2026-05")
       expect(parsed.data.work_days).toBe(2)
       expect(parsed.data.total_work_minutes).toBe(1050)
-      expect(parsed.data.total_overtime_minutes).toBe(90)
     }
   })
 

@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { MyShiftAssignments } from "@/app/(app)/shift/my-shift-assignments"
+import { MyShiftSwapRequests } from "@/app/(app)/shift/my-shift-swap-requests"
 import { ShiftAssignmentCreateForm } from "@/app/(app)/shift/shift-assignment-create-form"
 import { ShiftAssignmentList } from "@/app/(app)/shift/shift-assignment-list"
 import { ShiftPatternCreateForm } from "@/app/(app)/shift/shift-pattern-create-form"
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { getMyShiftAssignments } from "@/lib/api/get-my-shift-assignments"
+import { getMyShiftSwapRequests } from "@/lib/api/get-my-shift-swap-requests"
 import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
@@ -40,7 +42,15 @@ export default async function ShiftPage() {
         <h2 className="text-lg font-medium">シフトパターン</h2>
 
         <Suspense fallback={<ShiftSkeleton />}>
-          <Patterns />
+          <Patterns canManage={canManage} />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">自分の交代申請</h2>
+
+        <Suspense fallback={<ShiftSkeleton />}>
+          <MySwapRequests />
         </Suspense>
       </section>
 
@@ -103,14 +113,25 @@ async function MyShift() {
 }
 
 // /shift/patterns を認証付きで取得してパターン一覧を描画する非同期 RSC。
-async function Patterns() {
+async function Patterns(props: { canManage: boolean }) {
   const patterns = await getShiftPatterns()
 
   if (patterns instanceof Error) {
     return <p className="text-sm text-destructive">シフトパターンの取得に失敗しました</p>
   }
 
-  return <ShiftPatternList patterns={patterns} />
+  return <ShiftPatternList patterns={patterns} canManage={props.canManage} />
+}
+
+// /shift/swap-requests/me を認証付きで取得して自分の交代申請を描画する非同期 RSC。
+async function MySwapRequests() {
+  const swapRequests = await getMyShiftSwapRequests()
+
+  if (swapRequests instanceof Error) {
+    return <p className="text-sm text-destructive">交代申請の取得に失敗しました</p>
+  }
+
+  return <MyShiftSwapRequests swapRequests={swapRequests} />
 }
 
 // /shift/assignments を認証付きで取得して横断のシフト割当を描画する非同期 RSC（特権ロール）。

@@ -25,3 +25,21 @@ export type KnowledgeDetailResponse = {
   tags: string | null
   body_md: string
 }
+
+// POST /knowledge のリクエストボディ。
+// api/src/interface/knowledge/route.ts の zValidator と同形。tags は省略可・null 可。
+export type KnowledgeCreateRequest = {
+  title: string
+  category: string
+  tags?: string | null
+  body_md: string
+}
+
+// PUT /knowledge/:id のリクエストボディ。作成時と同じ全項目を送る。
+// api/src/interface/knowledge/[id]/route.ts の zValidator と同形。
+export type KnowledgeUpdateRequest = {
+  title: string
+  category: string
+  tags?: string | null
+  body_md: string
+}

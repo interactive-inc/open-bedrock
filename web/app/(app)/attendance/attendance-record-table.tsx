@@ -17,7 +17,6 @@ type AttendanceRecord = {
   clock_in_at: string | null
   clock_out_at: string | null
   work_minutes: number | null
-  overtime_minutes: number | null
   status: string
 }
 
@@ -28,7 +27,7 @@ type Props = {
 }
 
 // 勤怠レコードをテーブル描画する表示専用コンポーネント。本人 / 管理者で共有する。
-// status はバッジ、勤務 / 残業時間は分を Hh Mm へ整形して表示する。
+// status はバッジ、勤務時間は分を Hh Mm へ整形して表示する。
 export function AttendanceRecordTable(props: Props) {
   return (
     <Table>
@@ -41,7 +40,6 @@ export function AttendanceRecordTable(props: Props) {
           <TableHead>出勤</TableHead>
           <TableHead>退勤</TableHead>
           <TableHead className="text-right">勤務</TableHead>
-          <TableHead className="text-right">残業</TableHead>
           <TableHead>ステータス</TableHead>
         </TableRow>
       </TableHeader>
@@ -58,8 +56,6 @@ export function AttendanceRecordTable(props: Props) {
             <TableCell>{record.clock_out_at ?? "-"}</TableCell>
 
             <TableCell className="text-right">{toDurationLabel(record.work_minutes)}</TableCell>
-
-            <TableCell className="text-right">{toDurationLabel(record.overtime_minutes)}</TableCell>
 
             <TableCell>
               <Badge variant={record.status === "closed" ? "secondary" : "outline"}>

@@ -11,7 +11,7 @@ const zProps = z.object({
   deptId: z.number().nullable(),
   deptName: z.string().nullable(),
   position: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["active", "leave", "retired"]),
 })
 
 type Props = z.infer<typeof zProps>
@@ -62,5 +62,18 @@ export class Employee implements Props {
 
   withStatus(status: Props["status"]) {
     return new Employee({ ...this.props, status })
+  }
+
+  // 氏名・メール・ロール・部署・役職・在籍状況を差し替えた新しい従業員を返す。
+  withProfile(profile: {
+    name: Props["name"]
+    email: Props["email"]
+    role: Props["role"]
+    deptId: Props["deptId"]
+    deptName: Props["deptName"]
+    position: Props["position"]
+    status: Props["status"]
+  }) {
+    return new Employee({ ...this.props, ...profile })
   }
 }

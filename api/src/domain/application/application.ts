@@ -82,6 +82,10 @@ export class Application implements Props {
   withCurrentStep(currentStep: Props["currentStep"]) {
     return new Application({ ...this.props, currentStep })
   }
+
+  withPayload(payload: Props["payload"]) {
+    return new Application({ ...this.props, payload })
+  }
 }
 
 function toStatus(value: string): Application["status"] | Error {

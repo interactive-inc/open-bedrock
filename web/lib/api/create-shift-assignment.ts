@@ -10,7 +10,14 @@ export async function createShiftAssignment(
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.shift.assignments.$post({ json: request })
+  const response = await client.shift.assignments.$post({
+    json: {
+      employee_code: request.employee_code,
+      pattern_code: request.pattern_code,
+      date: request.date,
+      note: request.note ?? undefined,
+    },
+  })
 
   if (response.status >= 400) {
     return new Error("failed to create shift assignment")

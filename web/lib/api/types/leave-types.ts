@@ -65,3 +65,25 @@ export type LeaveRequestCreated = {
 export type LeaveDecisionResponse = {
   status: LeaveStatus
 }
+
+// PUT /leave/requests/:id のリクエストボディ。
+export type LeaveRequestUpdateRequest = {
+  leave_type: LeaveType
+  start_date: string
+  end_date: string
+  reason: string | null
+}
+
+// GET /leave/requests/:id と PUT /leave/requests/:id のレスポンス。api は snake_case で返す。
+// id は hc-client の materialize 上 number | null になるため合わせる。
+export type LeaveRequestDetailResponse = {
+  id: number | null
+  employee_id: number
+  leave_type: LeaveType
+  start_date: string
+  end_date: string
+  days: number
+  reason: string | null
+  status: LeaveStatus
+  created_at: string
+}

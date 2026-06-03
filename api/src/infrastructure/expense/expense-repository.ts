@@ -54,7 +54,13 @@ export class ExpenseRepository {
 
       const rows = await this.c.var.database
         .update(expenses)
-        .set({ status: expense.status })
+        .set({
+          category: expense.category,
+          amount: expense.amount,
+          spentAt: expense.spentAt,
+          note: expense.note,
+          status: expense.status,
+        })
         .where(eq(expenses.id, expense.id))
         .returning()
 
@@ -63,6 +69,17 @@ export class ExpenseRepository {
       return row === undefined ? null : Expense.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update expense")
+    }
+  }
+
+  // 経費申請を削除する。
+  async delete(expenseId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(expenses).where(eq(expenses.id, expenseId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete expense")
     }
   }
 

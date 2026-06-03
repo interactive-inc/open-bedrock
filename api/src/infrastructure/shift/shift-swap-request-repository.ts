@@ -1,7 +1,7 @@
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
 import type { Context } from "@/env"
 import { shiftSwapRequests } from "@/schema"
-import { eq } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 
 export class ShiftSwapRequestRepository {
   constructor(private readonly c: Context) {}
@@ -19,6 +19,22 @@ export class ShiftSwapRequestRepository {
       return row === undefined ? null : ShiftSwapRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load shift_swap_request")
+    }
+  }
+
+  async findByRequesterId(
+    requesterEmployeeId: number,
+  ): Promise<ReadonlyArray<ShiftSwapRequest> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(shiftSwapRequests)
+        .where(eq(shiftSwapRequests.requesterEmployeeId, requesterEmployeeId))
+        .orderBy(asc(shiftSwapRequests.date))
+
+      return rows.map((row) => ShiftSwapRequest.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load shift_swap_requests")
     }
   }
 
@@ -63,6 +79,18 @@ export class ShiftSwapRequestRepository {
       return row === undefined ? null : ShiftSwapRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to approve shift swap request")
+    }
+  }
+
+  async delete(swapRequestId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(shiftSwapRequests)
+        .where(eq(shiftSwapRequests.id, swapRequestId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete shift swap request")
     }
   }
 }

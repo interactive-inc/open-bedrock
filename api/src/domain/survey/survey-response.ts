@@ -57,4 +57,15 @@ export class SurveyResponse implements Props {
       submittedAt: row.submittedAt,
     })
   }
+
+  // 回答内容と提出時刻を差し替えた新しいインスタンスを返す。
+  withAnswers(props: { answersJson: unknown; submittedAt: string }): SurveyResponse {
+    return new SurveyResponse({
+      id: this.id,
+      surveyId: this.surveyId,
+      respondentId: this.respondentId,
+      answersJson: props.answersJson,
+      submittedAt: props.submittedAt,
+    })
+  }
 }

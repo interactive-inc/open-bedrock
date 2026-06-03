@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge"
-import type { PayslipStatus } from "@/lib/api/types/payroll-types"
 
 type Props = {
-  status: PayslipStatus
+  status: string
 }
 
 // 給与明細ステータスを日本語ラベルと配色付きの Badge で表示する。

@@ -5,6 +5,7 @@
 export type PayslipStatus = string
 
 // GET /payslips/me の各要素（自分の給与明細一覧）。
+// API ハンドラは status を string で返すため、union ではなく string で受ける。
 export type PayslipMineResponse = {
   id: number
   employee_id: number
@@ -14,7 +15,7 @@ export type PayslipMineResponse = {
   deductions: number
   net_pay: number
   issued_at: string | null
-  status: PayslipStatus
+  status: string
 }
 
 // GET /payslips/:id のレスポンス（給与明細詳細）。一覧と同形。
@@ -27,7 +28,7 @@ export type PayslipDetailResponse = {
   deductions: number
   net_pay: number
   issued_at: string | null
-  status: PayslipStatus
+  status: string
 }
 
 // POST /payslips のリクエスト body（特権ロールが対象社員の明細を発行）。
@@ -51,6 +52,7 @@ export type SalaryRevisionResponse = {
 }
 
 // POST /salary-revisions のリクエスト body（特権ロールが給与改定を作成）。
+// API ハンドラは reason を任意項目として受けるため optional で定義する。
 export type SalaryRevisionCreateRequest = {
   employee_code: string
   effective_date: string

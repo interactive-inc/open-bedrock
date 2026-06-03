@@ -1,12 +1,25 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { createAsset } from "@/lib/api/create-asset"
+import { deleteAsset } from "@/lib/api/delete-asset"
 import { lendAsset } from "@/lib/api/lend-asset"
 import { returnAsset } from "@/lib/api/return-asset"
+import { updateAsset } from "@/lib/api/update-asset"
 import type { AssetKind } from "@/lib/api/types/asset-types"
 
 export type AssetCreateFormState = {
+  ok: boolean
+  error: string | null
+}
+
+export type AssetUpdateFormState = {
+  ok: boolean
+  error: string | null
+}
+
+export type AssetDeleteFormState = {
   ok: boolean
   error: string | null
 }
@@ -151,4 +164,84 @@ export async function returnAssetAction(
   revalidatePath("/assets/lent/me")
 
   return { ok: true, error: null }
+}
+
+// 物品編集の Server Action。code は hidden、名称・種別・シリアル・購入日を更新する。
+// serial / purchased_on の空文字は値なし扱いで送らない。
+export async function updateAssetAction(
+  previousState: AssetUpdateFormState,
+  formData: FormData,
+): Promise<AssetUpdateFormState> {
+  const codeValue = formData.get("code")
+
+  const code = typeof codeValue === "string" ? codeValue : ""
+
+  if (code === "") {
+    return { ok: false, error: "資産が不正です" }
+  }
+
+  const nameValue = formData.get("name")
+
+  const name = typeof nameValue === "string" ? nameValue : ""
+
+  if (name === "") {
+    return { ok: false, error: "名称を入力してください" }
+  }
+
+  const kind = toKind(formData.get("kind"))
+
+  if (kind === null) {
+    return { ok: false, error: "種別を選択してください" }
+  }
+
+  const serialValue = formData.get("serial")
+
+  const serial = typeof serialValue === "string" && serialValue !== "" ? serialValue : undefined
+
+  const purchasedOnValue = formData.get("purchased_on")
+
+  const purchasedOn =
+    typeof purchasedOnValue === "string" && purchasedOnValue !== "" ? purchasedOnValue : undefined
+
+  const updated = await updateAsset(code, {
+    name: name,
+    kind: kind,
+    serial: serial,
+    purchased_on: purchasedOn,
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "物品の更新に失敗しました" }
+  }
+
+  revalidatePath("/assets")
+
+  revalidatePath(`/assets/${code}`)
+
+  return { ok: true, error: null }
+}
+
+// 物品削除の Server Action。code は hidden から受け取る。成功時は一覧へ遷移する。
+export async function deleteAssetAction(
+  previousState: AssetDeleteFormState,
+  formData: FormData,
+): Promise<AssetDeleteFormState> {
+  const codeValue = formData.get("code")
+
+  const code = typeof codeValue === "string" ? codeValue : ""
+
+  if (code === "") {
+    return { ok: false, error: "資産が不正です" }
+  }
+
+  const deleted = await deleteAsset(code)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "物品の削除に失敗しました（貸与中は削除できません）" }
+  }
+
+  revalidatePath("/assets")
+
+  // 削除後は詳細ページが消えるため一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。
+  redirect("/assets")
 }

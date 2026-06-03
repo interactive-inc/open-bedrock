@@ -2,10 +2,37 @@ import { Application } from "@/domain/application/application"
 import { ApplicationApproval } from "@/domain/application/application-approval"
 import type { Context } from "@/env"
 import { applicationApprovals, applications } from "@/schema"
-import { eq } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 
 export class ApplicationRepository {
   constructor(private readonly c: Context) {}
+
+  // 申請者本人の申請を作成日時の降順で返す。
+  async findByApplicantId(applicantId: number): Promise<ReadonlyArray<Application> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(applications)
+        .where(eq(applications.applicantId, applicantId))
+        .orderBy(desc(applications.createdAt))
+
+      const applicationList: Array<Application> = []
+
+      for (const row of rows) {
+        const application = Application.fromRow(row)
+
+        if (application instanceof Error) {
+          return application
+        }
+
+        applicationList.push(application)
+      }
+
+      return applicationList
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load applications")
+    }
+  }
 
   async findById(applicationId: number): Promise<Application | null | Error> {
     try {
@@ -64,6 +91,42 @@ export class ApplicationRepository {
       return row === undefined ? null : Application.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update application")
+    }
+  }
+
+  // 申請内容（payload）を更新する。status や currentStep は変更しない。
+  async updatePayload(application: Application): Promise<Application | null | Error> {
+    try {
+      if (application.id === null) {
+        return new Error("cannot update unsaved application")
+      }
+
+      const rows = await this.c.var.database
+        .update(applications)
+        .set({ payload: JSON.stringify(application.payload) })
+        .where(eq(applications.id, application.id))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Application.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update application")
+    }
+  }
+
+  // 申請を削除する。承認記録も併せて削除する。
+  async delete(applicationId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(applicationApprovals)
+        .where(eq(applicationApprovals.applicationId, applicationId))
+
+      await this.c.var.database.delete(applications).where(eq(applications.id, applicationId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete application")
     }
   }
 

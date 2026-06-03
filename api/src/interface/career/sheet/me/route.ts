@@ -1,8 +1,9 @@
+import { DeleteMyCareerSheet } from "@/application/career/delete-my-career-sheet"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { careerSheets } from "@/schema"
 import { eq } from "drizzle-orm"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /career/sheet/me — 本人のキャリアシート（未登録なら空のシート）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -40,4 +41,23 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   return c.json(responseBody, 200)
+})
+
+// DELETE /career/sheet/me — 本人のキャリアシートを削除（未登録でも 204）
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  const result = await new DeleteMyCareerSheet(c).run({
+    employeeId: session.employeeId,
+  })
+
+  if (result instanceof Error) {
+    throw new InternalError("failed to delete career sheet")
+  }
+
+  return c.body(null, 204)
 })

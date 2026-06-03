@@ -26,25 +26,17 @@ export default factory.createHandlers(
     if (!query.code || !query.name || !query.kind)
       throw new UsageError("--code と --name と --kind が必要です")
 
-    const payload: {
-      code: string
-      name: string
-      kind: "pc" | "monitor" | "furniture" | "other"
-      serial?: string
-      purchased_on?: string
-    } = {
-      code: query.code,
-      name: query.name,
-      kind: query.kind,
-    }
-
-    if (query.serial) payload.serial = query.serial
-
-    if (query["purchased-on"]) payload.purchased_on = query["purchased-on"]
-
     const client = await createClient()
 
-    const response = await client.assets.$post({ json: payload })
+    const response = await client.assets.$post({
+      json: {
+        code: query.code,
+        name: query.name,
+        kind: query.kind,
+        serial: query.serial,
+        purchased_on: query["purchased-on"],
+      },
+    })
 
     return c.json(await response.json())
   },

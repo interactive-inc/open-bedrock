@@ -30,6 +30,17 @@ export type ApplicationMineResponse = {
   created_at: string
 }
 
+// 自分の申請一覧コンポーネントが扱う表示用の項目。編集フォームで payload を JSON 編集する。
+// id は永続化前に null になりうる実 API レスポンスに合わせる。
+export type ApplicationListItem = {
+  id: number | null
+  template_id: number
+  status: ApplicationStatus
+  current_step: string | null
+  created_at: string
+  payload: unknown
+}
+
 // GET /applications/inbox の各要素（承認待ち一覧）。
 export type ApplicationInboxResponse = {
   id: number

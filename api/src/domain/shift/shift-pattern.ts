@@ -63,4 +63,22 @@ export class ShiftPattern implements Props {
       breakMinutes: row.breakMinutes,
     })
   }
+
+  // コード・名前・勤務時間・休憩を変更した新しいパターンを返す。
+  withDetails(props: {
+    code: string
+    name: string
+    startTime: string
+    endTime: string
+    breakMinutes: number
+  }): ShiftPattern {
+    return new ShiftPattern({
+      ...this.props,
+      code: props.code,
+      name: props.name,
+      startTime: props.startTime,
+      endTime: props.endTime,
+      breakMinutes: props.breakMinutes,
+    })
+  }
 }
