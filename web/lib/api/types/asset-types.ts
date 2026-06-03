@@ -36,3 +36,11 @@ export type AssetCreateRequest = {
 export type AssetLendRequest = {
   employee_code: string
 }
+
+// PUT /assets/:code のリクエスト body。serial / purchased_on は任意。
+export type AssetUpdateRequest = {
+  name: string
+  kind: AssetKind
+  serial?: string
+  purchased_on?: string
+}

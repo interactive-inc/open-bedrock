@@ -8,7 +8,7 @@ type Props = {
 }
 
 // 本人の月次サマリをサーバ側 fetch してカード描画する非同期 RSC。
-// 勤務日数・総勤務時間・総残業時間を並べる。取得失敗時はメッセージ表示にフォールバックする。
+// 勤務日数・総勤務時間を並べる。取得失敗時はメッセージ表示にフォールバックする。
 export async function AttendanceSummaryCard(props: Props) {
   const summary = await getMyAttendanceSummary({ month: props.month })
 
@@ -20,15 +20,11 @@ export async function AttendanceSummaryCard(props: Props) {
     { label: "対象月", value: summary.month },
     { label: "勤務日数", value: `${summary.work_days} 日` },
     { label: "総勤務時間", value: toDurationLabel(summary.total_work_minutes) },
-    {
-      label: "総残業時間",
-      value: toDurationLabel(summary.total_overtime_minutes),
-    },
   ]
 
   return (
     <Card className="p-0 gap-0">
-      <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3">
         {stats.map((stat) => (
           <div key={stat.label} className="flex flex-col gap-1">
             <span className="text-sm text-muted-foreground">{stat.label}</span>

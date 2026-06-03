@@ -126,7 +126,7 @@ export class OnboardingAssignmentRepository {
 
       await this.c.var.database
         .update(onboardingAssignments)
-        .set({ status: assignment.status })
+        .set({ status: assignment.status, assignedAt: assignment.assignedAt })
         .where(eq(onboardingAssignments.id, assignment.id))
 
       for (const task of assignment.tasks) {
@@ -143,6 +143,23 @@ export class OnboardingAssignmentRepository {
       return this.findById(assignment.id)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding assignment")
+    }
+  }
+
+  // 割り当てとその配下タスクを削除する。
+  async delete(assignmentId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(onboardingTasks)
+        .where(eq(onboardingTasks.assignmentId, assignmentId))
+
+      await this.c.var.database
+        .delete(onboardingAssignments)
+        .where(eq(onboardingAssignments.id, assignmentId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete onboarding assignment")
     }
   }
 }

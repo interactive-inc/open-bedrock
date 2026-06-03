@@ -7,7 +7,15 @@ const labels: Record<ReviewerType, string> = {
   subordinate: "部下評価",
 }
 
-// 評価者の種別を日本語ラベルに変換する。
-export function toReviewerTypeLabel(reviewerType: ReviewerType): string {
-  return labels[reviewerType]
+function isReviewerType(value: string): value is ReviewerType {
+  return value in labels
+}
+
+// 評価者の種別を日本語ラベルに変換する。未知の値はそのまま返す。
+export function toReviewerTypeLabel(reviewerType: string): string {
+  if (isReviewerType(reviewerType)) {
+    return labels[reviewerType]
+  }
+
+  return reviewerType
 }

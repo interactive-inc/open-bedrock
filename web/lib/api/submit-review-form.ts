@@ -16,7 +16,7 @@ export async function submitReviewForm(props: Props) {
     json.score = props.request.score
   }
 
-  json.answers = props.request.answers
+  json.answers = [...props.request.answers]
 
   if (props.request.comment !== null) {
     json.comment = props.request.comment

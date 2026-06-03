@@ -1,10 +1,15 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cancelShiftSwapRequest } from "@/lib/api/cancel-shift-swap-request"
 import { createShiftAssignment } from "@/lib/api/create-shift-assignment"
 import { createShiftPattern } from "@/lib/api/create-shift-pattern"
 import { createShiftSwapRequest } from "@/lib/api/create-shift-swap-request"
+import { deleteShiftAssignment } from "@/lib/api/delete-shift-assignment"
+import { deleteShiftPattern } from "@/lib/api/delete-shift-pattern"
 import { publishShiftAssignment } from "@/lib/api/publish-shift-assignment"
+import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
+import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -186,4 +191,171 @@ export async function createShiftPatternAction(
   revalidatePath("/shift")
 
   return { ok: true, error: null }
+}
+
+// シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。
+export async function updateShiftAssignmentAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const assignmentId = Number(formData.get("assignment_id"))
+
+  if (Number.isInteger(assignmentId) === false) {
+    return { ok: false, error: "割当 ID が不正です" }
+  }
+
+  const date = trimmedOrEmpty(formData.get("date"))
+
+  if (date === "") {
+    return { ok: false, error: "対象日を入力してください" }
+  }
+
+  const updated = await updateShiftAssignment(assignmentId, {
+    pattern_code: trimmedOrNull(formData.get("pattern_code")),
+    date: date,
+    note: trimmedOrNull(formData.get("note")),
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "シフト割当の変更に失敗しました" }
+  }
+
+  revalidatePath("/shift")
+
+  return { ok: true, error: null }
+}
+
+// シフト割当削除 Server Action（特権ロール）。assignment_id 必須。
+export async function deleteShiftAssignmentAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const assignmentId = Number(formData.get("assignment_id"))
+
+  if (Number.isInteger(assignmentId) === false) {
+    return { ok: false, error: "割当 ID が不正です" }
+  }
+
+  const deleted = await deleteShiftAssignment(assignmentId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "シフト割当の削除に失敗しました" }
+  }
+
+  revalidatePath("/shift")
+
+  return { ok: true, error: null }
+}
+
+// シフトパターン変更 Server Action（特権ロール）。code/name/start_time/end_time 必須。
+export async function updateShiftPatternAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const patternId = Number(formData.get("pattern_id"))
+
+  if (Number.isInteger(patternId) === false) {
+    return { ok: false, error: "パターン ID が不正です" }
+  }
+
+  const fields = toPatternFields(formData)
+
+  if (fields instanceof Error) {
+    return { ok: false, error: fields.message }
+  }
+
+  const updated = await updateShiftPattern(patternId, fields)
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "シフトパターンの変更に失敗しました" }
+  }
+
+  revalidatePath("/shift")
+
+  return { ok: true, error: null }
+}
+
+// シフトパターン削除 Server Action（特権ロール）。pattern_id 必須。割当から参照中だと api が 409。
+export async function deleteShiftPatternAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const patternId = Number(formData.get("pattern_id"))
+
+  if (Number.isInteger(patternId) === false) {
+    return { ok: false, error: "パターン ID が不正です" }
+  }
+
+  const deleted = await deleteShiftPattern(patternId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "シフトパターンの削除に失敗しました（割当から参照中の可能性）" }
+  }
+
+  revalidatePath("/shift")
+
+  return { ok: true, error: null }
+}
+
+// シフト交代申請取り下げ Server Action（申請者本人）。swap_request_id 必須。承認済みは api が 409。
+export async function cancelShiftSwapRequestAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const swapRequestId = Number(formData.get("swap_request_id"))
+
+  if (Number.isInteger(swapRequestId) === false) {
+    return { ok: false, error: "申請 ID が不正です" }
+  }
+
+  const cancelled = await cancelShiftSwapRequest(swapRequestId)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: "交代申請の取り下げに失敗しました（承認済みの可能性）" }
+  }
+
+  revalidatePath("/shift")
+
+  return { ok: true, error: null }
+}
+
+// パターン編集フォームの必須フィールドを検証して取り出す。不足時は Error を返す。
+function toPatternFields(
+  formData: FormData,
+):
+  | { code: string; name: string; start_time: string; end_time: string; break_minutes: number }
+  | Error {
+  const code = trimmedOrEmpty(formData.get("code"))
+
+  const name = trimmedOrEmpty(formData.get("name"))
+
+  const startTime = trimmedOrEmpty(formData.get("start_time"))
+
+  const endTime = trimmedOrEmpty(formData.get("end_time"))
+
+  if (code === "" || name === "" || startTime === "" || endTime === "") {
+    return new Error("コード・名前・開始・終了を入力してください")
+  }
+
+  const breakText = trimmedOrEmpty(formData.get("break_minutes"))
+
+  const breakMinutes = breakText === "" ? 0 : Number(breakText)
+
+  if (Number.isInteger(breakMinutes) === false) {
+    return new Error("休憩時間は整数で入力してください")
+  }
+
+  return { code, name, start_time: startTime, end_time: endTime, break_minutes: breakMinutes }
+}
+
+// FormData 値を trim した文字列に。未入力や非文字列は空文字。
+function trimmedOrEmpty(value: FormDataEntryValue | null): string {
+  return typeof value === "string" ? value.trim() : ""
+}
+
+// FormData 値を trim した文字列に。未入力や空は null。
+function trimmedOrNull(value: FormDataEntryValue | null): string | null {
+  const trimmed = trimmedOrEmpty(value)
+
+  return trimmed === "" ? null : trimmed
 }

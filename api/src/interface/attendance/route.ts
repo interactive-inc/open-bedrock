@@ -63,7 +63,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     clock_in_at: row.clockInAt,
     clock_out_at: row.clockOutAt,
     work_minutes: row.workMinutes,
-    overtime_minutes: row.overtimeMinutes,
     status: row.status,
   }))
 

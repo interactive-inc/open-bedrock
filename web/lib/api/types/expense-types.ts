@@ -61,3 +61,24 @@ export type ExpenseSubmitRequest = {
   spent_at: string
   note?: string
 }
+
+// PUT /expenses/:id のリクエスト body。
+export type ExpenseUpdateRequest = {
+  category: ExpenseCategory
+  amount: number
+  spent_at: string
+  note: string | null
+}
+
+// PUT /expenses/:id のレスポンス（更新後の経費。api は snake_case で返す）。
+// id は api の整形結果として number | null になりうる。
+export type ExpenseUpdatedResponse = {
+  id: number | null
+  employee_id: number
+  category: ExpenseCategory
+  amount: number
+  spent_at: string
+  note: string | null
+  status: ExpenseStatus
+  created_at: string
+}

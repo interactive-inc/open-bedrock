@@ -64,7 +64,17 @@ export class RoomReservation implements Props {
     })
   }
 
-  updatePurpose(purpose: string | null) {
+  // 用途を変更した新しい予約を返す。
+  withPurpose(purpose: string | null) {
     return new RoomReservation({ ...this.props, purpose })
+  }
+
+  // 開始終了時刻を変更した新しい予約を返す。
+  withRescheduled(props: { startAt: string; endAt: string }) {
+    return new RoomReservation({
+      ...this.props,
+      startAt: props.startAt,
+      endAt: props.endAt,
+    })
   }
 }

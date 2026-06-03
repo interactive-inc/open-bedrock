@@ -67,4 +67,9 @@ export class OnboardingTask implements Props {
   complete(completedAt: string) {
     return new OnboardingTask({ ...this.props, status: "done", completedAt })
   }
+
+  // 完了を取り消し pending に戻したタスクを返す。
+  uncomplete() {
+    return new OnboardingTask({ ...this.props, status: "pending", completedAt: null })
+  }
 }

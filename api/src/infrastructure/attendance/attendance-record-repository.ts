@@ -35,7 +35,6 @@ export class AttendanceRecordRepository {
           clockInAt: attendanceRecord.clockInAt,
           clockOutAt: attendanceRecord.clockOutAt,
           workMinutes: attendanceRecord.workMinutes,
-          overtimeMinutes: attendanceRecord.overtimeMinutes,
           note: attendanceRecord.note,
           status: attendanceRecord.status,
         })
@@ -62,7 +61,6 @@ export class AttendanceRecordRepository {
         .set({
           clockOutAt: attendanceRecord.clockOutAt,
           workMinutes: attendanceRecord.workMinutes,
-          overtimeMinutes: attendanceRecord.overtimeMinutes,
           status: attendanceRecord.status,
         })
         .where(eq(attendanceRecords.id, attendanceRecord.id))

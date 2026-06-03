@@ -86,8 +86,12 @@ import reviewMineHandler from "@/app/review/mine/route"
 import reviewResultsHandler from "@/app/review/results/[cycle_id]/[employee_code]/route"
 import reviewSubmitHandler from "@/app/review/submit/[form_id]/route"
 import roomAvailHandler from "@/app/room/avail/route"
+import roomCancelHandler from "@/app/room/cancel/route"
 import roomHandler from "@/app/room/route"
+import roomMineHandler from "@/app/room/mine/route"
 import roomReserveHandler from "@/app/room/reserve/route"
+import roomShowHandler from "@/app/room/show/route"
+import roomUpdateHandler from "@/app/room/update/route"
 import shiftAssignHandler from "@/app/shift/assign/route"
 import shiftAssignmentsHandler from "@/app/shift/assignments/route"
 import shiftHandler from "@/app/shift/route"
@@ -157,6 +161,10 @@ routes.post("/kb/get/:kid?", ...kbGetHandler)
 routes.post("/room", ...roomHandler)
 routes.post("/room/avail", ...roomAvailHandler)
 routes.post("/room/reserve", ...roomReserveHandler)
+routes.post("/room/mine", ...roomMineHandler)
+routes.post("/room/show", ...roomShowHandler)
+routes.post("/room/update", ...roomUpdateHandler)
+routes.post("/room/cancel", ...roomCancelHandler)
 
 routes.post("/skill", ...skillHandler)
 routes.post("/skill/list", ...skillListHandler)

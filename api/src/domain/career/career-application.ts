@@ -47,6 +47,11 @@ export class CareerApplication implements Props {
     })
   }
 
+  // 応募メッセージを差し替えた新しい応募を返す。
+  withMessage(message: string | null): CareerApplication {
+    return new CareerApplication({ ...this.props, message })
+  }
+
   // 永続化された行から復元する。
   static fromRow(row: CareerApplicationRow): CareerApplication {
     return new CareerApplication({

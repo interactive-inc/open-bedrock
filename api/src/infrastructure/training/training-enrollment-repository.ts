@@ -82,6 +82,7 @@ export class TrainingEnrollmentRepository {
           status: trainingEnrollment.status,
           completedAt: trainingEnrollment.completedAt,
           score: trainingEnrollment.score,
+          dueDate: trainingEnrollment.dueDate,
         })
         .where(eq(trainingEnrollments.id, trainingEnrollment.id))
         .returning()
@@ -91,6 +92,19 @@ export class TrainingEnrollmentRepository {
       return row === undefined ? null : TrainingEnrollment.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update training_enrollment")
+    }
+  }
+
+  // 受講登録を削除する。
+  async delete(enrollmentId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(trainingEnrollments)
+        .where(eq(trainingEnrollments.id, enrollmentId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete training_enrollment")
     }
   }
 }

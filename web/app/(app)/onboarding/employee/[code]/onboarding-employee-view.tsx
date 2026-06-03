@@ -1,6 +1,14 @@
 import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
+import { AssignmentActions } from "@/app/(app)/onboarding/assignment-actions"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -15,6 +23,7 @@ type Props = {
 }
 
 // GET /onboarding/employee/:code を取得し、社員の割当ごとにタスクを描画する非同期 RSC。
+// 各割当には特権ロール向けの割当日変更・取り消し操作を出す。
 export async function OnboardingEmployeeView(props: Props) {
   const assignments = await getOnboardingEmployee(props.code)
 
@@ -85,6 +94,14 @@ export async function OnboardingEmployeeView(props: Props) {
               </TableBody>
             </Table>
           </CardContent>
+
+          <CardFooter>
+            <AssignmentActions
+              assignmentId={assignment.id}
+              employeeCode={assignment.employee_code}
+              assignedAt={assignment.assigned_at}
+            />
+          </CardFooter>
         </Card>
       ))}
     </div>

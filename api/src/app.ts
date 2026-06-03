@@ -77,6 +77,8 @@ import * as reviewFormMeRoute from "@/interface/review/forms/me/route"
 import * as reviewFormSubmitRoute from "@/interface/review/forms/[form_id]/submit/route"
 import * as roomAvailabilityRoute from "@/interface/room/availability/route"
 import * as roomReservationCreateRoute from "@/interface/room/reservations/route"
+import * as roomReservationDetailRoute from "@/interface/room/reservations/[id]/route"
+import * as roomReservationMineRoute from "@/interface/room/reservations/me/route"
 import * as shiftAssignmentCreateRoute from "@/interface/shift/assignments/create-route"
 import * as shiftAssignmentListRoute from "@/interface/shift/assignments/route"
 import * as shiftAssignmentMeRoute from "@/interface/shift/assignments/me/route"
@@ -98,6 +100,28 @@ import * as trainingEnrollmentCompleteRoute from "@/interface/training/enrollmen
 import * as trainingEnrollmentCreateRoute from "@/interface/training/enrollments/enroll-route"
 import * as trainingEnrollmentListRoute from "@/interface/training/enrollments/route"
 import * as trainingEnrollmentMeRoute from "@/interface/training/enrollments/me/route"
+import * as applicationApplicationsMeRoute from "@/interface/application/applications/me/route"
+import * as careerApplicationsIdRoute from "@/interface/career/applications/[id]/route"
+import * as careerApplicationsMeRoute from "@/interface/career/applications/me/route"
+import * as employeeCodeRoute from "@/interface/employee/[code]/route"
+import * as goalGoalsGoalIdRoute from "@/interface/goal/goals/[goal_id]/route"
+import * as goalGoalsMeRoute from "@/interface/goal/goals/me/route"
+import * as leaveRequestsIdRoute from "@/interface/leave/requests/[id]/route"
+import * as notificationIdRoute from "@/interface/notification/[id]/route"
+import * as onboardingAssignmentsIdRoute from "@/interface/onboarding/assignments/[id]/route"
+import * as onboardingTasksIdUncompleteRoute from "@/interface/onboarding/tasks/[id]/uncomplete/route"
+import * as oneononeIdRoute from "@/interface/oneonone/[id]/route"
+import * as oneononeMeRoute from "@/interface/oneonone/me/route"
+import * as orgDepartmentsCodeRoute from "@/interface/org/departments/[code]/route"
+import * as orgDepartmentsRoute from "@/interface/org/departments/route"
+import * as shiftAssignmentsIdRoute from "@/interface/shift/assignments/[id]/route"
+import * as shiftPatternsIdRoute from "@/interface/shift/patterns/[id]/route"
+import * as shiftSwapRequestsIdRoute from "@/interface/shift/swap-requests/[id]/route"
+import * as shiftSwapRequestsMeRoute from "@/interface/shift/swap-requests/me/route"
+import * as skillSkillsMeSkillCodeRoute from "@/interface/skill/skills/me/[skill_code]/route"
+import * as surveySurveysResponsesResponseIdRoute from "@/interface/survey/surveys/responses/[response_id]/route"
+import * as surveySurveysResponsesMeRoute from "@/interface/survey/surveys/responses/me/route"
+import * as trainingEnrollmentsIdRoute from "@/interface/training/enrollments/[id]/route"
 
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
@@ -126,6 +150,7 @@ export const app = factory
   .post("/goals", ...goalCreateRoute.POST)
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
+  .get("/applications/me", ...applicationApplicationsMeRoute.GET)
   .get("/applications/:id", ...applicationDetailRoute.GET)
   .get("/applications", ...applicationListRoute.GET)
   .post("/applications", ...applicationSubmitRoute.POST)
@@ -137,6 +162,10 @@ export const app = factory
   .get("/knowledge", ...knowledgeListRoute.GET)
   .get("/rooms/availability", ...roomAvailabilityRoute.GET)
   .post("/rooms/reservations", ...roomReservationCreateRoute.POST)
+  .get("/rooms/reservations/me", ...roomReservationMineRoute.GET)
+  .get("/rooms/reservations/:id", ...roomReservationDetailRoute.GET)
+  .put("/rooms/reservations/:id", ...roomReservationDetailRoute.PUT)
+  .delete("/rooms/reservations/:id", ...roomReservationDetailRoute.DELETE)
   .get("/skills/me", ...skillMeRoute.GET)
   .put("/skills/me", ...skillMeUpdateRoute.PUT)
   .get("/skills", ...skillListRoute.GET)
@@ -210,6 +239,66 @@ export const app = factory
   .get("/review-cycles/:cycle_id/results/:employee_code", ...reviewCycleResultsRoute.GET)
   .post("/review-forms/:form_id/submit", ...reviewFormSubmitRoute.POST)
   .get("/review-forms/me", ...reviewFormMeRoute.GET)
+  .put("/applications/:id", ...applicationDetailRoute.PUT)
+  .delete("/applications/:id", ...applicationDetailRoute.DELETE)
+  .get("/career/applications/me", ...careerApplicationsMeRoute.GET)
+  .get("/career/applications/:id", ...careerApplicationsIdRoute.GET)
+  .put("/career/applications/:id", ...careerApplicationsIdRoute.PUT)
+  .delete("/career/applications/:id", ...careerApplicationsIdRoute.DELETE)
+  .delete("/career/sheet/me", ...careerSheetMeRoute.DELETE)
+  .post("/employees", ...employeeListRoute.POST)
+  .get("/employees/:code", ...employeeCodeRoute.GET)
+  .put("/employees/:code", ...employeeCodeRoute.PUT)
+  .delete("/employees/:code", ...employeeCodeRoute.DELETE)
+  .get("/goals/me", ...goalGoalsMeRoute.GET)
+  .get("/goals/:goal_id", ...goalGoalsGoalIdRoute.GET)
+  .put("/goals/:goal_id", ...goalGoalsGoalIdRoute.PUT)
+  .delete("/goals/:goal_id", ...goalGoalsGoalIdRoute.DELETE)
+  .get("/leave/requests/:id", ...leaveRequestsIdRoute.GET)
+  .put("/leave/requests/:id", ...leaveRequestsIdRoute.PUT)
+  .delete("/leave/requests/:id", ...leaveRequestsIdRoute.DELETE)
+  .get("/notifications/:id", ...notificationIdRoute.GET)
+  .delete("/notifications/:id", ...notificationIdRoute.DELETE)
+  .get("/onboarding/assignments/:id", ...onboardingAssignmentsIdRoute.GET)
+  .put("/onboarding/assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
+  .delete("/onboarding/assignments/:id", ...onboardingAssignmentsIdRoute.DELETE)
+  .post("/onboarding/tasks/:id/uncomplete", ...onboardingTasksIdUncompleteRoute.POST)
+  .get("/oneonone/me", ...oneononeMeRoute.GET)
+  .get("/oneonone/:id", ...oneononeIdRoute.GET)
+  .put("/oneonone/:id", ...oneononeIdRoute.PUT)
+  .delete("/oneonone/:id", ...oneononeIdRoute.DELETE)
+  .get("/org/departments", ...orgDepartmentsRoute.GET)
+  .post("/org/departments", ...orgDepartmentsRoute.POST)
+  .get("/org/departments/:code", ...orgDepartmentsCodeRoute.GET)
+  .put("/org/departments/:code", ...orgDepartmentsCodeRoute.PUT)
+  .delete("/org/departments/:code", ...orgDepartmentsCodeRoute.DELETE)
+  .get("/shift/assignments/:id", ...shiftAssignmentsIdRoute.GET)
+  .put("/shift/assignments/:id", ...shiftAssignmentsIdRoute.PUT)
+  .delete("/shift/assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
+  .get("/shift/patterns/:id", ...shiftPatternsIdRoute.GET)
+  .put("/shift/patterns/:id", ...shiftPatternsIdRoute.PUT)
+  .delete("/shift/patterns/:id", ...shiftPatternsIdRoute.DELETE)
+  .get("/shift/swap-requests/me", ...shiftSwapRequestsMeRoute.GET)
+  .get("/shift/swap-requests/:id", ...shiftSwapRequestsIdRoute.GET)
+  .delete("/shift/swap-requests/:id", ...shiftSwapRequestsIdRoute.DELETE)
+  .get("/skills/me/:skill_code", ...skillSkillsMeSkillCodeRoute.GET)
+  .delete("/skills/me/:skill_code", ...skillSkillsMeSkillCodeRoute.DELETE)
+  .get("/surveys/responses/me", ...surveySurveysResponsesMeRoute.GET)
+  .get("/surveys/responses/:response_id", ...surveySurveysResponsesResponseIdRoute.GET)
+  .put("/surveys/responses/:response_id", ...surveySurveysResponsesResponseIdRoute.PUT)
+  .delete("/surveys/responses/:response_id", ...surveySurveysResponsesResponseIdRoute.DELETE)
+  .get("/training/enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
+  .put("/training/enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
+  .delete("/training/enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
+  .post("/knowledge", ...knowledgeListRoute.POST)
+  .put("/knowledge/:id", ...knowledgeDetailRoute.PUT)
+  .delete("/knowledge/:id", ...knowledgeDetailRoute.DELETE)
+  .put("/assets/:code", ...assetDetailRoute.PUT)
+  .delete("/assets/:code", ...assetDetailRoute.DELETE)
+  .put("/expenses/:id", ...expenseDetailRoute.PUT)
+  .delete("/expenses/:id", ...expenseDetailRoute.DELETE)
+  .put("/training/courses/:code", ...trainingCourseDetailRoute.PUT)
+  .delete("/training/courses/:code", ...trainingCourseDetailRoute.DELETE)
 
 export type AppType = typeof app
 

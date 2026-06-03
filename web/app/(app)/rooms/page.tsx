@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { MyReservationsSection } from "@/app/(app)/rooms/my-reservations-section"
 import { RoomAvailabilitySearchForm } from "@/app/(app)/rooms/room-availability-search-form"
 import { RoomAvailabilitySection } from "@/app/(app)/rooms/room-availability-section"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -28,6 +29,14 @@ export default async function RoomsPage(props: Props) {
       <Suspense key={suspenseKey} fallback={<RoomsSkeleton />}>
         <RoomAvailabilitySection search={search} />
       </Suspense>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">自分の予約</h2>
+
+        <Suspense fallback={<RoomsSkeleton />}>
+          <MyReservationsSection />
+        </Suspense>
+      </section>
     </div>
   )
 }

@@ -5,7 +5,6 @@ export type AttendanceSummary = {
   month: string
   workDays: number
   totalWorkMinutes: number
-  totalOvertimeMinutes: number
 }
 
 export type Props = {
@@ -20,15 +19,11 @@ export function summarizeAttendance(props: Props): AttendanceSummary {
 
   let totalWorkMinutes = 0
 
-  let totalOvertimeMinutes = 0
-
   for (const record of props.records) {
     if (record.status === "closed") {
       workDays = workDays + 1
 
       totalWorkMinutes = totalWorkMinutes + (record.workMinutes ?? 0)
-
-      totalOvertimeMinutes = totalOvertimeMinutes + (record.overtimeMinutes ?? 0)
     }
   }
 
@@ -37,6 +32,5 @@ export function summarizeAttendance(props: Props): AttendanceSummary {
     month: props.month,
     workDays,
     totalWorkMinutes,
-    totalOvertimeMinutes,
   }
 }

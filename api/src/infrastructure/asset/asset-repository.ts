@@ -62,6 +62,48 @@ export class AssetRepository {
     }
   }
 
+  async updateDetails(asset: Asset): Promise<Asset | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(assets)
+        .set({
+          name: asset.name,
+          kind: asset.kind,
+          serial: asset.serial,
+          purchasedOn: asset.purchasedOn,
+        })
+        .where(eq(assets.code, asset.code))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Asset.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update asset details")
+    }
+  }
+
+  async delete(code: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(assets).where(eq(assets.code, code))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete asset")
+    }
+  }
+
+  // 資産削除に先立ち、その資産の貸出記録をまとめて削除する。
+  async deleteLendingsByAssetCode(assetCode: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(assetLendings).where(eq(assetLendings.assetCode, assetCode))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete asset lendings")
+    }
+  }
+
   // 貸出記録は資産集約に属するため、資産リポジトリが永続化する。
   async addLending(lending: AssetLending): Promise<AssetLending | Error> {
     try {

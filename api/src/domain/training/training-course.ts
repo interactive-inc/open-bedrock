@@ -75,6 +75,24 @@ export class TrainingCourse implements Props {
     })
   }
 
+  // 内容（タイトル・カテゴリ・説明・所要時間・必須フラグ）を変更した新しいコースを返す。code と status は保つ。
+  withDetails(props: {
+    title: string
+    category: string
+    description: string | null
+    durationMinutes: number | null
+    isRequired: boolean
+  }) {
+    return new TrainingCourse({
+      ...this.props,
+      title: props.title,
+      category: props.category,
+      description: props.description,
+      durationMinutes: props.durationMinutes,
+      isRequired: props.isRequired,
+    })
+  }
+
   archive() {
     return new TrainingCourse({ ...this.props, status: "archived" })
   }
