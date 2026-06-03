@@ -1,0 +1,177 @@
+"use client"
+
+import { useActionState, useState } from "react"
+import {
+  cancelFamilyCareLeaveAction,
+  updateFamilyCareLeaveAction,
+} from "@/app/(app)/family-care-leaves/actions"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import type { FamilyCareLeaveResponse } from "@/lib/api/types/family-care-leave-types"
+
+type Props = {
+  familyCareLeaves: ReadonlyArray<FamilyCareLeaveResponse>
+}
+
+// 自分の休業申出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+export function MyFamilyCareLeavesList(props: Props) {
+  if (props.familyCareLeaves.length === 0) {
+    return <p className="text-sm text-muted-foreground">休業申出はありません</p>
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>種別</TableHead>
+          <TableHead>開始</TableHead>
+          <TableHead>終了予定</TableHead>
+          <TableHead>備考</TableHead>
+          <TableHead>状態</TableHead>
+          <TableHead className="text-right">操作</TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {props.familyCareLeaves.map((familyCareLeave) => (
+          <TableRow key={familyCareLeave.id}>
+            <TableCell className="font-medium">{familyCareLeave.leave_kind}</TableCell>
+
+            <TableCell>{familyCareLeave.start_date}</TableCell>
+
+            <TableCell>{familyCareLeave.end_date}</TableCell>
+
+            <TableCell>{familyCareLeave.note ?? "-"}</TableCell>
+
+            <TableCell>{familyCareLeave.status}</TableCell>
+
+            <TableCell>
+              <div className="flex justify-end gap-2">
+                <UpdateFamilyCareLeaveDialog familyCareLeave={familyCareLeave} />
+
+                <CancelFamilyCareLeaveButton familyCareLeaveId={familyCareLeave.id} />
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
+// 休業申出変更フォームを Dialog で開く。種別・期間・備考を編集して送信する。
+function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveResponse }) {
+  const [open, setOpen] = useState(false)
+
+  const [state, formAction, pending] = useActionState(updateFamilyCareLeaveAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>休業申出を変更</DialogTitle>
+
+          <DialogDescription>種別・期間・備考を変更します。</DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="flex flex-col gap-4">
+          <input type="hidden" name="family_care_leave_id" value={props.familyCareLeave.id} />
+
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="update_leave_kind">種別</FieldLabel>
+
+              <NativeSelect
+                id="update_leave_kind"
+                name="leave_kind"
+                className="w-full"
+                defaultValue={props.familyCareLeave.leave_kind}
+              >
+                <NativeSelectOption value="maternity">産休</NativeSelectOption>
+
+                <NativeSelectOption value="childcare">育休</NativeSelectOption>
+
+                <NativeSelectOption value="family_care">介護休業</NativeSelectOption>
+              </NativeSelect>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_start_date">開始日</FieldLabel>
+
+              <Input
+                id="update_start_date"
+                name="start_date"
+                type="date"
+                defaultValue={props.familyCareLeave.start_date}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_end_date">終了予定日</FieldLabel>
+
+              <Input
+                id="update_end_date"
+                name="end_date"
+                type="date"
+                defaultValue={props.familyCareLeave.end_date}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="update_note">備考</FieldLabel>
+
+              <Input id="update_note" name="note" defaultValue={props.familyCareLeave.note ?? ""} />
+            </Field>
+          </FieldGroup>
+
+          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+
+          <Button type="submit" disabled={pending}>
+            変更を保存
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// 休業申出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
+  const [state, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
+    ok: false,
+    error: null,
+  })
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="family_care_leave_id" value={props.familyCareLeaveId} />
+
+      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+        取消
+      </Button>
+    </form>
+  )
+}
