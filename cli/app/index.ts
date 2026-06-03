@@ -118,6 +118,18 @@ import trainingEnrollmentsHandler from "@/app/training/enrollments/route"
 import trainingHandler from "@/app/training/route"
 import trainingMineHandler from "@/app/training/mine/route"
 import whoamiHandler from "@/app/whoami/route"
+import businessTripHandler from "@/app/business-trip/route"
+import businessTripRequestHandler from "@/app/business-trip/request/route"
+import businessTripMineHandler from "@/app/business-trip/mine/route"
+import businessTripShowHandler from "@/app/business-trip/show/route"
+import businessTripUpdateHandler from "@/app/business-trip/update/route"
+import businessTripCancelHandler from "@/app/business-trip/cancel/route"
+import rentalHandler from "@/app/rental/route"
+import rentalReserveHandler from "@/app/rental/reserve/route"
+import rentalMineHandler from "@/app/rental/mine/route"
+import rentalShowHandler from "@/app/rental/show/route"
+import rentalUpdateHandler from "@/app/rental/update/route"
+import rentalCancelHandler from "@/app/rental/cancel/route"
 
 const base = factory.createApp()
 
@@ -277,5 +289,17 @@ routes.post("/shift/swap-approve/:id?", ...shiftSwapApproveHandler)
 
 routes.post("/batch", ...batchHandler)
 routes.post("/dashboard", ...dashboardHandler)
+routes.post("/business-trip", ...businessTripHandler)
+routes.post("/business-trip/request", ...businessTripRequestHandler)
+routes.post("/business-trip/mine", ...businessTripMineHandler)
+routes.post("/business-trip/show", ...businessTripShowHandler)
+routes.post("/business-trip/update", ...businessTripUpdateHandler)
+routes.post("/business-trip/cancel", ...businessTripCancelHandler)
+routes.post("/rental", ...rentalHandler)
+routes.post("/rental/reserve", ...rentalReserveHandler)
+routes.post("/rental/mine", ...rentalMineHandler)
+routes.post("/rental/show", ...rentalShowHandler)
+routes.post("/rental/update", ...rentalUpdateHandler)
+routes.post("/rental/cancel", ...rentalCancelHandler)
 
 export const app = routes
