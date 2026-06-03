@@ -11,7 +11,7 @@ export type NotificationKind =
 // GET /notifications/me の各要素（自分宛ての通知一覧）。POST /notifications,
 // POST /notifications/:id/read のレスポンスも同形。
 export type NotificationResponse = {
-  id: number
+  id: number | null
   recipient_employee_id: number
   source_domain: string
   source_id: number | null
@@ -33,9 +33,12 @@ export type MarkAllReadResponse = {
 }
 
 // POST /notifications のリクエスト body（特権ロールが対象社員へ通知を作成）。
+// api の zod スキーマに合わせ、body/kind/source_* は任意。未指定時は api 側で既定値を補う。
 export type NotificationCreateRequest = {
   recipient_employee_code: string
-  kind: NotificationKind
   title: string
-  body: string | null
+  kind?: NotificationKind
+  body?: string
+  source_domain?: string
+  source_id?: number
 }

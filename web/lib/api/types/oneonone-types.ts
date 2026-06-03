@@ -22,3 +22,12 @@ export type OneOnOneCreateRequest = {
   manager_note: string | null
   next_action: string | null
 }
+
+// PUT /oneonone/:id のリクエストボディ。
+// api/src/interface/oneonone/[id]/route.ts の PUT zValidator と同形。
+// topics / manager_note / next_action を変更する。未入力は null。
+export type OneOnOneUpdateRequest = {
+  topics: string | null
+  manager_note: string | null
+  next_action: string | null
+}

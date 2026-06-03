@@ -54,30 +54,39 @@ export function MyResponsesList(props: Props) {
       </TableHeader>
 
       <TableBody>
-        {props.responses.map((response) => (
-          <TableRow key={response.id}>
-            <TableCell className="text-muted-foreground">{response.id}</TableCell>
+        {props.responses.map((response) => {
+          // id は永続化前のみ null。一覧に並ぶのは採番済みのため、null 行は描画しない。
+          if (response.id === null) {
+            return null
+          }
 
-            <TableCell className="font-medium">{response.survey_id}</TableCell>
+          const responseId = response.id
 
-            <TableCell>{response.submitted_at}</TableCell>
+          return (
+            <TableRow key={responseId}>
+              <TableCell className="text-muted-foreground">{responseId}</TableCell>
 
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateResponseDialog response={response} />
+              <TableCell className="font-medium">{response.survey_id}</TableCell>
 
-                <WithdrawResponseButton responseId={response.id} />
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              <TableCell>{response.submitted_at}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateResponseDialog responseId={responseId} response={response} />
+
+                  <WithdrawResponseButton responseId={responseId} />
+                </div>
+              </TableCell>
+            </TableRow>
+          )
+        })}
       </TableBody>
     </Table>
   )
 }
 
 // 回答変更フォームを Dialog で開く。既存回答を設問ごとの入力に展開して送信する。
-function UpdateResponseDialog(props: { response: SurveyResponseItem }) {
+function UpdateResponseDialog(props: { responseId: number; response: SurveyResponseItem }) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useActionState(updateSurveyResponseAction, {
@@ -99,7 +108,7 @@ function UpdateResponseDialog(props: { response: SurveyResponseItem }) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="responseId" value={props.response.id} />
+          <input type="hidden" name="responseId" value={props.responseId} />
 
           <FieldGroup>
             {entries.map((entry) => (

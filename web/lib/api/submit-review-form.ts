@@ -10,13 +10,13 @@ type Props = {
 export async function submitReviewForm(props: Props) {
   const client = await createClient()
 
-  const json: { score?: number; answers?: ReadonlyArray<unknown>; comment?: string } = {}
+  const json: { score?: number; answers?: unknown[]; comment?: string } = {}
 
   if (props.request.score !== null) {
     json.score = props.request.score
   }
 
-  json.answers = props.request.answers
+  json.answers = [...props.request.answers]
 
   if (props.request.comment !== null) {
     json.comment = props.request.comment

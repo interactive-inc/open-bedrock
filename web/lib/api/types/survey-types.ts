@@ -35,6 +35,22 @@ export type SurveySubmission = {
   submitted_at: string
 }
 
+// GET /surveys/responses/me と PUT /surveys/responses/:id のレスポンス要素。
+// api は snake_case で返す。id は永続化前 null になりうる SurveyResponse をそのまま整形するため number | null。
+export type SurveyResponseItem = {
+  id: number | null
+  survey_id: number
+  respondent_id: number
+  answers_json: unknown
+  submitted_at: string
+}
+
+// PUT /surveys/responses/:id のリクエストボディ。
+// answers_json は 質問 id をキーにした回答値のマップ。
+export type UpdateSurveyResponseRequest = {
+  answers_json: Record<string, unknown>
+}
+
 // GET /surveys/:id/summary の質問ごとの集計。
 // distribution は scale/choice の選択肢別件数、answers は text の自由記述一覧。
 export type SurveyQuestionSummary = {

@@ -20,18 +20,25 @@ type Props = {
 }
 
 // 目標一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる client コンポーネント。
+// id が null の目標は操作できないため何も描画しない。
 export function GoalRowActions(props: Props) {
+  const goalId = props.goal.id
+
+  if (goalId === null) {
+    return null
+  }
+
   return (
     <div className="flex justify-end gap-2">
-      <UpdateGoalDialog goal={props.goal} />
+      <UpdateGoalDialog goal={props.goal} goalId={goalId} />
 
-      <DeleteGoalButton goalId={props.goal.id} />
+      <DeleteGoalButton goalId={goalId} />
     </div>
   )
 }
 
 // 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。
-function UpdateGoalDialog(props: { goal: GoalResponse }) {
+function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useActionState(updateGoalAction, {
@@ -51,7 +58,7 @@ function UpdateGoalDialog(props: { goal: GoalResponse }) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="goalId" value={props.goal.id} />
+          <input type="hidden" name="goalId" value={props.goalId} />
 
           <FieldGroup>
             <Field>

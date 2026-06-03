@@ -29,10 +29,10 @@ export type ReviewFormResponse = {
   cycle_id: number
   subject_employee_id: number
   reviewer_employee_id: number
-  reviewer_type: ReviewerType
+  reviewer_type: string
   answers: ReadonlyArray<unknown>
   score: number | null
-  status: ReviewFormStatus
+  status: string
   submitted_at: string | null
 }
 

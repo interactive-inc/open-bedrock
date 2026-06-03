@@ -95,7 +95,7 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="pattern_id" value={props.pattern.id} />
+          <input type="hidden" name="pattern_id" value={props.pattern.id ?? undefined} />
 
           <FieldGroup>
             <Field>
@@ -156,12 +156,12 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
 }
 
 // パターン削除ボタン。割当から参照されているとサーバーが拒否し action がエラーを返す。
-function DeletePatternButton(props: { patternId: number }) {
+function DeletePatternButton(props: { patternId: number | null }) {
   const [, formAction, pending] = useActionState(deleteShiftPatternAction, initialState)
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="pattern_id" value={props.patternId} />
+      <input type="hidden" name="pattern_id" value={props.patternId ?? undefined} />
 
       <Button type="submit" variant="destructive" size="sm" disabled={pending}>
         削除

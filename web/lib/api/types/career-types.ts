@@ -23,7 +23,8 @@ export type CareerPosting = {
 }
 
 export type CareerApplication = {
-  id: number
+  // api は永続化前を null とするため number | null。
+  id: number | null
   posting_id: number
   applicant_id: number
   message: string | null

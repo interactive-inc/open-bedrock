@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { deleteMySkill } from "@/lib/api/delete-my-skill"
 import { putMySkill } from "@/lib/api/put-my-skill"
 
 export type SkillUpdateState = {
@@ -53,6 +54,28 @@ export async function updateSkillAction(
 
   if (result instanceof Error) {
     return { ok: false, error: "スキルの保存に失敗しました" }
+  }
+
+  revalidatePath("/skills/me")
+
+  return { ok: true, error: null }
+}
+
+// 登録スキル削除の Server Action。skill_code 必須。成功時は /skills/me を revalidate する。
+export async function removeSkillAction(
+  previousState: SkillUpdateState,
+  formData: FormData,
+): Promise<SkillUpdateState> {
+  const skillCode = formData.get("skill_code")
+
+  if (typeof skillCode !== "string" || skillCode === "") {
+    return { ok: false, error: "スキルを特定できませんでした" }
+  }
+
+  const result = await deleteMySkill(skillCode)
+
+  if (result instanceof Error) {
+    return { ok: false, error: "スキルの削除に失敗しました" }
   }
 
   revalidatePath("/skills/me")
