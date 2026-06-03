@@ -1,15 +1,18 @@
 // api/src/interface/training の route ハンドラのレスポンス/リクエストと同形の手書き type。
 // api と疎結合に保つため z.infer を import せずここで独立に定義する。
 
-export type TrainingCourseStatus = "active" | "archived"
+// status は API 上 DB の text 列をそのまま返すため string。
+// 作成系ハンドラが返す絞り込み union も string に代入可能。
+export type TrainingCourseStatus = string
 
-export type TrainingEnrollmentStatus = "enrolled" | "completed" | "failed"
+export type TrainingEnrollmentStatus = string
 
 // GET /training/courses の各要素、GET /training/courses/:code のレスポンス、
 // POST /training/courses のレスポンスも同形（研修コース）。
 // id はエンティティ整形ルート（作成/更新）では採番前の null を含む。
 // status は一覧ルートが DB の row 値（string）をそのまま返すため広く受ける。
 export type TrainingCourseResponse = {
+  // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
   code: string
   title: string
@@ -25,6 +28,7 @@ export type TrainingCourseResponse = {
 // id はエンティティ整形ルート（作成/完了/期限変更）では採番前の null を含む。
 // status は一覧ルートが DB の row 値（string）をそのまま返すため広く受ける。
 export type TrainingEnrollmentResponse = {
+  // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
   course_id: number
   employee_id: number

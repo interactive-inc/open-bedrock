@@ -13,19 +13,24 @@ const initialState: ReviewFormState = { ok: false, error: null }
 // 評価サイクルの作成フォーム（特権ロール向け）。タイトル・対象期間・締切日を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function ReviewCycleCreateForm() {
-  const action = useActionState(createReviewCycleAction, initialState)
+  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
+  const action = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
+    const next = await createReviewCycleAction(previousState, formData)
+
+    if (next.ok) {
+      toast.success("評価サイクルを作成しました")
+    } else if (next.error !== null) {
+      toast.error(next.error)
+    }
+
+    return next
+  }, initialState)
 
   const state = action[0]
 
   const dispatch = action[1]
 
   const isPending = action[2]
-
-  if (state.ok) {
-    toast.success("評価サイクルを作成しました")
-  } else if (state.error !== null) {
-    toast.error(state.error)
-  }
 
   return (
     <form action={dispatch}>
