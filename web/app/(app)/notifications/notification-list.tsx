@@ -85,7 +85,7 @@ export function NotificationList(props: Props) {
 
               {notification.is_read || notification.id === null ? null : (
                 <form action={markDispatch}>
-                  <input type="hidden" name="notification_id" value={notification.id} />
+                  <input type="hidden" name="notification_id" value={notification.id ?? ""} />
 
                   <Button type="submit" variant="secondary" size="sm">
                     既読にする

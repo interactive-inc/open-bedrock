@@ -94,7 +94,7 @@ export function ShiftAssignmentList(props: Props) {
               <div className="flex justify-end gap-2">
                 {props.canManage && assignment.published_at === null ? (
                   <form action={publishDispatch}>
-                    <input type="hidden" name="assignment_id" value={assignment.id ?? undefined} />
+                    <input type="hidden" name="assignment_id" value={assignment.id ?? ""} />
 
                     <Button type="submit" variant="secondary" size="sm" disabled={isPublishing}>
                       公開する
@@ -132,7 +132,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="assignment_id" value={props.assignment.id ?? undefined} />
+          <input type="hidden" name="assignment_id" value={props.assignment.id ?? ""} />
 
           <FieldGroup>
             <Field>
@@ -176,7 +176,7 @@ function DeleteAssignmentButton(props: { assignmentId: number | null }) {
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="assignment_id" value={props.assignmentId ?? undefined} />
+      <input type="hidden" name="assignment_id" value={props.assignmentId ?? ""} />
 
       <Button type="submit" variant="destructive" size="sm" disabled={pending}>
         削除

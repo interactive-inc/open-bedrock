@@ -11,6 +11,7 @@ export type NotificationKind =
 // GET /notifications/me の各要素（自分宛ての通知一覧）。POST /notifications,
 // POST /notifications/:id/read のレスポンスも同形。
 export type NotificationResponse = {
+  // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
   recipient_employee_id: number
   source_domain: string
@@ -37,6 +38,7 @@ export type MarkAllReadResponse = {
 export type NotificationCreateRequest = {
   recipient_employee_code: string
   title: string
+  // api 側は .optional()（string | undefined）のため null ではなく省略可能にする。
   kind?: NotificationKind
   body?: string
   source_domain?: string
