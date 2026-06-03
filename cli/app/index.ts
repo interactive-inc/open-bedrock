@@ -130,6 +130,42 @@ import rentalMineHandler from "@/app/rental/mine/route"
 import rentalShowHandler from "@/app/rental/show/route"
 import rentalUpdateHandler from "@/app/rental/update/route"
 import rentalCancelHandler from "@/app/rental/cancel/route"
+import resignationHandler from "@/app/resignation/route"
+import resignationRequestHandler from "@/app/resignation/request/route"
+import resignationMineHandler from "@/app/resignation/mine/route"
+import resignationShowHandler from "@/app/resignation/show/route"
+import resignationUpdateHandler from "@/app/resignation/update/route"
+import resignationCancelHandler from "@/app/resignation/cancel/route"
+import lifeEventHandler from "@/app/life-event/route"
+import lifeEventRequestHandler from "@/app/life-event/request/route"
+import lifeEventMineHandler from "@/app/life-event/mine/route"
+import lifeEventShowHandler from "@/app/life-event/show/route"
+import lifeEventUpdateHandler from "@/app/life-event/update/route"
+import lifeEventCancelHandler from "@/app/life-event/cancel/route"
+import familyCareLeaveHandler from "@/app/family-care-leave/route"
+import familyCareLeaveRequestHandler from "@/app/family-care-leave/request/route"
+import familyCareLeaveMineHandler from "@/app/family-care-leave/mine/route"
+import familyCareLeaveShowHandler from "@/app/family-care-leave/show/route"
+import familyCareLeaveUpdateHandler from "@/app/family-care-leave/update/route"
+import familyCareLeaveCancelHandler from "@/app/family-care-leave/cancel/route"
+import certificateRequestHandler from "@/app/certificate-request/route"
+import certificateRequestRequestHandler from "@/app/certificate-request/request/route"
+import certificateRequestMineHandler from "@/app/certificate-request/mine/route"
+import certificateRequestShowHandler from "@/app/certificate-request/show/route"
+import certificateRequestUpdateHandler from "@/app/certificate-request/update/route"
+import certificateRequestCancelHandler from "@/app/certificate-request/cancel/route"
+import yearEndAdjustmentHandler from "@/app/year-end-adjustment/route"
+import yearEndAdjustmentRequestHandler from "@/app/year-end-adjustment/request/route"
+import yearEndAdjustmentMineHandler from "@/app/year-end-adjustment/mine/route"
+import yearEndAdjustmentShowHandler from "@/app/year-end-adjustment/show/route"
+import yearEndAdjustmentUpdateHandler from "@/app/year-end-adjustment/update/route"
+import yearEndAdjustmentCancelHandler from "@/app/year-end-adjustment/cancel/route"
+import antisocialCheckHandler from "@/app/antisocial-check/route"
+import antisocialCheckRequestHandler from "@/app/antisocial-check/request/route"
+import antisocialCheckMineHandler from "@/app/antisocial-check/mine/route"
+import antisocialCheckShowHandler from "@/app/antisocial-check/show/route"
+import antisocialCheckUpdateHandler from "@/app/antisocial-check/update/route"
+import antisocialCheckCancelHandler from "@/app/antisocial-check/cancel/route"
 
 const base = factory.createApp()
 
@@ -301,5 +337,41 @@ routes.post("/rental/mine", ...rentalMineHandler)
 routes.post("/rental/show", ...rentalShowHandler)
 routes.post("/rental/update", ...rentalUpdateHandler)
 routes.post("/rental/cancel", ...rentalCancelHandler)
+routes.post("/resignation", ...resignationHandler)
+routes.post("/resignation/request", ...resignationRequestHandler)
+routes.post("/resignation/mine", ...resignationMineHandler)
+routes.post("/resignation/show", ...resignationShowHandler)
+routes.post("/resignation/update", ...resignationUpdateHandler)
+routes.post("/resignation/cancel", ...resignationCancelHandler)
+routes.post("/life-event", ...lifeEventHandler)
+routes.post("/life-event/request", ...lifeEventRequestHandler)
+routes.post("/life-event/mine", ...lifeEventMineHandler)
+routes.post("/life-event/show", ...lifeEventShowHandler)
+routes.post("/life-event/update", ...lifeEventUpdateHandler)
+routes.post("/life-event/cancel", ...lifeEventCancelHandler)
+routes.post("/family-care-leave", ...familyCareLeaveHandler)
+routes.post("/family-care-leave/request", ...familyCareLeaveRequestHandler)
+routes.post("/family-care-leave/mine", ...familyCareLeaveMineHandler)
+routes.post("/family-care-leave/show", ...familyCareLeaveShowHandler)
+routes.post("/family-care-leave/update", ...familyCareLeaveUpdateHandler)
+routes.post("/family-care-leave/cancel", ...familyCareLeaveCancelHandler)
+routes.post("/certificate-request", ...certificateRequestHandler)
+routes.post("/certificate-request/request", ...certificateRequestRequestHandler)
+routes.post("/certificate-request/mine", ...certificateRequestMineHandler)
+routes.post("/certificate-request/show", ...certificateRequestShowHandler)
+routes.post("/certificate-request/update", ...certificateRequestUpdateHandler)
+routes.post("/certificate-request/cancel", ...certificateRequestCancelHandler)
+routes.post("/year-end-adjustment", ...yearEndAdjustmentHandler)
+routes.post("/year-end-adjustment/request", ...yearEndAdjustmentRequestHandler)
+routes.post("/year-end-adjustment/mine", ...yearEndAdjustmentMineHandler)
+routes.post("/year-end-adjustment/show", ...yearEndAdjustmentShowHandler)
+routes.post("/year-end-adjustment/update", ...yearEndAdjustmentUpdateHandler)
+routes.post("/year-end-adjustment/cancel", ...yearEndAdjustmentCancelHandler)
+routes.post("/antisocial-check", ...antisocialCheckHandler)
+routes.post("/antisocial-check/request", ...antisocialCheckRequestHandler)
+routes.post("/antisocial-check/mine", ...antisocialCheckMineHandler)
+routes.post("/antisocial-check/show", ...antisocialCheckShowHandler)
+routes.post("/antisocial-check/update", ...antisocialCheckUpdateHandler)
+routes.post("/antisocial-check/cancel", ...antisocialCheckCancelHandler)
 
 export const app = routes
