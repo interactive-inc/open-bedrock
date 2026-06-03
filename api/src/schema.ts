@@ -566,6 +566,86 @@ export const rentalReservations = sqliteTable("rental_reservations", {
 
 export type RentalReservationRow = InferSelectModel<typeof rentalReservations>
 
+// 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ）
+export const resignations = sqliteTable("resignations", {
+  id: text("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  resignationDate: text("resignation_date").notNull(),
+  lastWorkingDate: text("last_working_date"),
+  reason: text("reason"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type ResignationRow = InferSelectModel<typeof resignations>
+
+// ライフイベント届出（結婚・出産・転居・忌引・扶養変更などの届出を記録）
+export const lifeEvents = sqliteTable("life_events", {
+  id: text("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  eventType: text("event_type").notNull(),
+  eventDate: text("event_date").notNull(),
+  detail: text("detail"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type LifeEventRow = InferSelectModel<typeof lifeEvents>
+
+// 産休・育休・介護休業の申出（期限管理と記録。給付金額の計算は持たない）
+export const familyCareLeaves = sqliteTable("family_care_leaves", {
+  id: text("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  leaveKind: text("leave_kind").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  note: text("note"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type FamilyCareLeaveRow = InferSelectModel<typeof familyCareLeaves>
+
+// 証明書発行依頼（在職・就労・退職証明書などの発行依頼を記録）
+export const certificateRequests = sqliteTable("certificate_requests", {
+  id: text("id").primaryKey(),
+  requesterId: integer("requester_id").notNull(),
+  certificateType: text("certificate_type").notNull(),
+  submitTo: text("submit_to"),
+  neededBy: text("needed_by"),
+  note: text("note"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type CertificateRequestRow = InferSelectModel<typeof certificateRequests>
+
+// 年末調整の申告受付（提出状況の記録のみ。税額の計算や判定は持たない）
+export const yearEndAdjustments = sqliteTable("year_end_adjustments", {
+  id: text("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  targetYear: integer("target_year").notNull(),
+  note: text("note"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type YearEndAdjustmentRow = InferSelectModel<typeof yearEndAdjustments>
+
+// 反社チェックの申請（取引先の確認情報と判定結果を記録）
+export const antisocialChecks = sqliteTable("antisocial_checks", {
+  id: text("id").primaryKey(),
+  requesterId: integer("requester_id").notNull(),
+  partnerName: text("partner_name").notNull(),
+  partnerAddress: text("partner_address"),
+  representativeName: text("representative_name"),
+  result: text("result"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type AntisocialCheckRow = InferSelectModel<typeof antisocialChecks>
+
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
 export const schema = {
   employees,
@@ -612,4 +692,10 @@ export const schema = {
   surveyResponses,
   businessTrips,
   rentalReservations,
+  resignations,
+  lifeEvents,
+  familyCareLeaves,
+  certificateRequests,
+  yearEndAdjustments,
+  antisocialChecks,
 }

@@ -1,0 +1,24 @@
+import { createClient } from "@/lib/api/hc-client"
+import type {
+  CertificateRequestResponse,
+  CertificateRequestUpdateRequest,
+} from "@/lib/api/types/certificate-request-types"
+
+// PUT /certificate-requests/:id。証明書発行依頼の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+export async function updateCertificateRequest(
+  id: string,
+  request: CertificateRequestUpdateRequest,
+): Promise<CertificateRequestResponse | Error> {
+  const client = await createClient()
+
+  const response = await client["certificate-requests"][":id"].$put({
+    param: { id },
+    json: request,
+  })
+
+  if (response.status >= 400) {
+    return new Error("failed to update certificate request")
+  }
+
+  return response.json()
+}
