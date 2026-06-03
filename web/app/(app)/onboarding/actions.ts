@@ -2,10 +2,14 @@
 
 import { revalidatePath } from "next/cache"
 import { cancelOnboardingAssignment } from "@/lib/api/cancel-onboarding-assignment"
+import { createOnboardingTemplate } from "@/lib/api/create-onboarding-template"
+import { deleteOnboardingTemplate } from "@/lib/api/delete-onboarding-template"
 import { postOnboardingAssign } from "@/lib/api/post-onboarding-assign"
 import { postOnboardingTaskComplete } from "@/lib/api/post-onboarding-task-complete"
 import { postOnboardingTaskUncomplete } from "@/lib/api/post-onboarding-task-uncomplete"
 import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignment"
+import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
+import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
 
 export type AssignState = {
   ok: boolean
@@ -188,4 +192,123 @@ export async function cancelOnboardingAssignmentAction(
   revalidatePath("/onboarding")
 
   return { ok: true, message: "割り当てを取り消しました" }
+}
+
+export type TemplateMutationState = {
+  ok: boolean
+  message: string | null
+}
+
+// kind の文字列を join / leave に正規化する。不正値は null。
+function parseKind(value: FormDataEntryValue | null): OnboardingKind | null {
+  if (value === "join") {
+    return "join"
+  }
+
+  if (value === "leave") {
+    return "leave"
+  }
+
+  return null
+}
+
+// FormData から code / name / kind / description を取り出す。不足時は null。
+function readTemplateForm(formData: FormData): {
+  code: string
+  name: string
+  kind: OnboardingKind
+  description: string | null
+} | null {
+  const code = formData.get("code")
+
+  const name = formData.get("name")
+
+  const kind = parseKind(formData.get("kind"))
+
+  const description = formData.get("description")
+
+  if (typeof code !== "string" || code === "" || typeof name !== "string" || name === "") {
+    return null
+  }
+
+  if (kind === null) {
+    return null
+  }
+
+  return {
+    code,
+    name,
+    kind,
+    description: typeof description === "string" && description !== "" ? description : null,
+  }
+}
+
+// テンプレート作成の Server Action（管理権限）。成功時に一覧を再検証する。
+export async function createOnboardingTemplateAction(
+  previousState: TemplateMutationState,
+  formData: FormData,
+): Promise<TemplateMutationState> {
+  const input = readTemplateForm(formData)
+
+  if (input === null) {
+    return { ok: false, message: "コード・名称・種別を入力してください" }
+  }
+
+  const created = await createOnboardingTemplate(input)
+
+  if (created instanceof Error) {
+    return { ok: false, message: "テンプレートの作成に失敗しました" }
+  }
+
+  revalidatePath("/onboarding")
+
+  return { ok: true, message: `${created.name} を作成しました` }
+}
+
+// テンプレート変更の Server Action（管理権限）。code は hidden input で受け取り変更しない。
+export async function updateOnboardingTemplateAction(
+  previousState: TemplateMutationState,
+  formData: FormData,
+): Promise<TemplateMutationState> {
+  const input = readTemplateForm(formData)
+
+  if (input === null) {
+    return { ok: false, message: "名称・種別を入力してください" }
+  }
+
+  const updated = await updateOnboardingTemplate(input.code, {
+    name: input.name,
+    kind: input.kind,
+    description: input.description,
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, message: "テンプレートの変更に失敗しました" }
+  }
+
+  revalidatePath("/onboarding")
+
+  return { ok: true, message: `${updated.name} を変更しました` }
+}
+
+// テンプレート削除の Server Action（管理権限）。code を hidden input で受け取る。
+export async function deleteOnboardingTemplateAction(
+  previousState: TemplateMutationState,
+  formData: FormData,
+): Promise<TemplateMutationState> {
+  const code = formData.get("code")
+
+  if (typeof code !== "string" || code === "") {
+    return { ok: false, message: "テンプレートを特定できませんでした" }
+  }
+
+  const deleted = await deleteOnboardingTemplate(code)
+
+  if (deleted instanceof Error) {
+    return { ok: false, message: "テンプレートの削除に失敗しました" }
+  }
+
+  revalidatePath("/onboarding")
+
+  return { ok: true, message: "テンプレートを削除しました" }
 }

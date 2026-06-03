@@ -128,7 +128,7 @@ describe("POST /rooms/reservations", () => {
   })
 
   test("returns 404 for an unknown route under /rooms", async () => {
-    const response = await getRequest("/rooms/unknown", await managerToken())
+    const response = await getRequest("/rooms/unknown/deep/path", await managerToken())
 
     expect(response.status).toBe(404)
   })

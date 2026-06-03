@@ -1,14 +1,22 @@
 import { Suspense } from "react"
+import { CareerPostingsAdminSection } from "@/app/(app)/career/career-postings-admin-section"
 import { CareerPostingsSection } from "@/app/(app)/career/career-postings-section"
 import { CareerSheetSection } from "@/app/(app)/career/career-sheet-section"
 import { MyApplicationsSection } from "@/app/(app)/career/my-applications-section"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getMe } from "@/lib/api/get-me"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
 export const metadata = { title: "キャリア" }
 
 // キャリア画面。本人のキャリアシート編集と社内公募一覧・応募を 1 画面に集約する。
+// 管理ロールには公募の作成・変更・削除セクションを追加で表示する。
 // 各セクションは非同期 RSC を Suspense 境界で囲み Skeleton をフォールバックにする。
-export default function CareerPage() {
+export default async function CareerPage() {
+  const currentUser = await getMe()
+
+  const canManage = currentUser instanceof Error ? false : canManageCareerPostings(currentUser.role)
+
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-4">
@@ -34,6 +42,16 @@ export default function CareerPage() {
           <MyApplicationsSection />
         </Suspense>
       </section>
+
+      {canManage ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold">公募の管理</h2>
+
+          <Suspense fallback={<Skeleton className="h-72 w-full" />}>
+            <CareerPostingsAdminSection />
+          </Suspense>
+        </section>
+      ) : null}
     </div>
   )
 }

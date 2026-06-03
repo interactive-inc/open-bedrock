@@ -23,6 +23,62 @@ export class SurveyRepository {
     }
   }
 
+  // アンケートを新規登録する。id は DB が採番し、登録後の行を返す。
+  async create(survey: Survey): Promise<Survey | Error> {
+    try {
+      const rows = await this.c.var.database
+        .insert(surveys)
+        .values({
+          title: survey.title,
+          status: survey.status,
+          questionsJson: JSON.stringify(survey.questionsJson),
+        })
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? new Error("failed to insert survey") : Survey.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to insert survey")
+    }
+  }
+
+  // アンケートの内容（タイトル・状態・設問）を id をキーに更新し、更新後の行を返す。
+  async update(survey: Survey): Promise<Survey | Error> {
+    if (survey.id === null) {
+      return new Error("survey id is required")
+    }
+
+    try {
+      const rows = await this.c.var.database
+        .update(surveys)
+        .set({
+          title: survey.title,
+          status: survey.status,
+          questionsJson: JSON.stringify(survey.questionsJson),
+        })
+        .where(eq(surveys.id, survey.id))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? new Error("failed to update survey") : Survey.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update survey")
+    }
+  }
+
+  // アンケートを削除する。
+  async delete(surveyId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(surveys).where(eq(surveys.id, surveyId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete survey")
+    }
+  }
+
   // 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
   async createResponse(response: SurveyResponse): Promise<SurveyResponse | Error> {
     try {

@@ -56,6 +56,15 @@ export class ReviewCycle implements Props {
   withStatus(status: Props["status"]) {
     return new ReviewCycle({ ...this.props, status })
   }
+
+  withDetails(details: { title: string; period: string; dueDate: string | null }) {
+    return new ReviewCycle({
+      ...this.props,
+      title: details.title,
+      period: details.period,
+      dueDate: details.dueDate,
+    })
+  }
 }
 
 function toCycleStatus(value: string): "draft" | "open" | "closed" {
