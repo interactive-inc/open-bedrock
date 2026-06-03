@@ -82,23 +82,28 @@ export function MyApplicationsList(props: Props) {
   )
 }
 
-// 承認待ちのときだけ変更・取り下げ操作を表示する。審査済みは操作不可。
+// 承認待ちのときだけ変更・取り下げ操作を表示する。審査済みや未採番は操作不可。
 function ApplicationRowActions(props: { application: ApplicationListItem }) {
-  if (props.application.status !== "pending") {
+  const applicationId = props.application.id
+
+  if (props.application.status !== "pending" || applicationId === null) {
     return <span className="block text-right text-xs text-muted-foreground">操作不可</span>
   }
 
   return (
     <div className="flex justify-end gap-2">
-      <UpdateApplicationDialog application={props.application} />
+      <UpdateApplicationDialog application={props.application} applicationId={applicationId} />
 
-      <WithdrawApplicationButton applicationId={props.application.id} />
+      <WithdrawApplicationButton applicationId={applicationId} />
     </div>
   )
 }
 
 // 申請内容の更新フォームを Dialog で開く。payload を JSON テキストで編集して送信する。
-function UpdateApplicationDialog(props: { application: ApplicationListItem }) {
+function UpdateApplicationDialog(props: {
+  application: ApplicationListItem
+  applicationId: number
+}) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useActionState(updateApplicationAction, {
@@ -118,7 +123,7 @@ function UpdateApplicationDialog(props: { application: ApplicationListItem }) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="application_id" value={props.application.id} />
+          <input type="hidden" name="application_id" value={props.applicationId} />
 
           <FieldGroup>
             <Field>

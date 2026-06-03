@@ -32,8 +32,28 @@ export type GoalSearchQuery = {
   employeeId: number | null
 }
 
-// POST /goals のリクエストボディ。weight 未指定時は api 側で 10 が入る。
+// GET /goals/:goalId と PUT /goals/:goalId のレスポンス。api は snake_case で返す。
+// id は api の型上 number | null になりうる。
+export type GoalResponse = {
+  id: number | null
+  employee_id: number
+  period: string
+  title: string
+  kpi: string | null
+  weight: number
+  status: string
+}
+
+// POST /goals のリクエストボディ。weight 未指定時は api 側で 10 が入る。kpi は未指定可。
 export type GoalCreateRequest = {
+  period: string
+  title: string
+  weight?: number
+  kpi?: string
+}
+
+// PUT /goals/:goalId のリクエストボディ。
+export type GoalUpdateRequest = {
   period: string
   title: string
   weight: number

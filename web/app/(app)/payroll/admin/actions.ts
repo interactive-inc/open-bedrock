@@ -88,7 +88,7 @@ export async function createSalaryRevisionAction(
   const reasonValue = formData.get("reason")
 
   const reason =
-    typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : null
+    typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : undefined
 
   const created = await createSalaryRevision({
     employee_code: employeeCode,

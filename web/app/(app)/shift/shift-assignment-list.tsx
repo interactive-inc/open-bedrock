@@ -94,7 +94,7 @@ export function ShiftAssignmentList(props: Props) {
               <div className="flex justify-end gap-2">
                 {props.canManage && assignment.published_at === null ? (
                   <form action={publishDispatch}>
-                    <input type="hidden" name="assignment_id" value={assignment.id} />
+                    <input type="hidden" name="assignment_id" value={assignment.id ?? undefined} />
 
                     <Button type="submit" variant="secondary" size="sm" disabled={isPublishing}>
                       公開する
@@ -132,7 +132,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="assignment_id" value={props.assignment.id} />
+          <input type="hidden" name="assignment_id" value={props.assignment.id ?? undefined} />
 
           <FieldGroup>
             <Field>
@@ -171,12 +171,12 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
 }
 
 // 割当削除ボタン。Server Action を呼び、成功時はリストが revalidate される。
-function DeleteAssignmentButton(props: { assignmentId: number }) {
+function DeleteAssignmentButton(props: { assignmentId: number | null }) {
   const [, formAction, pending] = useActionState(deleteShiftAssignmentAction, initialState)
 
   return (
     <form action={formAction}>
-      <input type="hidden" name="assignment_id" value={props.assignmentId} />
+      <input type="hidden" name="assignment_id" value={props.assignmentId ?? undefined} />
 
       <Button type="submit" variant="destructive" size="sm" disabled={pending}>
         削除

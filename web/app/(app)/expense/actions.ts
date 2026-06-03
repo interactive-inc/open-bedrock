@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache"
 import { approveExpense } from "@/lib/api/approve-expense"
+import { deleteExpense } from "@/lib/api/delete-expense"
 import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
+import { updateExpense } from "@/lib/api/update-expense"
 
 export type ExpenseSubmitFormState = {
   ok: boolean
@@ -12,6 +14,16 @@ export type ExpenseSubmitFormState = {
 }
 
 export type ExpenseDecisionFormState = {
+  ok: boolean
+  error: string | null
+}
+
+export type ExpenseUpdateFormState = {
+  ok: boolean
+  error: string | null
+}
+
+export type ExpenseDeleteFormState = {
   ok: boolean
   error: string | null
 }
@@ -145,6 +157,90 @@ export async function rejectExpenseAction(
   }
 
   revalidatePath("/expense/inbox")
+
+  revalidatePath(`/expense/${expenseId}`)
+
+  return { ok: true, error: null }
+}
+
+// 経費変更の Server Action。pending の経費のみ本人が編集できる。
+// note の空文字は値なし扱いで null を送る。
+export async function updateExpenseAction(
+  previousState: ExpenseUpdateFormState,
+  formData: FormData,
+): Promise<ExpenseUpdateFormState> {
+  const expenseIdValue = formData.get("expense_id")
+
+  const expenseId = Number(expenseIdValue)
+
+  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+    return { ok: false, error: "経費が不正です" }
+  }
+
+  const category = toCategory(formData.get("category"))
+
+  if (category === null) {
+    return { ok: false, error: "カテゴリを選択してください" }
+  }
+
+  const amountValue = formData.get("amount")
+
+  const amount = Number(amountValue)
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, error: "金額は正の数で入力してください" }
+  }
+
+  const spentAtValue = formData.get("spent_at")
+
+  const spentAt = typeof spentAtValue === "string" ? spentAtValue : ""
+
+  if (spentAt === "") {
+    return { ok: false, error: "利用日を入力してください" }
+  }
+
+  const noteValue = formData.get("note")
+
+  const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : null
+
+  const updated = await updateExpense(expenseId, {
+    category: category,
+    amount: amount,
+    spent_at: spentAt,
+    note: note,
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "経費の変更に失敗しました" }
+  }
+
+  revalidatePath("/expense")
+
+  revalidatePath(`/expense/${expenseId}`)
+
+  return { ok: true, error: null }
+}
+
+// 経費取り下げの Server Action。pending の経費のみ本人が取り下げできる。
+export async function deleteExpenseAction(
+  previousState: ExpenseDeleteFormState,
+  formData: FormData,
+): Promise<ExpenseDeleteFormState> {
+  const expenseIdValue = formData.get("expense_id")
+
+  const expenseId = Number(expenseIdValue)
+
+  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+    return { ok: false, error: "経費が不正です" }
+  }
+
+  const deleted = await deleteExpense(expenseId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "経費の取り下げに失敗しました" }
+  }
+
+  revalidatePath("/expense")
 
   revalidatePath(`/expense/${expenseId}`)
 

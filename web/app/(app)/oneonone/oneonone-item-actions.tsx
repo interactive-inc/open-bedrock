@@ -119,7 +119,7 @@ function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
 }
 
 // 1on1 削除ボタン。Server Action を呼び、成功時はリストが revalidate される。
-function DeleteOneOnOneButton(props: { oneOnOneId: string }) {
+function DeleteOneOnOneButton(props: { oneOnOneId: number }) {
   async function reduce(
     previousState: OneOnOneActionState,
     formData: FormData,

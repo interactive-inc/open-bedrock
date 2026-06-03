@@ -5,37 +5,41 @@ export type ShiftSwapStatus = "pending" | "approved"
 
 // GET /shift/assignments/me, GET /shift/assignments の各要素（シフト割当）。
 // POST /shift/assignments, POST /shift/assignments/:id/publish のレスポンスも同形。
+// id / pattern_id は作成・更新・公開レスポンスでは採番前の null を含むため nullable。
 export type ShiftAssignmentResponse = {
-  id: number
+  id: number | null
   employee_id: number
-  pattern_id: number
+  pattern_id: number | null
   date: string
   note: string | null
   published_at: string | null
 }
 
 // GET /shift/patterns の各要素（シフトパターン）。POST /shift/patterns のレスポンスも同形。
+// id は作成・更新レスポンスで採番前の null を含むため nullable。
 export type ShiftPatternResponse = {
-  id: number
+  id: number | null
   code: string
   name: string
   start_time: string
   end_time: string
-  break_minutes: number | null
+  break_minutes: number
 }
 
 // POST /shift/swap-requests, POST /shift/swap-requests/:id/approve のレスポンス（交代申請）。
+// status は api が任意文字列で返すため string。id は採番前 null を含む。
 export type ShiftSwapRequestResponse = {
-  id: number
+  id: number | null
   requester_employee_id: number
   target_employee_id: number
   date: string
   note: string | null
-  status: ShiftSwapStatus
+  status: string
   approved_at: string | null
 }
 
 // POST /shift/assignments のリクエスト body（特権ロールが社員にシフトを割り当てる）。
+// note 無しは null（api 側は note?: string なので送信時に undefined へ変換する）。
 export type ShiftAssignmentCreateRequest = {
   employee_code: string
   pattern_code: string

@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { cancelLeaveRequest } from "@/lib/api/cancel-leave-request"
 import { createLeaveRequest } from "@/lib/api/create-leave-request"
+import { updateLeaveRequest } from "@/lib/api/update-leave-request"
 import type { LeaveType } from "@/lib/api/types/leave-types"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
@@ -57,6 +59,99 @@ export async function createLeaveRequestAction(
   revalidatePath("/leave")
 
   return { ok: true, error: null }
+}
+
+// 休暇申請変更 Server Action。leave_request_id/leave_type/start_date/end_date 必須、reason は任意。
+// 成功時は /leave を revalidate して一覧へ反映する。
+export async function updateLeaveRequestAction(
+  previousState: LeaveActionState,
+  formData: FormData,
+): Promise<LeaveActionState> {
+  const leaveRequestId = toLeaveRequestId(formData.get("leave_request_id"))
+
+  if (leaveRequestId === null) {
+    return { ok: false, error: "休暇申請を特定できませんでした" }
+  }
+
+  const leaveType = toLeaveType(formData.get("leave_type"))
+
+  if (leaveType === null) {
+    return { ok: false, error: "休暇種別を選択してください" }
+  }
+
+  const startDate = formData.get("start_date")
+
+  const endDate = formData.get("end_date")
+
+  if (typeof startDate !== "string" || startDate === "") {
+    return { ok: false, error: "開始日を入力してください" }
+  }
+
+  if (typeof endDate !== "string" || endDate === "") {
+    return { ok: false, error: "終了日を入力してください" }
+  }
+
+  if (endDate < startDate) {
+    return { ok: false, error: "終了日は開始日以降にしてください" }
+  }
+
+  const reasonValue = formData.get("reason")
+
+  const reason =
+    typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : null
+
+  const updated = await updateLeaveRequest(leaveRequestId, {
+    leave_type: leaveType,
+    start_date: startDate,
+    end_date: endDate,
+    reason: reason,
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "休暇申請の変更に失敗しました" }
+  }
+
+  revalidatePath("/leave")
+
+  return { ok: true, error: null }
+}
+
+// 休暇申請取り下げ Server Action。leave_request_id 必須。
+// 成功時は /leave を revalidate して一覧へ反映する。
+export async function cancelLeaveRequestAction(
+  previousState: LeaveActionState,
+  formData: FormData,
+): Promise<LeaveActionState> {
+  const leaveRequestId = toLeaveRequestId(formData.get("leave_request_id"))
+
+  if (leaveRequestId === null) {
+    return { ok: false, error: "休暇申請を特定できませんでした" }
+  }
+
+  const cancelled = await cancelLeaveRequest(leaveRequestId)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: "休暇申請の取り下げに失敗しました" }
+  }
+
+  revalidatePath("/leave")
+
+  return { ok: true, error: null }
+}
+
+// leave_request_id の FormData 値を数値へ。不正値は null。
+function toLeaveRequestId(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string" || value === "") {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  if (Number.isInteger(parsed) === false) {
+    return null
+  }
+
+  return parsed
 }
 
 // leave_type の FormData 値を許可値へ。不正値は null。

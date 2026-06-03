@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { createGoal } from "@/lib/api/create-goal"
 import { createGoalEvaluation } from "@/lib/api/create-goal-evaluation"
+import { deleteGoal } from "@/lib/api/delete-goal"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
+import { updateGoal } from "@/lib/api/update-goal"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type GoalActionState = {
@@ -33,12 +35,75 @@ export async function createGoalAction(
 
   const kpiValue = formData.get("kpi")
 
-  const kpi = typeof kpiValue === "string" && kpiValue !== "" ? kpiValue : null
+  const kpi = typeof kpiValue === "string" && kpiValue !== "" ? kpiValue : undefined
 
   const goal = await createGoal({ period, title, weight, kpi })
 
   if (goal instanceof Error) {
     return { ok: false, error: "目標の作成に失敗しました" }
+  }
+
+  revalidatePath("/goals")
+
+  return { ok: true, error: null }
+}
+
+// 目標変更 Server Action。goalId/period/title 必須、weight/kpi は任意。
+// 本人以外や確定評価済みは api がエラーを返す。成功時は /goals を revalidate する。
+export async function updateGoalAction(
+  previousState: GoalActionState,
+  formData: FormData,
+): Promise<GoalActionState> {
+  const goalId = toGoalId(formData.get("goalId"))
+
+  if (goalId === null) {
+    return { ok: false, error: "目標 ID が不正です" }
+  }
+
+  const period = formData.get("period")
+
+  const title = formData.get("title")
+
+  if (typeof period !== "string" || period === "") {
+    return { ok: false, error: "期間を入力してください" }
+  }
+
+  if (typeof title !== "string" || title === "") {
+    return { ok: false, error: "タイトルを入力してください" }
+  }
+
+  const weight = toWeight(formData.get("weight"))
+
+  const kpiValue = formData.get("kpi")
+
+  const kpi = typeof kpiValue === "string" && kpiValue !== "" ? kpiValue : null
+
+  const goal = await updateGoal(goalId, { period, title, weight, kpi })
+
+  if (goal instanceof Error) {
+    return { ok: false, error: "目標の変更に失敗しました" }
+  }
+
+  revalidatePath("/goals")
+
+  return { ok: true, error: null }
+}
+
+// 目標削除 Server Action。goalId 必須。成功時は /goals を revalidate する。
+export async function deleteGoalAction(
+  previousState: GoalActionState,
+  formData: FormData,
+): Promise<GoalActionState> {
+  const goalId = toGoalId(formData.get("goalId"))
+
+  if (goalId === null) {
+    return { ok: false, error: "目標 ID が不正です" }
+  }
+
+  const deleted = await deleteGoal(goalId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "目標の削除に失敗しました" }
   }
 
   revalidatePath("/goals")

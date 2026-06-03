@@ -55,36 +55,48 @@ export function MyApplicationsList(props: Props) {
       </TableHeader>
 
       <TableBody>
-        {props.applications.map((application) => (
-          <TableRow key={application.id}>
-            <TableCell className="font-medium">{application.posting_id}</TableCell>
+        {props.applications.map((application) => {
+          // 永続化済みの応募のみ id を持つ。未採番(null)は操作対象にならないため表示しない。
+          const applicationId = application.id
 
-            <TableCell>{application.message ?? "-"}</TableCell>
+          if (applicationId === null) {
+            return null
+          }
 
-            <TableCell>
-              <Badge variant="secondary">{statusLabels[application.status]}</Badge>
-            </TableCell>
+          return (
+            <TableRow key={applicationId}>
+              <TableCell className="font-medium">{application.posting_id}</TableCell>
 
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {application.status === "applied" ? (
-                  <UpdateApplicationDialog application={application} />
-                ) : null}
+              <TableCell>{application.message ?? "-"}</TableCell>
 
-                {application.status === "applied" ? (
-                  <WithdrawApplicationButton applicationId={application.id} />
-                ) : null}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+              <TableCell>
+                <Badge variant="secondary">{statusLabels[application.status]}</Badge>
+              </TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {application.status === "applied" ? (
+                    <UpdateApplicationDialog
+                      applicationId={applicationId}
+                      application={application}
+                    />
+                  ) : null}
+
+                  {application.status === "applied" ? (
+                    <WithdrawApplicationButton applicationId={applicationId} />
+                  ) : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          )
+        })}
       </TableBody>
     </Table>
   )
 }
 
 // 応募メッセージ変更フォームを Dialog で開く。
-function UpdateApplicationDialog(props: { application: CareerApplication }) {
+function UpdateApplicationDialog(props: { applicationId: number; application: CareerApplication }) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useActionState(updateCareerApplicationAction, {
@@ -104,7 +116,7 @@ function UpdateApplicationDialog(props: { application: CareerApplication }) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="application_id" value={props.application.id} />
+          <input type="hidden" name="application_id" value={props.applicationId} />
 
           <FieldGroup>
             <Field>
