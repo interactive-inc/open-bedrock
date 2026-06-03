@@ -128,6 +128,24 @@ import * as skillSkillsMeSkillCodeRoute from "@/interface/skill/skills/me/[skill
 import * as surveySurveysResponsesResponseIdRoute from "@/interface/survey/surveys/responses/[response_id]/route"
 import * as surveySurveysResponsesMeRoute from "@/interface/survey/surveys/responses/me/route"
 import * as trainingEnrollmentsIdRoute from "@/interface/training/enrollments/[id]/route"
+import * as resignationCreateRoute from "@/interface/resignation/resignations/route"
+import * as resignationDetailRoute from "@/interface/resignation/resignations/[id]/route"
+import * as resignationMineRoute from "@/interface/resignation/resignations/me/route"
+import * as lifeEventCreateRoute from "@/interface/life-event/life-events/route"
+import * as lifeEventDetailRoute from "@/interface/life-event/life-events/[id]/route"
+import * as lifeEventMineRoute from "@/interface/life-event/life-events/me/route"
+import * as familyCareLeaveCreateRoute from "@/interface/family-care-leave/family-care-leaves/route"
+import * as familyCareLeaveDetailRoute from "@/interface/family-care-leave/family-care-leaves/[id]/route"
+import * as familyCareLeaveMineRoute from "@/interface/family-care-leave/family-care-leaves/me/route"
+import * as certificateRequestCreateRoute from "@/interface/certificate-request/certificate-requests/route"
+import * as certificateRequestDetailRoute from "@/interface/certificate-request/certificate-requests/[id]/route"
+import * as certificateRequestMineRoute from "@/interface/certificate-request/certificate-requests/me/route"
+import * as yearEndAdjustmentCreateRoute from "@/interface/year-end-adjustment/year-end-adjustments/route"
+import * as yearEndAdjustmentDetailRoute from "@/interface/year-end-adjustment/year-end-adjustments/[id]/route"
+import * as yearEndAdjustmentMineRoute from "@/interface/year-end-adjustment/year-end-adjustments/me/route"
+import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
+import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
+import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
 
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
@@ -315,6 +333,36 @@ export const app = factory
   .get("/rentals/:id", ...rentalReservationDetailRoute.GET)
   .put("/rentals/:id", ...rentalReservationDetailRoute.PUT)
   .delete("/rentals/:id", ...rentalReservationDetailRoute.DELETE)
+  .post("/resignations", ...resignationCreateRoute.POST)
+  .get("/resignations/me", ...resignationMineRoute.GET)
+  .get("/resignations/:id", ...resignationDetailRoute.GET)
+  .put("/resignations/:id", ...resignationDetailRoute.PUT)
+  .delete("/resignations/:id", ...resignationDetailRoute.DELETE)
+  .post("/life-events", ...lifeEventCreateRoute.POST)
+  .get("/life-events/me", ...lifeEventMineRoute.GET)
+  .get("/life-events/:id", ...lifeEventDetailRoute.GET)
+  .put("/life-events/:id", ...lifeEventDetailRoute.PUT)
+  .delete("/life-events/:id", ...lifeEventDetailRoute.DELETE)
+  .post("/family-care-leaves", ...familyCareLeaveCreateRoute.POST)
+  .get("/family-care-leaves/me", ...familyCareLeaveMineRoute.GET)
+  .get("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.GET)
+  .put("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.PUT)
+  .delete("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.DELETE)
+  .post("/certificate-requests", ...certificateRequestCreateRoute.POST)
+  .get("/certificate-requests/me", ...certificateRequestMineRoute.GET)
+  .get("/certificate-requests/:id", ...certificateRequestDetailRoute.GET)
+  .put("/certificate-requests/:id", ...certificateRequestDetailRoute.PUT)
+  .delete("/certificate-requests/:id", ...certificateRequestDetailRoute.DELETE)
+  .post("/year-end-adjustments", ...yearEndAdjustmentCreateRoute.POST)
+  .get("/year-end-adjustments/me", ...yearEndAdjustmentMineRoute.GET)
+  .get("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.GET)
+  .put("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.PUT)
+  .delete("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.DELETE)
+  .post("/antisocial-checks", ...antisocialCheckCreateRoute.POST)
+  .get("/antisocial-checks/me", ...antisocialCheckMineRoute.GET)
+  .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)
+  .put("/antisocial-checks/:id", ...antisocialCheckDetailRoute.PUT)
+  .delete("/antisocial-checks/:id", ...antisocialCheckDetailRoute.DELETE)
 
 export type AppType = typeof app
 

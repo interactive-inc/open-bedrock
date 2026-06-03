@@ -1,0 +1,88 @@
+import { CertificateRequest } from "@/domain/certificate-request/certificate-request"
+import type { Context } from "@/env"
+import { certificateRequests } from "@/schema"
+import { desc, eq } from "drizzle-orm"
+
+export class CertificateRequestRepository {
+  constructor(private readonly c: Context) {}
+
+  // 依頼者本人の証明書発行依頼を作成日時の降順で返す。
+  async findByRequesterId(requesterId: number): Promise<ReadonlyArray<CertificateRequest> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(certificateRequests)
+        .where(eq(certificateRequests.requesterId, requesterId))
+        .orderBy(desc(certificateRequests.createdAt))
+
+      return rows.map((row) => CertificateRequest.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load certificate_requests")
+    }
+  }
+
+  // 証明書発行依頼 id で1件取得する。存在しなければ null。
+  async findById(id: string): Promise<CertificateRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(certificateRequests)
+        .where(eq(certificateRequests.id, id))
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : CertificateRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load certificate_request")
+    }
+  }
+
+  async create(certificateRequest: CertificateRequest): Promise<CertificateRequest | Error> {
+    try {
+      await this.c.var.database.insert(certificateRequests).values({
+        id: certificateRequest.id,
+        requesterId: certificateRequest.requesterId,
+        certificateType: certificateRequest.certificateType,
+        submitTo: certificateRequest.submitTo,
+        neededBy: certificateRequest.neededBy,
+        note: certificateRequest.note,
+        status: certificateRequest.status,
+        createdAt: certificateRequest.createdAt,
+      })
+
+      return certificateRequest
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save certificate_request")
+    }
+  }
+
+  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。
+  async update(certificateRequest: CertificateRequest): Promise<CertificateRequest | Error> {
+    try {
+      await this.c.var.database
+        .update(certificateRequests)
+        .set({
+          certificateType: certificateRequest.certificateType,
+          submitTo: certificateRequest.submitTo,
+          neededBy: certificateRequest.neededBy,
+          note: certificateRequest.note,
+        })
+        .where(eq(certificateRequests.id, certificateRequest.id))
+
+      return certificateRequest
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update certificate_request")
+    }
+  }
+
+  // 証明書発行依頼を削除する。
+  async delete(id: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(certificateRequests).where(eq(certificateRequests.id, id))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete certificate_request")
+    }
+  }
+}

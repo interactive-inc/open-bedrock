@@ -1,0 +1,88 @@
+import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
+import type { Context } from "@/env"
+import { antisocialChecks } from "@/schema"
+import { desc, eq } from "drizzle-orm"
+
+export class AntisocialCheckRepository {
+  constructor(private readonly c: Context) {}
+
+  // 申請者本人の反社チェック申請を作成日時の降順で返す。
+  async findByRequesterId(requesterId: number): Promise<ReadonlyArray<AntisocialCheck> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(antisocialChecks)
+        .where(eq(antisocialChecks.requesterId, requesterId))
+        .orderBy(desc(antisocialChecks.createdAt))
+
+      return rows.map((row) => AntisocialCheck.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load antisocial_checks")
+    }
+  }
+
+  // 反社チェック申請 id で1件取得する。存在しなければ null。
+  async findById(id: string): Promise<AntisocialCheck | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(antisocialChecks)
+        .where(eq(antisocialChecks.id, id))
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : AntisocialCheck.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load antisocial_check")
+    }
+  }
+
+  async create(antisocialCheck: AntisocialCheck): Promise<AntisocialCheck | Error> {
+    try {
+      await this.c.var.database.insert(antisocialChecks).values({
+        id: antisocialCheck.id,
+        requesterId: antisocialCheck.requesterId,
+        partnerName: antisocialCheck.partnerName,
+        partnerAddress: antisocialCheck.partnerAddress,
+        representativeName: antisocialCheck.representativeName,
+        result: antisocialCheck.result,
+        status: antisocialCheck.status,
+        createdAt: antisocialCheck.createdAt,
+      })
+
+      return antisocialCheck
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save antisocial_check")
+    }
+  }
+
+  // 反社チェック申請の取引先情報と判定結果を更新する。
+  async update(antisocialCheck: AntisocialCheck): Promise<AntisocialCheck | Error> {
+    try {
+      await this.c.var.database
+        .update(antisocialChecks)
+        .set({
+          partnerName: antisocialCheck.partnerName,
+          partnerAddress: antisocialCheck.partnerAddress,
+          representativeName: antisocialCheck.representativeName,
+          result: antisocialCheck.result,
+        })
+        .where(eq(antisocialChecks.id, antisocialCheck.id))
+
+      return antisocialCheck
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update antisocial_check")
+    }
+  }
+
+  // 反社チェック申請を削除する。
+  async delete(id: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(antisocialChecks).where(eq(antisocialChecks.id, id))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete antisocial_check")
+    }
+  }
+}

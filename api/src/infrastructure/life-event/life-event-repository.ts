@@ -1,0 +1,83 @@
+import { LifeEvent } from "@/domain/life-event/life-event"
+import type { Context } from "@/env"
+import { lifeEvents } from "@/schema"
+import { asc, eq } from "drizzle-orm"
+
+export class LifeEventRepository {
+  constructor(private readonly c: Context) {}
+
+  // 届出者本人のライフイベント届出を発生日の昇順で返す。
+  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<LifeEvent> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(lifeEvents)
+        .where(eq(lifeEvents.employeeId, employeeId))
+        .orderBy(asc(lifeEvents.eventDate))
+
+      return rows.map((row) => LifeEvent.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load life_events")
+    }
+  }
+
+  // ライフイベント届出 id で1件取得する。存在しなければ null。
+  async findById(id: string): Promise<LifeEvent | null | Error> {
+    try {
+      const rows = await this.c.var.database.select().from(lifeEvents).where(eq(lifeEvents.id, id))
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : LifeEvent.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load life_event")
+    }
+  }
+
+  async create(lifeEvent: LifeEvent): Promise<LifeEvent | Error> {
+    try {
+      await this.c.var.database.insert(lifeEvents).values({
+        id: lifeEvent.id,
+        employeeId: lifeEvent.employeeId,
+        eventType: lifeEvent.eventType,
+        eventDate: lifeEvent.eventDate,
+        detail: lifeEvent.detail,
+        status: lifeEvent.status,
+        createdAt: lifeEvent.createdAt,
+      })
+
+      return lifeEvent
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save life_event")
+    }
+  }
+
+  // ライフイベント届出の種別・発生日・詳細を更新する。
+  async update(lifeEvent: LifeEvent): Promise<LifeEvent | Error> {
+    try {
+      await this.c.var.database
+        .update(lifeEvents)
+        .set({
+          eventType: lifeEvent.eventType,
+          eventDate: lifeEvent.eventDate,
+          detail: lifeEvent.detail,
+        })
+        .where(eq(lifeEvents.id, lifeEvent.id))
+
+      return lifeEvent
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update life_event")
+    }
+  }
+
+  // ライフイベント届出を削除する。
+  async delete(id: string): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(lifeEvents).where(eq(lifeEvents.id, id))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete life_event")
+    }
+  }
+}
