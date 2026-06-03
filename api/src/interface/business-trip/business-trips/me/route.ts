@@ -1,0 +1,35 @@
+import { ListMyBusinessTrips } from "@/application/business-trip/list-my-business-trips"
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+
+// GET /business-trips/me — 申請者本人の出張申請一覧
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const businessTrips = await new ListMyBusinessTrips(c).run({
+    travelerId: viewer.employeeId,
+  })
+
+  if (businessTrips instanceof Error) {
+    throw new InternalError("failed to load business trips")
+  }
+
+  const responseBody = businessTrips.map((businessTrip) => ({
+    id: businessTrip.id,
+    traveler_id: businessTrip.travelerId,
+    destination: businessTrip.destination,
+    start_date: businessTrip.startDate,
+    end_date: businessTrip.endDate,
+    purpose: businessTrip.purpose,
+    estimated_cost: businessTrip.estimatedCost,
+    status: businessTrip.status,
+    created_at: businessTrip.createdAt,
+  }))
+
+  return c.json(responseBody, 200)
+})
