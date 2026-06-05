@@ -35,7 +35,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       effective_date: z.string().min(1),
-      new_base_salary: z.number(),
+      new_base_salary: z.number().nonnegative(),
       reason: z.string().nullable().optional(),
     }),
   ),
