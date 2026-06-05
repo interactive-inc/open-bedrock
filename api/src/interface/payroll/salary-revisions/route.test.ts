@@ -177,6 +177,16 @@ describe("POST /salary-revisions", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when new_base_salary is negative", async () => {
+    const response = await request("/salary-revisions", await adminToken(), "POST", {
+      employee_code: "E005",
+      effective_date: "2026-04-01",
+      new_base_salary: -1,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/salary-revisions", null, "POST", {
       employee_code: "E005",
