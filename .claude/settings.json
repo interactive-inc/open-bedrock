@@ -16,6 +16,17 @@
     "CLAUDE_CODE_TASK_LIST_ID": "open-karte"
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/funnel-gateway-check.sh",
+            "statusMessage": "funnel gateway check"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
