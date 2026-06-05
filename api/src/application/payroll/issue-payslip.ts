@@ -18,13 +18,17 @@ export type Command = {
 
 export type EmployeeNotFound = { reason: "employee_not_found" }
 
+export type DuplicatePeriod = { reason: "duplicate_period" }
+
 /**
  * 特権ロールが対象社員の給与明細を差引支給額込みで発行する。
  */
 export class IssuePayslip {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Payslip | Forbidden | EmployeeNotFound | Error> {
+  async run(
+    command: Command,
+  ): Promise<Payslip | Forbidden | EmployeeNotFound | DuplicatePeriod | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -41,6 +45,16 @@ export class IssuePayslip {
 
     if (employee === null) {
       return { reason: "employee_not_found" }
+    }
+
+    const existing = await payslipRepository.findByEmployeeAndPeriod(employee.id, command.period)
+
+    if (existing instanceof Error) {
+      return existing
+    }
+
+    if (existing !== null) {
+      return { reason: "duplicate_period" }
     }
 
     const netPay = toNetPay({

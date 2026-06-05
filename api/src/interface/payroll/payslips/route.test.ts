@@ -152,6 +152,44 @@ describe("POST /payslips", () => {
     expect(response.status).toBe(404)
   })
 
+  test("returns 409 when a payslip already exists for the same period", async () => {
+    // E005 は period 2026-04 の給与明細をシード済み。同一期間の再発行は弾く。
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-04",
+      base_salary: 300000,
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("issues twice for the same period only once via the duplicate guard", async () => {
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    const first = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/payslips",
+      token,
+      method: "POST",
+      body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+    })
+
+    const second = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/payslips",
+      token,
+      method: "POST",
+      body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+    })
+
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(409)
+  })
+
   test("returns 400 when base_salary is missing", async () => {
     const response = await request("/payslips", await adminToken(), "POST", {
       employee_code: "E005",
