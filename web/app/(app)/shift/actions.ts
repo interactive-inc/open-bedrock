@@ -112,9 +112,9 @@ export async function publishShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const assignmentId = Number(formData.get("assignment_id"))
+  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
-  if (Number.isInteger(assignmentId) === false) {
+  if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
   }
 
@@ -198,9 +198,9 @@ export async function updateShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const assignmentId = Number(formData.get("assignment_id"))
+  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
-  if (Number.isInteger(assignmentId) === false) {
+  if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
   }
 
@@ -230,9 +230,9 @@ export async function deleteShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const assignmentId = Number(formData.get("assignment_id"))
+  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
-  if (Number.isInteger(assignmentId) === false) {
+  if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
   }
 
@@ -252,9 +252,9 @@ export async function updateShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const patternId = Number(formData.get("pattern_id"))
+  const patternId = toPositiveIntId(formData.get("pattern_id"))
 
-  if (Number.isInteger(patternId) === false) {
+  if (patternId === null) {
     return { ok: false, error: "パターン ID が不正です" }
   }
 
@@ -280,9 +280,9 @@ export async function deleteShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const patternId = Number(formData.get("pattern_id"))
+  const patternId = toPositiveIntId(formData.get("pattern_id"))
 
-  if (Number.isInteger(patternId) === false) {
+  if (patternId === null) {
     return { ok: false, error: "パターン ID が不正です" }
   }
 
@@ -302,9 +302,9 @@ export async function cancelShiftSwapRequestAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const swapRequestId = Number(formData.get("swap_request_id"))
+  const swapRequestId = toPositiveIntId(formData.get("swap_request_id"))
 
-  if (Number.isInteger(swapRequestId) === false) {
+  if (swapRequestId === null) {
     return { ok: false, error: "申請 ID が不正です" }
   }
 
@@ -346,6 +346,24 @@ function toPatternFields(
   }
 
   return { code, name, start_time: startTime, end_time: endTime, break_minutes: breakMinutes }
+}
+
+// FormData の ID 値を正の整数に変換する。10進の正整数のみ通し、それ以外は null。
+// 未入力（Number(null)=0）・0・負値・小数・全角・hex/指数表記（0x10・1e3）・桁あふれを弾く。
+function toPositiveIntId(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  if (/^\d+$/.test(trimmed) === false) {
+    return null
+  }
+
+  const parsed = Number(trimmed)
+
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // FormData 値を trim した文字列に。未入力や非文字列は空文字。
