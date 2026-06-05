@@ -16,13 +16,18 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      employee_code: z.string().min(1),
-      period: z.string().min(1),
-      base_salary: z.number(),
-      allowances: z.number().default(0),
-      deductions: z.number().default(0),
-    }),
+    z
+      .object({
+        employee_code: z.string().min(1),
+        period: z.string().min(1),
+        base_salary: z.number().nonnegative(),
+        allowances: z.number().nonnegative().default(0),
+        deductions: z.number().nonnegative().default(0),
+      })
+      // 控除が支給を上回ると net_pay が負になるため発行前に弾く。
+      .refine((input) => input.base_salary + input.allowances - input.deductions >= 0, {
+        message: "deductions must not exceed base salary plus allowances",
+      }),
   ),
   async (c) => {
     const session = c.var.session

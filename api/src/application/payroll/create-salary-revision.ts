@@ -42,16 +42,19 @@ export class CreateSalaryRevision {
       return { reason: "employee_not_found" }
     }
 
-    const latest = await salaryRevisionRepository.findLatestByEmployeeId(employee.id)
+    const priorRevision = await salaryRevisionRepository.findLatestBeforeDate(
+      employee.id,
+      command.effectiveDate,
+    )
 
-    if (latest instanceof Error) {
-      return latest
+    if (priorRevision instanceof Error) {
+      return priorRevision
     }
 
     const salaryRevision = SalaryRevision.create({
       employeeId: employee.id,
       effectiveDate: command.effectiveDate,
-      previousBaseSalary: toPreviousBaseSalary({ latestRevision: latest }),
+      previousBaseSalary: toPreviousBaseSalary({ priorRevision }),
       newBaseSalary: command.newBaseSalary,
       reason: command.reason,
       createdAt: command.createdAt,
