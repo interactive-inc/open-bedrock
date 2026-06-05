@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
+import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedPayslips } from "@/infrastructure/seed/seed-payslips"
 import { seedSalaryRevisions } from "@/infrastructure/seed/seed-salary-revisions"
@@ -150,6 +151,80 @@ describe("POST /payslips", () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 409 when a payslip already exists for the same period", async () => {
+    // E005 は period 2026-04 の給与明細をシード済み。同一期間の再発行は弾く。
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-04",
+      base_salary: 300000,
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("issues twice for the same period only once via the duplicate guard", async () => {
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    const first = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/payslips",
+      token,
+      method: "POST",
+      body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+    })
+
+    const second = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/payslips",
+      token,
+      method: "POST",
+      body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+    })
+
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(409)
+  })
+
+  test("returns 409 (not 500) when the existence check races and insert hits the unique index", async () => {
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    function issue(): Promise<Response> {
+      return requestWithContext({
+        db,
+        jwtSecret,
+        path: "/payslips",
+        token,
+        method: "POST",
+        body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+      })
+    }
+
+    const first = await issue()
+
+    expect(first.status).toBe(201)
+
+    // TOCTOU 競合を再現する。2回目の existence チェックだけ未検出（null）に偽装し
+    // insert を UNIQUE 制約に当てる。消費後は元実装へ戻り、insert 失敗後の再確認は実行を検出する。
+    const spy = spyOn(PayslipRepository.prototype, "findByEmployeeAndPeriod")
+
+    spy.mockImplementationOnce(() => Promise.resolve(null))
+
+    try {
+      const second = await issue()
+
+      // 500 ではなく重複として 409 を返す。
+      expect(second.status).toBe(409)
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   test("returns 400 when base_salary is missing", async () => {

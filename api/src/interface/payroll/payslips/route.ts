@@ -1,5 +1,6 @@
 import { IssuePayslip } from "@/application/payroll/issue-payslip"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -54,6 +55,10 @@ export const POST = factory.createHandlers(
     if ("reason" in payslip) {
       if (payslip.reason === "forbidden") {
         throw new ForbiddenError()
+      }
+
+      if (payslip.reason === "duplicate_period") {
+        throw new ConflictError("payslip already issued for this period")
       }
 
       throw new NotFoundError("employee not found")

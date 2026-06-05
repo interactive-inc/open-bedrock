@@ -1,5 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm"
-import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 // 従業員台帳
 export const employees = sqliteTable("employees", {
@@ -118,17 +118,22 @@ export const reviewForms = sqliteTable("review_forms", {
 export type ReviewFormRow = InferSelectModel<typeof reviewForms>
 
 // 給与明細（社員ごと・期間ごとの支給/控除/差引支給額）
-export const payslips = sqliteTable("payslips", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  period: text("period").notNull(),
-  baseSalary: integer("base_salary").notNull(),
-  allowances: integer("allowances").notNull(),
-  deductions: integer("deductions").notNull(),
-  netPay: integer("net_pay").notNull(),
-  issuedAt: text("issued_at"),
-  status: text("status").notNull(),
-})
+export const payslips = sqliteTable(
+  "payslips",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    period: text("period").notNull(),
+    baseSalary: integer("base_salary").notNull(),
+    allowances: integer("allowances").notNull(),
+    deductions: integer("deductions").notNull(),
+    netPay: integer("net_pay").notNull(),
+    issuedAt: text("issued_at"),
+    status: text("status").notNull(),
+  },
+  // 同一社員・同一期間の二重発行を禁止する。
+  (table) => [uniqueIndex("uq_payslips_employee_period").on(table.employeeId, table.period)],
+)
 
 export type PayslipRow = InferSelectModel<typeof payslips>
 
