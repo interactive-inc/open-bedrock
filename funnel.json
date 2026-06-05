@@ -1,24 +1,26 @@
 {
   "$schema": "node_modules/@interactive-inc/claude-funnel/funnel.schema.json",
+  "id": "5e2be1ab-ae9f-453d-9e8d-b1930df2361a",
   "channels": [
     {
       "name": "open-karte",
       "connectors": [
         {
           "type": "slack",
-          "name": "slack",
-          "env": {
-            "botToken": "SLACK_BOT_TOKEN",
-            "appToken": "SLACK_APP_TOKEN"
-          }
+          "name": "slack"
         }
       ]
     }
   ],
   "profiles": [
     {
+      "name": "open-karte",
       "channel": "open-karte",
-      "options": ["--brief", "--agent", "pm"],
+      "options": [
+        "--brief",
+        "--agent",
+        "pm"
+      ],
       "env": {
         "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
       }
