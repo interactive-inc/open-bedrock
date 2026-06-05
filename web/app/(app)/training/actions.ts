@@ -7,6 +7,7 @@ import { completeTrainingEnrollment } from "@/lib/api/complete-training-enrollme
 import { createTrainingCourse } from "@/lib/api/create-training-course"
 import { createTrainingEnrollment } from "@/lib/api/create-training-enrollment"
 import { updateTrainingCourse } from "@/lib/api/update-training-course"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type TrainingFormState = {
@@ -51,9 +52,9 @@ export async function completeTrainingEnrollmentAction(
     return { ok: false, error: "受講が不明です" }
   }
 
-  const enrollmentId = Number(enrollmentIdText)
+  const enrollmentId = toPositiveIntId(enrollmentIdText)
 
-  if (Number.isInteger(enrollmentId) === false) {
+  if (enrollmentId === null) {
     return { ok: false, error: "受講IDが不正です" }
   }
 
@@ -147,9 +148,9 @@ export async function cancelTrainingEnrollmentAction(
     return { ok: false, error: "受講が不明です" }
   }
 
-  const enrollmentId = Number(enrollmentIdText)
+  const enrollmentId = toPositiveIntId(enrollmentIdText)
 
-  if (Number.isInteger(enrollmentId) === false) {
+  if (enrollmentId === null) {
     return { ok: false, error: "受講IDが不正です" }
   }
 

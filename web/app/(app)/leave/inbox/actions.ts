@@ -3,25 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { approveLeaveRequest } from "@/lib/api/approve-leave-request"
 import { rejectLeaveRequest } from "@/lib/api/reject-leave-request"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type LeaveDecisionState = {
   ok: boolean
   error: string | null
-}
-
-// leaveRequestId フォーム値を正の整数へ変換する。無効なら null。
-function toLeaveRequestId(rawId: FormDataEntryValue | null): number | null {
-  if (typeof rawId !== "string") {
-    return null
-  }
-
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }
 
 // 承認処理。コメント任意。
@@ -58,7 +44,7 @@ export async function decideLeaveRequestAction(
   previousState: LeaveDecisionState,
   formData: FormData,
 ): Promise<LeaveDecisionState> {
-  const leaveRequestId = toLeaveRequestId(formData.get("leave_request_id"))
+  const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
     return { ok: false, error: "申請が指定されていません" }

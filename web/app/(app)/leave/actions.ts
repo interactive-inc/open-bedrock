@@ -5,6 +5,7 @@ import { cancelLeaveRequest } from "@/lib/api/cancel-leave-request"
 import { createLeaveRequest } from "@/lib/api/create-leave-request"
 import { updateLeaveRequest } from "@/lib/api/update-leave-request"
 import type { LeaveType } from "@/lib/api/types/leave-types"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type LeaveActionState = {
@@ -67,7 +68,7 @@ export async function updateLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
 ): Promise<LeaveActionState> {
-  const leaveRequestId = toLeaveRequestId(formData.get("leave_request_id"))
+  const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
     return { ok: false, error: "休暇申請を特定できませんでした" }
@@ -122,7 +123,7 @@ export async function cancelLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
 ): Promise<LeaveActionState> {
-  const leaveRequestId = toLeaveRequestId(formData.get("leave_request_id"))
+  const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
     return { ok: false, error: "休暇申請を特定できませんでした" }
@@ -137,21 +138,6 @@ export async function cancelLeaveRequestAction(
   revalidatePath("/leave")
 
   return { ok: true, error: null }
-}
-
-// leave_request_id の FormData 値を数値へ。不正値は null。
-function toLeaveRequestId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false) {
-    return null
-  }
-
-  return parsed
 }
 
 // leave_type の FormData 値を許可値へ。不正値は null。

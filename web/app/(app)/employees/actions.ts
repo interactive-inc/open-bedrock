@@ -6,6 +6,7 @@ import { createEmployee } from "@/lib/api/create-employee"
 import { deleteEmployee } from "@/lib/api/delete-employee"
 import { updateEmployee } from "@/lib/api/update-employee"
 import type { EmployeeStatus } from "@/lib/api/types/employee-types"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type EmployeeCreateFormState = {
   ok: boolean
@@ -48,21 +49,6 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData の dept_id を整数へ。未入力や不正値は null。
-function toDeptId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false) {
-    return null
-  }
-
-  return parsed
-}
-
 // 従業員登録の Server Action。code/name/email/password/role/status 必須、部署・役職は任意。
 export async function createEmployeeAction(
   previousState: EmployeeCreateFormState,
@@ -94,7 +80,7 @@ export async function createEmployeeAction(
     email: email,
     password: password,
     role: role,
-    dept_id: toDeptId(formData.get("dept_id")),
+    dept_id: toPositiveIntId(formData.get("dept_id")),
     dept_name: toText(formData.get("dept_name")),
     position: toText(formData.get("position")),
     status: status,
@@ -143,7 +129,7 @@ export async function updateEmployeeAction(
     name: name,
     email: email,
     role: role,
-    dept_id: toDeptId(formData.get("dept_id")),
+    dept_id: toPositiveIntId(formData.get("dept_id")),
     dept_name: toText(formData.get("dept_name")),
     position: toText(formData.get("position")),
     status: status,

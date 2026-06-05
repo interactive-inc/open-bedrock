@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cancelRoomReservation } from "@/lib/api/cancel-room-reservation"
 import { createRoomReservation } from "@/lib/api/create-room-reservation"
 import { updateRoomReservation } from "@/lib/api/update-room-reservation"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type RoomReservationActionState = {
@@ -17,7 +18,7 @@ export async function createRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
 ): Promise<RoomReservationActionState> {
-  const roomId = toRoomId(formData.get("room_id"))
+  const roomId = toPositiveIntId(formData.get("room_id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室を選択してください" }
@@ -126,21 +127,6 @@ export async function cancelRoomReservationAction(
   revalidatePath("/rooms")
 
   return { ok: true, error: null }
-}
-
-// room_id の FormData 値を数値へ。未入力や不正値は null。
-function toRoomId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false) {
-    return null
-  }
-
-  return parsed
 }
 
 // purpose の FormData 値を文字列へ。未入力や不正値は null。

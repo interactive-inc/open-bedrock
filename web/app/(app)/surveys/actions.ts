@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { submitSurveyResponse } from "@/lib/api/submit-survey-response"
 import { updateSurveyResponse } from "@/lib/api/update-survey-response"
 import { withdrawSurveyResponse } from "@/lib/api/withdraw-survey-response"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState のタプル要素となるアクション結果。
 // status で成否を表し、message は画面のトースト/エラー表示に使う。
@@ -18,11 +19,9 @@ export async function submitSurveyResponseAction(
   previousState: SubmitSurveyResponseState,
   formData: FormData,
 ): Promise<SubmitSurveyResponseState> {
-  const surveyIdRaw = formData.get("surveyId")
+  const surveyId = toPositiveIntId(formData.get("surveyId"))
 
-  const surveyId = Number(surveyIdRaw)
-
-  if (!Number.isInteger(surveyId)) {
+  if (surveyId === null) {
     return { status: "error", message: "アンケート ID が不正です" }
   }
 
@@ -62,9 +61,9 @@ export async function updateSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,
 ): Promise<MyResponseActionState> {
-  const responseId = Number(formData.get("responseId"))
+  const responseId = toPositiveIntId(formData.get("responseId"))
 
-  if (!Number.isInteger(responseId)) {
+  if (responseId === null) {
     return { ok: false, error: "回答 ID が不正です" }
   }
 
@@ -97,9 +96,9 @@ export async function withdrawSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,
 ): Promise<MyResponseActionState> {
-  const responseId = Number(formData.get("responseId"))
+  const responseId = toPositiveIntId(formData.get("responseId"))
 
-  if (!Number.isInteger(responseId)) {
+  if (responseId === null) {
     return { ok: false, error: "回答 ID が不正です" }
   }
 
