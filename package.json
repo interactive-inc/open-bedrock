@@ -13,7 +13,7 @@
     "check": "vp check"
   },
   "devDependencies": {
-    "@interactive-inc/claude-funnel": "^0.26.1",
+    "@interactive-inc/claude-funnel": "^0.53.0",
     "vite-plus": "^0.1.23"
   },
   "packageManager": "bun@1.3.14"
