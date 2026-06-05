@@ -73,6 +73,19 @@ export class IssuePayslip {
       issuedAt: command.issuedAt,
     })
 
-    return await payslipRepository.create(payslip)
+    const created = await payslipRepository.create(payslip)
+
+    if (created instanceof Error) {
+      // 競合（TOCTOU）で UNIQUE 制約に弾かれた可能性。再確認して行が在れば重複として 409 相当を返す。
+      const raced = await payslipRepository.findByEmployeeAndPeriod(employee.id, command.period)
+
+      if (raced instanceof Payslip) {
+        return { reason: "duplicate_period" }
+      }
+
+      return created
+    }
+
+    return created
   }
 }
