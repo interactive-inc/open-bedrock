@@ -7,6 +7,7 @@ import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { updateExpense } from "@/lib/api/update-expense"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type ExpenseSubmitFormState = {
   ok: boolean
@@ -104,11 +105,9 @@ export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const expenseIdValue = formData.get("expense_id")
+  const expenseId = toPositiveIntId(formData.get("expense_id"))
 
-  const expenseId = Number(expenseIdValue)
-
-  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+  if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
   }
 
@@ -134,11 +133,9 @@ export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const expenseIdValue = formData.get("expense_id")
+  const expenseId = toPositiveIntId(formData.get("expense_id"))
 
-  const expenseId = Number(expenseIdValue)
-
-  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+  if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
   }
 
@@ -169,11 +166,9 @@ export async function updateExpenseAction(
   previousState: ExpenseUpdateFormState,
   formData: FormData,
 ): Promise<ExpenseUpdateFormState> {
-  const expenseIdValue = formData.get("expense_id")
+  const expenseId = toPositiveIntId(formData.get("expense_id"))
 
-  const expenseId = Number(expenseIdValue)
-
-  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+  if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
   }
 
@@ -226,11 +221,9 @@ export async function deleteExpenseAction(
   previousState: ExpenseDeleteFormState,
   formData: FormData,
 ): Promise<ExpenseDeleteFormState> {
-  const expenseIdValue = formData.get("expense_id")
+  const expenseId = toPositiveIntId(formData.get("expense_id"))
 
-  const expenseId = Number(expenseIdValue)
-
-  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+  if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
   }
 

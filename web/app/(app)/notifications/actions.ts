@@ -5,6 +5,7 @@ import { createNotification } from "@/lib/api/create-notification"
 import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
 import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type NotificationFormState = {
@@ -17,11 +18,9 @@ export async function markNotificationReadAction(
   _previousState: NotificationFormState,
   formData: FormData,
 ): Promise<NotificationFormState> {
-  const idValue = formData.get("notification_id")
+  const notificationId = toPositiveIntId(formData.get("notification_id"))
 
-  const notificationId = Number(idValue)
-
-  if (Number.isInteger(notificationId) === false) {
+  if (notificationId === null) {
     return { ok: false, error: "通知 ID が不正です" }
   }
 

@@ -6,6 +6,7 @@ import { createGoalEvaluation } from "@/lib/api/create-goal-evaluation"
 import { deleteGoal } from "@/lib/api/delete-goal"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
 import { updateGoal } from "@/lib/api/update-goal"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type GoalActionState = {
@@ -54,7 +55,7 @@ export async function updateGoalAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
-  const goalId = toGoalId(formData.get("goalId"))
+  const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
@@ -94,7 +95,7 @@ export async function deleteGoalAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
-  const goalId = toGoalId(formData.get("goalId"))
+  const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
@@ -117,7 +118,7 @@ export async function createGoalEvaluationAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
-  const goalId = toGoalId(formData.get("goalId"))
+  const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
@@ -173,21 +174,6 @@ function toScore(value: FormDataEntryValue | null): number | null {
   const parsed = Number(value)
 
   if (Number.isNaN(parsed)) {
-    return null
-  }
-
-  return parsed
-}
-
-// goalId の FormData 値を整数へ。不正値は null。
-function toGoalId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (!Number.isInteger(parsed)) {
     return null
   }
 
