@@ -148,6 +148,51 @@ describe("POST /salary-revisions", () => {
     }
   })
 
+  test("backdated revision resolves previous base salary from the prior effective date", async () => {
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    // 登録順: 4月 → 6月 → 5月（バックデート）。E005 は 2025-04-01 の改定をシード済み。
+    await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/salary-revisions",
+      token,
+      method: "POST",
+      body: { employee_code: "E005", effective_date: "2026-04-01", new_base_salary: 320000 },
+    })
+
+    await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/salary-revisions",
+      token,
+      method: "POST",
+      body: { employee_code: "E005", effective_date: "2026-06-01", new_base_salary: 340000 },
+    })
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/salary-revisions",
+      token,
+      method: "POST",
+      body: { employee_code: "E005", effective_date: "2026-05-01", new_base_salary: 330000 },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = salaryRevisionResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // 直前は 2026-04-01（320000）であり、登録が最後の 2026-06-01（340000）ではない。
+      expect(parsed.data.previous_base_salary).toBe(320000)
+    }
+  })
+
   test("member is forbidden", async () => {
     const response = await request("/salary-revisions", await memberToken(), "POST", {
       employee_code: "E005",
@@ -172,6 +217,16 @@ describe("POST /salary-revisions", () => {
     const response = await request("/salary-revisions", await adminToken(), "POST", {
       employee_code: "E005",
       effective_date: "2026-04-01",
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when new_base_salary is negative", async () => {
+    const response = await request("/salary-revisions", await adminToken(), "POST", {
+      employee_code: "E005",
+      effective_date: "2026-04-01",
+      new_base_salary: -1,
     })
 
     expect(response.status).toBe(400)
