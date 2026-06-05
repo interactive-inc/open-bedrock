@@ -348,15 +348,22 @@ function toPatternFields(
   return { code, name, start_time: startTime, end_time: endTime, break_minutes: breakMinutes }
 }
 
-// FormData の ID 値を正の整数に変換する。未入力（Number(null)=0）・0・負値・非整数は null。
+// FormData の ID 値を正の整数に変換する。10進の正整数のみ通し、それ以外は null。
+// 未入力（Number(null)=0）・0・負値・小数・全角・hex/指数表記（0x10・1e3）・桁あふれを弾く。
 function toPositiveIntId(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
     return null
   }
 
-  const parsed = Number(value)
+  const trimmed = value.trim()
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+  if (/^\d+$/.test(trimmed) === false) {
+    return null
+  }
+
+  const parsed = Number(trimmed)
+
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // FormData 値を trim した文字列に。未入力や非文字列は空文字。
