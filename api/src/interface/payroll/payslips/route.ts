@@ -18,9 +18,9 @@ export const POST = factory.createHandlers(
     z.object({
       employee_code: z.string().min(1),
       period: z.string().min(1),
-      base_salary: z.number(),
-      allowances: z.number().default(0),
-      deductions: z.number().default(0),
+      base_salary: z.number().nonnegative(),
+      allowances: z.number().nonnegative().default(0),
+      deductions: z.number().nonnegative().default(0),
     }),
   ),
   async (c) => {

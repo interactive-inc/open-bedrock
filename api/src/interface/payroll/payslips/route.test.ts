@@ -161,6 +161,27 @@ describe("POST /payslips", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when base_salary is negative", async () => {
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-05",
+      base_salary: -1,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when deductions is negative", async () => {
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-05",
+      base_salary: 300000,
+      deductions: -1,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/payslips", null, "POST", {
       employee_code: "E005",
