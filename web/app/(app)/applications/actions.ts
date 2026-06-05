@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { updateApplication } from "@/lib/api/update-application"
 import { withdrawApplication } from "@/lib/api/withdraw-application"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ApplicationActionState = {
@@ -16,7 +17,7 @@ export async function updateApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
 ): Promise<ApplicationActionState> {
-  const applicationId = toApplicationId(formData.get("application_id"))
+  const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請を特定できませんでした" }
@@ -44,7 +45,7 @@ export async function withdrawApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
 ): Promise<ApplicationActionState> {
-  const applicationId = toApplicationId(formData.get("application_id"))
+  const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請を特定できませんでした" }
@@ -59,21 +60,6 @@ export async function withdrawApplicationAction(
   revalidatePath("/applications")
 
   return { ok: true, error: null }
-}
-
-// application_id の FormData 値を正の整数へ。不正値は null。
-function toApplicationId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }
 
 // payload の FormData 値(JSON 文字列) を unknown へ。解析できなければ Error。

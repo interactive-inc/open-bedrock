@@ -7,6 +7,7 @@ import { correctPayslip } from "@/lib/api/correct-payslip"
 import { correctSalaryRevision } from "@/lib/api/correct-salary-revision"
 import { createSalaryRevision } from "@/lib/api/create-salary-revision"
 import { issuePayslip } from "@/lib/api/issue-payslip"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type PayrollAdminFormState = {
@@ -116,9 +117,9 @@ export async function correctPayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
-  const payslipId = Number(formData.get("payslip_id"))
+  const payslipId = toPositiveIntId(formData.get("payslip_id"))
 
-  if (!Number.isInteger(payslipId) || payslipId <= 0) {
+  if (payslipId === null) {
     return { ok: false, error: "給与明細 ID を入力してください" }
   }
 
@@ -164,9 +165,9 @@ export async function cancelPayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
-  const payslipId = Number(formData.get("payslip_id"))
+  const payslipId = toPositiveIntId(formData.get("payslip_id"))
 
-  if (!Number.isInteger(payslipId) || payslipId <= 0) {
+  if (payslipId === null) {
     return { ok: false, error: "給与明細 ID を入力してください" }
   }
 
@@ -186,9 +187,9 @@ export async function correctSalaryRevisionAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
-  const salaryRevisionId = Number(formData.get("id"))
+  const salaryRevisionId = toPositiveIntId(formData.get("id"))
 
-  if (!Number.isInteger(salaryRevisionId) || salaryRevisionId <= 0) {
+  if (salaryRevisionId === null) {
     return { ok: false, error: "対象の給与改定が不正です" }
   }
 
@@ -231,9 +232,9 @@ export async function cancelSalaryRevisionAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
-  const salaryRevisionId = Number(formData.get("id"))
+  const salaryRevisionId = toPositiveIntId(formData.get("id"))
 
-  if (!Number.isInteger(salaryRevisionId) || salaryRevisionId <= 0) {
+  if (salaryRevisionId === null) {
     return { ok: false, error: "対象の給与改定が不正です" }
   }
 

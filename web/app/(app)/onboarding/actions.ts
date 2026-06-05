@@ -10,6 +10,7 @@ import { postOnboardingTaskUncomplete } from "@/lib/api/post-onboarding-task-unc
 import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignment"
 import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
 import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type AssignState = {
   ok: boolean
@@ -64,9 +65,9 @@ export async function completeOnboardingTaskAction(
     return { ok: false, message: "タスクが不明です" }
   }
 
-  const taskId = Number(rawTaskId)
+  const taskId = toPositiveIntId(rawTaskId)
 
-  if (!Number.isInteger(taskId)) {
+  if (taskId === null) {
     return { ok: false, message: "タスクIDが不正です" }
   }
 
@@ -95,9 +96,9 @@ export async function uncompleteOnboardingTaskAction(
     return { ok: false, message: "タスクが不明です" }
   }
 
-  const taskId = Number(rawTaskId)
+  const taskId = toPositiveIntId(rawTaskId)
 
-  if (!Number.isInteger(taskId)) {
+  if (taskId === null) {
     return { ok: false, message: "タスクIDが不正です" }
   }
 
@@ -135,9 +136,9 @@ export async function rescheduleOnboardingAssignmentAction(
     return { ok: false, message: "割り当てを特定できませんでした" }
   }
 
-  const assignmentId = Number(rawId)
+  const assignmentId = toPositiveIntId(rawId)
 
-  if (!Number.isInteger(assignmentId)) {
+  if (assignmentId === null) {
     return { ok: false, message: "割り当てIDが不正です" }
   }
 
@@ -173,9 +174,9 @@ export async function cancelOnboardingAssignmentAction(
     return { ok: false, message: "割り当てを特定できませんでした" }
   }
 
-  const assignmentId = Number(rawId)
+  const assignmentId = toPositiveIntId(rawId)
 
-  if (!Number.isInteger(assignmentId)) {
+  if (assignmentId === null) {
     return { ok: false, message: "割り当てIDが不正です" }
   }
 

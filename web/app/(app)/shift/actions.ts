@@ -10,6 +10,7 @@ import { deleteShiftPattern } from "@/lib/api/delete-shift-pattern"
 import { publishShiftAssignment } from "@/lib/api/publish-shift-assignment"
 import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -346,24 +347,6 @@ function toPatternFields(
   }
 
   return { code, name, start_time: startTime, end_time: endTime, break_minutes: breakMinutes }
-}
-
-// FormData の ID 値を正の整数に変換する。10進の正整数のみ通し、それ以外は null。
-// 未入力（Number(null)=0）・0・負値・小数・全角・hex/指数表記（0x10・1e3）・桁あふれを弾く。
-function toPositiveIntId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const trimmed = value.trim()
-
-  if (/^\d+$/.test(trimmed) === false) {
-    return null
-  }
-
-  const parsed = Number(trimmed)
-
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // FormData 値を trim した文字列に。未入力や非文字列は空文字。

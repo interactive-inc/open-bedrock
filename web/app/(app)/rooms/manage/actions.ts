@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { createRoom } from "@/lib/api/create-room"
 import { deleteRoom } from "@/lib/api/delete-room"
 import { updateRoom } from "@/lib/api/update-room"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type RoomCreateFormState = {
   ok: boolean
@@ -34,17 +35,6 @@ function toCapacity(value: FormDataEntryValue | null): number | null {
   }
 
   return parsed
-}
-
-// FormData の room id を数値へ変換する。不正なら null。
-function toRoomId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  return Number.isInteger(parsed) ? parsed : null
 }
 
 // 会議室登録の Server Action。location の空文字は値なし扱いにする。
@@ -86,7 +76,7 @@ export async function updateRoomAction(
   previousState: RoomUpdateFormState,
   formData: FormData,
 ): Promise<RoomUpdateFormState> {
-  const roomId = toRoomId(formData.get("id"))
+  const roomId = toPositiveIntId(formData.get("id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室が不正です" }
@@ -126,7 +116,7 @@ export async function deleteRoomAction(
   previousState: RoomDeleteFormState,
   formData: FormData,
 ): Promise<RoomDeleteFormState> {
-  const roomId = toRoomId(formData.get("id"))
+  const roomId = toPositiveIntId(formData.get("id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室が不正です" }
