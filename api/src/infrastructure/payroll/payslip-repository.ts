@@ -1,7 +1,7 @@
 import { Payslip } from "@/domain/payroll/payslip"
 import type { Context } from "@/env"
 import { payslips } from "@/schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 export class PayslipRepository {
   constructor(private readonly c: Context) {}
@@ -13,6 +13,26 @@ export class PayslipRepository {
         .select()
         .from(payslips)
         .where(eq(payslips.id, id))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Payslip.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load payslip")
+    }
+  }
+
+  // 社員と期間で給与明細を1件取得する。存在しなければ null。重複発行ガードに使う。
+  async findByEmployeeAndPeriod(
+    employeeId: number,
+    period: string,
+  ): Promise<Payslip | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(payslips)
+        .where(and(eq(payslips.employeeId, employeeId), eq(payslips.period, period)))
         .limit(1)
 
       const row = rows.at(0)
