@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createOrgDepartment } from "@/lib/api/create-org-department"
 import { deleteOrgDepartment } from "@/lib/api/delete-org-department"
 import { updateOrgDepartment } from "@/lib/api/update-org-department"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type OrgDepartmentActionState = {
@@ -23,7 +24,7 @@ export async function createOrgDepartmentAction(
     return { ok: false, error: "部署コードを入力してください" }
   }
 
-  const departmentId = toNumber(formData.get("department_id"))
+  const departmentId = toPositiveIntId(formData.get("department_id"))
 
   if (departmentId === null) {
     return { ok: false, error: "部署マスタ ID を入力してください" }

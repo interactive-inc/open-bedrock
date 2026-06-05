@@ -8,6 +8,7 @@ import { updateCareerApplication } from "@/lib/api/update-career-application"
 import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type CareerSheetFormState = {
   ok: boolean
@@ -58,15 +59,13 @@ export async function applyCareerPostingAction(
   previousState: CareerApplyFormState,
   formData: FormData,
 ): Promise<CareerApplyFormState> {
-  const postingIdValue = formData.get("posting_id")
+  const postingId = toPositiveIntId(formData.get("posting_id"))
 
-  const messageValue = formData.get("message")
-
-  const postingId = Number(postingIdValue)
-
-  if (!Number.isInteger(postingId) || postingId <= 0) {
+  if (postingId === null) {
     return { ok: false, error: "公募が不正です" }
   }
+
+  const messageValue = formData.get("message")
 
   const message = typeof messageValue === "string" && messageValue !== "" ? messageValue : null
 
@@ -87,7 +86,7 @@ export async function updateCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
 ): Promise<CareerApplicationActionState> {
-  const applicationId = toApplicationId(formData.get("application_id"))
+  const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "応募を特定できませんでした" }
@@ -114,7 +113,7 @@ export async function withdrawCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
 ): Promise<CareerApplicationActionState> {
-  const applicationId = toApplicationId(formData.get("application_id"))
+  const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "応募を特定できませんでした" }
@@ -179,7 +178,7 @@ export async function updateCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
-  const postingId = toPostingId(formData.get("posting_id"))
+  const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {
     return { ok: false, error: "公募を特定できませんでした" }
@@ -219,7 +218,7 @@ export async function deleteCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
-  const postingId = toPostingId(formData.get("posting_id"))
+  const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {
     return { ok: false, error: "公募を特定できませんでした" }
@@ -263,24 +262,4 @@ function toOptionalId(value: FormDataEntryValue | null): number | null | "invali
 // status フィールドを open/closed に正規化する。closed 以外は open。
 function toPostingStatus(value: FormDataEntryValue | null): "open" | "closed" {
   return value === "closed" ? "closed" : "open"
-}
-
-// posting_id の FormData 値を正の整数へ。未入力や不正値は null。
-function toPostingId(value: FormDataEntryValue | null): number | null {
-  return toApplicationId(value)
-}
-
-// application_id の FormData 値を正の整数へ。未入力や不正値は null。
-function toApplicationId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }

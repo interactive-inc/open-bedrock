@@ -3,25 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { approveApplication } from "@/lib/api/approve-application"
 import { rejectApplication } from "@/lib/api/reject-application"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type DecisionState = {
   ok: boolean
   error: string | null
-}
-
-// applicationId フォーム値を正の整数へ変換する。無効なら null。
-function toApplicationId(rawId: FormDataEntryValue | null): number | null {
-  if (typeof rawId !== "string") {
-    return null
-  }
-
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }
 
 // 承認処理。コメント任意。
@@ -55,7 +41,7 @@ export async function decideApplicationAction(
   previousState: DecisionState,
   formData: FormData,
 ): Promise<DecisionState> {
-  const applicationId = toApplicationId(formData.get("application_id"))
+  const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請が指定されていません" }

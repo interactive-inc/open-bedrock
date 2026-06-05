@@ -6,6 +6,7 @@ import { z } from "zod"
 import { createSurvey } from "@/lib/api/create-survey"
 import { deleteSurvey } from "@/lib/api/delete-survey"
 import { updateSurvey } from "@/lib/api/update-survey"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // アンケート作成・編集フォームの useActionState 結果。
 export type SurveyFormState = {
@@ -16,17 +17,6 @@ export type SurveyFormState = {
 const statusSchema = z.enum(["open", "closed"])
 
 const questionsJsonSchema = z.array(z.unknown())
-
-// FormData の survey id を数値へ変換する。不正なら null。
-function toSurveyId(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  return Number.isInteger(parsed) ? parsed : null
-}
 
 // FormData の questions テキストを設問配列へ検証付きで変換する。空なら空配列、不正なら Error。
 function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<unknown> | Error {
@@ -92,7 +82,7 @@ export async function updateSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
 ): Promise<SurveyFormState> {
-  const surveyId = toSurveyId(formData.get("id"))
+  const surveyId = toPositiveIntId(formData.get("id"))
 
   if (surveyId === null) {
     return { ok: false, error: "アンケートが不正です" }
@@ -138,7 +128,7 @@ export async function deleteSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
 ): Promise<SurveyFormState> {
-  const surveyId = toSurveyId(formData.get("id"))
+  const surveyId = toPositiveIntId(formData.get("id"))
 
   if (surveyId === null) {
     return { ok: false, error: "アンケートが不正です" }

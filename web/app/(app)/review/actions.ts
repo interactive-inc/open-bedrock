@@ -7,6 +7,7 @@ import { deleteReviewCycle } from "@/lib/api/delete-review-cycle"
 import { openReviewCycle } from "@/lib/api/open-review-cycle"
 import { submitReviewForm } from "@/lib/api/submit-review-form"
 import { updateReviewCycle } from "@/lib/api/update-review-cycle"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ReviewFormState = {
@@ -56,9 +57,9 @@ export async function openReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
-  const cycleId = Number(formData.get("cycle_id"))
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
-  if (Number.isInteger(cycleId) === false) {
+  if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
@@ -78,9 +79,9 @@ export async function closeReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
-  const cycleId = Number(formData.get("cycle_id"))
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
-  if (Number.isInteger(cycleId) === false) {
+  if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
@@ -100,9 +101,9 @@ export async function updateReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
-  const cycleId = Number(formData.get("cycle_id"))
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
-  if (Number.isInteger(cycleId) === false) {
+  if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
@@ -147,9 +148,9 @@ export async function deleteReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
-  const cycleId = Number(formData.get("cycle_id"))
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
-  if (Number.isInteger(cycleId) === false) {
+  if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
@@ -169,9 +170,9 @@ export async function submitReviewFormAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
-  const formId = Number(formData.get("form_id"))
+  const formId = toPositiveIntId(formData.get("form_id"))
 
-  if (Number.isInteger(formId) === false) {
+  if (formId === null) {
     return { ok: false, error: "フォーム ID が不正です" }
   }
 
