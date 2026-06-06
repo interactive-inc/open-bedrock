@@ -73,6 +73,8 @@ export const POST = factory.createHandlers(
     z.object({
       recipient_employee_code: z.string().min(1),
       message: z.string().min(1),
+      // 任意で添えるサンクスポイント。未指定はメッセージのみの感謝。
+      points: z.number().int().nonnegative().nullable().optional(),
     }),
   ),
   async (c) => {
@@ -88,6 +90,7 @@ export const POST = factory.createHandlers(
       senderEmployeeId: session.employeeId,
       recipientEmployeeCode: json.recipient_employee_code,
       message: json.message,
+      points: json.points ?? null,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
@@ -103,6 +106,14 @@ export const POST = factory.createHandlers(
       // 送信者はセッションから解決済みのはずなので、不在は想定外の内部状態。
       if (result.reason === "sender_not_found") {
         throw new InternalError("sender not found")
+      }
+
+      if (result.reason === "insufficient_budget") {
+        throw new BadRequestError("insufficient thanks point budget")
+      }
+
+      if (result.reason === "invalid_points") {
+        throw new BadRequestError("invalid points")
       }
 
       throw new BadRequestError("invalid thanks")

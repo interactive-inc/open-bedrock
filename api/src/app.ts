@@ -68,6 +68,15 @@ import * as onboardingTaskCompleteRoute from "@/interface/onboarding/tasks/[id]/
 import * as onboardingTemplateListRoute from "@/interface/onboarding/templates/route"
 import * as oneOnOneRoute from "@/interface/oneonone/route"
 import * as thanksRoute from "@/interface/thanks/route"
+import * as thanksBudgetMeRoute from "@/interface/thanks-points/budget/me/route"
+import * as thanksBalanceMeRoute from "@/interface/thanks-points/balance/me/route"
+import * as thanksRewardsRoute from "@/interface/thanks-points/rewards/route"
+import * as thanksRewardDetailRoute from "@/interface/thanks-points/rewards/[id]/route"
+import * as thanksRedemptionsRoute from "@/interface/thanks-points/redemptions/route"
+import * as thanksRedemptionsMeRoute from "@/interface/thanks-points/redemptions/me/route"
+import * as thanksRedemptionsInboxRoute from "@/interface/thanks-points/redemptions/inbox/route"
+import * as thanksRedemptionApproveRoute from "@/interface/thanks-points/redemptions/[id]/approve/route"
+import * as thanksRedemptionRejectRoute from "@/interface/thanks-points/redemptions/[id]/reject/route"
 import * as orgDepartmentMembersRoute from "@/interface/org/departments/[code]/members/route"
 import * as orgReportingLineRoute from "@/interface/org/reporting-line/[employee_code]/route"
 import * as orgTreeRoute from "@/interface/org/tree/route"
@@ -207,6 +216,16 @@ export const app = factory
   .post("/oneonone", ...oneOnOneRoute.POST)
   .get("/thanks", ...thanksRoute.GET)
   .post("/thanks", ...thanksRoute.POST)
+  .get("/thanks/budget/me", ...thanksBudgetMeRoute.GET)
+  .get("/thanks/balance/me", ...thanksBalanceMeRoute.GET)
+  .get("/thanks/rewards", ...thanksRewardsRoute.GET)
+  .post("/thanks/rewards", ...thanksRewardsRoute.POST)
+  .patch("/thanks/rewards/:id", ...thanksRewardDetailRoute.PATCH)
+  .get("/thanks/redemptions/me", ...thanksRedemptionsMeRoute.GET)
+  .get("/thanks/redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
+  .post("/thanks/redemptions", ...thanksRedemptionsRoute.POST)
+  .post("/thanks/redemptions/:id/approve", ...thanksRedemptionApproveRoute.POST)
+  .post("/thanks/redemptions/:id/reject", ...thanksRedemptionRejectRoute.POST)
   .get("/surveys/:survey_id/summary", ...surveySummaryRoute.GET)
   .post("/surveys/:survey_id/responses", ...surveyResponseCreateRoute.POST)
   .get("/surveys", ...surveyListRoute.GET)
