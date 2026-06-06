@@ -7,6 +7,7 @@ export type NotificationKind =
   | "approval_result"
   | "reminder"
   | "announcement"
+  | "thanks"
 
 // GET /notifications/me の各要素（自分宛ての通知一覧）。POST /notifications,
 // POST /notifications/:id/read のレスポンスも同形。

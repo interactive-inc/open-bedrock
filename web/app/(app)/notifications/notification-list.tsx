@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { NotificationFormState } from "@/app/(app)/notifications/actions"
@@ -68,6 +69,12 @@ export function NotificationList(props: Props) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{notification.title}</span>
+
+                  {notification.kind === "thanks" ? (
+                    <Link href="/thanks">
+                      <Badge variant="secondary">感謝</Badge>
+                    </Link>
+                  ) : null}
 
                   {notification.is_read ? (
                     <Badge variant="outline">既読</Badge>
