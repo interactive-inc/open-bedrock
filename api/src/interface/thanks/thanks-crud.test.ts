@@ -75,6 +75,7 @@ async function request(props: {
   token: string | null
   method?: string
   body?: unknown
+  now?: string
 }): Promise<Response> {
   return requestWithContext({
     db: props.db,
@@ -83,6 +84,7 @@ async function request(props: {
     token: props.token,
     method: props.method,
     body: props.body,
+    now: props.now,
   })
 }
 
@@ -152,6 +154,34 @@ describe("POST /thanks", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  test("maps a too-long message to 400 (invalid_thanks)", async () => {
+    const db = await createTestDb()
+
+    const response = await request({
+      db,
+      path: "/thanks",
+      token: await senderToken(),
+      method: "POST",
+      body: { recipient_employee_code: "E005", message: "あ".repeat(1001) },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("maps a whitespace-only message to 400 (invalid_thanks)", async () => {
+    const db = await createTestDb()
+
+    const response = await request({
+      db,
+      path: "/thanks",
+      token: await senderToken(),
+      method: "POST",
+      body: { recipient_employee_code: "E005", message: "   " },
+    })
+
+    expect(response.status).toBe(400)
   })
 
   test("creates a notification for the recipient only", async () => {
@@ -229,6 +259,103 @@ describe("GET /thanks", () => {
       expect(parsed.data.length).toBe(2)
       expect(parsed.data[0]?.message).toBe("2件目")
       expect(parsed.data[1]?.message).toBe("1件目")
+    }
+  })
+
+  test("honors limit and offset", async () => {
+    const db = await createTestDb()
+
+    for (const message of ["1件目", "2件目", "3件目"]) {
+      await request({
+        db,
+        path: "/thanks",
+        token: await senderToken(),
+        method: "POST",
+        body: { recipient_employee_code: "E005", message },
+      })
+    }
+
+    // 新着順は 3件目 → 2件目 → 1件目。offset=1, limit=1 で 2件目だけが返る。
+    const response = await request({
+      db,
+      path: "/thanks?limit=1&offset=1",
+      token: await recipientToken(),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.message).toBe("2件目")
+    }
+  })
+
+  test("falls back to the default limit when limit=0", async () => {
+    const db = await createTestDb()
+
+    for (const message of ["1件目", "2件目", "3件目"]) {
+      await request({
+        db,
+        path: "/thanks",
+        token: await senderToken(),
+        method: "POST",
+        body: { recipient_employee_code: "E005", message },
+      })
+    }
+
+    const response = await request({ db, path: "/thanks?limit=0", token: await recipientToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // limit=0 は空配列でなく既定の 50 にフォールバックするため、全 3 件が返る。
+      expect(parsed.data.length).toBe(3)
+    }
+  })
+
+  test("breaks created_at ties by id descending", async () => {
+    const db = await createTestDb()
+
+    // requestWithContext の既定 NOW で createdAt を固定し、タイブレークを id 降順で検証する。
+    for (const message of ["古い", "新しい"]) {
+      await request({
+        db,
+        path: "/thanks",
+        token: await senderToken(),
+        method: "POST",
+        body: { recipient_employee_code: "E005", message },
+        now: "2026-01-01T00:00:00.000Z",
+      })
+    }
+
+    const response = await request({
+      db,
+      path: "/thanks",
+      token: await recipientToken(),
+      now: "2026-01-01T00:00:00.000Z",
+    })
+
+    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(2)
+      expect(parsed.data[0]?.created_at).toBe(parsed.data[1]?.created_at)
+
+      const firstId = parsed.data[0]?.id ?? 0
+
+      const secondId = parsed.data[1]?.id ?? 0
+
+      expect(firstId).toBeGreaterThan(secondId)
     }
   })
 

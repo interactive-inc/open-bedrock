@@ -83,8 +83,10 @@ export class SendThanks {
 
     const notified = await notificationRepository.create(notification)
 
+    // 通知作成はベストエフォート。感謝は保存済みなので、通知が失敗してもログのみ残して感謝を返す。
+    // ここでエラーを返すと「保存済みなのに失敗応答」になり再送＝二重登録を招くため。
     if (notified instanceof Error) {
-      return notified
+      console.error("failed to create thanks notification", notified)
     }
 
     return created
