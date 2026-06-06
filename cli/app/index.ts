@@ -68,6 +68,9 @@ import onboardingTemplatesHandler from "@/app/onboarding/templates/route"
 import oneononeCreateHandler from "@/app/1on1/create/route"
 import oneononeHandler from "@/app/1on1/route"
 import oneononeListHandler from "@/app/1on1/list/route"
+import thanksHandler from "@/app/thanks/route"
+import thanksListHandler from "@/app/thanks/list/route"
+import thanksSendHandler from "@/app/thanks/send/route"
 import orgHandler from "@/app/org/route"
 import orgLineHandler from "@/app/org/line/[employee_code]/route"
 import orgMembersHandler from "@/app/org/members/[dept_code]/route"
@@ -260,6 +263,10 @@ routes.post("/goal/evaluate/:goal_id?", ...goalEvaluateHandler)
 routes.post("/1on1", ...oneononeHandler)
 routes.post("/1on1/list", ...oneononeListHandler)
 routes.post("/1on1/create", ...oneononeCreateHandler)
+
+routes.post("/thanks", ...thanksHandler)
+routes.post("/thanks/list", ...thanksListHandler)
+routes.post("/thanks/send", ...thanksSendHandler)
 
 routes.post("/survey", ...surveyHandler)
 routes.post("/survey/list", ...surveyListHandler)

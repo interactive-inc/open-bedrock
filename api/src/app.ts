@@ -67,6 +67,7 @@ import * as onboardingMeRoute from "@/interface/onboarding/me/route"
 import * as onboardingTaskCompleteRoute from "@/interface/onboarding/tasks/[id]/complete/route"
 import * as onboardingTemplateListRoute from "@/interface/onboarding/templates/route"
 import * as oneOnOneRoute from "@/interface/oneonone/route"
+import * as thanksRoute from "@/interface/thanks/route"
 import * as orgDepartmentMembersRoute from "@/interface/org/departments/[code]/members/route"
 import * as orgReportingLineRoute from "@/interface/org/reporting-line/[employee_code]/route"
 import * as orgTreeRoute from "@/interface/org/tree/route"
@@ -204,6 +205,8 @@ export const app = factory
   .get("/skills", ...skillListRoute.GET)
   .get("/oneonone", ...oneOnOneRoute.GET)
   .post("/oneonone", ...oneOnOneRoute.POST)
+  .get("/thanks", ...thanksRoute.GET)
+  .post("/thanks", ...thanksRoute.POST)
   .get("/surveys/:survey_id/summary", ...surveySummaryRoute.GET)
   .post("/surveys/:survey_id/responses", ...surveyResponseCreateRoute.POST)
   .get("/surveys", ...surveyListRoute.GET)
