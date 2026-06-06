@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { RewardManagement } from "@/app/(app)/thanks/reward-management"
 import { ThanksCreateForm } from "@/app/(app)/thanks/thanks-create-form"
 import { ThanksList } from "@/app/(app)/thanks/thanks-list"
 import { ThanksRewards } from "@/app/(app)/thanks/thanks-rewards"
@@ -22,6 +23,10 @@ export default function ThanksPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">ポイントを交換する</h2>
+
+        <Suspense fallback={null}>
+          <RewardManagement />
+        </Suspense>
 
         <Suspense fallback={<ThanksListSkeleton />}>
           <ThanksRewards />
