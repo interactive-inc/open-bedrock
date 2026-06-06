@@ -71,6 +71,14 @@ import oneononeListHandler from "@/app/1on1/list/route"
 import thanksHandler from "@/app/thanks/route"
 import thanksListHandler from "@/app/thanks/list/route"
 import thanksSendHandler from "@/app/thanks/send/route"
+import thanksBudgetHandler from "@/app/thanks/budget/route"
+import thanksBalanceHandler from "@/app/thanks/balance/route"
+import thanksRewardsHandler from "@/app/thanks/rewards/route"
+import thanksRewardAddHandler from "@/app/thanks/reward-add/route"
+import thanksRedeemHandler from "@/app/thanks/redeem/route"
+import thanksRedemptionsHandler from "@/app/thanks/redemptions/route"
+import thanksRedemptionApproveHandler from "@/app/thanks/redemption-approve/[redemption_id]/route"
+import thanksRedemptionRejectHandler from "@/app/thanks/redemption-reject/[redemption_id]/route"
 import orgHandler from "@/app/org/route"
 import orgLineHandler from "@/app/org/line/[employee_code]/route"
 import orgMembersHandler from "@/app/org/members/[dept_code]/route"
@@ -267,6 +275,14 @@ routes.post("/1on1/create", ...oneononeCreateHandler)
 routes.post("/thanks", ...thanksHandler)
 routes.post("/thanks/list", ...thanksListHandler)
 routes.post("/thanks/send", ...thanksSendHandler)
+routes.post("/thanks/budget", ...thanksBudgetHandler)
+routes.post("/thanks/balance", ...thanksBalanceHandler)
+routes.post("/thanks/rewards", ...thanksRewardsHandler)
+routes.post("/thanks/reward-add", ...thanksRewardAddHandler)
+routes.post("/thanks/redeem", ...thanksRedeemHandler)
+routes.post("/thanks/redemptions", ...thanksRedemptionsHandler)
+routes.post("/thanks/redemption-approve/:redemption_id?", ...thanksRedemptionApproveHandler)
+routes.post("/thanks/redemption-reject/:redemption_id?", ...thanksRedemptionRejectHandler)
 
 routes.post("/survey", ...surveyHandler)
 routes.post("/survey/list", ...surveyListHandler)
