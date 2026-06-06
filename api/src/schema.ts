@@ -475,6 +475,18 @@ export const oneOnOnes = sqliteTable("one_on_ones", {
 
 export type OneOnOneRow = InferSelectModel<typeof oneOnOnes>
 
+// 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。
+export const thanks = sqliteTable("thanks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  senderEmployeeId: integer("sender_employee_id").notNull(),
+  recipientEmployeeId: integer("recipient_employee_id").notNull(),
+  message: text("message").notNull(),
+  points: integer("points").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+})
+
+export type ThanksRow = InferSelectModel<typeof thanks>
+
 // 会議室マスタ（定員・所在地）
 export const rooms = sqliteTable("rooms", {
   id: integer("id").primaryKey(),
@@ -689,6 +701,7 @@ export const schema = {
   goalEvaluations,
   knowledgeArticles,
   oneOnOnes,
+  thanks,
   rooms,
   roomReservations,
   skills,
