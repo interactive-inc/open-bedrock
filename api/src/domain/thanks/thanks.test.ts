@@ -43,7 +43,18 @@ describe("Thanks.create", () => {
     expect(thanks).toBeInstanceOf(Error)
   })
 
-  test("rejects a message longer than 1000 characters", () => {
+  test("accepts a message of exactly 1000 characters", () => {
+    const thanks = Thanks.create({
+      senderEmployeeId: 4,
+      recipientEmployeeId: 5,
+      message: "あ".repeat(1000),
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(thanks).toBeInstanceOf(Thanks)
+  })
+
+  test("rejects a message of 1001 characters", () => {
     const thanks = Thanks.create({
       senderEmployeeId: 4,
       recipientEmployeeId: 5,

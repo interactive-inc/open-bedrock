@@ -26,9 +26,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const limit = toBoundedInt(c.req.query("limit"), defaultLimit, maxLimit)
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: defaultLimit,
+    min: 1,
+    max: maxLimit,
+  })
 
-  const offset = toBoundedInt(c.req.query("offset"), 0, Number.MAX_SAFE_INTEGER)
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  })
 
   const thanksList = await new ListThanks(c).run({ limit, offset })
 
@@ -86,8 +96,13 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in result) {
-      if (result.reason === "recipient_not_found" || result.reason === "sender_not_found") {
+      if (result.reason === "recipient_not_found") {
         throw new NotFoundError("recipient not found")
+      }
+
+      // 送信者はセッションから解決済みのはずなので、不在は想定外の内部状態。
+      if (result.reason === "sender_not_found") {
+        throw new InternalError("sender not found")
       }
 
       throw new BadRequestError("invalid thanks")
@@ -113,19 +128,25 @@ export const POST = factory.createHandlers(
   },
 )
 
-// クエリ文字列を範囲内の非負整数に丸める。未指定・不正は fallback。
-function toBoundedInt(raw: string | undefined, fallback: number, max: number): number {
-  if (raw === undefined) {
-    return fallback
+// クエリ文字列を [min, max] に丸める。未指定・非数・min 未満は fallback。
+// limit は min:1（0 を空一覧でなく既定にフォールバック）、offset は min:0（0 を正当値として維持）。
+function toBoundedInt(props: {
+  raw: string | undefined
+  fallback: number
+  min: number
+  max: number
+}): number {
+  if (props.raw === undefined) {
+    return props.fallback
   }
 
-  const parsed = Number.parseInt(raw, 10)
+  const parsed = Number.parseInt(props.raw, 10)
 
-  if (Number.isNaN(parsed) || parsed < 0) {
-    return fallback
+  if (Number.isNaN(parsed) || parsed < props.min) {
+    return props.fallback
   }
 
-  return parsed > max ? max : parsed
+  return parsed > props.max ? props.max : parsed
 }
 
 // 社員 id の配列から id→氏名 の Map を作る。
