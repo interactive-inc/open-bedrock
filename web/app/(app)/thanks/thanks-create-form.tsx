@@ -7,6 +7,7 @@ import type { ThanksActionState } from "@/app/(app)/thanks/actions"
 import { searchRecipientsAction } from "@/app/(app)/thanks/search-recipients-action"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EmployeeCombobox } from "@/components/ui.custom/employee-combobox"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
@@ -83,6 +84,24 @@ export function ThanksCreateForm() {
             rows={3}
             required
           />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="thanks-points">ポイント（任意）</FieldLabel>
+
+          <Input
+            id="thanks-points"
+            name="points"
+            type="number"
+            min={0}
+            step={1}
+            placeholder="0"
+            disabled={isPending}
+          />
+
+          <FieldDescription>
+            当月の贈与原資から相手へ贈るサンクスポイント。空欄ならメッセージのみの感謝になります。
+          </FieldDescription>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

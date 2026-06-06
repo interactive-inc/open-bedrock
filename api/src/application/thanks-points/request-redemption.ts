@@ -1,0 +1,70 @@
+import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
+import type { Context } from "@/env"
+import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+
+export type Command = {
+  employeeId: number
+  rewardId: number
+  createdAt: string
+}
+
+export type RewardNotFound = { reason: "reward_not_found" }
+
+export type RewardInactive = { reason: "reward_inactive" }
+
+export type OutOfStock = { reason: "out_of_stock" }
+
+export type InsufficientBalance = { reason: "insufficient_balance" }
+
+// 受領残高から交換を申請する。申請時点で在庫と残高を確認し、point_cost を写し取って pending で記録する。
+export class RequestRedemption {
+  constructor(private readonly c: Context) {}
+
+  async run(
+    command: Command,
+  ): Promise<
+    ThanksRedemption | RewardNotFound | RewardInactive | OutOfStock | InsufficientBalance | Error
+  > {
+    const rewardRepository = new ThanksRewardRepository(this.c)
+
+    const redemptionRepository = new ThanksRedemptionRepository(this.c)
+
+    const reward = await rewardRepository.findById(command.rewardId)
+
+    if (reward instanceof Error) {
+      return reward
+    }
+
+    if (reward === null) {
+      return { reason: "reward_not_found" }
+    }
+
+    if (reward.isActive === false) {
+      return { reason: "reward_inactive" }
+    }
+
+    if (reward.stock !== null && reward.stock <= 0) {
+      return { reason: "out_of_stock" }
+    }
+
+    const balance = await redemptionRepository.getBalance(command.employeeId)
+
+    if (balance instanceof Error) {
+      return balance
+    }
+
+    if (balance < reward.pointCost) {
+      return { reason: "insufficient_balance" }
+    }
+
+    const redemption = ThanksRedemption.create({
+      employeeId: command.employeeId,
+      rewardId: reward.id ?? command.rewardId,
+      pointCost: reward.pointCost,
+      createdAt: command.createdAt,
+    })
+
+    return redemptionRepository.create(redemption)
+  }
+}
