@@ -488,7 +488,8 @@ export const thanks = sqliteTable("thanks", {
 export type ThanksRow = InferSelectModel<typeof thanks>
 
 // サンクスポイントの月次贈与原資。employee_id + period(YYYY-MM) で一意。
-// 残量は保存せず「granted_points − 当月贈与済み合計」で都度算出する。
+// 残量は granted_points − consumed_points で算出する。consumed_points は贈与時に
+// 原子的な条件付き UPDATE で加算し、同月の同時送付でも原資超過しないための消費カウンタ。
 export const thanksPointBudgets = sqliteTable(
   "thanks_point_budgets",
   {
@@ -496,6 +497,7 @@ export const thanksPointBudgets = sqliteTable(
     employeeId: integer("employee_id").notNull(),
     period: text("period").notNull(),
     grantedPoints: integer("granted_points").notNull(),
+    consumedPoints: integer("consumed_points").notNull().default(0),
     createdAt: text("created_at").notNull(),
   },
   (table) => [
@@ -517,14 +519,14 @@ export const thanksRewards = sqliteTable("thanks_rewards", {
 
 export type ThanksRewardRow = InferSelectModel<typeof thanksRewards>
 
-// サンクスポイントの交換申請。申請→承認→確定の状態遷移を status で持つ。
+// サンクスポイントの交換申請。状態は pending→fulfilled（確定）/rejected（却下）。
 // point_cost は申請時点の交換コストを写し取り、後からカタログ価格が変わってもブレないようにする。
 export const thanksRedemptions = sqliteTable("thanks_redemptions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
   rewardId: integer("reward_id").notNull(),
   pointCost: integer("point_cost").notNull(),
-  status: text("status").notNull().$type<"pending" | "approved" | "rejected" | "fulfilled">(),
+  status: text("status").notNull().$type<"pending" | "rejected" | "fulfilled">(),
   createdAt: text("created_at").notNull(),
   decidedAt: text("decided_at"),
   deciderId: integer("decider_id"),

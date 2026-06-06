@@ -1,12 +1,15 @@
 -- サンクスポイント制度。月次の贈与原資・交換カタログ・交換申請の3テーブル。
 -- 受領残高は専用列を持たず「受領 thanks.points 合計 − 確定交換 point_cost 合計」で算出する。
 
--- 月次の贈与原資。employee_id + period(YYYY-MM) で一意。残量は保存せず算出する。
+-- 月次の贈与原資。employee_id + period(YYYY-MM) で一意。
+-- consumed_points は贈与時に原子的な条件付き UPDATE で加算する消費カウンタ。
+-- 残量は granted_points − consumed_points で算出し、同月の同時送付でも原資超過しない。
 CREATE TABLE IF NOT EXISTS thanks_point_budgets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   employee_id INTEGER NOT NULL,
   period TEXT NOT NULL,
   granted_points INTEGER NOT NULL,
+  consumed_points INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
 
@@ -23,7 +26,7 @@ CREATE TABLE IF NOT EXISTS thanks_rewards (
   created_at TEXT NOT NULL
 );
 
--- 交換申請。申請→承認→確定の状態遷移を status で持つ。
+-- 交換申請。status は pending→fulfilled（確定）/rejected（却下）。
 CREATE TABLE IF NOT EXISTS thanks_redemptions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   employee_id INTEGER NOT NULL,

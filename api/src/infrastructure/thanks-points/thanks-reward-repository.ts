@@ -1,7 +1,10 @@
 import { ThanksReward } from "@/domain/thanks-points/thanks-reward"
 import type { Context } from "@/env"
 import { thanksRewards } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq, gt, isNotNull, sql } from "drizzle-orm"
+
+// 在庫減算の結果。在庫を 1 減らせた / 減算対象でない（無制限・在庫切れ）/ 失敗 を区別する。
+export type StockDecrementOutcome = "decremented" | "skipped"
 
 export class ThanksRewardRepository {
   constructor(private readonly c: Context) {}
@@ -82,6 +85,29 @@ export class ThanksRewardRepository {
       return row === undefined ? null : ThanksReward.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update thanks reward")
+    }
+  }
+
+  // 在庫を 1 だけ原子的に減らす。stock IS NOT NULL AND stock>0 のときだけ更新するため
+  // 同時承認でも在庫はマイナスにならない。無制限（stock=null）や在庫切れは更新 0 行で "skipped"。
+  // SQL 例外は Error として返し、握りつぶさず呼び出し側で追跡できるようにする。
+  async decrementStock(rewardId: number): Promise<StockDecrementOutcome | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(thanksRewards)
+        .set({ stock: sql`${thanksRewards.stock} - 1` })
+        .where(
+          and(
+            eq(thanksRewards.id, rewardId),
+            isNotNull(thanksRewards.stock),
+            gt(thanksRewards.stock, 0),
+          ),
+        )
+        .returning()
+
+      return rows.at(0) === undefined ? "skipped" : "decremented"
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to decrement reward stock")
     }
   }
 }

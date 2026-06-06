@@ -1,8 +1,11 @@
 import { ThanksPointBudget } from "@/domain/thanks-points/thanks-point-budget"
 import { monthlyBudgetPoints } from "@/domain/thanks-points/monthly-budget-points"
 import type { Context } from "@/env"
-import { thanks, thanksPointBudgets } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { thanksPointBudgets } from "@/schema"
+import { and, eq, gt, sql } from "drizzle-orm"
+
+// 原資消費の結果。consumed=消費を予約できた / insufficient=残量不足で予約できなかった。
+export type ConsumeOutcome = "consumed" | "insufficient"
 
 export class ThanksPointBudgetRepository {
   constructor(private readonly c: Context) {}
@@ -63,6 +66,7 @@ export class ThanksPointBudgetRepository {
           employeeId: created.employeeId,
           period: created.period,
           grantedPoints: created.grantedPoints,
+          consumedPoints: created.consumedPoints,
           createdAt: created.createdAt,
         })
         .returning()
@@ -83,24 +87,59 @@ export class ThanksPointBudgetRepository {
     }
   }
 
-  // 当月 period に贈与済みのポイント合計（送り手 = employeeId）を算出する。
-  async getGrantedThisMonth(props: {
+  // 原資の消費を 1 ステートメントで原子的に予約する。
+  // granted_points − consumed_points >= points のときだけ consumed_points を加算する。
+  // D1 は個々のステートメントを直列化するため、同月の同時送付でも合計が原資を超える分は必ず弾かれる。
+  // 0 行更新は残量不足。points<=0 は呼び出し側で除外する前提（消費不要）。
+  async consume(props: {
     employeeId: number
     period: string
-  }): Promise<number | Error> {
+    points: number
+  }): Promise<ConsumeOutcome | Error> {
     try {
       const rows = await this.c.var.database
-        .select({ points: thanks.points, createdAt: thanks.createdAt })
-        .from(thanks)
-        .where(eq(thanks.senderEmployeeId, props.employeeId))
+        .update(thanksPointBudgets)
+        .set({ consumedPoints: sql`${thanksPointBudgets.consumedPoints} + ${props.points}` })
+        .where(
+          and(
+            eq(thanksPointBudgets.employeeId, props.employeeId),
+            eq(thanksPointBudgets.period, props.period),
+            gt(
+              sql`${thanksPointBudgets.grantedPoints} - ${thanksPointBudgets.consumedPoints}`,
+              props.points - 1,
+            ),
+          ),
+        )
+        .returning()
 
-      const total = rows
-        .filter((row) => row.createdAt.slice(0, 7) === props.period)
-        .reduce((sum, row) => sum + row.points, 0)
-
-      return total
+      return rows.at(0) === undefined ? "insufficient" : "consumed"
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to sum granted points")
+      return error instanceof Error ? error : new Error("failed to consume thanks point budget")
+    }
+  }
+
+  // consume の補償。感謝の保存が失敗したときに予約した消費を戻す（下限 0 に丸める）。
+  async release(props: {
+    employeeId: number
+    period: string
+    points: number
+  }): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .update(thanksPointBudgets)
+        .set({
+          consumedPoints: sql`MAX(${thanksPointBudgets.consumedPoints} - ${props.points}, 0)`,
+        })
+        .where(
+          and(
+            eq(thanksPointBudgets.employeeId, props.employeeId),
+            eq(thanksPointBudgets.period, props.period),
+          ),
+        )
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to release thanks point budget")
     }
   }
 }
