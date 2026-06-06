@@ -1,5 +1,6 @@
 "use client"
 
+import { LogOut } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { SidebarNav } from "@/components/sidebar-nav"
 import {
@@ -8,6 +9,9 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
@@ -40,7 +44,23 @@ export function AppShell(props: Props) {
         </SidebarContent>
 
         <SidebarFooter>
-          <span className="px-2 py-1 text-xs text-muted-foreground">{props.currentUser.role}</span>
+          <div className="flex flex-col gap-0.5 px-2 py-1">
+            <span className="text-sm font-medium">{props.currentUser.name}</span>
+
+            <span className="text-xs text-muted-foreground">{props.currentUser.role}</span>
+          </div>
+
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <form action={props.onLogout}>
+                <SidebarMenuButton render={<button type="submit" />}>
+                  <LogOut />
+
+                  <span>ログアウト</span>
+                </SidebarMenuButton>
+              </form>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
