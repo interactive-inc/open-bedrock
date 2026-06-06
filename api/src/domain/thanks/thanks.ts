@@ -16,7 +16,7 @@ const zProps = z.object({
 type Props = z.infer<typeof zProps>
 
 // 感謝（サンクス）1件。集約ルート。
-// points は将来のポイント付与用で本 Task では常に 0。
+// points は感謝に添えるサンクスポイント。0 はメッセージのみの感謝。負値は不可。
 export class Thanks implements Props {
   // 永続化前は null、DB 採番後に確定する。
   readonly id!: Props["id"]
@@ -39,11 +39,13 @@ export class Thanks implements Props {
     Object.freeze(this)
   }
 
-  // 新規の感謝を組み立てる。自己宛て送信とメッセージ不備は Error を返す。
+  // 新規の感謝を組み立てる。自己宛て送信・メッセージ不備・不正なポイントは Error を返す。
+  // points は 0 以上の整数（呼び出し側で上限・原資チェック済みの値を渡す前提）。
   static create(props: {
     senderEmployeeId: number
     recipientEmployeeId: number
     message: string
+    points: number
     createdAt: string
   }): Thanks | Error {
     if (props.senderEmployeeId === props.recipientEmployeeId) {
@@ -56,12 +58,16 @@ export class Thanks implements Props {
       return new Error("message is required and must be at most 1000 characters")
     }
 
+    if (Number.isInteger(props.points) === false || props.points < 0) {
+      return new Error("points must be a non-negative integer")
+    }
+
     return new Thanks({
       id: null,
       senderEmployeeId: props.senderEmployeeId,
       recipientEmployeeId: props.recipientEmployeeId,
       message: parsedMessage.data,
-      points: 0,
+      points: props.points,
       createdAt: props.createdAt,
     })
   }

@@ -10,13 +10,15 @@ export type ThanksResponse = {
   recipient_employee_id: number
   recipient_name: string
   message: string
-  // 本 Task では常に 0。将来のポイント付与用。
+  // 感謝に添えたサンクスポイント。0 はメッセージのみの感謝。
   points: number
   created_at: string
 }
 
 // POST /thanks のリクエスト body。送り手は token から解決されるため指定しない。
+// points は任意。未指定はメッセージのみの感謝。
 export type ThanksCreateRequest = {
   recipient_employee_code: string
   message: string
+  points?: number | null
 }
