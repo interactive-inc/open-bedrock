@@ -50,8 +50,26 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("redemption already decided")
     }
 
-    throw new ConflictError("insufficient balance")
+    if (result.reason === "insufficient_balance") {
+      throw new ConflictError("insufficient balance")
+    }
+
+    // 交換は確定済みだが在庫減算だけ失敗。確定は巻き戻さず、追跡できるよう構造化ログを残し
+    // レスポンスにも stock_warning を立てて運用側が手当てできるようにする（握りつぶさない）。
+    console.error(
+      JSON.stringify({
+        event: "thanks_redemption_stock_decrement_failed",
+        redemption_id: result.redemption.id,
+        reward_id: result.redemption.rewardId,
+        message: result.stockError.message,
+      }),
+    )
+
+    return c.json(
+      { id: result.redemption.id, status: result.redemption.status, stock_warning: true },
+      200,
+    )
   }
 
-  return c.json({ id: result.id, status: result.status }, 200)
+  return c.json({ id: result.id, status: result.status, stock_warning: false }, 200)
 })

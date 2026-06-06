@@ -6,7 +6,7 @@ const zProps = z.object({
   employeeId: z.number(),
   rewardId: z.number(),
   pointCost: z.number(),
-  status: z.enum(["pending", "approved", "rejected", "fulfilled"]),
+  status: z.enum(["pending", "rejected", "fulfilled"]),
   createdAt: z.string(),
   decidedAt: z.string().nullable(),
   deciderId: z.number().nullable(),
@@ -14,7 +14,8 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 交換申請の1件。集約ルート。状態遷移（申請→承認/却下）の不変条件を持つ。
+// 交換申請の1件。集約ルート。状態は申請(pending)→確定(fulfilled)/却下(rejected)。
+// 承認＝確定の状態遷移は二重消費を原子的に防ぐため repository の条件付き UPDATE で行う。
 export class ThanksRedemption implements Props {
   // 永続化前は null、DB 採番後に確定する。
   readonly id!: Props["id"]
@@ -70,34 +71,6 @@ export class ThanksRedemption implements Props {
       createdAt: row.createdAt,
       decidedAt: row.decidedAt,
       deciderId: row.deciderId,
-    })
-  }
-
-  // 承認して確定（fulfilled）へ進めた集約を返す。pending 以外からの遷移は Error。
-  withApproved(props: { deciderId: number; decidedAt: string }): ThanksRedemption | Error {
-    if (this.props.status !== "pending") {
-      return new Error("redemption is not pending")
-    }
-
-    return new ThanksRedemption({
-      ...this.props,
-      status: "fulfilled",
-      decidedAt: props.decidedAt,
-      deciderId: props.deciderId,
-    })
-  }
-
-  // 却下した集約を返す。pending 以外からの遷移は Error。
-  withRejected(props: { deciderId: number; decidedAt: string }): ThanksRedemption | Error {
-    if (this.props.status !== "pending") {
-      return new Error("redemption is not pending")
-    }
-
-    return new ThanksRedemption({
-      ...this.props,
-      status: "rejected",
-      decidedAt: props.decidedAt,
-      deciderId: props.deciderId,
     })
   }
 }

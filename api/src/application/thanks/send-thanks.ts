@@ -1,7 +1,6 @@
 import { Notification } from "@/domain/notification/notification"
 import { Thanks } from "@/domain/thanks/thanks"
 import { periodOf } from "@/domain/thanks-points/period-of"
-import { remainingBudgetPoints } from "@/domain/thanks-points/remaining-budget-points"
 import { toNonNegativePoints } from "@/domain/thanks-points/to-non-negative-points"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -77,20 +76,7 @@ export class SendThanks {
       return { reason: "invalid_points" }
     }
 
-    const budgetCheck = await this.assertBudget({
-      senderEmployeeId: sender.id,
-      points,
-      createdAt: command.createdAt,
-    })
-
-    if (budgetCheck instanceof Error) {
-      return budgetCheck
-    }
-
-    if (budgetCheck !== null) {
-      return budgetCheck
-    }
-
+    // メッセージ等の不変条件は原資の予約より前に検証し、不正入力で原資を消費しないようにする。
     const thanks = Thanks.create({
       senderEmployeeId: sender.id,
       recipientEmployeeId: recipient.id,
@@ -103,9 +89,35 @@ export class SendThanks {
       return { reason: "invalid_thanks" }
     }
 
+    const period = periodOf(command.createdAt)
+
+    const reserved = await this.reserveBudget({
+      senderEmployeeId: sender.id,
+      points,
+      period,
+      createdAt: command.createdAt,
+    })
+
+    if (reserved instanceof Error) {
+      return reserved
+    }
+
+    if (reserved !== null) {
+      return reserved
+    }
+
     const created = await thanksRepository.create(thanks)
 
     if (created instanceof Error) {
+      // 感謝の保存に失敗したら予約した原資を戻す（消費だけ進む不整合を避ける）。
+      if (points > 0) {
+        await new ThanksPointBudgetRepository(this.c).release({
+          employeeId: sender.id,
+          period,
+          points,
+        })
+      }
+
       return created
     }
 
@@ -130,12 +142,13 @@ export class SendThanks {
     return created
   }
 
-  // 当月の贈与原資の残量を確認する。points が 0 ならチェック不要で null。
-  // 残量不足は InsufficientBudget、取得失敗は Error、問題なければ null を返す。
-  // budget は当月分が無ければ既定額で遅延生成する（月初バッチに依存しない）。
-  private async assertBudget(props: {
+  // 当月の贈与原資を原子的に予約する。points が 0 ならチェック不要で null。
+  // budget が無ければ既定額で遅延生成し、残量を確定 UPDATE の WHERE に畳み込んで消費する。
+  // 残量不足は InsufficientBudget、取得失敗は Error、予約できたら null を返す。
+  private async reserveBudget(props: {
     senderEmployeeId: number
     points: number
+    period: string
     createdAt: string
   }): Promise<InsufficientBudget | Error | null> {
     if (props.points === 0) {
@@ -144,11 +157,9 @@ export class SendThanks {
 
     const budgetRepository = new ThanksPointBudgetRepository(this.c)
 
-    const period = periodOf(props.createdAt)
-
     const budget = await budgetRepository.findOrCreate({
       employeeId: props.senderEmployeeId,
-      period,
+      period: props.period,
       createdAt: props.createdAt,
     })
 
@@ -156,24 +167,16 @@ export class SendThanks {
       return budget
     }
 
-    const grantedThisMonth = await budgetRepository.getGrantedThisMonth({
+    const outcome = await budgetRepository.consume({
       employeeId: props.senderEmployeeId,
-      period,
+      period: props.period,
+      points: props.points,
     })
 
-    if (grantedThisMonth instanceof Error) {
-      return grantedThisMonth
+    if (outcome instanceof Error) {
+      return outcome
     }
 
-    const remaining = remainingBudgetPoints({
-      grantedPoints: budget.grantedPoints,
-      grantedThisMonth,
-    })
-
-    if (props.points > remaining) {
-      return { reason: "insufficient_budget" }
-    }
-
-    return null
+    return outcome === "insufficient" ? { reason: "insufficient_budget" } : null
   }
 }

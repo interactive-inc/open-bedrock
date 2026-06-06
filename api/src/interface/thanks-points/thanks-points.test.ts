@@ -53,6 +53,14 @@ function recipientToken(): Promise<string> {
   })
 }
 
+function otherRecipientToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 10,
+    email: "you+e010@example.com",
+    role: "member",
+  })
+}
+
 function request(props: {
   db: D1Database
   path: string
@@ -484,5 +492,146 @@ describe("redemption", () => {
     })
 
     expect(response.status).toBe(400)
+  })
+})
+
+describe("atomicity", () => {
+  // 残高100で各60の別 pending 2件を同一初期残高に対して両方発行し、両方の承認を同時に投げる。
+  // どちらの実行順でも、合計超過分(120>100)は必ず弾かれ 1 件だけ fulfilled・残高は 40 で負にならない。
+  test("two redemptions from the same balance: exactly one fulfills, balance never goes negative", async () => {
+    const db = await createTestDb()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 60, stock: null })
+
+    const requestRedemption = async () => {
+      const requested = await request({
+        db,
+        path: "/thanks/redemptions",
+        token: await recipientToken(),
+        method: "POST",
+        body: { reward_id: rewardId },
+      })
+
+      return z.object({ id: z.number() }).parse(await requested.json()).id
+    }
+
+    const firstId = await requestRedemption()
+
+    const secondId = await requestRedemption()
+
+    const adminTokenValue = await adminToken()
+
+    const approve = (id: number) =>
+      request({
+        db,
+        path: `/thanks/redemptions/${id}/approve`,
+        token: adminTokenValue,
+        method: "POST",
+      })
+
+    const responses = await Promise.all([approve(firstId), approve(secondId)])
+
+    const statuses = responses
+      .map((response) => response.status)
+      .sort((left, right) => left - right)
+
+    expect(statuses).toEqual([200, 409])
+
+    const balance = await request({ db, path: "/thanks/balance/me", token: await recipientToken() })
+
+    const parsed = z.object({ balance_points: z.number() }).parse(await balance.json())
+
+    expect(parsed.balance_points).toBe(40)
+    expect(parsed.balance_points).toBeGreaterThanOrEqual(0)
+  })
+
+  // 原資400で各300の感謝2件を同時送付。合計600>400なので片方は原資不足で弾かれ、残量は負にならない。
+  test("two point-thanks from the same budget: one succeeds, budget never goes negative", async () => {
+    const db = await createTestDb()
+
+    const senderTokenValue = await senderToken()
+
+    const sendOnce = () =>
+      request({
+        db,
+        path: "/thanks",
+        token: senderTokenValue,
+        method: "POST",
+        body: { recipient_employee_code: "E005", message: "ありがとう", points: 300 },
+      })
+
+    const responses = await Promise.all([sendOnce(), sendOnce()])
+
+    const statuses = responses
+      .map((response) => response.status)
+      .sort((left, right) => left - right)
+
+    expect(statuses).toEqual([201, 400])
+
+    const budget = await request({ db, path: "/thanks/budget/me", token: senderTokenValue })
+
+    const parsed = z
+      .object({ remaining_points: z.number(), consumed_points: z.number() })
+      .parse(await budget.json())
+
+    expect(parsed.consumed_points).toBe(300)
+    expect(parsed.remaining_points).toBe(100)
+    expect(parsed.remaining_points).toBeGreaterThanOrEqual(0)
+  })
+
+  // 在庫1の景品に対し、各々残高十分な2人が同時に交換確定。在庫はマイナスにならず1件だけ在庫を消費する。
+  test("stock never goes negative under concurrent approvals", async () => {
+    const db = await createTestDb()
+
+    // E005 と E010 にそれぞれ十分な残高を配る。
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E010", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 50, stock: 1 })
+
+    const requestFor = async (token: string) => {
+      const requested = await request({
+        db,
+        path: "/thanks/redemptions",
+        token,
+        method: "POST",
+        body: { reward_id: rewardId },
+      })
+
+      return z.object({ id: z.number() }).parse(await requested.json()).id
+    }
+
+    const recipientTokenValue = await recipientToken()
+    const otherTokenValue = await otherRecipientToken()
+
+    const firstId = await requestFor(recipientTokenValue)
+    const secondId = await requestFor(otherTokenValue)
+
+    const adminTokenValue = await adminToken()
+
+    const approve = (id: number) =>
+      request({
+        db,
+        path: `/thanks/redemptions/${id}/approve`,
+        token: adminTokenValue,
+        method: "POST",
+      })
+
+    // 残高は別人なので両方とも確定はできる（残高ガードでは弾かれない）。在庫1なので減算は1件だけ成功し、
+    // もう1件は条件付き UPDATE が 0 行で在庫を減らさない。確定は両方維持され、在庫はマイナスにならない。
+    const responses = await Promise.all([approve(firstId), approve(secondId)])
+
+    expect(responses.every((response) => response.status === 200)).toBe(true)
+
+    const rewardRow = await db
+      .prepare("SELECT stock FROM thanks_rewards WHERE id = ?")
+      .bind(rewardId)
+      .first<{ stock: number }>()
+
+    // 在庫は 1 から 0 までしか減らない（マイナスにならない）。
+    expect(rewardRow?.stock).toBe(0)
+    expect(rewardRow?.stock).toBeGreaterThanOrEqual(0)
   })
 })

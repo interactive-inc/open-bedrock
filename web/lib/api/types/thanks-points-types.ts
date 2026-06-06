@@ -5,7 +5,7 @@
 export type ThanksBudgetResponse = {
   period: string
   granted_points: number
-  granted_this_month: number
+  consumed_points: number
   remaining_points: number
 }
 
@@ -30,7 +30,7 @@ export type ThanksRedemptionResponse = {
   employee_id: number
   reward_id: number
   point_cost: number
-  status: "pending" | "approved" | "rejected" | "fulfilled"
+  status: "pending" | "rejected" | "fulfilled"
   created_at: string
   decided_at: string | null
   decider_id: number | null

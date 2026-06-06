@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
+import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
@@ -16,14 +16,29 @@ export type AlreadyDecided = { reason: "already_decided" }
 
 export type InsufficientBalance = { reason: "insufficient_balance" }
 
+// 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
+// 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
+export type FulfilledWithStockError = {
+  reason: "fulfilled_with_stock_error"
+  redemption: ThanksRedemption
+  stockError: Error
+}
+
+export type DecideResult =
+  | ThanksRedemption
+  | RedemptionNotFound
+  | AlreadyDecided
+  | InsufficientBalance
+  | FulfilledWithStockError
+  | Error
+
 // 交換申請を承認（確定）または却下する。
-// 承認時は残高を再確認し（TOCTOU 対策）、pending からの条件付き UPDATE で二重承認＝二重消費を原子的に弾く。
+// 承認は残高チェックを確定 UPDATE の WHERE に畳み込んだ 1 ステートメントで行い、
+// 二重承認・別申請の合計超過のいずれでも残高がマイナスに割れないようにする（TOCTOU 対策）。
 export class DecideRedemption {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<ThanksRedemption | RedemptionNotFound | AlreadyDecided | InsufficientBalance | Error> {
+  async run(command: Command): Promise<DecideResult> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
     const existing = await redemptionRepository.findById(command.redemptionId)
@@ -36,34 +51,22 @@ export class DecideRedemption {
       return { reason: "redemption_not_found" }
     }
 
-    if (existing.status !== "pending") {
-      return { reason: "already_decided" }
-    }
-
     if (command.action === "reject") {
-      return this.reject(existing, command)
+      return this.reject(command)
     }
 
-    return this.approve(existing, command)
+    return this.approve(command)
   }
 
-  // 却下。pending からの条件付き UPDATE で確定済みは弾く。
-  private async reject(
-    redemption: ThanksRedemption,
-    command: Command,
-  ): Promise<ThanksRedemption | AlreadyDecided | Error> {
+  // 却下。pending からの条件付き UPDATE で確定済みは弾く。0 行更新は already_decided。
+  private async reject(command: Command): Promise<ThanksRedemption | AlreadyDecided | Error> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
-    const rejected = redemption.withRejected({
+    const updated = await redemptionRepository.rejectFromPending({
+      redemptionId: command.redemptionId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,
     })
-
-    if (rejected instanceof Error) {
-      return rejected
-    }
-
-    const updated = await redemptionRepository.decideFromPending(rejected)
 
     if (updated instanceof Error) {
       return updated
@@ -72,70 +75,71 @@ export class DecideRedemption {
     return updated === null ? { reason: "already_decided" } : updated
   }
 
-  // 承認＝確定。残高を再確認してから pending を奪う。確定後に在庫を1つ減らす。
+  // 承認＝確定。残高チェックを畳み込んだ条件付き UPDATE で確定し、確定後に在庫を原子的に減らす。
+  // 0 行更新は「残高不足 or 既に決裁済み」。findById で pending を確認してから区別する。
   private async approve(
-    redemption: ThanksRedemption,
     command: Command,
-  ): Promise<ThanksRedemption | AlreadyDecided | InsufficientBalance | Error> {
+  ): Promise<
+    ThanksRedemption | AlreadyDecided | InsufficientBalance | FulfilledWithStockError | Error
+  > {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
-    const balance = await redemptionRepository.getBalance(redemption.employeeId)
+    const before = await redemptionRepository.findById(command.redemptionId)
 
-    if (balance instanceof Error) {
-      return balance
+    if (before instanceof Error) {
+      return before
     }
 
-    if (balance < redemption.pointCost) {
-      return { reason: "insufficient_balance" }
+    if (before === null) {
+      return { reason: "already_decided" }
     }
 
-    const approved = redemption.withApproved({
+    if (before.status !== "pending") {
+      return { reason: "already_decided" }
+    }
+
+    const updated = await redemptionRepository.approveFromPending({
+      redemptionId: command.redemptionId,
+      employeeId: before.employeeId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,
     })
-
-    if (approved instanceof Error) {
-      return approved
-    }
-
-    const updated = await redemptionRepository.decideFromPending(approved)
 
     if (updated instanceof Error) {
       return updated
     }
 
     if (updated === null) {
-      return { reason: "already_decided" }
+      return await this.classifyZeroUpdate(command.redemptionId)
     }
 
-    await this.decrementStock(updated.rewardId)
+    const stock = await new ThanksRewardRepository(this.c).decrementStock(updated.rewardId)
+
+    if (stock instanceof Error) {
+      return { reason: "fulfilled_with_stock_error", redemption: updated, stockError: stock }
+    }
 
     return updated
   }
 
-  // 在庫を1つ減らす。無制限カタログや在庫切れは無視（残高側で消費は確定済み）。
-  // 在庫はベストエフォートで、失敗してもログのみ残す（確定済みの交換を巻き戻さない）。
-  private async decrementStock(rewardId: number): Promise<void> {
-    const rewardRepository = new ThanksRewardRepository(this.c)
+  // 承認 UPDATE が 0 行のとき、pending のまま残っていれば残高不足、消えていれば既に決裁済みと判定する。
+  private async classifyZeroUpdate(
+    redemptionId: number,
+  ): Promise<AlreadyDecided | InsufficientBalance | Error> {
+    const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
-    const reward = await rewardRepository.findById(rewardId)
+    const after = await redemptionRepository.findById(redemptionId)
 
-    if (reward instanceof Error || reward === null) {
-      console.error("failed to load reward for stock decrement", rewardId)
-
-      return
+    if (after instanceof Error) {
+      return after
     }
 
-    const decremented = reward.withStockDecremented()
-
-    if (decremented instanceof Error) {
-      return
+    if (after === null) {
+      return { reason: "already_decided" }
     }
 
-    const updated = await rewardRepository.update(decremented)
-
-    if (updated instanceof Error) {
-      console.error("failed to decrement reward stock", updated)
-    }
+    return after.status === "pending"
+      ? { reason: "insufficient_balance" }
+      : { reason: "already_decided" }
   }
 }

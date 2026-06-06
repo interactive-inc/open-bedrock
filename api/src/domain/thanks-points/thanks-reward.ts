@@ -92,17 +92,4 @@ export class ThanksReward implements Props {
   withActive(isActive: boolean): ThanksReward {
     return new ThanksReward({ ...this.props, isActive })
   }
-
-  // 在庫を1つ減らした集約を返す。無制限（null）はそのまま。0 以下からの減算は Error。
-  withStockDecremented(): ThanksReward | Error {
-    if (this.props.stock === null) {
-      return this
-    }
-
-    if (this.props.stock <= 0) {
-      return new Error("reward is out of stock")
-    }
-
-    return new ThanksReward({ ...this.props, stock: this.props.stock - 1 })
-  }
 }
