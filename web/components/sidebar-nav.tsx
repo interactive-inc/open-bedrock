@@ -13,6 +13,7 @@ import {
   FileText,
   GitBranch,
   GraduationCap,
+  HeartHandshake,
   Inbox,
   LayoutDashboard,
   MessagesSquare,
@@ -95,6 +96,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       { label: "ナレッジ", href: "/knowledge", icon: FileText },
       { label: "サーベイ", href: "/surveys", icon: MessagesSquare },
       { label: "1on1", href: "/oneonone", icon: CalendarClock },
+      { label: "感謝", href: "/thanks", icon: HeartHandshake },
     ],
   },
   {
