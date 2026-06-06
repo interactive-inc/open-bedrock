@@ -1,28 +1,39 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { sendThanksAction } from "@/app/(app)/thanks/actions"
 import type { ThanksActionState } from "@/app/(app)/thanks/actions"
+import { searchRecipientsAction } from "@/app/(app)/thanks/search-recipients-action"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { EmployeeCombobox } from "@/components/ui.custom/employee-combobox"
+import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
 
 const initialState: ThanksActionState = { ok: false, error: null }
 
 // 感謝の送付フォーム。useActionState で sendThanksAction を呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
 export function ThanksCreateForm() {
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  const [recipient, setRecipient] = useState<EmployeeListItem | null>(null)
+
+  // useActionState の reducer。送り先未選択ならここで弾き、選択済みなら Server Action を実行する。
   async function reduce(
     previousState: ThanksActionState,
     formData: FormData,
   ): Promise<ThanksActionState> {
+    if (recipient === null) {
+      const blocked: ThanksActionState = { ok: false, error: "送り先の従業員を選択してください" }
+      toast.error(blocked.error)
+      return blocked
+    }
+
     const result = await sendThanksAction(previousState, formData)
 
     if (result.ok) {
       toast.success("感謝を送りました")
+      setRecipient(null)
     } else if (result.error !== null) {
       toast.error(result.error)
     }
@@ -46,10 +57,19 @@ export function ThanksCreateForm() {
         <Field>
           <FieldLabel htmlFor="thanks-recipient">送り先</FieldLabel>
 
-          <Input id="thanks-recipient" name="recipient_employee_code" placeholder="E005" required />
+          <EmployeeCombobox
+            id="thanks-recipient"
+            value={recipient}
+            onValueChange={setRecipient}
+            searchEmployees={searchRecipientsAction}
+            placeholder="名前またはコードで検索"
+            disabled={isPending}
+          />
+
+          <input type="hidden" name="recipient_employee_code" value={recipient?.code ?? ""} />
 
           <FieldDescription>
-            感謝を送る相手の従業員コード。送り主は自分が設定されます。
+            感謝を送る相手を名前またはコードで検索して選びます。送り主は自分が設定されます。
           </FieldDescription>
         </Field>
 
