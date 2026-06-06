@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -47,13 +48,15 @@ export function AppHeader(props: Props) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">{props.currentUser.name}</span>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">{props.currentUser.name}</span>
 
-                <span className="text-xs text-muted-foreground">{props.currentUser.email}</span>
-              </span>
-            </DropdownMenuLabel>
+                  <span className="text-xs text-muted-foreground">{props.currentUser.email}</span>
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
 
