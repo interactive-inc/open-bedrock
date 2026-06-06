@@ -3,7 +3,7 @@
 import { LogOut, User } from "lucide-react"
 import type { MeResponse } from "@/lib/api/types/auth-types"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +33,13 @@ export function AppHeader(props: Props) {
       <div className="ml-auto flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button variant="ghost" size="icon" aria-label="ユーザーメニュー" />}
+            render={
+              <button
+                type="button"
+                aria-label="ユーザーメニュー"
+                className={buttonVariants({ variant: "ghost", size: "icon" })}
+              />
+            }
           >
             <Avatar className="size-8">
               <AvatarFallback>{initial}</AvatarFallback>
