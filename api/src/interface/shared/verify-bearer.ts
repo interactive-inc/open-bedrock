@@ -27,7 +27,9 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
 
 async function toVerifiedPayload(token: string, jwtSecret: string) {
   try {
-    const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret))
+    const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
+      algorithms: ["HS256"],
+    })
 
     const parsed = tokenPayloadSchema.safeParse(verified.payload)
 

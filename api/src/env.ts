@@ -6,6 +6,9 @@ import type { DrizzleD1Database } from "drizzle-orm/d1"
 export type Bindings = {
   DB: D1Database
   JWT_SECRET: string
+  // CORS で許可する Origin をカンマ区切りで指定する（例: "https://app.example.com,https://admin.example.com"）。
+  // 未設定時はローカル開発用 Origin のみ許可。本番では必ず設定する。
+  CORS_ORIGIN?: string
   // テストで現在時刻を固定するための注入点（本番では未設定 = 実時計）。
   NOW?: string
 }
