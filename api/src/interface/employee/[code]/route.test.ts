@@ -211,6 +211,15 @@ describe("POST /employees", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("returns 400 when the password is shorter than 8 characters", async () => {
+    const response = await request("/employees", await adminToken(), "POST", {
+      ...newEmployee,
+      password: "short7!",
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
 
 describe("PUT /employees/:code", () => {

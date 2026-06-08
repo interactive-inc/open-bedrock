@@ -3,6 +3,7 @@ import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -77,7 +78,7 @@ export const POST = factory.createHandlers(
       code: z.string().min(1),
       name: z.string().min(1),
       email: z.string().min(1),
-      password: z.string().min(1),
+      password: z.string().min(8),
       role: z.string().min(1),
       dept_id: z.number().int().nullable().optional(),
       dept_name: z.string().nullable().optional(),
@@ -116,6 +117,10 @@ export const POST = factory.createHandlers(
     if ("reason" in created) {
       if (created.reason === "forbidden") {
         throw new ForbiddenError()
+      }
+
+      if (created.reason === "weak_password") {
+        throw new BadRequestError("password must be at least 8 characters")
       }
 
       throw new ConflictError("employee code already exists")
