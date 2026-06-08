@@ -23,17 +23,26 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CodeConflict = { reason: "employee_code_conflict" }
 
+export type WeakPassword = { reason: "weak_password" }
+
+// パスワード最低文字数。route 層の zod 検証と二重で防御する。
+const MIN_PASSWORD_LENGTH = 8
+
 /**
  * 権限と重複コードを確認し、新しい従業員を台帳に登録する。
  */
 export class RegisterEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Employee | Forbidden | CodeConflict | Error> {
+  async run(command: Command): Promise<Employee | Forbidden | CodeConflict | WeakPassword | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     if (canManageEmployees(command.viewerRole) === false) {
       return { reason: "forbidden" }
+    }
+
+    if (command.employee.password.length < MIN_PASSWORD_LENGTH) {
+      return { reason: "weak_password" }
     }
 
     const existing = await employeeRepository.findByCode(command.employee.code)

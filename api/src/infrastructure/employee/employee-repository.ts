@@ -95,6 +95,20 @@ export class EmployeeRepository {
     }
   }
 
+  // パスワードハッシュのみ差し替える。旧フォーマット → 新フォーマット段階移行に使う。
+  async updatePasswordHash(employeeId: number, newPasswordHash: string): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .update(employees)
+        .set({ passwordHash: newPasswordHash })
+        .where(eq(employees.id, employeeId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update password hash")
+    }
+  }
+
   // 従業員を削除する。
   async delete(code: string): Promise<null | Error> {
     try {
