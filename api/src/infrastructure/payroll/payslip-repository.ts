@@ -1,5 +1,7 @@
 import { Payslip } from "@/domain/payroll/payslip"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { payslips } from "@/schema"
 import { and, eq } from "drizzle-orm"
 
@@ -63,6 +65,14 @@ export class PayslipRepository {
 
       return row === undefined ? new Error("failed to insert payslip") : Payslip.fromRow(row)
     } catch (error) {
+      // (employee_id, period) の UNIQUE 索引違反 = 同一期間の二重発行。型付きで返し、
+      // 呼び出し側が再読込に依存せず重複として扱えるようにする。
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("payslip already exists for the employee and period", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert payslip")
     }
   }

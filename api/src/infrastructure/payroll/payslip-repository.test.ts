@@ -1,5 +1,6 @@
 import { Payslip } from "@/domain/payroll/payslip"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
@@ -69,7 +70,7 @@ describe("PayslipRepository", () => {
     expect(found).toBeNull()
   })
 
-  test("the unique index rejects a duplicate employee and period", async () => {
+  test("create returns a UniqueConstraintError on a duplicate employee and period", async () => {
     const { context } = createTestContext()
 
     const repository = new PayslipRepository(context)
@@ -100,6 +101,6 @@ describe("PayslipRepository", () => {
       }),
     )
 
-    expect(second).toBeInstanceOf(Error)
+    expect(second).toBeInstanceOf(UniqueConstraintError)
   })
 })

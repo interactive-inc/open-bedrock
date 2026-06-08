@@ -212,7 +212,7 @@ describe("POST /payslips", () => {
     expect(first.status).toBe(201)
 
     // TOCTOU 競合を再現する。2回目の existence チェックだけ未検出（null）に偽装し
-    // insert を UNIQUE 制約に当てる。消費後は元実装へ戻り、insert 失敗後の再確認は実行を検出する。
+    // insert を UNIQUE 索引に当てる。insert 失敗を UNIQUE 違反として判別し 409 にマッピングする。
     const spy = spyOn(PayslipRepository.prototype, "findByEmployeeAndPeriod")
 
     spy.mockImplementationOnce(() => Promise.resolve(null))
@@ -222,6 +222,70 @@ describe("POST /payslips", () => {
 
       // 500 ではなく重複として 409 を返す。
       expect(second.status).toBe(409)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  test("returns 409 (not 500) even when reads keep failing after the insert races (double fault)", async () => {
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    function issue(): Promise<Response> {
+      return requestWithContext({
+        db,
+        jwtSecret,
+        path: "/payslips",
+        token,
+        method: "POST",
+        body: { employee_code: "E010", period: "2026-05", base_salary: 250000 },
+      })
+    }
+
+    const first = await issue()
+
+    expect(first.status).toBe(201)
+
+    // issue #45 の二重障害を再現する。existence チェックは未検出（null）に偽装して insert を
+    // UNIQUE 索引へ当て、その後の読み取りはすべて一時的 DB エラーにする。再読込に依存せず
+    // UNIQUE 違反だけで重複を判定するので、旧実装の 500 ではなく 409 を返す。
+    const spy = spyOn(PayslipRepository.prototype, "findByEmployeeAndPeriod")
+
+    spy.mockImplementationOnce(() => Promise.resolve(null))
+
+    spy.mockImplementation(() => Promise.resolve(new Error("transient read failure")))
+
+    try {
+      const second = await issue()
+
+      expect(second.status).toBe(409)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  test("returns 500 (not 409) when the insert fails with a non-unique error", async () => {
+    // UNIQUE 違反だけが 409 へ降格する契約を固定する。素の DB エラーは 500 のまま。
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    const spy = spyOn(PayslipRepository.prototype, "create")
+
+    spy.mockImplementation(() => Promise.resolve(new Error("connection lost")))
+
+    try {
+      const response = await requestWithContext({
+        db,
+        jwtSecret,
+        path: "/payslips",
+        token,
+        method: "POST",
+        body: { employee_code: "E010", period: "2026-09", base_salary: 250000 },
+      })
+
+      expect(response.status).toBe(500)
     } finally {
       spy.mockRestore()
     }

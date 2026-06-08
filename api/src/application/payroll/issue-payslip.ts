@@ -5,6 +5,7 @@ import { toNetPay } from "@/domain/payroll/to-net-pay"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -75,17 +76,14 @@ export class IssuePayslip {
 
     const created = await payslipRepository.create(payslip)
 
-    if (created instanceof Error) {
-      // 競合（TOCTOU）で UNIQUE 制約に弾かれた可能性。再確認して行が在れば重複として 409 相当を返す。
-      const raced = await payslipRepository.findByEmployeeAndPeriod(employee.id, command.period)
-
-      if (raced instanceof Payslip) {
-        return { reason: "duplicate_period" }
-      }
-
-      return created
+    // payslips の UNIQUE 索引は (employee_id, period) のみ。insert の UNIQUE 違反は
+    // 同一期間の二重発行と確定できるため、再読込に依存せず重複を返す（TOCTOU 競合対策）。
+    // 索引を増やす場合はこの分岐の前提が崩れるので見直すこと。
+    if (created instanceof UniqueConstraintError) {
+      return { reason: "duplicate_period" }
     }
 
+    // それ以外の DB エラーはそのまま伝播し、ルートで 500 になる。
     return created
   }
 }
