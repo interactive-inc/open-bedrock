@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { SignJWT } from "jose"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -94,5 +95,37 @@ describe("GET /me", () => {
     const response = await getMe(token)
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 401 for an expired token", async () => {
+    // exp を過去（2001 年）に固定したトークン。jwtVerify が期限切れとして弾く。
+    const expired = await new SignJWT({
+      employeeId: 1,
+      email: "you+e001@example.com",
+      role: "admin",
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime(1_000_000_000)
+      .sign(new TextEncoder().encode(jwtSecret))
+
+    const response = await getMe(expired)
+
+    expect(response.status).toBe(401)
+  })
+
+  test("returns 401 for a token signed with a non-HS256 algorithm", async () => {
+    // アルゴリズム固定（HS256）の確認。HS512 で署名したトークンは弾かれる。
+    const wrongAlg = await new SignJWT({
+      employeeId: 1,
+      email: "you+e001@example.com",
+      role: "admin",
+    })
+      .setProtectedHeader({ alg: "HS512" })
+      .setIssuedAt()
+      .sign(new TextEncoder().encode(jwtSecret))
+
+    const response = await getMe(wrongAlg)
+
+    expect(response.status).toBe(401)
   })
 })

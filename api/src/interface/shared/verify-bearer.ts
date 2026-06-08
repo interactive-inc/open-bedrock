@@ -27,7 +27,11 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
 
 async function toVerifiedPayload(token: string, jwtSecret: string) {
   try {
-    const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret))
+    // アルゴリズムを HS256 に固定する（アルゴリズム混同攻撃の防止）。
+    // exp が付いていれば jwtVerify が期限切れを自動で弾く。
+    const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
+      algorithms: ["HS256"],
+    })
 
     const parsed = tokenPayloadSchema.safeParse(verified.payload)
 
