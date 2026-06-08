@@ -132,7 +132,19 @@ export class SurveyRepository {
         .where(eq(surveyResponses.respondentId, respondentId))
         .orderBy(asc(surveyResponses.submittedAt))
 
-      return rows.map((row) => SurveyResponse.fromRow(row))
+      const responses: Array<SurveyResponse> = []
+
+      for (const row of rows) {
+        const response = SurveyResponse.fromRow(row)
+
+        if (response instanceof Error) {
+          return response
+        }
+
+        responses.push(response)
+      }
+
+      return responses
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load survey responses")
     }

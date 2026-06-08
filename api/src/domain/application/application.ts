@@ -64,13 +64,19 @@ export class Application implements Props {
       return status
     }
 
+    const payload = decodePayload(row.payload)
+
+    if (payload instanceof Error) {
+      return payload
+    }
+
     return new Application({
       id: row.id,
       templateId: row.templateId,
       applicantId: row.applicantId,
       status: status,
       currentStep: row.currentStep,
-      payload: JSON.parse(row.payload),
+      payload: payload,
       createdAt: row.createdAt,
     })
   }
@@ -102,4 +108,12 @@ function toStatus(value: string): Application["status"] | Error {
   }
 
   return new Error("applications row status is invalid")
+}
+
+function decodePayload(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return new Error("applications row payload is not valid JSON")
+  }
 }
