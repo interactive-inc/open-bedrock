@@ -16,7 +16,7 @@ import { surveyResponses, surveys } from "@/schema"
 import { eq } from "drizzle-orm"
 
 // GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー（管理ロールのみ）。
-// 自由記述を含む集計を返すため、匿名回答の保護として閲覧を管理ロールに限定する。
+// 自由記述を含む集計を返すため、回答の機微情報の保護として閲覧を管理ロールに限定する。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
     throw new UnauthorizedError()
