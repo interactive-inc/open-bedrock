@@ -1,7 +1,7 @@
 ---
 name: issue-planner
 description: Create a technical plan and write it to a GitHub Issue via triage.
-model: claude-opus-4-7
+model: claude-opus-4-6
 memory: project
 isolation: worktree
 skills:

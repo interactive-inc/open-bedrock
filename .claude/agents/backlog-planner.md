@@ -2,7 +2,7 @@
 name: backlog-planner
 description: Create or update product backlog items via triage.
 permissionMode: bypassPermissions
-model: claude-opus-4-7
+model: claude-opus-4-6
 memory: project
 isolation: worktree
 skills:
