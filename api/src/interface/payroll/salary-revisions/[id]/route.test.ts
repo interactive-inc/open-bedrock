@@ -175,6 +175,15 @@ describe("PUT /salary-revisions/:id", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when new_base_salary is not an integer", async () => {
+    const response = await request("/salary-revisions/1", await adminToken(), "PUT", {
+      effective_date: "2025-05-01",
+      new_base_salary: 310000.5,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/salary-revisions/1", null, "PUT", {
       effective_date: "2025-05-01",
