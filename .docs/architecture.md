@@ -22,6 +22,20 @@ cli は引数をローカルの HTTP リクエストに変換し、内部の Hon
 
 ログインで取得した JWT トークンを Authorization ヘッダに Bearer トークンとして付与する。cli はトークンを ~/.karte/config.json に保存する。web は httpOnly cookie に保持する。api は jose でトークンを検証する。
 
+JWT の有効期限は発行から 8 時間。期限切れトークンは 401 を返す。
+
+## Security
+
+パスワードは PBKDF2-SHA256・10 万反復・個別ソルト(crypto.subtle 実装)でハッシュ化する。旧実装(SHA-256 固定ソルト)からの移行はログイン成功時に自動で行う。
+
+CORS は env.CORS_ORIGIN で許可オリジンを制限する。ワイルドカードは使わない。
+
+リクエストボディは 1 MB を上限とする(Hono bodyLimit ミドルウェア)。フリーテキストフィールドは最大 200〜50,000 字、ID・コード類は最大 100 字のバリデーションを各ルートに設ける。日付フィールドは ISO 8601 形式(YYYY-MM-DD)を強制する。
+
+ルートの認可は employee_id の所有者照合で行う。他者のデータへのアクセスは application の summary など明示的に許可された操作を除き拒否する。
+
+状態遷移を伴う操作(休暇申請の承認・却下など)は事前条件チェックを持ち、同一リクエストの二重処理を防ぐ。
+
 ## Styling
 
 web は Tailwind CSS と shadcn で構成する。
