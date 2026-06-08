@@ -1,6 +1,7 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
 import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -12,8 +13,8 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       leave_type: z.enum(["annual", "special"]),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       reason: z.string().nullable().optional(),
     }),
   ),

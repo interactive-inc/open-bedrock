@@ -3,6 +3,7 @@ import { GetFamilyCareLeave } from "@/application/family-care-leave/get-family-c
 import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-family-care-leave"
 import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -62,8 +63,8 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       leave_kind: z.string().min(1),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       note: z.string().nullable().optional(),
     }),
   ),

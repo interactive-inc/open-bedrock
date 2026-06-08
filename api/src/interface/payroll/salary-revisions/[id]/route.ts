@@ -10,6 +10,7 @@ import {
 } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -34,7 +35,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      effective_date: z.string().min(1),
+      effective_date: isoDate,
       new_base_salary: z.number().int().nonnegative().safe(),
       reason: z.string().nullable().optional(),
     }),
