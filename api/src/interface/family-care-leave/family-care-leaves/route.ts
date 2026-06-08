@@ -1,5 +1,6 @@
 import { CreateFamilyCareLeave } from "@/application/family-care-leave/create-family-care-leave"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -11,8 +12,8 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       leave_kind: z.string().min(1),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       note: z.string().nullable().optional(),
     }),
   ),

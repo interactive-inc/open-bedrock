@@ -3,6 +3,7 @@ import { GetLifeEvent } from "@/application/life-event/get-life-event"
 import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
 import type { LifeEvent } from "@/domain/life-event/life-event"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -61,7 +62,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       event_type: z.string().min(1),
-      event_date: z.string().min(1),
+      event_date: isoDate,
       detail: z.string().nullable().optional(),
     }),
   ),
