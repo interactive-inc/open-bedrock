@@ -84,6 +84,17 @@ describe("RegisterEmployee", () => {
 
     expect(result).toEqual({ reason: "employee_code_conflict" })
   })
+
+  test("rejects a password shorter than 8 characters with weak_password", async () => {
+    const context = createTestContext().context
+
+    const result = await new RegisterEmployee(context).run({
+      viewerRole: "admin",
+      employee: { ...newEmployeeInput, password: "short7!" },
+    })
+
+    expect(result).toEqual({ reason: "weak_password" })
+  })
 })
 
 describe("GetEmployee", () => {
