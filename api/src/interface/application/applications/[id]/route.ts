@@ -1,5 +1,6 @@
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
+import { canDecideApplication } from "@/domain/application/can-decide-application"
 import { toApplicationId } from "@/domain/application/to-application-id"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
@@ -46,6 +47,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (row === undefined) {
     throw new NotFoundError("application not found")
+  }
+
+  // 申請者本人か承認権限を持つロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
+  const isOwner = row.application.applicantId === session.employeeId
+
+  if (isOwner === false && canDecideApplication(session.role) === false) {
+    throw new ForbiddenError()
   }
 
   const responseBody = {

@@ -1,3 +1,4 @@
+import { canManageSurveys } from "@/domain/survey/can-manage-surveys"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { toAnswerDistribution } from "@/domain/survey/to-answer-distribution"
 import { toAnswersList } from "@/domain/survey/to-answers-list"
@@ -5,14 +6,24 @@ import { toTextAnswers } from "@/domain/survey/to-text-answers"
 import { SurveyResponse } from "@/domain/survey/survey-response"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BadRequestError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { surveyResponses, surveys } from "@/schema"
 import { eq } from "drizzle-orm"
 
-// GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー
+// GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー（管理ロールのみ）。
+// 自由記述を含む集計を返すため、匿名回答の保護として閲覧を管理ロールに限定する。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
     throw new UnauthorizedError()
+  }
+
+  if (canManageSurveys(c.var.session.role) === false) {
+    throw new ForbiddenError()
   }
 
   const surveyId = Number(c.req.param("survey_id"))

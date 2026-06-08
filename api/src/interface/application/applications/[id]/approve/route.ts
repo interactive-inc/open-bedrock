@@ -1,10 +1,12 @@
 import { DecideApplication } from "@/application/application/decide-application"
+import { canDecideApplication } from "@/domain/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { toApplicationId } from "@/domain/application/to-application-id"
 import { zValidator } from "@hono/zod-validator"
 import {
   BadRequestError,
+  ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
@@ -32,6 +34,10 @@ export const POST = factory.createHandlers(
 
     if (session === null) {
       throw new UnauthorizedError()
+    }
+
+    if (canDecideApplication(session.role) === false) {
+      throw new ForbiddenError()
     }
 
     const updated = await new DecideApplication(c).run({

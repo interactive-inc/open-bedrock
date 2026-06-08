@@ -130,4 +130,16 @@ describe("GET /applications/:id", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 403 for a non-owner non-privileged role (no ID-scan leakage)", async () => {
+    const response = await request("/applications/1", await tokenFor(99, "member"))
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 200 for a privileged non-owner (approver can view)", async () => {
+    const response = await request("/applications/1", await tokenFor(2, "manager"))
+
+    expect(response.status).toBe(200)
+  })
 })
