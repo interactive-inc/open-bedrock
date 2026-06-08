@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(
       employee_code: z.string().min(1),
       effective_date: isoDate,
       new_base_salary: z.number().int().nonnegative().safe(),
-      reason: z.string().optional(),
+      reason: z.string().max(3_000).optional(),
     }),
   ),
   async (c) => {

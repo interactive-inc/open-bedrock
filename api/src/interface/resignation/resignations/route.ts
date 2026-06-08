@@ -13,7 +13,7 @@ export const POST = factory.createHandlers(
     z.object({
       resignation_date: isoDate,
       last_working_date: isoDate.nullable().optional(),
-      reason: z.string().min(1).nullable().optional(),
+      reason: z.string().min(1).max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

@@ -14,7 +14,7 @@ export const PUT = factory.createHandlers(
       skill_code: z.string().min(1),
       level: z.number(),
       years: z.number().nullable().optional(),
-      note: z.string().nullable().optional(),
+      note: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

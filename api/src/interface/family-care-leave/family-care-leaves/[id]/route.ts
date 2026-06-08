@@ -62,10 +62,10 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      leave_kind: z.string().min(1),
+      leave_kind: z.string().min(1).max(200),
       start_date: isoDate,
       end_date: isoDate,
-      note: z.string().nullable().optional(),
+      note: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

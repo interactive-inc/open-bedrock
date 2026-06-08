@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      comment: z.string().min(1),
+      comment: z.string().min(1).max(3_000),
     }),
   ),
   async (c) => {

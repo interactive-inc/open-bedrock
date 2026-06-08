@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(
     z.object({
       score: z.number().optional(),
       answers: z.array(z.unknown()).optional(),
-      comment: z.string().optional(),
+      comment: z.string().max(3_000).optional(),
     }),
   ),
   async (c) => {

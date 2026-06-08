@@ -1,5 +1,6 @@
 import { SubmitApplication } from "@/application/application/submit-application"
 import { factory } from "@/lib/factory"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
@@ -12,7 +13,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       template_code: z.string().min(1),
-      payload: z.unknown(),
+      payload: jsonPayloadSchema(10_000),
     }),
   ),
   async (c) => {

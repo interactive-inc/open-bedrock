@@ -12,7 +12,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      title: z.string().min(1),
+      title: z.string().min(1).max(500),
       status: z.enum(["open", "closed"]),
       questions_json: z.array(z.unknown()),
     }),

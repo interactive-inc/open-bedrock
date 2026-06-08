@@ -50,9 +50,9 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
+      name: z.string().min(1).max(200),
       kind: z.enum(["pc", "monitor", "furniture", "other"]),
-      serial: z.string().optional(),
+      serial: z.string().max(200).optional(),
       purchased_on: z.string().optional(),
     }),
   ),

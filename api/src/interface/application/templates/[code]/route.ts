@@ -3,6 +3,7 @@ import { UpdateApplicationTemplate } from "@/application/application/update-appl
 import type { ApplicationTemplate } from "@/domain/application/application-template"
 import { factory } from "@/lib/factory"
 import { applicationTemplates } from "@/schema"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { eq } from "drizzle-orm"
 import {
@@ -66,11 +67,11 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
-      category: z.string().min(1),
-      description: z.string().nullable().optional(),
-      schema_json: z.unknown(),
-      approver_roles: z.array(z.string()).optional(),
+      name: z.string().min(1).max(500),
+      category: z.string().min(1).max(200),
+      description: z.string().max(3_000).nullable().optional(),
+      schema_json: jsonPayloadSchema(10_000),
+      approver_roles: z.array(z.string().max(100)).optional(),
     }),
   ),
   async (c) => {

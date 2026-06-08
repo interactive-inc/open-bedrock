@@ -11,10 +11,10 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      destination: z.string().min(1),
+      destination: z.string().min(1).max(500),
       start_date: isoDate,
       end_date: isoDate,
-      purpose: z.string().min(1),
+      purpose: z.string().min(1).max(3_000),
       estimated_cost: z.number().int().nullable().optional(),
     }),
   ),
