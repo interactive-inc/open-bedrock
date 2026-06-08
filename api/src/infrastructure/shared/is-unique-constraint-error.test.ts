@@ -34,6 +34,12 @@ describe("isUniqueConstraintError", () => {
     expect(isUniqueConstraintError(error)).toBe(false)
   })
 
+  test("ignores a D1 NOT NULL message that exposes no structured code", () => {
+    const error = new Error("D1_ERROR: NOT NULL constraint failed: payslips.period")
+
+    expect(isUniqueConstraintError(error)).toBe(false)
+  })
+
   test("ignores non-error values", () => {
     expect(isUniqueConstraintError(null)).toBe(false)
     expect(isUniqueConstraintError("UNIQUE constraint failed")).toBe(false)

@@ -76,15 +76,14 @@ export class IssuePayslip {
 
     const created = await payslipRepository.create(payslip)
 
+    // payslips の UNIQUE 索引は (employee_id, period) のみ。insert の UNIQUE 違反は
+    // 同一期間の二重発行と確定できるため、再読込に依存せず重複を返す（TOCTOU 競合対策）。
+    // 索引を増やす場合はこの分岐の前提が崩れるので見直すこと。
     if (created instanceof UniqueConstraintError) {
-      // 競合（TOCTOU）で UNIQUE 索引に弾かれた = 同一期間が既に在る。再読込に依存せず重複を返す。
       return { reason: "duplicate_period" }
     }
 
-    if (created instanceof Error) {
-      return created
-    }
-
+    // それ以外の DB エラーはそのまま伝播し、ルートで 500 になる。
     return created
   }
 }

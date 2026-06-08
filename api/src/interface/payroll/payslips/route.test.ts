@@ -265,6 +265,32 @@ describe("POST /payslips", () => {
     }
   })
 
+  test("returns 500 (not 409) when the insert fails with a non-unique error", async () => {
+    // UNIQUE 違反だけが 409 へ降格する契約を固定する。素の DB エラーは 500 のまま。
+    const db = await createTestDb()
+
+    const token = await adminToken()
+
+    const spy = spyOn(PayslipRepository.prototype, "create")
+
+    spy.mockImplementation(() => Promise.resolve(new Error("connection lost")))
+
+    try {
+      const response = await requestWithContext({
+        db,
+        jwtSecret,
+        path: "/payslips",
+        token,
+        method: "POST",
+        body: { employee_code: "E010", period: "2026-09", base_salary: 250000 },
+      })
+
+      expect(response.status).toBe(500)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
   test("returns 400 when base_salary is missing", async () => {
     const response = await request("/payslips", await adminToken(), "POST", {
       employee_code: "E005",
