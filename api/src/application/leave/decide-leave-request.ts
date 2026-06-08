@@ -13,13 +13,17 @@ export type Command = {
 
 export type LeaveRequestNotFound = { failure: "leave_request_not_found" }
 
+export type AlreadyDecided = { failure: "already_decided" }
+
 /**
- * 休暇申請を承認/却下する。承認時のみ残数を減算する。
+ * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
  */
 export class DecideLeaveRequest {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<LeaveRequest | LeaveRequestNotFound | Error> {
+  async run(
+    command: Command,
+  ): Promise<LeaveRequest | LeaveRequestNotFound | AlreadyDecided | Error> {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
 
     const leaveBalanceRepository = new LeaveBalanceRepository(this.c)
@@ -36,26 +40,27 @@ export class DecideLeaveRequest {
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
 
-    const decided = existing.decide({
+    // pending からの条件付き UPDATE。決定済みは 0 行更新（null）となり、再決定と残数の二重減算を防ぐ。
+    const decided = await leaveRequestRepository.decideFromPending({
+      leaveRequestId: command.leaveRequestId,
       status: nextStatus,
       approverId: command.approverId,
       decidedComment: command.comment,
     })
 
-    const updated = await leaveRequestRepository.update(decided)
-
-    if (updated instanceof Error) {
-      return updated
+    if (decided instanceof Error) {
+      return decided
     }
 
-    if (updated === null) {
-      return { failure: "leave_request_not_found" }
+    if (decided === null) {
+      return { failure: "already_decided" }
     }
 
+    // pending から approved に確定できたときだけ残数を減算する。
     if (command.action === "approve") {
       const balance = await leaveBalanceRepository.findByKey({
-        employeeId: existing.employeeId,
-        leaveType: existing.leaveType,
+        employeeId: decided.employeeId,
+        leaveType: decided.leaveType,
         fiscalYear: command.fiscalYear,
       })
 
@@ -64,7 +69,7 @@ export class DecideLeaveRequest {
       }
 
       if (balance !== null) {
-        const decremented = await leaveBalanceRepository.update(balance.decrement(existing.days))
+        const decremented = await leaveBalanceRepository.update(balance.decrement(decided.days))
 
         if (decremented instanceof Error) {
           return decremented
@@ -72,6 +77,6 @@ export class DecideLeaveRequest {
       }
     }
 
-    return updated
+    return decided
   }
 }

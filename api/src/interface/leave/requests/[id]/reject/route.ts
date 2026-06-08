@@ -4,6 +4,7 @@ import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
 import { toLeaveRequestId } from "@/domain/leave/to-leave-request-id"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -55,6 +56,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("failure" in updated) {
+      if (updated.failure === "already_decided") {
+        throw new ConflictError("leave request already decided")
+      }
+
       throw new NotFoundError("leave request not found")
     }
 
