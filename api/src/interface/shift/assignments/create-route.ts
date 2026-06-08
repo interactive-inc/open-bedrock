@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(
       employee_code: z.string().min(1),
       pattern_code: z.string().min(1),
       date: z.string().min(1),
-      note: z.string().optional(),
+      note: z.string().max(3_000).optional(),
     }),
   ),
   async (c) => {

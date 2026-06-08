@@ -77,9 +77,9 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      topics: z.string().nullable().optional(),
-      manager_note: z.string().nullable().optional(),
-      next_action: z.string().nullable().optional(),
+      topics: z.string().max(5_000).nullable().optional(),
+      manager_note: z.string().max(5_000).nullable().optional(),
+      next_action: z.string().max(5_000).nullable().optional(),
     }),
   ),
   async (c) => {

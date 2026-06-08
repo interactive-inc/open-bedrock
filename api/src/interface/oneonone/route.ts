@@ -47,10 +47,10 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      member_email: z.string().min(1),
-      topics: z.string().nullable().optional(),
-      manager_note: z.string().nullable().optional(),
-      next_action: z.string().nullable().optional(),
+      member_email: z.string().min(1).max(254),
+      topics: z.string().max(5_000).nullable().optional(),
+      manager_note: z.string().max(5_000).nullable().optional(),
+      next_action: z.string().max(5_000).nullable().optional(),
     }),
   ),
   async (c) => {

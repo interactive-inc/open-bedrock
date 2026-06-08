@@ -73,10 +73,10 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      title: z.string().min(1),
+      title: z.string().min(1).max(500),
       dept_id: z.number().int().nullable().optional(),
-      dept_name: z.string().nullable().optional(),
-      required_skills: z.string().nullable().optional(),
+      dept_name: z.string().max(200).nullable().optional(),
+      required_skills: z.string().max(3_000).nullable().optional(),
       status: z.enum(["open", "closed"]).optional(),
     }),
   ),

@@ -56,9 +56,9 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       code: z.string().min(1),
-      name: z.string().min(1),
+      name: z.string().min(1).max(500),
       kind: z.enum(["join", "leave"]),
-      description: z.string().nullable().optional(),
+      description: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

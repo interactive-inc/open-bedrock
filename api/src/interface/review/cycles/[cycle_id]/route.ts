@@ -19,8 +19,8 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      title: z.string().min(1),
-      period: z.string().min(1),
+      title: z.string().min(1).max(500),
+      period: z.string().min(1).max(100),
       dueDate: z.string().nullable().optional(),
     }),
   ),

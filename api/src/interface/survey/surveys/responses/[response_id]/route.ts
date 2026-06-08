@@ -3,6 +3,7 @@ import { UpdateSurveyResponse } from "@/application/survey/update-survey-respons
 import { WithdrawSurveyResponse } from "@/application/survey/withdraw-survey-response"
 import type { SurveyResponse } from "@/domain/survey/survey-response"
 import { factory } from "@/lib/factory"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
@@ -70,7 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 // PUT /surveys/responses/:response_id — 回答内容を変更（本人のみ・公開中のみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator("json", z.object({ answers_json: z.record(z.string(), z.unknown()) })),
+  zValidator("json", z.object({ answers_json: jsonPayloadSchema(10_000) })),
   async (c) => {
     const viewer = c.var.session
 

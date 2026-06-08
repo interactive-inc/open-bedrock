@@ -9,8 +9,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      email: z.string(),
-      password: z.string(),
+      email: z.string().max(254),
+      password: z.string().max(200),
     }),
   ),
   async (c) => {

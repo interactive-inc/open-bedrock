@@ -54,12 +54,12 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
-      email: z.string().min(1),
-      role: z.string().min(1),
+      name: z.string().min(1).max(200),
+      email: z.string().min(1).max(254),
+      role: z.string().min(1).max(100),
       dept_id: z.number().int().nullable().optional(),
-      dept_name: z.string().nullable().optional(),
-      position: z.string().nullable().optional(),
+      dept_name: z.string().max(200).nullable().optional(),
+      position: z.string().max(200).nullable().optional(),
       status: z.enum(["active", "leave", "retired"]),
     }),
   ),

@@ -37,7 +37,7 @@ export const PUT = factory.createHandlers(
     z.object({
       effective_date: isoDate,
       new_base_salary: z.number().int().nonnegative().safe(),
-      reason: z.string().nullable().optional(),
+      reason: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

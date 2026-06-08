@@ -38,7 +38,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
+      name: z.string().min(1).max(200),
       point_cost: z.number(),
       stock: z.number().int().nonnegative().nullable().optional(),
     }),

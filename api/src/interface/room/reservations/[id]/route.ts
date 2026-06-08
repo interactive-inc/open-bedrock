@@ -62,7 +62,7 @@ export const PUT = factory.createHandlers(
     z.object({
       start_at: z.string().min(1),
       end_at: z.string().min(1),
-      purpose: z.string().nullable().optional(),
+      purpose: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

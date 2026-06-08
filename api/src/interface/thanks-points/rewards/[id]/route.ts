@@ -19,7 +19,7 @@ export const PATCH = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      name: z.string().min(1),
+      name: z.string().min(1).max(200),
       point_cost: z.number(),
       stock: z.number().int().nonnegative().nullable(),
       is_active: z.boolean(),

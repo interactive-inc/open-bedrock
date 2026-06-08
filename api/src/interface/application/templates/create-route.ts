@@ -1,5 +1,6 @@
 import { CreateApplicationTemplate } from "@/application/application/create-application-template"
 import { factory } from "@/lib/factory"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ConflictError,
@@ -17,11 +18,11 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       code: z.string().min(1),
-      name: z.string().min(1),
-      category: z.string().min(1),
-      description: z.string().nullable().optional(),
-      schema_json: z.unknown(),
-      approver_roles: z.array(z.string()).optional(),
+      name: z.string().min(1).max(500),
+      category: z.string().min(1).max(200),
+      description: z.string().max(3_000).nullable().optional(),
+      schema_json: jsonPayloadSchema(10_000),
+      approver_roles: z.array(z.string().max(100)).optional(),
     }),
   ),
   async (c) => {

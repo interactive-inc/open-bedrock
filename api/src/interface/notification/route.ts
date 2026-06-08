@@ -19,9 +19,9 @@ export const POST = factory.createHandlers(
     z.object({
       recipient_employee_code: z.string().min(1),
       kind: notificationKindSchema.default("announcement"),
-      title: z.string().min(1),
-      body: z.string().optional(),
-      source_domain: z.string().optional(),
+      title: z.string().min(1).max(500),
+      body: z.string().max(5_000).optional(),
+      source_domain: z.string().max(100).optional(),
       source_id: z.number().optional(),
     }),
   ),

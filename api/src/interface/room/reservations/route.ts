@@ -13,7 +13,7 @@ export const POST = factory.createHandlers(
       room_id: z.number().int(),
       start_at: z.string().min(1),
       end_at: z.string().min(1),
-      purpose: z.string().nullable().optional(),
+      purpose: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

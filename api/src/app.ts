@@ -1,5 +1,6 @@
 import { hc } from "hono/client"
 import { HTTPException } from "hono/http-exception"
+import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
@@ -187,6 +188,7 @@ function resolveAllowedOrigin(origin: string, allowList: string | undefined): st
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
 export const app = factory
   .createApp()
+  .use("*", bodyLimit({ maxSize: 1_000_000 }))
   .use("*", cors({ origin: (origin, c) => resolveAllowedOrigin(origin, c.env.CORS_ORIGIN) }))
   .use("*", contextStorage())
   .use("*", databaseMiddleware)

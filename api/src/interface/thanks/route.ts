@@ -72,7 +72,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       recipient_employee_code: z.string().min(1),
-      message: z.string().min(1),
+      message: z.string().min(1).max(1_000),
       // 任意で添えるサンクスポイント。未指定はメッセージのみの感謝。
       points: z.number().int().nonnegative().nullable().optional(),
     }),

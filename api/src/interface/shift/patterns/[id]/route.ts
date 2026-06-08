@@ -68,7 +68,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       code: z.string().min(1),
-      name: z.string().min(1),
+      name: z.string().min(1).max(200),
       start_time: z.string().min(1),
       end_time: z.string().min(1),
       break_minutes: z.number().default(0),
