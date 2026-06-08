@@ -6,23 +6,6 @@ import { and, desc, eq, lt } from "drizzle-orm"
 export class SalaryRevisionRepository {
   constructor(private readonly c: Context) {}
 
-  async findLatestByEmployeeId(employeeId: number): Promise<SalaryRevision | null | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select()
-        .from(salaryRevisions)
-        .where(eq(salaryRevisions.employeeId, employeeId))
-        .orderBy(desc(salaryRevisions.effectiveDate))
-        .limit(1)
-
-      const row = rows.at(0)
-
-      return row === undefined ? null : SalaryRevision.fromRow(row)
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to load salary revision")
-    }
-  }
-
   // 指定 effectiveDate より前で最も新しい改定を返す。バックデート登録時の「前回基本給」解決に使う。
   // effectiveDate が同日のものは含めない（直前の改定のみ対象）。
   async findLatestBeforeDate(
