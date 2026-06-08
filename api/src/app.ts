@@ -166,11 +166,28 @@ import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates
 import * as payrollSalaryRevisionDetailRoute from "@/interface/payroll/salary-revisions/[id]/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
+// CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
+const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
+
+// Origin リクエストヘッダを env.CORS_ORIGIN（カンマ区切り）と照合し、許可された Origin のみ返す。
+// 未設定時は defaultAllowedOrigins のみ許可（本番では必ず CORS_ORIGIN を設定する）。
+function resolveAllowedOrigin(origin: string, allowList: string | undefined): string | null {
+  const allowed =
+    allowList === undefined || allowList.trim() === ""
+      ? defaultAllowedOrigins
+      : allowList
+          .split(",")
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0)
+
+  return allowed.includes(origin) ? origin : null
+}
+
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
 export const app = factory
   .createApp()
-  .use("*", cors())
+  .use("*", cors({ origin: (origin, c) => resolveAllowedOrigin(origin, c.env.CORS_ORIGIN) }))
   .use("*", contextStorage())
   .use("*", databaseMiddleware)
   .onError((error, c) => {

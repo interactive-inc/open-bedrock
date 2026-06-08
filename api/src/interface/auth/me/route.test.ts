@@ -84,6 +84,19 @@ describe("GET /me", () => {
     expect(response.status).toBe(401)
   })
 
+  test("returns 401 for an expired token", async () => {
+    const expiredToken = await createTestToken(
+      jwtSecret,
+      { employeeId: 1, email: "you+e001@example.com", role: "admin" },
+      // 1 秒前に切れる exp（絶対 epoch 秒）。
+      { expirationTime: Math.floor(Date.now() / 1000) - 1 },
+    )
+
+    const response = await getMe(expiredToken)
+
+    expect(response.status).toBe(401)
+  })
+
   test("returns 404 when the token employee does not exist", async () => {
     const token = await createTestToken(jwtSecret, {
       employeeId: 9999,
