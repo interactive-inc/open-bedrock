@@ -3,6 +3,7 @@ import { GetBusinessTrip } from "@/application/business-trip/get-business-trip"
 import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
 import type { BusinessTrip } from "@/domain/business-trip/business-trip"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -63,8 +64,8 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       destination: z.string().min(1),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       purpose: z.string().min(1),
       estimated_cost: z.number().int().nullable().optional(),
     }),

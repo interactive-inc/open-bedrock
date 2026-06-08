@@ -3,6 +3,7 @@ import { GetRentalReservation } from "@/application/rental/get-rental-reservatio
 import { UpdateRentalReservation } from "@/application/rental/update-rental-reservation"
 import type { RentalReservation } from "@/domain/rental/rental-reservation"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -62,8 +63,8 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       item_name: z.string().min(1),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       purpose: z.string().nullable().optional(),
     }),
   ),

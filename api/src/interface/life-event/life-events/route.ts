@@ -1,5 +1,6 @@
 import { CreateLifeEvent } from "@/application/life-event/create-life-event"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -11,7 +12,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       event_type: z.string().min(1),
-      event_date: z.string().min(1),
+      event_date: isoDate,
       detail: z.string().nullable().optional(),
     }),
   ),

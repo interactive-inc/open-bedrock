@@ -3,6 +3,7 @@ import { GetResignation } from "@/application/resignation/get-resignation"
 import { UpdateResignation } from "@/application/resignation/update-resignation"
 import { Resignation } from "@/domain/resignation/resignation"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -60,8 +61,8 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      resignation_date: z.string().min(1),
-      last_working_date: z.string().min(1).nullable().optional(),
+      resignation_date: isoDate,
+      last_working_date: isoDate.nullable().optional(),
       reason: z.string().min(1).nullable().optional(),
     }),
   ),

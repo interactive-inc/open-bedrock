@@ -1,5 +1,6 @@
 import { CreateBusinessTrip } from "@/application/business-trip/create-business-trip"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -11,8 +12,8 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       destination: z.string().min(1),
-      start_date: z.string().min(1),
-      end_date: z.string().min(1),
+      start_date: isoDate,
+      end_date: isoDate,
       purpose: z.string().min(1),
       estimated_cost: z.number().int().nullable().optional(),
     }),

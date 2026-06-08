@@ -1,5 +1,6 @@
 import { CreateResignation } from "@/application/resignation/create-resignation"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -10,8 +11,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      resignation_date: z.string().min(1),
-      last_working_date: z.string().min(1).nullable().optional(),
+      resignation_date: isoDate,
+      last_working_date: isoDate.nullable().optional(),
       reason: z.string().min(1).nullable().optional(),
     }),
   ),
