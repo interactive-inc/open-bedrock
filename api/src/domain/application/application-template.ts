@@ -58,15 +58,27 @@ export class ApplicationTemplate implements Props {
     })
   }
 
-  static fromRow(row: ApplicationTemplateRow): ApplicationTemplate {
+  static fromRow(row: ApplicationTemplateRow): ApplicationTemplate | Error {
+    const schemaJson = decodeSchemaJson(row.schemaJson)
+
+    if (schemaJson instanceof Error) {
+      return schemaJson
+    }
+
+    const approverRoles = decodeApproverRoles(row.approverRoles)
+
+    if (approverRoles instanceof Error) {
+      return approverRoles
+    }
+
     return new ApplicationTemplate({
       id: row.id,
       code: row.code,
       name: row.name,
       category: row.category,
       description: row.description,
-      schemaJson: JSON.parse(row.schemaJson),
-      approverRoles: JSON.parse(row.approverRoles),
+      schemaJson: schemaJson,
+      approverRoles: approverRoles,
     })
   }
 
@@ -86,5 +98,33 @@ export class ApplicationTemplate implements Props {
       schemaJson: props.schemaJson,
       approverRoles: props.approverRoles,
     })
+  }
+}
+
+function decodeSchemaJson(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return new Error("application_templates row schemaJson is not valid JSON")
+  }
+}
+
+function decodeApproverRoles(value: string): ReadonlyArray<string> | Error {
+  try {
+    const decoded: unknown = JSON.parse(value)
+
+    if (!Array.isArray(decoded)) {
+      return new Error("application_templates row approverRoles is not an array")
+    }
+
+    for (const item of decoded) {
+      if (typeof item !== "string") {
+        return new Error("application_templates row approverRoles contains a non-string item")
+      }
+    }
+
+    return decoded
+  } catch {
+    return new Error("application_templates row approverRoles is not valid JSON")
   }
 }
