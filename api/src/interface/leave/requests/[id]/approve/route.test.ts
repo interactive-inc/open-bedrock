@@ -143,6 +143,46 @@ describe("POST /leave/requests/:id/approve", () => {
     expect(annual?.used_days).toBe(8)
   })
 
+  test("re-approving an already-decided request returns 409 and does not decrement the balance twice", async () => {
+    const db = await createTestDb()
+
+    const managerToken = await tokenFor(4, "manager")
+
+    function approve(): Promise<Response> {
+      return requestWithContext({
+        db,
+        jwtSecret,
+        path: "/leave/requests/1/approve",
+        token: managerToken,
+        method: "POST",
+        body: { comment: "approved" },
+      })
+    }
+
+    const first = await approve()
+
+    expect(first.status).toBe(200)
+
+    const second = await approve()
+
+    expect(second.status).toBe(409)
+
+    const balanceResponse = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/leave/balance/me",
+      token: await tokenFor(5, "member"),
+    })
+
+    const balances = z.array(leaveBalanceResponseSchema).parse(await balanceResponse.json())
+
+    const annual = balances.find((row) => row.leave_type === "annual")
+
+    // 1回ぶんだけ減算されている。旧実装では再承認で二重減算されていた。
+    expect(annual?.remaining_days).toBe(12)
+    expect(annual?.used_days).toBe(8)
+  })
+
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave/requests/1/approve",

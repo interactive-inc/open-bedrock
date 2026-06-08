@@ -73,4 +73,51 @@ describe("LeaveRequestRepository", () => {
     expect(updated.status).toBe("approved")
     expect(updated.approverId).toBe(2)
   })
+
+  test("decideFromPending decides a pending request once, then returns null for a re-decision", async () => {
+    const { context } = createTestContext()
+
+    const repository = new LeaveRequestRepository(context)
+
+    const created = await repository.create(
+      LeaveRequest.create({
+        employeeId: 1,
+        leaveType: "annual",
+        startDate: "2026-02-01",
+        endDate: "2026-02-03",
+        days: 3,
+        reason: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    const first = await repository.decideFromPending({
+      leaveRequestId: created.id,
+      status: "approved",
+      approverId: 2,
+      decidedComment: "承認",
+    })
+
+    expect(first).toBeInstanceOf(LeaveRequest)
+
+    if (first instanceof Error || first === null) {
+      throw new Error("first decideFromPending failed")
+    }
+
+    expect(first.status).toBe("approved")
+
+    // 決定済みは pending 条件に当たらず 0 行更新 → null（再決定を弾く）。
+    const second = await repository.decideFromPending({
+      leaveRequestId: created.id,
+      status: "rejected",
+      approverId: 3,
+      decidedComment: "却下",
+    })
+
+    expect(second).toBeNull()
+  })
 })
