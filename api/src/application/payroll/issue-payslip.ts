@@ -5,6 +5,7 @@ import { toNetPay } from "@/domain/payroll/to-net-pay"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -75,14 +76,12 @@ export class IssuePayslip {
 
     const created = await payslipRepository.create(payslip)
 
+    if (created instanceof UniqueConstraintError) {
+      // 競合（TOCTOU）で UNIQUE 索引に弾かれた = 同一期間が既に在る。再読込に依存せず重複を返す。
+      return { reason: "duplicate_period" }
+    }
+
     if (created instanceof Error) {
-      // 競合（TOCTOU）で UNIQUE 制約に弾かれた可能性。再確認して行が在れば重複として 409 相当を返す。
-      const raced = await payslipRepository.findByEmployeeAndPeriod(employee.id, command.period)
-
-      if (raced instanceof Payslip) {
-        return { reason: "duplicate_period" }
-      }
-
       return created
     }
 
