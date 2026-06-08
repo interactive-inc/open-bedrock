@@ -107,4 +107,24 @@ describe("SalaryRevisionRepository", () => {
 
     expect(found).toBeNull()
   })
+
+  test("update returns an Error when the revision has no id", async () => {
+    const { context } = createTestContext()
+
+    const repository = new SalaryRevisionRepository(context)
+
+    // 未保存（id=null）の改定を訂正しようとすると、黙って no-op せずエラーを返す。
+    const result = await repository.update(
+      SalaryRevision.create({
+        employeeId: 1,
+        effectiveDate: "2026-04-01",
+        previousBaseSalary: 300000,
+        newBaseSalary: 330000,
+        reason: null,
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+    )
+
+    expect(result).toBeInstanceOf(Error)
+  })
 })
