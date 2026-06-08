@@ -269,6 +269,26 @@ describe("POST /payslips", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when base_salary is not an integer", async () => {
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-05",
+      base_salary: 300000.5,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when base_salary exceeds the safe integer range", async () => {
+    const response = await request("/payslips", await adminToken(), "POST", {
+      employee_code: "E005",
+      period: "2026-05",
+      base_salary: 10_000_000_000_000_000,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/payslips", null, "POST", {
       employee_code: "E005",

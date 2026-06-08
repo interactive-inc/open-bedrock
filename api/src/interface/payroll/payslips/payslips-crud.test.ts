@@ -221,6 +221,23 @@ describe("PUT /payslips/:id", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("returns 400 when net_pay is not an integer", async () => {
+    const response = await request({
+      path: "/payslips/1",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        period: "2026-04",
+        base_salary: 310000,
+        allowances: 25000,
+        deductions: 50000,
+        net_pay: 285000.5,
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
 
 describe("DELETE /payslips/:id", () => {
