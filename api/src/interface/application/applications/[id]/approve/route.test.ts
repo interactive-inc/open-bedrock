@@ -156,4 +156,13 @@ describe("POST /applications/:id/approve", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 403 for a non-privileged role", async () => {
+    const response = await request("/applications/1/approve", await tokenFor(5, "member"), {
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(response.status).toBe(403)
+  })
 })
