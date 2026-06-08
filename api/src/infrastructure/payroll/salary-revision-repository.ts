@@ -73,8 +73,12 @@ export class SalaryRevisionRepository {
     }
   }
 
-  // 既存の給与改定の適用日・改定後基本給・理由を訂正する。
+  // 既存の給与改定の適用日・改定後基本給・理由を訂正する。id は採番済みの前提。
   async update(salaryRevision: SalaryRevision): Promise<SalaryRevision | Error> {
+    if (salaryRevision.id === null) {
+      return new Error("salary revision id is required to update")
+    }
+
     try {
       await this.c.var.database
         .update(salaryRevisions)
@@ -83,7 +87,7 @@ export class SalaryRevisionRepository {
           newBaseSalary: salaryRevision.newBaseSalary,
           reason: salaryRevision.reason,
         })
-        .where(eq(salaryRevisions.id, salaryRevision.id ?? 0))
+        .where(eq(salaryRevisions.id, salaryRevision.id))
 
       return salaryRevision
     } catch (error) {
