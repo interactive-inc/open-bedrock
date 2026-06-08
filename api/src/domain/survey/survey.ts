@@ -43,12 +43,18 @@ export class Survey implements Props {
     })
   }
 
-  static fromRow(row: SurveyRow): Survey {
+  static fromRow(row: SurveyRow): Survey | Error {
+    const questionsJson = decodeQuestionsJson(row.questionsJson)
+
+    if (questionsJson instanceof Error) {
+      return questionsJson
+    }
+
     return new Survey({
       id: row.id,
       title: row.title,
       status: row.status === "open" ? "open" : "closed",
-      questionsJson: JSON.parse(row.questionsJson),
+      questionsJson: questionsJson,
     })
   }
 
@@ -68,5 +74,19 @@ export class Survey implements Props {
 
   isOpen() {
     return this.props.status === "open"
+  }
+}
+
+function decodeQuestionsJson(value: string): ReadonlyArray<unknown> | Error {
+  try {
+    const decoded: unknown = JSON.parse(value)
+
+    if (!Array.isArray(decoded)) {
+      return new Error("surveys row questionsJson is not an array")
+    }
+
+    return decoded
+  } catch {
+    return new Error("surveys row questionsJson is not valid JSON")
   }
 }

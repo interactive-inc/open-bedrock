@@ -48,12 +48,18 @@ export class SurveyResponse implements Props {
     })
   }
 
-  static fromRow(row: SurveyResponseRow): SurveyResponse {
+  static fromRow(row: SurveyResponseRow): SurveyResponse | Error {
+    const answersJson = decodeAnswersJson(row.answersJson)
+
+    if (answersJson instanceof Error) {
+      return answersJson
+    }
+
     return new SurveyResponse({
       id: row.id,
       surveyId: row.surveyId,
       respondentId: row.respondentId,
-      answersJson: JSON.parse(row.answersJson),
+      answersJson: answersJson,
       submittedAt: row.submittedAt,
     })
   }
@@ -67,5 +73,13 @@ export class SurveyResponse implements Props {
       answersJson: props.answersJson,
       submittedAt: props.submittedAt,
     })
+  }
+}
+
+function decodeAnswersJson(value: string): unknown {
+  try {
+    return JSON.parse(value)
+  } catch {
+    return new Error("survey_responses row answersJson is not valid JSON")
   }
 }
