@@ -8,6 +8,6 @@ api ワークスペース(Hono on Cloudflare Workers)が提供する HTTP API。
 
 ## エンドポイント構造
 
-ドメインごとにパスを分ける。一覧取得は GET、作成や提出や承認などの操作は POST、自分のスキルやキャリアシートの更新は PUT を用いる。
+ドメインごとにパスを分ける。一覧や詳細の取得は GET、作成や提出や承認などの操作は POST、レコードの更新は PUT(一部 PATCH)、削除は DELETE を用いる。
 
 ルートの一覧は api/src/app.ts を、各エンドポイントの入出力は api/src/interface 配下の実装を参照する。
