@@ -87,10 +87,10 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       period: z.string().min(1),
-      base_salary: z.number().nonnegative(),
-      allowances: z.number().nonnegative(),
-      deductions: z.number().nonnegative(),
-      net_pay: z.number().nonnegative(),
+      base_salary: z.number().int().nonnegative().safe(),
+      allowances: z.number().int().nonnegative().safe(),
+      deductions: z.number().int().nonnegative().safe(),
+      net_pay: z.number().int().nonnegative().safe(),
     }),
   ),
   async (c) => {
