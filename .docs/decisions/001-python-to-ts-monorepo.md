@@ -2,19 +2,20 @@
 
 ## 状況
 
-初期の open-karte はサーバ(FastAPI)と CLI とMCPサーバを Python で実装していた。現行リポジトリでは api と cli と web を TypeScript の bun モノレポとして構成し直す移行が進んでいる。移行の意思決定の背景はコードからは読み取れないため、ここでは観測された事実のみを記録する。
+初期の open-karte はサーバ(FastAPI)と CLI と MCP サーバを Python で実装していた。これを api と cli と web からなる TypeScript の bun モノレポへ移行することにした。移行の動機そのものはコードからは読み取れないため、ここでは観測された事実と決定を記録する。
 
 ## 判断
 
-api と cli と web を npm workspaces のモノレポにまとめ、CLI は Hono と bun、API は Hono と Cloudflare Workers、web は Next.js で実装する方針に揃える。CLI は旧 talent.py と同じく ~/.talent/config.json とバックエンド API を前提とする設計を踏襲する。
+api と cli と web を bun workspaces のモノレポにまとめ、api は Hono と Cloudflare Workers、cli は Hono と bun、web は Next.js で実装する方針に揃える。cli は引数をローカル HTTP リクエストに変換し、内部の Hono ルートを経て接続先 api を叩く。cli の設定は ~/.karte/config.json に保存する。
 
 ## 理由
 
-- Python 実装の継続: 未確認。移行理由はコードから読み取れない
-- TypeScript モノレポの採用: API と CLI で同一の Hono ルーティング基盤を共有でき、bun で統一的に実行できる
+- Python 実装の継続: 却下。移行理由の詳細はコードから読み取れないが、TypeScript への一本化が選ばれた
+- TypeScript モノレポの採用: api と cli で同一の Hono ルーティング基盤を共有でき、bun で統一的に実行できる。web も含めて Zod による入力検証と型を共有しやすい
 
 ## 結果
 
-- CLI は引数をローカル HTTP リクエストに変換し Hono ルートで処理する設計になった。詳細は [[features|機能一覧]] を参照
-- api と web は現状スキャフォールドで、業務機能は未実装。CLI が叩くバックエンド本体はこのリポジトリに含まれない
-- トレードオフ: 旧 Python 実装と新 TypeScript 実装が併存する移行期にあり、両者の統合方針は未確認
+- 旧 Python 実装は廃止し、api と cli と web は本リポジトリの TypeScript モノレポに実装済み。各機能の概要は [[features|機能一覧]]、システム構成は [[architecture|アーキテクチャ]] を参照
+- cli は引数をローカル HTTP リクエストに変換し、内部の Hono ルートを経て api を叩く設計になった
+- cli の設定ファイルは ~/.karte/config.json（旧実装の ~/.talent から変更）
+- トレードオフ: api を Cloudflare Workers と D1 前提に寄せたため、ランタイムやデータ層の選択肢がその制約に縛られる
