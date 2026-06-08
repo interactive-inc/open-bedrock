@@ -4,7 +4,7 @@ import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("SalaryRevisionRepository", () => {
-  test("create then findLatestByEmployeeId round-trips the revision", async () => {
+  test("create then findById round-trips the revision", async () => {
     const { context } = createTestContext()
 
     const repository = new SalaryRevisionRepository(context)
@@ -22,28 +22,28 @@ describe("SalaryRevisionRepository", () => {
 
     expect(created).toBeInstanceOf(SalaryRevision)
 
-    if (created instanceof Error) {
-      throw created
+    if (created instanceof Error || created.id === null) {
+      throw new Error("create failed")
     }
 
-    const found = await repository.findLatestByEmployeeId(1)
+    const found = await repository.findById(created.id)
 
     expect(found).toBeInstanceOf(SalaryRevision)
 
     if (found instanceof Error || found === null) {
-      throw new Error("findLatestByEmployeeId failed")
+      throw new Error("findById failed")
     }
 
     expect(found.newBaseSalary).toBe(330000)
     expect(found.effectiveDate).toBe("2026-04-01")
   })
 
-  test("findLatestByEmployeeId returns null when none exist", async () => {
+  test("findById returns null when none exist", async () => {
     const { context } = createTestContext()
 
     const repository = new SalaryRevisionRepository(context)
 
-    const found = await repository.findLatestByEmployeeId(9999)
+    const found = await repository.findById(9999)
 
     expect(found).toBeNull()
   })
