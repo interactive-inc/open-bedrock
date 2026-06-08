@@ -1,7 +1,7 @@
 import { LeaveRequest } from "@/domain/leave/leave-request"
 import type { Context } from "@/env"
 import { leaveRequests } from "@/schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 export class LeaveRequestRepository {
   constructor(private readonly c: Context) {}
@@ -71,6 +71,33 @@ export class LeaveRequestRepository {
       return row === undefined ? null : LeaveRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update leave_request")
+    }
+  }
+
+  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+  // 再決定と残数の二重減算を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+  async decideFromPending(props: {
+    leaveRequestId: number
+    status: "approved" | "rejected"
+    approverId: number
+    decidedComment: string | null
+  }): Promise<LeaveRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(leaveRequests)
+        .set({
+          status: props.status,
+          approverId: props.approverId,
+          decidedComment: props.decidedComment,
+        })
+        .where(and(eq(leaveRequests.id, props.leaveRequestId), eq(leaveRequests.status, "pending")))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : LeaveRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to decide leave_request")
     }
   }
 
