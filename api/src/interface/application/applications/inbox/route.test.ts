@@ -120,4 +120,10 @@ describe("GET /applications/inbox", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 403 for a non-privileged role", async () => {
+    const response = await request("/applications/inbox", await tokenFor(99, "member"))
+
+    expect(response.status).toBe(403)
+  })
 })
