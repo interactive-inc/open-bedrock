@@ -34,13 +34,8 @@ export function AppHeader(props: Props) {
       <div className="ml-auto flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <button
-                type="button"
-                aria-label="ユーザーメニュー"
-                className={buttonVariants({ variant: "ghost", size: "icon" })}
-              />
-            }
+            aria-label="ユーザーメニュー"
+            className={buttonVariants({ variant: "ghost", size: "icon" })}
           >
             <Avatar className="size-8">
               <AvatarFallback>{initial}</AvatarFallback>
