@@ -1,4 +1,5 @@
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import {
@@ -16,7 +17,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      answers_json: z.record(z.string(), z.unknown()),
+      answers_json: jsonPayloadSchema(10_000),
     }),
   ),
   async (c) => {

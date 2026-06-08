@@ -4,6 +4,7 @@ import { canDecideApplication } from "@/domain/application/can-decide-applicatio
 import { toApplicationId } from "@/domain/application/to-application-id"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
+import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -73,7 +74,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 // PUT /applications/:id — 本人が申請内容（payload）を更新（pending のみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator("json", z.object({ payload: z.unknown() })),
+  zValidator("json", z.object({ payload: jsonPayloadSchema(10_000) })),
   async (c) => {
     const session = c.var.session
 

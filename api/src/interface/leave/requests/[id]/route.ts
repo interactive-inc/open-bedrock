@@ -85,7 +85,7 @@ export const PUT = factory.createHandlers(
       leave_type: z.enum(["annual", "special"]),
       start_date: isoDate,
       end_date: isoDate,
-      reason: z.string().nullable().optional(),
+      reason: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

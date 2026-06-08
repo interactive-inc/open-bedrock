@@ -11,9 +11,9 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      event_type: z.string().min(1),
+      event_type: z.string().min(1).max(200),
       event_date: isoDate,
-      detail: z.string().nullable().optional(),
+      detail: z.string().max(3_000).nullable().optional(),
     }),
   ),
   async (c) => {

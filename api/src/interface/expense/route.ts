@@ -14,7 +14,7 @@ export const POST = factory.createHandlers(
       category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
       amount: z.number().positive(),
       spent_at: z.string().min(1),
-      note: z.string().optional(),
+      note: z.string().max(3_000).optional(),
     }),
   ),
   async (c) => {
