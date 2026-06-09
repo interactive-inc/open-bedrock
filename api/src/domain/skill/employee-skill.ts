@@ -4,8 +4,8 @@ import { z } from "zod"
 const zProps = z.object({
   employeeId: z.number(),
   skillCode: z.string(),
-  level: z.number(),
-  years: z.number().nullable(),
+  level: z.number().int().min(1).max(10),
+  years: z.number().int().nonnegative().nullable(),
   note: z.string().nullable(),
 })
 
