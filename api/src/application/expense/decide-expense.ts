@@ -43,7 +43,7 @@ export class DecideExpense {
     }
 
     if (existing.status !== "pending") {
-      return { reason: "already_decided" }
+      return { reason: "already_decided" } as const
     }
 
     const approval = await expenseRepository.addApproval(
