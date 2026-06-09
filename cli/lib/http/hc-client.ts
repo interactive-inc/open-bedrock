@@ -7,7 +7,10 @@ import { ApiError } from "@/lib/errors"
 // hc は 4xx/5xx でも throw しないため、各ルートが response.ok を確認しないと
 // API エラーがサイレントに成功扱いされていた。全ルートで一括して弾くために fetch を包む。
 // 成功時は本文を読まずそのまま返すので、呼び出し側の json() と二重読みにならない。
-const fetchOrThrow: typeof fetch = async (input, init) => {
+const handleFetch = async (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1],
+): Promise<Response> => {
   const response = await fetch(input, init)
 
   if (response.ok) {
@@ -31,6 +34,10 @@ const fetchOrThrow: typeof fetch = async (input, init) => {
     detail === "" ? `ERR ${response.status}` : `ERR ${response.status} ${detail}`,
   )
 }
+
+// bun の typeof fetch は静的メソッド preconnect を要求するため、実 fetch のものを引き継いで
+// hc の fetch オプション（typeof fetch）に代入可能にする。
+const fetchOrThrow: typeof fetch = Object.assign(handleFetch, { preconnect: fetch.preconnect })
 
 export async function createClient(baseUrlOverride?: string) {
   const config = await loadConfig()

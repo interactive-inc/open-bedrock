@@ -4,10 +4,16 @@ import { describe, expect, spyOn, test } from "bun:test"
 // #96: hc クライアントが API のエラーレスポンス(4xx/5xx)をサイレントに成功扱いせず、
 // stderr + 非ゼロ終了に落とすことを確認する。fetch をモックして API 障害を再現する。
 
+// bun の typeof fetch は静的メソッド preconnect を要求するため、実 fetch から引き継いだ
+// モックを作り、mockImplementation の型（typeof fetch）に適合させる。
+function fetchReturning(status: number, body: string): typeof fetch {
+  return Object.assign(() => Promise.resolve(new Response(body, { status })), {
+    preconnect: fetch.preconnect,
+  })
+}
+
 async function whoamiWith(status: number, body: string): Promise<Response> {
-  const spy = spyOn(globalThis, "fetch").mockImplementation(() =>
-    Promise.resolve(new Response(body, { status })),
-  )
+  const spy = spyOn(globalThis, "fetch").mockImplementation(fetchReturning(status, body))
 
   try {
     return await app.request("/whoami", {
