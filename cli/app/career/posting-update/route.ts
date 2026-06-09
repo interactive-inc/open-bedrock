@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -32,7 +33,8 @@ export default factory.createHandlers(
       param: { posting_id: query.id },
       json: {
         title: query.title,
-        dept_id: query["dept-id"] !== undefined ? Number(query["dept-id"]) : null,
+        dept_id:
+          query["dept-id"] !== undefined ? toFiniteNumber(query["dept-id"], "--dept-id") : null,
         dept_name: query["dept-name"] ?? null,
         required_skills: query.skills ?? null,
         status: query.status === "closed" ? "closed" : "open",

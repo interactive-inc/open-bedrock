@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -36,7 +37,8 @@ export default factory.createHandlers(
         title: query.title,
         category: query.category,
         description: query.description,
-        duration_minutes: query.duration !== undefined ? Number(query.duration) : undefined,
+        duration_minutes:
+          query.duration !== undefined ? toFiniteNumber(query.duration, "--duration") : undefined,
         is_required: query.required !== undefined,
       },
     })

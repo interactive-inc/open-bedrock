@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -30,8 +31,8 @@ export default factory.createHandlers(
 
     const json = {
       skill_code: skillCode,
-      level: Number(query.level),
-      years: query.years !== undefined ? Number(query.years) : undefined,
+      level: toFiniteNumber(query.level, "--level"),
+      years: query.years !== undefined ? toFiniteNumber(query.years, "--years") : undefined,
       note: query.note,
     }
 

@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -42,7 +43,7 @@ export default factory.createHandlers(
       param: { id: expenseId },
       json: {
         category,
-        amount: Number(amount),
+        amount: toFiniteNumber(amount, "--amount"),
         spent_at: spentAt,
         note: query.note ?? null,
       },
