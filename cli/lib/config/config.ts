@@ -1,4 +1,4 @@
-import { chmod, mkdir } from "node:fs/promises"
+import { mkdir, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import { join } from "node:path"
 
@@ -21,11 +21,16 @@ export async function loadConfig(): Promise<KarteConfig> {
   if (await file.exists()) {
     try {
       return (await file.json()) as KarteConfig
-    } catch {
-      // 設定ファイルが壊れていても CLI を起動できるよう既定値にフォールバックし、
-      // raw stack trace でなく警告を stderr に出す。
+    } catch (error) {
+      // JSON パース失敗のみ既定値にフォールバックする。読み取り権限・I/O エラーは
+      // 「JSON 解析失敗」と誤表示して握り潰さないよう、そのまま伝播させる。
+      if (error instanceof SyntaxError === false) {
+        throw error
+      }
+
+      // 壊れた設定でも CLI を起動できるよう既定値で続行し、raw stack trace でなく警告を出す。
       process.stderr.write(
-        "warning: ~/.karte/config.json を解析できませんでした。既定設定で続行します\n",
+        `warning: ${configPaths().file} を解析できませんでした。既定設定で続行します\n`,
       )
       return { base_url: DEFAULT_BASE_URL, token: null }
     }
@@ -37,7 +42,7 @@ export async function saveConfig(config: KarteConfig): Promise<void> {
   const paths = configPaths()
   // 初回ログイン時に ~/.karte が無いと ENOENT になるため先に作成する（dir は 0700）。
   await mkdir(paths.dir, { recursive: true, mode: 0o700 })
-  await Bun.write(paths.file, `${JSON.stringify(config, null, 2)}\n`)
-  // トークンを含むため所有者のみ読み書き可（0600）にする。
-  await chmod(paths.file, 0o600)
+  // トークンを含むため、作成時点から所有者のみ読み書き可（0600）にする。
+  // Bun.write + 後追い chmod だと作成〜chmod の間に world-readable な TOCTOU 窓があった。
+  await writeFile(paths.file, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 })
 }
