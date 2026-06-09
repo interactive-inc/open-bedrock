@@ -19,4 +19,12 @@ describe("toFiniteNumber", () => {
   test("throws when the value is undefined", () => {
     expect(() => toFiniteNumber(undefined, "--base")).toThrow()
   })
+
+  test("throws on an empty string (Number('') would be 0)", () => {
+    expect(() => toFiniteNumber("", "--score")).toThrow("--score")
+  })
+
+  test("throws on a whitespace-only string", () => {
+    expect(() => toFiniteNumber("   ", "--score")).toThrow()
+  })
 })
