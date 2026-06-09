@@ -16,12 +16,17 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      leave_type: z.enum(["annual", "special"]),
-      start_date: isoDate,
-      end_date: isoDate,
-      reason: z.string().max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        leave_type: z.enum(["annual", "special"]),
+        start_date: isoDate,
+        end_date: isoDate,
+        reason: z.string().max(3_000).nullable().optional(),
+      })
+      .refine((d) => d.start_date <= d.end_date, {
+        message: "end_date must be on or after start_date",
+        path: ["end_date"],
+      }),
   ),
   async (c) => {
     const body = c.req.valid("json")
