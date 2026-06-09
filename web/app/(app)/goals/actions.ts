@@ -174,7 +174,7 @@ function toScore(value: FormDataEntryValue | null): number | null {
 
   const parsed = Number(value)
 
-  if (Number.isNaN(parsed)) {
+  if (!Number.isFinite(parsed)) {
     return null
   }
 
