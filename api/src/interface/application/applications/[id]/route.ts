@@ -57,6 +57,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
+  let payload: unknown
+  try {
+    payload = JSON.parse(row.application.payload)
+  } catch {
+    throw new InternalError("invalid payload data")
+  }
+
   const responseBody = {
     id: row.application.id,
     template_code: row.templateCode ?? "",
@@ -64,7 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     applicant_name: row.applicantName ?? "",
     status: row.application.status,
     current_step: row.application.currentStep,
-    payload: JSON.parse(row.application.payload),
+    payload,
     created_at: row.application.createdAt,
   }
 

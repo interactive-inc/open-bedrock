@@ -9,6 +9,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
+  InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
@@ -50,16 +51,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(eq(surveyResponses.surveyId, surveyId))
     .orderBy(surveyResponses.id)
 
-  const responses = responseRows.map(
-    (row) =>
-      new SurveyResponse({
-        id: row.id,
-        surveyId: row.surveyId,
-        respondentId: row.respondentId,
-        answersJson: JSON.parse(row.answersJson),
-        submittedAt: row.submittedAt,
-      }),
-  )
+  const responses = responseRows.map((row) => {
+    let answersJson: unknown
+    try {
+      answersJson = JSON.parse(row.answersJson)
+    } catch {
+      throw new InternalError("invalid answers_json data")
+    }
+    return new SurveyResponse({
+      id: row.id,
+      surveyId: row.surveyId,
+      respondentId: row.respondentId,
+      answersJson,
+      submittedAt: row.submittedAt,
+    })
+  })
 
   const answersList = toAnswersList(responses)
 
@@ -71,7 +77,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     answers: ReadonlyArray<string>
   }> = []
 
-  for (const candidate of JSON.parse(surveyRow.questionsJson)) {
+  let questionsJsonParsed: unknown
+  try {
+    questionsJsonParsed = JSON.parse(surveyRow.questionsJson)
+  } catch {
+    throw new InternalError("invalid questions_json data")
+  }
+
+  for (const candidate of Array.isArray(questionsJsonParsed) ? questionsJsonParsed : []) {
     const parsed = surveyQuestionSchema.safeParse(candidate)
 
     if (parsed.success) {
