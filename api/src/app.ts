@@ -248,6 +248,7 @@ export const app = factory
   .get("/surveys/:survey_id/summary", ...surveySummaryRoute.GET)
   .post("/surveys/:survey_id/responses", ...surveyResponseCreateRoute.POST)
   .get("/surveys", ...surveyListRoute.GET)
+  .get("/surveys/:survey_id", ...surveyDetailRoute.GET)
   .get("/career/postings", ...careerPostingListRoute.GET)
   .post("/career/postings", ...careerPostingListRoute.POST)
   .post("/career/postings/:posting_id/apply", ...careerPostingApplyRoute.POST)
