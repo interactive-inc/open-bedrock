@@ -1,4 +1,5 @@
 import type { Employee } from "@/domain/employee/employee"
+import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
 import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
@@ -8,10 +9,13 @@ import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onbo
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 
 export type Command = {
+  viewerRole: string
   employeeCode: string
   templateCode: string
   assignedAt: string
 }
+
+export type Forbidden = { reason: "forbidden" }
 
 export type EmployeeNotFound = { reason: "employee_not_found" }
 
@@ -32,7 +36,11 @@ export class AssignOnboarding {
 
   async run(
     command: Command,
-  ): Promise<AssignOnboardingResult | EmployeeNotFound | TemplateNotFound | Error> {
+  ): Promise<AssignOnboardingResult | Forbidden | EmployeeNotFound | TemplateNotFound | Error> {
+    if (canManageOnboarding(command.viewerRole) === false) {
+      return { reason: "forbidden" }
+    }
+
     const employeeRepository = new EmployeeRepository(this.c)
 
     const templateRepository = new OnboardingTemplateRepository(this.c)

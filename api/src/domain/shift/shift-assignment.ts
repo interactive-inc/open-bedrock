@@ -27,6 +27,10 @@ export class ShiftAssignment implements Props {
 
   readonly publishedAt!: Props["publishedAt"]
 
+  get isModifiable(): boolean {
+    return this.publishedAt === null
+  }
+
   constructor(private readonly props: Props) {
     zProps.parse(props)
 

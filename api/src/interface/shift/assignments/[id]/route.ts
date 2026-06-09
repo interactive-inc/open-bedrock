@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -103,6 +104,10 @@ export const PUT = factory.createHandlers(
         throw new ForbiddenError()
       }
 
+      if (assignment.reason === "already_published") {
+        throw new ConflictError("shift assignment is already published")
+      }
+
       if (assignment.reason === "pattern_not_found") {
         throw new NotFoundError("pattern not found")
       }
@@ -139,6 +144,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "forbidden") {
     throw new ForbiddenError()
+  }
+
+  if (result.reason === "already_published") {
+    throw new ConflictError("shift assignment is already published")
   }
 
   if (result.reason === "assignment_not_found") {
