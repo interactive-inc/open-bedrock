@@ -132,7 +132,15 @@ describe("POST /leave/requests", () => {
   })
 
   test("returns 409 when an overlapping pending request already exists", async () => {
-    // seed の申請 1 は employee 5・2026-06-01〜2026-06-03・pending。
+    // 以降の重複テストは seed の申請 1（employee 5・2026-06-01〜2026-06-03・pending）に
+    // 依存する。seed が変わったら無言で壊れないよう前提をここで明示検証する。
+    const seeded = seedLeaveRequests[0]
+
+    expect(seeded?.employeeId).toBe(5)
+    expect(seeded?.status).toBe("pending")
+    expect(seeded?.startDate).toBe("2026-06-01")
+    expect(seeded?.endDate).toBe("2026-06-03")
+
     const response = await request({
       path: "/leave/requests",
       token: await tokenFor(5, "member"),
