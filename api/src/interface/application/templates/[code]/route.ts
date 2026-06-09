@@ -49,13 +49,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("template not found")
   }
 
+  let schemaJson: unknown
+  let approverRoles: unknown
+  try {
+    schemaJson = JSON.parse(row.schemaJson)
+  } catch {
+    throw new InternalError("invalid schema_json data")
+  }
+  try {
+    approverRoles = JSON.parse(row.approverRoles)
+  } catch {
+    throw new InternalError("invalid approver_roles data")
+  }
+
   const responseBody = {
     code: row.code,
     name: row.name,
     category: row.category,
     description: row.description,
-    schema_json: JSON.parse(row.schemaJson),
-    approver_roles: JSON.parse(row.approverRoles),
+    schema_json: schemaJson,
+    approver_roles: approverRoles,
   }
 
   return c.json(responseBody, 200)
