@@ -1,5 +1,6 @@
 import { CreateSurvey } from "@/application/survey/create-survey"
 import { Survey } from "@/domain/survey/survey"
+import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
@@ -14,7 +15,7 @@ export const POST = factory.createHandlers(
     z.object({
       title: z.string().min(1).max(500),
       status: z.enum(["open", "closed"]),
-      questions_json: z.array(z.unknown()),
+      questions_json: z.array(surveyQuestionSchema).max(100),
     }),
   ),
   async (c) => {
