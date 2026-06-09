@@ -2,8 +2,13 @@ import { z } from "zod"
 
 const jwtPayloadSchema = z.object({ exp: z.number() })
 
-// JWT が読めない/期限切れのときのフォールバック（従来値の 8 時間）。
+// exp を読めないとき（非 JWT・payload 不正・exp 欠落）のフォールバック（従来値の 8 時間）。
 const fallbackSeconds = 60 * 60 * 8
+
+// exp は読めたが既に期限切れのときの maxAge（秒）。8 時間の cookie を立てると
+// 失効トークンで API が 401 を返し続け、ログインへ飛ばされる無意味な状態になるため、
+// 即時失効に近い 1 秒にする。
+const expiredSeconds = 1
 
 // session cookie の maxAge を JWT の exp（秒）から算出する。
 // API 側で JWT 寿命を変えても cookie が追従し、「cookie 有効・JWT 失効」の窓を作らない。
@@ -26,7 +31,8 @@ export function sessionMaxAge(token: string): number {
 
     const remainingSeconds = parsed.data.exp - Math.floor(Date.now() / 1000)
 
-    return remainingSeconds > 0 ? remainingSeconds : fallbackSeconds
+    // 読めたが期限切れ（<= 0）と、そもそも読めない（fallback）は性質が違うので分ける。
+    return remainingSeconds > 0 ? remainingSeconds : expiredSeconds
   } catch {
     return fallbackSeconds
   }
