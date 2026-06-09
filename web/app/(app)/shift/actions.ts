@@ -173,7 +173,7 @@ export async function createShiftPatternAction(
 
   const breakMinutes = breakMinutesText === "" ? null : Number(breakMinutesText)
 
-  if (breakMinutes !== null && Number.isInteger(breakMinutes) === false) {
+  if (breakMinutes !== null && (Number.isInteger(breakMinutes) === false || breakMinutes < 0)) {
     return { ok: false, error: "休憩時間は整数で入力してください" }
   }
 
@@ -342,7 +342,7 @@ function toPatternFields(
 
   const breakMinutes = breakText === "" ? 0 : Number(breakText)
 
-  if (Number.isInteger(breakMinutes) === false) {
+  if (Number.isInteger(breakMinutes) === false || breakMinutes < 0) {
     return new Error("休憩時間は整数で入力してください")
   }
 
