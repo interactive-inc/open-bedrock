@@ -18,15 +18,20 @@ export type NotTraveler = { reason: "not_traveler" }
 
 export type NotModifiable = { reason: "not_modifiable" }
 
+export type OverlappingTrip = { reason: "overlapping_trip" }
+
 /**
  * 出張申請の行き先・期間・目的・概算費用を変更する。本人以外と、承認済み申請の変更を拒否する。
+ * 変更後の期間が他の出張申請と重複する場合も拒否する。
  */
 export class UpdateBusinessTrip {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<BusinessTrip | BusinessTripNotFound | NotTraveler | NotModifiable | Error> {
+  ): Promise<
+    BusinessTrip | BusinessTripNotFound | NotTraveler | NotModifiable | OverlappingTrip | Error
+  > {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
     const current = await businessTripRepository.findById(command.businessTripId)
@@ -45,6 +50,21 @@ export class UpdateBusinessTrip {
 
     if (!current.isModifiable) {
       return { reason: "not_modifiable" }
+    }
+
+    const overlapping = await businessTripRepository.findOverlapping({
+      travelerId: command.travelerId,
+      startDate: command.startDate,
+      endDate: command.endDate,
+      excludeBusinessTripId: command.businessTripId,
+    })
+
+    if (overlapping instanceof Error) {
+      return overlapping
+    }
+
+    if (overlapping.length > 0) {
+      return { reason: "overlapping_trip" }
     }
 
     const updated = current.withDetails({
