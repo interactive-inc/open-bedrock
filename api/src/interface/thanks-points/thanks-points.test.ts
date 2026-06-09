@@ -378,47 +378,74 @@ describe("redemption", () => {
     expect(second.status).toBe(409)
   })
 
-  test("prevents draining the balance below zero across two redemptions", async () => {
+  test("rejects a second redemption request while a pending one exists", async () => {
     const db = await createTestDb()
 
     await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
 
     const rewardId = await createReward({ db, pointCost: 60 })
 
-    const requestRedemption = async () => {
-      const requested = await request({
-        db,
-        path: "/thanks/redemptions",
-        token: await recipientToken(),
-        method: "POST",
-        body: { reward_id: rewardId },
-      })
+    const first = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
 
-      return z.object({ id: z.number() }).parse(await requested.json()).id
-    }
+    expect(first.status).toBe(201)
 
-    const firstId = await requestRedemption()
+    // pending が既に存在するため 2 件目は 409 で弾かれる。
+    const second = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
 
-    const secondId = await requestRedemption()
+    expect(second.status).toBe(409)
+  })
 
-    const firstApprove = await request({
+  test("allows a new redemption after the previous pending is resolved", async () => {
+    const db = await createTestDb()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 200 })
+
+    const rewardId = await createReward({ db, pointCost: 60 })
+
+    const first = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    expect(first.status).toBe(201)
+
+    const firstId = z.object({ id: z.number() }).parse(await first.json()).id
+
+    // 1 件目を承認して pending を解消する。
+    const approved = await request({
       db,
       path: `/thanks/redemptions/${firstId}/approve`,
       token: await adminToken(),
       method: "POST",
     })
 
-    expect(firstApprove.status).toBe(200)
+    expect(approved.status).toBe(200)
 
-    // 残高 100 から 60 を確定済み。2件目は残高 40 で 60 を要するため弾く。
-    const secondApprove = await request({
+    // pending が無くなったので 2 件目を申請できる。
+    const second = await request({
       db,
-      path: `/thanks/redemptions/${secondId}/approve`,
-      token: await adminToken(),
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
       method: "POST",
+      body: { reward_id: rewardId },
     })
 
-    expect(secondApprove.status).toBe(409)
+    expect(second.status).toBe(201)
   })
 
   test("rejecting a redemption keeps the balance intact", async () => {
@@ -496,55 +523,32 @@ describe("redemption", () => {
 })
 
 describe("atomicity", () => {
-  // 残高100で各60の別 pending 2件を同一初期残高に対して両方発行し、両方の承認を同時に投げる。
-  // どちらの実行順でも、合計超過分(120>100)は必ず弾かれ 1 件だけ fulfilled・残高は 40 で負にならない。
-  test("two redemptions from the same balance: exactly one fulfills, balance never goes negative", async () => {
+  // 同一社員の同時申請。pending が 1 件しか作られないことを確認する。
+  test("concurrent redemption requests from the same employee: exactly one succeeds", async () => {
     const db = await createTestDb()
 
     await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
 
     const rewardId = await createReward({ db, pointCost: 60, stock: null })
 
-    const requestRedemption = async () => {
-      const requested = await request({
+    const recipientTokenValue = await recipientToken()
+
+    const requestOnce = () =>
+      request({
         db,
         path: "/thanks/redemptions",
-        token: await recipientToken(),
+        token: recipientTokenValue,
         method: "POST",
         body: { reward_id: rewardId },
       })
 
-      return z.object({ id: z.number() }).parse(await requested.json()).id
-    }
-
-    const firstId = await requestRedemption()
-
-    const secondId = await requestRedemption()
-
-    const adminTokenValue = await adminToken()
-
-    const approve = (id: number) =>
-      request({
-        db,
-        path: `/thanks/redemptions/${id}/approve`,
-        token: adminTokenValue,
-        method: "POST",
-      })
-
-    const responses = await Promise.all([approve(firstId), approve(secondId)])
+    const responses = await Promise.all([requestOnce(), requestOnce()])
 
     const statuses = responses
       .map((response) => response.status)
       .sort((left, right) => left - right)
 
-    expect(statuses).toEqual([200, 409])
-
-    const balance = await request({ db, path: "/thanks/balance/me", token: await recipientToken() })
-
-    const parsed = z.object({ balance_points: z.number() }).parse(await balance.json())
-
-    expect(parsed.balance_points).toBe(40)
-    expect(parsed.balance_points).toBeGreaterThanOrEqual(0)
+    expect(statuses).toEqual([201, 409])
   })
 
   // 原資400で各300の感謝2件を同時送付。合計600>400なので片方は原資不足で弾かれ、残量は負にならない。
