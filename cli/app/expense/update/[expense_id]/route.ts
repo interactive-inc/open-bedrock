@@ -39,6 +39,8 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
+    // 4xx/5xx は createClient の fetch ラッパーが ApiError として throw するため、
+    // ここでの response.ok チェックは不要（到達時は必ず成功）。
     const response = await client.expenses[":id"].$put({
       param: { id: expenseId },
       json: {
@@ -48,10 +50,6 @@ export default factory.createHandlers(
         note: query.note ?? null,
       },
     })
-
-    if (response.status >= 400) {
-      throw new UsageError("経費の変更に失敗しました")
-    }
 
     return c.json(await response.json())
   },
