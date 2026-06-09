@@ -10,11 +10,19 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      resignation_date: isoDate,
-      last_working_date: isoDate.nullable().optional(),
-      reason: z.string().min(1).max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        resignation_date: isoDate,
+        last_working_date: isoDate.nullable().optional(),
+        reason: z.string().min(1).max(3_000).nullable().optional(),
+      })
+      .refine(
+        (data) => data.last_working_date == null || data.last_working_date <= data.resignation_date,
+        {
+          message: "last_working_date must be on or before resignation_date",
+          path: ["last_working_date"],
+        },
+      ),
   ),
   async (c) => {
     const viewer = c.var.session

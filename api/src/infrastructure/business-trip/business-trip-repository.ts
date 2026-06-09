@@ -1,10 +1,38 @@
 import { BusinessTrip } from "@/domain/business-trip/business-trip"
 import type { Context } from "@/env"
 import { businessTrips } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq, lte, gte, ne } from "drizzle-orm"
 
 export class BusinessTripRepository {
   constructor(private readonly c: Context) {}
+
+  // 同一申請者で期間が重複する出張申請を返す。
+  async findOverlapping(query: {
+    travelerId: number
+    startDate: string
+    endDate: string
+    excludeBusinessTripId: string | null
+  }): Promise<ReadonlyArray<BusinessTrip> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(businessTrips)
+        .where(
+          and(
+            eq(businessTrips.travelerId, query.travelerId),
+            lte(businessTrips.startDate, query.endDate),
+            gte(businessTrips.endDate, query.startDate),
+            query.excludeBusinessTripId === null
+              ? undefined
+              : ne(businessTrips.id, query.excludeBusinessTripId),
+          ),
+        )
+
+      return rows.map((row) => BusinessTrip.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load business_trips")
+    }
+  }
 
   // 申請者本人の出張申請を開始日の昇順で返す。
   async findByTravelerId(travelerId: number): Promise<ReadonlyArray<BusinessTrip> | Error> {

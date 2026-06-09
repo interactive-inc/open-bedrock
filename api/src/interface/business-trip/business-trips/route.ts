@@ -2,7 +2,7 @@ import { CreateBusinessTrip } from "@/application/business-trip/create-business-
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ConflictError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -15,7 +15,7 @@ export const POST = factory.createHandlers(
       start_date: isoDate,
       end_date: isoDate,
       purpose: z.string().min(1).max(3_000),
-      estimated_cost: z.number().int().nullable().optional(),
+      estimated_cost: z.number().int().nonnegative().nullable().optional(),
     }),
   ),
   async (c) => {
@@ -39,6 +39,10 @@ export const POST = factory.createHandlers(
 
     if (businessTrip instanceof Error) {
       throw new InternalError("failed to create business trip")
+    }
+
+    if ("reason" in businessTrip) {
+      throw new ConflictError("overlapping business trip already exists")
     }
 
     const responseBody = {
