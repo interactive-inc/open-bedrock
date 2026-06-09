@@ -10,14 +10,27 @@ export type Command = {
   createdAt: string
 }
 
+export type AlreadyRequested = { kind: "already_requested" }
+
 /**
  * 退職申請を作成する。status は "requested" で登録する。
+ * 同一社員の PENDING（requested）申請が既に存在する場合は重複として拒否する。
  */
 export class CreateResignation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Resignation | Error> {
+  async run(command: Command): Promise<Resignation | AlreadyRequested | Error> {
     const resignationRepository = new ResignationRepository(this.c)
+
+    const existing = await resignationRepository.findPendingByEmployeeId(command.employeeId)
+
+    if (existing instanceof Error) {
+      return existing
+    }
+
+    if (existing !== null) {
+      return { kind: "already_requested" }
+    }
 
     const resignation = Resignation.create({
       employeeId: command.employeeId,
