@@ -1,6 +1,5 @@
 import type { LeaveRequest } from "@/domain/leave/leave-request"
 import type { Context } from "@/env"
-import { LeaveBalanceRepository } from "@/infrastructure/leave/leave-balance-repository"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
 export type Command = {
@@ -37,8 +36,6 @@ export class DecideLeaveRequest {
   > {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
 
-    const leaveBalanceRepository = new LeaveBalanceRepository(this.c)
-
     const existing = await leaveRequestRepository.findById(command.leaveRequestId)
 
     if (existing instanceof Error) {
@@ -51,7 +48,33 @@ export class DecideLeaveRequest {
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
 
-    // pending からの条件付き UPDATE。決定済みは 0 行更新（null）となり、再決定と残数の二重減算を防ぐ。
+    if (command.action === "approve") {
+      const approved = await leaveRequestRepository.approveFromPendingAndConsumeBalance({
+        leaveRequestId: command.leaveRequestId,
+        approverId: command.approverId,
+        decidedComment: command.comment,
+        fiscalYear: command.fiscalYear,
+      })
+
+      if (approved instanceof Error) {
+        return approved
+      }
+
+      if (approved === "already_decided") {
+        return { failure: "already_decided" }
+      }
+
+      if (approved === "balance_not_found") {
+        return { failure: "balance_not_found" }
+      }
+
+      if (approved === "insufficient_balance") {
+        return { failure: "insufficient_balance" }
+      }
+
+      return approved
+    }
+
     const decided = await leaveRequestRepository.decideFromPending({
       leaveRequestId: command.leaveRequestId,
       status: nextStatus,
@@ -65,41 +88,6 @@ export class DecideLeaveRequest {
 
     if (decided === null) {
       return { failure: "already_decided" }
-    }
-
-    // pending から approved に確定できたときだけ残数を減算する。
-    if (command.action === "approve") {
-      // 残数レコードが存在するか確認する。不在の場合は承認を拒否する。
-      const balance = await leaveBalanceRepository.findByKey({
-        employeeId: decided.employeeId,
-        leaveType: decided.leaveType,
-        fiscalYear: command.fiscalYear,
-      })
-
-      if (balance instanceof Error) {
-        return balance
-      }
-
-      if (balance === null) {
-        return { failure: "balance_not_found" }
-      }
-
-      // アトミック UPDATE で残数を減算する。remaining_days >= days の条件付きで
-      // 0 行更新は残数不足。
-      const outcome = await leaveBalanceRepository.consumeDays({
-        employeeId: decided.employeeId,
-        leaveType: decided.leaveType,
-        fiscalYear: command.fiscalYear,
-        days: decided.days,
-      })
-
-      if (outcome instanceof Error) {
-        return outcome
-      }
-
-      if (outcome === "insufficient") {
-        return { failure: "insufficient_balance" }
-      }
     }
 
     return decided
