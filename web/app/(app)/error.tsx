@@ -11,7 +11,7 @@ type Props = {
 // 保護領域のエラーバウンダリ。AppShell 内で未ハンドル例外時に回復導線を出す。
 export default function AppError(props: Props) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+    <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-6 text-center">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">問題が発生しました</h1>
 
