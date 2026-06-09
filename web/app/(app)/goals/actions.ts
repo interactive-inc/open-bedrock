@@ -151,6 +151,7 @@ export async function createGoalEvaluationAction(
 }
 
 // weight の FormData 値を数値へ。未入力や不正値は api 既定の 10 を使う。
+// 0 以下の値は不正とみなしデフォルトへフォールバックする。
 function toWeight(value: FormDataEntryValue | null): number {
   if (typeof value !== "string" || value === "") {
     return 10
@@ -158,7 +159,7 @@ function toWeight(value: FormDataEntryValue | null): number {
 
   const parsed = Number(value)
 
-  if (Number.isNaN(parsed)) {
+  if (!Number.isFinite(parsed) || parsed <= 0) {
     return 10
   }
 
