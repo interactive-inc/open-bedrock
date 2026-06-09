@@ -12,6 +12,7 @@ import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, eq } from "drizzle-orm"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 const kindQuerySchema = z.enum(["join", "leave"]).optional()
 
@@ -60,7 +61,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       name: z.string().min(1).max(500),
       kind: z.enum(["join", "leave"]),
       description: z.string().max(3_000).nullable().optional(),

@@ -8,3 +8,6 @@ export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD 形�
 // YYYY-MM 形式の月次期間。payslip の (employee_id, period) 一意索引が
 // 「2026-1」と「2026-01」を別キーとして取り込んでしまうのを防ぐ。
 export const yearMonth = z.string().regex(/^\d{4}-\d{2}$/, "YYYY-MM 形式で入力してください")
+
+// コード・識別子フィールド共通。空文字と長すぎる値を弾く。
+export const codeSchema = z.string().min(1).max(200)

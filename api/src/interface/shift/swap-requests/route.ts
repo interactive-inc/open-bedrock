@@ -15,6 +15,7 @@ import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // GET /shift/swap-requests — 承認権限者向けの保留中のシフト交代申請一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -61,7 +62,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      target_employee_code: z.string().min(1),
+      target_employee_code: codeSchema,
       date: isoDate,
       note: z.string().max(3_000).optional(),
     }),

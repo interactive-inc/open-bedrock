@@ -19,6 +19,7 @@ import { employees, thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, inArray } from "drizzle-orm"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // GET /thanks — 全従業員が閲覧する感謝のタイムライン（新着順・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -76,7 +77,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      recipient_employee_code: z.string().min(1),
+      recipient_employee_code: codeSchema,
       message: z.string().min(1).max(1_000),
       // 任意で添えるサンクスポイント。未指定はメッセージのみの感謝。
       points: z.number().int().nonnegative().nullable().optional(),

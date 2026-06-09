@@ -4,6 +4,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // PUT /skills/me — 本人のスキルを登録・更新（スキルマスタ結合済みを返す）
 export const PUT = factory.createHandlers(
@@ -11,7 +12,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      skill_code: z.string().min(1),
+      skill_code: codeSchema,
       level: z.number().int().min(1).max(10),
       years: z.number().int().nonnegative().nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),
