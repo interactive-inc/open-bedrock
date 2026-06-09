@@ -32,17 +32,11 @@ const initialState: AssetUpdateFormState = { ok: false, error: null }
 export function AssetEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 
-  const action = useActionState(updateAssetAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast し、成功時は Dialog を閉じる。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await updateAssetAction(state, formData)
+  async function reduce(
+    previousState: AssetUpdateFormState,
+    formData: FormData,
+  ): Promise<AssetUpdateFormState> {
+    const result = await updateAssetAction(previousState, formData)
 
     if (result.ok) {
       toast.success("物品を更新しました")
@@ -52,8 +46,16 @@ export function AssetEditForm(props: Props) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
+
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -66,7 +68,7 @@ export function AssetEditForm(props: Props) {
           <DialogDescription>名称・種別・シリアル・購入日を変更します。</DialogDescription>
         </DialogHeader>
 
-        <form action={handleAction} className="flex flex-col gap-4">
+        <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="code" value={props.code} />
 
           <FieldGroup>

@@ -16,17 +16,11 @@ const selectClassName =
 // 従業員登録フォーム。コード・氏名・メール・初期パスワード・ロール・在籍状況を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function EmployeeCreateForm() {
-  const action = useActionState(createEmployeeAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await createEmployeeAction(state, formData)
+  async function reduce(
+    previousState: EmployeeCreateFormState,
+    formData: FormData,
+  ): Promise<EmployeeCreateFormState> {
+    const result = await createEmployeeAction(previousState, formData)
 
     if (result.ok) {
       toast.success("従業員を登録しました")
@@ -34,11 +28,19 @@ export function EmployeeCreateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="employee-code">従業員コード</FieldLabel>

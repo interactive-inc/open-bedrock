@@ -15,25 +15,27 @@ const initialState: RoomDeleteFormState = { ok: false, error: null }
 
 // 会議室削除ボタン。成功時は Server Action 側で /rooms/manage へ遷移する。
 export function RoomDeleteButton(props: Props) {
-  const action = useActionState(deleteRoomAction, initialState)
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。失敗時のみ toast する（成功時は遷移するため戻らない）。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await deleteRoomAction(initialState, formData)
+  async function reduce(
+    previousState: RoomDeleteFormState,
+    formData: FormData,
+  ): Promise<RoomDeleteFormState> {
+    const result = await deleteRoomAction(previousState, formData)
 
     if (result.error !== null) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <input type="hidden" name="id" value={props.id} />
 
       <Button type="submit" variant="destructive" size="sm" disabled={isPending}>

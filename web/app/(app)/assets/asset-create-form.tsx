@@ -13,17 +13,11 @@ const initialState: AssetCreateFormState = { ok: false, error: null }
 // 物品登録フォーム。コード・名称・種別・任意のシリアル/購入日を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function AssetCreateForm() {
-  const action = useActionState(createAssetAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await createAssetAction(state, formData)
+  async function reduce(
+    previousState: AssetCreateFormState,
+    formData: FormData,
+  ): Promise<AssetCreateFormState> {
+    const result = await createAssetAction(previousState, formData)
 
     if (result.ok) {
       toast.success("物品を登録しました")
@@ -31,11 +25,19 @@ export function AssetCreateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="asset-code">資産コード</FieldLabel>

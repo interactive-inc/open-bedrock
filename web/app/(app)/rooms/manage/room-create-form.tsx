@@ -13,17 +13,11 @@ const initialState: RoomCreateFormState = { ok: false, error: null }
 // 会議室登録フォーム。名称・定員・任意の所在地を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function RoomCreateForm() {
-  const action = useActionState(createRoomAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await createRoomAction(state, formData)
+  async function reduce(
+    previousState: RoomCreateFormState,
+    formData: FormData,
+  ): Promise<RoomCreateFormState> {
+    const result = await createRoomAction(previousState, formData)
 
     if (result.ok) {
       toast.success("会議室を登録しました")
@@ -31,11 +25,19 @@ export function RoomCreateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="room-name">名称</FieldLabel>

@@ -16,17 +16,11 @@ const initialState: AssetReturnFormState = { ok: false, error: null }
 // 物品返却フォーム。貸与中の物品にだけ表示する想定。ボタン 1 つで返却する。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function AssetReturnForm(props: Props) {
-  const action = useActionState(returnAssetAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await returnAssetAction(state, formData)
+  async function reduce(
+    previousState: AssetReturnFormState,
+    formData: FormData,
+  ): Promise<AssetReturnFormState> {
+    const result = await returnAssetAction(previousState, formData)
 
     if (result.ok) {
       toast.success("返却しました")
@@ -34,11 +28,19 @@ export function AssetReturnForm(props: Props) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction} className="flex flex-col gap-2">
+    <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="code" value={props.code} />
 
       <Button type="submit" size="sm" variant="outline" disabled={isPending}>

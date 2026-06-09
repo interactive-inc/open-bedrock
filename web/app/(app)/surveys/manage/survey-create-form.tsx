@@ -15,17 +15,11 @@ const initialState: SurveyFormState = { ok: false, error: null }
 // アンケート登録フォーム。タイトル・状態・設問 JSON を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function SurveyCreateForm() {
-  const action = useActionState(createSurveyAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await createSurveyAction(state, formData)
+  async function reduce(
+    previousState: SurveyFormState,
+    formData: FormData,
+  ): Promise<SurveyFormState> {
+    const result = await createSurveyAction(previousState, formData)
 
     if (result.ok) {
       toast.success("アンケートを作成しました")
@@ -33,11 +27,19 @@ export function SurveyCreateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="survey-title">タイトル</FieldLabel>
