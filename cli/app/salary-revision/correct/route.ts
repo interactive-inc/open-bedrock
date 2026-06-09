@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -32,7 +33,7 @@ export default factory.createHandlers(
       param: { id: query.id },
       json: {
         effective_date: query.effective,
-        new_base_salary: Number(query["new-base-salary"]),
+        new_base_salary: toFiniteNumber(query["new-base-salary"], "--new-base-salary"),
         reason: query.reason ?? null,
       },
     })
