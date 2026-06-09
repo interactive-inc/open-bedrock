@@ -1,4 +1,5 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { decoyPasswordHash } from "@/domain/auth/decoy-password-hash"
 import { isLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
 import { toPasswordHash } from "@/domain/auth/to-password-hash"
 import { verifyPassword } from "@/domain/auth/verify-password"
@@ -33,6 +34,9 @@ export class AuthenticateEmployee {
     }
 
     if (found === null) {
+      // ユーザー列挙のタイミング差を消すため、実在ユーザーと同じ PBKDF2 検証コストを払う（#212）。
+      await verifyPassword(command.password, decoyPasswordHash)
+
       return { reason: "invalid_credentials" }
     }
 

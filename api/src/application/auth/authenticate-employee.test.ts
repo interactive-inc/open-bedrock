@@ -65,6 +65,18 @@ describe("AuthenticateEmployee", () => {
     expect(result).toEqual({ reason: "invalid_credentials" })
   })
 
+  test("returns invalid_credentials for an unknown email", async () => {
+    const { context } = createTestContext()
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+absent@example.com",
+      password: "whatever",
+      jwtSecret,
+    })
+
+    expect(result).toEqual({ reason: "invalid_credentials" })
+  })
+
   test("authenticates against a legacy hash and rehashes to the new format", async () => {
     const { context, db } = createTestContext()
 
