@@ -69,7 +69,7 @@ export const PUT = factory.createHandlers(
     z.object({
       period: z.string().min(1).max(100),
       title: z.string().min(1).max(500),
-      weight: z.number(),
+      weight: z.number().int().min(1).max(100),
       kpi: z.string().max(3_000).nullable().optional(),
     }),
   ),

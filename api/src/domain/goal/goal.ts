@@ -7,7 +7,7 @@ const zProps = z.object({
   period: z.string(),
   title: z.string(),
   kpi: z.string().nullable(),
-  weight: z.number(),
+  weight: z.number().int().min(1).max(100),
   status: z.string(),
 })
 
