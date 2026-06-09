@@ -18,6 +18,8 @@ export type AssignmentNotFound = { reason: "assignment_not_found" }
 
 export type PatternNotFound = { reason: "pattern_not_found" }
 
+export type AlreadyPublished = { reason: "already_published" }
+
 type ResolvedPattern = { patternId: number | null }
 
 /**
@@ -28,7 +30,9 @@ export class UpdateShiftAssignment {
 
   async run(
     input: Input,
-  ): Promise<ShiftAssignment | Forbidden | AssignmentNotFound | PatternNotFound | Error> {
+  ): Promise<
+    ShiftAssignment | Forbidden | AssignmentNotFound | PatternNotFound | AlreadyPublished | Error
+  > {
     if (canManageShift(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -43,6 +47,10 @@ export class UpdateShiftAssignment {
 
     if (current === null) {
       return { reason: "assignment_not_found" }
+    }
+
+    if (current.isModifiable === false) {
+      return { reason: "already_published" }
     }
 
     const resolved = await this.resolvePatternId(input.patternCode)

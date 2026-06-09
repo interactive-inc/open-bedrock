@@ -1,5 +1,10 @@
 import { AssignOnboarding } from "@/application/onboarding/assign-onboarding"
-import { InternalError, NotFoundError } from "@/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -17,8 +22,14 @@ export const POST = factory.createHandlers(
   ),
   async (c) => {
     const json = c.req.valid("json")
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
 
     const result = await new AssignOnboarding(c).run({
+      viewerRole: viewer.role,
       employeeCode: json.employee_code,
       templateCode: json.template_code,
       assignedAt: c.env.NOW ?? new Date().toISOString(),
@@ -29,6 +40,9 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in result) {
+      if (result.reason === "forbidden") {
+        throw new ForbiddenError("not authorized")
+      }
       throw new NotFoundError(result.reason)
     }
 
