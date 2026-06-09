@@ -22,7 +22,11 @@ export async function loadConfig(): Promise<KarteConfig> {
     try {
       return (await file.json()) as KarteConfig
     } catch {
-      // 設定ファイルが壊れていても CLI を起動できるよう既定値にフォールバックする。
+      // 設定ファイルが壊れていても CLI を起動できるよう既定値にフォールバックし、
+      // raw stack trace でなく警告を stderr に出す。
+      process.stderr.write(
+        "warning: ~/.karte/config.json を解析できませんでした。既定設定で続行します\n",
+      )
       return { base_url: DEFAULT_BASE_URL, token: null }
     }
   }
