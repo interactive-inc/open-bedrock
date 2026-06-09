@@ -1,5 +1,6 @@
 import { SubmitExpense } from "@/application/expense/submit-expense"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
@@ -13,7 +14,7 @@ export const POST = factory.createHandlers(
     z.object({
       category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
       amount: z.number().positive().int().safe(),
-      spent_at: z.string().min(1),
+      spent_at: isoDate,
       note: z.string().max(3_000).optional(),
     }),
   ),

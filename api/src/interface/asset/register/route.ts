@@ -1,5 +1,6 @@
 import { RegisterAsset } from "@/application/asset/register-asset"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
@@ -20,7 +21,7 @@ export const POST = factory.createHandlers(
       name: z.string().min(1).max(200),
       kind: z.enum(["pc", "monitor", "furniture", "other"]),
       serial: z.string().max(200).optional(),
-      purchased_on: z.string().optional(),
+      purchased_on: isoDate.optional(),
     }),
   ),
   async (c) => {

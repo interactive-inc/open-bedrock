@@ -1,6 +1,7 @@
 import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { assets } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -53,7 +54,7 @@ export const PUT = factory.createHandlers(
       name: z.string().min(1).max(200),
       kind: z.enum(["pc", "monitor", "furniture", "other"]),
       serial: z.string().max(200).optional(),
-      purchased_on: z.string().optional(),
+      purchased_on: isoDate.optional(),
     }),
   ),
   async (c) => {

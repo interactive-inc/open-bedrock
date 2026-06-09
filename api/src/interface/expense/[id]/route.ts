@@ -4,6 +4,7 @@ import { canDecideExpense } from "@/domain/expense/can-decide-expense"
 import type { Expense } from "@/domain/expense/expense"
 import { toExpenseId } from "@/domain/expense/to-expense-id"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -88,7 +89,7 @@ export const PUT = factory.createHandlers(
     z.object({
       category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
       amount: z.number().positive().int().safe(),
-      spent_at: z.string().min(1),
+      spent_at: isoDate,
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),
