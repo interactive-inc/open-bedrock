@@ -5,11 +5,17 @@ import { hc } from "hono/client"
 // ネットワーク失敗（接続拒否・DNS 失敗・タイムアウト）を 503 Response に変換する。
 // hc は fetch の例外をそのまま投げ、未ハンドル例外が Next.js に伝播して汎用 500 になる。
 // 503 に変換することで各 API 関数の status/ok 判定に乗り、Error として扱える。
+// 変換するのはネットワーク失敗（fetch は TypeError を投げる）のみ。不正 URL 等の
+// プログラミングエラーまで 503 に握り潰さないよう、それ以外は再 throw する。
 const fetchWithNetworkGuard: typeof fetch = async (input, init) => {
   try {
     return await fetch(input, init)
-  } catch {
-    return Response.json({ error: "api unreachable" }, { status: 503 })
+  } catch (error) {
+    if (error instanceof TypeError) {
+      return Response.json({ error: "api unreachable" }, { status: 503 })
+    }
+
+    throw error
   }
 }
 
