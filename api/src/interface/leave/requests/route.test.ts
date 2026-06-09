@@ -131,6 +131,52 @@ describe("POST /leave/requests", () => {
     }
   })
 
+  test("returns 409 when an overlapping pending request already exists", async () => {
+    // seed の申請 1 は employee 5・2026-06-01〜2026-06-03・pending。
+    const response = await request({
+      path: "/leave/requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-06-02",
+        end_date: "2026-06-04",
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("treats a shared boundary date as an overlap", async () => {
+    const response = await request({
+      path: "/leave/requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-06-03",
+        end_date: "2026-06-05",
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("allows a request that starts immediately after an existing one", async () => {
+    const response = await request({
+      path: "/leave/requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-06-04",
+        end_date: "2026-06-06",
+      },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
   test("returns 400 when the end date precedes the start date", async () => {
     const response = await request({
       path: "/leave/requests",

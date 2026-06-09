@@ -1,7 +1,7 @@
 import { LeaveRequest } from "@/domain/leave/leave-request"
 import type { Context } from "@/env"
 import { leaveRequests } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { and, eq, gte, inArray, lte } from "drizzle-orm"
 
 export class LeaveRequestRepository {
   constructor(private readonly c: Context) {}
@@ -19,6 +19,33 @@ export class LeaveRequestRepository {
       return row === undefined ? null : LeaveRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load leave_request")
+    }
+  }
+
+  // 同一社員の未却下（pending/approved）申請のうち、指定期間と重なるものを返す。
+  // 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
+  // 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
+  async findOverlapping(props: {
+    employeeId: number
+    startDate: string
+    endDate: string
+  }): Promise<ReadonlyArray<LeaveRequest> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(leaveRequests)
+        .where(
+          and(
+            eq(leaveRequests.employeeId, props.employeeId),
+            inArray(leaveRequests.status, ["pending", "approved"]),
+            lte(leaveRequests.startDate, props.endDate),
+            gte(leaveRequests.endDate, props.startDate),
+          ),
+        )
+
+      return rows.map((row) => LeaveRequest.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to query leave_request overlap")
     }
   }
 
