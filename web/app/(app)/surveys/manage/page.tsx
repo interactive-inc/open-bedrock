@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { SurveyCreateForm } from "@/app/(app)/surveys/manage/survey-create-form"
 import { SurveyDeleteButton } from "@/app/(app)/surveys/manage/survey-delete-button"
@@ -15,13 +16,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { getMe } from "@/lib/api/get-me"
 import { getSurveyList } from "@/lib/api/get-survey-list"
+import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 export const metadata = { title: "サーベイ管理" }
 
 // サーベイ管理画面（/surveys/manage）。管理者がアンケートを作成・編集・削除する。
 // 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
-export default function SurveyManagePage() {
+// 非特権ロールは notFound で弾く（defense-in-depth）。
+export default async function SurveyManagePage() {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageSurveys(me.role)) {
+    notFound()
+  }
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">

@@ -1,12 +1,20 @@
+import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { BatchJobList } from "@/app/(app)/batch/batch-job-list"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "バッチ" }
 
 // バッチジョブ状況一覧（/batch）画面。ジョブ名 / 状態 / 最終実行を一覧表示する RSC。
 // データ取得は子の非同期 RSC に委譲し、ここでは Suspense でフォールバックを出す。
-export default function BatchPage() {
+// admin のみアクセス可能（defense-in-depth）。
+export default async function BatchPage() {
+  const me = await getMe()
+
+  if (me instanceof Error || me.role !== "admin") {
+    notFound()
+  }
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
