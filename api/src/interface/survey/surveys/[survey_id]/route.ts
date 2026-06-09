@@ -5,6 +5,7 @@ import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -64,6 +65,10 @@ export const PUT = factory.createHandlers(
     if (updated instanceof Survey === false) {
       if (updated.reason === "survey_not_found") {
         throw new NotFoundError("survey not found")
+      }
+
+      if (updated.reason === "questions_immutable") {
+        throw new ConflictError("questions not modifiable when survey is closed")
       }
 
       throw new ForbiddenError()
