@@ -12,8 +12,8 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       skill_code: z.string().min(1),
-      level: z.number(),
-      years: z.number().nullable().optional(),
+      level: z.number().int().min(1).max(10),
+      years: z.number().int().nonnegative().nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),
