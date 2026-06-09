@@ -17,14 +17,17 @@ describe("toRequest", () => {
   })
 
   test("warns on an unknown short flag and ignores it", () => {
+    // expect が throw しても確実に復元するため try/finally で囲う。
     const spy = spyOn(process.stderr, "write").mockImplementation(() => true)
 
-    const result = toRequest(["foo", "-x"])
+    try {
+      const result = toRequest(["foo", "-x"])
 
-    expect(spy).toHaveBeenCalled()
-    expect(result.path).toBe("/foo")
-    expect(result.body).toEqual({})
-
-    spy.mockRestore()
+      expect(spy).toHaveBeenCalled()
+      expect(result.path).toBe("/foo")
+      expect(result.body).toEqual({})
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

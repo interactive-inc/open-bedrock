@@ -39,7 +39,7 @@ export function toRequest(args: string[]) {
         }
       } else {
         // 未定義の短縮フラグは無視するが、サイレントにせず stderr に警告する。
-        process.stderr.write(`warning: 不明なフラグ ${arg} を無視しました\n`)
+        process.stderr.write(`警告: 不明なフラグ ${arg} を無視しました\n`)
         i++
       }
       continue
