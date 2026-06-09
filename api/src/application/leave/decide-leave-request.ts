@@ -15,6 +15,10 @@ export type LeaveRequestNotFound = { failure: "leave_request_not_found" }
 
 export type AlreadyDecided = { failure: "already_decided" }
 
+export type BalanceNotFound = { failure: "balance_not_found" }
+
+export type InsufficientBalance = { failure: "insufficient_balance" }
+
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
  */
@@ -23,7 +27,14 @@ export class DecideLeaveRequest {
 
   async run(
     command: Command,
-  ): Promise<LeaveRequest | LeaveRequestNotFound | AlreadyDecided | Error> {
+  ): Promise<
+    | LeaveRequest
+    | LeaveRequestNotFound
+    | AlreadyDecided
+    | BalanceNotFound
+    | InsufficientBalance
+    | Error
+  > {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
 
     const leaveBalanceRepository = new LeaveBalanceRepository(this.c)
@@ -58,6 +69,7 @@ export class DecideLeaveRequest {
 
     // pending から approved に確定できたときだけ残数を減算する。
     if (command.action === "approve") {
+      // 残数レコードが存在するか確認する。不在の場合は承認を拒否する。
       const balance = await leaveBalanceRepository.findByKey({
         employeeId: decided.employeeId,
         leaveType: decided.leaveType,
@@ -68,12 +80,25 @@ export class DecideLeaveRequest {
         return balance
       }
 
-      if (balance !== null) {
-        const decremented = await leaveBalanceRepository.update(balance.decrement(decided.days))
+      if (balance === null) {
+        return { failure: "balance_not_found" }
+      }
 
-        if (decremented instanceof Error) {
-          return decremented
-        }
+      // アトミック UPDATE で残数を減算する。remaining_days >= days の条件付きで
+      // 0 行更新は残数不足。
+      const outcome = await leaveBalanceRepository.consumeDays({
+        employeeId: decided.employeeId,
+        leaveType: decided.leaveType,
+        fiscalYear: command.fiscalYear,
+        days: decided.days,
+      })
+
+      if (outcome instanceof Error) {
+        return outcome
+      }
+
+      if (outcome === "insufficient") {
+        return { failure: "insufficient_balance" }
       }
     }
 

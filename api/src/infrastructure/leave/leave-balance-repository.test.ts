@@ -37,7 +37,7 @@ describe("LeaveBalanceRepository", () => {
     expect(found.remainingDays).toBe(15)
   })
 
-  test("update persists the decremented balance", async () => {
+  test("consumeDays atomically decrements the balance", async () => {
     const { context, db } = createTestContext()
 
     await seedD1(db, "leave_balances", [
@@ -53,25 +53,66 @@ describe("LeaveBalanceRepository", () => {
 
     const repository = new LeaveBalanceRepository(context)
 
-    const found = await repository.findByKey({
+    const outcome = await repository.consumeDays({
+      employeeId: 1,
+      leaveType: "annual",
+      fiscalYear: "2026",
+      days: 2,
+    })
+
+    expect(outcome).toBe("consumed")
+
+    const after = await repository.findByKey({
       employeeId: 1,
       fiscalYear: "2026",
       leaveType: "annual",
     })
 
-    if (found instanceof Error || found === null) {
+    if (after instanceof Error || after === null) {
       throw new Error("findByKey failed")
     }
 
-    const updated = await repository.update(found.decrement(2))
+    expect(after.usedDays).toBe(7)
+    expect(after.remainingDays).toBe(13)
+  })
 
-    expect(updated).toBeInstanceOf(LeaveBalance)
+  test("consumeDays returns insufficient when remaining_days < days", async () => {
+    const { context, db } = createTestContext()
 
-    if (updated instanceof Error || updated === null) {
-      throw new Error("update failed")
+    await seedD1(db, "leave_balances", [
+      {
+        employee_id: 1,
+        fiscal_year: "2026",
+        leave_type: "annual",
+        granted_days: 20,
+        used_days: 18,
+        remaining_days: 2,
+      },
+    ])
+
+    const repository = new LeaveBalanceRepository(context)
+
+    const outcome = await repository.consumeDays({
+      employeeId: 1,
+      leaveType: "annual",
+      fiscalYear: "2026",
+      days: 3,
+    })
+
+    expect(outcome).toBe("insufficient")
+
+    // Balance should remain unchanged
+    const after = await repository.findByKey({
+      employeeId: 1,
+      fiscalYear: "2026",
+      leaveType: "annual",
+    })
+
+    if (after instanceof Error || after === null) {
+      throw new Error("findByKey failed")
     }
 
-    expect(updated.usedDays).toBe(7)
-    expect(updated.remainingDays).toBe(13)
+    expect(after.usedDays).toBe(18)
+    expect(after.remainingDays).toBe(2)
   })
 })
