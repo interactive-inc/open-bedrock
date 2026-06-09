@@ -11,6 +11,8 @@ export type Forbidden = { reason: "forbidden" }
 
 export type AssignmentNotFound = { reason: "assignment_not_found" }
 
+export type AlreadyPublished = { reason: "already_published" }
+
 export type Deleted = { reason: "deleted" }
 
 /**
@@ -19,7 +21,9 @@ export type Deleted = { reason: "deleted" }
 export class DeleteShiftAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<Deleted | Forbidden | AssignmentNotFound | Error> {
+  async run(
+    input: Input,
+  ): Promise<Deleted | Forbidden | AssignmentNotFound | AlreadyPublished | Error> {
     if (canManageShift(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -34,6 +38,10 @@ export class DeleteShiftAssignment {
 
     if (current === null) {
       return { reason: "assignment_not_found" }
+    }
+
+    if (current.isModifiable === false) {
+      return { reason: "already_published" }
     }
 
     const deleted = await assignmentRepository.delete(input.assignmentId)
