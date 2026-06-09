@@ -16,11 +16,7 @@
     {
       "name": "open-karte",
       "channel": "open-karte",
-      "options": [
-        "--brief",
-        "--agent",
-        "pm"
-      ],
+      "options": ["--brief", "--agent", "pm"],
       "env": {
         "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
       }
