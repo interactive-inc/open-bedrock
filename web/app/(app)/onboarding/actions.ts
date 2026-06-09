@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cancelOnboardingAssignment } from "@/lib/api/cancel-onboarding-assignment"
 import { createOnboardingTemplate } from "@/lib/api/create-onboarding-template"
 import { deleteOnboardingTemplate } from "@/lib/api/delete-onboarding-template"
+import { getMe } from "@/lib/api/get-me"
 import { postOnboardingAssign } from "@/lib/api/post-onboarding-assign"
 import { postOnboardingTaskComplete } from "@/lib/api/post-onboarding-task-complete"
 import { postOnboardingTaskUncomplete } from "@/lib/api/post-onboarding-task-uncomplete"
@@ -11,6 +12,7 @@ import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignme
 import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
 import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 
 export type AssignState = {
   ok: boolean
@@ -19,10 +21,17 @@ export type AssignState = {
 
 // オンボーディング割当の Server Action。useActionState から呼ばれる。
 // 成功時は employee 画面を再検証し、結果メッセージを state に返す。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function assignOnboardingAction(
   previousState: AssignState,
   formData: FormData,
 ): Promise<AssignState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const employeeCode = formData.get("employee_code")
 
   const templateCode = formData.get("template_code")
@@ -122,10 +131,17 @@ export type AssignmentMutationState = {
 
 // 割り当ての割当日を変更する Server Action。assignment_id と assigned_at を受け取る。
 // 成功時に該当社員の画面を再検証する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function rescheduleOnboardingAssignmentAction(
   previousState: AssignmentMutationState,
   formData: FormData,
 ): Promise<AssignmentMutationState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const rawId = formData.get("assignment_id")
 
   const assignedAt = formData.get("assigned_at")
@@ -162,10 +178,17 @@ export async function rescheduleOnboardingAssignmentAction(
 }
 
 // 割り当てを取り消す Server Action。assignment_id を受け取り、成功時に社員画面を再検証する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function cancelOnboardingAssignmentAction(
   previousState: AssignmentMutationState,
   formData: FormData,
 ): Promise<AssignmentMutationState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const rawId = formData.get("assignment_id")
 
   const employeeCode = formData.get("employee_code")
@@ -245,10 +268,17 @@ function readTemplateForm(formData: FormData): {
 }
 
 // テンプレート作成の Server Action（管理権限）。成功時に一覧を再検証する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,
 ): Promise<TemplateMutationState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const input = readTemplateForm(formData)
 
   if (input === null) {
@@ -267,10 +297,17 @@ export async function createOnboardingTemplateAction(
 }
 
 // テンプレート変更の Server Action（管理権限）。code は hidden input で受け取り変更しない。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,
 ): Promise<TemplateMutationState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const input = readTemplateForm(formData)
 
   if (input === null) {
@@ -293,10 +330,17 @@ export async function updateOnboardingTemplateAction(
 }
 
 // テンプレート削除の Server Action（管理権限）。code を hidden input で受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,
 ): Promise<TemplateMutationState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    return { ok: false, message: "権限がありません" }
+  }
+
   const code = formData.get("code")
 
   if (typeof code !== "string" || code === "") {

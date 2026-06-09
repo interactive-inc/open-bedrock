@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { RoomCreateForm } from "@/app/(app)/rooms/manage/room-create-form"
 import { RoomDeleteButton } from "@/app/(app)/rooms/manage/room-delete-button"
@@ -14,12 +15,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { getMe } from "@/lib/api/get-me"
 import { getRoomList } from "@/lib/api/get-room-list"
+import { canManageRooms } from "@/lib/room/can-manage-rooms"
 
 export const metadata = { title: "会議室マスタ" }
 
 // 会議室マスタ管理画面。管理者が会議室を登録・編集・削除する。RSC でサーバ取得して一覧表示する。
-export default function RoomManagePage() {
+// 非特権ロールは notFound で弾く（defense-in-depth）。
+export default async function RoomManagePage() {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageRooms(me.role)) {
+    notFound()
+  }
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">

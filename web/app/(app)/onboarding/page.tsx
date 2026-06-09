@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { CreateTemplateForm } from "@/app/(app)/onboarding/create-template-form"
 import { OnboardingTemplatesTable } from "@/app/(app)/onboarding/onboarding-templates-table"
 import { MyTasksList } from "@/app/(app)/onboarding/my-tasks-list"
@@ -7,11 +8,19 @@ import { AssignFormSection } from "@/app/(app)/onboarding/assign-form-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getMe } from "@/lib/api/get-me"
+import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 
 export const metadata = { title: "オンボーディング" }
 
 // オンボーディング画面。テンプレ一覧・自分のタスク・割当フォームを Suspense 境界で並べる。
-export default function OnboardingPage() {
+// 非特権ロールは notFound で弾く（defense-in-depth）。
+export default async function OnboardingPage() {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageOnboarding(me.role)) {
+    notFound()
+  }
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">

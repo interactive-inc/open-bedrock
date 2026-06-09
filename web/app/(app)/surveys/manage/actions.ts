@@ -5,8 +5,10 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createSurvey } from "@/lib/api/create-survey"
 import { deleteSurvey } from "@/lib/api/delete-survey"
+import { getMe } from "@/lib/api/get-me"
 import { updateSurvey } from "@/lib/api/update-survey"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 // アンケート作成・編集フォームの useActionState 結果。
 export type SurveyFormState = {
@@ -38,10 +40,17 @@ function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<unknow
 }
 
 // アンケート作成の Server Action。タイトル・状態・設問 JSON を検証して POST する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
 ): Promise<SurveyFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageSurveys(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const titleValue = formData.get("title")
 
   const title = typeof titleValue === "string" ? titleValue : ""
@@ -78,10 +87,17 @@ export async function createSurveyAction(
 }
 
 // アンケート編集の Server Action。id は hidden、タイトル・状態・設問 JSON を更新する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
 ): Promise<SurveyFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageSurveys(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const surveyId = toPositiveIntId(formData.get("id"))
 
   if (surveyId === null) {
@@ -124,10 +140,17 @@ export async function updateSurveyAction(
 }
 
 // アンケート削除の Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
 ): Promise<SurveyFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageSurveys(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const surveyId = toPositiveIntId(formData.get("id"))
 
   if (surveyId === null) {
