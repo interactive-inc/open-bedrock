@@ -15,15 +15,17 @@ export type FamilyCareLeaveNotFound = { reason: "family_care_leave_not_found" }
 
 export type NotApplicant = { reason: "not_applicant" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
- * 休業申出の種別・期間・備考を変更する。本人以外の変更を拒否する。
+ * 休業申出の種別・期間・備考を変更する。本人以外と、承認済み申出の変更を拒否する。
  */
 export class UpdateFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<FamilyCareLeave | FamilyCareLeaveNotFound | NotApplicant | Error> {
+  ): Promise<FamilyCareLeave | FamilyCareLeaveNotFound | NotApplicant | NotModifiable | Error> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const current = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
@@ -38,6 +40,10 @@ export class UpdateFamilyCareLeave {
 
     if (current.employeeId !== command.employeeId) {
       return { reason: "not_applicant" }
+    }
+
+    if (current.status !== "requested") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current.withDetails({
