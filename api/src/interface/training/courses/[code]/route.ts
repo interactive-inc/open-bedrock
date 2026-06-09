@@ -66,7 +66,7 @@ export const PUT = factory.createHandlers(
       title: z.string().min(1).max(500),
       category: z.string().min(1).max(200),
       description: z.string().max(3_000).nullable().optional(),
-      duration_minutes: z.number().nullable().optional(),
+      duration_minutes: z.number().int().positive().nullable().optional(),
       is_required: z.boolean().optional(),
     }),
   ),
