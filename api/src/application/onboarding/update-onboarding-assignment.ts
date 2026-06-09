@@ -15,6 +15,8 @@ export type AssignmentNotFound = { reason: "assignment_not_found" }
 
 export type Forbidden = { reason: "forbidden" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 export type UpdateOnboardingAssignmentResult = {
   assignment: OnboardingAssignment
   employee: Employee
@@ -28,7 +30,9 @@ export class UpdateOnboardingAssignment {
 
   async run(
     command: Command,
-  ): Promise<UpdateOnboardingAssignmentResult | AssignmentNotFound | Forbidden | Error> {
+  ): Promise<
+    UpdateOnboardingAssignmentResult | AssignmentNotFound | Forbidden | NotModifiable | Error
+  > {
     if (canViewEmployeeOnboarding({ viewerRole: command.viewerRole }) === false) {
       return { reason: "forbidden" }
     }
@@ -39,6 +43,10 @@ export class UpdateOnboardingAssignment {
 
     if (current instanceof Error) {
       return { reason: "assignment_not_found" }
+    }
+
+    if (current.status === "completed") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = await assignmentRepository.update(current.withRescheduled(command.assignedAt))

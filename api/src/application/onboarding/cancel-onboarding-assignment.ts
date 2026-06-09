@@ -11,6 +11,8 @@ export type AssignmentNotFound = { reason: "assignment_not_found" }
 
 export type Forbidden = { reason: "forbidden" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 export type Cancelled = { reason: "cancelled" }
 
 /**
@@ -19,7 +21,9 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelOnboardingAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Cancelled | AssignmentNotFound | Forbidden | Error> {
+  async run(
+    command: Command,
+  ): Promise<Cancelled | AssignmentNotFound | Forbidden | NotModifiable | Error> {
     if (canViewEmployeeOnboarding({ viewerRole: command.viewerRole }) === false) {
       return { reason: "forbidden" }
     }
@@ -30,6 +34,10 @@ export class CancelOnboardingAssignment {
 
     if (current instanceof Error) {
       return { reason: "assignment_not_found" }
+    }
+
+    if (current.status === "completed") {
+      return { reason: "not_modifiable" }
     }
 
     const deleted = await assignmentRepository.delete(command.assignmentId)

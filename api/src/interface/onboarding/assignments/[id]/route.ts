@@ -5,6 +5,7 @@ import type { Employee } from "@/domain/employee/employee"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -112,6 +113,10 @@ export const PUT = factory.createHandlers(
         throw new ForbiddenError()
       }
 
+      if (result.reason === "not_modifiable") {
+        throw new ConflictError("assignment is already completed")
+      }
+
       throw new NotFoundError("assignment not found")
     }
 
@@ -144,6 +149,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "forbidden") {
     throw new ForbiddenError()
+  }
+
+  if (result.reason === "not_modifiable") {
+    throw new ConflictError("assignment is already completed")
   }
 
   if (result.reason === "assignment_not_found") {
