@@ -1,4 +1,5 @@
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { canManageBatch } from "@/domain/batch/can-manage-batch"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { batchJobs } from "@/schema"
@@ -8,6 +9,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (session === null) {
     throw new UnauthorizedError()
+  }
+
+  if (canManageBatch(session.role) === false) {
+    throw new ForbiddenError()
   }
 
   const rows = await c.var.database.select().from(batchJobs).orderBy(batchJobs.id)
