@@ -57,9 +57,7 @@ export class RequestRedemption {
       return { reason: "out_of_stock" }
     }
 
-    const hasPending = await redemptionRepository.hasPendingByEmployee(
-      command.employeeId,
-    )
+    const hasPending = await redemptionRepository.hasPendingByEmployee(command.employeeId)
 
     if (hasPending instanceof Error) {
       return hasPending
