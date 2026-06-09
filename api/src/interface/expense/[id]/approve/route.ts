@@ -6,6 +6,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -42,6 +43,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new DecideExpense(c).run({
+      viewerRole: session.role,
       expenseId,
       approverId: session.employeeId,
       action: "approve",
@@ -54,6 +56,12 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in updated) {
+      if (updated.reason === "already_decided") {
+        throw new ConflictError("already decided")
+      }
+      if (updated.reason === "forbidden") {
+        throw new ForbiddenError()
+      }
       throw new NotFoundError("expense not found")
     }
 

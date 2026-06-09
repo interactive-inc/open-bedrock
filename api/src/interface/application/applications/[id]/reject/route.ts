@@ -6,6 +6,7 @@ import { toApplicationId } from "@/domain/application/to-application-id"
 import { zValidator } from "@hono/zod-validator"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -41,6 +42,7 @@ export const POST = factory.createHandlers(
     }
 
     const updated = await new DecideApplication(c).run({
+      viewerRole: session.role,
       applicationId: applicationId,
       approverId: session.employeeId,
       action: "reject",
@@ -53,6 +55,12 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in updated) {
+      if (updated.reason === "already_decided") {
+        throw new ConflictError("already decided")
+      }
+      if (updated.reason === "forbidden") {
+        throw new ForbiddenError()
+      }
       throw new NotFoundError("application not found")
     }
 
