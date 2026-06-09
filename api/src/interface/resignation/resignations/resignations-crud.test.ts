@@ -78,6 +78,15 @@ function applicantToken(): Promise<string> {
   })
 }
 
+// Employee 5 has no pending resignation in seed data.
+function noPendingToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
 async function request(props: {
   path: string
   token: string | null
@@ -113,7 +122,7 @@ describe("POST /resignations", () => {
   test("creates a resignation with status requested", async () => {
     const response = await request({
       path: "/resignations",
-      token: await applicantToken(),
+      token: await noPendingToken(),
       method: "POST",
       body: {
         resignation_date: "2026-12-31",
@@ -130,7 +139,7 @@ describe("POST /resignations", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.employee_id).toBe(4)
+      expect(parsed.data.employee_id).toBe(5)
       expect(parsed.data.last_working_date).toBe("2026-12-20")
     }
   })
@@ -138,7 +147,7 @@ describe("POST /resignations", () => {
   test("creates a resignation with null optional fields", async () => {
     const response = await request({
       path: "/resignations",
-      token: await applicantToken(),
+      token: await noPendingToken(),
       method: "POST",
       body: {
         resignation_date: "2026-12-31",
@@ -155,6 +164,20 @@ describe("POST /resignations", () => {
       expect(parsed.data.last_working_date).toBe(null)
       expect(parsed.data.reason).toBe(null)
     }
+  })
+
+  test("returns 409 when the employee already has a pending resignation", async () => {
+    const response = await request({
+      path: "/resignations",
+      token: await applicantToken(),
+      method: "POST",
+      body: {
+        resignation_date: "2026-12-31",
+        reason: "Duplicate attempt",
+      },
+    })
+
+    expect(response.status).toBe(409)
   })
 
   test("returns 401 without a bearer token", async () => {

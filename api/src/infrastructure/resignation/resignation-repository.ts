@@ -1,7 +1,7 @@
 import { Resignation } from "@/domain/resignation/resignation"
 import type { Context } from "@/env"
 import { resignations } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 export class ResignationRepository {
   constructor(private readonly c: Context) {}
@@ -34,6 +34,22 @@ export class ResignationRepository {
       return row === undefined ? null : Resignation.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load resignation")
+    }
+  }
+
+  // 指定社員の PENDING（requested）状態の退職申請を1件返す。存在しなければ null。
+  async findPendingByEmployeeId(employeeId: number): Promise<Resignation | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(resignations)
+        .where(and(eq(resignations.employeeId, employeeId), eq(resignations.status, "requested")))
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Resignation.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to find pending resignation")
     }
   }
 

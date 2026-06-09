@@ -2,7 +2,7 @@ import { CreateResignation } from "@/application/resignation/create-resignation"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ConflictError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -25,7 +25,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const resignation = await new CreateResignation(c).run({
+    const result = await new CreateResignation(c).run({
       employeeId: viewer.employeeId,
       resignationDate: json.resignation_date,
       lastWorkingDate: json.last_working_date ?? null,
@@ -33,18 +33,22 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (resignation instanceof Error) {
+    if (result instanceof Error) {
       throw new InternalError("failed to create resignation")
     }
 
+    if ("kind" in result) {
+      throw new ConflictError("a pending resignation already exists")
+    }
+
     const responseBody = {
-      id: resignation.id,
-      employee_id: resignation.employeeId,
-      resignation_date: resignation.resignationDate,
-      last_working_date: resignation.lastWorkingDate,
-      reason: resignation.reason,
-      status: resignation.status,
-      created_at: resignation.createdAt,
+      id: result.id,
+      employee_id: result.employeeId,
+      resignation_date: result.resignationDate,
+      last_working_date: result.lastWorkingDate,
+      reason: result.reason,
+      status: result.status,
+      created_at: result.createdAt,
     }
 
     return c.json(responseBody, 201)
