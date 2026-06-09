@@ -4,6 +4,7 @@ import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import { Payslip } from "@/domain/payroll/payslip"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -160,6 +161,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "forbidden") {
     throw new ForbiddenError()
+  }
+
+  if (result.reason === "already_issued") {
+    throw new ConflictError("payslip is already issued")
   }
 
   if (result.reason === "payslip_not_found") {
