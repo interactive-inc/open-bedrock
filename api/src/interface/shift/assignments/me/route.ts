@@ -3,7 +3,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { shiftAssignments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { and, eq, gte, lte } from "drizzle-orm"
+import { and, eq, gte, isNotNull, lte } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /shift/assignments/me — 本人の担当シフト一覧（日付範囲で絞り込み可能）
@@ -25,7 +25,10 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const conditions = [eq(shiftAssignments.employeeId, session.employeeId)]
+    const conditions = [
+      eq(shiftAssignments.employeeId, session.employeeId),
+      isNotNull(shiftAssignments.publishedAt),
+    ]
 
     if (query.from !== undefined) {
       conditions.push(gte(shiftAssignments.date, query.from))
