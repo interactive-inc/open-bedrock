@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { postLogin } from "@/lib/api/post-login"
+import { sessionMaxAge } from "@/lib/auth/session-max-age"
 
 export type LoginState = {
   ok: boolean
@@ -36,7 +37,7 @@ export async function loginAction(
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 8,
+    maxAge: sessionMaxAge(result.access_token),
   })
 
   redirect("/dashboard")
