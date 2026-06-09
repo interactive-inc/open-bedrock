@@ -227,6 +227,11 @@ describe("POST /thanks", () => {
   })
 })
 
+const thanksListResponseSchema = z.object({
+  data: z.array(thanksResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /thanks", () => {
   test("returns all thanks newest first for any employee", async () => {
     const db = await createTestDb()
@@ -251,14 +256,15 @@ describe("GET /thanks", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+    const parsed = thanksListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data[0]?.message).toBe("2件目")
-      expect(parsed.data[1]?.message).toBe("1件目")
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data[0]?.message).toBe("2件目")
+      expect(parsed.data.data[1]?.message).toBe("1件目")
     }
   })
 
@@ -284,13 +290,14 @@ describe("GET /thanks", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+    const parsed = thanksListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.message).toBe("2件目")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.total).toBe(3)
+      expect(parsed.data.data[0]?.message).toBe("2件目")
     }
   })
 
@@ -311,13 +318,14 @@ describe("GET /thanks", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+    const parsed = thanksListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
       // limit=0 は空配列でなく既定の 50 にフォールバックするため、全 3 件が返る。
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
+      expect(parsed.data.total).toBe(3)
     }
   })
 
@@ -343,17 +351,17 @@ describe("GET /thanks", () => {
       now: "2026-01-01T00:00:00.000Z",
     })
 
-    const parsed = z.array(thanksResponseSchema).safeParse(await response.json())
+    const parsed = thanksListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data[0]?.created_at).toBe(parsed.data[1]?.created_at)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.data[0]?.created_at).toBe(parsed.data.data[1]?.created_at)
 
-      const firstId = parsed.data[0]?.id ?? 0
+      const firstId = parsed.data.data[0]?.id ?? 0
 
-      const secondId = parsed.data[1]?.id ?? 0
+      const secondId = parsed.data.data[1]?.id ?? 0
 
       expect(firstId).toBeGreaterThan(secondId)
     }
