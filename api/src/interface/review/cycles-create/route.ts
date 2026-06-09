@@ -1,5 +1,6 @@
 import { CreateReviewCycle } from "@/application/review/create-review-cycle"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -13,7 +14,7 @@ export const POST = factory.createHandlers(
     z.object({
       title: z.string().min(1).max(500),
       period: z.string().min(1).max(100),
-      dueDate: z.string().optional(),
+      dueDate: isoDate.optional(),
     }),
   ),
   async (c) => {

@@ -1,5 +1,6 @@
 import { EnrollTraining } from "@/application/training/enroll-training"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ConflictError,
@@ -18,7 +19,7 @@ export const POST = factory.createHandlers(
     z.object({
       course_code: z.string().min(1),
       employee_code: z.string().optional(),
-      due_date: z.string().optional(),
+      due_date: isoDate.optional(),
     }),
   ),
   async (c) => {

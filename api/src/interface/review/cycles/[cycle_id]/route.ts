@@ -2,6 +2,7 @@ import { DeleteReviewCycle } from "@/application/review/delete-review-cycle"
 import { UpdateReviewCycle } from "@/application/review/update-review-cycle"
 import { ReviewCycle } from "@/domain/review/review-cycle"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
@@ -21,7 +22,7 @@ export const PUT = factory.createHandlers(
     z.object({
       title: z.string().min(1).max(500),
       period: z.string().min(1).max(100),
-      dueDate: z.string().nullable().optional(),
+      dueDate: isoDate.nullable().optional(),
     }),
   ),
   async (c) => {

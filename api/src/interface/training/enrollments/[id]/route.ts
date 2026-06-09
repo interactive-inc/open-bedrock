@@ -3,6 +3,7 @@ import { GetTrainingEnrollment } from "@/application/training/get-training-enrol
 import { RescheduleTrainingEnrollment } from "@/application/training/reschedule-training-enrollment"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
@@ -66,7 +67,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 // PUT /training/enrollments/:id — 受講期限を変更（本人または管理権限）
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator("json", z.object({ due_date: z.string().nullable().optional() })),
+  zValidator("json", z.object({ due_date: isoDate.nullable().optional() })),
   async (c) => {
     const session = c.var.session
 
