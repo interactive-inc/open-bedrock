@@ -23,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const requestedEmployeeId = (() => {
     if (parsed.data.employee_id === undefined) return null
-    const parsed2 = Number.parseInt(parsed.data.employee_id, 10)
+    const parsed2 = Number(parsed.data.employee_id)
     return Number.isInteger(parsed2) ? parsed2 : null
   })()
 

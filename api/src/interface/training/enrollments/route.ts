@@ -78,7 +78,7 @@ async function resolveTargetEmployeeId(
   }
 
   if (query.employee_id !== undefined) {
-    const parsed = Number.parseInt(query.employee_id, 10)
+    const parsed = Number(query.employee_id)
     return Number.isInteger(parsed) ? parsed : null
   }
 

@@ -20,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const requestedEmployeeId = (() => {
     if (employeeIdParam === undefined) return null
-    const parsed = Number.parseInt(employeeIdParam, 10)
+    const parsed = Number(employeeIdParam)
     return Number.isInteger(parsed) ? parsed : null
   })()
 
