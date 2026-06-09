@@ -7,16 +7,18 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { inArray } from "drizzle-orm"
 import { z } from "zod"
-
-const defaultLimit = 50
-
-const maxLimit = 100
 
 // GET /thanks — 全従業員が閲覧する感謝のタイムライン（新着順・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -28,16 +30,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
-    fallback: defaultLimit,
+    fallback: DEFAULT_LIST_LIMIT,
     min: 1,
-    max: maxLimit,
+    max: MAX_LIST_LIMIT,
   })
 
   const offset = toBoundedInt({
     raw: c.req.query("offset"),
     fallback: 0,
     min: 0,
-    max: Number.MAX_SAFE_INTEGER,
+    max: MAX_LIST_OFFSET,
   })
 
   const thanksList = await new ListThanks(c).run({ limit, offset })
@@ -138,27 +140,6 @@ export const POST = factory.createHandlers(
     return c.json(responseBody, 201)
   },
 )
-
-// クエリ文字列を [min, max] に丸める。未指定・非数・min 未満は fallback。
-// limit は min:1（0 を空一覧でなく既定にフォールバック）、offset は min:0（0 を正当値として維持）。
-function toBoundedInt(props: {
-  raw: string | undefined
-  fallback: number
-  min: number
-  max: number
-}): number {
-  if (props.raw === undefined) {
-    return props.fallback
-  }
-
-  const parsed = Number.parseInt(props.raw, 10)
-
-  if (Number.isNaN(parsed) || parsed < props.min) {
-    return props.fallback
-  }
-
-  return parsed > props.max ? props.max : parsed
-}
 
 // 社員 id の配列から id→氏名 の Map を作る。
 async function toEmployeeNameMap(

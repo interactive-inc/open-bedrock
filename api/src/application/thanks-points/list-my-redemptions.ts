@@ -6,9 +6,17 @@ import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thank
 export class ListMyRedemptions {
   constructor(private readonly c: Context) {}
 
-  async run(props: { employeeId: number }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
+  async run(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
-    return redemptionRepository.findByEmployee(props.employeeId)
+    return redemptionRepository.findByEmployee({
+      employeeId: props.employeeId,
+      limit: props.limit,
+      offset: props.offset,
+    })
   }
 }

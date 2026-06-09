@@ -522,6 +522,128 @@ describe("redemption", () => {
   })
 })
 
+describe("redemption pagination", () => {
+  const redemptionListSchema = z.array(
+    z.object({ id: z.number(), employee_id: z.number(), status: z.string() }),
+  )
+
+  // 同時 pending は 1 件までなので、申請→却下で解決済みの交換を 1 件積み増す。
+  async function createRejectedRedemption(props: {
+    db: D1Database
+    recipientTokenValue: string
+    rewardId: number
+  }): Promise<void> {
+    const requested = await request({
+      db: props.db,
+      path: "/thanks/redemptions",
+      token: props.recipientTokenValue,
+      method: "POST",
+      body: { reward_id: props.rewardId },
+    })
+
+    const id = z.object({ id: z.number() }).parse(await requested.json()).id
+
+    await request({
+      db: props.db,
+      path: `/thanks/redemptions/${id}/reject`,
+      token: await adminToken(),
+      method: "POST",
+    })
+  }
+
+  test("limits and offsets my redemptions", async () => {
+    const db = await createTestDb()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 200 })
+
+    const rewardId = await createReward({ db, pointCost: 10 })
+
+    const recipientTokenValue = await recipientToken()
+
+    await createRejectedRedemption({ db, recipientTokenValue, rewardId })
+    await createRejectedRedemption({ db, recipientTokenValue, rewardId })
+    await createRejectedRedemption({ db, recipientTokenValue, rewardId })
+
+    const page1 = await request({
+      db,
+      path: "/thanks/redemptions/me?limit=2",
+      token: recipientTokenValue,
+    })
+
+    expect(page1.status).toBe(200)
+
+    const list1 = redemptionListSchema.parse(await page1.json())
+
+    expect(list1.length).toBe(2)
+
+    const page2 = await request({
+      db,
+      path: "/thanks/redemptions/me?limit=2&offset=2",
+      token: recipientTokenValue,
+    })
+
+    expect(page2.status).toBe(200)
+
+    const list2 = redemptionListSchema.parse(await page2.json())
+
+    expect(list2.length).toBe(1)
+
+    // ページ間で id が重複しない（新しい順）。
+    expect(list1.map((row) => row.id)).not.toContain(list2[0]?.id)
+  })
+
+  test("limits and offsets the pending inbox", async () => {
+    const db = await createTestDb()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E010", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 10 })
+
+    // 異なる社員がそれぞれ pending を 1 件ずつ持つ（合計 2 件）。
+    await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await otherRecipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    const page1 = await request({
+      db,
+      path: "/thanks/redemptions/inbox?limit=1",
+      token: await adminToken(),
+    })
+
+    expect(page1.status).toBe(200)
+
+    const list1 = redemptionListSchema.parse(await page1.json())
+
+    expect(list1.length).toBe(1)
+
+    const page2 = await request({
+      db,
+      path: "/thanks/redemptions/inbox?limit=1&offset=1",
+      token: await adminToken(),
+    })
+
+    expect(page2.status).toBe(200)
+
+    const list2 = redemptionListSchema.parse(await page2.json())
+
+    expect(list2.length).toBe(1)
+    expect(list1[0]?.id).not.toBe(list2[0]?.id)
+  })
+})
+
 describe("atomicity", () => {
   // 同一社員の同時申請。pending が 1 件しか作られないことを確認する。
   test("concurrent redemption requests from the same employee: exactly one succeeds", async () => {
