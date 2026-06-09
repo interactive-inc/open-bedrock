@@ -10,7 +10,7 @@ import {
 } from "@/interface/lib/errors"
 import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import { z } from "zod"
 
 const kindQuerySchema = z.enum(["join", "leave"]).optional()
@@ -36,14 +36,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(onboardingTemplates)
     .where(kind === undefined ? undefined : eq(onboardingTemplates.kind, kind))
 
-  const taskRows = await c.var.database.select().from(onboardingTemplateTasks)
+  const taskCountRows = await c.var.database
+    .select({ templateCode: onboardingTemplateTasks.templateCode, total: count() })
+    .from(onboardingTemplateTasks)
+    .groupBy(onboardingTemplateTasks.templateCode)
+
+  const taskCountMap = new Map(taskCountRows.map((row) => [row.templateCode, row.total]))
 
   const body = templateRows.map((template) => ({
     code: template.code,
     name: template.name,
     kind: template.kind,
     description: template.description,
-    task_count: taskRows.filter((task) => task.templateCode === template.code).length,
+    task_count: taskCountMap.get(template.code) ?? 0,
   }))
 
   return c.json(body, 200)
