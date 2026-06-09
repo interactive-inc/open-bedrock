@@ -5,6 +5,7 @@ import type { CertificateRequest } from "@/domain/certificate-request/certificat
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -94,6 +95,10 @@ export const PUT = factory.createHandlers(
         throw new NotFoundError("certificate request not found")
       }
 
+      if (certificateRequest.reason === "not_modifiable") {
+        throw new ConflictError("not modifiable")
+      }
+
       throw new ForbiddenError("not the requester")
     }
 
@@ -124,6 +129,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "not_requester") {
     throw new ForbiddenError("not the requester")
+  }
+
+  if (result.reason === "not_modifiable") {
+    throw new ConflictError("not modifiable")
   }
 
   return c.body(null, 204)

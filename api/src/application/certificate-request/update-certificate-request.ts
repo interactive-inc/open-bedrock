@@ -15,15 +15,19 @@ export type CertificateRequestNotFound = { reason: "certificate_request_not_foun
 
 export type NotRequester = { reason: "not_requester" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
- * 証明書発行依頼の種別・提出先・希望日・備考を変更する。本人以外の変更を拒否する。
+ * 証明書発行依頼の種別・提出先・希望日・備考を変更する。本人以外と、確定済み依頼の変更を拒否する。
  */
 export class UpdateCertificateRequest {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<CertificateRequest | CertificateRequestNotFound | NotRequester | Error> {
+  ): Promise<
+    CertificateRequest | CertificateRequestNotFound | NotRequester | NotModifiable | Error
+  > {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
     const current = await certificateRequestRepository.findById(command.certificateRequestId)
@@ -38,6 +42,10 @@ export class UpdateCertificateRequest {
 
     if (current.requesterId !== command.requesterId) {
       return { reason: "not_requester" }
+    }
+
+    if (current.status !== "requested") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current.withDetails({
