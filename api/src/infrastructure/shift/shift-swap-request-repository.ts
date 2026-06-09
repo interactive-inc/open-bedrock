@@ -1,7 +1,7 @@
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
 import type { Context } from "@/env"
 import { shiftSwapRequests } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 export class ShiftSwapRequestRepository {
   constructor(private readonly c: Context) {}
@@ -19,6 +19,33 @@ export class ShiftSwapRequestRepository {
       return row === undefined ? null : ShiftSwapRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load shift_swap_request")
+    }
+  }
+
+  async findPending(
+    requesterEmployeeId: number,
+    targetEmployeeId: number,
+    date: string,
+  ): Promise<ShiftSwapRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(shiftSwapRequests)
+        .where(
+          and(
+            eq(shiftSwapRequests.requesterEmployeeId, requesterEmployeeId),
+            eq(shiftSwapRequests.targetEmployeeId, targetEmployeeId),
+            eq(shiftSwapRequests.date, date),
+            eq(shiftSwapRequests.status, "pending"),
+          ),
+        )
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ShiftSwapRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to find pending shift_swap_request")
     }
   }
 

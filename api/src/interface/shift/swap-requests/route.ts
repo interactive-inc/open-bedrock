@@ -3,6 +3,7 @@ import { canApproveShiftSwap } from "@/domain/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -85,6 +86,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in swapRequest) {
+      if (swapRequest.reason === "already_exists") {
+        throw new ConflictError("pending swap request already exists")
+      }
+
       throw new NotFoundError("target employee not found")
     }
 

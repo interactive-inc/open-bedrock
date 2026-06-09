@@ -12,13 +12,15 @@ export type Input = {
 
 export type TargetNotFound = { reason: "target_not_found" }
 
+export type AlreadyExists = { reason: "already_exists" }
+
 /**
  * 交代相手を確認して、本人からのシフト交代申請を作る。
  */
 export class CreateShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ShiftSwapRequest | TargetNotFound | Error> {
+  async run(input: Input): Promise<ShiftSwapRequest | TargetNotFound | AlreadyExists | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const target = await employeeRepository.findByCode(input.targetEmployeeCode)
@@ -32,6 +34,20 @@ export class CreateShiftSwapRequest {
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
+
+    const pending = await swapRequestRepository.findPending(
+      input.requesterEmployeeId,
+      target.id,
+      input.date,
+    )
+
+    if (pending instanceof Error) {
+      return pending
+    }
+
+    if (pending !== null) {
+      return { reason: "already_exists" }
+    }
 
     const swapRequest = ShiftSwapRequest.create({
       requesterEmployeeId: input.requesterEmployeeId,

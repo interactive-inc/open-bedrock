@@ -108,12 +108,32 @@ describe("GET /shift/assignments/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      // id=2 は publishedAt が null（下書き）なので除外され、公開済みの 1 件のみ返る
+      expect(parsed.data.length).toBe(1)
       expect(parsed.data.every((row) => row.employee_id === 5)).toBe(true)
+      expect(parsed.data.every((row) => row.published_at !== null)).toBe(true)
     }
   })
 
   test("filters own assignments by date range", async () => {
+    const response = await request({
+      path: "/shift/assignments/me?from=2026-06-01&to=2026-06-01",
+      token: await tokenFor(5, "member"),
+    })
+
+    const parsed = z.array(shiftAssignmentResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // id=1 は公開済み (2026-06-01)。id=2 は下書き (2026-06-02) なので対象外。
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.id).toBe(1)
+    }
+  })
+
+  test("excludes draft assignments (publishedAt is null)", async () => {
+    // 2026-06-02 にはシード id=2 があるが publishedAt=null なので返らない
     const response = await request({
       path: "/shift/assignments/me?from=2026-06-02&to=2026-06-02",
       token: await tokenFor(5, "member"),
@@ -124,8 +144,7 @@ describe("GET /shift/assignments/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(2)
+      expect(parsed.data.length).toBe(0)
     }
   })
 

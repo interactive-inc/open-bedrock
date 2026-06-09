@@ -18,6 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const query = toNotificationSearchQuery({
     isRead: c.req.query("is_read") ?? null,
     limit: c.req.query("limit") ?? null,
+    offset: c.req.query("offset") ?? null,
   })
 
   const conditions: Array<SQL> = [eq(notifications.recipientEmployeeId, session.employeeId)]
@@ -26,13 +27,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     conditions.push(eq(notifications.isRead, query.isRead ? 1 : 0))
   }
 
-  const baseQuery = c.var.database
+  const rows = await c.var.database
     .select()
     .from(notifications)
     .where(and(...conditions))
     .orderBy(desc(notifications.createdAt))
-
-  const rows = query.limit === null ? await baseQuery : await baseQuery.limit(query.limit)
+    .limit(query.limit)
+    .offset(query.offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,

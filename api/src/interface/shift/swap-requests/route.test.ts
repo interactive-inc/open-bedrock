@@ -137,11 +137,12 @@ describe("GET /shift/swap-requests", () => {
 
 describe("POST /shift/swap-requests", () => {
   test("any authenticated user files a swap request and returns 201", async () => {
+    // 2026-06-10 はシードに pending が存在しないため新規作成できる
     const response = await request({
       path: "/shift/swap-requests",
       token: await tokenFor(5, "member"),
       method: "POST",
-      body: { target_employee_code: "E004", date: "2026-06-01", note: "Medical appointment" },
+      body: { target_employee_code: "E004", date: "2026-06-10", note: "Medical appointment" },
     })
 
     expect(response.status).toBe(201)
@@ -155,6 +156,18 @@ describe("POST /shift/swap-requests", () => {
       expect(parsed.data.target_employee_id).toBe(4)
       expect(parsed.data.status).toBe("pending")
     }
+  })
+
+  test("returns 409 when a pending swap request already exists for the same requester, target, and date", async () => {
+    // シード id=1 が requester=5, target=4, date=2026-06-01, status=pending で存在する
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { target_employee_code: "E004", date: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(409)
   })
 
   test("returns 404 for an unknown target_employee_code", async () => {
