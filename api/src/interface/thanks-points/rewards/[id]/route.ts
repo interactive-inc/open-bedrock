@@ -1,6 +1,7 @@
 import { UpdateReward } from "@/application/thanks-points/update-reward"
 import { canManageRewards } from "@/domain/thanks-points/can-manage-rewards"
 import { toPositiveInt } from "@/domain/thanks-points/to-positive-int"
+import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward"
 import {
   BadRequestError,
   ForbiddenError,
@@ -20,7 +21,7 @@ export const PATCH = factory.createHandlers(
     "json",
     z.object({
       name: z.string().min(1).max(200),
-      point_cost: z.number(),
+      point_cost: rewardPointCostSchema,
       stock: z.number().int().nonnegative().nullable(),
       is_active: z.boolean(),
     }),
