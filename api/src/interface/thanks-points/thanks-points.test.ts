@@ -582,6 +582,8 @@ describe("redemption pagination", () => {
       token: recipientTokenValue,
     })
 
+    expect(page2.status).toBe(200)
+
     const list2 = redemptionListSchema.parse(await page2.json())
 
     expect(list2.length).toBe(1)
@@ -632,6 +634,8 @@ describe("redemption pagination", () => {
       path: "/thanks/redemptions/inbox?limit=1&offset=1",
       token: await adminToken(),
     })
+
+    expect(page2.status).toBe(200)
 
     const list2 = redemptionListSchema.parse(await page2.json())
 

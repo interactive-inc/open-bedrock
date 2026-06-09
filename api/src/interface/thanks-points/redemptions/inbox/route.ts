@@ -2,13 +2,14 @@ import { ListPendingRedemptions } from "@/application/thanks-points/list-pending
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import { canDecideRedemption } from "@/domain/thanks-points/can-decide-redemption"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { toBoundedInt } from "@/interface/shared/to-bounded-int"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-
-const defaultLimit = 50
-
-const maxLimit = 100
 
 // GET /thanks/redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -24,16 +25,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
-    fallback: defaultLimit,
+    fallback: DEFAULT_LIST_LIMIT,
     min: 1,
-    max: maxLimit,
+    max: MAX_LIST_LIMIT,
   })
 
   const offset = toBoundedInt({
     raw: c.req.query("offset"),
     fallback: 0,
     min: 0,
-    max: Number.MAX_SAFE_INTEGER,
+    max: MAX_LIST_OFFSET,
   })
 
   const redemptions = await new ListPendingRedemptions(c).run({ limit, offset })
