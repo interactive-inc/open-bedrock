@@ -6,6 +6,7 @@ import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -55,6 +56,10 @@ export const PUT = factory.createHandlers(
     if (updated instanceof ReviewCycle === false) {
       if (updated.reason === "forbidden") {
         throw new ForbiddenError()
+      }
+
+      if (updated.reason === "not_modifiable") {
+        throw new ConflictError("not modifiable")
       }
 
       throw new NotFoundError("review cycle not found")

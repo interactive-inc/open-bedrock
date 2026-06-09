@@ -15,13 +15,17 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CycleNotFound = { reason: "cycle_not_found" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
  * 管理権限のある本人が、評価サイクルの題目・期間・締切を更新する。
  */
 export class UpdateReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ReviewCycle | Forbidden | CycleNotFound | Error> {
+  async run(
+    input: Input,
+  ): Promise<ReviewCycle | Forbidden | CycleNotFound | NotModifiable | Error> {
     if (canAdministerCycle(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -36,6 +40,10 @@ export class UpdateReviewCycle {
 
     if (reviewCycle === null) {
       return { reason: "cycle_not_found" }
+    }
+
+    if (reviewCycle.status === "closed") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = await repository.updateDetails(
