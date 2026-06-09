@@ -202,6 +202,68 @@ import salaryRevisionCorrectHandler from "@/app/salary-revision/correct/route"
 import salaryRevisionCancelHandler from "@/app/salary-revision/cancel/route"
 import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
 import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
+import cmd1on1DeleteHandler from "@/app/1on1/delete/route"
+import cmd1on1EditHandler from "@/app/1on1/edit/route"
+import cmd1on1MineHandler from "@/app/1on1/mine/route"
+import cmd1on1ShowHandler from "@/app/1on1/show/route"
+import applicationMineHandler from "@/app/application/mine/route"
+import applicationShowHandler from "@/app/application/show/route"
+import applicationUpdateHandler from "@/app/application/update/route"
+import applicationWithdrawHandler from "@/app/application/withdraw/route"
+import assetDeleteHandler from "@/app/asset/delete/[asset_code]/route"
+import assetUpdateHandler from "@/app/asset/update/[asset_code]/route"
+import careerApplicationShowHandler from "@/app/career/application-show/route"
+import careerApplicationUpdateHandler from "@/app/career/application-update/route"
+import careerApplicationsHandler from "@/app/career/applications/route"
+import careerSheetDeleteHandler from "@/app/career/sheet-delete/route"
+import careerWithdrawHandler from "@/app/career/withdraw/route"
+import employeeDeleteHandler from "@/app/employee/delete/[employee_code]/route"
+import employeeRegisterHandler from "@/app/employee/register/route"
+import employeeShowHandler from "@/app/employee/show/[employee_code]/route"
+import employeeUpdateHandler from "@/app/employee/update/[employee_code]/route"
+import expenseDeleteHandler from "@/app/expense/delete/[expense_id]/route"
+import expenseUpdateHandler from "@/app/expense/update/[expense_id]/route"
+import goalDeleteHandler from "@/app/goal/delete/route"
+import goalMineHandler from "@/app/goal/mine/route"
+import goalShowHandler from "@/app/goal/show/route"
+import goalUpdateHandler from "@/app/goal/update/route"
+import kbAddHandler from "@/app/kb/add/route"
+import kbDeleteHandler from "@/app/kb/delete/route"
+import kbEditHandler from "@/app/kb/edit/route"
+import leaveCancelHandler from "@/app/leave/cancel/route"
+import leaveShowHandler from "@/app/leave/show/route"
+import leaveUpdateHandler from "@/app/leave/update/route"
+import notifyDeleteHandler from "@/app/notify/delete/route"
+import notifyShowHandler from "@/app/notify/show/route"
+import onboardingAssignmentCancelHandler from "@/app/onboarding/assignment/cancel/[assignment_id]/route"
+import onboardingAssignmentShowHandler from "@/app/onboarding/assignment/show/[assignment_id]/route"
+import onboardingAssignmentUpdateHandler from "@/app/onboarding/assignment/update/[assignment_id]/route"
+import onboardingUncompleteHandler from "@/app/onboarding/uncomplete/[task_id]/route"
+import orgDeptCreateHandler from "@/app/org/dept/create/route"
+import orgDeptDeleteHandler from "@/app/org/dept/delete/route"
+import orgDeptListHandler from "@/app/org/dept/list/route"
+import orgDeptShowHandler from "@/app/org/dept/show/route"
+import orgDeptUpdateHandler from "@/app/org/dept/update/route"
+import shiftAssignmentDeleteHandler from "@/app/shift/assignment-delete/route"
+import shiftAssignmentShowHandler from "@/app/shift/assignment-show/route"
+import shiftAssignmentUpdateHandler from "@/app/shift/assignment-update/route"
+import shiftPatternDeleteHandler from "@/app/shift/pattern-delete/route"
+import shiftPatternShowHandler from "@/app/shift/pattern-show/route"
+import shiftPatternUpdateHandler from "@/app/shift/pattern-update/route"
+import shiftSwapCancelHandler from "@/app/shift/swap-cancel/route"
+import shiftSwapMineHandler from "@/app/shift/swap-mine/route"
+import shiftSwapShowHandler from "@/app/shift/swap-show/route"
+import skillRemoveHandler from "@/app/skill/remove/[skill_code]/route"
+import skillShowHandler from "@/app/skill/show/[skill_code]/route"
+import surveyEditHandler from "@/app/survey/edit/[response_id]/route"
+import surveyResponseHandler from "@/app/survey/response/[response_id]/route"
+import surveyResponsesHandler from "@/app/survey/responses/route"
+import surveyWithdrawHandler from "@/app/survey/withdraw/[response_id]/route"
+import trainingCancelHandler from "@/app/training/cancel/route"
+import trainingCourseArchiveHandler from "@/app/training/course-archive/route"
+import trainingCourseUpdateHandler from "@/app/training/course-update/route"
+import trainingRescheduleHandler from "@/app/training/reschedule/route"
+import trainingShowHandler from "@/app/training/show/route"
 
 const base = factory.createApp()
 
@@ -446,5 +508,69 @@ routes.post("/salary-revision/correct", ...salaryRevisionCorrectHandler)
 routes.post("/salary-revision/cancel", ...salaryRevisionCancelHandler)
 routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
 routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
+
+// #100: 未登録だったルートを追加（ファイル構造から POST パスを導出）
+routes.post("/1on1/delete", ...cmd1on1DeleteHandler)
+routes.post("/1on1/edit", ...cmd1on1EditHandler)
+routes.post("/1on1/mine", ...cmd1on1MineHandler)
+routes.post("/1on1/show", ...cmd1on1ShowHandler)
+routes.post("/application/mine", ...applicationMineHandler)
+routes.post("/application/show", ...applicationShowHandler)
+routes.post("/application/update", ...applicationUpdateHandler)
+routes.post("/application/withdraw", ...applicationWithdrawHandler)
+routes.post("/asset/delete/:asset_code?", ...assetDeleteHandler)
+routes.post("/asset/update/:asset_code?", ...assetUpdateHandler)
+routes.post("/career/application-show", ...careerApplicationShowHandler)
+routes.post("/career/application-update", ...careerApplicationUpdateHandler)
+routes.post("/career/applications", ...careerApplicationsHandler)
+routes.post("/career/sheet-delete", ...careerSheetDeleteHandler)
+routes.post("/career/withdraw", ...careerWithdrawHandler)
+routes.post("/employee/delete/:employee_code?", ...employeeDeleteHandler)
+routes.post("/employee/register", ...employeeRegisterHandler)
+routes.post("/employee/show/:employee_code?", ...employeeShowHandler)
+routes.post("/employee/update/:employee_code?", ...employeeUpdateHandler)
+routes.post("/expense/delete/:expense_id?", ...expenseDeleteHandler)
+routes.post("/expense/update/:expense_id?", ...expenseUpdateHandler)
+routes.post("/goal/delete", ...goalDeleteHandler)
+routes.post("/goal/mine", ...goalMineHandler)
+routes.post("/goal/show", ...goalShowHandler)
+routes.post("/goal/update", ...goalUpdateHandler)
+routes.post("/kb/add", ...kbAddHandler)
+routes.post("/kb/delete", ...kbDeleteHandler)
+routes.post("/kb/edit", ...kbEditHandler)
+routes.post("/leave/cancel", ...leaveCancelHandler)
+routes.post("/leave/show", ...leaveShowHandler)
+routes.post("/leave/update", ...leaveUpdateHandler)
+routes.post("/notify/delete", ...notifyDeleteHandler)
+routes.post("/notify/show", ...notifyShowHandler)
+routes.post("/onboarding/assignment/cancel/:assignment_id?", ...onboardingAssignmentCancelHandler)
+routes.post("/onboarding/assignment/show/:assignment_id?", ...onboardingAssignmentShowHandler)
+routes.post("/onboarding/assignment/update/:assignment_id?", ...onboardingAssignmentUpdateHandler)
+routes.post("/onboarding/uncomplete/:task_id?", ...onboardingUncompleteHandler)
+routes.post("/org/dept/create", ...orgDeptCreateHandler)
+routes.post("/org/dept/delete", ...orgDeptDeleteHandler)
+routes.post("/org/dept/list", ...orgDeptListHandler)
+routes.post("/org/dept/show", ...orgDeptShowHandler)
+routes.post("/org/dept/update", ...orgDeptUpdateHandler)
+routes.post("/shift/assignment-delete", ...shiftAssignmentDeleteHandler)
+routes.post("/shift/assignment-show", ...shiftAssignmentShowHandler)
+routes.post("/shift/assignment-update", ...shiftAssignmentUpdateHandler)
+routes.post("/shift/pattern-delete", ...shiftPatternDeleteHandler)
+routes.post("/shift/pattern-show", ...shiftPatternShowHandler)
+routes.post("/shift/pattern-update", ...shiftPatternUpdateHandler)
+routes.post("/shift/swap-cancel", ...shiftSwapCancelHandler)
+routes.post("/shift/swap-mine", ...shiftSwapMineHandler)
+routes.post("/shift/swap-show", ...shiftSwapShowHandler)
+routes.post("/skill/remove/:skill_code?", ...skillRemoveHandler)
+routes.post("/skill/show/:skill_code?", ...skillShowHandler)
+routes.post("/survey/edit/:response_id?", ...surveyEditHandler)
+routes.post("/survey/response/:response_id?", ...surveyResponseHandler)
+routes.post("/survey/responses", ...surveyResponsesHandler)
+routes.post("/survey/withdraw/:response_id?", ...surveyWithdrawHandler)
+routes.post("/training/cancel", ...trainingCancelHandler)
+routes.post("/training/course-archive", ...trainingCourseArchiveHandler)
+routes.post("/training/course-update", ...trainingCourseUpdateHandler)
+routes.post("/training/reschedule", ...trainingRescheduleHandler)
+routes.post("/training/show", ...trainingShowHandler)
 
 export const app = routes
