@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createEmployee } from "@/lib/api/create-employee"
 import { deleteEmployee } from "@/lib/api/delete-employee"
+import { getMe } from "@/lib/api/get-me"
 import { updateEmployee } from "@/lib/api/update-employee"
 import type { EmployeeStatus } from "@/lib/api/types/employee-types"
+import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type EmployeeCreateFormState = {
@@ -54,6 +56,12 @@ export async function createEmployeeAction(
   previousState: EmployeeCreateFormState,
   formData: FormData,
 ): Promise<EmployeeCreateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+    return { ok: false, error: "従業員を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   const name = toText(formData.get("name"))
@@ -103,6 +111,12 @@ export async function updateEmployeeAction(
   previousState: EmployeeUpdateFormState,
   formData: FormData,
 ): Promise<EmployeeUpdateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+    return { ok: false, error: "従業員を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   if (code === null) {
@@ -151,6 +165,12 @@ export async function deleteEmployeeAction(
   previousState: EmployeeDeleteFormState,
   formData: FormData,
 ): Promise<EmployeeDeleteFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+    return { ok: false, error: "従業員を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   if (code === null) {

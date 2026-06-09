@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache"
 import { closeReviewCycle } from "@/lib/api/close-review-cycle"
 import { createReviewCycle } from "@/lib/api/create-review-cycle"
 import { deleteReviewCycle } from "@/lib/api/delete-review-cycle"
+import { getMe } from "@/lib/api/get-me"
 import { openReviewCycle } from "@/lib/api/open-review-cycle"
 import { submitReviewForm } from "@/lib/api/submit-review-form"
 import { updateReviewCycle } from "@/lib/api/update-review-cycle"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ReviewFormState = {
@@ -20,6 +22,12 @@ export async function createReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
   const titleValue = formData.get("title")
 
   const title = typeof titleValue === "string" ? titleValue.trim() : ""
@@ -57,6 +65,12 @@ export async function openReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
   const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
   if (cycleId === null) {
@@ -79,6 +93,12 @@ export async function closeReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
   const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
   if (cycleId === null) {
@@ -101,6 +121,12 @@ export async function updateReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
   const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
   if (cycleId === null) {
@@ -148,6 +174,12 @@ export async function deleteReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
   const cycleId = toPositiveIntId(formData.get("cycle_id"))
 
   if (cycleId === null) {

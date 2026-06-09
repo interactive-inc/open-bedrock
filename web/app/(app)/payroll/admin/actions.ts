@@ -6,8 +6,10 @@ import { cancelSalaryRevision } from "@/lib/api/cancel-salary-revision"
 import { correctPayslip } from "@/lib/api/correct-payslip"
 import { correctSalaryRevision } from "@/lib/api/correct-salary-revision"
 import { createSalaryRevision } from "@/lib/api/create-salary-revision"
+import { getMe } from "@/lib/api/get-me"
 import { issuePayslip } from "@/lib/api/issue-payslip"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManagePayroll } from "@/lib/payroll/can-manage-payroll"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type PayrollAdminFormState = {
@@ -20,6 +22,12 @@ export async function issuePayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const employeeCodeValue = formData.get("employee_code")
 
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue.trim() : ""
@@ -68,6 +76,12 @@ export async function createSalaryRevisionAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const employeeCodeValue = formData.get("employee_code")
 
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue.trim() : ""
@@ -117,6 +131,12 @@ export async function correctPayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const payslipId = toPositiveIntId(formData.get("payslip_id"))
 
   if (payslipId === null) {
@@ -165,6 +185,12 @@ export async function cancelPayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const payslipId = toPositiveIntId(formData.get("payslip_id"))
 
   if (payslipId === null) {
@@ -187,6 +213,12 @@ export async function correctSalaryRevisionAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const salaryRevisionId = toPositiveIntId(formData.get("id"))
 
   if (salaryRevisionId === null) {
@@ -232,6 +264,12 @@ export async function cancelSalaryRevisionAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
 ): Promise<PayrollAdminFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManagePayroll(currentUser.role) === false) {
+    return { ok: false, error: "給与を管理する権限がありません" }
+  }
+
   const salaryRevisionId = toPositiveIntId(formData.get("id"))
 
   if (salaryRevisionId === null) {
