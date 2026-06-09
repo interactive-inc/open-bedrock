@@ -2,6 +2,17 @@ import { getServerSession } from "@/lib/auth/get-server-session"
 import type { ApiClient } from "api/app"
 import { hc } from "hono/client"
 
+// ネットワーク失敗（接続拒否・DNS 失敗・タイムアウト）を 503 Response に変換する。
+// hc は fetch の例外をそのまま投げ、未ハンドル例外が Next.js に伝播して汎用 500 になる。
+// 503 に変換することで各 API 関数の status/ok 判定に乗り、Error として扱える。
+const fetchWithNetworkGuard: typeof fetch = async (input, init) => {
+  try {
+    return await fetch(input, init)
+  } catch {
+    return Response.json({ error: "api unreachable" }, { status: 503 })
+  }
+}
+
 // api 側で hc の型計算を済ませた ApiClient 型を使う。
 // これにより HonoBase の schema 抽出が効き、レスポンス型が正しく推論される。
 export async function createClient(): Promise<ApiClient> {
@@ -15,7 +26,7 @@ export async function createClient(): Promise<ApiClient> {
     headers.Authorization = `Bearer ${token}`
   }
 
-  return hc(baseUrl, { headers }) as unknown as ApiClient
+  return hc(baseUrl, { headers, fetch: fetchWithNetworkGuard }) as unknown as ApiClient
 }
 
 export type Client = ApiClient
