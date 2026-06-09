@@ -139,8 +139,8 @@ export async function correctPayslipAction(
 
   const netPay = Number(formData.get("net_pay"))
 
-  if (!Number.isFinite(netPay) || netPay < 0) {
-    return { ok: false, error: "差引支給額は 0 以上の数で入力してください" }
+  if (!Number.isFinite(netPay) || !Number.isInteger(netPay) || netPay < 0) {
+    return { ok: false, error: "差引支給額は 0 以上の整数で入力してください" }
   }
 
   const corrected = await correctPayslip(payslipId, {
@@ -249,11 +249,11 @@ export async function cancelSalaryRevisionAction(
   return { ok: true, error: null }
 }
 
-// FormData の数値を 0 以上の number へ。未入力・不正値は 0 とする。
+// FormData の数値を 0 以上の整数へ。未入力・不正値・小数・負値は 0 とする。
 function toNonNegativeNumber(value: FormDataEntryValue | null): number {
   const parsed = Number(value)
 
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
     return 0
   }
 
