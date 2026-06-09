@@ -9,10 +9,47 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+const defaultLimit = 50
+
+const maxLimit = 100
+
+function toBoundedInt(props: {
+  raw: string | null
+  fallback: number
+  min: number
+  max: number
+}): number {
+  if (props.raw === null) {
+    return props.fallback
+  }
+
+  const parsed = Number.parseInt(props.raw, 10)
+
+  if (Number.isNaN(parsed) || parsed < props.min) {
+    return props.fallback
+  }
+
+  return parsed > props.max ? props.max : parsed
+}
+
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const keyword = c.req.query("q") ?? null
 
   const category = c.req.query("category") ?? null
+
+  const limit = toBoundedInt({
+    raw: c.req.query("limit") ?? null,
+    fallback: defaultLimit,
+    min: 1,
+    max: maxLimit,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset") ?? null,
+    fallback: 0,
+    min: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  })
 
   const conditions: Array<SQL> = []
 
@@ -36,6 +73,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(knowledgeArticles)
     .where(conditions.length === 0 ? undefined : and(...conditions))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,
