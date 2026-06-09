@@ -60,6 +60,14 @@ export const POST = factory.createHandlers(
         throw new ConflictError("leave request already decided")
       }
 
+      if (updated.failure === "balance_not_found") {
+        throw new ConflictError("leave balance record not found")
+      }
+
+      if (updated.failure === "insufficient_balance") {
+        throw new ConflictError("insufficient leave balance")
+      }
+
       throw new NotFoundError("leave request not found")
     }
 
