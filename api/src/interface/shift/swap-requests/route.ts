@@ -1,6 +1,7 @@
 import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-request"
 import { canApproveShiftSwap } from "@/domain/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ConflictError,
@@ -61,7 +62,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       target_employee_code: z.string().min(1),
-      date: z.string().min(1),
+      date: isoDate,
       note: z.string().max(3_000).optional(),
     }),
   ),

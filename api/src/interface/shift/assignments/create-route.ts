@@ -1,5 +1,6 @@
 import { CreateShiftAssignment } from "@/application/shift/create-shift-assignment"
 import { factory } from "@/lib/factory"
+import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ForbiddenError,
@@ -18,7 +19,7 @@ export const POST = factory.createHandlers(
     z.object({
       employee_code: z.string().min(1),
       pattern_code: z.string().min(1),
-      date: z.string().min(1),
+      date: isoDate,
       note: z.string().max(3_000).optional(),
     }),
   ),
