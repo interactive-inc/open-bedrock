@@ -7,7 +7,7 @@ const zProps = z.object({
   name: z.string(),
   startTime: z.string(),
   endTime: z.string(),
-  breakMinutes: z.number(),
+  breakMinutes: z.number().int().nonnegative(),
 })
 
 type Props = z.infer<typeof zProps>
