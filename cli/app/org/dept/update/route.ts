@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
+import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
@@ -31,7 +32,7 @@ export default factory.createHandlers(
       json: {
         parent_code: query.parent ?? null,
         manager_employee_code: query.manager ?? null,
-        order: Number(query.order),
+        order: toFiniteNumber(query.order, "--order"),
       },
     })
 
