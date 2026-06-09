@@ -1,10 +1,15 @@
 import { ListMyRedemptions } from "@/application/thanks-points/list-my-redemptions"
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toBoundedInt } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
-// GET /thanks/redemptions/me — 自分の交換申請の一覧（新しい順）
+const defaultLimit = 50
+
+const maxLimit = 100
+
+// GET /thanks/redemptions/me — 自分の交換申請の一覧（新しい順・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -12,7 +17,25 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const redemptions = await new ListMyRedemptions(c).run({ employeeId: session.employeeId })
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: defaultLimit,
+    min: 1,
+    max: maxLimit,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  })
+
+  const redemptions = await new ListMyRedemptions(c).run({
+    employeeId: session.employeeId,
+    limit,
+    offset,
+  })
 
   if (redemptions instanceof Error) {
     throw new InternalError("failed to load redemptions")
