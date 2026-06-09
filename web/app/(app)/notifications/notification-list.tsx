@@ -37,9 +37,9 @@ export function NotificationList(props: Props) {
 
   async function markAllReduce(
     previousState: NotificationFormState,
-    formData: FormData,
+    _formData: FormData,
   ): Promise<NotificationFormState> {
-    const result = await markAllNotificationsReadAction(previousState, formData)
+    const result = await markAllNotificationsReadAction(previousState)
     if (result.ok) {
       toast.success("すべて既読にしました")
     } else if (result.error !== null) {
