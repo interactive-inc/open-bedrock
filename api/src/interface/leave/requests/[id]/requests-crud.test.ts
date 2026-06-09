@@ -198,6 +198,72 @@ describe("PUT /leave/requests/:id", () => {
     }
   })
 
+  test("allows revising into a period that overlaps only the request itself", async () => {
+    // 申請1 (06-01..06-03) を自分自身と重なる 06-02..06-04 へ更新。
+    // 自己除外 (excludeId) が無いと自分にヒットして 409 になってしまう。
+    const response = await request({
+      path: "/leave/requests/1",
+      token: await tokenFor(5, "member"),
+      method: "PUT",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-06-02",
+        end_date: "2026-06-04",
+        reason: null,
+      },
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("returns 409 when revising into another pending request's period", async () => {
+    const db = await createTestDb()
+
+    // employee 5 に別期間の pending をもう 1 件追加する。
+    await seedD1(db, "leave_requests", [
+      {
+        id: 100,
+        employee_id: 5,
+        leave_type: "annual",
+        start_date: "2026-07-01",
+        end_date: "2026-07-03",
+        days: 3,
+        reason: null,
+        status: "pending",
+        approver_id: null,
+        decided_comment: null,
+        created_at: "2026-05-20T00:00:00Z",
+      },
+    ])
+
+    const bindings: Bindings = {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      NOW: "2026-01-01T00:00:00.000Z",
+    }
+
+    // 申請1 を 07-02..07-04 へ変更すると申請100 と重複する → 409。
+    const response = await testApp.request(
+      "/leave/requests/1",
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${await tokenFor(5, "member")}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          leave_type: "annual",
+          start_date: "2026-07-02",
+          end_date: "2026-07-04",
+          reason: null,
+        }),
+      },
+      bindings,
+    )
+
+    expect(response.status).toBe(409)
+  })
+
   test("returns 409 when revising a decided request", async () => {
     const response = await request({
       path: "/leave/requests/2",

@@ -132,6 +132,10 @@ export const PUT = factory.createHandlers(
       throw new BadRequestError("invalid leave period")
     }
 
+    if (result.reason === "overlapping_leave_request") {
+      throw new ConflictError("an overlapping leave request already exists")
+    }
+
     throw new ConflictError("the leave request is already decided")
   },
 )

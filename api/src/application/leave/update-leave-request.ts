@@ -20,7 +20,14 @@ export type NotModifiable = { reason: "not_modifiable" }
 
 export type InvalidLeavePeriod = { reason: "invalid_leave_period" }
 
-type Failure = LeaveRequestNotFound | NotApplicant | NotModifiable | InvalidLeavePeriod
+export type OverlappingLeaveRequest = { reason: "overlapping_leave_request" }
+
+type Failure =
+  | LeaveRequestNotFound
+  | NotApplicant
+  | NotModifiable
+  | InvalidLeavePeriod
+  | OverlappingLeaveRequest
 
 /**
  * 休暇申請の内容を変更する。本人以外と、決定済み申請の変更を拒否する。
@@ -53,6 +60,23 @@ export class UpdateLeaveRequest {
 
     if (days instanceof Error) {
       return { reason: "invalid_leave_period" }
+    }
+
+    // 自分自身を除外して、同社員・同期間の未却下申請と重ならないか確認する。
+    // 除外しないと更新のたびに自己ヒットして必ず重複扱いになる。
+    const overlapping = await repository.findOverlapping({
+      employeeId: command.employeeId,
+      startDate: command.startDate,
+      endDate: command.endDate,
+      excludeId: command.leaveRequestId,
+    })
+
+    if (overlapping instanceof Error) {
+      return overlapping
+    }
+
+    if (overlapping.length > 0) {
+      return { reason: "overlapping_leave_request" }
     }
 
     const revised = current.withRevised({

@@ -1,5 +1,10 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
-import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -41,6 +46,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("failure" in created) {
+      if (created.failure === "overlapping_leave_request") {
+        throw new ConflictError("an overlapping leave request already exists")
+      }
+
       throw new BadRequestError("invalid leave period")
     }
 
