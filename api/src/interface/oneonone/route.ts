@@ -1,7 +1,8 @@
 import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
+import { canCreateOneOnOne } from "@/domain/oneonone/can-create-one-on-one"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { aliasedTable, eq, or } from "drizzle-orm"
@@ -58,6 +59,10 @@ export const POST = factory.createHandlers(
 
     if (session === null) {
       throw new UnauthorizedError()
+    }
+
+    if (canCreateOneOnOne(session.role) === false) {
+      throw new ForbiddenError()
     }
 
     const json = c.req.valid("json")
