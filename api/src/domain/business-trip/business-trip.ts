@@ -81,6 +81,10 @@ export class BusinessTrip implements Props {
     })
   }
 
+  get isModifiable(): boolean {
+    return this.status === "requested"
+  }
+
   // 申請内容を変更した新しい出張申請を返す。
   withDetails(props: {
     destination: string

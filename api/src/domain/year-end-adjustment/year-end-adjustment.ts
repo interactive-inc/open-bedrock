@@ -63,6 +63,10 @@ export class YearEndAdjustment implements Props {
     })
   }
 
+  get isModifiable(): boolean {
+    return this.status === "submitted"
+  }
+
   // 申告内容を変更した新しい年末調整申告を返す。
   withDetails(props: { targetYear: number; note: string | null }): YearEndAdjustment {
     return new YearEndAdjustment({
