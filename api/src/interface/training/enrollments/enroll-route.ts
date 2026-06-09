@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       course_code: codeSchema,
-      employee_code: z.string().optional(),
+      employee_code: codeSchema.optional(),
       due_date: isoDate.optional(),
     }),
   ),

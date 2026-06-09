@@ -50,8 +50,8 @@ export const POST = factory.createHandlers(
     z.object({
       code: codeSchema,
       department_id: z.number(),
-      parent_code: z.string().nullable().optional(),
-      manager_employee_code: z.string().nullable().optional(),
+      parent_code: codeSchema.nullable().optional(),
+      manager_employee_code: codeSchema.nullable().optional(),
       order: z.number(),
     }),
   ),
