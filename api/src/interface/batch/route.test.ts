@@ -45,6 +45,14 @@ function adminToken(): Promise<string> {
   })
 }
 
+function employeeToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 2,
+    email: "you+e002@example.com",
+    role: "employee",
+  })
+}
+
 async function request(path: string, token: string | null): Promise<Response> {
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
@@ -84,5 +92,11 @@ describe("GET /batch", () => {
     const response = await request("/batch", "not-a-real-token")
 
     expect(response.status).toBe(401)
+  })
+
+  test("returns 403 for a non-privileged role (employee)", async () => {
+    const response = await request("/batch", await employeeToken())
+
+    expect(response.status).toBe(403)
   })
 })
