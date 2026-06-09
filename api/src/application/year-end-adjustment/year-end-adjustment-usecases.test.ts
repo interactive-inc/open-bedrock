@@ -20,6 +20,10 @@ async function seedAdjustment(context: Context, employeeId: number): Promise<str
     throw new Error("seed failed")
   }
 
+  if ("kind" in created) {
+    throw new Error("seed failed: already submitted")
+  }
+
   return created.id
 }
 
@@ -38,6 +42,10 @@ describe("CreateYearEndAdjustment", () => {
 
     if (created instanceof Error) {
       throw new Error("create failed")
+    }
+
+    if ("kind" in created) {
+      throw new Error("create failed: already submitted")
     }
 
     expect(created.status).toBe("submitted")
