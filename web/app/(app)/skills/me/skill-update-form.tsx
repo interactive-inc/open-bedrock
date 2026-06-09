@@ -16,17 +16,11 @@ const levelOptions = [1, 2, 3, 4, 5]
 // 本人のスキル登録/更新フォーム。useActionState で updateSkillAction を呼ぶ。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function SkillUpdateForm() {
-  const action = useActionState(updateSkillAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await updateSkillAction(state, formData)
+  async function reduce(
+    previousState: SkillUpdateState,
+    formData: FormData,
+  ): Promise<SkillUpdateState> {
+    const result = await updateSkillAction(previousState, formData)
 
     if (result.ok) {
       toast.success("スキルを保存しました")
@@ -34,11 +28,19 @@ export function SkillUpdateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="skill_code">スキルコード</FieldLabel>

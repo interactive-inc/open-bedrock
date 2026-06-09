@@ -37,17 +37,11 @@ const selectClassName =
 export function EmployeeEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 
-  const action = useActionState(updateEmployeeAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast し、成功時は Dialog を閉じる。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await updateEmployeeAction(state, formData)
+  async function reduce(
+    previousState: EmployeeUpdateFormState,
+    formData: FormData,
+  ): Promise<EmployeeUpdateFormState> {
+    const result = await updateEmployeeAction(previousState, formData)
 
     if (result.ok) {
       toast.success("従業員を更新しました")
@@ -57,8 +51,16 @@ export function EmployeeEditForm(props: Props) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
+
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -73,7 +75,7 @@ export function EmployeeEditForm(props: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <form action={handleAction} className="flex flex-col gap-4">
+        <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="code" value={props.code} />
 
           <FieldGroup>

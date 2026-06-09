@@ -14,17 +14,11 @@ const initialState: ExpenseSubmitFormState = { ok: false, error: null }
 // 経費申請フォーム。カテゴリ・金額・利用日・任意メモを native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function ExpenseCreateForm() {
-  const action = useActionState(submitExpenseAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast する。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await submitExpenseAction(state, formData)
+  async function reduce(
+    previousState: ExpenseSubmitFormState,
+    formData: FormData,
+  ): Promise<ExpenseSubmitFormState> {
+    const result = await submitExpenseAction(previousState, formData)
 
     if (result.ok) {
       toast.success("経費を申請しました")
@@ -32,11 +26,19 @@ export function ExpenseCreateForm() {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="expense-category">カテゴリ</FieldLabel>

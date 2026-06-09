@@ -33,17 +33,11 @@ const initialState: SurveyFormState = { ok: false, error: null }
 export function SurveyEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 
-  const action = useActionState(updateSurveyAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。結果をその場で toast し、成功時は Dialog を閉じる。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await updateSurveyAction(state, formData)
+  async function reduce(
+    previousState: SurveyFormState,
+    formData: FormData,
+  ): Promise<SurveyFormState> {
+    const result = await updateSurveyAction(previousState, formData)
 
     if (result.ok) {
       toast.success("アンケートを更新しました")
@@ -53,8 +47,16 @@ export function SurveyEditForm(props: Props) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
+
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -67,7 +69,7 @@ export function SurveyEditForm(props: Props) {
           <DialogDescription>タイトル・状態・設問を変更します。</DialogDescription>
         </DialogHeader>
 
-        <form action={handleAction} className="flex flex-col gap-4">
+        <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="id" value={props.id} />
 
           <FieldGroup>
