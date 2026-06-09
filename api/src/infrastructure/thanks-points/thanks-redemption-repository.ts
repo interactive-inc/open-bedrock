@@ -117,13 +117,19 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  async findByEmployee(employeeId: number): Promise<ReadonlyArray<ThanksRedemption> | Error> {
+  async findByEmployee(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(thanksRedemptions)
-        .where(eq(thanksRedemptions.employeeId, employeeId))
+        .where(eq(thanksRedemptions.employeeId, props.employeeId))
         .orderBy(desc(thanksRedemptions.id))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => ThanksRedemption.fromRow(row))
     } catch (error) {
@@ -131,13 +137,18 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  async findPending(): Promise<ReadonlyArray<ThanksRedemption> | Error> {
+  async findPending(props: {
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(thanksRedemptions)
         .where(eq(thanksRedemptions.status, "pending"))
         .orderBy(desc(thanksRedemptions.id))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => ThanksRedemption.fromRow(row))
     } catch (error) {
@@ -161,9 +172,7 @@ export class ThanksRedemptionRepository {
 
       return rows.length > 0
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to check pending redemptions")
+      return error instanceof Error ? error : new Error("failed to check pending redemptions")
     }
   }
 
