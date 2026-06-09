@@ -20,33 +20,37 @@ type Props = {
 const initialState: NotificationFormState = { ok: false, error: null }
 
 // 通知一覧。各通知を Card で並べ、未読には既読化ボタンを出す。
-// 既読化・全件既読の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+// 既読化・全件既読の結果は reducer ラッパー内で toast する（render 本体で toast しない）。
 export function NotificationList(props: Props) {
-  const markAction = useActionState(markNotificationReadAction, initialState)
-
-  const markState = markAction[0]
-
-  const markDispatch = markAction[1]
-
-  const markAllAction = useActionState(markAllNotificationsReadAction, initialState)
-
-  const markAllState = markAllAction[0]
-
-  const markAllDispatch = markAllAction[1]
-
-  const isMarkingAll = markAllAction[2]
-
-  if (markState.ok) {
-    toast.success("既読にしました")
-  } else if (markState.error !== null) {
-    toast.error(markState.error)
+  async function markReduce(
+    previousState: NotificationFormState,
+    formData: FormData,
+  ): Promise<NotificationFormState> {
+    const result = await markNotificationReadAction(previousState, formData)
+    if (result.ok) {
+      toast.success("既読にしました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+    return result
   }
 
-  if (markAllState.ok) {
-    toast.success("すべて既読にしました")
-  } else if (markAllState.error !== null) {
-    toast.error(markAllState.error)
+  async function markAllReduce(
+    previousState: NotificationFormState,
+    _formData: FormData,
+  ): Promise<NotificationFormState> {
+    const result = await markAllNotificationsReadAction(previousState)
+    if (result.ok) {
+      toast.success("すべて既読にしました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+    return result
   }
+
+  const [, markDispatch] = useActionState(markReduce, initialState)
+
+  const [, markAllDispatch, isMarkingAll] = useActionState(markAllReduce, initialState)
 
   if (props.notifications.length === 0) {
     return <p className="text-sm text-muted-foreground">通知はありません</p>
