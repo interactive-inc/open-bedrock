@@ -145,6 +145,28 @@ export class ThanksRedemptionRepository {
     }
   }
 
+  // 指定社員に pending 状態の交換申請が存在するかを返す。
+  async hasPendingByEmployee(employeeId: number): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ id: thanksRedemptions.id })
+        .from(thanksRedemptions)
+        .where(
+          and(
+            eq(thanksRedemptions.employeeId, employeeId),
+            eq(thanksRedemptions.status, "pending"),
+          ),
+        )
+        .limit(1)
+
+      return rows.length > 0
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to check pending redemptions")
+    }
+  }
+
   // 受領残高を算出する。受領 thanks.points 合計 − 確定交換（fulfilled）の point_cost 合計。
   // 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
   async getBalance(employeeId: number): Promise<number | Error> {
