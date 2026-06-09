@@ -1,7 +1,7 @@
 import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
 import type { Context } from "@/env"
 import { yearEndAdjustments } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 
 export class YearEndAdjustmentRepository {
   constructor(private readonly c: Context) {}
@@ -34,6 +34,28 @@ export class YearEndAdjustmentRepository {
       return row === undefined ? null : YearEndAdjustment.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load year_end_adjustment")
+    }
+  }
+
+  // 同一社員・同一年度の申告が存在するか確認する。
+  async findByEmployeeIdAndYear(
+    employeeId: number,
+    targetYear: number,
+  ): Promise<YearEndAdjustment | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(yearEndAdjustments)
+        .where(
+          and(
+            eq(yearEndAdjustments.employeeId, employeeId),
+            eq(yearEndAdjustments.targetYear, targetYear),
+          ),
+        )
+      const row = rows.at(0)
+      return row === undefined ? null : YearEndAdjustment.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to find year_end_adjustment")
     }
   }
 
