@@ -1,7 +1,14 @@
 import { LeaveRequest } from "@/domain/leave/leave-request"
 import type { Context } from "@/env"
-import { leaveRequests } from "@/schema"
+import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne } from "drizzle-orm"
+
+export type ApproveWithBalanceOutcome =
+  | LeaveRequest
+  | "already_decided"
+  | "balance_not_found"
+  | "insufficient_balance"
+  | Error
 
 export class LeaveRequestRepository {
   constructor(private readonly c: Context) {}
@@ -131,6 +138,119 @@ export class LeaveRequestRepository {
     }
   }
 
+  // 承認と休暇残数の減算を D1 batch で同一トランザクションにまとめる。
+  // Cloudflare D1 は BEGIN TRANSACTION ではなく batch() で複数 statement の
+  // 順次実行と失敗時 rollback を提供する。
+  async approveFromPendingAndConsumeBalance(props: {
+    leaveRequestId: number
+    approverId: number
+    decidedComment: string | null
+    fiscalYear: string
+  }): Promise<ApproveWithBalanceOutcome> {
+    try {
+      let batchError: Error | null = null
+      let decideResult: D1Result<unknown> | undefined
+
+      try {
+        const results = await this.c.env.DB.batch([
+          this.c.env.DB.prepare(
+            `
+            UPDATE leave_balances
+            SET
+              used_days = used_days + (
+                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              ),
+              remaining_days = remaining_days - (
+                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              )
+            WHERE employee_id = (
+                SELECT employee_id FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              )
+              AND leave_type = (
+                SELECT leave_type FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              )
+              AND fiscal_year = ?2
+              AND remaining_days >= (
+                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              )
+            `,
+          ).bind(props.leaveRequestId, props.fiscalYear),
+          abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+          this.c.env.DB.prepare(
+            `
+            UPDATE leave_requests
+            SET
+              status = 'approved',
+              approver_id = ?2,
+              decided_comment = ?3
+            WHERE id = ?1
+              AND status = 'pending'
+            RETURNING
+              id,
+              employee_id AS employeeId,
+              leave_type AS leaveType,
+              start_date AS startDate,
+              end_date AS endDate,
+              days,
+              reason,
+              status,
+              approver_id AS approverId,
+              decided_comment AS decidedComment,
+              created_at AS createdAt
+            `,
+          ).bind(props.leaveRequestId, props.approverId, props.decidedComment),
+          abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        ])
+
+        decideResult = results.at(2)
+      } catch (error) {
+        batchError = error instanceof Error ? error : new Error("failed to approve leave_request")
+      }
+
+      const decidedRow = firstResultRow(decideResult)
+
+      if (decidedRow !== undefined) {
+        return LeaveRequest.fromRow(decidedRow as Parameters<typeof LeaveRequest.fromRow>[0])
+      }
+
+      const current = await this.findById(props.leaveRequestId)
+
+      if (current instanceof Error) {
+        return current
+      }
+
+      if (current === null || current.status !== "pending") {
+        return "already_decided"
+      }
+
+      const balanceRows = await this.c.var.database
+        .select()
+        .from(leaveBalances)
+        .where(
+          and(
+            eq(leaveBalances.employeeId, current.employeeId),
+            eq(leaveBalances.leaveType, current.leaveType),
+            eq(leaveBalances.fiscalYear, props.fiscalYear),
+          ),
+        )
+        .limit(1)
+
+      if (balanceRows.at(0) === undefined) {
+        return "balance_not_found"
+      }
+
+      const balance = balanceRows.at(0)
+
+      if (balance !== undefined && balance.remainingDays < current.days) {
+        return "insufficient_balance"
+      }
+
+      return batchError ?? new Error("failed to approve leave_request")
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to approve leave_request")
+    }
+  }
+
   // 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
   async revise(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
@@ -168,4 +288,12 @@ export class LeaveRequestRepository {
       return error instanceof Error ? error : new Error("failed to delete leave_request")
     }
   }
+}
+
+function firstResultRow(result: D1Result<unknown> | undefined): unknown {
+  return result?.results?.at(0)
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
 }

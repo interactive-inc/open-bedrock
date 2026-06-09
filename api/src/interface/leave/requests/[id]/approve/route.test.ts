@@ -21,6 +21,10 @@ const leaveDecisionResponseSchema = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
 })
 
+const leaveRequestRowSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
+})
+
 const jwtSecret = "leave-requests-approve-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
@@ -181,6 +185,81 @@ describe("POST /leave/requests/:id/approve", () => {
     // 1回ぶんだけ減算されている。旧実装では再承認で二重減算されていた。
     expect(annual?.remaining_days).toBe(12)
     expect(annual?.used_days).toBe(8)
+  })
+
+  test("keeps the request pending when balance is insufficient", async () => {
+    const db = await createTestDb()
+
+    await db
+      .prepare(
+        `
+        UPDATE leave_balances
+        SET used_days = 19, remaining_days = 1
+        WHERE employee_id = 5 AND fiscal_year = '2026' AND leave_type = 'annual'
+        `,
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/leave/requests/1/approve",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "approved" },
+    })
+
+    expect(response.status).toBe(409)
+
+    const requestRow = leaveRequestRowSchema.parse(
+      await db.prepare("SELECT status FROM leave_requests WHERE id = 1").first(),
+    )
+
+    const balance = leaveBalanceResponseSchema.parse(
+      await db
+        .prepare(
+          `
+          SELECT fiscal_year, leave_type, granted_days, used_days, remaining_days
+          FROM leave_balances
+          WHERE employee_id = 5 AND fiscal_year = '2026' AND leave_type = 'annual'
+          `,
+        )
+        .first(),
+    )
+
+    expect(requestRow.status).toBe("pending")
+    expect(balance.used_days).toBe(19)
+    expect(balance.remaining_days).toBe(1)
+  })
+
+  test("keeps the request pending when the balance record is missing", async () => {
+    const db = await createTestDb()
+
+    await db
+      .prepare(
+        `
+        DELETE FROM leave_balances
+        WHERE employee_id = 5 AND fiscal_year = '2026' AND leave_type = 'annual'
+        `,
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/leave/requests/1/approve",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "approved" },
+    })
+
+    expect(response.status).toBe(409)
+
+    const requestRow = leaveRequestRowSchema.parse(
+      await db.prepare("SELECT status FROM leave_requests WHERE id = 1").first(),
+    )
+
+    expect(requestRow.status).toBe("pending")
   })
 
   test("returns 403 for a member", async () => {
