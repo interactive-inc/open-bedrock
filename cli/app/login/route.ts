@@ -3,7 +3,7 @@ import { z } from "zod"
 import { loadConfig, saveConfig } from "@/lib/config/config"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
-import { ApiError, UsageError } from "@/lib/errors"
+import { UsageError } from "@/lib/errors"
 
 export const help = `karte login — ログインしてトークンを取得
 
@@ -35,19 +35,11 @@ export default factory.createHandlers(
 
     const client = await createClient(config.base_url)
 
+    // createClient の fetch ラッパーが 4xx/5xx を ApiError として throw するため、
+    // ここに来た時点で response は必ず成功。手動の ok チェックは不要。
     const response = await client.auth.login.$post({
       json: { email: query.email, password: query.password },
     })
-
-    if (!response.ok) {
-      let message: string
-      try {
-        message = JSON.stringify(await response.json())
-      } catch {
-        message = await response.text()
-      }
-      throw new ApiError(response.status, `ログイン失敗 ${response.status} ${message}`)
-    }
 
     const result = await response.json()
 
