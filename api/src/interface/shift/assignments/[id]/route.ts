@@ -13,6 +13,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -68,7 +69,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      pattern_code: z.string().nullable().optional(),
+      pattern_code: codeSchema.nullable().optional(),
       date: isoDate,
       note: z.string().max(3_000).nullable().optional(),
     }),

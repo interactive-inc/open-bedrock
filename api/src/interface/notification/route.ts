@@ -10,6 +10,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /notifications — 権限を持つ役割が通知を作成する
 export const POST = factory.createHandlers(
@@ -17,7 +18,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      recipient_employee_code: z.string().min(1),
+      recipient_employee_code: codeSchema,
       kind: notificationKindSchema.default("announcement"),
       title: z.string().min(1).max(500),
       body: z.string().max(5_000).optional(),

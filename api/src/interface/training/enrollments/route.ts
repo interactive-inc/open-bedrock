@@ -1,5 +1,6 @@
 import { canManageTraining } from "@/domain/training/can-manage-training"
 import type { Variables } from "@/env"
+import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, trainingEnrollments } from "@/schema"
@@ -13,7 +14,7 @@ export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
-    z.object({ employee_id: z.string().optional(), employee_code: z.string().optional() }),
+    z.object({ employee_id: z.string().optional(), employee_code: codeSchema.optional() }),
   ),
   async (c) => {
     const query = c.req.valid("query")

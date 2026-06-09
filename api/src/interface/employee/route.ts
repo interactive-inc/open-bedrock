@@ -14,6 +14,7 @@ import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
 import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -75,7 +76,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       name: z.string().min(1).max(200),
       email: z.string().min(1).max(254),
       password: z.string().min(8).max(200),

@@ -14,6 +14,7 @@ import {
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // パターンをレスポンス用の snake_case に整形する。
 function toResponseBody(pattern: ShiftPattern) {
@@ -67,7 +68,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       name: z.string().min(1).max(200),
       start_time: z.string().min(1),
       end_time: z.string().min(1),

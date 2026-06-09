@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -54,8 +55,8 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      parent_code: z.string().nullable().optional(),
-      manager_employee_code: z.string().nullable().optional(),
+      parent_code: codeSchema.nullable().optional(),
+      manager_employee_code: codeSchema.nullable().optional(),
       order: z.number(),
     }),
   ),

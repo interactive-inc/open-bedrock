@@ -7,7 +7,7 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
-import { yearMonth } from "@/lib/schemas"
+import { codeSchema, yearMonth } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        employee_code: z.string().min(1),
+        employee_code: codeSchema,
         period: yearMonth,
         base_salary: z.number().int().nonnegative().safe(),
         allowances: z.number().int().nonnegative().safe().default(0),

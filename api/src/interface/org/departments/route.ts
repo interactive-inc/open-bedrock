@@ -12,6 +12,7 @@ import {
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // 部署ノードをレスポンス用の snake_case に整形する。
 function toResponseBody(department: OrgDepartment) {
@@ -47,10 +48,10 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       department_id: z.number(),
-      parent_code: z.string().nullable().optional(),
-      manager_employee_code: z.string().nullable().optional(),
+      parent_code: codeSchema.nullable().optional(),
+      manager_employee_code: codeSchema.nullable().optional(),
       order: z.number(),
     }),
   ),

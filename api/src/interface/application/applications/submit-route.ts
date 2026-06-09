@@ -5,6 +5,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /applications — 本人として申請を作成
 export const POST = factory.createHandlers(
@@ -12,7 +13,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      template_code: z.string().min(1),
+      template_code: codeSchema,
       payload: jsonPayloadSchema(10_000),
     }),
   ),

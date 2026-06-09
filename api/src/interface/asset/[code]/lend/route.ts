@@ -10,6 +10,7 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /assets/:code/lend — 在庫中の資産を従業員へ貸し出す（権限が必要）
 export const POST = factory.createHandlers(
@@ -17,7 +18,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_code: z.string().min(1),
+      employee_code: codeSchema,
     }),
   ),
   async (c) => {

@@ -10,6 +10,7 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /assets — 新規資産の登録（権限が必要）
 export const POST = factory.createHandlers(
@@ -17,7 +18,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       name: z.string().min(1).max(200),
       kind: z.enum(["pc", "monitor", "furniture", "other"]),
       serial: z.string().max(200).optional(),
