@@ -15,25 +15,27 @@ const initialState: EmployeeDeleteFormState = { ok: false, error: null }
 
 // 従業員削除ボタン。成功時は Server Action 側で /employees へ遷移する。自分自身の削除は失敗を toast する。
 export function EmployeeDeleteButton(props: Props) {
-  const action = useActionState(deleteEmployeeAction, initialState)
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。失敗時のみ toast する（成功時は遷移するため戻らない）。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await deleteEmployeeAction(initialState, formData)
+  async function reduce(
+    previousState: EmployeeDeleteFormState,
+    formData: FormData,
+  ): Promise<EmployeeDeleteFormState> {
+    const result = await deleteEmployeeAction(previousState, formData)
 
     if (result.error !== null) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
 
+  const action = useActionState(reduce, initialState)
+
+  const formAction = action[1]
+
+  const isPending = action[2]
+
   return (
-    <form action={handleAction}>
+    <form action={formAction}>
       <input type="hidden" name="code" value={props.code} />
 
       <Button type="submit" variant="destructive" size="sm" disabled={isPending}>

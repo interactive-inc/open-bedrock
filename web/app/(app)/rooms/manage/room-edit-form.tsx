@@ -31,17 +31,11 @@ const initialState: RoomUpdateFormState = { ok: false, error: null }
 export function RoomEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 
-  const action = useActionState(updateRoomAction, initialState)
-
-  const state = action[0]
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
-
-  // form action に渡すラッパ。Server Action の結果をその場で toast し、成功時は Dialog を閉じる。
-  async function handleAction(formData: FormData): Promise<void> {
-    const result = await updateRoomAction(state, formData)
+  async function reduce(
+    previousState: RoomUpdateFormState,
+    formData: FormData,
+  ): Promise<RoomUpdateFormState> {
+    const result = await updateRoomAction(previousState, formData)
 
     if (result.ok) {
       toast.success("会議室を更新しました")
@@ -51,8 +45,16 @@ export function RoomEditForm(props: Props) {
       toast.error(result.error)
     }
 
-    dispatch(formData)
+    return result
   }
+
+  const action = useActionState(reduce, initialState)
+
+  const state = action[0]
+
+  const formAction = action[1]
+
+  const isPending = action[2]
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,7 +67,7 @@ export function RoomEditForm(props: Props) {
           <DialogDescription>名称・定員・所在地を変更します。</DialogDescription>
         </DialogHeader>
 
-        <form action={handleAction} className="flex flex-col gap-4">
+        <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="id" value={props.id} />
 
           <FieldGroup>
