@@ -13,15 +13,17 @@ export type YearEndAdjustmentNotFound = { reason: "year_end_adjustment_not_found
 
 export type NotApplicant = { reason: "not_applicant" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
- * 年末調整の申告の対象年・備考を変更する。本人以外の変更を拒否する。
+ * 年末調整の申告の対象年・備考を変更する。本人以外と、承認済み申告の変更を拒否する。
  */
 export class UpdateYearEndAdjustment {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<YearEndAdjustment | YearEndAdjustmentNotFound | NotApplicant | Error> {
+  ): Promise<YearEndAdjustment | YearEndAdjustmentNotFound | NotApplicant | NotModifiable | Error> {
     const yearEndAdjustmentRepository = new YearEndAdjustmentRepository(this.c)
 
     const current = await yearEndAdjustmentRepository.findById(command.yearEndAdjustmentId)
@@ -36,6 +38,10 @@ export class UpdateYearEndAdjustment {
 
     if (current.employeeId !== command.employeeId) {
       return { reason: "not_applicant" }
+    }
+
+    if (!current.isModifiable) {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current.withDetails({

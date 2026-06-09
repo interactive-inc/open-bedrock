@@ -5,6 +5,7 @@ import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-ad
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -88,6 +89,10 @@ export const PUT = factory.createHandlers(
         throw new NotFoundError("year end adjustment not found")
       }
 
+      if (yearEndAdjustment.reason === "not_modifiable") {
+        throw new ConflictError("not modifiable")
+      }
+
       throw new ForbiddenError("not the applicant")
     }
 
@@ -118,6 +123,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "not_applicant") {
     throw new ForbiddenError("not the applicant")
+  }
+
+  if (result.reason === "not_modifiable") {
+    throw new ConflictError("not modifiable")
   }
 
   return c.body(null, 204)
