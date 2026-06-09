@@ -19,7 +19,7 @@ async function seedTrip(context: Context, travelerId: number): Promise<string> {
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
-  if (created instanceof Error) {
+  if (created instanceof Error || "reason" in created) {
     throw new Error("seed failed")
   }
 
@@ -42,7 +42,7 @@ describe("CreateBusinessTrip", () => {
 
     expect(created).toBeInstanceOf(BusinessTrip)
 
-    if (created instanceof Error) {
+    if (created instanceof Error || "reason" in created) {
       throw new Error("create failed")
     }
 

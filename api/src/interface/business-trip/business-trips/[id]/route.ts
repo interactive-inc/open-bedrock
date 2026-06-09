@@ -67,7 +67,7 @@ export const PUT = factory.createHandlers(
       start_date: isoDate,
       end_date: isoDate,
       purpose: z.string().min(1).max(3_000),
-      estimated_cost: z.number().int().nullable().optional(),
+      estimated_cost: z.number().int().nonnegative().nullable().optional(),
     }),
   ),
   async (c) => {
