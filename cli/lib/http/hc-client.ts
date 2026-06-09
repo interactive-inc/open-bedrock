@@ -14,7 +14,17 @@ const fetchOrThrow: typeof fetch = async (input, init) => {
     return response
   }
 
-  const detail = await response.text()
+  // 本文は一度だけ読む。JSON ならコンパクトに整形し、それ以外は生テキストを使う
+  // （ensureOk と同じ見え方に揃える）。
+  const raw = await response.text()
+
+  let detail: string
+
+  try {
+    detail = JSON.stringify(JSON.parse(raw))
+  } catch {
+    detail = raw
+  }
 
   throw new ApiError(
     response.status,

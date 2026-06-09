@@ -36,6 +36,14 @@ describe("hc client error handling (#96)", () => {
     expect(response.status).toBe(500)
   })
 
+  test("surfaces a JSON error body's contents in the message", async () => {
+    const response = await whoamiWith(400, JSON.stringify({ message: "validation failed" }))
+
+    expect(response.status).toBe(400)
+
+    expect(await response.text()).toContain("validation failed")
+  })
+
   test("passes through a successful response untouched", async () => {
     const response = await whoamiWith(200, JSON.stringify({ id: 1, name: "You Example" }))
 
