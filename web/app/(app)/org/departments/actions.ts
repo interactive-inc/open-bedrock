@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache"
 import { createOrgDepartment } from "@/lib/api/create-org-department"
 import { deleteOrgDepartment } from "@/lib/api/delete-org-department"
+import { getMe } from "@/lib/api/get-me"
 import { updateOrgDepartment } from "@/lib/api/update-org-department"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageOrg } from "@/lib/org/can-manage-org"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type OrgDepartmentActionState = {
@@ -18,6 +20,12 @@ export async function createOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
 ): Promise<OrgDepartmentActionState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+    return { ok: false, error: "組織を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   if (code === null) {
@@ -62,6 +70,12 @@ export async function updateOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
 ): Promise<OrgDepartmentActionState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+    return { ok: false, error: "組織を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   if (code === null) {
@@ -94,6 +108,12 @@ export async function deleteOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
 ): Promise<OrgDepartmentActionState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+    return { ok: false, error: "組織を管理する権限がありません" }
+  }
+
   const code = toText(formData.get("code"))
 
   if (code === null) {

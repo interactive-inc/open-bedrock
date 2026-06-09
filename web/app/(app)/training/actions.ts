@@ -6,8 +6,10 @@ import { cancelTrainingEnrollment } from "@/lib/api/cancel-training-enrollment"
 import { completeTrainingEnrollment } from "@/lib/api/complete-training-enrollment"
 import { createTrainingCourse } from "@/lib/api/create-training-course"
 import { createTrainingEnrollment } from "@/lib/api/create-training-enrollment"
+import { getMe } from "@/lib/api/get-me"
 import { updateTrainingCourse } from "@/lib/api/update-training-course"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageTraining } from "@/lib/training/can-manage-training"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type TrainingFormState = {
@@ -74,6 +76,12 @@ export async function createTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,
 ): Promise<TrainingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+    return { ok: false, error: "研修コースを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -170,6 +178,12 @@ export async function updateTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,
 ): Promise<TrainingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+    return { ok: false, error: "研修コースを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -235,6 +249,12 @@ export async function archiveTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,
 ): Promise<TrainingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+    return { ok: false, error: "研修コースを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
