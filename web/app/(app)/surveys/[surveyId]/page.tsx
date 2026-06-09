@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/survey-answer-form"
-import { getSurveyList } from "@/lib/api/get-survey-list"
+import { getSurvey } from "@/lib/api/get-survey"
 import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/survey-question-schema"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ type Props = {
 }
 
 // アンケート回答画面 (/surveys/:surveyId)。
-// 専用の取得 API が無いため一覧から対象を絞り込み、設問を回答フォームに渡す。
+// 専用の取得 API で対象アンケートを取得し、設問を回答フォームに渡す。
 export default async function SurveyAnswerPage(props: Props) {
   const routeParams = await props.params
 
@@ -24,13 +24,11 @@ export default async function SurveyAnswerPage(props: Props) {
     notFound()
   }
 
-  const surveys = await getSurveyList()
+  const survey = await getSurvey(surveyId)
 
-  if (surveys instanceof Error) {
+  if (survey instanceof Error) {
     return <p className="text-sm text-destructive">アンケートの取得に失敗しました</p>
   }
-
-  const survey = surveys.find((candidate) => candidate.id === surveyId) ?? null
 
   if (survey === null) {
     notFound()
