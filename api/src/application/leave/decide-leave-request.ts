@@ -15,6 +15,8 @@ export type LeaveRequestNotFound = { failure: "leave_request_not_found" }
 
 export type AlreadyDecided = { failure: "already_decided" }
 
+export type LeaveBalanceNotFound = { failure: "leave_balance_not_found" }
+
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
  */
@@ -23,7 +25,7 @@ export class DecideLeaveRequest {
 
   async run(
     command: Command,
-  ): Promise<LeaveRequest | LeaveRequestNotFound | AlreadyDecided | Error> {
+  ): Promise<LeaveRequest | LeaveRequestNotFound | AlreadyDecided | LeaveBalanceNotFound | Error> {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
 
     const leaveBalanceRepository = new LeaveBalanceRepository(this.c)
@@ -36,6 +38,24 @@ export class DecideLeaveRequest {
 
     if (existing === null) {
       return { failure: "leave_request_not_found" }
+    }
+
+    // 承認時は残数レコードの存在を確定前に確認する。レコードが無いまま確定すると
+    // 減算がスキップされ、残数未作成の社員が無制限に休暇取得できてしまうため拒否する。
+    if (command.action === "approve") {
+      const balance = await leaveBalanceRepository.findByKey({
+        employeeId: existing.employeeId,
+        leaveType: existing.leaveType,
+        fiscalYear: command.fiscalYear,
+      })
+
+      if (balance instanceof Error) {
+        return balance
+      }
+
+      if (balance === null) {
+        return { failure: "leave_balance_not_found" }
+      }
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -68,12 +88,14 @@ export class DecideLeaveRequest {
         return balance
       }
 
-      if (balance !== null) {
-        const decremented = await leaveBalanceRepository.update(balance.decrement(decided.days))
+      if (balance === null) {
+        return new Error("leave balance not found after decision")
+      }
 
-        if (decremented instanceof Error) {
-          return decremented
-        }
+      const decremented = await leaveBalanceRepository.update(balance.decrement(decided.days))
+
+      if (decremented instanceof Error) {
+        return decremented
       }
     }
 

@@ -183,6 +183,37 @@ describe("POST /leave/requests/:id/approve", () => {
     expect(annual?.used_days).toBe(8)
   })
 
+  test("returns 409 and keeps the request pending when no balance record exists", async () => {
+    const db = await createTestDb()
+
+    // 対象社員・休暇種別・年度の残数レコードを削除して「未作成」状態を作る。
+    await db
+      .prepare(
+        "DELETE FROM leave_balances WHERE employee_id = ? AND leave_type = ? AND fiscal_year = ?",
+      )
+      .bind(5, "annual", "2026")
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/leave/requests/1/approve",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "approved" },
+    })
+
+    expect(response.status).toBe(409)
+
+    // 確定前に拒否されるため申請は pending のまま。旧実装では承認が成功し減算がスキップされていた。
+    const status = await db
+      .prepare("SELECT status FROM leave_requests WHERE id = ?")
+      .bind(1)
+      .first("status")
+
+    expect(status).toBe("pending")
+  })
+
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave/requests/1/approve",
