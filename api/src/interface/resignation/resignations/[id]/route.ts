@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -83,6 +84,12 @@ export const PUT = factory.createHandlers(
     }
 
     const json = c.req.valid("json")
+
+    const today = (c.env.NOW ?? new Date().toISOString()).slice(0, 10)
+
+    if (json.resignation_date < today) {
+      throw new BadRequestError("resignation_date must be today or in the future")
+    }
 
     const resignation = await new UpdateResignation(c).run({
       resignationId: c.req.param("id") ?? "",

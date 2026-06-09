@@ -15,9 +15,9 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-import { employees } from "@/schema"
+import { employees, thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { inArray } from "drizzle-orm"
+import { count, inArray } from "drizzle-orm"
 import { z } from "zod"
 
 // GET /thanks — 全従業員が閲覧する感謝のタイムライン（新着順・ページング）
@@ -42,7 +42,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const thanksList = await new ListThanks(c).run({ limit, offset })
+  const [thanksList, totalRows] = await Promise.all([
+    new ListThanks(c).run({ limit, offset }),
+    c.var.database.select({ total: count() }).from(thanksTable),
+  ])
 
   if (thanksList instanceof Error) {
     throw new InternalError("failed to load thanks")
@@ -53,7 +56,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     thanksList.flatMap((thanks) => [thanks.senderEmployeeId, thanks.recipientEmployeeId]),
   )
 
-  const responseBody = thanksList.map((thanks) => ({
+  const items = thanksList.map((thanks) => ({
     id: thanks.id,
     sender_employee_id: thanks.senderEmployeeId,
     sender_name: nameById.get(thanks.senderEmployeeId) ?? "",
@@ -64,7 +67,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: thanks.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: items, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /thanks — 全従業員が他の従業員へ感謝を送る（受信者にだけ通知を作成）

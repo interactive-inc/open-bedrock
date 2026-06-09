@@ -2,7 +2,12 @@ import { CreateResignation } from "@/application/resignation/create-resignation"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ConflictError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -32,6 +37,12 @@ export const POST = factory.createHandlers(
     }
 
     const json = c.req.valid("json")
+
+    const today = (c.env.NOW ?? new Date().toISOString()).slice(0, 10)
+
+    if (json.resignation_date < today) {
+      throw new BadRequestError("resignation_date must be today or in the future")
+    }
 
     const result = await new CreateResignation(c).run({
       employeeId: viewer.employeeId,
