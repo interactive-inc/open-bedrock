@@ -38,8 +38,8 @@ export async function issuePayslipAction(
 
   const baseSalary = Number(formData.get("base_salary"))
 
-  if (!Number.isFinite(baseSalary) || baseSalary < 0) {
-    return { ok: false, error: "基本給は 0 以上の数で入力してください" }
+  if (!Number.isFinite(baseSalary) || !Number.isInteger(baseSalary) || baseSalary < 0) {
+    return { ok: false, error: "基本給は 0 以上の整数で入力してください" }
   }
 
   const allowances = toNonNegativeNumber(formData.get("allowances"))
@@ -86,8 +86,8 @@ export async function createSalaryRevisionAction(
 
   const newBaseSalary = Number(formData.get("new_base_salary"))
 
-  if (!Number.isFinite(newBaseSalary) || newBaseSalary < 0) {
-    return { ok: false, error: "改定後基本給は 0 以上の数で入力してください" }
+  if (!Number.isFinite(newBaseSalary) || !Number.isInteger(newBaseSalary) || newBaseSalary < 0) {
+    return { ok: false, error: "改定後基本給は 0 以上の整数で入力してください" }
   }
 
   const reasonValue = formData.get("reason")
@@ -133,14 +133,14 @@ export async function correctPayslipAction(
 
   const baseSalary = Number(formData.get("base_salary"))
 
-  if (!Number.isFinite(baseSalary) || baseSalary < 0) {
-    return { ok: false, error: "基本給は 0 以上の数で入力してください" }
+  if (!Number.isFinite(baseSalary) || !Number.isInteger(baseSalary) || baseSalary < 0) {
+    return { ok: false, error: "基本給は 0 以上の整数で入力してください" }
   }
 
   const netPay = Number(formData.get("net_pay"))
 
-  if (!Number.isFinite(netPay) || netPay < 0) {
-    return { ok: false, error: "差引支給額は 0 以上の数で入力してください" }
+  if (!Number.isFinite(netPay) || !Number.isInteger(netPay) || netPay < 0) {
+    return { ok: false, error: "差引支給額は 0 以上の整数で入力してください" }
   }
 
   const corrected = await correctPayslip(payslipId, {
@@ -203,8 +203,8 @@ export async function correctSalaryRevisionAction(
 
   const newBaseSalary = Number(formData.get("new_base_salary"))
 
-  if (!Number.isFinite(newBaseSalary) || newBaseSalary < 0) {
-    return { ok: false, error: "改定後基本給は 0 以上の数で入力してください" }
+  if (!Number.isFinite(newBaseSalary) || !Number.isInteger(newBaseSalary) || newBaseSalary < 0) {
+    return { ok: false, error: "改定後基本給は 0 以上の整数で入力してください" }
   }
 
   const reasonValue = formData.get("reason")
@@ -249,11 +249,11 @@ export async function cancelSalaryRevisionAction(
   return { ok: true, error: null }
 }
 
-// FormData の数値を 0 以上の number へ。未入力・不正値は 0 とする。
+// FormData の数値を 0 以上の整数へ。未入力・不正値・小数・負値は 0 とする。
 function toNonNegativeNumber(value: FormDataEntryValue | null): number {
   const parsed = Number(value)
 
-  if (!Number.isFinite(parsed) || parsed < 0) {
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
     return 0
   }
 

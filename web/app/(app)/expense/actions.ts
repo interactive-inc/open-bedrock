@@ -68,8 +68,8 @@ export async function submitExpenseAction(
 
   const amount = Number(amountValue)
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { ok: false, error: "金額は正の数で入力してください" }
+  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
+    return { ok: false, error: "金額は正の整数で入力してください" }
   }
 
   const spentAtValue = formData.get("spent_at")
@@ -182,8 +182,8 @@ export async function updateExpenseAction(
 
   const amount = Number(amountValue)
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return { ok: false, error: "金額は正の数で入力してください" }
+  if (!Number.isFinite(amount) || !Number.isInteger(amount) || amount <= 0) {
+    return { ok: false, error: "金額は正の整数で入力してください" }
   }
 
   const spentAtValue = formData.get("spent_at")
