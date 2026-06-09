@@ -12,14 +12,32 @@ export type Command = {
   createdAt: string
 }
 
+export type OverlappingTrip = { reason: "overlapping_trip" }
+
 /**
  * 出張申請を作成する。status は "requested" で登録する。
+ * 同一申請者の期間が重複する出張申請が既に存在する場合は拒否する。
  */
 export class CreateBusinessTrip {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<BusinessTrip | Error> {
+  async run(command: Command): Promise<BusinessTrip | OverlappingTrip | Error> {
     const businessTripRepository = new BusinessTripRepository(this.c)
+
+    const overlapping = await businessTripRepository.findOverlapping({
+      travelerId: command.travelerId,
+      startDate: command.startDate,
+      endDate: command.endDate,
+      excludeBusinessTripId: null,
+    })
+
+    if (overlapping instanceof Error) {
+      return overlapping
+    }
+
+    if (overlapping.length > 0) {
+      return { reason: "overlapping_trip" }
+    }
 
     const businessTrip = BusinessTrip.create({
       travelerId: command.travelerId,
