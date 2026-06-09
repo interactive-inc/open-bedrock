@@ -87,7 +87,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
-      amount: z.number(),
+      amount: z.number().positive().int().safe(),
       spent_at: z.string().min(1),
       note: z.string().max(3_000).nullable().optional(),
     }),

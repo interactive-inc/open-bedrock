@@ -144,3 +144,66 @@ describe("GET /expenses/:id", () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe("PUT /expenses/:id", () => {
+  const validBody = {
+    category: "transport",
+    amount: 1500,
+    spent_at: "2026-05-10",
+    note: "updated",
+  }
+
+  test("updates the amount for the owner", async () => {
+    const response = await request({
+      path: "/expenses/1",
+      token: await tokenFor(5, "member"),
+      method: "PUT",
+      body: validBody,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = expenseDetailResponseSchema
+      .omit({ applicant_name: true })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.amount).toBe(1500)
+    }
+  })
+
+  test("returns 400 for a negative amount", async () => {
+    const response = await request({
+      path: "/expenses/1",
+      token: await tokenFor(5, "member"),
+      method: "PUT",
+      body: { ...validBody, amount: -100 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 for a zero amount", async () => {
+    const response = await request({
+      path: "/expenses/1",
+      token: await tokenFor(5, "member"),
+      method: "PUT",
+      body: { ...validBody, amount: 0 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 for a non integer amount", async () => {
+    const response = await request({
+      path: "/expenses/1",
+      token: await tokenFor(5, "member"),
+      method: "PUT",
+      body: { ...validBody, amount: 1.005 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+})
