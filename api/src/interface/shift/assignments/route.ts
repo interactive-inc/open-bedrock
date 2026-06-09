@@ -1,4 +1,5 @@
 import { canManageShift } from "@/domain/shift/can-manage-shift"
+import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, orgDepartments, shiftAssignments } from "@/schema"
@@ -16,7 +17,7 @@ export const GET = factory.createHandlers(
     z.object({
       from: z.string().optional(),
       to: z.string().optional(),
-      dept_code: z.string().optional(),
+      dept_code: codeSchema.optional(),
     }),
   ),
   async (c) => {
