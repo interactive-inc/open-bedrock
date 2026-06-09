@@ -9,6 +9,7 @@ import {
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /shift/patterns — 特権ロールがシフトパターンを新規作成する
 export const POST = factory.createHandlers(
@@ -16,7 +17,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       name: z.string().min(1).max(200),
       start_time: z.string().min(1),
       end_time: z.string().min(1),

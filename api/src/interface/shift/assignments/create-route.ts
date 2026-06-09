@@ -10,6 +10,7 @@ import {
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /shift/assignments — 特権ロールが下書きのシフト割当を作成する
 export const POST = factory.createHandlers(
@@ -17,8 +18,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_code: z.string().min(1),
-      pattern_code: z.string().min(1),
+      employee_code: codeSchema,
+      pattern_code: codeSchema,
       date: isoDate,
       note: z.string().max(3_000).optional(),
     }),

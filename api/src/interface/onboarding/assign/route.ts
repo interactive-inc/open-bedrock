@@ -9,6 +9,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 // POST /onboarding/assign — テンプレートを社員へ割り当てる
 export const POST = factory.createHandlers(
@@ -16,8 +17,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      employee_code: z.string().min(1),
-      template_code: z.string().min(1),
+      employee_code: codeSchema,
+      template_code: codeSchema,
     }),
   ),
   async (c) => {

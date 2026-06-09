@@ -9,13 +9,14 @@ import {
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { codeSchema } from "@/lib/schemas"
 
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
-      code: z.string().min(1),
+      code: codeSchema,
       title: z.string().min(1).max(500),
       category: z.string().min(1).max(200),
       description: z.string().max(3_000).optional(),
