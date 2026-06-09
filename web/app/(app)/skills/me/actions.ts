@@ -33,13 +33,13 @@ export async function updateSkillAction(
 
   const level = Number(levelInput)
 
-  if (Number.isNaN(level)) {
+  if (!Number.isFinite(level)) {
     return { ok: false, error: "レベルが不正です" }
   }
 
   const years = typeof yearsInput === "string" && yearsInput !== "" ? Number(yearsInput) : null
 
-  if (years !== null && Number.isNaN(years)) {
+  if (years !== null && !Number.isFinite(years)) {
     return { ok: false, error: "経験年数が不正です" }
   }
 
