@@ -71,7 +71,7 @@ export const PUT = factory.createHandlers(
       category: z.string().min(1).max(200),
       description: z.string().max(3_000).nullable().optional(),
       schema_json: jsonPayloadSchema(10_000),
-      approver_roles: z.array(z.string().max(100)).optional(),
+      approver_roles: z.array(z.string().max(100)).max(20).optional(),
     }),
   ),
   async (c) => {
