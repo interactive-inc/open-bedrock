@@ -15,15 +15,17 @@ export type AntisocialCheckNotFound = { reason: "antisocial_check_not_found" }
 
 export type NotRequester = { reason: "not_requester" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
- * 反社チェック申請の取引先情報と判定結果を変更する。本人以外の変更を拒否する。
+ * 反社チェック申請の取引先情報と判定結果を変更する。本人以外と、確定済み申請の変更を拒否する。
  */
 export class UpdateAntisocialCheck {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<AntisocialCheck | AntisocialCheckNotFound | NotRequester | Error> {
+  ): Promise<AntisocialCheck | AntisocialCheckNotFound | NotRequester | NotModifiable | Error> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
 
     const current = await antisocialCheckRepository.findById(command.antisocialCheckId)
@@ -38,6 +40,10 @@ export class UpdateAntisocialCheck {
 
     if (current.requesterId !== command.requesterId) {
       return { reason: "not_requester" }
+    }
+
+    if (current.status !== "requested") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current.withDetails({
