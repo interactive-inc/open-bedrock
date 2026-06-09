@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import { createNotification } from "@/lib/api/create-notification"
+import { getMe } from "@/lib/api/get-me"
 import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
 import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type NotificationFormState = {
@@ -76,6 +78,12 @@ export async function createNotificationAction(
   _previousState: NotificationFormState,
   formData: FormData,
 ): Promise<NotificationFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageNotifications(currentUser.role) === false) {
+    return { ok: false, error: "通知を送信する権限がありません" }
+  }
+
   const recipientCodeValue = formData.get("recipient_employee_code")
 
   const recipientEmployeeCode =
