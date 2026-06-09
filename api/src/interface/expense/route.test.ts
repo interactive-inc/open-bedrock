@@ -139,6 +139,28 @@ describe("POST /expenses", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when amount is not an integer", async () => {
+    const response = await request({
+      path: "/expenses",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { category: "transport", amount: 1.005, spent_at: "2026-05-25" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when amount exceeds the safe integer range", async () => {
+    const response = await request({
+      path: "/expenses",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { category: "transport", amount: Number.MAX_SAFE_INTEGER + 2, spent_at: "2026-05-25" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 400 when category is invalid", async () => {
     const response = await request({
       path: "/expenses",
