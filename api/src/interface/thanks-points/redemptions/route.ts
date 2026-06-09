@@ -59,6 +59,10 @@ export const POST = factory.createHandlers(
         throw new ConflictError("reward out of stock")
       }
 
+      if (result.reason === "pending_exists") {
+        throw new ConflictError("pending redemption already exists")
+      }
+
       throw new BadRequestError("reward is not available")
     }
 

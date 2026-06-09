@@ -17,14 +17,23 @@ export type OutOfStock = { reason: "out_of_stock" }
 
 export type InsufficientBalance = { reason: "insufficient_balance" }
 
+export type PendingExists = { reason: "pending_exists" }
+
 // 受領残高から交換を申請する。申請時点で在庫と残高を確認し、point_cost を写し取って pending で記録する。
+// 同一社員に対して PENDING 状態の申請が既に存在する場合は重複を防止する。
 export class RequestRedemption {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
   ): Promise<
-    ThanksRedemption | RewardNotFound | RewardInactive | OutOfStock | InsufficientBalance | Error
+    | ThanksRedemption
+    | RewardNotFound
+    | RewardInactive
+    | OutOfStock
+    | InsufficientBalance
+    | PendingExists
+    | Error
   > {
     const rewardRepository = new ThanksRewardRepository(this.c)
 
@@ -46,6 +55,18 @@ export class RequestRedemption {
 
     if (reward.stock !== null && reward.stock <= 0) {
       return { reason: "out_of_stock" }
+    }
+
+    const hasPending = await redemptionRepository.hasPendingByEmployee(
+      command.employeeId,
+    )
+
+    if (hasPending instanceof Error) {
+      return hasPending
+    }
+
+    if (hasPending) {
+      return { reason: "pending_exists" }
     }
 
     const balance = await redemptionRepository.getBalance(command.employeeId)
