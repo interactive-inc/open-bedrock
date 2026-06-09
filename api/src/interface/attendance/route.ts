@@ -21,8 +21,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const requestedEmployeeId =
-    parsed.data.employee_id === undefined ? null : Number(parsed.data.employee_id)
+  const requestedEmployeeId = (() => {
+    if (parsed.data.employee_id === undefined) return null
+    const parsed2 = Number.parseInt(parsed.data.employee_id, 10)
+    return Number.isInteger(parsed2) ? parsed2 : null
+  })()
 
   const query = resolveAttendanceSearchQuery({
     requestedEmployeeId,

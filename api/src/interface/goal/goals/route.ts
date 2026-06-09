@@ -18,7 +18,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const employeeIdParam = c.req.query("employee_id")
 
-  const requestedEmployeeId = employeeIdParam === undefined ? null : Number(employeeIdParam)
+  const requestedEmployeeId = (() => {
+    if (employeeIdParam === undefined) return null
+    const parsed = Number.parseInt(employeeIdParam, 10)
+    return Number.isInteger(parsed) ? parsed : null
+  })()
 
   const targetEmployeeId = requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
 
