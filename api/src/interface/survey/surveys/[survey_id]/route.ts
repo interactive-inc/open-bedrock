@@ -28,11 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  const rows = await c.var.database
-    .select()
-    .from(surveys)
-    .where(eq(surveys.id, surveyId))
-    .limit(1)
+  const rows = await c.var.database.select().from(surveys).where(eq(surveys.id, surveyId)).limit(1)
 
   const row = rows.at(0)
 
