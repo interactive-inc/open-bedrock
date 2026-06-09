@@ -9,8 +9,47 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { surveys } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
+import { eq } from "drizzle-orm"
 import { z } from "zod"
+
+// GET /surveys/:survey_id — 指定アンケートを取得（認証済みユーザー）
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  const surveyId = Number(c.req.param("survey_id"))
+
+  if (Number.isInteger(surveyId) === false) {
+    throw new NotFoundError("survey not found")
+  }
+
+  const rows = await c.var.database
+    .select()
+    .from(surveys)
+    .where(eq(surveys.id, surveyId))
+    .limit(1)
+
+  const row = rows.at(0)
+
+  if (row === undefined) {
+    throw new NotFoundError("survey not found")
+  }
+
+  return c.json(
+    {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      questions_json: JSON.parse(row.questionsJson),
+    },
+    200,
+  )
+})
 
 // アンケートをレスポンス用の snake_case に整形する。
 function toResponseBody(survey: Survey) {
