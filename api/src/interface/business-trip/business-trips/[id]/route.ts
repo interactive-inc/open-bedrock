@@ -103,6 +103,10 @@ export const PUT = factory.createHandlers(
         throw new ConflictError("not modifiable")
       }
 
+      if (businessTrip.reason === "overlapping_trip") {
+        throw new ConflictError("overlapping business trip already exists")
+      }
+
       throw new ForbiddenError("not the traveler")
     }
 
