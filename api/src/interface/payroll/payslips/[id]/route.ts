@@ -94,9 +94,12 @@ export const PUT = factory.createHandlers(
         deductions: z.number().int().nonnegative().safe(),
         net_pay: z.number().int().nonnegative().safe(),
       })
-      .refine((input) => input.net_pay === input.base_salary + input.allowances - input.deductions, {
-        message: "net_pay must equal base_salary + allowances - deductions",
-      }),
+      .refine(
+        (input) => input.net_pay === input.base_salary + input.allowances - input.deductions,
+        {
+          message: "net_pay must equal base_salary + allowances - deductions",
+        },
+      ),
   ),
   async (c) => {
     const session = c.var.session
