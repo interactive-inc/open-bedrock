@@ -180,6 +180,33 @@ describe("POST /resignations", () => {
     expect(response.status).toBe(409)
   })
 
+  test("returns 400 when resignation_date is in the past", async () => {
+    const response = await request({
+      path: "/resignations",
+      token: await noPendingToken(),
+      method: "POST",
+      body: {
+        resignation_date: "2025-12-31",
+        reason: "Past date attempt",
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("accepts resignation_date equal to today", async () => {
+    const response = await request({
+      path: "/resignations",
+      token: await noPendingToken(),
+      method: "POST",
+      body: {
+        resignation_date: "2026-01-01",
+      },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/resignations",
@@ -307,6 +334,21 @@ describe("PUT /resignations/:id", () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when updating resignation_date to a past date", async () => {
+    const response = await request({
+      path: `/resignations/${ownResignationId}`,
+      token: await applicantToken(),
+      method: "PUT",
+      body: {
+        resignation_date: "2025-06-01",
+        last_working_date: null,
+        reason: null,
+      },
+    })
+
+    expect(response.status).toBe(400)
   })
 })
 
