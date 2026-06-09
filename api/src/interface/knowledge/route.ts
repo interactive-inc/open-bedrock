@@ -74,7 +74,7 @@ export const POST = factory.createHandlers(
       tags: json.tags ?? null,
       bodyMd: json.body_md,
       authorId: viewer.employeeId,
-      createdAt: new Date().toISOString(),
+      createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
     if (article instanceof Error) {

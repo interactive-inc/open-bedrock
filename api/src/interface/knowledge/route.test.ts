@@ -14,6 +14,14 @@ const knowledgeSearchResultResponseSchema = z.object({
   snippet: z.string(),
 })
 
+const knowledgeCreatedResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  category: z.string(),
+  tags: z.string().nullable(),
+  body_md: z.string(),
+})
+
 const jwtSecret = "knowledge-list-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
@@ -117,5 +125,38 @@ describe("GET /knowledge", () => {
     const response = await request("/knowledge", null)
 
     expect(response.status).toBe(401)
+  })
+})
+
+describe("POST /knowledge", () => {
+  test("persists created_at from the injected NOW", async () => {
+    const db = await createTestDb()
+
+    const now = "2026-03-15T12:00:00.000Z"
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/knowledge",
+      token: await memberToken(),
+      method: "POST",
+      body: { title: "New Article", category: "Policy", body_md: "hello body" },
+      now,
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = knowledgeCreatedResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      const createdAt = await db
+        .prepare("SELECT created_at FROM knowledge_articles WHERE id = ?")
+        .bind(parsed.data.id)
+        .first("created_at")
+
+      expect(createdAt).toBe(now)
+    }
   })
 })
