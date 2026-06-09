@@ -15,7 +15,9 @@ export type Forbidden = { reason: "forbidden" }
 
 export type SurveyNotFound = { reason: "survey_not_found" }
 
-export type UpdateFailure = Forbidden | SurveyNotFound
+export type QuestionsImmutable = { reason: "questions_immutable" }
+
+export type UpdateFailure = Forbidden | SurveyNotFound | QuestionsImmutable
 
 /**
  * 管理権限を持つ者がアンケートの内容を変更する。
@@ -38,6 +40,13 @@ export class UpdateSurvey {
 
     if (current === null) {
       return { reason: "survey_not_found" }
+    }
+
+    if (
+      current.status === "closed" &&
+      JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)
+    ) {
+      return { reason: "questions_immutable" }
     }
 
     return surveyRepository.update(
