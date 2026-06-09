@@ -10,12 +10,16 @@ export async function getMe() {
 
   const response = await client.me.$get()
 
-  if (response.status === 401 || response.status === 403) {
+  // hc の型では status が成功コードのリテラル(200)になり === 401/403 が TS2367 になるため、
+  // 実行時の実値を見るよう number に広げてから判定する。
+  const status: number = response.status
+
+  if (status === 401 || status === 403) {
     return new Error("unauthorized")
   }
 
-  if (response.status >= 400) {
-    throw new Error(`failed to load me (${response.status})`)
+  if (status >= 400) {
+    throw new Error(`failed to load me (${status})`)
   }
 
   return response.json()
