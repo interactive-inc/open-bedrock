@@ -14,13 +14,17 @@ export type LifeEventNotFound = { reason: "life_event_not_found" }
 
 export type NotApplicant = { reason: "not_applicant" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
- * ライフイベント届出の種別・発生日・詳細を変更する。本人以外の変更を拒否する。
+ * ライフイベント届出の種別・発生日・詳細を変更する。本人以外と、承認済み届出の変更を拒否する。
  */
 export class UpdateLifeEvent {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<LifeEvent | LifeEventNotFound | NotApplicant | Error> {
+  async run(
+    command: Command,
+  ): Promise<LifeEvent | LifeEventNotFound | NotApplicant | NotModifiable | Error> {
     const lifeEventRepository = new LifeEventRepository(this.c)
 
     const current = await lifeEventRepository.findById(command.lifeEventId)
@@ -35,6 +39,10 @@ export class UpdateLifeEvent {
 
     if (current.employeeId !== command.employeeId) {
       return { reason: "not_applicant" }
+    }
+
+    if (!current.isModifiable) {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current.withDetails({

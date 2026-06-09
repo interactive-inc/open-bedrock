@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -98,6 +99,10 @@ export const PUT = factory.createHandlers(
         throw new NotFoundError("business trip not found")
       }
 
+      if (businessTrip.reason === "not_modifiable") {
+        throw new ConflictError("not modifiable")
+      }
+
       throw new ForbiddenError("not the traveler")
     }
 
@@ -128,6 +133,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "not_traveler") {
     throw new ForbiddenError("not the traveler")
+  }
+
+  if (result.reason === "not_modifiable") {
+    throw new ConflictError("not modifiable")
   }
 
   return c.body(null, 204)

@@ -69,6 +69,10 @@ export class LifeEvent implements Props {
     })
   }
 
+  get isModifiable(): boolean {
+    return this.status === "submitted"
+  }
+
   // 届出内容を変更した新しいライフイベント届出を返す。
   withDetails(props: { eventType: string; eventDate: string; detail: string | null }): LifeEvent {
     return new LifeEvent({
