@@ -13,7 +13,7 @@ export const POST = factory.createHandlers(
     z.object({
       period: z.string().min(1).max(100),
       title: z.string().min(1).max(500),
-      weight: z.number().default(10),
+      weight: z.number().int().min(1).max(100).default(10),
       kpi: z.string().max(3_000).optional(),
     }),
   ),
