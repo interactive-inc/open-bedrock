@@ -111,8 +111,8 @@ export async function createTrainingCourseAction(
 
   const durationMinutes = durationText === "" ? null : Number(durationText)
 
-  if (durationMinutes !== null && Number.isInteger(durationMinutes) === false) {
-    return { ok: false, error: "所要時間は整数（分）で入力してください" }
+  if (durationMinutes !== null && !(Number.isInteger(durationMinutes) && durationMinutes > 0)) {
+    return { ok: false, error: "所要時間は正の整数（分）で入力してください" }
   }
 
   const isRequired = formData.get("is_required") === "on"
@@ -207,8 +207,8 @@ export async function updateTrainingCourseAction(
 
   const durationMinutes = durationText === "" ? null : Number(durationText)
 
-  if (durationMinutes !== null && Number.isInteger(durationMinutes) === false) {
-    return { ok: false, error: "所要時間は整数（分）で入力してください" }
+  if (durationMinutes !== null && !(Number.isInteger(durationMinutes) && durationMinutes > 0)) {
+    return { ok: false, error: "所要時間は正の整数（分）で入力してください" }
   }
 
   const isRequired = formData.get("is_required") === "on"

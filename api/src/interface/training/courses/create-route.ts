@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(
       title: z.string().min(1).max(500),
       category: z.string().min(1).max(200),
       description: z.string().max(3_000).optional(),
-      duration_minutes: z.number().optional(),
+      duration_minutes: z.number().int().positive().optional(),
       is_required: z.boolean().optional(),
     }),
   ),
