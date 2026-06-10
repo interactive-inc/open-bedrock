@@ -139,6 +139,29 @@ describe("POST /attendance/clock-out", () => {
     expect(response.status).toBe(409)
   })
 
+  test("returns 409 when there is no prior clock-in", async () => {
+    const db = await createTestDb()
+
+    // Insert an open record whose clock_in_at is null (anomalous state).
+    await db
+      .prepare(
+        "INSERT INTO attendance_records (id, employee_id, work_date, clock_in_at, clock_out_at, work_minutes, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      )
+      .bind(999, 10, "2026-05-30", null, null, null, "open")
+      .run()
+
+    const response = await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-out",
+      token: await tokenFor(10, "member"),
+      now: "2026-05-30T18:00:00Z",
+      body: {},
+    })
+
+    expect(response.status).toBe(409)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await send({
       db: await createTestDb(),
