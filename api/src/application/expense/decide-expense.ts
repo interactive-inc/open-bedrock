@@ -42,6 +42,10 @@ export class DecideExpense {
       return { reason: "expense_not_found" }
     }
 
+    if (existing.employeeId === command.approverId) {
+      return { reason: "forbidden" } as const
+    }
+
     if (existing.status !== "pending") {
       return { reason: "already_decided" } as const
     }

@@ -56,6 +56,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("failure" in updated) {
+      if (updated.failure === "self_approval") {
+        throw new ForbiddenError()
+      }
+
       if (updated.failure === "already_decided") {
         throw new ConflictError("leave request already decided")
       }
