@@ -16,14 +16,11 @@ import {
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 
-// GET /review-cycles/:cycle_id/results/:employee_code — 管理者が集計済みの評価結果を取得
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
-
   if (session === null) {
     throw new UnauthorizedError()
   }
-
   if (canAdministerCycle(session.role) === false) {
     throw new ForbiddenError()
   }
@@ -35,46 +32,25 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewCycles)
     .where(eq(reviewCycles.id, cycleId))
     .limit(1)
-
   const cycleRow = cycleRows.at(0)
-
   if (cycleRow === undefined) {
     throw new NotFoundError("review cycle not found")
   }
-
   const employeeRows = await c.var.database
     .select({ id: employees.id })
     .from(employees)
     .where(eq(employees.code, validateCodeParam(c.req.param("employee_code"), "employee")))
     .limit(1)
-
   const employeeRow = employeeRows.at(0)
-
   if (employeeRow === undefined) {
     throw new NotFoundError("employee not found")
   }
-
   const formRows = await c.var.database
     .select()
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
-
-  const forms = formRows.map(
-    (row) =>
-      new ReviewForm({
-        id: row.id,
-        cycleId: row.cycleId,
-        subjectEmployeeId: row.subjectEmployeeId,
-        reviewerEmployeeId: row.reviewerEmployeeId,
-        reviewerType: toReviewerType(row.reviewerType),
-        answers: toAnswers(row.answers),
-        score: row.score,
-        status: toFormStatus(row.status),
-        submittedAt: row.submittedAt,
-      }),
-  )
-
+  const forms = formRows.map((row) => ReviewForm.fromRow(row))
   const cycle = new ReviewCycle({
     id: cycleRow.id,
     title: cycleRow.title,
@@ -82,13 +58,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: toCycleStatus(cycleRow.status),
     dueDate: cycleRow.dueDate,
   })
-
   const view = toReviewResultView(cycle, forms, employeeRow.id)
-
   if (view instanceof Error) {
     throw new InternalError(view.message)
   }
-
   const body = {
     cycle_id: view.cycleId,
     subject_employee_id: view.subjectEmployeeId,
@@ -107,36 +80,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       submitted_at: form.submittedAt,
     })),
   }
-
   return c.json(body, 200)
 })
-
-function toReviewerType(value: string): "self" | "manager" | "peer" | "subordinate" {
-  if (value === "manager") {
-    return "manager"
-  }
-
-  if (value === "peer") {
-    return "peer"
-  }
-
-  if (value === "subordinate") {
-    return "subordinate"
-  }
-
-  return "self"
-}
-
-function toFormStatus(value: string): "pending" | "submitted" {
-  return value === "submitted" ? "submitted" : "pending"
-}
-
-function toAnswers(value: string): ReadonlyArray<unknown> {
-  try {
-    const decoded: unknown = JSON.parse(value)
-
-    return Array.isArray(decoded) ? decoded : []
-  } catch {
-    return []
-  }
-}
