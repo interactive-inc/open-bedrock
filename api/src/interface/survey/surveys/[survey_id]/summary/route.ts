@@ -1,4 +1,5 @@
 import { canManageSurveys } from "@/domain/survey/can-manage-surveys"
+import { Survey } from "@/domain/survey/survey"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { toAnswerDistribution } from "@/domain/survey/to-answer-distribution"
 import { toAnswersList } from "@/domain/survey/to-answers-list"
@@ -80,14 +81,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     answers: ReadonlyArray<string>
   }> = []
 
-  let questionsJsonParsed: unknown
-  try {
-    questionsJsonParsed = JSON.parse(surveyRow.questionsJson)
-  } catch {
-    throw new InternalError("invalid questions_json data")
+  const survey = Survey.fromRow(surveyRow)
+
+  if (survey instanceof Error) {
+    throw new InternalError(survey.message)
   }
 
-  for (const candidate of Array.isArray(questionsJsonParsed) ? questionsJsonParsed : []) {
+  for (const candidate of survey.questionsJson) {
     const parsed = surveyQuestionSchema.safeParse(candidate)
 
     if (parsed.success) {

@@ -41,22 +41,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  let questionsJson: unknown
-  try {
-    questionsJson = JSON.parse(row.questionsJson)
-  } catch {
-    throw new InternalError("invalid questions_json data")
+  const survey = Survey.fromRow(row)
+
+  if (survey instanceof Error) {
+    throw new InternalError(survey.message)
   }
 
-  return c.json(
-    {
-      id: row.id,
-      title: row.title,
-      status: row.status,
-      questions_json: questionsJson,
-    },
-    200,
-  )
+  return c.json(toResponseBody(survey), 200)
 })
 
 // アンケートをレスポンス用の snake_case に整形する。

@@ -1,3 +1,4 @@
+import { toAnswers } from "@/domain/review/review-form-helpers"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -10,28 +11,23 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewForms } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 
-// GET /review-forms/me — 本人が評価者として割り当てられたフォームの一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
-
   if (session === null) {
     throw new UnauthorizedError()
   }
-
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
     fallback: DEFAULT_LIST_LIMIT,
     min: 1,
     max: MAX_LIST_LIMIT,
   })
-
   const offset = toBoundedInt({
     raw: c.req.query("offset"),
     fallback: 0,
     min: 0,
     max: MAX_LIST_OFFSET,
   })
-
   const rows = await c.var.database
     .select()
     .from(reviewForms)
@@ -39,7 +35,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(asc(reviewForms.id))
     .limit(limit)
     .offset(offset)
-
   const body = rows.map((row) => ({
     id: row.id,
     cycle_id: row.cycleId,
@@ -51,17 +46,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
     submitted_at: row.submittedAt,
   }))
-
   return c.json(body, 200)
 })
-
-// answers は JSON 文字列で保存されているため配列に復元する。
-function toAnswers(value: string): ReadonlyArray<unknown> {
-  try {
-    const decoded: unknown = JSON.parse(value)
-
-    return Array.isArray(decoded) ? decoded : []
-  } catch {
-    return []
-  }
-}
