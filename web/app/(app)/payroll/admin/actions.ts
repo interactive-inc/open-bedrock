@@ -163,11 +163,23 @@ export async function correctPayslipAction(
     return { ok: false, error: "差引支給額は 0 以上の整数で入力してください" }
   }
 
+  const allowances = Number(formData.get("allowances"))
+
+  if (!Number.isFinite(allowances) || !Number.isInteger(allowances) || allowances < 0) {
+    return { ok: false, error: "手当は 0 以上の整数で入力してください" }
+  }
+
+  const deductions = Number(formData.get("deductions"))
+
+  if (!Number.isFinite(deductions) || !Number.isInteger(deductions) || deductions < 0) {
+    return { ok: false, error: "控除は 0 以上の整数で入力してください" }
+  }
+
   const corrected = await correctPayslip(payslipId, {
     period: period,
     base_salary: baseSalary,
-    allowances: toNonNegativeNumber(formData.get("allowances")),
-    deductions: toNonNegativeNumber(formData.get("deductions")),
+    allowances: allowances,
+    deductions: deductions,
     net_pay: netPay,
   })
 
