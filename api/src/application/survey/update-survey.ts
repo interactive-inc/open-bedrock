@@ -42,11 +42,16 @@ export class UpdateSurvey {
       return { reason: "survey_not_found" }
     }
 
-    if (
-      current.status === "closed" &&
-      JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)
-    ) {
-      return { reason: "questions_immutable" }
+    if (JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)) {
+      const responseCount = await surveyRepository.countResponsesBySurveyId(command.surveyId)
+
+      if (responseCount instanceof Error) {
+        return responseCount
+      }
+
+      if (responseCount > 0) {
+        return { reason: "questions_immutable" }
+      }
     }
 
     return surveyRepository.update(
