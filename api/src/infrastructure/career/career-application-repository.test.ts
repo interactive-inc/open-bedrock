@@ -19,7 +19,7 @@ describe("CareerApplicationRepository", () => {
 
     expect(created).toBeInstanceOf(CareerApplication)
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error || "reason" in created || created.id === null) {
       throw new Error("create failed")
     }
 
@@ -68,7 +68,7 @@ describe("CareerApplicationRepository", () => {
       CareerApplication.create({ postingId: 1, applicantId: 8, message: "before" }),
     )
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error || "reason" in created || created.id === null) {
       throw new Error("create failed")
     }
 
@@ -92,7 +92,7 @@ describe("CareerApplicationRepository", () => {
       CareerApplication.create({ postingId: 1, applicantId: 9, message: "x" }),
     )
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error || "reason" in created || created.id === null) {
       throw new Error("create failed")
     }
 
