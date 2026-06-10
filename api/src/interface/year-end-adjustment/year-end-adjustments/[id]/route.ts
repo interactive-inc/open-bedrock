@@ -60,7 +60,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      target_year: z.number().int(),
+      target_year: z.number().int().min(2000).max(2100),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),
