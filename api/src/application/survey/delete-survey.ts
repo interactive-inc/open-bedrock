@@ -17,6 +17,7 @@ export type DeleteFailure = Forbidden | SurveyNotFound
 
 /**
  * 管理権限を持つ者がアンケートを削除する。
+ * 関連する回答（survey_responses）を先に削除してから本体を削除する。
  */
 export class DeleteSurvey {
   constructor(private readonly c: Context) {}
@@ -36,6 +37,12 @@ export class DeleteSurvey {
 
     if (current === null) {
       return { reason: "survey_not_found" }
+    }
+
+    const responsesDeleted = await surveyRepository.deleteResponsesBySurveyId(command.surveyId)
+
+    if (responsesDeleted instanceof Error) {
+      return responsesDeleted
     }
 
     const deleted = await surveyRepository.delete(command.surveyId)

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
@@ -46,6 +47,23 @@ const testApp = factory
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
 
   await seedD1(
     db,
@@ -283,5 +301,47 @@ describe("DELETE /surveys/:survey_id", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  test("deletes related survey_responses before the survey", async () => {
+    const db = await createTestDb()
+    const token = await adminToken()
+
+    const bindings: Bindings = {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      NOW: "2026-01-01T00:00:00.000Z",
+    }
+
+    // Survey 1 has 3 seed responses. Confirm they exist via summary.
+    const summaryBefore = await testApp.request(
+      "/surveys/1/summary",
+      { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
+
+    expect(summaryBefore.status).toBe(200)
+
+    const bodyBefore = (await summaryBefore.json()) as { response_count: number }
+
+    expect(bodyBefore.response_count).toBe(3)
+
+    // Delete the survey.
+    const deleteRes = await testApp.request(
+      "/surveys/1",
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
+
+    expect(deleteRes.status).toBe(204)
+
+    // Summary should now 404 because the survey is gone.
+    const summaryAfter = await testApp.request(
+      "/surveys/1/summary",
+      { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
+
+    expect(summaryAfter.status).toBe(404)
   })
 })
