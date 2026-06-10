@@ -1,5 +1,6 @@
 import { DeleteSurvey } from "@/application/survey/delete-survey"
 import { UpdateSurvey } from "@/application/survey/update-survey"
+import { canManageSurveys } from "@/domain/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { factory } from "@/lib/factory"
@@ -17,6 +18,7 @@ import { eq } from "drizzle-orm"
 import { z } from "zod"
 
 // GET /surveys/:survey_id — 指定アンケートを取得（認証済みユーザー）
+// 管理ロール以外は open 状態のアンケートのみ閲覧可能。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -35,6 +37,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const row = rows.at(0)
 
   if (row === undefined) {
+    throw new NotFoundError("survey not found")
+  }
+
+  if (row.status !== "open" && canManageSurveys(session.role) === false) {
     throw new NotFoundError("survey not found")
   }
 
