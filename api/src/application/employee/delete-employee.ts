@@ -164,9 +164,7 @@ export class DeleteEmployee {
           )
           .bind(employeeCode),
         db
-          .prepare(
-            "UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1",
-          )
+          .prepare("UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1")
           .bind(employeeId),
       ])
 

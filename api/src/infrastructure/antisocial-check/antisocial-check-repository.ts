@@ -7,13 +7,19 @@ export class AntisocialCheckRepository {
   constructor(private readonly c: Context) {}
 
   // 申請者本人の反社チェック申請を作成日時の降順で返す。
-  async findByRequesterId(requesterId: number): Promise<ReadonlyArray<AntisocialCheck> | Error> {
+  async findByRequesterId(props: {
+    requesterId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<AntisocialCheck> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(antisocialChecks)
-        .where(eq(antisocialChecks.requesterId, requesterId))
+        .where(eq(antisocialChecks.requesterId, props.requesterId))
         .orderBy(desc(antisocialChecks.createdAt))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => AntisocialCheck.fromRow(row))
     } catch (error) {
