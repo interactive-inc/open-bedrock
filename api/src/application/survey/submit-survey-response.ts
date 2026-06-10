@@ -1,7 +1,10 @@
 import type { SurveySubmissionView } from "@/application/survey/survey-submission-view"
 import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
-import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import {
+  type AlreadySubmittedError,
+  SurveyRepository,
+} from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
   surveyId: number
@@ -65,6 +68,10 @@ export class SubmitSurveyResponse {
 
     if (created instanceof Error) {
       return created
+    }
+
+    if ("reason" in created) {
+      return created as AlreadySubmittedError
     }
 
     if (created.id === null) {
