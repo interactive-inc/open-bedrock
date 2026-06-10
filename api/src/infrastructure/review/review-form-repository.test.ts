@@ -62,7 +62,7 @@ describe("ReviewFormRepository", () => {
     }
 
     const updated = await repository.update(
-      found.withSubmission(80, ["回答"], "2026-05-31T00:00:00.000Z"),
+      found.withSubmission(80, ["回答"], "Good progress", "2026-05-31T00:00:00.000Z"),
     )
 
     expect(updated).toBeInstanceOf(ReviewForm)
