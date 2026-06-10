@@ -540,7 +540,7 @@ describe("redemption", () => {
     expect(response.status).toBe(403)
   })
 
-    test("rejects an invalid redemption id", async () => {
+  test("rejects an invalid redemption id", async () => {
     const db = await createTestDb()
 
     const response = await request({
