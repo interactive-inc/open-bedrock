@@ -13,6 +13,7 @@ const knowledgeSearchResultResponseSchema = z.object({
   category: z.string(),
   title: z.string(),
   snippet: z.string(),
+  author_id: z.number(),
 })
 
 const knowledgeCreatedResponseSchema = z.object({

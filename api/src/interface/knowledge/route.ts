@@ -64,6 +64,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     category: row.category,
     title: row.title,
     snippet: row.bodyMd.replace(/\s+/g, " ").trim().slice(0, 200),
+    author_id: row.authorId,
   }))
 
   return c.json(responseBody, 200)
