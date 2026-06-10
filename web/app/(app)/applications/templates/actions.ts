@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { createApplicationTemplate } from "@/lib/api/create-application-template"
 import { deleteApplicationTemplate } from "@/lib/api/delete-application-template"
+import { getMe } from "@/lib/api/get-me"
 import { updateApplicationTemplate } from "@/lib/api/update-application-template"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ApplicationTemplateFormState = {
@@ -37,10 +39,17 @@ function parseSchemaJson(value: FormDataEntryValue | null): unknown | Error {
 }
 
 // テンプレート作成 Server Action（管理権限）。code/name/category 必須。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageApplicationTemplates(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -97,10 +106,17 @@ export async function createApplicationTemplateAction(
 }
 
 // テンプレート変更 Server Action（管理権限）。code は hidden input、内容は各 input で受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageApplicationTemplates(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -156,10 +172,17 @@ export async function updateApplicationTemplateAction(
 }
 
 // テンプレート削除 Server Action（管理権限）。code を hidden input で受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageApplicationTemplates(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""

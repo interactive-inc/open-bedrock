@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache"
 import { applyCareerPosting } from "@/lib/api/apply-career-posting"
 import { createCareerPosting } from "@/lib/api/create-career-posting"
 import { deleteCareerPosting } from "@/lib/api/delete-career-posting"
+import { getMe } from "@/lib/api/get-me"
 import { updateCareerApplication } from "@/lib/api/update-career-application"
 import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type CareerSheetFormState = {
@@ -140,10 +142,17 @@ export type CareerPostingFormState = {
 }
 
 // 公募作成の Server Action（管理ロール）。title 必須、部署・必要スキルは任意。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageCareerPostings(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const title = toText(formData.get("title"))
 
   if (title === null) {
@@ -174,10 +183,17 @@ export async function createCareerPostingAction(
 }
 
 // 公募変更の Server Action（管理ロール）。posting_id は hidden、内容は各 input で受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageCareerPostings(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {
@@ -214,10 +230,17 @@ export async function updateCareerPostingAction(
 }
 
 // 公募削除の Server Action（管理ロール）。posting_id を hidden で受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageCareerPostings(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {

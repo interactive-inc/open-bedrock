@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache"
 import { approveExpense } from "@/lib/api/approve-expense"
 import { deleteExpense } from "@/lib/api/delete-expense"
+import { getMe } from "@/lib/api/get-me"
 import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { updateExpense } from "@/lib/api/update-expense"
+import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type ExpenseSubmitFormState = {
@@ -101,10 +103,17 @@ export async function submitExpenseAction(
 }
 
 // 経費承認の Server Action。expense_id は hidden フィールドから受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canDecideExpense(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
@@ -129,10 +138,17 @@ export async function approveExpenseAction(
 }
 
 // 経費却下の Server Action。理由コメントは必須。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canDecideExpense(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {

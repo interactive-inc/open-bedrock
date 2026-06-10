@@ -7,10 +7,12 @@ import { createShiftPattern } from "@/lib/api/create-shift-pattern"
 import { createShiftSwapRequest } from "@/lib/api/create-shift-swap-request"
 import { deleteShiftAssignment } from "@/lib/api/delete-shift-assignment"
 import { deleteShiftPattern } from "@/lib/api/delete-shift-pattern"
+import { getMe } from "@/lib/api/get-me"
 import { publishShiftAssignment } from "@/lib/api/publish-shift-assignment"
 import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -59,10 +61,17 @@ export async function createShiftSwapRequestAction(
 }
 
 // シフト割当作成 Server Action（特権ロール）。employee_code/pattern_code/date 必須、note 任意。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const employeeCodeValue = formData.get("employee_code")
 
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue.trim() : ""
@@ -109,10 +118,17 @@ export async function createShiftAssignmentAction(
 }
 
 // シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function publishShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -131,10 +147,17 @@ export async function publishShiftAssignmentAction(
 }
 
 // シフトパターン作成 Server Action（特権ロール）。code/name/start_time/end_time 必須、break_minutes 任意。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -195,10 +218,17 @@ export async function createShiftPatternAction(
 }
 
 // シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -227,10 +257,17 @@ export async function updateShiftAssignmentAction(
 }
 
 // シフト割当削除 Server Action（特権ロール）。assignment_id 必須。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -249,10 +286,17 @@ export async function deleteShiftAssignmentAction(
 }
 
 // シフトパターン変更 Server Action（特権ロール）。code/name/start_time/end_time 必須。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const patternId = toPositiveIntId(formData.get("pattern_id"))
 
   if (patternId === null) {
@@ -277,10 +321,17 @@ export async function updateShiftPatternAction(
 }
 
 // シフトパターン削除 Server Action（特権ロール）。pattern_id 必須。割当から参照中だと api が 409。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageShift(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const patternId = toPositiveIntId(formData.get("pattern_id"))
 
   if (patternId === null) {

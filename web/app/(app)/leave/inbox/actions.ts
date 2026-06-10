@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { approveLeaveRequest } from "@/lib/api/approve-leave-request"
+import { getMe } from "@/lib/api/get-me"
 import { rejectLeaveRequest } from "@/lib/api/reject-leave-request"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 
 export type LeaveDecisionState = {
   ok: boolean
@@ -40,10 +42,17 @@ async function reject(leaveRequestId: number, comment: string | null): Promise<L
 }
 
 // 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function decideLeaveRequestAction(
   previousState: LeaveDecisionState,
   formData: FormData,
 ): Promise<LeaveDecisionState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canDecideLeave(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {

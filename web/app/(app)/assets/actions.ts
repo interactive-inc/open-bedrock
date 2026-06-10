@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAsset } from "@/lib/api/create-asset"
 import { deleteAsset } from "@/lib/api/delete-asset"
+import { getMe } from "@/lib/api/get-me"
 import { lendAsset } from "@/lib/api/lend-asset"
 import { returnAsset } from "@/lib/api/return-asset"
 import { updateAsset } from "@/lib/api/update-asset"
 import type { AssetKind } from "@/lib/api/types/asset-types"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 
 export type AssetCreateFormState = {
   ok: boolean
@@ -52,10 +54,17 @@ function toKind(value: FormDataEntryValue | null): AssetKind | null {
 }
 
 // 物品登録の Server Action。serial / purchased_on の空文字は値なし扱いで送らない。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function createAssetAction(
   previousState: AssetCreateFormState,
   formData: FormData,
 ): Promise<AssetCreateFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageAssets(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -105,10 +114,17 @@ export async function createAssetAction(
 }
 
 // 物品貸与の Server Action。code は hidden、貸与先の従業員コードを受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function lendAssetAction(
   previousState: AssetLendFormState,
   formData: FormData,
 ): Promise<AssetLendFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageAssets(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -139,10 +155,17 @@ export async function lendAssetAction(
 }
 
 // 物品返却の Server Action。code は hidden から受け取る。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function returnAssetAction(
   previousState: AssetReturnFormState,
   formData: FormData,
 ): Promise<AssetReturnFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageAssets(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -168,10 +191,17 @@ export async function returnAssetAction(
 
 // 物品編集の Server Action。code は hidden、名称・種別・シリアル・購入日を更新する。
 // serial / purchased_on の空文字は値なし扱いで送らない。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function updateAssetAction(
   previousState: AssetUpdateFormState,
   formData: FormData,
 ): Promise<AssetUpdateFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageAssets(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -222,10 +252,17 @@ export async function updateAssetAction(
 }
 
 // 物品削除の Server Action。code は hidden から受け取る。成功時は一覧へ遷移する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function deleteAssetAction(
   previousState: AssetDeleteFormState,
   formData: FormData,
 ): Promise<AssetDeleteFormState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canManageAssets(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""

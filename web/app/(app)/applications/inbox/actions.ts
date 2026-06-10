@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { approveApplication } from "@/lib/api/approve-application"
+import { getMe } from "@/lib/api/get-me"
 import { rejectApplication } from "@/lib/api/reject-application"
+import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type DecisionState = {
@@ -37,10 +39,17 @@ async function reject(applicationId: number, comment: string | null): Promise<De
 }
 
 // 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。
+// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
 export async function decideApplicationAction(
   previousState: DecisionState,
   formData: FormData,
 ): Promise<DecisionState> {
+  const me = await getMe()
+
+  if (me instanceof Error || !canDecideApplication(me.role)) {
+    return { ok: false, error: "権限がありません" }
+  }
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
