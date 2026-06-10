@@ -3,7 +3,10 @@ import { TrainingEnrollment } from "@/domain/training/training-enrollment"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
-import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
+import {
+  type AlreadyEnrolledError,
+  TrainingEnrollmentRepository,
+} from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number
@@ -85,7 +88,17 @@ export class EnrollTraining {
       dueDate: command.dueDate,
     })
 
-    return enrollmentRepository.create(enrollment)
+    const created = await enrollmentRepository.create(enrollment)
+
+    if (created instanceof Error) {
+      return created
+    }
+
+    if ("reason" in created) {
+      return created as AlreadyEnrolledError
+    }
+
+    return created
   }
 
   private async toEnrolleeId(
