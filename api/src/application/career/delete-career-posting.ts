@@ -56,10 +56,16 @@ export class DeleteCareerPosting {
       return { reason: "has_applied_applications" }
     }
 
-    const deleted = await postingRepository.delete(command.postingId)
-
-    if (deleted instanceof Error) {
-      return deleted
+    // career_applications（withdrawn/rejected）と career_postings を D1 batch でアトミックに削除する。
+    // この時点で applied の応募が 0 であることは確認済みのため、全応募を安全に削除できる。
+    try {
+      const db = this.c.env.DB
+      await db.batch([
+        db.prepare("DELETE FROM career_applications WHERE posting_id = ?1").bind(command.postingId),
+        db.prepare("DELETE FROM career_postings WHERE id = ?1").bind(command.postingId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete career posting")
     }
 
     return { reason: "deleted" }
