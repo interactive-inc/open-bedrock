@@ -106,10 +106,7 @@ export class CareerApplicationRepository {
         .select()
         .from(careerApplications)
         .where(
-          and(
-            eq(careerApplications.postingId, postingId),
-            eq(careerApplications.status, status),
-          ),
+          and(eq(careerApplications.postingId, postingId), eq(careerApplications.status, status)),
         )
 
       return rows.length
