@@ -1,7 +1,10 @@
 import { Resignation } from "@/domain/resignation/resignation"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { resignations } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
+
+export type AlreadyRequestedError = { kind: "already_requested" }
 
 export class ResignationRepository {
   constructor(private readonly c: Context) {}
@@ -53,7 +56,8 @@ export class ResignationRepository {
     }
   }
 
-  async create(resignation: Resignation): Promise<Resignation | Error> {
+  // UNIQUE 制約 (employee_id) WHERE status = 'requested' に違反した場合は already_requested を返す。
+  async create(resignation: Resignation): Promise<Resignation | AlreadyRequestedError | Error> {
     try {
       await this.c.var.database.insert(resignations).values({
         id: resignation.id,
@@ -67,6 +71,9 @@ export class ResignationRepository {
 
       return resignation
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return { kind: "already_requested" }
+      }
       return error instanceof Error ? error : new Error("failed to save resignation")
     }
   }

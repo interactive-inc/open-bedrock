@@ -40,6 +40,11 @@ export class CreateResignation {
       createdAt: command.createdAt,
     })
 
-    return await resignationRepository.create(resignation)
+    const created = await resignationRepository.create(resignation)
+
+    if (created instanceof Error) return created
+    if ("kind" in created) return created
+
+    return created
   }
 }
