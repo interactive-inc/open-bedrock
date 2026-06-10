@@ -1,5 +1,6 @@
 import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { yearEndAdjustments } from "@/schema"
 import { and, desc, eq } from "drizzle-orm"
 
@@ -65,7 +66,7 @@ export class YearEndAdjustmentRepository {
     }
   }
 
-  async create(yearEndAdjustment: YearEndAdjustment): Promise<YearEndAdjustment | Error> {
+  async create(yearEndAdjustment: YearEndAdjustment): Promise<YearEndAdjustment | null | Error> {
     try {
       await this.c.var.database.insert(yearEndAdjustments).values({
         id: yearEndAdjustment.id,
@@ -78,6 +79,10 @@ export class YearEndAdjustmentRepository {
 
       return yearEndAdjustment
     } catch (error) {
+      // (employee_id, target_year) の UNIQUE 索引違反 = 同一年度の二重申告。
+      if (isUniqueConstraintError(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to save year_end_adjustment")
     }
   }
