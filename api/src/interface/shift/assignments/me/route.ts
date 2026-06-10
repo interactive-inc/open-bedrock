@@ -1,4 +1,10 @@
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { shiftAssignments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -14,6 +20,8 @@ export const GET = factory.createHandlers(
     z.object({
       from: z.string().optional(),
       to: z.string().optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -24,6 +32,20 @@ export const GET = factory.createHandlers(
     if (session === null) {
       throw new UnauthorizedError()
     }
+
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
 
     const conditions = [
       eq(shiftAssignments.employeeId, session.employeeId),
@@ -43,6 +65,8 @@ export const GET = factory.createHandlers(
       .from(shiftAssignments)
       .where(and(...conditions))
       .orderBy(shiftAssignments.id)
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       id: row.id,

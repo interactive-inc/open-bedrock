@@ -8,13 +8,19 @@ export class ApplicationRepository {
   constructor(private readonly c: Context) {}
 
   // 申請者本人の申請を作成日時の降順で返す。
-  async findByApplicantId(applicantId: number): Promise<ReadonlyArray<Application> | Error> {
+  async findByApplicantId(
+    applicantId: number,
+    opts?: { limit: number; offset: number },
+  ): Promise<ReadonlyArray<Application> | Error> {
     try {
-      const rows = await this.c.var.database
+      const query = this.c.var.database
         .select()
         .from(applications)
         .where(eq(applications.applicantId, applicantId))
         .orderBy(desc(applications.createdAt))
+
+      const rows =
+        opts !== undefined ? await query.limit(opts.limit).offset(opts.offset) : await query
 
       const applicationList: Array<Application> = []
 
