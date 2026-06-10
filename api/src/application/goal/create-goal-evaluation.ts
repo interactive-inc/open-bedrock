@@ -79,6 +79,10 @@ export class CreateGoalEvaluation {
       const updated = await goalRepository.update(goal.withStatus("done"))
 
       if (updated instanceof Error) {
+        // 補償: goal 更新が失敗したので evaluation を削除して整合性を保つ
+        if (evaluation.id !== null) {
+          await goalEvaluationRepository.delete(evaluation.id)
+        }
         return updated
       }
     }
