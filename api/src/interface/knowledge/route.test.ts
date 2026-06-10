@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedKnowledgeArticles } from "@/infrastructure/seed/seed-knowledge-articles"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -26,6 +27,23 @@ const jwtSecret = "knowledge-list-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
 
   await seedD1(
     db,

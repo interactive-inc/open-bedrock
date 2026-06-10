@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -20,6 +21,23 @@ const jwtSecret = "survey-responses-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
 
   await seedD1(
     db,
@@ -49,8 +67,8 @@ async function createTestDb(): Promise<D1Database> {
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }
@@ -96,7 +114,7 @@ describe("POST /surveys/:survey_id/responses", () => {
 
     if (parsed.success) {
       expect(parsed.data.survey_id).toBe(2)
-      expect(parsed.data.respondent_id).toBe(99)
+      expect(parsed.data.respondent_id).toBe(13)
       expect(parsed.data.submitted_at).toBe("2026-01-01T00:00:00.000Z")
     }
   })

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { HTTPException } from "hono/http-exception"
 import { contextStorage } from "hono/context-storage"
@@ -103,8 +104,8 @@ function adminToken(): Promise<string> {
 // 一般ロール（管理権限なし）。
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }
