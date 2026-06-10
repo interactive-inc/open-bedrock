@@ -62,4 +62,14 @@ export class GoalEvaluationRepository {
       return error instanceof Error ? error : new Error("failed to delete goal evaluation")
     }
   }
+
+  // 目標に紐づく評価をすべて削除する。
+  async deleteByGoalId(goalId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.goalId, goalId))
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete goal evaluations")
+    }
+  }
 }
