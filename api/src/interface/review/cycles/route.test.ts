@@ -53,11 +53,11 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
-function memberToken(): Promise<string> {
+function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 5,
-    email: "you+e005@example.com",
-    role: "member",
+    employeeId: 1,
+    email: "you+e001@example.com",
+    role: "admin",
   })
 }
 
@@ -72,7 +72,7 @@ async function request(
 
 describe("GET /review-cycles", () => {
   test("returns 200 with all cycles", async () => {
-    const response = await request("/review-cycles", await memberToken())
+    const response = await request("/review-cycles", await adminToken())
 
     expect(response.status).toBe(200)
 

@@ -65,7 +65,7 @@ describe("GET /employees", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(11)
+      expect(parsed.data.length).toBe(14)
 
       const lead = parsed.data.find((employee) => employee.code === "E001")
 
@@ -148,7 +148,7 @@ describe("GET /employees", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.length).toBe(3)
     }
   })
 
@@ -162,7 +162,7 @@ describe("GET /employees", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(9)
+      expect(parsed.data.length).toBe(12)
     }
   })
 
