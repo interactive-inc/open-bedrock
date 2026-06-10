@@ -37,7 +37,9 @@ export class SetReviewCycleStatus {
       return { reason: "cycle_not_found" }
     }
 
-    const updated = await repository.update(reviewCycle.withStatus(toCycleStatus(input.status)))
+    const updated = await repository.updateStatus(
+      reviewCycle.withStatus(toCycleStatus(input.status)),
+    )
 
     if (updated instanceof Error) {
       return updated
