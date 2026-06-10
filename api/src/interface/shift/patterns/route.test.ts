@@ -83,7 +83,7 @@ async function request(props: RequestProps): Promise<Response> {
 
 describe("GET /shift/patterns", () => {
   test("returns 200 with all patterns", async () => {
-    const response = await request({ path: "/shift/patterns", token: await tokenFor(5, "member") })
+    const response = await request({ path: "/shift/patterns", token: await tokenFor(4, "manager") })
 
     expect(response.status).toBe(200)
 

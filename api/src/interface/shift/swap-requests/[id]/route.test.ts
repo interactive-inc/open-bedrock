@@ -137,7 +137,7 @@ describe("GET /shift/swap-requests/:id", () => {
   test("returns 403 for a non-requester non-approver", async () => {
     const response = await request({
       path: "/shift/swap-requests/1",
-      token: await tokenFor(4, "member"),
+      token: await tokenFor(10, "member"),
     })
 
     expect(response.status).toBe(403)

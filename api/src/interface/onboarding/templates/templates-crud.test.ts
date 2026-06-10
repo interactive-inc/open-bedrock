@@ -117,7 +117,7 @@ describe("POST /onboarding/templates", () => {
   test("a non-privileged role is forbidden", async () => {
     const response = await request({
       path: "/onboarding/templates",
-      token: await token(1, "member"),
+      token: await token(5, "member"),
       method: "POST",
       body: { code: "manager_join", name: "Manager Onboarding", kind: "join" },
     })
@@ -180,7 +180,7 @@ describe("GET /onboarding/templates/:code", () => {
   test("a non-privileged role is forbidden", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "member"),
+      token: await token(5, "member"),
     })
 
     expect(response.status).toBe(403)
@@ -220,7 +220,7 @@ describe("PUT /onboarding/templates/:code", () => {
   test("a non-privileged role is forbidden", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "member"),
+      token: await token(5, "member"),
       method: "PUT",
       body: { name: "Updated", kind: "join" },
     })
@@ -254,7 +254,7 @@ describe("DELETE /onboarding/templates/:code", () => {
   test("a non-privileged role is forbidden", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "member"),
+      token: await token(5, "member"),
       method: "DELETE",
     })
 
