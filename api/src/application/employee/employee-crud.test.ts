@@ -559,4 +559,49 @@ describe("DeleteEmployee", () => {
       .first("manager_employee_code")
     expect(manager).toBeNull()
   })
+
+  test("nullifies thanks_redemptions.decider_id when the decider employee is deleted", async () => {
+    const { context, db } = createTestContext()
+
+    // 社員 A（削除対象：決裁者）と社員 B（申請者：残存）を作成
+    const idA = await seedEmployee(context, "EA02")
+    const idB = await seedEmployee(context, "EB02")
+
+    // thanks_rewards マスタを用意
+    await db
+      .prepare(
+        "INSERT INTO thanks_rewards (id, name, point_cost, is_active, created_at) VALUES (1, 'Gift Card', 100, 1, '2026-01-01T00:00:00Z')",
+      )
+      .run()
+
+    // 社員 B の交換申請を社員 A が決裁した状態
+    await db
+      .prepare(
+        "INSERT INTO thanks_redemptions (id, employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id) VALUES (1, ?1, 1, 100, 'fulfilled', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', ?2)",
+      )
+      .bind(idB, idA)
+      .run()
+
+    // 社員 A を削除
+    const result = await new DeleteEmployee(context).run({
+      viewerRole: "admin",
+      viewerEmployeeId: idB,
+      code: "EA02",
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+
+    // thanks_redemptions.decider_id が NULL に更新されている
+    const deciderId = await db
+      .prepare("SELECT decider_id FROM thanks_redemptions WHERE id = 1")
+      .first("decider_id")
+    expect(deciderId).toBeNull()
+
+    // 社員 B の交換申請レコード自体は残っている
+    const redemptionCount = await db
+      .prepare("SELECT COUNT(*) as c FROM thanks_redemptions WHERE employee_id = ?1")
+      .bind(idB)
+      .first("c")
+    expect(redemptionCount).toBe(1)
+  })
 })
