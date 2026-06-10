@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { ApplyToCareerPosting } from "@/application/career/apply-to-career-posting"
 import { CreateCareerPosting } from "@/application/career/create-career-posting"
 import { DeleteCareerPosting } from "@/application/career/delete-career-posting"
 import { GetCareerPosting } from "@/application/career/get-career-posting"
@@ -209,5 +210,33 @@ describe("DeleteCareerPosting", () => {
     }
 
     expect(result.reason).toBe("forbidden")
+  })
+
+  test("returns has_applied_applications when the posting has applied applications", async () => {
+    const { context } = createTestContext()
+
+    const postingId = await seedPosting(context)
+
+    // Apply to the posting so it has a pending application
+    const applied = await new ApplyToCareerPosting(context).run({
+      postingId,
+      applicantId: 10,
+      message: null,
+    })
+
+    if (applied instanceof Error || "reason" in applied) {
+      throw new Error("apply failed")
+    }
+
+    const result = await new DeleteCareerPosting(context).run({
+      viewerRole: "admin",
+      postingId,
+    })
+
+    if (result instanceof Error) {
+      throw new Error("unexpected error")
+    }
+
+    expect(result.reason).toBe("has_applied_applications")
   })
 })
