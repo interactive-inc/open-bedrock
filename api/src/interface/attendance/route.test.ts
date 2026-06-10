@@ -69,19 +69,25 @@ async function getRequest(path: string, token: string | null): Promise<Response>
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
 
+const attendanceListResponseSchema = z.object({
+  data: z.array(attendanceRecordResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /attendance", () => {
   test("privileged role can read another employee via employee_id", async () => {
     const response = await getRequest("/attendance?employee_id=5", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(attendanceRecordResponseSchema).safeParse(await response.json())
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((record) => record.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data.every((record) => record.employee_id === 5)).toBe(true)
     }
   })
 
