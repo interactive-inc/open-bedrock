@@ -1,7 +1,10 @@
 import { TrainingEnrollment } from "@/domain/training/training-enrollment"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { trainingEnrollments } from "@/schema"
 import { and, eq } from "drizzle-orm"
+
+export type AlreadyEnrolledError = { reason: "already_enrolled" }
 
 export class TrainingEnrollmentRepository {
   constructor(private readonly c: Context) {}
@@ -46,7 +49,10 @@ export class TrainingEnrollmentRepository {
     }
   }
 
-  async create(trainingEnrollment: TrainingEnrollment): Promise<TrainingEnrollment | Error> {
+  // UNIQUE 制約 (course_id, employee_id) に違反した場合は already_enrolled を返す。
+  async create(
+    trainingEnrollment: TrainingEnrollment,
+  ): Promise<TrainingEnrollment | AlreadyEnrolledError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(trainingEnrollments)
@@ -66,6 +72,9 @@ export class TrainingEnrollmentRepository {
         ? new Error("failed to insert training_enrollment")
         : TrainingEnrollment.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return { reason: "already_enrolled" }
+      }
       return error instanceof Error ? error : new Error("failed to insert training_enrollment")
     }
   }
