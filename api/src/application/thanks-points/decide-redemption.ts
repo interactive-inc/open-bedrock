@@ -16,6 +16,8 @@ export type AlreadyDecided = { reason: "already_decided" }
 
 export type InsufficientBalance = { reason: "insufficient_balance" }
 
+export type SelfApprovalForbidden = { reason: "self_approval_forbidden" }
+
 // 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
 // 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
 export type FulfilledWithStockError = {
@@ -29,6 +31,7 @@ export type DecideResult =
   | RedemptionNotFound
   | AlreadyDecided
   | InsufficientBalance
+  | SelfApprovalForbidden
   | FulfilledWithStockError
   | Error
 
@@ -80,7 +83,12 @@ export class DecideRedemption {
   private async approve(
     command: Command,
   ): Promise<
-    ThanksRedemption | AlreadyDecided | InsufficientBalance | FulfilledWithStockError | Error
+    | ThanksRedemption
+    | AlreadyDecided
+    | InsufficientBalance
+    | SelfApprovalForbidden
+    | FulfilledWithStockError
+    | Error
   > {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
@@ -96,6 +104,10 @@ export class DecideRedemption {
 
     if (before.status !== "pending") {
       return { reason: "already_decided" }
+    }
+
+    if (before.employeeId === command.deciderId) {
+      return { reason: "self_approval_forbidden" }
     }
 
     const updated = await redemptionRepository.approveFromPending({
