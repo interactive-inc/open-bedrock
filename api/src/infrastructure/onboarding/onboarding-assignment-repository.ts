@@ -2,7 +2,7 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { Context } from "@/env"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, inArray } from "drizzle-orm"
 
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -104,21 +104,33 @@ export class OnboardingAssignmentRepository {
         .from(onboardingAssignments)
         .where(eq(onboardingAssignments.employeeId, employeeId))
 
-      const assignments: Array<OnboardingAssignment> = []
+      const assignmentIds = assignmentRows.map((row) => row.id)
 
-      for (const assignmentRow of assignmentRows) {
-        const taskRows = await this.c.var.database
-          .select()
-          .from(onboardingTasks)
-          .where(eq(onboardingTasks.assignmentId, assignmentRow.id))
-          .orderBy(asc(onboardingTasks.sortOrder))
-
-        const tasks = taskRows.map((row) => OnboardingTask.fromRow(row))
-
-        assignments.push(OnboardingAssignment.fromRow(assignmentRow, tasks))
+      if (assignmentIds.length === 0) {
+        return []
       }
 
-      return assignments
+      const taskRows = await this.c.var.database
+        .select()
+        .from(onboardingTasks)
+        .where(inArray(onboardingTasks.assignmentId, assignmentIds))
+        .orderBy(asc(onboardingTasks.sortOrder))
+
+      const tasksByAssignmentId = new Map<number, Array<OnboardingTask>>()
+
+      for (const row of taskRows) {
+        const tasks = tasksByAssignmentId.get(row.assignmentId)
+        if (tasks !== undefined) {
+          tasks.push(OnboardingTask.fromRow(row))
+        } else {
+          tasksByAssignmentId.set(row.assignmentId, [OnboardingTask.fromRow(row)])
+        }
+      }
+
+      return assignmentRows.map((assignmentRow) => {
+        const tasks = tasksByAssignmentId.get(assignmentRow.id) ?? []
+        return OnboardingAssignment.fromRow(assignmentRow, tasks)
+      })
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load onboarding assignments")
     }
