@@ -21,10 +21,10 @@ export type ExpenseNotFound = { reason: "expense_not_found" }
 export type AlreadyDecided = { reason: "already_decided" }
 
 /**
- * 経費のステータスを pending からの条件付き UPDATE で確定し、勝った場合のみ承認/却下を記録する。
+ * 経費のステータスを pending からの条件付き UPDATE で確定し、承認記録を同時に INSERT する。
+ * D1 batch で status UPDATE と approval INSERT をアトミックに行うため、
+ * status だけ確定し承認記録が欠損する不整合は起きない。
  * 並行リクエストは条件付き UPDATE でどちらか 1 件しか確定できず、承認記録も重複しない。
- * 確定後に addApproval が失敗した場合は status のみ確定し承認記録が欠損しうる（D1 に
- * 対話的トランザクションが無いことによる許容済みトレードオフ。Error は呼び出し元へ伝播する）。
  */
 export class DecideExpense {
   constructor(private readonly c: Context) {}
@@ -58,9 +58,18 @@ export class DecideExpense {
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
 
-    const decided = await expenseRepository.decideFromPending({
+    const approval = ExpenseApproval.create({
+      expenseId: command.expenseId,
+      approverId: command.approverId,
+      action: command.action,
+      comment: command.comment,
+      createdAt: command.createdAt,
+    })
+
+    const decided = await expenseRepository.decideFromPendingWithApproval({
       expenseId: command.expenseId,
       status: nextStatus,
+      approval,
     })
 
     if (decided instanceof Error) {
@@ -80,20 +89,6 @@ export class DecideExpense {
       }
 
       return { reason: "already_decided" } as const
-    }
-
-    const approval = await expenseRepository.addApproval(
-      ExpenseApproval.create({
-        expenseId: command.expenseId,
-        approverId: command.approverId,
-        action: command.action,
-        comment: command.comment,
-        createdAt: command.createdAt,
-      }),
-    )
-
-    if (approval instanceof Error) {
-      return approval
     }
 
     return { status: decided.status }
