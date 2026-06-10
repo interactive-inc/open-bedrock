@@ -104,6 +104,24 @@ describe("GET /career/postings", () => {
     }
   })
 
+  test("returns only 1 posting when limit=1", async () => {
+    const response = await request({
+      path: "/career/postings?limit=1",
+      token: await tokenForEmployee(1),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = careerPostingResponseSchema.array().safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.status).toBe("open")
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/career/postings", token: null })
 

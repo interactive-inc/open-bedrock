@@ -171,6 +171,29 @@ describe("GET /onboarding/templates", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns only 1 template when limit=1 and task_count reflects that template", async () => {
+    const response = await request({
+      path: "/onboarding/templates?limit=1",
+      token: await token(1, "admin"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(onboardingTemplateResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+
+      const returned = parsed.data[0]
+
+      // engineer_join is the first seed template and has 2 tasks
+      expect(returned?.code).toBe("engineer_join")
+      expect(returned?.task_count).toBe(2)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/onboarding/templates", token: null })
 
