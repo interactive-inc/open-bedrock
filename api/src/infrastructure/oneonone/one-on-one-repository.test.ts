@@ -9,7 +9,7 @@ describe("OneOnOneRepository", () => {
 
     const repository = new OneOnOneRepository(context)
 
-    const oneOnOne = OneOnOne.create({
+    const result = OneOnOne.create({
       memberId: 1,
       managerId: 2,
       heldAt: "2026-01-01T00:00:00.000Z",
@@ -17,6 +17,10 @@ describe("OneOnOneRepository", () => {
       managerNote: null,
       nextAction: null,
     })
+
+    if ("reason" in result) throw new Error("unexpected self_reference")
+
+    const oneOnOne = result
 
     const saved = await repository.save(oneOnOne)
 
