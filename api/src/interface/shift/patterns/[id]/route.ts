@@ -5,13 +5,13 @@ import type { ShiftPattern } from "@/domain/shift/shift-pattern"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -30,11 +30,7 @@ function toResponseBody(pattern: ShiftPattern) {
 
 // GET /shift/patterns/:id — シフトパターンの詳細（特権ロール）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const patternId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(patternId) === false) {
-    throw new BadRequestError("invalid pattern id")
-  }
+  const patternId = validateIntParam(c.req.param("id"), "shift pattern")
 
   const session = c.var.session
 
@@ -80,11 +76,7 @@ export const PUT = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const patternId = Number(c.req.param("id") ?? "")
-
-    if (Number.isInteger(patternId) === false) {
-      throw new BadRequestError("invalid pattern id")
-    }
+    const patternId = validateIntParam(c.req.param("id"), "shift pattern")
 
     const session = c.var.session
 
@@ -126,11 +118,7 @@ export const PUT = factory.createHandlers(
 
 // DELETE /shift/patterns/:id — シフトパターンを削除（特権ロール）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const patternId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(patternId) === false) {
-    throw new BadRequestError("invalid pattern id")
-  }
+  const patternId = validateIntParam(c.req.param("id"), "shift pattern")
 
   const session = c.var.session
 

@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -22,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const code = c.req.param("code") ?? ""
+  const code = validateCodeParam(c.req.param("code"), "asset")
 
   const rows = await c.var.database.select().from(assets).where(eq(assets.code, code)).limit(1)
 
@@ -68,7 +69,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateAsset(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "asset"),
       details: {
         name: json.name,
         kind: json.kind,
@@ -113,7 +114,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteAsset(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "asset"),
   })
 
   if (result instanceof Error) {

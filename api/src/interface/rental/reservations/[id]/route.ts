@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -38,7 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const reservation = await new GetRentalReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
     requesterId: viewer.employeeId,
   })
 
@@ -84,7 +85,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const reservation = await new UpdateRentalReservation(c).run({
-      reservationId: c.req.param("id") ?? "",
+      reservationId: validateUuidParam(c.req.param("id"), "reservation"),
       requesterId: viewer.employeeId,
       itemName: json.item_name,
       startDate: json.start_date,
@@ -121,7 +122,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelRentalReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+    reservationId: validateUuidParam(c.req.param("id"), "reservation"),
     requesterId: viewer.employeeId,
   })
 

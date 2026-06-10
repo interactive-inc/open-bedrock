@@ -1,6 +1,7 @@
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { employees, orgMemberships } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -20,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const employeeCode = c.req.param("employee_code") ?? ""
+  const employeeCode = validateCodeParam(c.req.param("employee_code"), "employee")
 
   // 全 memberships + employees を 1 クエリで一括取得し、メモリ上でツリーを走査する。
   // 組織規模が小さい前提（数百人以下）なので全件取得で十分速い。

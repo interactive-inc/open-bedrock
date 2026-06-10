@@ -9,6 +9,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { trainingCourses } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -29,7 +30,7 @@ function toResponseBody(course: TrainingCourse) {
 }
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const code = c.req.param("code") ?? ""
+  const code = validateCodeParam(c.req.param("code"), "training course")
 
   const rows = await c.var.database
     .select()
@@ -81,7 +82,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateTrainingCourse(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "training course"),
       title: body.title,
       category: body.category,
       description: body.description ?? null,
@@ -115,7 +116,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new ArchiveTrainingCourse(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "training course"),
   })
 
   if (result instanceof Error) {

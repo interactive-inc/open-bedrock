@@ -165,7 +165,7 @@ describe("POST /onboarding/tasks/:id/uncomplete", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non-integer task id", async () => {
+  test("returns 404 for a non-integer task id", async () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
@@ -174,7 +174,7 @@ describe("POST /onboarding/tasks/:id/uncomplete", () => {
       method: "POST",
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {

@@ -4,13 +4,13 @@ import { goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { z } from "zod"
 
 // POST /goals/:goal_id/evaluations — 目標への評価を登録し、final なら目標を完了にする
@@ -31,11 +31,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const goalId = Number(c.req.param("goal_id"))
-
-    if (Number.isInteger(goalId) === false) {
-      throw new BadRequestError("invalid goal id")
-    }
+    const goalId = validateIntParam(c.req.param("goal_id"), "goal")
 
     const json = c.req.valid("json")
 

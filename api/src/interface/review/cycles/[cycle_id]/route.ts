@@ -5,13 +5,13 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -33,11 +33,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const cycleId = Number(c.req.param("cycle_id"))
-
-    if (Number.isInteger(cycleId) === false) {
-      throw new BadRequestError("invalid cycle id")
-    }
+    const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
     const json = c.req.valid("json")
 
@@ -85,11 +81,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const cycleId = Number(c.req.param("cycle_id"))
-
-  if (Number.isInteger(cycleId) === false) {
-    throw new BadRequestError("invalid cycle id")
-  }
+  const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const result = await new DeleteReviewCycle(c).run({
     viewerRole: session.role,

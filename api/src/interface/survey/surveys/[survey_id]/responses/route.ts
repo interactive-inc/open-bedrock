@@ -1,5 +1,6 @@
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import {
@@ -25,11 +26,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const surveyId = Number(c.req.param("survey_id"))
-
-    if (!Number.isInteger(surveyId)) {
-      throw new BadRequestError("invalid survey id")
-    }
+    const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
     const json = c.req.valid("json")
 

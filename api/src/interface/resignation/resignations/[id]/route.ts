@@ -13,6 +13,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -38,7 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const resignation = await new GetResignation(c).run({
-    resignationId: c.req.param("id") ?? "",
+    resignationId: validateUuidParam(c.req.param("id"), "resignation"),
     employeeId: viewer.employeeId,
   })
 
@@ -92,7 +93,7 @@ export const PUT = factory.createHandlers(
     }
 
     const resignation = await new UpdateResignation(c).run({
-      resignationId: c.req.param("id") ?? "",
+      resignationId: validateUuidParam(c.req.param("id"), "resignation"),
       employeeId: viewer.employeeId,
       resignationDate: json.resignation_date,
       lastWorkingDate: json.last_working_date ?? null,
@@ -128,7 +129,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelResignation(c).run({
-    resignationId: c.req.param("id") ?? "",
+    resignationId: validateUuidParam(c.req.param("id"), "resignation"),
     employeeId: viewer.employeeId,
   })
 

@@ -6,13 +6,13 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -37,11 +37,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const enrollmentId = Number(c.req.param("id"))
-
-  if (Number.isInteger(enrollmentId) === false) {
-    throw new BadRequestError("invalid enrollment id")
-  }
+  const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
   const enrollment = await new GetTrainingEnrollment(c).run({
     enrollmentId: enrollmentId,
@@ -75,11 +71,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const enrollmentId = Number(c.req.param("id"))
-
-    if (Number.isInteger(enrollmentId) === false) {
-      throw new BadRequestError("invalid enrollment id")
-    }
+    const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
     const body = c.req.valid("json")
 
@@ -118,11 +110,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const enrollmentId = Number(c.req.param("id"))
-
-  if (Number.isInteger(enrollmentId) === false) {
-    throw new BadRequestError("invalid enrollment id")
-  }
+  const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
   const result = await new CancelTrainingEnrollment(c).run({
     enrollmentId: enrollmentId,

@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -39,7 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const businessTrip = await new GetBusinessTrip(c).run({
-    businessTripId: c.req.param("id") ?? "",
+    businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
     travelerId: viewer.employeeId,
   })
 
@@ -86,7 +87,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const businessTrip = await new UpdateBusinessTrip(c).run({
-      businessTripId: c.req.param("id") ?? "",
+      businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
       travelerId: viewer.employeeId,
       destination: json.destination,
       startDate: json.start_date,
@@ -128,7 +129,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelBusinessTrip(c).run({
-    businessTripId: c.req.param("id") ?? "",
+    businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
     travelerId: viewer.employeeId,
   })
 
