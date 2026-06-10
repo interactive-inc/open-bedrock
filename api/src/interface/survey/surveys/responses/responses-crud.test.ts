@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { HTTPException } from "hono/http-exception"
 import { contextStorage } from "hono/context-storage"
@@ -46,6 +47,23 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedD1(
+    db,
     "surveys",
     seedSurveys.map((survey) => ({
       id: survey.id,
@@ -82,8 +100,8 @@ function ownerToken(): Promise<string> {
 // 他人（回答 id=1 の回答者ではない）。
 function otherToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }
