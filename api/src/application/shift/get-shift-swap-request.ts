@@ -36,7 +36,11 @@ export class GetShiftSwapRequest {
 
     const isTargetEmployee = swapRequest.targetEmployeeId === input.viewerEmployeeId
 
-    if (isRequester === false && isTargetEmployee === false && canApproveShiftSwap(input.viewerRole) === false) {
+    if (
+      isRequester === false &&
+      isTargetEmployee === false &&
+      canApproveShiftSwap(input.viewerRole) === false
+    ) {
       return { reason: "not_visible" }
     }
 
