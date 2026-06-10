@@ -1,11 +1,10 @@
 import { DecideExpense } from "@/application/expense/decide-expense"
 import { canDecideExpense } from "@/domain/expense/can-decide-expense"
-import { toExpenseId } from "@/domain/expense/to-expense-id"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -30,11 +29,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const expenseId = toExpenseId(c.req.param("id") ?? "")
-
-    if (expenseId === null) {
-      throw new BadRequestError("invalid expense id")
-    }
+    const expenseId = validateIntParam(c.req.param("id"), "expense")
 
     if (canDecideExpense(session.role) === false) {
       throw new ForbiddenError()

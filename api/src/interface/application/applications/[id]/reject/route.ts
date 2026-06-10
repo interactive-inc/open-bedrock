@@ -2,10 +2,9 @@ import { DecideApplication } from "@/application/application/decide-application"
 import { canDecideApplication } from "@/domain/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { toApplicationId } from "@/domain/application/to-application-id"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -23,11 +22,7 @@ export const POST = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const applicationId = toApplicationId(c.req.param("id") ?? "")
-
-    if (applicationId === null) {
-      throw new BadRequestError("invalid application id")
-    }
+    const applicationId = validateIntParam(c.req.param("id"), "application")
 
     const body = c.req.valid("json")
 
