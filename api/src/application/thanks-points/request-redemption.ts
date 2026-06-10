@@ -84,6 +84,12 @@ export class RequestRedemption {
       createdAt: command.createdAt,
     })
 
-    return redemptionRepository.create(redemption)
+    const created = await redemptionRepository.create(redemption)
+
+    if (!(created instanceof Error) && "reason" in created) {
+      return { reason: "pending_exists" }
+    }
+
+    return created
   }
 }

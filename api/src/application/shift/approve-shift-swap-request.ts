@@ -51,7 +51,7 @@ export class ApproveShiftSwapRequest {
     }
 
     if (approved === null) {
-      return { reason: "swap_request_not_found" }
+      return { reason: "already_approved" }
     }
 
     return approved
