@@ -19,6 +19,9 @@ const leaveBalanceResponseSchema = z.object({
 
 const jwtSecret = "leave-balance-me-route-test-secret"
 
+// 2026 年度（4 月始まり）内の日付。シードの fiscal_year "2026" と整合させる。
+const fiscalNow = "2026-06-01T00:00:00.000Z"
+
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
@@ -90,6 +93,7 @@ async function request(props: {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
+    now: fiscalNow,
     path: props.path,
     token: props.token,
     method: props.method,
