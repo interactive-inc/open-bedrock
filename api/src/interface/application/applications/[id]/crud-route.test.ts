@@ -126,13 +126,13 @@ describe("PUT /applications/:id", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non numeric id", async () => {
+  test("returns 404 for a non numeric id", async () => {
     const response = await request("/applications/abc", await tokenFor(5, "member"), {
       method: "PUT",
       body: { payload: {} },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
