@@ -19,8 +19,16 @@ describe("TrainingEnrollmentRepository", () => {
 
     expect(created).toBeInstanceOf(TrainingEnrollment)
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error) {
       throw new Error("create failed")
+    }
+
+    if ("reason" in created) {
+      throw new Error("unexpected already_enrolled")
+    }
+
+    if (created.id === null) {
+      throw new Error("create returned null id")
     }
 
     const found = await repository.findById(created.id)
@@ -49,8 +57,16 @@ describe("TrainingEnrollmentRepository", () => {
       }),
     )
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error) {
       throw new Error("create failed")
+    }
+
+    if ("reason" in created) {
+      throw new Error("unexpected already_enrolled")
+    }
+
+    if (created.id === null) {
+      throw new Error("create returned null id")
     }
 
     const updated = await repository.update(created.complete("2026-02-01T00:00:00.000Z", 90))
