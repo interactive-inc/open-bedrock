@@ -54,6 +54,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("insufficient balance")
     }
 
+    if (result.reason === "self_approval_forbidden") {
+      throw new ForbiddenError("cannot approve own redemption")
+    }
+
     // 交換は確定済みだが在庫減算だけ失敗。確定は巻き戻さず、追跡できるよう構造化ログを残し
     // レスポンスにも stock_warning を立てて運用側が手当てできるようにする（握りつぶさない）。
     console.error(

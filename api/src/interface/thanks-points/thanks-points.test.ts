@@ -508,6 +508,38 @@ describe("redemption", () => {
     expect(response.status).toBe(403)
   })
 
+  test("forbids the applicant from approving their own redemption", async () => {
+    const db = await createTestDb()
+
+    // admin(E001) にポイントを付与する。
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E001", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 60 })
+
+    // admin 自身が交換申請を出す。
+    const requested = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await adminToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    expect(requested.status).toBe(201)
+
+    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+
+    // admin 本人が承認しようとすると 403 で弾かれる。
+    const response = await request({
+      db,
+      path: `/thanks/redemptions/${redemptionId}/approve`,
+      token: await adminToken(),
+      method: "POST",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
   test("rejects an invalid redemption id", async () => {
     const db = await createTestDb()
 
