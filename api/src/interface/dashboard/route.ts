@@ -12,22 +12,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const employeeRows = await c.var.database.select({ total: count() }).from(employees)
-
-  const openGoalRows = await c.var.database
-    .select({ total: count() })
-    .from(goals)
-    .where(eq(goals.status, "in_progress"))
-
-  const pendingApplicationRows = await c.var.database
-    .select({ total: count() })
-    .from(applications)
-    .where(eq(applications.status, "pending"))
-
-  const openSurveyRows = await c.var.database
-    .select({ total: count() })
-    .from(surveys)
-    .where(eq(surveys.status, "open"))
+  const [employeeRows, openGoalRows, pendingApplicationRows, openSurveyRows] =
+    await c.var.database.batch([
+      c.var.database.select({ total: count() }).from(employees),
+      c.var.database.select({ total: count() }).from(goals).where(eq(goals.status, "in_progress")),
+      c.var.database
+        .select({ total: count() })
+        .from(applications)
+        .where(eq(applications.status, "pending")),
+      c.var.database.select({ total: count() }).from(surveys).where(eq(surveys.status, "open")),
+    ])
 
   const body = {
     employee_count: employeeRows.at(0)?.total ?? 0,
