@@ -16,6 +16,8 @@ export type NotReserver = { reason: "not_reserver" }
 
 export type RoomAlreadyReserved = { reason: "room_already_reserved" }
 
+export type InvalidTimeRange = { reason: "invalid_time_range" }
+
 /**
  * 会議室予約の時刻と用途を変更する。本人以外の変更と、変更後の時間帯の重複を拒否する。
  */
@@ -24,7 +26,18 @@ export class UpdateRoomReservation {
 
   async run(
     command: Command,
-  ): Promise<RoomReservation | ReservationNotFound | NotReserver | RoomAlreadyReserved | Error> {
+  ): Promise<
+    | RoomReservation
+    | ReservationNotFound
+    | NotReserver
+    | RoomAlreadyReserved
+    | InvalidTimeRange
+    | Error
+  > {
+    if (command.startAt >= command.endAt) {
+      return { reason: "invalid_time_range" }
+    }
+
     const reservationRepository = new RoomReservationRepository(this.c)
 
     const current = await reservationRepository.findById(command.reservationId)

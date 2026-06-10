@@ -12,13 +12,21 @@ export type Command = {
 
 export type RoomAlreadyReserved = { reason: "room_already_reserved" }
 
+export type InvalidTimeRange = { reason: "invalid_time_range" }
+
 /**
  * 会議室を予約する。重複時は判別可能な失敗を返す。
  */
 export class CreateRoomReservation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<RoomReservation | RoomAlreadyReserved | Error> {
+  async run(
+    command: Command,
+  ): Promise<RoomReservation | RoomAlreadyReserved | InvalidTimeRange | Error> {
+    if (command.startAt >= command.endAt) {
+      return { reason: "invalid_time_range" }
+    }
+
     const reservationRepository = new RoomReservationRepository(this.c)
 
     const reservation = RoomReservation.create({
