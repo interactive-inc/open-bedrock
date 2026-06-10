@@ -38,7 +38,7 @@ describe("ApplicationRepository", () => {
     expect(found.currentStep).toBe("manager")
   })
 
-  test("update persists the status change", async () => {
+  test("decideFromPending flips a pending application and clears the current step", async () => {
     const { context } = createTestContext()
 
     const repository = new ApplicationRepository(context)
@@ -57,15 +57,66 @@ describe("ApplicationRepository", () => {
       throw created
     }
 
-    const updated = await repository.update(created.withStatus("approved"))
+    const decided = await repository.decideFromPending({
+      applicationId: created.id ?? 0,
+      status: "approved",
+    })
 
-    expect(updated).toBeInstanceOf(Application)
+    expect(decided).toBeInstanceOf(Application)
 
-    if (updated instanceof Error || updated === null) {
-      throw new Error("update failed")
+    if (decided instanceof Error || decided === null) {
+      throw new Error("decideFromPending failed")
     }
 
-    expect(updated.status).toBe("approved")
+    expect(decided.status).toBe("approved")
+    expect(decided.currentStep).toBeNull()
+  })
+
+  test("decideFromPending returns null for an unknown application id", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const decided = await repository.decideFromPending({ applicationId: 99999, status: "approved" })
+
+    expect(decided).toBeNull()
+  })
+
+  test("decideFromPending returns null for an already decided application", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await repository.create(
+      Application.create({
+        templateId: 1,
+        applicantId: 1,
+        currentStep: "manager",
+        payload: {},
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error) {
+      throw created
+    }
+
+    await repository.decideFromPending({ applicationId: created.id ?? 0, status: "approved" })
+
+    const second = await repository.decideFromPending({
+      applicationId: created.id ?? 0,
+      status: "rejected",
+    })
+
+    expect(second).toBeNull()
+
+    const found = await repository.findById(created.id ?? 0)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findById failed")
+    }
+
+    expect(found.status).toBe("approved")
   })
 
   test("addApproval persists an approval record for the application", async () => {
