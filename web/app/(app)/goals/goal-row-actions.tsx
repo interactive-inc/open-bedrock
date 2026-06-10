@@ -2,6 +2,17 @@
 
 import { useActionState, useState } from "react"
 import { deleteGoalAction, updateGoalAction } from "@/app/(app)/goals/actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -102,20 +113,40 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
   )
 }
 
-// 目標削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+// 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function DeleteGoalButton(props: { goalId: number }) {
-  const [state, formAction, pending] = useActionState(deleteGoalAction, {
+  const [, formAction, pending] = useActionState(deleteGoalAction, {
     ok: false,
     error: null,
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="goalId" value={props.goalId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+    <AlertDialog>
+      <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={pending} />}>
         削除
-      </Button>
-    </form>
+      </AlertDialogTrigger>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>この目標を削除しますか？</AlertDialogTitle>
+
+          <AlertDialogDescription>
+            この操作は取り消せません。目標の記録が完全に削除されます。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>やめる</AlertDialogCancel>
+
+          <form action={formAction}>
+            <input type="hidden" name="goalId" value={props.goalId} />
+
+            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
+              削除する
+            </AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
