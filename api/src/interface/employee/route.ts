@@ -14,7 +14,7 @@ import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
 import { and, eq, or } from "drizzle-orm"
 import { z } from "zod"
-import { codeSchema } from "@/lib/schemas"
+import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -80,7 +80,7 @@ export const POST = factory.createHandlers(
       name: z.string().min(1).max(200),
       email: z.string().min(1).max(254),
       password: z.string().min(8).max(200),
-      role: z.string().min(1).max(100),
+      role: employeeRoleSchema,
       dept_id: z.number().int().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
       position: z.string().max(200).nullable().optional(),
@@ -118,6 +118,10 @@ export const POST = factory.createHandlers(
     if ("reason" in created) {
       if (created.reason === "forbidden") {
         throw new ForbiddenError()
+      }
+
+      if (created.reason === "role_escalation_forbidden") {
+        throw new ForbiddenError("only admin can assign non-member roles")
       }
 
       if (created.reason === "weak_password") {

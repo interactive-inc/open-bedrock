@@ -6,7 +6,7 @@ export type EmployeeResponse = {
   position: string | null
   email: string
   status: string
-  role: string
+  role: "member" | "manager" | "hr" | "admin"
 }
 
 // 在籍状況。api の status enum と同形。
@@ -18,7 +18,7 @@ export type EmployeeCreateRequest = {
   name: string
   email: string
   password: string
-  role: string
+  role: "member" | "manager" | "hr" | "admin"
   dept_id?: number | null
   dept_name?: string | null
   position?: string | null
@@ -29,7 +29,7 @@ export type EmployeeCreateRequest = {
 export type EmployeeUpdateRequest = {
   name: string
   email: string
-  role: string
+  role: "member" | "manager" | "hr" | "admin"
   dept_id?: number | null
   dept_name?: string | null
   position?: string | null
