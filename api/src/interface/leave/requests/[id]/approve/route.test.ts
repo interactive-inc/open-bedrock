@@ -294,7 +294,7 @@ describe("POST /leave/requests/:id/approve", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for an invalid id", async () => {
+  test("returns 404 for an invalid id", async () => {
     const response = await request({
       path: "/leave/requests/abc/approve",
       token: await tokenFor(4, "manager"),
@@ -302,7 +302,7 @@ describe("POST /leave/requests/:id/approve", () => {
       body: { comment: null },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {

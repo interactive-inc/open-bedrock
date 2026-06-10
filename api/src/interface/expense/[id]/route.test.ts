@@ -126,10 +126,10 @@ describe("GET /expenses/:id", () => {
     expect(response.status).toBe(403)
   })
 
-  test("returns 400 for a non numeric id", async () => {
+  test("returns 404 for a non numeric id", async () => {
     const response = await request({ path: "/expenses/abc", token: await tokenFor(5, "member") })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for an unknown id", async () => {

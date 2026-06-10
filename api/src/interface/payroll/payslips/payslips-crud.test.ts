@@ -154,7 +154,7 @@ describe("PUT /payslips/:id", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non-numeric id", async () => {
+  test("returns 404 for a non-numeric id", async () => {
     const response = await request({
       path: "/payslips/abc",
       token: await adminToken(),
@@ -168,7 +168,7 @@ describe("PUT /payslips/:id", () => {
       },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {

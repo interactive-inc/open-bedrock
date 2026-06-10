@@ -149,13 +149,13 @@ describe("PUT /salary-revisions/:id", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non-numeric id", async () => {
+  test("returns 404 for a non-numeric id", async () => {
     const response = await request("/salary-revisions/abc", await adminToken(), "PUT", {
       effective_date: "2025-05-01",
       new_base_salary: 310000,
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 400 when new_base_salary is missing", async () => {
@@ -213,10 +213,10 @@ describe("DELETE /salary-revisions/:id", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non-numeric id", async () => {
+  test("returns 404 for a non-numeric id", async () => {
     const response = await request("/salary-revisions/abc", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {

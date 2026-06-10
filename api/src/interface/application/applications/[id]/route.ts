@@ -1,15 +1,14 @@
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { canDecideApplication } from "@/domain/application/can-decide-application"
-import { toApplicationId } from "@/domain/application/to-application-id"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -25,11 +24,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const applicationId = toApplicationId(c.req.param("id") ?? "")
-
-  if (applicationId === null) {
-    throw new BadRequestError("invalid application id")
-  }
+  const applicationId = validateIntParam(c.req.param("id"), "application")
 
   const rows = await c.var.database
     .select({
@@ -89,16 +84,12 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const applicationId = toApplicationId(c.req.param("id") ?? "")
-
-    if (applicationId === null) {
-      throw new BadRequestError("invalid application id")
-    }
+    const applicationId = validateIntParam(c.req.param("id"), "application")
 
     const body = c.req.valid("json")
 
     const updated = await new UpdateApplication(c).run({
-      applicationId: applicationId,
+      applicationId,
       applicantId: session.employeeId,
       payload: body.payload,
     })
@@ -131,14 +122,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const applicationId = toApplicationId(c.req.param("id") ?? "")
-
-  if (applicationId === null) {
-    throw new BadRequestError("invalid application id")
-  }
+  const applicationId = validateIntParam(c.req.param("id"), "application")
 
   const result = await new WithdrawApplication(c).run({
-    applicationId: applicationId,
+    applicationId,
     applicantId: session.employeeId,
   })
 
