@@ -1,7 +1,6 @@
 import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
 export type Input = {
   viewerRole: string
@@ -37,18 +36,15 @@ export class DeleteReviewCycle {
       return { reason: "cycle_not_found" }
     }
 
-    const formRepository = new ReviewFormRepository(this.c)
+    const db = this.c.env.DB
 
-    const formsDeleted = await formRepository.deleteByCycleId(input.cycleId)
-
-    if (formsDeleted instanceof Error) {
-      return formsDeleted
-    }
-
-    const deleted = await repository.delete(input.cycleId)
-
-    if (deleted instanceof Error) {
-      return deleted
+    try {
+      await db.batch([
+        db.prepare("DELETE FROM review_forms WHERE cycle_id = ?1").bind(input.cycleId),
+        db.prepare("DELETE FROM review_cycles WHERE id = ?1").bind(input.cycleId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete review cycle")
     }
 
     return { reason: "deleted" }
