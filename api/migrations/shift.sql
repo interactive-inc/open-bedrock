@@ -24,6 +24,8 @@ CREATE INDEX IF NOT EXISTS idx_shift_assignments_employee ON shift_assignments (
 
 CREATE INDEX IF NOT EXISTS idx_shift_assignments_date ON shift_assignments (date);
 
+CREATE INDEX IF NOT EXISTS idx_shift_assignments_pattern ON shift_assignments (pattern_id);
+
 -- シフト交代申請（申請者と交代相手・対象日・承認状態）
 CREATE TABLE IF NOT EXISTS shift_swap_requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

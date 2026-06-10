@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications (recipient_employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient_unread ON notifications (recipient_employee_id) WHERE is_read = 0;

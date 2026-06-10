@@ -1,5 +1,6 @@
+import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 // 従業員台帳
 export const employees = sqliteTable("employees", {
@@ -50,17 +51,25 @@ export const orgMemberships = sqliteTable(
 export type OrgMembershipRow = InferSelectModel<typeof orgMemberships>
 
 // 通知（社員宛ての申請・承認・リマインド・お知らせ）。is_read は 0/1 で保存する。
-export const notifications = sqliteTable("notifications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  recipientEmployeeId: integer("recipient_employee_id").notNull(),
-  sourceDomain: text("source_domain").notNull(),
-  sourceId: integer("source_id"),
-  kind: text("kind").notNull(),
-  title: text("title").notNull(),
-  body: text("body"),
-  isRead: integer("is_read").notNull().default(0),
-  createdAt: text("created_at").notNull(),
-})
+export const notifications = sqliteTable(
+  "notifications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    recipientEmployeeId: integer("recipient_employee_id").notNull(),
+    sourceDomain: text("source_domain").notNull(),
+    sourceId: integer("source_id"),
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    body: text("body"),
+    isRead: integer("is_read").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    index("idx_notifications_recipient_unread")
+      .on(table.recipientEmployeeId)
+      .where(sql`is_read = 0`),
+  ],
+)
 
 export type NotificationRow = InferSelectModel<typeof notifications>
 
@@ -163,14 +172,18 @@ export const shiftPatterns = sqliteTable("shift_patterns", {
 export type ShiftPatternRow = InferSelectModel<typeof shiftPatterns>
 
 // シフト割当（社員ごとの日次シフト。published_at:null は下書き）
-export const shiftAssignments = sqliteTable("shift_assignments", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  patternId: integer("pattern_id"),
-  date: text("date").notNull(),
-  note: text("note"),
-  publishedAt: text("published_at"),
-})
+export const shiftAssignments = sqliteTable(
+  "shift_assignments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    patternId: integer("pattern_id"),
+    date: text("date").notNull(),
+    note: text("note"),
+    publishedAt: text("published_at"),
+  },
+  (table) => [index("idx_shift_assignments_pattern").on(table.patternId)],
+)
 
 export type ShiftAssignmentRow = InferSelectModel<typeof shiftAssignments>
 
@@ -545,14 +558,18 @@ export const rooms = sqliteTable("rooms", {
 export type RoomRow = InferSelectModel<typeof rooms>
 
 // 会議室予約（重複判定は start_at/end_at の範囲で行う）
-export const roomReservations = sqliteTable("room_reservations", {
-  id: text("id").primaryKey(),
-  roomId: integer("room_id").notNull(),
-  reserverId: integer("reserver_id").notNull(),
-  startAt: text("start_at").notNull(),
-  endAt: text("end_at").notNull(),
-  purpose: text("purpose"),
-})
+export const roomReservations = sqliteTable(
+  "room_reservations",
+  {
+    id: text("id").primaryKey(),
+    roomId: integer("room_id").notNull(),
+    reserverId: integer("reserver_id").notNull(),
+    startAt: text("start_at").notNull(),
+    endAt: text("end_at").notNull(),
+    purpose: text("purpose"),
+  },
+  (table) => [index("idx_room_reservations_reserver").on(table.reserverId)],
+)
 
 export type RoomReservationRow = InferSelectModel<typeof roomReservations>
 
