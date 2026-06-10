@@ -45,8 +45,8 @@ export class RegisterEmployee {
       return { reason: "forbidden" }
     }
 
-    // admin 以外は employee ロールしか付与できない
-    if (command.employee.role !== "employee" && command.viewerRole !== "admin") {
+    // admin 以外は member ロールしか付与できない
+    if (command.employee.role !== "member" && command.viewerRole !== "admin") {
       return { reason: "role_escalation_forbidden" }
     }
 

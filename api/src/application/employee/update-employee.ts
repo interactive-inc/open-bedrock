@@ -5,6 +5,7 @@ import { EmployeeRepository } from "@/infrastructure/employee/employee-repositor
 
 export type Command = {
   viewerRole: string
+  viewerEmployeeId: number
   code: string
   profile: {
     name: string
@@ -23,7 +24,16 @@ export type RoleEscalationForbidden = { reason: "role_escalation_forbidden" }
 
 export type EmployeeNotFound = { reason: "employee_not_found" }
 
-export type UpdateEmployeeFailure = Forbidden | RoleEscalationForbidden | EmployeeNotFound
+export type CannotDemoteSelf = { reason: "cannot_demote_self" }
+
+export type LastAdmin = { reason: "last_admin" }
+
+export type UpdateEmployeeFailure =
+  | Forbidden
+  | RoleEscalationForbidden
+  | EmployeeNotFound
+  | CannotDemoteSelf
+  | LastAdmin
 
 /**
  * 権限と存在を確認し、従業員の氏名・メール・ロール・部署・役職・在籍状況を更新する。
@@ -38,11 +48,6 @@ export class UpdateEmployee {
       return { reason: "forbidden" }
     }
 
-    // admin 以外は employee ロールしか付与できない
-    if (command.profile.role !== "employee" && command.viewerRole !== "admin") {
-      return { reason: "role_escalation_forbidden" }
-    }
-
     const employee = await employeeRepository.findByCode(command.code)
 
     if (employee instanceof Error) {
@@ -51,6 +56,33 @@ export class UpdateEmployee {
 
     if (employee === null) {
       return { reason: "employee_not_found" }
+    }
+
+    // 自分自身の admin ロールを外すことはできない
+    if (
+      employee.id === command.viewerEmployeeId &&
+      employee.role === "admin" &&
+      command.profile.role !== "admin"
+    ) {
+      return { reason: "cannot_demote_self" }
+    }
+
+    // 最後の admin を降格させることはできない
+    if (employee.role === "admin" && command.profile.role !== "admin") {
+      const adminCount = await employeeRepository.countByRole("admin")
+
+      if (adminCount instanceof Error) {
+        return adminCount
+      }
+
+      if (adminCount <= 1) {
+        return { reason: "last_admin" }
+      }
+    }
+
+    // admin 以外は member ロールしか付与できない
+    if (command.profile.role !== "member" && command.viewerRole !== "admin") {
+      return { reason: "role_escalation_forbidden" }
     }
 
     const updated = await employeeRepository.updateProfile(employee.withProfile(command.profile))

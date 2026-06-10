@@ -121,7 +121,7 @@ export const POST = factory.createHandlers(
       }
 
       if (created.reason === "role_escalation_forbidden") {
-        throw new ForbiddenError("only admin can assign non-employee roles")
+        throw new ForbiddenError("only admin can assign non-member roles")
       }
 
       if (created.reason === "weak_password") {

@@ -75,6 +75,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateEmployee(c).run({
       viewerRole: session.role,
+      viewerEmployeeId: session.employeeId,
       code: c.req.param("code") ?? "",
       profile: {
         name: json.name,
@@ -97,7 +98,15 @@ export const PUT = factory.createHandlers(
       }
 
       if (updated.reason === "role_escalation_forbidden") {
-        throw new ForbiddenError("only admin can assign non-employee roles")
+        throw new ForbiddenError("only admin can assign non-member roles")
+      }
+
+      if (updated.reason === "cannot_demote_self") {
+        throw new ForbiddenError("cannot remove admin role from yourself")
+      }
+
+      if (updated.reason === "last_admin") {
+        throw new ForbiddenError("cannot remove the last admin")
       }
 
       throw new ForbiddenError()
