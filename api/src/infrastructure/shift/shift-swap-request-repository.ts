@@ -51,15 +51,19 @@ export class ShiftSwapRequestRepository {
     }
   }
 
-  async findByRequesterId(
-    requesterEmployeeId: number,
-  ): Promise<ReadonlyArray<ShiftSwapRequest> | Error> {
+  async findByRequesterId(props: {
+    requesterEmployeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ShiftSwapRequest> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(shiftSwapRequests)
-        .where(eq(shiftSwapRequests.requesterEmployeeId, requesterEmployeeId))
+        .where(eq(shiftSwapRequests.requesterEmployeeId, props.requesterEmployeeId))
         .orderBy(asc(shiftSwapRequests.date))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => ShiftSwapRequest.fromRow(row))
     } catch (error) {
