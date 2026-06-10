@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { employeeRoleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -56,7 +57,7 @@ export const PUT = factory.createHandlers(
     z.object({
       name: z.string().min(1).max(200),
       email: z.string().min(1).max(254),
-      role: z.string().min(1).max(100),
+      role: employeeRoleSchema,
       dept_id: z.number().int().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
       position: z.string().max(200).nullable().optional(),
@@ -93,6 +94,10 @@ export const PUT = factory.createHandlers(
     if ("reason" in updated) {
       if (updated.reason === "employee_not_found") {
         throw new NotFoundError("employee not found")
+      }
+
+      if (updated.reason === "role_escalation_forbidden") {
+        throw new ForbiddenError("only admin can assign non-employee roles")
       }
 
       throw new ForbiddenError()

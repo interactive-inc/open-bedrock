@@ -11,3 +11,8 @@ export const yearMonth = z.string().regex(/^\d{4}-\d{2}$/, "YYYY-MM 形式で入
 
 // コード・識別子フィールド共通。空文字と長すぎる値を弾く。
 export const codeSchema = z.string().min(1).max(200)
+
+// 従業員ロール。API 入力で許容する値を列挙する。
+export const employeeRoleSchema = z.enum(["employee", "manager", "hr", "admin"])
+
+export type EmployeeRole = z.infer<typeof employeeRoleSchema>

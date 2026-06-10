@@ -19,9 +19,11 @@ export type Command = {
 
 export type Forbidden = { reason: "forbidden" }
 
+export type RoleEscalationForbidden = { reason: "role_escalation_forbidden" }
+
 export type EmployeeNotFound = { reason: "employee_not_found" }
 
-export type UpdateEmployeeFailure = Forbidden | EmployeeNotFound
+export type UpdateEmployeeFailure = Forbidden | RoleEscalationForbidden | EmployeeNotFound
 
 /**
  * 権限と存在を確認し、従業員の氏名・メール・ロール・部署・役職・在籍状況を更新する。
@@ -34,6 +36,11 @@ export class UpdateEmployee {
 
     if (canManageEmployees(command.viewerRole) === false) {
       return { reason: "forbidden" }
+    }
+
+    // admin 以外は employee ロールしか付与できない
+    if (command.profile.role !== "employee" && command.viewerRole !== "admin") {
+      return { reason: "role_escalation_forbidden" }
     }
 
     const employee = await employeeRepository.findByCode(command.code)
