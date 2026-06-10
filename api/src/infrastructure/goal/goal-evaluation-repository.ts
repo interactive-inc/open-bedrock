@@ -53,4 +53,13 @@ export class GoalEvaluationRepository {
       return error instanceof Error ? error : new Error("failed to create goal evaluation")
     }
   }
+
+  async delete(evaluationId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.id, evaluationId))
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete goal evaluation")
+    }
+  }
 }
