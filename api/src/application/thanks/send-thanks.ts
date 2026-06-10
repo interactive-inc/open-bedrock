@@ -22,6 +22,8 @@ export type RecipientNotFound = { reason: "recipient_not_found" }
 
 export type InvalidThanks = { reason: "invalid_thanks" }
 
+export type SelfThanks = { reason: "self_thanks" }
+
 export type InvalidPoints = { reason: "invalid_points" }
 
 export type InsufficientBudget = { reason: "insufficient_budget" }
@@ -39,6 +41,7 @@ export class SendThanks {
     | Thanks
     | SenderNotFound
     | RecipientNotFound
+    | SelfThanks
     | InvalidThanks
     | InvalidPoints
     | InsufficientBudget
@@ -68,6 +71,10 @@ export class SendThanks {
 
     if (recipient === null) {
       return { reason: "recipient_not_found" }
+    }
+
+    if (sender.id === recipient.id) {
+      return { reason: "self_thanks" }
     }
 
     const points = toNonNegativePoints(command.points)

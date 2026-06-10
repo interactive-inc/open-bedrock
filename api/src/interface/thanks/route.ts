@@ -114,6 +114,10 @@ export const POST = factory.createHandlers(
         throw new InternalError("sender not found")
       }
 
+      if (result.reason === "self_thanks") {
+        throw new BadRequestError("cannot send thanks to yourself")
+      }
+
       if (result.reason === "insufficient_budget") {
         throw new BadRequestError("insufficient thanks point budget")
       }
