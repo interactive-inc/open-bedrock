@@ -45,10 +45,11 @@ export class LeaveBalance implements Props {
     })
   }
 
-  decrement(days: number) {
+  decrement(days: number): LeaveBalance | { reason: "invalid_decrement" } {
     if (days <= 0 || days > this.props.remainingDays) {
-      throw new Error(`invalid decrement: days=${days}, remaining=${this.props.remainingDays}`)
+      return { reason: "invalid_decrement" }
     }
+
     return new LeaveBalance({
       ...this.props,
       usedDays: this.props.usedDays + days,

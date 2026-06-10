@@ -3,6 +3,12 @@ import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-re
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
+function createSwapRequest(props: Parameters<typeof ShiftSwapRequest.create>[0]): ShiftSwapRequest {
+  const result = ShiftSwapRequest.create(props)
+  if ("reason" in result) throw new Error("unexpected self_reference in test")
+  return result
+}
+
 describe("ShiftSwapRequestRepository", () => {
   test("create then findById round-trips the swap request", async () => {
     const { context } = createTestContext()
@@ -10,7 +16,7 @@ describe("ShiftSwapRequestRepository", () => {
     const repository = new ShiftSwapRequestRepository(context)
 
     const created = await repository.create(
-      ShiftSwapRequest.create({
+      createSwapRequest({
         requesterEmployeeId: 1,
         targetEmployeeId: 2,
         date: "2026-05-31",

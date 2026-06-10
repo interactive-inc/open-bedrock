@@ -7,14 +7,18 @@ import { createTestContext } from "@/interface/shared/test/create-test-context"
 async function createSwapRequest(
   repository: ShiftSwapRequestRepository,
 ): Promise<ShiftSwapRequest> {
-  const result = await repository.create(
-    ShiftSwapRequest.create({
-      requesterEmployeeId: 1,
-      targetEmployeeId: 2,
-      date: "2026-06-01",
-      note: null,
-    }),
-  )
+  const swapRequest = ShiftSwapRequest.create({
+    requesterEmployeeId: 1,
+    targetEmployeeId: 2,
+    date: "2026-06-01",
+    note: null,
+  })
+
+  if ("reason" in swapRequest) {
+    throw new Error("unexpected self_reference in test")
+  }
+
+  const result = await repository.create(swapRequest)
 
   if (result instanceof Error || "reason" in result) {
     throw new Error("failed to create swap request")
