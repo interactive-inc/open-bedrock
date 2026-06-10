@@ -1,7 +1,7 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import type { Context } from "@/env"
 import { thanks, thanksRedemptions } from "@/schema"
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 
 // 残高から差し引く対象とみなす確定済みの交換ステータス。確定は fulfilled の1つだけ。
 // 承認＝確定（fulfilled）へ直行するため approved は使わない。
@@ -240,7 +240,8 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 受領残高を算出する。受領 thanks.points 合計 − 確定交換（fulfilled）の point_cost 合計。
+  // 受領残高を算出する。受領 thanks.points 合計 − 確定・保留中の交換（fulfilled + pending）の
+  // point_cost 合計。pending を含めることで、未決裁の申請分も残高に反映させる。
   // 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
   async getBalance(employeeId: number): Promise<number | Error> {
     try {
@@ -249,7 +250,7 @@ export class ThanksRedemptionRepository {
         .from(thanks)
         .where(eq(thanks.recipientEmployeeId, employeeId))
 
-      const [settledRow] = await this.c.var.database
+      const [deductedRow] = await this.c.var.database
         .select({
           total: sql<number>`COALESCE(SUM(${thanksRedemptions.pointCost}), 0)`,
         })
@@ -257,11 +258,11 @@ export class ThanksRedemptionRepository {
         .where(
           and(
             eq(thanksRedemptions.employeeId, employeeId),
-            eq(thanksRedemptions.status, settledStatus),
+            inArray(thanksRedemptions.status, [settledStatus, "pending"]),
           ),
         )
 
-      return (receivedRow?.total ?? 0) - (settledRow?.total ?? 0)
+      return (receivedRow?.total ?? 0) - (deductedRow?.total ?? 0)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to compute balance")
     }
