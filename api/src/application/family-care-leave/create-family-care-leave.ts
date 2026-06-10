@@ -11,13 +11,15 @@ export type Command = {
   createdAt: string
 }
 
+export type InvalidDateRange = { reason: "invalid_date_range" }
+
 /**
  * 休業申出を作成する。status は "requested" で登録する。
  */
 export class CreateFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<FamilyCareLeave | Error> {
+  async run(command: Command): Promise<FamilyCareLeave | InvalidDateRange | Error> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const familyCareLeave = FamilyCareLeave.create({
@@ -28,6 +30,10 @@ export class CreateFamilyCareLeave {
       note: command.note,
       createdAt: command.createdAt,
     })
+
+    if ("reason" in familyCareLeave) {
+      return familyCareLeave
+    }
 
     return await familyCareLeaveRepository.create(familyCareLeave)
   }

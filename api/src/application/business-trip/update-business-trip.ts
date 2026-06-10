@@ -20,6 +20,8 @@ export type NotModifiable = { reason: "not_modifiable" }
 
 export type OverlappingTrip = { reason: "overlapping_trip" }
 
+export type InvalidDateRange = { reason: "invalid_date_range" }
+
 /**
  * 出張申請の行き先・期間・目的・概算費用を変更する。本人以外と、承認済み申請の変更を拒否する。
  * 変更後の期間が他の出張申請と重複する場合も拒否する。
@@ -30,7 +32,13 @@ export class UpdateBusinessTrip {
   async run(
     command: Command,
   ): Promise<
-    BusinessTrip | BusinessTripNotFound | NotTraveler | NotModifiable | OverlappingTrip | Error
+    | BusinessTrip
+    | BusinessTripNotFound
+    | NotTraveler
+    | NotModifiable
+    | OverlappingTrip
+    | InvalidDateRange
+    | Error
   > {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
@@ -74,6 +82,10 @@ export class UpdateBusinessTrip {
       purpose: command.purpose,
       estimatedCost: command.estimatedCost,
     })
+
+    if ("reason" in updated) {
+      return updated
+    }
 
     return await businessTripRepository.update(updated)
   }

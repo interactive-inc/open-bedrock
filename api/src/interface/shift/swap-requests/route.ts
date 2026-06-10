@@ -4,6 +4,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -88,6 +89,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in swapRequest) {
+      if (swapRequest.reason === "self_reference") {
+        throw new BadRequestError("cannot swap with yourself")
+      }
+
       if (swapRequest.reason === "already_exists") {
         throw new ConflictError("pending swap request already exists")
       }

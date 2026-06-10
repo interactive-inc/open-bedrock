@@ -49,7 +49,11 @@ export class FamilyCareLeave implements Props {
     endDate: string
     note: string | null
     createdAt: string
-  }): FamilyCareLeave {
+  }): FamilyCareLeave | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new FamilyCareLeave({
       id: crypto.randomUUID(),
       employeeId: props.employeeId,
@@ -81,7 +85,11 @@ export class FamilyCareLeave implements Props {
     startDate: string
     endDate: string
     note: string | null
-  }): FamilyCareLeave {
+  }): FamilyCareLeave | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new FamilyCareLeave({
       ...this.props,
       leaveKind: props.leaveKind,

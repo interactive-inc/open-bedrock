@@ -54,9 +54,16 @@ export class UpdateRoomReservation {
       return { reason: "not_reserver" }
     }
 
-    const updated = current
-      .withRescheduled({ startAt: command.startAt, endAt: command.endAt })
-      .withPurpose(command.purpose)
+    const rescheduled = current.withRescheduled({
+      startAt: command.startAt,
+      endAt: command.endAt,
+    })
+
+    if ("reason" in rescheduled) {
+      return rescheduled
+    }
+
+    const updated = rescheduled.withPurpose(command.purpose)
 
     const result = await reservationRepository.updateIfNoOverlap(updated)
 

@@ -2,7 +2,12 @@ import { CreateBusinessTrip } from "@/application/business-trip/create-business-
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ConflictError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -47,6 +52,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in businessTrip) {
+      if (businessTrip.reason === "invalid_date_range") {
+        throw new BadRequestError("invalid date range")
+      }
+
       throw new ConflictError("overlapping business trip already exists")
     }
 

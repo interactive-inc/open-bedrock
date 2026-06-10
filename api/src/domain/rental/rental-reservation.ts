@@ -49,7 +49,11 @@ export class RentalReservation implements Props {
     endDate: string
     purpose: string | null
     createdAt: string
-  }): RentalReservation {
+  }): RentalReservation | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new RentalReservation({
       id: crypto.randomUUID(),
       requesterId: props.requesterId,
@@ -81,7 +85,15 @@ export class RentalReservation implements Props {
   }
 
   // 品名と期間を変更した新しい予約を返す。
-  withDetails(props: { itemName: string; startDate: string; endDate: string }) {
+  withDetails(props: {
+    itemName: string
+    startDate: string
+    endDate: string
+  }): RentalReservation | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new RentalReservation({
       ...this.props,
       itemName: props.itemName,

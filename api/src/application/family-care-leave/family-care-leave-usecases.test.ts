@@ -22,6 +22,10 @@ async function seedLeave(context: Context, employeeId: number): Promise<string> 
     throw new Error("seed failed")
   }
 
+  if ("reason" in created) {
+    throw new Error("seed failed: " + created.reason)
+  }
+
   return created.id
 }
 
@@ -42,6 +46,10 @@ describe("CreateFamilyCareLeave", () => {
 
     if (created instanceof Error) {
       throw new Error("create failed")
+    }
+
+    if ("reason" in created) {
+      throw new Error("unexpected reason")
     }
 
     expect(created.status).toBe("requested")

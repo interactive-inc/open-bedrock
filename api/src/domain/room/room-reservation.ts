@@ -12,6 +12,8 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
+export type InvalidTimeRange = { reason: "invalid_time_range" }
+
 // 会議室予約（重複は start_at/end_at の範囲で判定）。集約ルート。
 export class RoomReservation implements Props {
   // id は UUID。新規作成時に採番する。
@@ -27,13 +29,7 @@ export class RoomReservation implements Props {
 
   readonly purpose!: Props["purpose"]
 
-  constructor(private readonly props: Props) {
-    zProps.parse(props)
-
-    if (props.startAt >= props.endAt) {
-      throw new Error("startAt must be before endAt")
-    }
-
+  private constructor(private readonly props: Props) {
     Object.assign(this, props)
 
     Object.freeze(this)
@@ -46,19 +42,25 @@ export class RoomReservation implements Props {
     startAt: string
     endAt: string
     purpose: string | null
-  }): RoomReservation {
-    return new RoomReservation({
-      id: crypto.randomUUID(),
-      roomId: props.roomId,
-      reserverId: props.reserverId,
-      startAt: props.startAt,
-      endAt: props.endAt,
-      purpose: props.purpose,
-    })
+  }): RoomReservation | InvalidTimeRange {
+    if (props.startAt >= props.endAt) {
+      return { reason: "invalid_time_range" }
+    }
+
+    return new RoomReservation(
+      zProps.parse({
+        id: crypto.randomUUID(),
+        roomId: props.roomId,
+        reserverId: props.reserverId,
+        startAt: props.startAt,
+        endAt: props.endAt,
+        purpose: props.purpose,
+      }),
+    )
   }
 
-  static fromRow(row: RoomReservationRow): RoomReservation {
-    return new RoomReservation({
+  static fromRow(row: RoomReservationRow): RoomReservation | Error {
+    const parsed = zProps.safeParse({
       id: row.id,
       roomId: row.roomId,
       reserverId: row.reserverId,
@@ -66,6 +68,16 @@ export class RoomReservation implements Props {
       endAt: row.endAt,
       purpose: row.purpose,
     })
+
+    if (!parsed.success) {
+      return new Error(parsed.error.message)
+    }
+
+    if (parsed.data.startAt >= parsed.data.endAt) {
+      return new Error("startAt must be before endAt")
+    }
+
+    return new RoomReservation(parsed.data)
   }
 
   // 用途を変更した新しい予約を返す。
@@ -74,7 +86,11 @@ export class RoomReservation implements Props {
   }
 
   // 開始終了時刻を変更した新しい予約を返す。
-  withRescheduled(props: { startAt: string; endAt: string }) {
+  withRescheduled(props: { startAt: string; endAt: string }): RoomReservation | InvalidTimeRange {
+    if (props.startAt >= props.endAt) {
+      return { reason: "invalid_time_range" }
+    }
+
     return new RoomReservation({
       ...this.props,
       startAt: props.startAt,

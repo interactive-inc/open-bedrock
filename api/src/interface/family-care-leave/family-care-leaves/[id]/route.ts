@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -100,6 +101,10 @@ export const PUT = factory.createHandlers(
     if ("reason" in familyCareLeave) {
       if (familyCareLeave.reason === "family_care_leave_not_found") {
         throw new NotFoundError("family care leave not found")
+      }
+
+      if (familyCareLeave.reason === "invalid_date_range") {
+        throw new BadRequestError("invalid date range")
       }
 
       if (familyCareLeave.reason === "not_modifiable") {

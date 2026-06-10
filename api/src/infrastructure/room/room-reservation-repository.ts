@@ -30,7 +30,15 @@ export class RoomReservationRepository {
           ),
         )
 
-      return rows.map((row) => RoomReservation.fromRow(row))
+      const reservations: Array<RoomReservation> = []
+
+      for (const row of rows) {
+        const reservation = RoomReservation.fromRow(row)
+        if (reservation instanceof Error) return reservation
+        reservations.push(reservation)
+      }
+
+      return reservations
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load room_reservations")
     }
@@ -45,7 +53,15 @@ export class RoomReservationRepository {
         .where(eq(roomReservations.reserverId, reserverId))
         .orderBy(asc(roomReservations.startAt))
 
-      return rows.map((row) => RoomReservation.fromRow(row))
+      const reservations: Array<RoomReservation> = []
+
+      for (const row of rows) {
+        const reservation = RoomReservation.fromRow(row)
+        if (reservation instanceof Error) return reservation
+        reservations.push(reservation)
+      }
+
+      return reservations
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load room_reservations")
     }
@@ -61,7 +77,9 @@ export class RoomReservationRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : RoomReservation.fromRow(row)
+      if (row === undefined) return null
+
+      return RoomReservation.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load room_reservation")
     }

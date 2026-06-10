@@ -37,6 +37,10 @@ export class CreateRoomReservation {
       purpose: command.purpose,
     })
 
+    if ("reason" in reservation) {
+      return reservation
+    }
+
     const created = await reservationRepository.createIfNoOverlap(reservation)
 
     if (created instanceof Error) {
