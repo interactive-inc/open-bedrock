@@ -57,26 +57,6 @@ export class RequestRedemption {
       return { reason: "out_of_stock" }
     }
 
-    const hasPending = await redemptionRepository.hasPendingByEmployee(command.employeeId)
-
-    if (hasPending instanceof Error) {
-      return hasPending
-    }
-
-    if (hasPending) {
-      return { reason: "pending_exists" }
-    }
-
-    const balance = await redemptionRepository.getBalance(command.employeeId)
-
-    if (balance instanceof Error) {
-      return balance
-    }
-
-    if (balance < reward.pointCost) {
-      return { reason: "insufficient_balance" }
-    }
-
     const redemption = ThanksRedemption.create({
       employeeId: command.employeeId,
       rewardId: reward.id ?? command.rewardId,
@@ -84,11 +64,8 @@ export class RequestRedemption {
       createdAt: command.createdAt,
     })
 
-    const created = await redemptionRepository.create(redemption)
-
-    if (!(created instanceof Error) && "reason" in created) {
-      return { reason: "pending_exists" }
-    }
+    // 残高チェックと重複 pending チェックを INSERT にアトミックに畳み込む（TOCTOU 対策）。
+    const created = await redemptionRepository.createIfSufficientBalance(redemption)
 
     return created
   }
