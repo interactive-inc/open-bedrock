@@ -10,8 +10,6 @@ export type Command = {
 
 export type PayslipNotFound = { reason: "payslip_not_found" }
 
-export type AlreadyIssued = { reason: "already_issued" }
-
 export type Cancelled = { reason: "cancelled" }
 
 /**
@@ -20,9 +18,7 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelPayslip {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | Forbidden | PayslipNotFound | AlreadyIssued | Error> {
+  async run(command: Command): Promise<Cancelled | Forbidden | PayslipNotFound | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -37,10 +33,6 @@ export class CancelPayslip {
 
     if (current === null) {
       return { reason: "payslip_not_found" }
-    }
-
-    if (current.status !== "draft") {
-      return { reason: "already_issued" }
     }
 
     const deleted = await payslipRepository.delete(command.payslipId)
