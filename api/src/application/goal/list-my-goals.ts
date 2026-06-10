@@ -4,6 +4,8 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 
 export type Command = {
   employeeId: number
+  limit?: number
+  offset?: number
 }
 
 /**
@@ -15,6 +17,11 @@ export class ListMyGoals {
   async run(command: Command): Promise<ReadonlyArray<Goal> | Error> {
     const repository = new GoalRepository(this.c)
 
-    return await repository.findByEmployeeId(command.employeeId)
+    const opts =
+      command.limit !== undefined && command.offset !== undefined
+        ? { limit: command.limit, offset: command.offset }
+        : undefined
+
+    return await repository.findByEmployeeId(command.employeeId, opts)
   }
 }

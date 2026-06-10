@@ -41,6 +41,10 @@ export class OneOnOne implements Props {
 
   // 新規 1on1 を組み立てる。id は crypto.randomUUID() で採番する。
   static create(props: z.infer<typeof zNewProps>): OneOnOne {
+    if (props.memberId === props.managerId) {
+      throw new Error("member and manager must be different")
+    }
+
     return new OneOnOne({
       id: crypto.randomUUID(),
       memberId: props.memberId,

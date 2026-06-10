@@ -1,5 +1,11 @@
 import { resolveAttendanceSearchQuery } from "@/domain/attendance/resolve-attendance-search-query"
 import { attendanceListQuerySchema } from "@/interface/attendance/attendance-list-query"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { attendanceRecords } from "@/schema"
@@ -53,11 +59,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     conditions.push(lte(attendanceRecords.workDate, query.to))
   }
 
+  const limit = toBoundedInt({
+    raw: parsed.data.limit,
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: parsed.data.offset,
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select()
     .from(attendanceRecords)
     .where(conditions.length === 0 ? undefined : and(...conditions))
     .orderBy(asc(attendanceRecords.id))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,

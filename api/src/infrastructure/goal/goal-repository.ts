@@ -23,13 +23,19 @@ export class GoalRepository {
   }
 
   // 社員本人の目標を id の昇順で返す。
-  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<Goal> | Error> {
+  async findByEmployeeId(
+    employeeId: number,
+    opts?: { limit: number; offset: number },
+  ): Promise<ReadonlyArray<Goal> | Error> {
     try {
-      const rows = await this.c.var.database
+      const query = this.c.var.database
         .select()
         .from(goals)
         .where(eq(goals.employeeId, employeeId))
         .orderBy(asc(goals.id))
+
+      const rows =
+        opts !== undefined ? await query.limit(opts.limit).offset(opts.offset) : await query
 
       return rows.map((row) => Goal.fromRow(row))
     } catch (error) {
