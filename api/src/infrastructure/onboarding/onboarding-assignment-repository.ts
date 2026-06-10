@@ -149,13 +149,14 @@ export class OnboardingAssignmentRepository {
   // 割り当てとその配下タスクを削除する。
   async delete(assignmentId: number): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .delete(onboardingTasks)
-        .where(eq(onboardingTasks.assignmentId, assignmentId))
-
-      await this.c.var.database
-        .delete(onboardingAssignments)
-        .where(eq(onboardingAssignments.id, assignmentId))
+      await this.c.var.database.batch([
+        this.c.var.database
+          .delete(onboardingTasks)
+          .where(eq(onboardingTasks.assignmentId, assignmentId)),
+        this.c.var.database
+          .delete(onboardingAssignments)
+          .where(eq(onboardingAssignments.id, assignmentId)),
+      ])
 
       return null
     } catch (error) {
