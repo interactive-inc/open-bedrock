@@ -37,13 +37,19 @@ export class OnboardingAssignmentRepository {
         })
       }
 
-      return this.findById(assignmentRow.id)
+      const result = await this.findById(assignmentRow.id)
+
+      if (result === null) {
+        return new Error("failed to create onboarding assignment")
+      }
+
+      return result
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to insert onboarding assignment")
     }
   }
 
-  async findById(assignmentId: number): Promise<OnboardingAssignment | Error> {
+  async findById(assignmentId: number): Promise<OnboardingAssignment | null | Error> {
     try {
       const assignmentRows = await this.c.var.database
         .select()
@@ -54,7 +60,7 @@ export class OnboardingAssignmentRepository {
       const assignmentRow = assignmentRows.at(0)
 
       if (assignmentRow === undefined) {
-        return new Error("failed to load onboarding assignment")
+        return null
       }
 
       const taskRows = await this.c.var.database
@@ -140,7 +146,13 @@ export class OnboardingAssignmentRepository {
           .where(eq(onboardingTasks.id, task.id))
       }
 
-      return this.findById(assignment.id)
+      const result = await this.findById(assignment.id)
+
+      if (result === null) {
+        return new Error("failed to update onboarding assignment")
+      }
+
+      return result
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding assignment")
     }
