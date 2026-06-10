@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache"
 import { applyCareerPosting } from "@/lib/api/apply-career-posting"
 import { createCareerPosting } from "@/lib/api/create-career-posting"
 import { deleteCareerPosting } from "@/lib/api/delete-career-posting"
+import { getMe } from "@/lib/api/get-me"
 import { updateCareerApplication } from "@/lib/api/update-career-application"
 import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type CareerSheetFormState = {
@@ -144,6 +146,12 @@ export async function createCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+    return { ok: false, error: "公募を管理する権限がありません" }
+  }
+
   const title = toText(formData.get("title"))
 
   if (title === null) {
@@ -178,6 +186,12 @@ export async function updateCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+    return { ok: false, error: "公募を管理する権限がありません" }
+  }
+
   const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {
@@ -218,6 +232,12 @@ export async function deleteCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
 ): Promise<CareerPostingFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+    return { ok: false, error: "公募を管理する権限がありません" }
+  }
+
   const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {

@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache"
 import { approveExpense } from "@/lib/api/approve-expense"
 import { deleteExpense } from "@/lib/api/delete-expense"
+import { getMe } from "@/lib/api/get-me"
 import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { updateExpense } from "@/lib/api/update-expense"
+import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type ExpenseSubmitFormState = {
@@ -105,6 +107,12 @@ export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canDecideExpense(currentUser.role) === false) {
+    return { ok: false, error: "経費を承認・却下する権限がありません" }
+  }
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
@@ -133,6 +141,12 @@ export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canDecideExpense(currentUser.role) === false) {
+    return { ok: false, error: "経費を承認・却下する権限がありません" }
+  }
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
