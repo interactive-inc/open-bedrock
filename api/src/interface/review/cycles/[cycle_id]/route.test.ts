@@ -162,4 +162,16 @@ describe("DELETE /review-cycles/:cycle_id", () => {
 
     expect(response.status).toBe(403)
   })
+
+  test("admin cannot delete an open cycle - returns 409", async () => {
+    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
+
+  test("admin cannot delete a closed cycle - returns 409", async () => {
+    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
 })

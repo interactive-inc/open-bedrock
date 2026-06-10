@@ -12,15 +12,18 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CycleNotFound = { reason: "cycle_not_found" }
 
+export type NotDeletable = { reason: "not_deletable" }
+
 export type Deleted = { reason: "deleted" }
 
 /**
  * 管理権限のある本人が、評価サイクルを削除する。
+ * draft 状態のサイクルのみ削除できる。
  */
 export class DeleteReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<Deleted | Forbidden | CycleNotFound | Error> {
+  async run(input: Input): Promise<Deleted | Forbidden | CycleNotFound | NotDeletable | Error> {
     if (canAdministerCycle(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -35,6 +38,10 @@ export class DeleteReviewCycle {
 
     if (reviewCycle === null) {
       return { reason: "cycle_not_found" }
+    }
+
+    if (reviewCycle.status !== "draft") {
+      return { reason: "not_deletable" }
     }
 
     const formRepository = new ReviewFormRepository(this.c)
