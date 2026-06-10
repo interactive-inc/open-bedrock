@@ -11,6 +11,9 @@ export type Bindings = {
   CORS_ORIGIN?: string
   // テストで現在時刻を固定するための注入点（本番では未設定 = 実時計）。
   NOW?: string
+  // ログインエンドポイントのレート制限カウンターを保持する KV namespace。
+  // `wrangler kv:namespace create RATE_LIMIT` で発行し wrangler.jsonc に設定する。
+  RATE_LIMIT?: KVNamespace
 }
 
 // 認証済みの本人（セッション）。
