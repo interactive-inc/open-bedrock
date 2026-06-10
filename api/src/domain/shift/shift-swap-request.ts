@@ -44,7 +44,11 @@ export class ShiftSwapRequest implements Props {
     targetEmployeeId: number
     date: string
     note: string | null
-  }): ShiftSwapRequest {
+  }): ShiftSwapRequest | { reason: "self_reference" } {
+    if (props.requesterEmployeeId === props.targetEmployeeId) {
+      return { reason: "self_reference" }
+    }
+
     return new ShiftSwapRequest({
       id: null,
       requesterEmployeeId: props.requesterEmployeeId,

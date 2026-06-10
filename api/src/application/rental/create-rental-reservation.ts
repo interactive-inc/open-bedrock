@@ -11,13 +11,15 @@ export type Command = {
   createdAt: string
 }
 
+export type InvalidDateRange = { reason: "invalid_date_range" }
+
 /**
  * レンタル予約を申請する。記録のみで重複判定は行わない。
  */
 export class CreateRentalReservation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<RentalReservation | Error> {
+  async run(command: Command): Promise<RentalReservation | InvalidDateRange | Error> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
     const reservation = RentalReservation.create({
@@ -28,6 +30,10 @@ export class CreateRentalReservation {
       purpose: command.purpose,
       createdAt: command.createdAt,
     })
+
+    if ("reason" in reservation) {
+      return reservation
+    }
 
     return await reservationRepository.create(reservation)
   }

@@ -3,13 +3,19 @@ import { RoomReservationRepository } from "@/infrastructure/room/room-reservatio
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
+function createReservation(props: Parameters<typeof RoomReservation.create>[0]): RoomReservation {
+  const result = RoomReservation.create(props)
+  if ("reason" in result) throw new Error("unexpected invalid_time_range in test")
+  return result
+}
+
 describe("RoomReservationRepository", () => {
   test("createIfNoOverlap succeeds when no overlapping reservation exists", async () => {
     const { context } = createTestContext()
 
     const repository = new RoomReservationRepository(context)
 
-    const reservation = RoomReservation.create({
+    const reservation = createReservation({
       roomId: 1,
       reserverId: 1,
       startAt: "2026-01-01T10:00:00.000Z",
@@ -34,7 +40,7 @@ describe("RoomReservationRepository", () => {
 
     const repository = new RoomReservationRepository(context)
 
-    const existing = RoomReservation.create({
+    const existing = createReservation({
       roomId: 1,
       reserverId: 1,
       startAt: "2026-01-01T10:00:00.000Z",
@@ -48,7 +54,7 @@ describe("RoomReservationRepository", () => {
       throw created
     }
 
-    const overlapping = RoomReservation.create({
+    const overlapping = createReservation({
       roomId: 1,
       reserverId: 2,
       startAt: "2026-01-01T10:30:00.000Z",
@@ -66,7 +72,7 @@ describe("RoomReservationRepository", () => {
 
     const repository = new RoomReservationRepository(context)
 
-    const reservation = RoomReservation.create({
+    const reservation = createReservation({
       roomId: 1,
       reserverId: 1,
       startAt: "2026-01-01T10:00:00.000Z",
@@ -80,9 +86,12 @@ describe("RoomReservationRepository", () => {
       throw created
     }
 
-    const updated = reservation
-      .withRescheduled({ startAt: "2026-01-01T14:00:00.000Z", endAt: "2026-01-01T15:00:00.000Z" })
-      .withPurpose("時間変更後の会議")
+    const rescheduled = reservation.withRescheduled({
+      startAt: "2026-01-01T14:00:00.000Z",
+      endAt: "2026-01-01T15:00:00.000Z",
+    })
+    if ("reason" in rescheduled) throw new Error("unexpected invalid_time_range")
+    const updated = rescheduled.withPurpose("時間変更後の会議")
 
     const result = await repository.updateIfNoOverlap(updated)
 
@@ -103,7 +112,7 @@ describe("RoomReservationRepository", () => {
 
     const repository = new RoomReservationRepository(context)
 
-    const existing = RoomReservation.create({
+    const existing = createReservation({
       roomId: 1,
       reserverId: 2,
       startAt: "2026-01-01T14:00:00.000Z",
@@ -117,7 +126,7 @@ describe("RoomReservationRepository", () => {
       throw createdExisting
     }
 
-    const target = RoomReservation.create({
+    const target = createReservation({
       roomId: 1,
       reserverId: 1,
       startAt: "2026-01-01T10:00:00.000Z",
@@ -131,11 +140,14 @@ describe("RoomReservationRepository", () => {
       throw createdTarget
     }
 
-    const updated = target
-      .withRescheduled({ startAt: "2026-01-01T14:30:00.000Z", endAt: "2026-01-01T15:30:00.000Z" })
-      .withPurpose("時間変更")
+    const rescheduledTarget = target.withRescheduled({
+      startAt: "2026-01-01T14:30:00.000Z",
+      endAt: "2026-01-01T15:30:00.000Z",
+    })
+    if ("reason" in rescheduledTarget) throw new Error("unexpected invalid_time_range")
+    const updatedTarget = rescheduledTarget.withPurpose("時間変更")
 
-    const result = await repository.updateIfNoOverlap(updated)
+    const result = await repository.updateIfNoOverlap(updatedTarget)
 
     expect(result).toBeNull()
   })
@@ -145,7 +157,7 @@ describe("RoomReservationRepository", () => {
 
     const repository = new RoomReservationRepository(context)
 
-    const reservation = RoomReservation.create({
+    const reservation = createReservation({
       roomId: 1,
       reserverId: 1,
       startAt: "2026-01-01T10:00:00.000Z",

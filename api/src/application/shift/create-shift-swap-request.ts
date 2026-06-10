@@ -12,6 +12,8 @@ export type Input = {
 
 export type TargetNotFound = { reason: "target_not_found" }
 
+export type SelfReference = { reason: "self_reference" }
+
 export type AlreadyExists = { reason: "already_exists" }
 
 /**
@@ -20,7 +22,9 @@ export type AlreadyExists = { reason: "already_exists" }
 export class CreateShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ShiftSwapRequest | TargetNotFound | AlreadyExists | Error> {
+  async run(
+    input: Input,
+  ): Promise<ShiftSwapRequest | TargetNotFound | SelfReference | AlreadyExists | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const target = await employeeRepository.findByCode(input.targetEmployeeCode)
@@ -59,6 +63,10 @@ export class CreateShiftSwapRequest {
       date: input.date,
       note: input.note,
     })
+
+    if ("reason" in swapRequest) {
+      return swapRequest
+    }
 
     const created = await swapRequestRepository.create(swapRequest)
 

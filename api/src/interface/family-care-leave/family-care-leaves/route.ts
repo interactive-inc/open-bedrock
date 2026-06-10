@@ -2,7 +2,7 @@ import { CreateFamilyCareLeave } from "@/application/family-care-leave/create-fa
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -42,6 +42,10 @@ export const POST = factory.createHandlers(
 
     if (familyCareLeave instanceof Error) {
       throw new InternalError("failed to create family care leave")
+    }
+
+    if ("reason" in familyCareLeave) {
+      throw new BadRequestError("end_date must be on or after start_date")
     }
 
     const responseBody = {

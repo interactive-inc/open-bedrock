@@ -53,7 +53,11 @@ export class BusinessTrip implements Props {
     purpose: string
     estimatedCost: number | null
     createdAt: string
-  }): BusinessTrip {
+  }): BusinessTrip | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new BusinessTrip({
       id: crypto.randomUUID(),
       travelerId: props.travelerId,
@@ -92,7 +96,11 @@ export class BusinessTrip implements Props {
     endDate: string
     purpose: string
     estimatedCost: number | null
-  }): BusinessTrip {
+  }): BusinessTrip | { reason: "invalid_date_range" } {
+    if (props.startDate > props.endDate) {
+      return { reason: "invalid_date_range" }
+    }
+
     return new BusinessTrip({
       ...this.props,
       destination: props.destination,
