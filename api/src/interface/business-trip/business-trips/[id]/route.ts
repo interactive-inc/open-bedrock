@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -102,6 +103,10 @@ export const PUT = factory.createHandlers(
     if ("reason" in businessTrip) {
       if (businessTrip.reason === "business_trip_not_found") {
         throw new NotFoundError("business trip not found")
+      }
+
+      if (businessTrip.reason === "invalid_date_range") {
+        throw new BadRequestError("invalid date range")
       }
 
       if (businessTrip.reason === "not_modifiable") {

@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -99,6 +100,10 @@ export const PUT = factory.createHandlers(
     if ("reason" in reservation) {
       if (reservation.reason === "reservation_not_found") {
         throw new NotFoundError("reservation not found")
+      }
+
+      if (reservation.reason === "invalid_date_range") {
+        throw new BadRequestError("invalid date range")
       }
 
       if (reservation.reason === "not_modifiable") {
