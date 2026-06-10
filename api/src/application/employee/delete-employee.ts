@@ -82,17 +82,17 @@ export class DeleteEmployee {
           .bind(employeeId),
         db
           .prepare(
-            "DELETE FROM goal_evaluations WHERE goal_id IN (SELECT id FROM goals WHERE employee_id = ?1)",
+            "DELETE FROM goal_evaluations WHERE goal_id IN (SELECT id FROM goals WHERE employee_id = ?1) OR evaluator_id = ?1",
           )
           .bind(employeeId),
         db
           .prepare(
-            "DELETE FROM expense_approvals WHERE expense_id IN (SELECT id FROM expenses WHERE employee_id = ?1)",
+            "DELETE FROM expense_approvals WHERE expense_id IN (SELECT id FROM expenses WHERE employee_id = ?1) OR approver_id = ?1",
           )
           .bind(employeeId),
         db
           .prepare(
-            "DELETE FROM application_approvals WHERE application_id IN (SELECT id FROM applications WHERE applicant_id = ?1)",
+            "DELETE FROM application_approvals WHERE application_id IN (SELECT id FROM applications WHERE applicant_id = ?1) OR approver_id = ?1",
           )
           .bind(employeeId),
 
@@ -153,6 +153,14 @@ export class DeleteEmployee {
         db
           .prepare(
             "UPDATE org_departments SET manager_employee_code = NULL WHERE manager_employee_code = ?1",
+          )
+          .bind(employeeCode),
+        db
+          .prepare("UPDATE leave_requests SET approver_id = NULL WHERE approver_id = ?1")
+          .bind(employeeId),
+        db
+          .prepare(
+            "UPDATE org_memberships SET manager_employee_code = NULL WHERE manager_employee_code = ?1",
           )
           .bind(employeeCode),
       ])

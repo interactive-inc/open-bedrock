@@ -419,4 +419,144 @@ describe("DeleteEmployee", () => {
     const found = await new EmployeeRepository(context).findByCode("E910")
     expect(found).toBeNull()
   })
+
+  test("deletes approver/evaluator orphan records when the referenced employee is deleted", async () => {
+    const { context, db } = createTestContext()
+
+    // 社員 A（削除対象）と社員 B（残存）を作成
+    const idA = await seedEmployee(context, "EA01")
+    const idB = await seedEmployee(context, "EB01")
+
+    // --- 社員 B の目標に対して社員 A が評価者 ---
+    await db
+      .prepare(
+        "INSERT INTO goals (id, employee_id, period, title, weight, status) VALUES (10, ?1, '2026-H1', 'B Goal', 100, 'open')",
+      )
+      .bind(idB)
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO goal_evaluations (id, goal_id, evaluator_id, kind, score, created_at) VALUES (10, 10, ?1, 'manager', 4, '2026-01-01T00:00:00Z')",
+      )
+      .bind(idA)
+      .run()
+
+    // --- 社員 B の経費に対して社員 A が承認者 ---
+    await db
+      .prepare(
+        "INSERT INTO expenses (id, employee_id, category, amount, spent_at, status, created_at) VALUES (10, ?1, 'transport', 1000, '2026-01-01', 'approved', '2026-01-01T00:00:00Z')",
+      )
+      .bind(idB)
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO expense_approvals (id, expense_id, approver_id, action, created_at) VALUES (10, 10, ?1, 'approve', '2026-01-01T00:00:00Z')",
+      )
+      .bind(idA)
+      .run()
+
+    // --- 社員 B の申請に対して社員 A が承認者 ---
+    await db
+      .prepare(
+        "INSERT INTO application_templates (id, code, name, category, schema_json, approver_roles) VALUES (1, 'TPL01', 'Test', 'general', '[]', '[\"admin\"]')",
+      )
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO applications (id, template_id, applicant_id, status, payload, created_at) VALUES (10, 1, ?1, 'approved', '{}', '2026-01-01T00:00:00Z')",
+      )
+      .bind(idB)
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO application_approvals (id, application_id, approver_id, action, created_at) VALUES (10, 10, ?1, 'approve', '2026-01-01T00:00:00Z')",
+      )
+      .bind(idA)
+      .run()
+
+    // --- 社員 B の休暇申請で社員 A が承認者（nullable FK） ---
+    await db
+      .prepare(
+        "INSERT INTO leave_requests (id, employee_id, leave_type, start_date, end_date, days, status, approver_id, created_at) VALUES (10, ?1, 'annual', '2026-02-01', '2026-02-02', 1, 'approved', ?2, '2026-01-01T00:00:00Z')",
+      )
+      .bind(idB, idA)
+      .run()
+
+    // --- org_memberships で社員 A がマネージャー（nullable FK） ---
+    await db
+      .prepare(
+        "INSERT INTO org_memberships (department_code, employee_code, manager_employee_code) VALUES ('D002', ?1, ?2)",
+      )
+      .bind("EB01", "EA01")
+      .run()
+
+    // 社員 A を削除
+    const result = await new DeleteEmployee(context).run({
+      viewerRole: "admin",
+      viewerEmployeeId: idB,
+      code: "EA01",
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+
+    // 社員 A が評価者の goal_evaluations が削除されている
+    const evalCount = await db
+      .prepare("SELECT COUNT(*) as c FROM goal_evaluations WHERE evaluator_id = ?1")
+      .bind(idA)
+      .first("c")
+    expect(evalCount).toBe(0)
+
+    // 社員 B の目標自体は残っている
+    const goalCount = await db
+      .prepare("SELECT COUNT(*) as c FROM goals WHERE employee_id = ?1")
+      .bind(idB)
+      .first("c")
+    expect(goalCount).toBe(1)
+
+    // 社員 A が承認者の expense_approvals が削除されている
+    const expApprovalCount = await db
+      .prepare("SELECT COUNT(*) as c FROM expense_approvals WHERE approver_id = ?1")
+      .bind(idA)
+      .first("c")
+    expect(expApprovalCount).toBe(0)
+
+    // 社員 B の経費自体は残っている
+    const expenseCount = await db
+      .prepare("SELECT COUNT(*) as c FROM expenses WHERE employee_id = ?1")
+      .bind(idB)
+      .first("c")
+    expect(expenseCount).toBe(1)
+
+    // 社員 A が承認者の application_approvals が削除されている
+    const appApprovalCount = await db
+      .prepare("SELECT COUNT(*) as c FROM application_approvals WHERE approver_id = ?1")
+      .bind(idA)
+      .first("c")
+    expect(appApprovalCount).toBe(0)
+
+    // 社員 B の申請自体は残っている
+    const appCount = await db
+      .prepare("SELECT COUNT(*) as c FROM applications WHERE applicant_id = ?1")
+      .bind(idB)
+      .first("c")
+    expect(appCount).toBe(1)
+
+    // leave_requests.approver_id が NULL に更新されている
+    const leaveApprover = await db
+      .prepare("SELECT approver_id FROM leave_requests WHERE id = 10")
+      .first("approver_id")
+    expect(leaveApprover).toBeNull()
+
+    // org_memberships.manager_employee_code が NULL に更新されている
+    const manager = await db
+      .prepare(
+        "SELECT manager_employee_code FROM org_memberships WHERE department_code = 'D002' AND employee_code = 'EB01'",
+      )
+      .first("manager_employee_code")
+    expect(manager).toBeNull()
+  })
 })
