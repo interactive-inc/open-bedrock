@@ -126,6 +126,7 @@ describe("POST /expenses/:id/approve", () => {
   })
 
   test("returns 409 for a second decision and keeps a single approval record", async () => {
+    // seed の expense_approvals は空である前提（カウントは 1 回目の承認分のみになる）。
     const db = await createTestDb()
 
     const token = await tokenFor(2, "manager")

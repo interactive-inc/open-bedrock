@@ -139,6 +139,44 @@ describe("ExpenseRepository", () => {
     expect(found.status).toBe("approved")
   })
 
+  test("decideFromPending returns null for a settled expense and keeps it settled", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ExpenseRepository(context)
+
+    const created = await repository.create(
+      Expense.create({
+        employeeId: 1,
+        category: "transport",
+        amount: 1200,
+        spentAt: "2026-01-01",
+        note: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    await repository.update(created.withStatus("settled"))
+
+    const decided = await repository.decideFromPending({
+      expenseId: created.id,
+      status: "approved",
+    })
+
+    expect(decided).toBeNull()
+
+    const found = await repository.findById(created.id)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findById failed")
+    }
+
+    expect(found.status).toBe("settled")
+  })
+
   test("decideFromPending returns null for an unknown expense id", async () => {
     const { context } = createTestContext()
 

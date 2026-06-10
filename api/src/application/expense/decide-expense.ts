@@ -1,6 +1,5 @@
 import { canDecideExpense } from "@/domain/expense/can-decide-expense"
 import { ExpenseApproval } from "@/domain/expense/expense-approval"
-import type { Expense } from "@/domain/expense/expense"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 
@@ -11,6 +10,10 @@ export type Command = {
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
+}
+
+export type ExpenseDecision = {
+  status: "pending" | "approved" | "rejected" | "settled"
 }
 
 export type ExpenseNotFound = { reason: "expense_not_found" }
@@ -28,7 +31,7 @@ export class DecideExpense {
 
   async run(
     command: Command,
-  ): Promise<Expense | ExpenseNotFound | AlreadyDecided | { reason: "forbidden" } | Error> {
+  ): Promise<ExpenseDecision | ExpenseNotFound | AlreadyDecided | { reason: "forbidden" } | Error> {
     if (canDecideExpense(command.viewerRole) === false) {
       return { reason: "forbidden" } as const
     }
@@ -89,6 +92,6 @@ export class DecideExpense {
       return approval
     }
 
-    return decided
+    return { status: decided.status }
   }
 }
