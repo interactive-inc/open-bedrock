@@ -82,6 +82,19 @@ export class SurveyRepository {
     }
   }
 
+  // 指定アンケートに紐づく回答をすべて削除する。
+  async deleteResponsesBySurveyId(surveyId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(surveyResponses)
+        .where(eq(surveyResponses.surveyId, surveyId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete survey responses")
+    }
+  }
+
   // 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
   // UNIQUE 制約 (survey_id, respondent_id) に違反した場合は already_submitted を返す。
   async createResponse(
