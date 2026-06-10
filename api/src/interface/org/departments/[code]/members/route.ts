@@ -1,6 +1,7 @@
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -11,7 +12,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const code = c.req.param("code") ?? ""
+  const code = validateCodeParam(c.req.param("code"), "department")
 
   const departmentRows = await c.var.database
     .select()

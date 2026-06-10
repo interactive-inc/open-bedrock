@@ -2,12 +2,12 @@ import { SetReviewCycleStatus } from "@/application/review/set-review-cycle-stat
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // POST /review-cycles/:cycle_id/close — 管理者が評価サイクルを closed にする
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
@@ -17,11 +17,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const cycleId = Number(c.req.param("cycle_id"))
-
-  if (Number.isInteger(cycleId) === false) {
-    throw new BadRequestError("invalid cycle id")
-  }
+  const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const updated = await new SetReviewCycleStatus(c).run({
     viewerRole: session.role,

@@ -4,13 +4,13 @@ import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // 交代申請をレスポンス用の snake_case に整形する。
 function toResponseBody(swapRequest: ShiftSwapRequest) {
@@ -27,11 +27,7 @@ function toResponseBody(swapRequest: ShiftSwapRequest) {
 
 // GET /shift/swap-requests/:id — 交代申請の詳細（申請者本人か承認権限者）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(swapRequestId) === false) {
-    throw new BadRequestError("invalid swap request id")
-  }
+  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 
@@ -62,11 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
 // DELETE /shift/swap-requests/:id — 保留中の交代申請を取り下げる（申請者本人）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(swapRequestId) === false) {
-    throw new BadRequestError("invalid swap request id")
-  }
+  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 

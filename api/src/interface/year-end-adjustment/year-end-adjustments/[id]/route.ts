@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -35,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const yearEndAdjustment = await new GetYearEndAdjustment(c).run({
-    yearEndAdjustmentId: c.req.param("id") ?? "",
+    yearEndAdjustmentId: validateUuidParam(c.req.param("id"), "year end adjustment"),
     employeeId: viewer.employeeId,
   })
 
@@ -74,7 +75,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const yearEndAdjustment = await new UpdateYearEndAdjustment(c).run({
-      yearEndAdjustmentId: c.req.param("id") ?? "",
+      yearEndAdjustmentId: validateUuidParam(c.req.param("id"), "year end adjustment"),
       employeeId: viewer.employeeId,
       targetYear: json.target_year,
       note: json.note ?? null,
@@ -109,7 +110,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelYearEndAdjustment(c).run({
-    yearEndAdjustmentId: c.req.param("id") ?? "",
+    yearEndAdjustmentId: validateUuidParam(c.req.param("id"), "year end adjustment"),
     employeeId: viewer.employeeId,
   })
 

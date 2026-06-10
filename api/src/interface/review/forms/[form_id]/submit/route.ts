@@ -2,13 +2,13 @@ import { SubmitReviewForm } from "@/application/review/submit-review-form"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -32,11 +32,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const formId = Number(c.req.param("form_id"))
-
-    if (Number.isInteger(formId) === false) {
-      throw new BadRequestError("invalid form id")
-    }
+    const formId = validateIntParam(c.req.param("form_id"), "review form")
 
     const submitted = await new SubmitReviewForm(c).run({
       viewerEmployeeId: session.employeeId,

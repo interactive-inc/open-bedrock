@@ -1,11 +1,11 @@
 import { MarkNotificationRead } from "@/application/notification/mark-notification-read"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 
@@ -17,11 +17,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const notificationId = Number(c.req.param("id"))
-
-  if (Number.isInteger(notificationId) === false) {
-    throw new BadRequestError("invalid notification id")
-  }
+  const notificationId = validateIntParam(c.req.param("id"), "notification")
 
   const result = await new MarkNotificationRead(c).run({
     notificationId,

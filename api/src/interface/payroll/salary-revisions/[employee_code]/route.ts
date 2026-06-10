@@ -1,5 +1,6 @@
 import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -23,7 +24,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const employeeCode = c.req.param("employee_code") ?? ""
+  const employeeCode = validateCodeParam(c.req.param("employee_code"), "employee")
 
   const employeeRows = await c.var.database
     .select()

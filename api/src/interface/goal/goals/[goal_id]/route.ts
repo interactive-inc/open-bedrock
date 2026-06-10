@@ -3,6 +3,7 @@ import { GetGoal } from "@/application/goal/get-goal"
 import { UpdateGoal } from "@/application/goal/update-goal"
 import type { Goal } from "@/domain/goal/goal"
 import { factory } from "@/lib/factory"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ConflictError,
@@ -27,9 +28,9 @@ function toResponseBody(goal: Goal) {
   }
 }
 
-// パスパラメータの goal_id を数値へ。空や不正値は NaN になり後段で 404 になる。
-function toGoalId(value: string | null): number {
-  return Number(value ?? "")
+// パスパラメータの goal_id を正の整数に変換する。不正値は 404。
+function toGoalId(value: string | undefined): number {
+  return validateIntParam(value, "goal")
 }
 
 // GET /goals/:goal_id — 目標の詳細（本人と特権ロールのみ）

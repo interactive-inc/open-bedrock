@@ -4,6 +4,7 @@ import { canManageSurveys } from "@/domain/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question"
 import { factory } from "@/lib/factory"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   ConflictError,
@@ -26,11 +27,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const surveyId = Number(c.req.param("survey_id"))
-
-  if (Number.isInteger(surveyId) === false) {
-    throw new NotFoundError("survey not found")
-  }
+  const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
   const rows = await c.var.database.select().from(surveys).where(eq(surveys.id, surveyId)).limit(1)
 
@@ -90,11 +87,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const surveyId = Number(c.req.param("survey_id"))
-
-    if (Number.isInteger(surveyId) === false) {
-      throw new NotFoundError("survey not found")
-    }
+    const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
     const body = c.req.valid("json")
 
@@ -134,11 +127,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const surveyId = Number(c.req.param("survey_id"))
-
-  if (Number.isInteger(surveyId) === false) {
-    throw new NotFoundError("survey not found")
-  }
+  const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
   const result = await new DeleteSurvey(c).run({
     viewerRole: session.role,

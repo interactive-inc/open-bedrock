@@ -10,6 +10,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -52,7 +53,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const oneOnOne = await new GetOneOnOne(c).run({
-    oneOnOneId: c.req.param("id") ?? "",
+    oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
     viewerId: viewer.employeeId,
   })
 
@@ -97,7 +98,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const oneOnOne = await new UpdateOneOnOne(c).run({
-      oneOnOneId: c.req.param("id") ?? "",
+      oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
       managerId: viewer.employeeId,
       topics: json.topics ?? null,
       managerNote: json.manager_note ?? null,
@@ -129,7 +130,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteOneOnOne(c).run({
-    oneOnOneId: c.req.param("id") ?? "",
+    oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
     managerId: viewer.employeeId,
   })
 
