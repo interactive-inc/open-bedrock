@@ -1,5 +1,7 @@
 import { AttendanceRecord } from "@/domain/attendance/attendance-record"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { attendanceRecords } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 
@@ -46,6 +48,14 @@ export class AttendanceRecordRepository {
         ? new Error("failed to insert attendance record")
         : AttendanceRecord.fromRow(row)
     } catch (error) {
+      // (employee_id) WHERE status = 'open' の UNIQUE 索引違反 = 二重打刻。
+      // 型付きで返し、application 層が再読込に依存せず重複として扱えるようにする。
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("employee already has an open attendance record", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert attendance record")
     }
   }
