@@ -49,7 +49,7 @@ function employeeToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 2,
     email: "you+e002@example.com",
-    role: "employee",
+    role: "member",
   })
 }
 

@@ -1,7 +1,7 @@
 import { Employee } from "@/domain/employee/employee"
 import type { Context } from "@/env"
 import { employees } from "@/schema"
-import { eq, sql } from "drizzle-orm"
+import { count, eq, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // 新規従業員の登録に必要な値。id は DB が採番するため含めない。
@@ -41,6 +41,20 @@ export class EmployeeRepository {
       return row === undefined ? null : Employee.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load employee")
+    }
+  }
+
+  // 指定ロールの従業員数を返す。
+  async countByRole(role: string): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(employees)
+        .where(eq(employees.role, role))
+
+      return rows.at(0)?.value ?? 0
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to count employees by role")
     }
   }
 

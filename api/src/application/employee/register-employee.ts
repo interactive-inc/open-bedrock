@@ -21,6 +21,8 @@ export type Command = {
 
 export type Forbidden = { reason: "forbidden" }
 
+export type RoleEscalationForbidden = { reason: "role_escalation_forbidden" }
+
 export type CodeConflict = { reason: "employee_code_conflict" }
 
 export type WeakPassword = { reason: "weak_password" }
@@ -34,11 +36,18 @@ const MIN_PASSWORD_LENGTH = 8
 export class RegisterEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Employee | Forbidden | CodeConflict | WeakPassword | Error> {
+  async run(
+    command: Command,
+  ): Promise<Employee | Forbidden | RoleEscalationForbidden | CodeConflict | WeakPassword | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     if (canManageEmployees(command.viewerRole) === false) {
       return { reason: "forbidden" }
+    }
+
+    // admin 以外は member ロールしか付与できない
+    if (command.employee.role !== "member" && command.viewerRole !== "admin") {
+      return { reason: "role_escalation_forbidden" }
     }
 
     if (command.employee.password.length < MIN_PASSWORD_LENGTH) {
