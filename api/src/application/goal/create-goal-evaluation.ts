@@ -56,16 +56,22 @@ export class CreateGoalEvaluation {
       return permission
     }
 
-    const evaluation = await goalEvaluationRepository.create(
-      GoalEvaluation.create({
-        goalId: command.goalId,
-        evaluatorId: command.evaluatorId,
-        kind: command.kind,
-        score: command.score,
-        comment: command.comment,
-        createdAt: command.createdAt,
-      }),
-    )
+    const newEvaluation = GoalEvaluation.create({
+      goalId: command.goalId,
+      evaluatorId: command.evaluatorId,
+      kind: command.kind,
+      score: command.score,
+      comment: command.comment,
+      createdAt: command.createdAt,
+    })
+
+    // final 評価は goal の status='done' 更新と D1 batch でアトミックに行う。
+    // 非 final 評価は単独 INSERT で十分。
+    if (command.kind === "final") {
+      return await goalEvaluationRepository.createWithGoalCompletion(newEvaluation, goal)
+    }
+
+    const evaluation = await goalEvaluationRepository.create(newEvaluation)
 
     if (evaluation instanceof Error) {
       return evaluation
@@ -73,18 +79,6 @@ export class CreateGoalEvaluation {
 
     if ("reason" in evaluation) {
       return evaluation as AlreadyEvaluatedError
-    }
-
-    if (command.kind === "final") {
-      const updated = await goalRepository.update(goal.withStatus("done"))
-
-      if (updated instanceof Error) {
-        // 補償: goal 更新が失敗したので evaluation を削除して整合性を保つ
-        if (evaluation.id !== null) {
-          await goalEvaluationRepository.delete(evaluation.id)
-        }
-        return updated
-      }
     }
 
     return evaluation
