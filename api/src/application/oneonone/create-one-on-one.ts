@@ -14,13 +14,15 @@ export type Command = {
 
 export type MemberNotFound = { reason: "member_not_found" }
 
+export type SelfReference = { reason: "self_reference" }
+
 /**
  * マネージャーが対象社員との 1on1 を記録する。
  */
 export class CreateOneOnOne {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<OneOnOne | MemberNotFound | Error> {
+  async run(command: Command): Promise<OneOnOne | MemberNotFound | SelfReference | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const oneOnOneRepository = new OneOnOneRepository(this.c)
@@ -43,6 +45,10 @@ export class CreateOneOnOne {
       managerNote: command.managerNote,
       nextAction: command.nextAction,
     })
+
+    if ("reason" in oneOnOne) {
+      return oneOnOne
+    }
 
     return await oneOnOneRepository.save(oneOnOne)
   }

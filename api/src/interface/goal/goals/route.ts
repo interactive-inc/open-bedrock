@@ -1,6 +1,12 @@
 import { canViewOthers } from "@/domain/goal/goal-access"
 import { factory } from "@/lib/factory"
 import { goals } from "@/schema"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -38,11 +44,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     conditions.push(eq(goals.period, period))
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select()
     .from(goals)
     .where(and(...conditions))
     .orderBy(goals.id)
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,
