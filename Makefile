@@ -18,4 +18,4 @@ designer:
 	claude --agent product-designer
 
 pm:
-	bunx funnel claude --profile open-karte
+	bunx funnel claude --profile open-karte --dangerously-skip-permissions

@@ -14,4 +14,11 @@
     },
   ],
   // JWT_SECRET は secret として登録する: `wrangler secret put JWT_SECRET`
+  "kv_namespaces": [
+    {
+      "binding": "RATE_LIMIT",
+      // `wrangler kv:namespace create RATE_LIMIT` で発行された ID に置き換える。
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID",
+    },
+  ],
 }
