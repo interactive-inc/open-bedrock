@@ -103,6 +103,7 @@ export function PayslipCorrectForm() {
             step={1}
             placeholder="0"
             defaultValue={0}
+            required
           />
         </Field>
 
@@ -117,6 +118,7 @@ export function PayslipCorrectForm() {
             step={1}
             placeholder="0"
             defaultValue={0}
+            required
           />
         </Field>
 
