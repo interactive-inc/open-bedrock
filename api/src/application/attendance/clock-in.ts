@@ -1,6 +1,7 @@
 import { AttendanceRecord } from "@/domain/attendance/attendance-record"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   employeeId: number
@@ -36,6 +37,12 @@ export class ClockIn {
         note: command.note,
       }),
     )
+
+    // attendance_records の UNIQUE 索引は (employee_id) WHERE status = 'open' のみ。
+    // insert の UNIQUE 違反は二重打刻と確定できるため、再読込に依存せず重複を返す（TOCTOU 競合対策）。
+    if (record instanceof UniqueConstraintError) {
+      return { reason: "already_clocked_in" }
+    }
 
     if (record instanceof Error) {
       return record
