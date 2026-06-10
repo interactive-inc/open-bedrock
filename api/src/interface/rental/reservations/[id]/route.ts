@@ -6,6 +6,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -100,6 +101,10 @@ export const PUT = factory.createHandlers(
         throw new NotFoundError("reservation not found")
       }
 
+      if (reservation.reason === "not_modifiable") {
+        throw new ConflictError("reservation is not modifiable")
+      }
+
       throw new ForbiddenError("not the requester")
     }
 
@@ -130,6 +135,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "not_requester") {
     throw new ForbiddenError("not the requester")
+  }
+
+  if (result.reason === "not_modifiable") {
+    throw new ConflictError("reservation is not modifiable")
   }
 
   return c.body(null, 204)

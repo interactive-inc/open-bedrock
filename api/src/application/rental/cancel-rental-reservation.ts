@@ -10,6 +10,8 @@ export type ReservationNotFound = { reason: "reservation_not_found" }
 
 export type NotRequester = { reason: "not_requester" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 export type Cancelled = { reason: "cancelled" }
 
 /**
@@ -18,7 +20,9 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelRentalReservation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Cancelled | ReservationNotFound | NotRequester | Error> {
+  async run(
+    command: Command,
+  ): Promise<Cancelled | ReservationNotFound | NotRequester | NotModifiable | Error> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
     const current = await reservationRepository.findById(command.reservationId)
@@ -33,6 +37,10 @@ export class CancelRentalReservation {
 
     if (current.requesterId !== command.requesterId) {
       return { reason: "not_requester" }
+    }
+
+    if (current.status !== "requested") {
+      return { reason: "not_modifiable" }
     }
 
     const deleted = await reservationRepository.delete(command.reservationId)

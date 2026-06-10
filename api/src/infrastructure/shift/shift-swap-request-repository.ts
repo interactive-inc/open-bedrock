@@ -98,7 +98,9 @@ export class ShiftSwapRequestRepository {
       const rows = await this.c.var.database
         .update(shiftSwapRequests)
         .set({ status: swapRequest.status, approvedAt: swapRequest.approvedAt })
-        .where(eq(shiftSwapRequests.id, swapRequest.id))
+        .where(
+          and(eq(shiftSwapRequests.id, swapRequest.id), eq(shiftSwapRequests.status, "pending")),
+        )
         .returning()
 
       const row = rows.at(0)

@@ -8,6 +8,8 @@ import { and, desc, eq, sql } from "drizzle-orm"
 // この集合は getBalance の集計と approveFromPending の残高サブクエリの両方で一致させる。
 const settledStatus = "fulfilled"
 
+export type PendingExistsError = { reason: "pending_exists" }
+
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
 
@@ -27,7 +29,9 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  async create(redemption: ThanksRedemption): Promise<ThanksRedemption | Error> {
+  async create(
+    redemption: ThanksRedemption,
+  ): Promise<ThanksRedemption | PendingExistsError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(thanksRedemptions)
@@ -48,6 +52,9 @@ export class ThanksRedemptionRepository {
         ? new Error("failed to insert thanks redemption")
         : ThanksRedemption.fromRow(row)
     } catch (error) {
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+        return { reason: "pending_exists" }
+      }
       return error instanceof Error ? error : new Error("failed to insert thanks redemption")
     }
   }
