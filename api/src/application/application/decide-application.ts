@@ -49,6 +49,10 @@ export class DecideApplication {
       return { reason: "application_not_found" }
     }
 
+    if (existing.applicantId === command.approverId) {
+      return { reason: "forbidden" } as const
+    }
+
     if (existing.status !== "pending") {
       return { reason: "already_decided" } as const
     }

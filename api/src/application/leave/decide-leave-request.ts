@@ -18,6 +18,8 @@ export type BalanceNotFound = { failure: "balance_not_found" }
 
 export type InsufficientBalance = { failure: "insufficient_balance" }
 
+export type SelfApproval = { failure: "self_approval" }
+
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
  */
@@ -32,6 +34,7 @@ export class DecideLeaveRequest {
     | AlreadyDecided
     | BalanceNotFound
     | InsufficientBalance
+    | SelfApproval
     | Error
   > {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
@@ -44,6 +47,10 @@ export class DecideLeaveRequest {
 
     if (existing === null) {
       return { failure: "leave_request_not_found" }
+    }
+
+    if (existing.employeeId === command.approverId) {
+      return { failure: "self_approval" }
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
