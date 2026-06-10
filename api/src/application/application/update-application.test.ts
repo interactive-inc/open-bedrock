@@ -149,7 +149,7 @@ describe("UpdateApplication", () => {
 
     const created = await seedPending(repository, 5)
 
-    await repository.update(created.withStatus("approved"))
+    await repository.decideFromPending({ applicationId: created.id ?? 0, status: "approved" })
 
     const result = await new UpdateApplication(context).run({
       applicationId: created.id ?? 0,
@@ -215,7 +215,7 @@ describe("WithdrawApplication", () => {
 
     const created = await seedPending(repository, 5)
 
-    await repository.update(created.withStatus("rejected"))
+    await repository.decideFromPending({ applicationId: created.id ?? 0, status: "rejected" })
 
     const result = await new WithdrawApplication(context).run({
       applicationId: created.id ?? 0,

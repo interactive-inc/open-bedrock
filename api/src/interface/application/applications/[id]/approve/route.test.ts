@@ -130,6 +130,42 @@ describe("POST /applications/:id/approve", () => {
     expect(response.status).toBe(200)
   })
 
+  test("returns 409 for a second decision and keeps a single approval record", async () => {
+    const db = await createTestDb()
+
+    const token = await tokenFor(2, "manager")
+
+    const first = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1/approve",
+      token,
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(first.status).toBe(200)
+
+    const second = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1/reject",
+      token,
+      method: "POST",
+      body: { comment: "too late" },
+    })
+
+    expect(second.status).toBe(409)
+
+    const approvals = await db
+      .prepare(
+        "SELECT COUNT(*) AS approvalCount FROM application_approvals WHERE application_id = 1",
+      )
+      .first("approvalCount")
+
+    expect(approvals).toBe(1)
+  })
+
   test("returns 400 when comment is omitted", async () => {
     const response = await request("/applications/1/approve", await tokenFor(2, "manager"), {
       method: "POST",

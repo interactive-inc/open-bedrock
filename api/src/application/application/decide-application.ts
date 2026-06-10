@@ -20,7 +20,10 @@ export type ApplicationDecision = {
 export type AlreadyDecided = { reason: "already_decided" }
 
 /**
- * 承認/却下を記録し、申請のステータスを更新する。
+ * 申請のステータスを pending からの条件付き UPDATE で確定し、勝った場合のみ承認/却下を記録する。
+ * 並行リクエストは条件付き UPDATE でどちらか 1 件しか確定できず、承認記録も重複しない。
+ * 確定後に addApproval が失敗した場合は status のみ確定し承認記録が欠損しうる（D1 に
+ * 対話的トランザクションが無いことによる許容済みトレードオフ。Error は呼び出し元へ伝播する）。
  */
 export class DecideApplication {
   constructor(private readonly c: Context) {}
@@ -50,6 +53,32 @@ export class DecideApplication {
       return { reason: "already_decided" } as const
     }
 
+    const nextStatus = command.action === "approve" ? "approved" : "rejected"
+
+    const decided = await applicationRepository.decideFromPending({
+      applicationId: command.applicationId,
+      status: nextStatus,
+    })
+
+    if (decided instanceof Error) {
+      return decided
+    }
+
+    if (decided === null) {
+      // 条件付き UPDATE が 0 行更新だった。並行リクエストに先を越されたケースを再読込で分類する。
+      const current = await applicationRepository.findById(command.applicationId)
+
+      if (current instanceof Error) {
+        return current
+      }
+
+      if (current === null) {
+        return { reason: "application_not_found" }
+      }
+
+      return { reason: "already_decided" } as const
+    }
+
     const approval = await applicationRepository.addApproval(
       ApplicationApproval.create({
         applicationId: command.applicationId,
@@ -64,20 +93,6 @@ export class DecideApplication {
       return approval
     }
 
-    const nextStatus = command.action === "approve" ? "approved" : "rejected"
-
-    const updated = await applicationRepository.update(
-      existing.withStatus(nextStatus).withCurrentStep(null),
-    )
-
-    if (updated instanceof Error) {
-      return updated
-    }
-
-    if (updated === null) {
-      return { reason: "application_not_found" }
-    }
-
-    return { status: updated.status }
+    return { status: decided.status }
   }
 }
