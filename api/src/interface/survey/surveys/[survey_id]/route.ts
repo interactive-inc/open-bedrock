@@ -137,5 +137,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
+  if (result.reason === "not_deletable") {
+    throw new ConflictError("open survey cannot be deleted")
+  }
+
   return c.body(null, 204)
 })

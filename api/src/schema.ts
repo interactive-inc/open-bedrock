@@ -182,7 +182,10 @@ export const shiftAssignments = sqliteTable(
     note: text("note"),
     publishedAt: text("published_at"),
   },
-  (table) => [index("idx_shift_assignments_pattern").on(table.patternId)],
+  (table) => [
+    index("idx_shift_assignments_pattern").on(table.patternId),
+    uniqueIndex("uq_shift_assignment_employee_date").on(table.employeeId, table.date),
+  ],
 )
 
 export type ShiftAssignmentRow = InferSelectModel<typeof shiftAssignments>
