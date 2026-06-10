@@ -119,11 +119,12 @@ export class ApplicationRepository {
   // 申請を削除する。承認記録も併せて削除する。
   async delete(applicationId: number): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .delete(applicationApprovals)
-        .where(eq(applicationApprovals.applicationId, applicationId))
-
-      await this.c.var.database.delete(applications).where(eq(applications.id, applicationId))
+      await this.c.var.database.batch([
+        this.c.var.database
+          .delete(applicationApprovals)
+          .where(eq(applicationApprovals.applicationId, applicationId)),
+        this.c.var.database.delete(applications).where(eq(applications.id, applicationId)),
+      ])
 
       return null
     } catch (error) {
