@@ -2,7 +2,7 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { Context } from "@/env"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
-import { asc, eq, inArray } from "drizzle-orm"
+import { and, asc, count, eq, inArray } from "drizzle-orm"
 
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -167,6 +167,27 @@ export class OnboardingAssignmentRepository {
       return result
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding assignment")
+    }
+  }
+
+  // 指定テンプレートコードに紐づく in_progress 状態の割り当て数を返す。
+  async countActiveByTemplateCode(templateCode: string): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(onboardingAssignments)
+        .where(
+          and(
+            eq(onboardingAssignments.templateCode, templateCode),
+            eq(onboardingAssignments.status, "in_progress"),
+          ),
+        )
+
+      return rows.at(0)?.value ?? 0
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to count active onboarding assignments")
     }
   }
 
