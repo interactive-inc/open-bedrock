@@ -5,6 +5,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -57,6 +58,10 @@ export const POST = factory.createHandlers(
     if ("reason" in evaluation) {
       if (evaluation.reason === "goal_not_found") {
         throw new NotFoundError("goal not found")
+      }
+
+      if (evaluation.reason === "already_evaluated") {
+        throw new ConflictError("already evaluated")
       }
 
       throw new ForbiddenError()

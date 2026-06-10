@@ -2,7 +2,10 @@ import type { Forbidden } from "@/domain/goal/goal-access"
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation"
 import { resolveEvaluationPermission } from "@/domain/goal/resolve-evaluation-permission"
 import type { Context } from "@/env"
-import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
+import {
+  type AlreadyEvaluatedError,
+  GoalEvaluationRepository,
+} from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 
 export type Command = {
@@ -17,13 +20,17 @@ export type Command = {
 
 export type GoalNotFound = { reason: "goal_not_found" }
 
+export type AlreadyEvaluated = { reason: "already_evaluated" }
+
 /**
  * 目標の存在確認・権限判定・評価作成・final時の完了反映までを束ねる。
  */
 export class CreateGoalEvaluation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<GoalEvaluation | GoalNotFound | Forbidden | Error> {
+  async run(
+    command: Command,
+  ): Promise<GoalEvaluation | GoalNotFound | AlreadyEvaluated | Forbidden | Error> {
     const goalRepository = new GoalRepository(this.c)
 
     const goalEvaluationRepository = new GoalEvaluationRepository(this.c)
@@ -62,6 +69,10 @@ export class CreateGoalEvaluation {
 
     if (evaluation instanceof Error) {
       return evaluation
+    }
+
+    if ("reason" in evaluation) {
+      return evaluation as AlreadyEvaluatedError
     }
 
     if (command.kind === "final") {
