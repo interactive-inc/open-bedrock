@@ -1,4 +1,5 @@
 import type { LeaveRequest } from "@/domain/leave/leave-request"
+import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
 import type { Context } from "@/env"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
@@ -7,7 +8,6 @@ export type Command = {
   approverId: number
   action: "approve" | "reject"
   comment: string | null
-  fiscalYear: string
 }
 
 export type LeaveRequestNotFound = { failure: "leave_request_not_found" }
@@ -20,8 +20,11 @@ export type InsufficientBalance = { failure: "insufficient_balance" }
 
 export type SelfApproval = { failure: "self_approval" }
 
+export type InvalidStartDate = { failure: "invalid_start_date" }
+
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
+ * 会計年度は申請の startDate から導出する（サーバ時刻に依存しない）。
  */
 export class DecideLeaveRequest {
   constructor(private readonly c: Context) {}
@@ -35,6 +38,7 @@ export class DecideLeaveRequest {
     | BalanceNotFound
     | InsufficientBalance
     | SelfApproval
+    | InvalidStartDate
     | Error
   > {
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
@@ -53,6 +57,12 @@ export class DecideLeaveRequest {
       return { failure: "self_approval" }
     }
 
+    const fiscalYear = toFiscalYear(existing.startDate)
+
+    if (fiscalYear === null) {
+      return { failure: "invalid_start_date" }
+    }
+
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
 
     if (command.action === "approve") {
@@ -60,7 +70,7 @@ export class DecideLeaveRequest {
         leaveRequestId: command.leaveRequestId,
         approverId: command.approverId,
         decidedComment: command.comment,
-        fiscalYear: command.fiscalYear,
+        fiscalYear,
       })
 
       if (approved instanceof Error) {
