@@ -150,4 +150,22 @@ describe("POST /review-forms/:form_id/submit", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("rejects answers exceeding the serialized size limit with 400", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 75,
+      answers: ["x".repeat(20_000)],
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("accepts answers within the serialized size limit", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 75,
+      answers: ["x".repeat(1_000)],
+    })
+
+    expect(response.status).toBe(200)
+  })
 })
