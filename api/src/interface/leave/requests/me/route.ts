@@ -1,4 +1,10 @@
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { leaveRequests } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
@@ -13,6 +19,8 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       status: z.enum(["pending", "approved", "rejected"]).optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -24,6 +32,20 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+
     const conditions = [eq(leaveRequests.employeeId, session.employeeId)]
 
     if (query.status !== undefined) {
@@ -34,6 +56,8 @@ export const GET = factory.createHandlers(
       .select()
       .from(leaveRequests)
       .where(and(...conditions))
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       id: row.id,

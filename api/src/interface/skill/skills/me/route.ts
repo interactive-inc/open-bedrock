@@ -1,4 +1,10 @@
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { employeeSkills, skills } from "@/schema"
@@ -12,11 +18,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select({ employeeSkill: employeeSkills, skill: skills })
     .from(employeeSkills)
     .leftJoin(skills, eq(skills.code, employeeSkills.skillCode))
     .where(eq(employeeSkills.employeeId, session.employeeId))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     skill_code: row.employeeSkill.skillCode,

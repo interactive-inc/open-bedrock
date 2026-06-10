@@ -13,6 +13,12 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { surveyResponses, surveys } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -45,11 +51,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const responseRows = await c.var.database
     .select()
     .from(surveyResponses)
     .where(eq(surveyResponses.surveyId, surveyId))
     .orderBy(surveyResponses.id)
+    .limit(limit)
+    .offset(offset)
 
   const responses = responseRows.map((row) => {
     let answersJson: unknown
