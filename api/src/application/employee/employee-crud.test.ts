@@ -224,6 +224,20 @@ describe("DeleteEmployee", () => {
     expect(result).toEqual({ reason: "forbidden" })
   })
 
+  test("rejects manager role with forbidden (delete is hr/admin only)", async () => {
+    const context = createTestContext().context
+
+    const id = await seedEmployee(context, "E907")
+
+    const result = await new DeleteEmployee(context).run({
+      viewerRole: "manager",
+      viewerEmployeeId: id + 1,
+      code: "E907",
+    })
+
+    expect(result).toEqual({ reason: "forbidden" })
+  })
+
   test("rejects an unknown code with employee_not_found", async () => {
     const context = createTestContext().context
 
