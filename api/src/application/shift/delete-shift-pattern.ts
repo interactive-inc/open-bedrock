@@ -41,13 +41,13 @@ export class DeleteShiftPattern {
 
     const assignmentRepository = new ShiftAssignmentRepository(this.c)
 
-    const referencing = await assignmentRepository.findByPatternId(input.patternId)
+    const inUse = await assignmentRepository.existsByPatternId(input.patternId)
 
-    if (referencing instanceof Error) {
-      return referencing
+    if (inUse instanceof Error) {
+      return inUse
     }
 
-    if (referencing.length > 0) {
+    if (inUse) {
       return { reason: "pattern_in_use" }
     }
 
