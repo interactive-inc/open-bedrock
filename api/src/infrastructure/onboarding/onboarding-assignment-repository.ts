@@ -2,7 +2,7 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { Context } from "@/env"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
-import { asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq, inArray, ne } from "drizzle-orm"
 
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -167,6 +167,36 @@ export class OnboardingAssignmentRepository {
       return result
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding assignment")
+    }
+  }
+
+  // employee_id と templateCode の組み合わせで completed 以外の割り当てを探す。
+  async findActiveByEmployeeAndTemplate(
+    employeeId: number,
+    templateCode: string,
+  ): Promise<OnboardingAssignment | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(onboardingAssignments)
+        .where(
+          and(
+            eq(onboardingAssignments.employeeId, employeeId),
+            eq(onboardingAssignments.templateCode, templateCode),
+            ne(onboardingAssignments.status, "completed"),
+          ),
+        )
+        .limit(1)
+
+      const row = rows.at(0)
+
+      if (row === undefined) {
+        return null
+      }
+
+      return this.findById(row.id)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to check existing assignment")
     }
   }
 

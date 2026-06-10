@@ -21,6 +21,8 @@ export type EmployeeNotFound = { reason: "employee_not_found" }
 
 export type TemplateNotFound = { reason: "template_not_found" }
 
+export type AlreadyAssigned = { reason: "already_assigned" }
+
 export type AssignOnboardingResult = {
   assignment: OnboardingAssignment
   employee: Employee
@@ -36,7 +38,14 @@ export class AssignOnboarding {
 
   async run(
     command: Command,
-  ): Promise<AssignOnboardingResult | Forbidden | EmployeeNotFound | TemplateNotFound | Error> {
+  ): Promise<
+    | AssignOnboardingResult
+    | Forbidden
+    | EmployeeNotFound
+    | TemplateNotFound
+    | AlreadyAssigned
+    | Error
+  > {
     if (canManageOnboarding(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -65,6 +74,19 @@ export class AssignOnboarding {
 
     if (template === null) {
       return { reason: "template_not_found" }
+    }
+
+    const existing = await assignmentRepository.findActiveByEmployeeAndTemplate(
+      employee.id,
+      template.code,
+    )
+
+    if (existing instanceof Error) {
+      return existing
+    }
+
+    if (existing !== null) {
+      return { reason: "already_assigned" }
     }
 
     const assignment = OnboardingAssignment.create({
