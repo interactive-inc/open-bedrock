@@ -56,6 +56,11 @@ export class CreateShiftSwapRequest {
       note: input.note,
     })
 
-    return swapRequestRepository.create(swapRequest)
+    const created = await swapRequestRepository.create(swapRequest)
+
+    if (created instanceof Error) return created
+    if ("reason" in created) return created
+
+    return created
   }
 }

@@ -3,6 +3,8 @@ import type { Context } from "@/env"
 import { shiftSwapRequests } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 
+export type AlreadyExistsError = { reason: "already_exists" }
+
 export class ShiftSwapRequestRepository {
   constructor(private readonly c: Context) {}
 
@@ -65,7 +67,9 @@ export class ShiftSwapRequestRepository {
     }
   }
 
-  async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | Error> {
+  async create(
+    swapRequest: ShiftSwapRequest,
+  ): Promise<ShiftSwapRequest | AlreadyExistsError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(shiftSwapRequests)
@@ -85,6 +89,9 @@ export class ShiftSwapRequestRepository {
         ? new Error("failed to insert shift swap request")
         : ShiftSwapRequest.fromRow(row)
     } catch (error) {
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+        return { reason: "already_exists" }
+      }
       return error instanceof Error ? error : new Error("failed to insert shift swap request")
     }
   }
