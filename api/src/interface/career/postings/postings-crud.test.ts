@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { seedCareerApplications } from "@/infrastructure/seed/seed-career-applications"
 import { seedCareerPostings } from "@/infrastructure/seed/seed-career-postings"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
@@ -31,6 +32,25 @@ async function createTestDb(): Promise<D1Database> {
       dept_name: posting.deptName,
       required_skills: posting.requiredSkills,
       status: posting.status,
+    })),
+  )
+
+  return db
+}
+
+// 公募 + 応募セットを含むDBを生成する。posting_id=1 に status=applied の応募あり。
+async function createTestDbWithApplications(): Promise<D1Database> {
+  const db = await createTestDb()
+
+  await seedD1(
+    db,
+    "career_applications",
+    seedCareerApplications.map((application) => ({
+      id: application.id,
+      posting_id: application.postingId,
+      applicant_id: application.applicantId,
+      message: application.message,
+      status: application.status,
     })),
   )
 
@@ -251,5 +271,18 @@ describe("DELETE /career/postings/:posting_id", () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 409 when the posting has applied applications", async () => {
+    // posting_id=1 has a status=applied application in the seed
+    const response = await requestWithContext({
+      db: await createTestDbWithApplications(),
+      jwtSecret,
+      path: "/career/postings/1",
+      token: await tokenFor(1, "admin"),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(409)
   })
 })
