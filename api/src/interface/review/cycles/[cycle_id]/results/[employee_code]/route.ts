@@ -4,6 +4,12 @@ import { ReviewForm } from "@/domain/review/review-form"
 import { toCycleStatus } from "@/domain/review/to-cycle-status"
 import { toReviewResultView } from "@/domain/review/to-review-result-view"
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
@@ -24,6 +30,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (canAdministerCycle(session.role) === false) {
     throw new ForbiddenError()
   }
+
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
 
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
@@ -50,6 +70,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
+    .limit(limit)
+    .offset(offset)
   const forms = formRows.map((row) => ReviewForm.fromRow(row))
   const cycle = new ReviewCycle({
     id: cycleRow.id,
