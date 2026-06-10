@@ -1,10 +1,12 @@
 import { tokenPayloadSchema } from "@/domain/auth/token-payload"
 import type { HonoEnv } from "@/env"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { createMiddleware } from "hono/factory"
 import { jwtVerify } from "jose"
 
 // Bearer トークンを検証し、本人を c.var.session に載せる。
+// JWT の role は発行時点のスナップショットなので、DB から最新 role を再取得して上書きする。
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   const header = c.req.header("Authorization")
 
@@ -20,7 +22,14 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  c.set("session", payload)
+  const repo = new EmployeeRepository(c)
+  const employee = await repo.findById(payload.employeeId)
+
+  if (employee === null || employee instanceof Error) {
+    throw new UnauthorizedError("employee not found")
+  }
+
+  c.set("session", { ...payload, role: employee.role })
 
   await next()
 })
