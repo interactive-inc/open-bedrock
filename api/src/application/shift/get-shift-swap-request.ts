@@ -14,7 +14,7 @@ export type SwapRequestNotFound = { reason: "swap_request_not_found" }
 export type NotVisible = { reason: "not_visible" }
 
 /**
- * シフト交代申請を1件取得する。申請者本人か承認権限者のみ閲覧できる。
+ * シフト交代申請を1件取得する。申請者本人・対象社員・承認権限者のみ閲覧できる。
  */
 export class GetShiftSwapRequest {
   constructor(private readonly c: Context) {}
@@ -34,7 +34,13 @@ export class GetShiftSwapRequest {
 
     const isRequester = swapRequest.requesterEmployeeId === input.viewerEmployeeId
 
-    if (isRequester === false && canApproveShiftSwap(input.viewerRole) === false) {
+    const isTargetEmployee = swapRequest.targetEmployeeId === input.viewerEmployeeId
+
+    if (
+      isRequester === false &&
+      isTargetEmployee === false &&
+      canApproveShiftSwap(input.viewerRole) === false
+    ) {
       return { reason: "not_visible" }
     }
 
