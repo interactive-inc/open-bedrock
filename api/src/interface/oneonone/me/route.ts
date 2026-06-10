@@ -3,7 +3,7 @@ import { factory } from "@/lib/factory"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
-import { aliasedTable, eq } from "drizzle-orm"
+import { aliasedTable, eq, inArray } from "drizzle-orm"
 
 const members = aliasedTable(employees, "members")
 
@@ -23,11 +23,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load one-on-ones")
   }
 
-  const nameRows = await c.var.database
-    .select({ id: oneOnOnes.id, memberName: members.name, managerName: managers.name })
-    .from(oneOnOnes)
-    .leftJoin(members, eq(members.id, oneOnOnes.memberId))
-    .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
+  const ids = oneOnOnesList.map((o) => o.id)
+
+  const nameRows =
+    ids.length === 0
+      ? []
+      : await c.var.database
+          .select({ id: oneOnOnes.id, memberName: members.name, managerName: managers.name })
+          .from(oneOnOnes)
+          .leftJoin(members, eq(members.id, oneOnOnes.memberId))
+          .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
+          .where(inArray(oneOnOnes.id, ids))
 
   const responseBody = oneOnOnesList.map((oneOnOne) => {
     const nameRow = nameRows.find((row) => row.id === oneOnOne.id)
