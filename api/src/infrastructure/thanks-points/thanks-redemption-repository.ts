@@ -10,6 +10,8 @@ const settledStatus = "fulfilled"
 
 export type PendingExistsError = { reason: "pending_exists" }
 
+export type InsufficientBalanceError = { reason: "insufficient_balance" }
+
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
 
@@ -55,6 +57,61 @@ export class ThanksRedemptionRepository {
       if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
         return { reason: "pending_exists" }
       }
+      return error instanceof Error ? error : new Error("failed to insert thanks redemption")
+    }
+  }
+
+  // 残高チェックと重複 pending チェックを INSERT の SELECT ... WHERE に畳み込んだ 1 ステートメントで
+  // アトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
+  // 同時に複数の申請が試みられても残高がマイナスに割れない。
+  // 0 行挿入（changes === 0）は残高不足または既に pending が存在することを意味する。
+  // どちらの原因かは hasPendingByEmployee で判定する（INSERT が弾いた後なので競合の心配は不要）。
+  async createIfSufficientBalance(
+    redemption: ThanksRedemption,
+  ): Promise<ThanksRedemption | PendingExistsError | InsufficientBalanceError | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id)
+            SELECT ${redemption.employeeId}, ${redemption.rewardId}, ${redemption.pointCost},
+                   'pending', ${redemption.createdAt}, NULL, NULL
+            WHERE (
+              (SELECT COALESCE(SUM(${thanks.points}), 0) FROM ${thanks}
+                WHERE ${thanks.recipientEmployeeId} = ${redemption.employeeId})
+              - (SELECT COALESCE(SUM(${thanksRedemptions.pointCost}), 0) FROM ${thanksRedemptions}
+                WHERE ${thanksRedemptions.employeeId} = ${redemption.employeeId}
+                  AND ${thanksRedemptions.status} = ${settledStatus})
+            ) >= ${redemption.pointCost}
+            AND NOT EXISTS (
+              SELECT 1 FROM ${thanksRedemptions}
+              WHERE ${thanksRedemptions.employeeId} = ${redemption.employeeId}
+                AND ${thanksRedemptions.status} = 'pending'
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        const hasPending = await this.hasPendingByEmployee(redemption.employeeId)
+
+        if (hasPending instanceof Error) {
+          return hasPending
+        }
+
+        return hasPending ? { reason: "pending_exists" } : { reason: "insufficient_balance" }
+      }
+
+      const lastId = result.meta.last_row_id
+
+      const rows = await this.c.var.database
+        .select()
+        .from(thanksRedemptions)
+        .where(eq(thanksRedemptions.id, lastId))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to load inserted thanks redemption")
+        : ThanksRedemption.fromRow(row)
+    } catch (error) {
       return error instanceof Error ? error : new Error("failed to insert thanks redemption")
     }
   }
