@@ -12,6 +12,8 @@ export type NotClockedIn = { reason: "not_clocked_in" }
 
 export type AttendanceNotFound = { reason: "attendance_not_found" }
 
+export type ClockInAtMissing = { reason: "clock_in_at_missing" }
+
 /**
  * 退勤を打刻する。出勤中の記録に労働時間を確定する。
  */
@@ -20,7 +22,7 @@ export class ClockOut {
 
   async run(
     command: Command,
-  ): Promise<AttendanceRecord | NotClockedIn | AttendanceNotFound | Error> {
+  ): Promise<AttendanceRecord | NotClockedIn | AttendanceNotFound | ClockInAtMissing | Error> {
     const recordRepository = new AttendanceRecordRepository(this.c)
 
     const open = await recordRepository.findOpenByEmployeeId(command.employeeId)
@@ -33,8 +35,12 @@ export class ClockOut {
       return { reason: "not_clocked_in" }
     }
 
+    if (open.clockInAt === null) {
+      return { reason: "clock_in_at_missing" }
+    }
+
     const workMinutes = toWorkMinutes({
-      clockInAt: open.clockInAt ?? command.now,
+      clockInAt: open.clockInAt,
       clockOutAt: command.now,
     })
 

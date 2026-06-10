@@ -30,6 +30,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("not clocked in")
     }
 
+    if (record.reason === "clock_in_at_missing") {
+      throw new ConflictError("clock-in time is missing")
+    }
+
     throw new NotFoundError("attendance not found")
   }
 

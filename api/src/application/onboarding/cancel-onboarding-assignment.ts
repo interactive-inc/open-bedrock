@@ -1,4 +1,4 @@
-import { canViewEmployeeOnboarding } from "@/domain/onboarding/can-view-employee-onboarding"
+import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 
@@ -24,7 +24,7 @@ export class CancelOnboardingAssignment {
   async run(
     command: Command,
   ): Promise<Cancelled | AssignmentNotFound | Forbidden | NotModifiable | Error> {
-    if (canViewEmployeeOnboarding({ viewerRole: command.viewerRole }) === false) {
+    if (canManageOnboarding(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
 
