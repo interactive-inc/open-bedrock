@@ -80,8 +80,8 @@ export class UpdateEmployee {
       }
     }
 
-    // admin 以外は member ロールしか付与できない
-    if (command.profile.role !== "member" && command.viewerRole !== "admin") {
+    // ロール変更は admin のみ許可
+    if (command.profile.role !== employee.role && command.viewerRole !== "admin") {
       return { reason: "role_escalation_forbidden" }
     }
 
