@@ -2,7 +2,7 @@ import { Application } from "@/domain/application/application"
 import { ApplicationApproval } from "@/domain/application/application-approval"
 import type { Context } from "@/env"
 import { applicationApprovals, applications } from "@/schema"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 
 export class ApplicationRepository {
   constructor(private readonly c: Context) {}
@@ -135,6 +135,20 @@ export class ApplicationRepository {
       return null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete application")
+    }
+  }
+
+  // 指定テンプレートに紐づく pending 状態の申請数を返す。
+  async countPendingByTemplateId(templateId: number): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(applications)
+        .where(and(eq(applications.templateId, templateId), eq(applications.status, "pending")))
+
+      return rows.at(0)?.value ?? 0
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to count pending applications")
     }
   }
 
