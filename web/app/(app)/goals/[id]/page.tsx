@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { GoalEvaluationForm } from "@/app/(app)/goals/[id]/goal-evaluation-form"
-import { getGoalList } from "@/lib/api/get-goal-list"
+import { getGoal } from "@/lib/api/get-goal"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -10,7 +10,7 @@ type Props = {
   params: Promise<{ id: string }>
 }
 
-// 目標詳細画面。GET /goals/:id の専用エンドポイントが無いため一覧から該当を抽出する RSC。
+// 目標詳細画面。GET /goals/:goal_id で単一目標を取得する RSC。
 // 詳細表示に加えて評価登録フォーム (POST /goals/:id/evaluations) を置く。
 export default async function GoalDetailPage(props: Props) {
   const params = await props.params
@@ -21,18 +21,12 @@ export default async function GoalDetailPage(props: Props) {
     return <p className="text-sm text-destructive">目標 ID が不正です</p>
   }
 
-  const goals = await getGoalList({ period: null, employeeId: null })
+  const goal = await getGoal(goalId)
 
-  if (goals instanceof Error) {
-    return <p className="text-sm text-destructive">目標の取得に失敗しました</p>
-  }
-
-  const goal = goals.find((target) => target.id === goalId) ?? null
-
-  if (goal === null) {
+  if (goal instanceof Error) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">目標が見つかりませんでした</p>
+        <p className="text-sm text-destructive">目標の取得に失敗しました</p>
 
         <Link href="/goals" className="text-sm text-primary underline-offset-4 hover:underline">
           一覧へ戻る
@@ -79,7 +73,7 @@ export default async function GoalDetailPage(props: Props) {
         </CardContent>
       </Card>
 
-      <GoalEvaluationForm goalId={goal.id} />
+      {goal.id !== null && <GoalEvaluationForm goalId={goal.id} />}
     </div>
   )
 }
