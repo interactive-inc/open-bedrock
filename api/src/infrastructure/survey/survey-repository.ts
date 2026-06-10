@@ -1,8 +1,11 @@
 import { Survey } from "@/domain/survey/survey"
 import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
+
+export type AlreadySubmittedError = { reason: "already_submitted" }
 
 export class SurveyRepository {
   constructor(private readonly c: Context) {}
@@ -80,7 +83,10 @@ export class SurveyRepository {
   }
 
   // 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
-  async createResponse(response: SurveyResponse): Promise<SurveyResponse | Error> {
+  // UNIQUE 制約 (survey_id, respondent_id) に違反した場合は already_submitted を返す。
+  async createResponse(
+    response: SurveyResponse,
+  ): Promise<SurveyResponse | AlreadySubmittedError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(surveyResponses)
@@ -100,6 +106,9 @@ export class SurveyRepository {
 
       return SurveyResponse.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return { reason: "already_submitted" }
+      }
       return error instanceof Error ? error : new Error("failed to insert survey response")
     }
   }
