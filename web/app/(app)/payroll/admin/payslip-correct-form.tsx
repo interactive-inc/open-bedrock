@@ -129,8 +129,9 @@ export function PayslipCorrectForm() {
             type="number"
             min={0}
             step={1}
-            placeholder="275000"
-            required
+            placeholder="基本給 + 手当 - 控除で自動算出"
+            readOnly
+            tabIndex={-1}
           />
         </Field>
 

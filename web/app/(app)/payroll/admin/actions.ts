@@ -125,8 +125,8 @@ export async function createSalaryRevisionAction(
   return { ok: true, error: null }
 }
 
-// 給与明細の訂正 Server Action。payslip_id/period/base_salary/net_pay 必須、手当・控除は任意。
-// 金額は api 側で再計算せず、入力値をそのまま記録する。
+// 給与明細の訂正 Server Action。payslip_id/period/base_salary 必須、手当・控除は任意。
+// net_pay は web 側で base_salary + allowances - deductions として算出して送信する。
 export async function correctPayslipAction(
   previousState: PayrollAdminFormState,
   formData: FormData,
@@ -157,17 +157,17 @@ export async function correctPayslipAction(
     return { ok: false, error: "基本給は 0 以上の整数で入力してください" }
   }
 
-  const netPay = Number(formData.get("net_pay"))
+  const allowances = toNonNegativeNumber(formData.get("allowances"))
 
-  if (!Number.isFinite(netPay) || !Number.isInteger(netPay) || netPay < 0) {
-    return { ok: false, error: "差引支給額は 0 以上の整数で入力してください" }
-  }
+  const deductions = toNonNegativeNumber(formData.get("deductions"))
+
+  const netPay = baseSalary + allowances - deductions
 
   const corrected = await correctPayslip(payslipId, {
     period: period,
     base_salary: baseSalary,
-    allowances: toNonNegativeNumber(formData.get("allowances")),
-    deductions: toNonNegativeNumber(formData.get("deductions")),
+    allowances: allowances,
+    deductions: deductions,
     net_pay: netPay,
   })
 
