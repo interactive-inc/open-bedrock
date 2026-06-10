@@ -139,6 +139,60 @@ describe("GET /knowledge", () => {
     }
   })
 
+  test("applies limit and returns at most that many articles", async () => {
+    const response = await request("/knowledge?limit=2", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(2)
+    }
+  })
+
+  test("clamps limit above MAX to MAX_LIST_LIMIT and still returns 200", async () => {
+    const response = await request("/knowledge?limit=9999", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+  })
+
+  test("falls back to DEFAULT_LIST_LIMIT on a mixed string limit and returns 200", async () => {
+    const response = await request("/knowledge?limit=50abc", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // default limit (50) >= 6 seed articles, so all are returned
+      expect(parsed.data.length).toBe(6)
+    }
+  })
+
+  test("applies a huge offset exceeding 32-bit int and returns 200 with empty result", async () => {
+    const response = await request("/knowledge?offset=9999999999999", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // offset clamped to MAX_LIST_OFFSET (2_147_483_647) — far beyond any row
+      expect(parsed.data.length).toBe(0)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/knowledge", null)
 
