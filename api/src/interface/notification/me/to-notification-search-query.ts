@@ -1,24 +1,31 @@
 import type { NotificationSearchQuery } from "@/domain/notification/notification-search-query"
-
-const defaultLimit = 50
-
-const maxLimit = 100
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 
 export type Props = {
-  isRead: string | null
-  limit: string | null
-  offset: string | null
+  isRead: string | undefined
+  limit: string | undefined
+  offset: string | undefined
 }
 
 export function toNotificationSearchQuery(props: Props): NotificationSearchQuery {
   return {
     isRead: toIsRead(props.isRead),
-    limit: toBoundedInt({ raw: props.limit, fallback: defaultLimit, min: 1, max: maxLimit }),
-    offset: toBoundedInt({ raw: props.offset, fallback: 0, min: 0, max: Number.MAX_SAFE_INTEGER }),
+    limit: toBoundedInt({
+      raw: props.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    }),
+    offset: toBoundedInt({ raw: props.offset, fallback: 0, min: 0, max: MAX_LIST_OFFSET }),
   }
 }
 
-function toIsRead(raw: string | null): boolean | null {
+function toIsRead(raw: string | undefined): boolean | null {
   if (raw === "true") {
     return true
   }
@@ -28,23 +35,4 @@ function toIsRead(raw: string | null): boolean | null {
   }
 
   return null
-}
-
-function toBoundedInt(props: {
-  raw: string | null
-  fallback: number
-  min: number
-  max: number
-}): number {
-  if (props.raw === null) {
-    return props.fallback
-  }
-
-  const parsed = Number.parseInt(props.raw, 10)
-
-  if (Number.isNaN(parsed) || parsed < props.min) {
-    return props.fallback
-  }
-
-  return parsed > props.max ? props.max : parsed
 }
