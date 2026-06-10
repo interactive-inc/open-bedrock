@@ -14,6 +14,7 @@ const knowledgeArticleResponseSchema = z.object({
   category: z.string(),
   tags: z.string().nullable(),
   body_md: z.string(),
+  author_id: z.number(),
 })
 
 const jwtSecret = "knowledge-detail-route-test-secret"

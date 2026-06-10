@@ -35,6 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     category: row.category,
     tags: row.tags,
     body_md: row.bodyMd,
+    author_id: row.authorId,
   }
 
   return c.json(responseBody, 200)
