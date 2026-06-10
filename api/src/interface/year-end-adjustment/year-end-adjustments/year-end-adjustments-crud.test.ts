@@ -132,7 +132,7 @@ describe("POST /year-end-adjustments", () => {
       token: await applicantToken(),
       method: "POST",
       body: {
-        target_year: 2025,
+        target_year: 2024,
         note: "Submitted with deduction documents",
       },
     })
@@ -146,7 +146,7 @@ describe("POST /year-end-adjustments", () => {
     if (parsed.success) {
       expect(parsed.data.status).toBe("submitted")
       expect(parsed.data.employee_id).toBe(4)
-      expect(parsed.data.target_year).toBe(2025)
+      expect(parsed.data.target_year).toBe(2024)
     }
   })
 
@@ -156,7 +156,7 @@ describe("POST /year-end-adjustments", () => {
       token: await applicantToken(),
       method: "POST",
       body: {
-        target_year: 2025,
+        target_year: 2024,
       },
     })
 

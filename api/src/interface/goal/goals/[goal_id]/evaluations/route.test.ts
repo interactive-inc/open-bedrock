@@ -124,7 +124,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const evaluateResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/goals/4/evaluations",
+      path: "/goals/3/evaluations",
       token: await tokenFor(4, "manager"),
       method: "POST",
       body: { kind: "final", score: 90 },
@@ -135,7 +135,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const listResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/goals?employee_id=9&period=2025-H2",
+      path: "/goals?employee_id=9&period=2026-H1",
       token: await tokenFor(9, "member"),
     })
 
@@ -144,7 +144,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data[0]?.id).toBe(4)
+      expect(parsed.data[0]?.id).toBe(3)
       expect(parsed.data[0]?.status).toBe("done")
     }
   })
