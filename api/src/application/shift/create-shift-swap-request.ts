@@ -33,6 +33,10 @@ export class CreateShiftSwapRequest {
       return { reason: "target_not_found" }
     }
 
+    if (target.id === input.requesterEmployeeId) {
+      return { reason: "target_not_found" }
+    }
+
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
 
     const pending = await swapRequestRepository.findPending(
