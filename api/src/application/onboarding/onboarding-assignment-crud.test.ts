@@ -178,7 +178,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const found = await repository.findById(assignmentId)
 
-    expect(found).toBeInstanceOf(Error)
+    expect(found).toBeNull()
   })
 
   test("a member is forbidden", async () => {
@@ -209,8 +209,8 @@ describe("UncompleteOnboardingTask", () => {
 
     const assignment = await repository.findById(assignmentId)
 
-    if (assignment instanceof Error) {
-      throw assignment
+    if (assignment === null || assignment instanceof Error) {
+      throw assignment ?? new Error("assignment not found")
     }
 
     const taskId = assignment.tasks[0]?.id
@@ -251,8 +251,8 @@ describe("UncompleteOnboardingTask", () => {
 
     const assignment = await repository.findById(assignmentId)
 
-    if (assignment instanceof Error) {
-      throw assignment
+    if (assignment === null || assignment instanceof Error) {
+      throw assignment ?? new Error("assignment not found")
     }
 
     const taskId = assignment.tasks[0]?.id
