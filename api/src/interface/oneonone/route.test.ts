@@ -32,7 +32,7 @@ async function createTestDb(): Promise<D1Database> {
       name: employee.name,
       email: employee.email,
       password_hash: employee.passwordHash,
-      role: employee.role,
+      role: employee.id === 4 ? "manager" : employee.role,
       dept_id: employee.deptId,
       dept_name: employee.deptName,
       position: employee.position,
@@ -157,6 +157,14 @@ describe("POST /oneonone", () => {
 
   test("returns 400 when member_email is missing", async () => {
     const response = await postOneOnOne(await managerToken(), { topics: "body only" })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when member and manager are the same person", async () => {
+    const response = await postOneOnOne(await managerToken(), {
+      member_email: "you+e004@example.com",
+    })
 
     expect(response.status).toBe(400)
   })
