@@ -20,7 +20,15 @@ describe("ShiftSwapRequestRepository", () => {
 
     expect(created).toBeInstanceOf(ShiftSwapRequest)
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error) {
+      throw new Error("create failed")
+    }
+
+    if ("reason" in created) {
+      throw new Error("unexpected already_exists")
+    }
+
+    if (created.id === null) {
       throw new Error("create failed")
     }
 
