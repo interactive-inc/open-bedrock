@@ -354,9 +354,7 @@ describe("DELETE /surveys/:survey_id", () => {
     }
 
     // Close survey 1 directly so the deletion guard allows it.
-    await db
-      .prepare("UPDATE surveys SET status = 'closed' WHERE id = 1")
-      .run()
+    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = 1").run()
 
     // Survey 1 has 3 seed responses. Confirm they exist via summary.
     const summaryBefore = await testApp.request(
