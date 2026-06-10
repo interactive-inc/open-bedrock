@@ -21,21 +21,6 @@ export class CreateRoomReservation {
   async run(command: Command): Promise<RoomReservation | RoomAlreadyReserved | Error> {
     const reservationRepository = new RoomReservationRepository(this.c)
 
-    const overlapping = await reservationRepository.findOverlapping({
-      roomId: command.roomId,
-      startAt: command.startAt,
-      endAt: command.endAt,
-      excludeReservationId: null,
-    })
-
-    if (overlapping instanceof Error) {
-      return overlapping
-    }
-
-    if (overlapping.length > 0) {
-      return { reason: "room_already_reserved" }
-    }
-
     const reservation = RoomReservation.create({
       roomId: command.roomId,
       reserverId: command.reserverId,
@@ -44,6 +29,16 @@ export class CreateRoomReservation {
       purpose: command.purpose,
     })
 
-    return await reservationRepository.create(reservation)
+    const created = await reservationRepository.createIfNoOverlap(reservation)
+
+    if (created instanceof Error) {
+      return created
+    }
+
+    if (created === null) {
+      return { reason: "room_already_reserved" }
+    }
+
+    return created
   }
 }

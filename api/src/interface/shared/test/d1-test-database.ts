@@ -51,7 +51,22 @@ function toPreparedStatement(
 
       return column === undefined ? row : (row[column] ?? null)
     },
-    run: async () => toResult(sqlite.query(query).all(...bindings())),
+    run: async () => {
+      const result = sqlite.query(query).run(...bindings())
+      return {
+        results: [],
+        success: true as const,
+        meta: {
+          duration: 0,
+          size_after: 0,
+          rows_read: 0,
+          rows_written: 0,
+          last_row_id: Number(result.lastInsertRowid),
+          changed_db: result.changes > 0,
+          changes: result.changes,
+        },
+      }
+    },
     all: async () => toResult(sqlite.query(query).all(...bindings())),
     raw: async () => sqlite.query(query).values(...bindings()),
   }
