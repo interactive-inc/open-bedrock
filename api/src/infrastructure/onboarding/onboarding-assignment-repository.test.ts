@@ -45,8 +45,8 @@ describe("OnboardingAssignmentRepository", () => {
 
     expect(found).toBeInstanceOf(OnboardingAssignment)
 
-    if (found instanceof Error) {
-      throw found
+    if (found === null || found instanceof Error) {
+      throw found ?? new Error("not found")
     }
 
     expect(found.templateCode).toBe("join-default")

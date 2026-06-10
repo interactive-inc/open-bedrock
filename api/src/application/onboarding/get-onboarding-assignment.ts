@@ -33,8 +33,12 @@ export class GetOnboardingAssignment {
 
     const assignment = await assignmentRepository.findById(command.assignmentId)
 
-    if (assignment instanceof Error) {
+    if (assignment === null) {
       return { reason: "assignment_not_found" }
+    }
+
+    if (assignment instanceof Error) {
+      return assignment
     }
 
     const isOwner = assignment.employeeId === command.viewerEmployeeId
