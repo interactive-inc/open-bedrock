@@ -61,6 +61,11 @@ export class ApplyToCareerPosting {
       return created
     }
 
+    // 一意制約違反（並行リクエストによる二重応募）
+    if ("reason" in created && created.reason === "already_applied") {
+      return { reason: "already_applied" }
+    }
+
     return created
   }
 }

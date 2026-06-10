@@ -3,10 +3,14 @@ import type { Context } from "@/env"
 import { careerApplications } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 
+export type AlreadyAppliedError = { reason: "already_applied" }
+
 export class CareerApplicationRepository {
   constructor(private readonly c: Context) {}
 
-  async create(careerApplication: CareerApplication): Promise<CareerApplication | Error> {
+  async create(
+    careerApplication: CareerApplication,
+  ): Promise<CareerApplication | AlreadyAppliedError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(careerApplications)
@@ -24,6 +28,9 @@ export class CareerApplicationRepository {
         ? new Error("failed to insert career application")
         : CareerApplication.fromRow(row)
     } catch (error) {
+      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+        return { reason: "already_applied" }
+      }
       return error instanceof Error ? error : new Error("failed to insert career application")
     }
   }
