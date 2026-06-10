@@ -1,7 +1,7 @@
 import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { leaveBalances } from "@/schema"
 import { and, eq } from "drizzle-orm"
 
@@ -14,6 +14,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const fiscalYear = toFiscalYear(c.env.NOW ?? new Date().toISOString())
+
+  if (fiscalYear === null) {
+    throw new InternalError("invalid server time")
+  }
 
   const rows = await c.var.database
     .select()
