@@ -1,7 +1,7 @@
 import { RoomReservation } from "@/domain/room/room-reservation"
 import type { Context } from "@/env"
 import { roomReservations } from "@/schema"
-import { and, asc, eq, gt, lt, ne } from "drizzle-orm"
+import { and, asc, eq, gt, lt, ne, sql } from "drizzle-orm"
 
 type OverlapQuery = {
   roomId: number
@@ -77,6 +77,31 @@ export class RoomReservationRepository {
         endAt: reservation.endAt,
         purpose: reservation.purpose,
       })
+
+      return reservation
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save room_reservation")
+    }
+  }
+
+  // 重複予約がなければ INSERT し、競合があれば null を返す。チェックと INSERT をアトミックに行う。
+  async createIfNoOverlap(reservation: RoomReservation): Promise<RoomReservation | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO room_reservations (id, room_id, reserver_id, start_at, end_at, purpose)
+            SELECT ${reservation.id}, ${reservation.roomId}, ${reservation.reserverId},
+                   ${reservation.startAt}, ${reservation.endAt}, ${reservation.purpose}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM room_reservations
+              WHERE room_id = ${reservation.roomId}
+                AND start_at < ${reservation.endAt}
+                AND end_at > ${reservation.startAt}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
 
       return reservation
     } catch (error) {
