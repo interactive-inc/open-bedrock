@@ -2,14 +2,13 @@ import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
 import { canDecideExpense } from "@/domain/expense/can-decide-expense"
 import type { Expense } from "@/domain/expense/expense"
-import { toExpenseId } from "@/domain/expense/to-expense-id"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { eq } from "drizzle-orm"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -41,11 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const expenseId = toExpenseId(c.req.param("id") ?? "")
-
-  if (expenseId === null) {
-    throw new BadRequestError("invalid expense id")
-  }
+  const expenseId = validateIntParam(c.req.param("id"), "expense")
 
   const rows = await c.var.database
     .select({ expense: expenses, applicantName: employees.name })
@@ -100,11 +95,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const expenseId = toExpenseId(c.req.param("id") ?? "")
-
-    if (expenseId === null) {
-      throw new BadRequestError("invalid expense id")
-    }
+    const expenseId = validateIntParam(c.req.param("id"), "expense")
 
     const json = c.req.valid("json")
 
@@ -145,11 +136,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const expenseId = toExpenseId(c.req.param("id") ?? "")
-
-  if (expenseId === null) {
-    throw new BadRequestError("invalid expense id")
-  }
+  const expenseId = validateIntParam(c.req.param("id"), "expense")
 
   const result = await new DeleteExpense(c).run({
     expenseId: expenseId,

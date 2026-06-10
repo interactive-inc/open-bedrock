@@ -4,13 +4,13 @@ import { UpdateOnboardingAssignment } from "@/application/onboarding/update-onbo
 import type { Employee } from "@/domain/employee/employee"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -37,13 +37,6 @@ function toResponseBody(assignment: OnboardingAssignment, employee: Employee) {
   }
 }
 
-// 割り当て id をパスから数値で取り出す。不正なら null。
-function toAssignmentId(value: string | undefined): number | null {
-  const parsed = Number(value ?? "")
-
-  return Number.isInteger(parsed) ? parsed : null
-}
-
 // GET /onboarding/assignments/:id — 割り当ての詳細（本人か特権ロール）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -52,11 +45,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignmentId = toAssignmentId(c.req.param("id"))
-
-  if (assignmentId === null) {
-    throw new BadRequestError("invalid assignment id")
-  }
+  const assignmentId = validateIntParam(c.req.param("id"), "assignment")
 
   const result = await new GetOnboardingAssignment(c).run({
     assignmentId,
@@ -90,11 +79,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const assignmentId = toAssignmentId(c.req.param("id"))
-
-    if (assignmentId === null) {
-      throw new BadRequestError("invalid assignment id")
-    }
+    const assignmentId = validateIntParam(c.req.param("id"), "assignment")
 
     const json = c.req.valid("json")
 
@@ -132,11 +117,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignmentId = toAssignmentId(c.req.param("id"))
-
-  if (assignmentId === null) {
-    throw new BadRequestError("invalid assignment id")
-  }
+  const assignmentId = validateIntParam(c.req.param("id"), "assignment")
 
   const result = await new CancelOnboardingAssignment(c).run({
     assignmentId,

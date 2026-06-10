@@ -3,12 +3,12 @@ import { CorrectPayslip } from "@/application/payroll/correct-payslip"
 import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import { Payslip } from "@/domain/payroll/payslip"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { yearMonth } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -16,8 +16,6 @@ import { payslips } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
-
-const payslipIdSchema = z.coerce.number().int()
 
 // 給与明細をレスポンス用の snake_case に整形する。
 function toResponseBody(payslip: Payslip) {
@@ -42,16 +40,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const payslipId = payslipIdSchema.safeParse(c.req.param("id"))
-
-  if (payslipId.success === false) {
-    throw new BadRequestError("invalid payslip id")
-  }
+  const payslipId = validateIntParam(c.req.param("id"), "payslip")
 
   const rows = await c.var.database
     .select()
     .from(payslips)
-    .where(eq(payslips.id, payslipId.data))
+    .where(eq(payslips.id, payslipId))
     .limit(1)
 
   const row = rows.at(0)
@@ -108,17 +102,13 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const payslipId = payslipIdSchema.safeParse(c.req.param("id"))
-
-    if (payslipId.success === false) {
-      throw new BadRequestError("invalid payslip id")
-    }
+    const payslipId = validateIntParam(c.req.param("id"), "payslip")
 
     const json = c.req.valid("json")
 
     const payslip = await new CorrectPayslip(c).run({
       viewerRole: session.role,
-      payslipId: payslipId.data,
+      payslipId: payslipId,
       period: json.period,
       baseSalary: json.base_salary,
       allowances: json.allowances,
@@ -150,15 +140,11 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const payslipId = payslipIdSchema.safeParse(c.req.param("id"))
-
-  if (payslipId.success === false) {
-    throw new BadRequestError("invalid payslip id")
-  }
+  const payslipId = validateIntParam(c.req.param("id"), "payslip")
 
   const result = await new CancelPayslip(c).run({
     viewerRole: session.role,
-    payslipId: payslipId.data,
+    payslipId: payslipId,
   })
 
   if (result instanceof Error) {

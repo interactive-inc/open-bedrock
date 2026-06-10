@@ -3,8 +3,8 @@ import { UpdateKnowledgeArticle } from "@/application/knowledge/update-knowledge
 import { factory } from "@/lib/factory"
 import { knowledgeArticles } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -14,19 +14,13 @@ import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-const articleIdSchema = z.coerce.number().int().positive()
-
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const parsedId = articleIdSchema.safeParse(c.req.param("id"))
-
-  if (parsedId.success === false) {
-    throw new BadRequestError("invalid knowledge id")
-  }
+  const articleId = validateIntParam(c.req.param("id"), "knowledge")
 
   const rows = await c.var.database
     .select()
     .from(knowledgeArticles)
-    .where(eq(knowledgeArticles.id, parsedId.data))
+    .where(eq(knowledgeArticles.id, articleId))
     .limit(1)
 
   const row = rows.at(0)
@@ -65,16 +59,12 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const parsedId = articleIdSchema.safeParse(c.req.param("id"))
-
-    if (parsedId.success === false) {
-      throw new BadRequestError("invalid knowledge id")
-    }
+    const articleId = validateIntParam(c.req.param("id"), "knowledge")
 
     const json = c.req.valid("json")
 
     const article = await new UpdateKnowledgeArticle(c).run({
-      articleId: parsedId.data,
+      articleId: articleId,
       authorId: viewer.employeeId,
       title: json.title,
       category: json.category,
@@ -114,14 +104,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const parsedId = articleIdSchema.safeParse(c.req.param("id"))
-
-  if (parsedId.success === false) {
-    throw new BadRequestError("invalid knowledge id")
-  }
+  const articleId = validateIntParam(c.req.param("id"), "knowledge")
 
   const result = await new DeleteKnowledgeArticle(c).run({
-    articleId: parsedId.data,
+    articleId: articleId,
     authorId: viewer.employeeId,
   })
 

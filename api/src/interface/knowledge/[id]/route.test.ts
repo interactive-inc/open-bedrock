@@ -92,10 +92,10 @@ describe("GET /knowledge/:id", () => {
     expect(response.status).toBe(401)
   })
 
-  test("returns 400 when the id is not a positive integer", async () => {
+  test("returns 404 when the id is not a positive integer", async () => {
     const response = await request("/knowledge/abc", await memberToken())
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 when the article does not exist", async () => {

@@ -2,19 +2,17 @@ import { CancelSalaryRevision } from "@/application/payroll/cancel-salary-revisi
 import { CorrectSalaryRevision } from "@/application/payroll/correct-salary-revision"
 import { SalaryRevision } from "@/domain/payroll/salary-revision"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-
-const salaryRevisionIdSchema = z.coerce.number().int()
 
 // 給与改定をレスポンス用の snake_case に整形する。
 function toResponseBody(salaryRevision: SalaryRevision) {
@@ -47,17 +45,13 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const salaryRevisionId = salaryRevisionIdSchema.safeParse(c.req.param("id"))
-
-    if (salaryRevisionId.success === false) {
-      throw new BadRequestError("invalid salary revision id")
-    }
+    const salaryRevisionId = validateIntParam(c.req.param("id"), "salary revision")
 
     const json = c.req.valid("json")
 
     const corrected = await new CorrectSalaryRevision(c).run({
       viewerRole: session.role,
-      salaryRevisionId: salaryRevisionId.data,
+      salaryRevisionId: salaryRevisionId,
       effectiveDate: json.effective_date,
       newBaseSalary: json.new_base_salary,
       reason: json.reason ?? null,
@@ -88,15 +82,11 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const salaryRevisionId = salaryRevisionIdSchema.safeParse(c.req.param("id"))
-
-  if (salaryRevisionId.success === false) {
-    throw new BadRequestError("invalid salary revision id")
-  }
+  const salaryRevisionId = validateIntParam(c.req.param("id"), "salary revision")
 
   const result = await new CancelSalaryRevision(c).run({
     viewerRole: session.role,
-    salaryRevisionId: salaryRevisionId.data,
+    salaryRevisionId: salaryRevisionId,
   })
 
   if (result instanceof Error) {
