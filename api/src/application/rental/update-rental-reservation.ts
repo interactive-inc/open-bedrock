@@ -15,6 +15,8 @@ export type ReservationNotFound = { reason: "reservation_not_found" }
 
 export type NotRequester = { reason: "not_requester" }
 
+export type NotModifiable = { reason: "not_modifiable" }
+
 /**
  * レンタル予約の品名・期間・用途を変更する。本人以外の変更を拒否する。
  */
@@ -23,7 +25,7 @@ export class UpdateRentalReservation {
 
   async run(
     command: Command,
-  ): Promise<RentalReservation | ReservationNotFound | NotRequester | Error> {
+  ): Promise<RentalReservation | ReservationNotFound | NotRequester | NotModifiable | Error> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
     const current = await reservationRepository.findById(command.reservationId)
@@ -38,6 +40,10 @@ export class UpdateRentalReservation {
 
     if (current.requesterId !== command.requesterId) {
       return { reason: "not_requester" }
+    }
+
+    if (current.status !== "requested") {
+      return { reason: "not_modifiable" }
     }
 
     const updated = current
