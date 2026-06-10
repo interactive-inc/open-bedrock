@@ -10,7 +10,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import { and, eq, or, sql } from "drizzle-orm"
+import { and, desc, eq, or, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -56,6 +56,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(knowledgeArticles)
     .where(conditions.length === 0 ? undefined : and(...conditions))
+    .orderBy(desc(knowledgeArticles.id))
     .limit(limit)
     .offset(offset)
 
