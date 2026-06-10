@@ -104,4 +104,16 @@ describe("POST /review-cycles/:cycle_id/open and /close", () => {
 
     expect(response.status).toBe(403)
   })
+
+  test("closed cycle cannot be opened (409)", async () => {
+    const response = await request("/review-cycles/2/open", await adminToken(), "POST")
+
+    expect(response.status).toBe(409)
+  })
+
+  test("draft cycle cannot be closed directly (409)", async () => {
+    const response = await request("/review-cycles/3/close", await adminToken(), "POST")
+
+    expect(response.status).toBe(409)
+  })
 })
