@@ -44,7 +44,7 @@ export async function submitSurveyResponseAction(
   }
 
   revalidatePath(`/surveys/${surveyId}`)
-  revalidatePath("/surveys/responses/me")
+  revalidatePath("/surveys/responses")
   revalidatePath(`/surveys/${surveyId}/summary`)
 
   return { status: "success", message: "回答を送信しました" }
@@ -87,7 +87,7 @@ export async function updateSurveyResponseAction(
     return { ok: false, error: "回答の変更に失敗しました" }
   }
 
-  revalidatePath("/surveys/responses/me")
+  revalidatePath("/surveys/responses")
 
   return { ok: true, error: null }
 }
@@ -110,7 +110,7 @@ export async function withdrawSurveyResponseAction(
     return { ok: false, error: "回答の取り下げに失敗しました" }
   }
 
-  revalidatePath("/surveys/responses/me")
+  revalidatePath("/surveys/responses")
 
   return { ok: true, error: null }
 }
