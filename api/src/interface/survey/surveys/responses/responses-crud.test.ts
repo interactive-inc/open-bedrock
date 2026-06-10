@@ -100,8 +100,8 @@ function ownerToken(): Promise<string> {
 // 他人（回答 id=1 の回答者ではない）。
 function otherToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }

@@ -67,8 +67,8 @@ async function createTestDb(): Promise<D1Database> {
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }
@@ -114,7 +114,7 @@ describe("POST /surveys/:survey_id/responses", () => {
 
     if (parsed.success) {
       expect(parsed.data.survey_id).toBe(2)
-      expect(parsed.data.respondent_id).toBe(99)
+      expect(parsed.data.respondent_id).toBe(13)
       expect(parsed.data.submitted_at).toBe("2026-01-01T00:00:00.000Z")
     }
   })

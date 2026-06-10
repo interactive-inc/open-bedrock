@@ -103,8 +103,8 @@ function adminToken(): Promise<string> {
 // 一般ロール（管理権限なし）。
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 99,
-    email: "you+e099@example.com",
+    employeeId: 13,
+    email: "you+e013@example.com",
     role: "member",
   })
 }
