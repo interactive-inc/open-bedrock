@@ -1,7 +1,7 @@
 import { CareerApplication } from "@/domain/career/career-application"
 import type { Context } from "@/env"
 import { careerApplications } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 
 export type AlreadyAppliedError = { reason: "already_applied" }
 
@@ -96,20 +96,20 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 指定した求人に対して指定ステータスの応募が存在するか確認する。
+  // 指定した求人に対して指定ステータスの応募件数を返す。
   async countByPostingIdAndStatus(
     postingId: number,
     status: CareerApplication["status"],
   ): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
-        .select()
+        .select({ value: count() })
         .from(careerApplications)
         .where(
           and(eq(careerApplications.postingId, postingId), eq(careerApplications.status, status)),
         )
 
-      return rows.length
+      return rows.at(0)?.value ?? 0
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to count career_applications")
     }
