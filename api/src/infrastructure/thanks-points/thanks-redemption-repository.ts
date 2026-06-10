@@ -244,15 +244,15 @@ export class ThanksRedemptionRepository {
   // 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
   async getBalance(employeeId: number): Promise<number | Error> {
     try {
-      const receivedRows = await this.c.var.database
-        .select({ points: thanks.points })
+      const [receivedRow] = await this.c.var.database
+        .select({ total: sql<number>`COALESCE(SUM(${thanks.points}), 0)` })
         .from(thanks)
         .where(eq(thanks.recipientEmployeeId, employeeId))
 
-      const received = receivedRows.reduce((sum, row) => sum + row.points, 0)
-
-      const settledRows = await this.c.var.database
-        .select({ pointCost: thanksRedemptions.pointCost })
+      const [settledRow] = await this.c.var.database
+        .select({
+          total: sql<number>`COALESCE(SUM(${thanksRedemptions.pointCost}), 0)`,
+        })
         .from(thanksRedemptions)
         .where(
           and(
@@ -261,9 +261,7 @@ export class ThanksRedemptionRepository {
           ),
         )
 
-      const settled = settledRows.reduce((sum, row) => sum + row.pointCost, 0)
-
-      return received - settled
+      return (receivedRow?.total ?? 0) - (settledRow?.total ?? 0)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to compute balance")
     }
