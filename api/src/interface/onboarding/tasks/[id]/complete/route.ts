@@ -1,11 +1,11 @@
 import { CompleteOnboardingTask } from "@/application/onboarding/complete-onboarding-task"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 
@@ -16,11 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const taskId = Number(c.req.param("id"))
-
-  if (Number.isInteger(taskId) === false) {
-    throw new BadRequestError("invalid task id")
-  }
+  const taskId = validateIntParam(c.req.param("id"), "task")
 
   const task = await new CompleteOnboardingTask(c).run({
     taskId,

@@ -8,6 +8,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 
 // POST /assets/:code/return — 貸出中の資産を在庫へ戻す（権限が必要）
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
@@ -19,7 +20,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const updated = await new ReturnAsset(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "asset"),
     now: c.env.NOW ?? new Date().toISOString(),
   })
 

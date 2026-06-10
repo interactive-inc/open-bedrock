@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -37,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const certificateRequest = await new GetCertificateRequest(c).run({
-    certificateRequestId: c.req.param("id") ?? "",
+    certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
     requesterId: viewer.employeeId,
   })
 
@@ -78,7 +79,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const certificateRequest = await new UpdateCertificateRequest(c).run({
-      certificateRequestId: c.req.param("id") ?? "",
+      certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
       requesterId: viewer.employeeId,
       certificateType: json.certificate_type,
       submitTo: json.submit_to ?? null,
@@ -115,7 +116,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelCertificateRequest(c).run({
-    certificateRequestId: c.req.param("id") ?? "",
+    certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
     requesterId: viewer.employeeId,
   })
 

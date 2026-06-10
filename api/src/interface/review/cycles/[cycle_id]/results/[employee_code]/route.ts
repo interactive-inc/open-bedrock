@@ -8,12 +8,13 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // GET /review-cycles/:cycle_id/results/:employee_code — 管理者が集計済みの評価結果を取得
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -27,11 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const cycleId = Number(c.req.param("cycle_id"))
-
-  if (Number.isInteger(cycleId) === false) {
-    throw new BadRequestError("invalid cycle id")
-  }
+  const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const cycleRows = await c.var.database
     .select()
@@ -48,7 +45,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const employeeRows = await c.var.database
     .select({ id: employees.id })
     .from(employees)
-    .where(eq(employees.code, c.req.param("employee_code") ?? ""))
+    .where(eq(employees.code, validateCodeParam(c.req.param("employee_code"), "employee")))
     .limit(1)
 
   const employeeRow = employeeRows.at(0)

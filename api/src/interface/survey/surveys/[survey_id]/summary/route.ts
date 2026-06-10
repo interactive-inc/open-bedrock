@@ -7,12 +7,12 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -33,11 +33,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const surveyId = Number(c.req.param("survey_id"))
-
-  if (!Number.isInteger(surveyId)) {
-    throw new BadRequestError("invalid survey id")
-  }
+  const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
   const surveyRows = await c.var.database
     .select()

@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { employeeRoleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -36,7 +37,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const employee = await new GetEmployee(c).run({ code: c.req.param("code") ?? "" })
+  const employee = await new GetEmployee(c).run({
+    code: validateCodeParam(c.req.param("code"), "employee"),
+  })
 
   if (employee instanceof Error) {
     throw new InternalError("failed to load employee")
@@ -76,7 +79,7 @@ export const PUT = factory.createHandlers(
     const updated = await new UpdateEmployee(c).run({
       viewerRole: session.role,
       viewerEmployeeId: session.employeeId,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "employee"),
       profile: {
         name: json.name,
         email: json.email,
@@ -127,7 +130,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new DeleteEmployee(c).run({
     viewerRole: session.role,
     viewerEmployeeId: session.employeeId,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "employee"),
   })
 
   if (result instanceof Error) {

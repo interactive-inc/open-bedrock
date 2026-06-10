@@ -2,12 +2,12 @@ import { DeleteNotification } from "@/application/notification/delete-notificati
 import { GetNotification } from "@/application/notification/get-notification"
 import type { Notification } from "@/domain/notification/notification"
 import {
-  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
@@ -34,11 +34,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const notificationId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(notificationId) === false) {
-    throw new BadRequestError("invalid notification id")
-  }
+  const notificationId = validateIntParam(c.req.param("id"), "notification")
 
   const result = await new GetNotification(c).run({
     notificationId,
@@ -68,11 +64,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const notificationId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(notificationId) === false) {
-    throw new BadRequestError("invalid notification id")
-  }
+  const notificationId = validateIntParam(c.req.param("id"), "notification")
 
   const result = await new DeleteNotification(c).run({
     notificationId,

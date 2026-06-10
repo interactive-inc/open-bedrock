@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -38,7 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const familyCareLeave = await new GetFamilyCareLeave(c).run({
-    familyCareLeaveId: c.req.param("id") ?? "",
+    familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
     employeeId: viewer.employeeId,
   })
 
@@ -84,7 +85,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const familyCareLeave = await new UpdateFamilyCareLeave(c).run({
-      familyCareLeaveId: c.req.param("id") ?? "",
+      familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
       employeeId: viewer.employeeId,
       leaveKind: json.leave_kind,
       startDate: json.start_date,
@@ -121,7 +122,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelFamilyCareLeave(c).run({
-    familyCareLeaveId: c.req.param("id") ?? "",
+    familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
     employeeId: viewer.employeeId,
   })
 

@@ -3,6 +3,7 @@ import { RemoveMySkill } from "@/application/skill/remove-my-skill"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 
 // GET /skills/me/:skill_code — 本人の登録スキルを1件取得（スキルマスタ結合済み）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -14,7 +15,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new GetMySkill(c).run({
     employeeId: session.employeeId,
-    skillCode: c.req.param("skill_code") ?? "",
+    skillCode: validateCodeParam(c.req.param("skill_code"), "skill"),
   })
 
   if (result instanceof Error) {
@@ -47,7 +48,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new RemoveMySkill(c).run({
     employeeId: session.employeeId,
-    skillCode: c.req.param("skill_code") ?? "",
+    skillCode: validateCodeParam(c.req.param("skill_code"), "skill"),
   })
 
   if (result instanceof Error) {

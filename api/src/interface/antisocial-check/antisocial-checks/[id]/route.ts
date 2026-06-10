@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -37,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const antisocialCheck = await new GetAntisocialCheck(c).run({
-    antisocialCheckId: c.req.param("id") ?? "",
+    antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
     requesterId: viewer.employeeId,
   })
 
@@ -78,7 +79,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
-      antisocialCheckId: c.req.param("id") ?? "",
+      antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
       requesterId: viewer.employeeId,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,
@@ -115,7 +116,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelAntisocialCheck(c).run({
-    antisocialCheckId: c.req.param("id") ?? "",
+    antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
     requesterId: viewer.employeeId,
   })
 
