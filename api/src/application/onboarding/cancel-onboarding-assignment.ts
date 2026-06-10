@@ -33,7 +33,7 @@ export class CancelOnboardingAssignment {
     const current = await assignmentRepository.findById(command.assignmentId)
 
     if (current instanceof Error) {
-      return current
+      return { reason: "assignment_not_found" }
     }
 
     if (current.status === "completed") {
