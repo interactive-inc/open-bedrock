@@ -2,7 +2,7 @@ import { Application } from "@/domain/application/application"
 import { ApplicationApproval } from "@/domain/application/application-approval"
 import type { Context } from "@/env"
 import { applicationApprovals, applications } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 
 export class ApplicationRepository {
   constructor(private readonly c: Context) {}
@@ -74,23 +74,24 @@ export class ApplicationRepository {
     }
   }
 
-  async update(application: Application): Promise<Application | null | Error> {
+  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+  // 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。確定時は current_step も外す。
+  async decideFromPending(props: {
+    applicationId: number
+    status: "approved" | "rejected"
+  }): Promise<Application | null | Error> {
     try {
-      if (application.id === null) {
-        return new Error("cannot update unsaved application")
-      }
-
       const rows = await this.c.var.database
         .update(applications)
-        .set({ status: application.status, currentStep: application.currentStep })
-        .where(eq(applications.id, application.id))
+        .set({ status: props.status, currentStep: null })
+        .where(and(eq(applications.id, props.applicationId), eq(applications.status, "pending")))
         .returning()
 
       const row = rows.at(0)
 
       return row === undefined ? null : Application.fromRow(row)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update application")
+      return error instanceof Error ? error : new Error("failed to decide application")
     }
   }
 
