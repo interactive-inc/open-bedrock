@@ -68,7 +68,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError("not a participant")
   }
 
-  return c.json(await toResponseBody(c, oneOnOne), 200)
+  const body = await toResponseBody(c, oneOnOne)
+  const safeBody = {
+    ...body,
+    manager_note: viewer.employeeId === oneOnOne.managerId ? body.manager_note : null,
+  }
+  return c.json(safeBody, 200)
 })
 
 // PUT /oneonone/:id — 1on1 の記録内容を変更（記録した上長のみ）
