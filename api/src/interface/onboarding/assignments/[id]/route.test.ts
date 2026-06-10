@@ -251,6 +251,16 @@ describe("PUT /onboarding/assignments/:id", () => {
 })
 
 describe("DELETE /onboarding/assignments/:id", () => {
+  test("returns 403 for non-privileged role", async () => {
+    const response = await request({
+      path: "/onboarding/assignments/100",
+      token: await token(6, "member"),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
   test("a privileged role cancels the assignment and gets 204", async () => {
     const db = await createTestDb()
 

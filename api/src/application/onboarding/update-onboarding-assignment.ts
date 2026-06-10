@@ -1,5 +1,5 @@
 import type { Employee } from "@/domain/employee/employee"
-import { canViewEmployeeOnboarding } from "@/domain/onboarding/can-view-employee-onboarding"
+import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -33,7 +33,7 @@ export class UpdateOnboardingAssignment {
   ): Promise<
     UpdateOnboardingAssignmentResult | AssignmentNotFound | Forbidden | NotModifiable | Error
   > {
-    if (canViewEmployeeOnboarding({ viewerRole: command.viewerRole }) === false) {
+    if (canManageOnboarding(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
 
