@@ -4,6 +4,8 @@ import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-reposit
 
 export type Command = {
   employeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,9 @@ export class ListMyOneOnOnes {
   async run(command: Command): Promise<ReadonlyArray<OneOnOne> | Error> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    return await oneOnOneRepository.findByParticipantId(command.employeeId)
+    return await oneOnOneRepository.findByParticipantId(command.employeeId, {
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

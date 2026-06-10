@@ -1,6 +1,12 @@
 import { ListMyOneOnOnes } from "@/application/oneonone/list-my-one-on-ones"
 import { factory } from "@/lib/factory"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
 import { aliasedTable, eq, inArray } from "drizzle-orm"
@@ -17,7 +23,25 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const oneOnOnesList = await new ListMyOneOnOnes(c).run({ employeeId: viewer.employeeId })
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
+  const oneOnOnesList = await new ListMyOneOnOnes(c).run({
+    employeeId: viewer.employeeId,
+    limit,
+    offset,
+  })
 
   if (oneOnOnesList instanceof Error) {
     throw new InternalError("failed to load one-on-ones")

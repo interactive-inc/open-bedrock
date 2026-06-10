@@ -20,13 +20,18 @@ export class OneOnOneRepository {
   }
 
   // 本人が参加した（メンバー or マネージャー）1on1 を開催日時の降順で返す。
-  async findByParticipantId(employeeId: number): Promise<ReadonlyArray<OneOnOne> | Error> {
+  async findByParticipantId(
+    employeeId: number,
+    options: { limit: number; offset: number },
+  ): Promise<ReadonlyArray<OneOnOne> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(oneOnOnes)
         .where(or(eq(oneOnOnes.memberId, employeeId), eq(oneOnOnes.managerId, employeeId)))
         .orderBy(desc(oneOnOnes.heldAt))
+        .limit(options.limit)
+        .offset(options.offset)
 
       return rows.map((row) => OneOnOne.fromRow(row))
     } catch (error) {
