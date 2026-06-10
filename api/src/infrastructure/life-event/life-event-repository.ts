@@ -6,7 +6,6 @@ import { asc, eq } from "drizzle-orm"
 export class LifeEventRepository {
   constructor(private readonly c: Context) {}
 
-  // 届出者本人のライフイベント届出を発生日の昇順で返す。
   // 届出者本人のライフイベント届出をイベント日の昇順でページングして返す。
   async findByEmployeeId(props: {
     employeeId: number

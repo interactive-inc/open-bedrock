@@ -6,8 +6,7 @@ import { and, asc, eq } from "drizzle-orm"
 export class ResignationRepository {
   constructor(private readonly c: Context) {}
 
-  // 申請者本人の退職申請を退職希望日の昇順で返す。
-  // 申請者本人の退職申請を退職日の昇順でページングして返す。
+  // 申請者本人の退職申請を退職希望日の昇順でページングして返す。
   async findByEmployeeId(props: {
     employeeId: number
     limit: number

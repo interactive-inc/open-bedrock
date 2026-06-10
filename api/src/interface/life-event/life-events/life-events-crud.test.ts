@@ -189,23 +189,48 @@ describe("GET /life-events/me", () => {
   })
 
   test("applies limit and offset to the listing", async () => {
-    const limited = await request({
-      path: "/life-events/me?limit=1",
-      token: await applicantToken(),
-    })
+    // 同一 DB に 2 件目を作成し、limit が件数を絞り offset が先頭を飛ばすことを検証する。
+    const db = await createTestDb()
+
+    const token = await applicantToken()
+
+    const bindings = { DB: db, JWT_SECRET: jwtSecret, NOW: "2026-01-01T00:00:00.000Z" }
+
+    const created = await app.request(
+      "/life-events",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          event_type: "childbirth",
+          event_date: "2026-09-01",
+          detail: "第二子の出生届",
+        }),
+      },
+      bindings,
+    )
+
+    expect(created.status).toBe(201)
+
+    const limited = await app.request(
+      "/life-events/me?limit=1",
+      { headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
 
     const limitedRows = z.array(lifeEventResponseSchema).parse(await limited.json())
 
     expect(limitedRows.length).toBe(1)
 
-    const skipped = await request({
-      path: "/life-events/me?offset=1",
-      token: await applicantToken(),
-    })
+    const skipped = await app.request(
+      "/life-events/me?offset=1",
+      { headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
 
     const skippedRows = z.array(lifeEventResponseSchema).parse(await skipped.json())
 
-    expect(skippedRows.length).toBe(0)
+    expect(skippedRows.length).toBe(1)
   })
 
   test("returns 401 without a bearer token", async () => {

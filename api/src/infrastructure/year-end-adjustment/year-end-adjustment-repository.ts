@@ -6,7 +6,6 @@ import { and, desc, eq } from "drizzle-orm"
 export class YearEndAdjustmentRepository {
   constructor(private readonly c: Context) {}
 
-  // 本人の年末調整申告を対象年の降順で返す。
   // 本人の年末調整申告を対象年の降順でページングして返す。
   async findByEmployeeId(props: {
     employeeId: number
