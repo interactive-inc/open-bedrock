@@ -237,6 +237,26 @@ describe("GET /resignations/me", () => {
     }
   })
 
+  test("applies limit and offset to the listing", async () => {
+    const limited = await request({
+      path: "/resignations/me?limit=1",
+      token: await applicantToken(),
+    })
+
+    const limitedRows = z.array(resignationResponseSchema).parse(await limited.json())
+
+    expect(limitedRows.length).toBe(1)
+
+    const skipped = await request({
+      path: "/resignations/me?offset=1",
+      token: await applicantToken(),
+    })
+
+    const skippedRows = z.array(resignationResponseSchema).parse(await skipped.json())
+
+    expect(skippedRows.length).toBe(0)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/resignations/me", token: null })
 

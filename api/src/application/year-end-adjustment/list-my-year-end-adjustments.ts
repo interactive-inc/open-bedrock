@@ -4,6 +4,8 @@ import { YearEndAdjustmentRepository } from "@/infrastructure/year-end-adjustmen
 
 export type Command = {
   employeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyYearEndAdjustments {
   async run(command: Command): Promise<ReadonlyArray<YearEndAdjustment> | Error> {
     const yearEndAdjustmentRepository = new YearEndAdjustmentRepository(this.c)
 
-    return await yearEndAdjustmentRepository.findByEmployeeId(command.employeeId)
+    return await yearEndAdjustmentRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

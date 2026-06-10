@@ -186,6 +186,26 @@ describe("GET /year-end-adjustments/me", () => {
     }
   })
 
+  test("applies limit and offset to the listing", async () => {
+    const limited = await request({
+      path: "/year-end-adjustments/me?limit=1",
+      token: await applicantToken(),
+    })
+
+    const limitedRows = z.array(yearEndAdjustmentResponseSchema).parse(await limited.json())
+
+    expect(limitedRows.length).toBe(1)
+
+    const skipped = await request({
+      path: "/year-end-adjustments/me?offset=1",
+      token: await applicantToken(),
+    })
+
+    const skippedRows = z.array(yearEndAdjustmentResponseSchema).parse(await skipped.json())
+
+    expect(skippedRows.length).toBe(0)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/year-end-adjustments/me", token: null })
 

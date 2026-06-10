@@ -4,6 +4,8 @@ import { ResignationRepository } from "@/infrastructure/resignation/resignation-
 
 export type Command = {
   employeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyResignations {
   async run(command: Command): Promise<ReadonlyArray<Resignation> | Error> {
     const resignationRepository = new ResignationRepository(this.c)
 
-    return await resignationRepository.findByEmployeeId(command.employeeId)
+    return await resignationRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }
