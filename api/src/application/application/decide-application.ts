@@ -22,6 +22,8 @@ export type AlreadyDecided = { reason: "already_decided" }
 /**
  * 申請のステータスを pending からの条件付き UPDATE で確定し、勝った場合のみ承認/却下を記録する。
  * 並行リクエストは条件付き UPDATE でどちらか 1 件しか確定できず、承認記録も重複しない。
+ * 確定後に addApproval が失敗した場合は status のみ確定し承認記録が欠損しうる（D1 に
+ * 対話的トランザクションが無いことによる許容済みトレードオフ。Error は呼び出し元へ伝播する）。
  */
 export class DecideApplication {
   constructor(private readonly c: Context) {}

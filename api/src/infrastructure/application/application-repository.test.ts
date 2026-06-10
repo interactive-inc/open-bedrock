@@ -72,6 +72,16 @@ describe("ApplicationRepository", () => {
     expect(decided.currentStep).toBeNull()
   })
 
+  test("decideFromPending returns null for an unknown application id", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const decided = await repository.decideFromPending({ applicationId: 99999, status: "approved" })
+
+    expect(decided).toBeNull()
+  })
+
   test("decideFromPending returns null for an already decided application", async () => {
     const { context } = createTestContext()
 
