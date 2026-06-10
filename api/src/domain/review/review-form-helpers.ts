@@ -1,0 +1,32 @@
+// review_forms 行の文字列カラムを型安全な値域に変換するヘルパー群。
+// ドメイン層（ReviewForm.fromRow）と interface 層の読み取り GET で共有する。
+
+export function toReviewerType(value: string): "self" | "manager" | "peer" | "subordinate" {
+  if (value === "manager") {
+    return "manager"
+  }
+
+  if (value === "peer") {
+    return "peer"
+  }
+
+  if (value === "subordinate") {
+    return "subordinate"
+  }
+
+  return "self"
+}
+
+export function toFormStatus(value: string): "pending" | "submitted" {
+  return value === "submitted" ? "submitted" : "pending"
+}
+
+export function toAnswers(value: string): ReadonlyArray<unknown> {
+  try {
+    const decoded: unknown = JSON.parse(value)
+
+    return Array.isArray(decoded) ? decoded : []
+  } catch {
+    return []
+  }
+}
