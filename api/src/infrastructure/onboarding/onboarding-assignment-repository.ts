@@ -7,40 +7,45 @@ import { asc, eq, inArray } from "drizzle-orm"
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
 
+  // assignment INSERT + 全タスク INSERT を D1 batch で 1 トランザクションにまとめる。
+  // タスクの assignment_id は MAX(id) サブクエリで参照し、アプリ側で id を受け渡す必要をなくす。
   async create(assignment: OnboardingAssignment): Promise<OnboardingAssignment | Error> {
     try {
-      const assignmentRows = await this.c.var.database
-        .insert(onboardingAssignments)
-        .values({
-          employeeId: assignment.employeeId,
-          templateCode: assignment.templateCode,
-          kind: assignment.kind,
-          status: assignment.status,
-          assignedAt: assignment.assignedAt,
-        })
-        .returning()
+      const assignmentStmt = this.c.env.DB.prepare(
+        `INSERT INTO onboarding_assignments (employee_id, template_code, kind, status, assigned_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)
+         RETURNING id, employee_id, template_code, kind, status, assigned_at`,
+      ).bind(
+        assignment.employeeId,
+        assignment.templateCode,
+        assignment.kind,
+        assignment.status,
+        assignment.assignedAt,
+      )
 
-      const assignmentRow = assignmentRows.at(0)
+      // last_insert_rowid() は直後の 1 文でしか使えない（タスク INSERT で上書きされる）。
+      // assignment は autoincrement なので MAX(id) はバッチ内で安定して参照できる。
+      const taskStmts = assignment.tasks.map((task) =>
+        this.c.env.DB.prepare(
+          `INSERT INTO onboarding_tasks (assignment_id, template_task_code, title, sort_order, status, completed_at)
+           VALUES ((SELECT MAX(id) FROM onboarding_assignments), ?1, ?2, ?3, ?4, ?5)`,
+        ).bind(
+          task.templateTaskCode,
+          task.title,
+          task.order,
+          task.status,
+          task.completedAt,
+        ),
+      )
+
+      const results = await this.c.env.DB.batch([assignmentStmt, ...taskStmts])
+
+      const assignmentRow = results[0]?.results?.at(0) as
+        | { id: number }
+        | undefined
 
       if (assignmentRow === undefined) {
         return new Error("failed to insert onboarding assignment")
-      }
-
-      if (assignment.tasks.length > 0) {
-        const taskStmts = assignment.tasks.map((task) =>
-          this.c.var.database.insert(onboardingTasks).values({
-            assignmentId: assignmentRow.id,
-            templateTaskCode: task.templateTaskCode,
-            title: task.title,
-            sortOrder: task.order,
-            status: task.status,
-            completedAt: task.completedAt,
-          }),
-        )
-
-        await this.c.var.database.batch(
-          taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
-        )
       }
 
       const result = await this.findById(assignmentRow.id)
