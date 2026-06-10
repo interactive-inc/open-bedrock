@@ -1,41 +1,61 @@
-import { factory } from "@/lib/factory"
+// ログインエンドポイント向け IP ベースのレート制限ユーティリティ。
+// Workers KV を使い、同一 IP からの失敗が閾値を超えた場合に 429 を返す。
+//
+// 設計: 「タイムスタンプリスト」方式
+//   キー: login:fail:{ip}
+//   値:   失敗タイムスタンプ（Unix 秒）の配列（JSON）
+//   ウィンドウ内のタイムスタンプ数が LIMIT を超えたら 429。
+//   成功時はキーごと削除してカウンタをリセットする。
+//
+// アトミック性について:
+//   KV は "last write wins" のため、高頻度リクエストでタイムスタンプが
+//   一部上書きされてもカウントが過小になる方向にしか働かない（過剰ブロックはしない）。
+//   これは Workers KV の特性上の既知の許容範囲とする。
 
-// ログインエンドポイント向け IP ベースのレート制限ミドルウェア。
-// Workers KV を使い、同一 IP から短時間に連続してリクエストが来た場合に 429 を返す。
+import type { KVNamespace } from "@cloudflare/workers-types"
 
-const LIMIT = 5 // 同一ウィンドウ内の最大リクエスト数
-const WINDOW_SECONDS = 60 // ウィンドウ幅（秒）。現在時刻をこの単位で丸める
-const TTL_SECONDS = 900 // KV エントリの有効期限（15分）
+const LIMIT = 5 // ウィンドウ内の最大失敗数
+const WINDOW_SECONDS = 900 // ウィンドウ幅（秒）。15分
 
-// 現在時刻（秒）を WINDOW_SECONDS 単位で丸めたウィンドウ番号を返す。
-function currentWindow(nowMs: number): number {
-  return Math.floor(nowMs / 1000 / WINDOW_SECONDS)
+function kvKey(ip: string): string {
+  return `login:fail:${ip}`
 }
 
-export const loginRateLimitMiddleware = factory.createMiddleware(async (c, next) => {
-  const kv = c.env.RATE_LIMIT
+/**
+ * ウィンドウ内の失敗数が閾値を超えているかチェックする。
+ * 超えていれば true を返す（呼び出し側は 429 を返すこと）。
+ */
+export async function checkRateLimit(kv: KVNamespace, ip: string): Promise<boolean> {
+  const raw = await kv.get(kvKey(ip))
+  if (raw === null) return false
 
-  // KV が未設定の環境（ローカル dev 等）はスキップする。
-  if (kv === undefined) {
-    return next()
-  }
+  const timestamps: number[] = JSON.parse(raw)
+  const now = Math.floor(Date.now() / 1000)
+  const cutoff = now - WINDOW_SECONDS
+  const recent = timestamps.filter((t) => t >= cutoff)
 
-  const ip =
-    c.req.header("CF-Connecting-IP") ??
-    c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() ??
-    "unknown"
+  return recent.length >= LIMIT
+}
 
-  const window = currentWindow(Date.now())
-  const key = `login:ip:${ip}:${window}`
+/**
+ * ログイン失敗を記録する。
+ * ウィンドウ外の古いタイムスタンプは同時に除去する。
+ */
+export async function recordFailure(kv: KVNamespace, ip: string): Promise<void> {
+  const raw = await kv.get(kvKey(ip))
+  const existing: number[] = raw !== null ? JSON.parse(raw) : []
 
-  const raw = await kv.get(key)
-  const count = raw !== null ? Number(raw) : 0
+  const now = Math.floor(Date.now() / 1000)
+  const cutoff = now - WINDOW_SECONDS
+  const recent = existing.filter((t) => t >= cutoff)
+  recent.push(now)
 
-  if (count >= LIMIT) {
-    return c.json({ error: "too many requests" }, 429)
-  }
+  await kv.put(kvKey(ip), JSON.stringify(recent), { expirationTtl: WINDOW_SECONDS })
+}
 
-  await kv.put(key, String(count + 1), { expirationTtl: TTL_SECONDS })
-
-  return next()
-})
+/**
+ * ログイン成功時にカウンタをリセットする（キーを削除する）。
+ */
+export async function clearFailures(kv: KVNamespace, ip: string): Promise<void> {
+  await kv.delete(kvKey(ip))
+}

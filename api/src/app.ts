@@ -4,7 +4,6 @@ import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
-import { loginRateLimitMiddleware } from "@/interface/shared/login-rate-limit"
 import { factory } from "@/lib/factory"
 import * as applicationApproveRoute from "@/interface/application/applications/[id]/approve/route"
 import * as applicationDetailRoute from "@/interface/application/applications/[id]/route"
@@ -201,7 +200,7 @@ export const app = factory
     return c.json({ error: "internal server error" }, 500)
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
-  .post("/auth/login", loginRateLimitMiddleware, ...authLoginRoute.POST)
+  .post("/auth/login", ...authLoginRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/employees", ...employeeListRoute.GET)
   .get("/dashboard", ...dashboardRoute.GET)
