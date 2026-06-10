@@ -43,12 +43,18 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
+    const fiscalYear = toFiscalYear(c.env.NOW ?? new Date().toISOString())
+
+    if (fiscalYear === null) {
+      throw new InternalError("invalid server time")
+    }
+
     const updated = await new DecideLeaveRequest(c).run({
       leaveRequestId,
       approverId: session.employeeId,
       action: "reject",
       comment: body.comment,
-      fiscalYear: toFiscalYear(c.env.NOW ?? new Date().toISOString()),
+      fiscalYear,
     })
 
     if (updated instanceof Error) {
