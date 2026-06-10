@@ -8,9 +8,15 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { aliasedTable, eq, or } from "drizzle-orm"
+import { aliasedTable, desc, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 const members = aliasedTable(employees, "members")
@@ -25,6 +31,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select({ oneOnOne: oneOnOnes, memberName: members.name, managerName: managers.name })
     .from(oneOnOnes)
@@ -33,6 +53,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(
       or(eq(oneOnOnes.memberId, session.employeeId), eq(oneOnOnes.managerId, session.employeeId)),
     )
+    .orderBy(desc(oneOnOnes.heldAt))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.oneOnOne.id,
