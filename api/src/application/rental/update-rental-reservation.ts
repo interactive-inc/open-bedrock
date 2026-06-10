@@ -54,6 +54,16 @@ export class UpdateRentalReservation {
       })
       .withPurpose(command.purpose)
 
-    return await reservationRepository.update(updated)
+    const result = await reservationRepository.update(updated)
+
+    if (result instanceof Error) {
+      return result
+    }
+
+    if (result === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return result
   }
 }
