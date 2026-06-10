@@ -125,7 +125,7 @@ export async function createSalaryRevisionAction(
   return { ok: true, error: null }
 }
 
-// 給与明細の訂正 Server Action。payslip_id/period/base_salary/net_pay 必須、手当・控除は任意。
+// 給与明細の訂正 Server Action。payslip_id/period/base_salary/allowances/deductions/net_pay 必須（0 以上の整数）。
 // 金額は api 側で再計算せず、入力値をそのまま記録する。
 export async function correctPayslipAction(
   previousState: PayrollAdminFormState,
