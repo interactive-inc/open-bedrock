@@ -145,4 +145,159 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("includes all conflicts when a single room has multiple overlapping reservations", async () => {
+    // Build a DB with one room that has two reservations both overlapping the query window.
+    const db = createD1TestDatabase(loadSchema())
+
+    await seedD1(db, "employees", [
+      {
+        id: 4,
+        code: "E004",
+        name: "Manager",
+        email: "you+e004@example.com",
+        password_hash: "hash",
+        role: "manager",
+        dept_id: 1,
+        dept_name: "Engineering",
+        position: "Manager",
+        status: "active",
+      },
+    ])
+
+    await seedD1(db, "rooms", [{ id: 10, name: "Room Alpha", capacity: 5, location: null }])
+
+    await seedD1(db, "room_reservations", [
+      {
+        id: "10000000-0000-0000-0000-000000000001",
+        room_id: 10,
+        reserver_id: 4,
+        start_at: "2026-06-01T09:00:00Z",
+        end_at: "2026-06-01T10:00:00Z",
+        purpose: "First overlap",
+      },
+      {
+        id: "10000000-0000-0000-0000-000000000002",
+        room_id: 10,
+        reserver_id: 4,
+        start_at: "2026-06-01T09:30:00Z",
+        end_at: "2026-06-01T10:30:00Z",
+        purpose: "Second overlap",
+      },
+    ])
+
+    const token = await managerToken()
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/rooms/availability?start_at=2026-06-01T09:15:00Z&end_at=2026-06-01T10:15:00Z&capacity=0",
+      token,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+
+      const roomAlpha = parsed.data.find((row) => row.room.id === 10)
+
+      expect(roomAlpha?.available).toBe(false)
+      expect(roomAlpha?.conflicts.length).toBe(2)
+
+      const startTimes = roomAlpha?.conflicts.map((c) => c.startAt).sort() ?? []
+
+      expect(startTimes).toEqual(["2026-06-01T09:00:00Z", "2026-06-01T09:30:00Z"])
+    }
+  })
+
+  test("groups conflicts correctly when multiple rooms each have overlapping reservations", async () => {
+    // Build a DB with two rooms, each having a distinct set of overlapping reservations.
+    const db = createD1TestDatabase(loadSchema())
+
+    await seedD1(db, "employees", [
+      {
+        id: 4,
+        code: "E004",
+        name: "Manager",
+        email: "you+e004@example.com",
+        password_hash: "hash",
+        role: "manager",
+        dept_id: 1,
+        dept_name: "Engineering",
+        position: "Manager",
+        status: "active",
+      },
+    ])
+
+    await seedD1(db, "rooms", [
+      { id: 20, name: "Room Beta", capacity: 4, location: null },
+      { id: 21, name: "Room Gamma", capacity: 4, location: null },
+    ])
+
+    await seedD1(db, "room_reservations", [
+      // Room Beta: two conflicts
+      {
+        id: "20000000-0000-0000-0000-000000000001",
+        room_id: 20,
+        reserver_id: 4,
+        start_at: "2026-06-02T10:00:00Z",
+        end_at: "2026-06-02T11:00:00Z",
+        purpose: "Beta conflict 1",
+      },
+      {
+        id: "20000000-0000-0000-0000-000000000002",
+        room_id: 20,
+        reserver_id: 4,
+        start_at: "2026-06-02T10:30:00Z",
+        end_at: "2026-06-02T11:30:00Z",
+        purpose: "Beta conflict 2",
+      },
+      // Room Gamma: one conflict
+      {
+        id: "20000000-0000-0000-0000-000000000003",
+        room_id: 21,
+        reserver_id: 4,
+        start_at: "2026-06-02T10:15:00Z",
+        end_at: "2026-06-02T10:45:00Z",
+        purpose: "Gamma conflict 1",
+      },
+    ])
+
+    const token = await managerToken()
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/rooms/availability?start_at=2026-06-02T10:00:00Z&end_at=2026-06-02T11:30:00Z&capacity=0",
+      token,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(2)
+
+      const roomBeta = parsed.data.find((row) => row.room.id === 20)
+
+      expect(roomBeta?.available).toBe(false)
+      expect(roomBeta?.conflicts.length).toBe(2)
+
+      const betaStartTimes = roomBeta?.conflicts.map((c) => c.startAt).sort() ?? []
+
+      expect(betaStartTimes).toEqual(["2026-06-02T10:00:00Z", "2026-06-02T10:30:00Z"])
+
+      const roomGamma = parsed.data.find((row) => row.room.id === 21)
+
+      expect(roomGamma?.available).toBe(false)
+      expect(roomGamma?.conflicts.length).toBe(1)
+      expect(roomGamma?.conflicts[0]?.startAt).toBe("2026-06-02T10:15:00Z")
+    }
+  })
 })
