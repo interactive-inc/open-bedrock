@@ -1,17 +1,15 @@
 import { ApplyToCareerPosting } from "@/application/career/apply-to-career-posting"
 import { factory } from "@/lib/factory"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
-  BadRequestError,
   ConflictError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { z } from "zod"
-
-const postingIdSchema = z.coerce.number().int().positive()
 
 export const POST = factory.createHandlers(
   verifyBearer,
@@ -22,11 +20,7 @@ export const POST = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const postingId = postingIdSchema.safeParse(c.req.param("posting_id"))
-
-    if (postingId.success === false) {
-      throw new BadRequestError("invalid posting id")
-    }
+    const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
     const session = c.var.session
 
@@ -37,7 +31,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const view = await new ApplyToCareerPosting(c).run({
-      postingId: postingId.data,
+      postingId,
       applicantId: session.employeeId,
       message: json.message ?? null,
     })

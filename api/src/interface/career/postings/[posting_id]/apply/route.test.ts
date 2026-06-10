@@ -144,7 +144,7 @@ describe("POST /career/postings/:posting_id/apply", () => {
     expect(response.status).toBe(401)
   })
 
-  test("returns 400 when the posting id is not a positive integer", async () => {
+  test("returns 404 when the posting id is not a positive integer", async () => {
     const response = await request({
       path: "/career/postings/abc/apply",
       token: await tokenForEmployee(2),
@@ -152,7 +152,7 @@ describe("POST /career/postings/:posting_id/apply", () => {
       body: { message: null },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 when the posting does not exist", async () => {

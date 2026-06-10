@@ -1,15 +1,14 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { canDecideLeave } from "@/domain/leave/can-decide-leave"
 import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
-import { toLeaveRequestId } from "@/domain/leave/to-leave-request-id"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -35,11 +34,7 @@ export const POST = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const leaveRequestId = toLeaveRequestId(c.req.param("id") ?? "")
-
-    if (leaveRequestId === null) {
-      throw new BadRequestError("invalid leave request id")
-    }
+    const leaveRequestId = validateIntParam(c.req.param("id"), "leave request")
 
     const body = c.req.valid("json")
 
