@@ -40,7 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     member_name: row.memberName ?? "",
     manager_name: row.managerName ?? "",
     topics: row.oneOnOne.topics,
-    manager_note: row.oneOnOne.managerNote,
+    manager_note: session.employeeId === row.oneOnOne.managerId ? row.oneOnOne.managerNote : null,
     next_action: row.oneOnOne.nextAction,
   }))
 
