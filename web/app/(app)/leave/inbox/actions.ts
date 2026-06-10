@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { approveLeaveRequest } from "@/lib/api/approve-leave-request"
+import { getMe } from "@/lib/api/get-me"
 import { rejectLeaveRequest } from "@/lib/api/reject-leave-request"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 
 export type LeaveDecisionState = {
   ok: boolean
@@ -44,6 +46,12 @@ export async function decideLeaveRequestAction(
   previousState: LeaveDecisionState,
   formData: FormData,
 ): Promise<LeaveDecisionState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canDecideLeave(currentUser.role) === false) {
+    return { ok: false, error: "休暇申請を承認・却下する権限がありません" }
+  }
+
   const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {

@@ -1,8 +1,10 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import { createApplicationTemplate } from "@/lib/api/create-application-template"
 import { deleteApplicationTemplate } from "@/lib/api/delete-application-template"
+import { getMe } from "@/lib/api/get-me"
 import { updateApplicationTemplate } from "@/lib/api/update-application-template"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
@@ -41,6 +43,12 @@ export async function createApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+    return { ok: false, error: "テンプレートを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -101,6 +109,12 @@ export async function updateApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+    return { ok: false, error: "テンプレートを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -160,6 +174,12 @@ export async function deleteApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
 ): Promise<ApplicationTemplateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+    return { ok: false, error: "テンプレートを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
