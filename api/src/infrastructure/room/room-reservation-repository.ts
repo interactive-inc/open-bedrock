@@ -109,6 +109,34 @@ export class RoomReservationRepository {
     }
   }
 
+  // 重複予約がなければ UPDATE し、競合があれば null を返す。チェックと UPDATE をアトミックに行う。
+  async updateIfNoOverlap(reservation: RoomReservation): Promise<RoomReservation | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`UPDATE room_reservations
+            SET start_at = ${reservation.startAt},
+                end_at   = ${reservation.endAt},
+                purpose  = ${reservation.purpose}
+            WHERE id = ${reservation.id}
+              AND NOT EXISTS (
+                SELECT 1 FROM room_reservations
+                WHERE room_id = ${reservation.roomId}
+                  AND id != ${reservation.id}
+                  AND start_at < ${reservation.endAt}
+                  AND end_at   > ${reservation.startAt}
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      return reservation
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update room_reservation")
+    }
+  }
+
   // 予約の開始終了時刻と用途を更新する。
   async update(reservation: RoomReservation): Promise<RoomReservation | Error> {
     try {

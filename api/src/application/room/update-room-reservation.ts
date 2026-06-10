@@ -41,25 +41,21 @@ export class UpdateRoomReservation {
       return { reason: "not_reserver" }
     }
 
-    const overlapping = await reservationRepository.findOverlapping({
-      roomId: current.roomId,
-      startAt: command.startAt,
-      endAt: command.endAt,
-      excludeReservationId: current.id,
-    })
-
-    if (overlapping instanceof Error) {
-      return overlapping
-    }
-
-    if (overlapping.length > 0) {
-      return { reason: "room_already_reserved" }
-    }
-
     const updated = current
       .withRescheduled({ startAt: command.startAt, endAt: command.endAt })
       .withPurpose(command.purpose)
 
-    return await reservationRepository.update(updated)
+    const result = await reservationRepository.updateIfNoOverlap(updated)
+
+    if (result instanceof Error) {
+      return result
+    }
+
+    // null は並行リクエストによる重複（存在は確認済みのため）
+    if (result === null) {
+      return { reason: "room_already_reserved" }
+    }
+
+    return result
   }
 }
