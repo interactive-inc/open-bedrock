@@ -125,6 +125,41 @@ describe("POST /expenses/:id/approve", () => {
     expect(response.status).toBe(200)
   })
 
+  test("returns 409 for a second decision and keeps a single approval record", async () => {
+    // seed の expense_approvals は空である前提（カウントは 1 回目の承認分のみになる）。
+    const db = await createTestDb()
+
+    const token = await tokenFor(2, "manager")
+
+    const first = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/expenses/1/approve",
+      token,
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(first.status).toBe(200)
+
+    const second = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/expenses/1/reject",
+      token,
+      method: "POST",
+      body: { comment: "too late" },
+    })
+
+    expect(second.status).toBe(409)
+
+    const approvals = await db
+      .prepare("SELECT COUNT(*) AS approvalCount FROM expense_approvals WHERE expense_id = 1")
+      .first("approvalCount")
+
+    expect(approvals).toBe(1)
+  })
+
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/expenses/1/approve",

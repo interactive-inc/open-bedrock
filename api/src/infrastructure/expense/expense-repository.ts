@@ -2,7 +2,7 @@ import { Expense } from "@/domain/expense/expense"
 import { ExpenseApproval } from "@/domain/expense/expense-approval"
 import type { Context } from "@/env"
 import { expenseApprovals, expenses } from "@/schema"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 
 export class ExpenseRepository {
   constructor(private readonly c: Context) {}
@@ -69,6 +69,27 @@ export class ExpenseRepository {
       return row === undefined ? null : Expense.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update expense")
+    }
+  }
+
+  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+  // 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+  async decideFromPending(props: {
+    expenseId: number
+    status: "approved" | "rejected"
+  }): Promise<Expense | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(expenses)
+        .set({ status: props.status })
+        .where(and(eq(expenses.id, props.expenseId), eq(expenses.status, "pending")))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Expense.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to decide expense")
     }
   }
 
