@@ -43,6 +43,8 @@ export async function submitSurveyResponseAction(
     return { status: "error", message: "回答の送信に失敗しました" }
   }
 
+  revalidatePath(`/surveys/${surveyId}`)
+  revalidatePath("/surveys/responses/me")
   revalidatePath(`/surveys/${surveyId}/summary`)
 
   return { status: "success", message: "回答を送信しました" }
