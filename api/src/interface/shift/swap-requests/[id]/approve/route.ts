@@ -35,8 +35,8 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ForbiddenError()
     }
 
-    if (swapRequest.reason === "already_approved") {
-      throw new ConflictError("already approved")
+    if (swapRequest.reason === "already_approved" || swapRequest.reason === "not_pending") {
+      throw new ConflictError("swap request is not pending")
     }
 
     throw new NotFoundError("swap request not found")
