@@ -16,9 +16,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const query = toNotificationSearchQuery({
-    isRead: c.req.query("is_read") ?? null,
-    limit: c.req.query("limit") ?? null,
-    offset: c.req.query("offset") ?? null,
+    isRead: c.req.query("is_read"),
+    limit: c.req.query("limit"),
+    offset: c.req.query("offset"),
   })
 
   const conditions: Array<SQL> = [eq(notifications.recipientEmployeeId, session.employeeId)]
