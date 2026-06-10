@@ -69,19 +69,25 @@ async function getRequest(path: string, token: string | null): Promise<Response>
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
 
+const attendanceListResponseSchema = z.object({
+  data: z.array(attendanceRecordResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /attendance/me", () => {
   test("returns own records and ignores employee_id", async () => {
     const response = await getRequest("/attendance/me?employee_id=9", await tokenFor(5, "member"))
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(attendanceRecordResponseSchema).safeParse(await response.json())
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((record) => record.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data.every((record) => record.employee_id === 5)).toBe(true)
     }
   })
 
@@ -93,13 +99,14 @@ describe("GET /attendance/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(attendanceRecordResponseSchema).safeParse(await response.json())
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(2)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(2)
     }
   })
 
