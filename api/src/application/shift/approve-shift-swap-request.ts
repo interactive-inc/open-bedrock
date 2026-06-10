@@ -15,6 +15,8 @@ export type SwapRequestNotFound = { reason: "swap_request_not_found" }
 
 export type AlreadyApproved = { reason: "already_approved" }
 
+export type NotPending = { reason: "not_pending" }
+
 /**
  * 権限を確認し、保留中のシフト交代申請を承認する。
  */
@@ -23,7 +25,9 @@ export class ApproveShiftSwapRequest {
 
   async run(
     input: Input,
-  ): Promise<ShiftSwapRequest | Forbidden | SwapRequestNotFound | AlreadyApproved | Error> {
+  ): Promise<
+    ShiftSwapRequest | Forbidden | SwapRequestNotFound | AlreadyApproved | NotPending | Error
+  > {
     if (canApproveShiftSwap(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -40,8 +44,8 @@ export class ApproveShiftSwapRequest {
       return { reason: "swap_request_not_found" }
     }
 
-    if (swapRequest.status === "approved") {
-      return { reason: "already_approved" }
+    if (swapRequest.status !== "pending") {
+      return { reason: "not_pending" }
     }
 
     const approved = await swapRequestRepository.update(swapRequest.withApproved(input.approvedAt))

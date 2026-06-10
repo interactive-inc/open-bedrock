@@ -157,11 +157,13 @@ export class LeaveRequestRepository {
             `
             UPDATE leave_balances
             SET
-              used_days = used_days + (
-                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              used_days = used_days + COALESCE(
+                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                0
               ),
-              remaining_days = remaining_days - (
-                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              remaining_days = remaining_days - COALESCE(
+                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                0
               )
             WHERE employee_id = (
                 SELECT employee_id FROM leave_requests WHERE id = ?1 AND status = 'pending'
@@ -170,8 +172,9 @@ export class LeaveRequestRepository {
                 SELECT leave_type FROM leave_requests WHERE id = ?1 AND status = 'pending'
               )
               AND fiscal_year = ?2
-              AND remaining_days >= (
-                SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'
+              AND remaining_days >= COALESCE(
+                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                0
               )
             `,
           ).bind(props.leaveRequestId, props.fiscalYear),
