@@ -97,7 +97,7 @@ describe("GET /me", () => {
     expect(response.status).toBe(401)
   })
 
-  test("returns 404 when the token employee does not exist", async () => {
+  test("returns 401 when the token employee does not exist", async () => {
     const token = await createTestToken(jwtSecret, {
       employeeId: 9999,
       email: "you+ghost@example.com",
@@ -106,6 +106,6 @@ describe("GET /me", () => {
 
     const response = await getMe(token)
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(401)
   })
 })

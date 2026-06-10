@@ -65,8 +65,8 @@ function adminToken(): Promise<string> {
 
 function employeeToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 2,
-    email: "you+e002@example.com",
+    employeeId: 5,
+    email: "you+e005@example.com",
     role: "member",
   })
 }

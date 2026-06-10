@@ -15,16 +15,19 @@ type SeedEmployee = {
 
 export const seedEmployees: ReadonlyArray<SeedEmployee> = [
   buildEmployee(1, "E001", "Alex Carter", 1, "Corporate Planning", "CTO", "admin"),
-  buildEmployee(2, "E002", "Blake Morgan", 2, "Human Resources", "HR Manager", "member"),
+  buildEmployee(2, "E002", "Blake Morgan", 2, "Human Resources", "HR Manager", "manager"),
   buildEmployee(3, "E003", "Casey Reed", 2, "Human Resources", "HR Staff", "member"),
-  buildEmployee(4, "E004", "Drew Sato", 3, "Engineering", "Engineering Manager", "member"),
+  buildEmployee(4, "E004", "Drew Sato", 3, "Engineering", "Engineering Manager", "manager"),
   buildEmployee(5, "E005", "Emery Lane", 3, "Engineering", "Senior Engineer", "member"),
+  buildEmployee(6, "E006", "Sage Hayashi", 3, "Engineering", "Engineer", "member"),
   buildEmployee(9, "E009", "Finley Brooks", 4, "Sales", "Sales Manager", "member"),
   buildEmployee(10, "E010", "Gray Ellis", 4, "Sales", "Sales Staff", "member"),
   buildEmployee(13, "E013", "Harper Quinn", 5, "Customer Success", "CS Manager", "member"),
+  buildEmployee(15, "E015", "Riley Tanaka", 5, "Customer Success", "CS Staff", "member"),
   buildEmployee(16, "E016", "Indi Vaughn", 6, "Administration", "Admin Manager", "member"),
   buildEmployee(17, "E017", "Jordan Pike", 2, "Human Resources", "HR Staff", "member", "leave"),
   buildEmployee(18, "E018", "Kris Nolan", 4, "Sales", "Sales Staff", "member", "retired"),
+  buildEmployee(99, "E099", "Robin Uchida", 6, "Administration", "Admin Staff", "member"),
 ]
 
 function buildEmployee(
