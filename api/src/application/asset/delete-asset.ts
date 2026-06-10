@@ -18,7 +18,8 @@ export type Deleted = { reason: "deleted" }
 export type DeleteAssetFailure = DeleteForbidden | DeleteAssetNotFound | DeleteAssetInUse
 
 /**
- * 権限・存在・貸出状態を確認し、貸出記録を削除してから資産を削除する。貸与中は拒否する。
+ * 権限・存在・貸出状態を確認し、資産と貸出記録の削除を 1 回の D1 batch で
+ * アトミックに行う。貸与中は拒否する。並行リクエストとの競合は条件付き write で防ぐ。
  */
 export class DeleteAsset {
   constructor(private readonly c: Context) {}
@@ -44,18 +45,31 @@ export class DeleteAsset {
       return { reason: "asset_in_use" }
     }
 
-    const lendingsDeleted = await assetRepository.deleteLendingsByAssetCode(command.code)
+    const outcome = await assetRepository.deleteIfNotLent(command.code)
 
-    if (lendingsDeleted instanceof Error) {
-      return lendingsDeleted
+    if (outcome instanceof Error) {
+      return outcome
     }
 
-    const deleted = await assetRepository.delete(command.code)
-
-    if (deleted instanceof Error) {
-      return deleted
+    if (outcome === "deleted") {
+      return { reason: "deleted" }
     }
 
-    return { reason: "deleted" }
+    // batch が条件不成立で rollback された。並行リクエストに先を越されたケースを再読込で分類する。
+    const current = await assetRepository.findByCode(command.code)
+
+    if (current instanceof Error) {
+      return current
+    }
+
+    if (current === null) {
+      return { reason: "asset_not_found" }
+    }
+
+    if (current.status === "lent") {
+      return { reason: "asset_in_use" }
+    }
+
+    return new Error("failed to delete asset")
   }
 }

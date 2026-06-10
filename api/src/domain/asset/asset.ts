@@ -69,10 +69,6 @@ export class Asset implements Props {
     })
   }
 
-  withLendStatus(status: Props["status"], holderEmployeeId: Props["holderEmployeeId"]) {
-    return new Asset({ ...this.props, status, holderEmployeeId })
-  }
-
   // 名称・種別・シリアル・購入日を差し替える。在庫/貸出状態と保有者は保つ。
   withDetails(details: {
     name: Props["name"]
