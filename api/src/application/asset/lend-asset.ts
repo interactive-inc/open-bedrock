@@ -1,5 +1,4 @@
 import type { Asset } from "@/domain/asset/asset"
-import { AssetLending } from "@/domain/asset/asset-lending"
 import { canManageAssets } from "@/domain/asset/can-manage-assets"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
@@ -27,7 +26,8 @@ export type LendAssetFailure =
   | LendAssetNotInStock
 
 /**
- * 権限・在庫・貸出先を確認し、貸出記録を起こして資産を貸出中に更新する。
+ * 権限・在庫・貸出先を確認し、貸出記録の追加と資産の貸出中への更新を
+ * 1 回の D1 batch でアトミックに行う。並行リクエストとの競合は条件付き write で防ぐ。
  */
 export class LendAsset {
   constructor(private readonly c: Context) {}
@@ -65,28 +65,35 @@ export class LendAsset {
       return { reason: "asset_not_in_stock" }
     }
 
-    const lending = await assetRepository.addLending(
-      AssetLending.create({
-        assetCode: command.code,
-        employeeId: employee.id,
-        lentAt: command.now,
-      }),
-    )
+    const lent = await assetRepository.lendFromStock({
+      assetCode: command.code,
+      employeeId: employee.id,
+      lentAt: command.now,
+    })
 
-    if (lending instanceof Error) {
-      return lending
+    if (lent instanceof Error) {
+      return lent
     }
 
-    const updated = await assetRepository.update(asset.withLendStatus("lent", employee.id))
-
-    if (updated instanceof Error) {
-      return updated
+    if (lent !== null) {
+      return lent
     }
 
-    if (updated === null) {
-      return new Error("failed to update asset after lending")
+    // batch が条件不成立で rollback された。並行リクエストに先を越されたケースを再読込で分類する。
+    const current = await assetRepository.findByCode(command.code)
+
+    if (current instanceof Error) {
+      return current
     }
 
-    return updated
+    if (current === null) {
+      return { reason: "asset_not_found" }
+    }
+
+    if (current.status !== "in_stock") {
+      return { reason: "asset_not_in_stock" }
+    }
+
+    return new Error("failed to lend asset")
   }
 }

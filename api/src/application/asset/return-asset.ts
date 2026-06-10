@@ -18,7 +18,8 @@ export type ReturnAssetNotLent = { reason: "asset_not_lent" }
 export type ReturnAssetFailure = ReturnForbidden | ReturnAssetNotFound | ReturnAssetNotLent
 
 /**
- * 権限・貸出状態を確認し、開いている貸出記録を閉じて資産を在庫に戻す。
+ * 権限・貸出状態を確認し、資産の在庫戻しと貸出記録のクローズを
+ * 1 回の D1 batch でアトミックに行う。並行リクエストとの競合は条件付き write で防ぐ。
  */
 export class ReturnAsset {
   constructor(private readonly c: Context) {}
@@ -44,22 +45,34 @@ export class ReturnAsset {
       return { reason: "asset_not_lent" }
     }
 
-    const closed = await assetRepository.closeLending(command.code, command.now)
+    const returned = await assetRepository.returnFromLent({
+      assetCode: command.code,
+      returnedAt: command.now,
+    })
 
-    if (closed instanceof Error) {
-      return closed
+    if (returned instanceof Error) {
+      return returned
     }
 
-    const updated = await assetRepository.update(asset.withLendStatus("in_stock", null))
-
-    if (updated instanceof Error) {
-      return updated
+    if (returned !== null) {
+      return returned
     }
 
-    if (updated === null) {
-      return new Error("failed to update asset after return")
+    // batch が条件不成立で rollback された。並行リクエストに先を越されたケースを再読込で分類する。
+    const current = await assetRepository.findByCode(command.code)
+
+    if (current instanceof Error) {
+      return current
     }
 
-    return updated
+    if (current === null) {
+      return { reason: "asset_not_found" }
+    }
+
+    if (current.status !== "lent") {
+      return { reason: "asset_not_lent" }
+    }
+
+    return new Error("failed to return asset")
   }
 }

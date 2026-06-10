@@ -1,8 +1,28 @@
 import { Asset } from "@/domain/asset/asset"
-import { AssetLending } from "@/domain/asset/asset-lending"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { assetLendings } from "@/schema"
 import { describe, expect, test } from "bun:test"
+import type { Context } from "@/env"
+import { eq } from "drizzle-orm"
+
+async function seedInStock(context: Context, code: string): Promise<void> {
+  const repository = new AssetRepository(context)
+
+  const created = await repository.create(
+    Asset.create({
+      code: code,
+      name: "ノートPC",
+      kind: "laptop",
+      serial: null,
+      purchasedOn: null,
+    }),
+  )
+
+  if (created instanceof Error) {
+    throw created
+  }
+}
 
 describe("AssetRepository", () => {
   test("create then findByCode round-trips the asset", async () => {
@@ -38,85 +58,188 @@ describe("AssetRepository", () => {
     expect(found.status).toBe("in_stock")
   })
 
-  test("update persists the lend status change", async () => {
+  test("lendFromStock lends an in_stock asset and opens a lending atomically", async () => {
     const { context } = createTestContext()
 
     const repository = new AssetRepository(context)
 
-    const created = await repository.create(
-      Asset.create({
-        code: "PC-002",
-        name: "ノートPC",
-        kind: "laptop",
-        serial: null,
-        purchasedOn: null,
-      }),
-    )
+    await seedInStock(context, "PC-002")
 
-    if (created instanceof Error) {
-      throw created
+    const lent = await repository.lendFromStock({
+      assetCode: "PC-002",
+      employeeId: 1,
+      lentAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(lent).toBeInstanceOf(Asset)
+
+    if (lent instanceof Error || lent === null) {
+      throw new Error("lendFromStock failed")
     }
 
-    const updated = await repository.update(created.withLendStatus("lent", 1))
+    expect(lent.status).toBe("lent")
+    expect(lent.holderEmployeeId).toBe(1)
 
-    expect(updated).toBeInstanceOf(Asset)
+    const lendings = await context.var.database
+      .select()
+      .from(assetLendings)
+      .where(eq(assetLendings.assetCode, "PC-002"))
 
-    if (updated instanceof Error || updated === null) {
-      throw new Error("update failed")
-    }
-
-    expect(updated.status).toBe("lent")
-    expect(updated.holderEmployeeId).toBe(1)
+    expect(lendings.length).toBe(1)
+    expect(lendings.at(0)?.returnedAt).toBeNull()
   })
 
-  test("addLending persists an open lending for the asset", async () => {
+  test("lendFromStock returns null for an already lent asset and adds no lending", async () => {
     const { context } = createTestContext()
 
     const repository = new AssetRepository(context)
 
-    const created = await repository.addLending(
-      AssetLending.create({
-        assetCode: "PC-001",
-        employeeId: 1,
-        lentAt: "2026-01-01T00:00:00.000Z",
-      }),
-    )
+    await seedInStock(context, "PC-003")
 
-    expect(created).toBeInstanceOf(AssetLending)
+    await repository.lendFromStock({
+      assetCode: "PC-003",
+      employeeId: 1,
+      lentAt: "2026-01-01T00:00:00.000Z",
+    })
 
-    if (created instanceof Error || created.id === null) {
-      throw new Error("addLending failed")
+    const second = await repository.lendFromStock({
+      assetCode: "PC-003",
+      employeeId: 2,
+      lentAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(second).toBeNull()
+
+    const lendings = await context.var.database
+      .select()
+      .from(assetLendings)
+      .where(eq(assetLendings.assetCode, "PC-003"))
+
+    expect(lendings.length).toBe(1)
+
+    const found = await repository.findByCode("PC-003")
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findByCode failed")
     }
 
-    expect(created.assetCode).toBe("PC-001")
-    expect(created.returnedAt).toBeNull()
+    expect(found.holderEmployeeId).toBe(1)
   })
 
-  test("closeLending sets returnedAt on the open lending", async () => {
+  test("returnFromLent returns the asset to stock and closes the open lending", async () => {
     const { context } = createTestContext()
 
     const repository = new AssetRepository(context)
 
-    const created = await repository.addLending(
-      AssetLending.create({
-        assetCode: "PC-003",
-        employeeId: 1,
-        lentAt: "2026-01-01T00:00:00.000Z",
-      }),
-    )
+    await seedInStock(context, "PC-004")
 
-    if (created instanceof Error) {
-      throw created
+    await repository.lendFromStock({
+      assetCode: "PC-004",
+      employeeId: 1,
+      lentAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    const returned = await repository.returnFromLent({
+      assetCode: "PC-004",
+      returnedAt: "2026-02-01T00:00:00.000Z",
+    })
+
+    expect(returned).toBeInstanceOf(Asset)
+
+    if (returned instanceof Error || returned === null) {
+      throw new Error("returnFromLent failed")
     }
 
-    const closed = await repository.closeLending("PC-003", "2026-02-01T00:00:00.000Z")
+    expect(returned.status).toBe("in_stock")
+    expect(returned.holderEmployeeId).toBeNull()
 
-    expect(closed).toBeInstanceOf(AssetLending)
+    const lendings = await context.var.database
+      .select()
+      .from(assetLendings)
+      .where(eq(assetLendings.assetCode, "PC-004"))
 
-    if (closed instanceof Error || closed === null) {
-      throw new Error("closeLending failed")
+    expect(lendings.at(0)?.returnedAt).toBe("2026-02-01T00:00:00.000Z")
+  })
+
+  test("returnFromLent returns null for an asset that is not lent", async () => {
+    const { context } = createTestContext()
+
+    const repository = new AssetRepository(context)
+
+    await seedInStock(context, "PC-005")
+
+    const returned = await repository.returnFromLent({
+      assetCode: "PC-005",
+      returnedAt: "2026-02-01T00:00:00.000Z",
+    })
+
+    expect(returned).toBeNull()
+  })
+
+  test("deleteIfNotLent deletes the asset and its lendings", async () => {
+    const { context } = createTestContext()
+
+    const repository = new AssetRepository(context)
+
+    await seedInStock(context, "PC-006")
+
+    await repository.lendFromStock({
+      assetCode: "PC-006",
+      employeeId: 1,
+      lentAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    await repository.returnFromLent({
+      assetCode: "PC-006",
+      returnedAt: "2026-02-01T00:00:00.000Z",
+    })
+
+    const outcome = await repository.deleteIfNotLent("PC-006")
+
+    expect(outcome).toBe("deleted")
+
+    const found = await repository.findByCode("PC-006")
+
+    expect(found).toBeNull()
+
+    const lendings = await context.var.database
+      .select()
+      .from(assetLendings)
+      .where(eq(assetLendings.assetCode, "PC-006"))
+
+    expect(lendings.length).toBe(0)
+  })
+
+  test("deleteIfNotLent returns null for a lent asset and keeps it", async () => {
+    const { context } = createTestContext()
+
+    const repository = new AssetRepository(context)
+
+    await seedInStock(context, "PC-007")
+
+    await repository.lendFromStock({
+      assetCode: "PC-007",
+      employeeId: 1,
+      lentAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    const outcome = await repository.deleteIfNotLent("PC-007")
+
+    expect(outcome).toBeNull()
+
+    const found = await repository.findByCode("PC-007")
+
+    if (found instanceof Error || found === null) {
+      throw new Error("asset should remain")
     }
 
-    expect(closed.returnedAt).toBe("2026-02-01T00:00:00.000Z")
+    expect(found.status).toBe("lent")
+
+    const lendings = await context.var.database
+      .select()
+      .from(assetLendings)
+      .where(eq(assetLendings.assetCode, "PC-007"))
+
+    expect(lendings.length).toBe(1)
   })
 })
