@@ -146,6 +146,76 @@ describe("GET /leave/requests/:id", () => {
     }
   })
 
+  test("returns 200 for a manager viewing another person's request", async () => {
+    const db = await createTestDb()
+
+    // employee 4 を manager ロールに上書き（シードは member）
+    await db.prepare("UPDATE employees SET role = ? WHERE id = ?").bind("manager", 4).run()
+
+    const bindings: Bindings = {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      NOW: "2026-01-01T00:00:00.000Z",
+    }
+
+    const response = await testApp.request(
+      "/leave/requests/1",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${await tokenFor(4, "manager")}`,
+        },
+      },
+      bindings,
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveRequestResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.employee_id).toBe(5)
+    }
+  })
+
+  test("returns 200 for an hr viewer viewing another person's request", async () => {
+    const db = await createTestDb()
+
+    // employee 2 を hr ロールに上書き（シードは member）
+    await db.prepare("UPDATE employees SET role = ? WHERE id = ?").bind("hr", 2).run()
+
+    const bindings: Bindings = {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      NOW: "2026-01-01T00:00:00.000Z",
+    }
+
+    const response = await testApp.request(
+      "/leave/requests/1",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${await tokenFor(2, "hr")}`,
+        },
+      },
+      bindings,
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveRequestResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.employee_id).toBe(5)
+    }
+  })
+
   test("returns 403 for another person's request", async () => {
     const response = await request({
       path: "/leave/requests/2",
