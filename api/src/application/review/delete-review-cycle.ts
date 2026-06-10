@@ -1,6 +1,7 @@
 import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
+import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
 export type Input = {
   viewerRole: string
@@ -34,6 +35,14 @@ export class DeleteReviewCycle {
 
     if (reviewCycle === null) {
       return { reason: "cycle_not_found" }
+    }
+
+    const formRepository = new ReviewFormRepository(this.c)
+
+    const formsDeleted = await formRepository.deleteByCycleId(input.cycleId)
+
+    if (formsDeleted instanceof Error) {
+      return formsDeleted
     }
 
     const deleted = await repository.delete(input.cycleId)

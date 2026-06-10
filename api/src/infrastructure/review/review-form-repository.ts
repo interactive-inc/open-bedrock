@@ -22,6 +22,16 @@ export class ReviewFormRepository {
     }
   }
 
+  async deleteByCycleId(cycleId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(reviewForms).where(eq(reviewForms.cycleId, cycleId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete review_forms")
+    }
+  }
+
   async update(reviewForm: ReviewForm): Promise<ReviewForm | null | Error> {
     try {
       const rows = await this.c.var.database
