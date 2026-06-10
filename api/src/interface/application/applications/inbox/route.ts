@@ -1,5 +1,11 @@
 import { canDecideApplication } from "@/domain/application/can-decide-application"
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { eq } from "drizzle-orm"
@@ -17,6 +23,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select({
       application: applications,
@@ -27,6 +47,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .leftJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
     .leftJoin(employees, eq(employees.id, applications.applicantId))
     .where(eq(applications.status, "pending"))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.application.id,
