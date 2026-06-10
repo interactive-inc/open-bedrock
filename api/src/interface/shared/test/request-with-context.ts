@@ -12,6 +12,8 @@ export type Props = {
 }
 
 // テスト用の既定の固定時刻。created_at 等の検証はこの値を期待値にする。
+// 注意: 会計年度（toFiscalYear、4 月始まり）ではこの日付は 2025 年度になる。
+// fiscal year を参照するテストはシードと整合する now（例: 2026-06-01）を明示的に渡すこと。
 const defaultNow = "2026-01-01T00:00:00.000Z"
 
 // テスト用: テスト DB と Bindings（JWT_SECRET と固定時刻）を渡して app を叩く。
