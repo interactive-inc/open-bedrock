@@ -86,7 +86,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     dueDate: cycleRow.dueDate,
   })
 
-  const view = toReviewResultView(cycle, forms)
+  const view = toReviewResultView(cycle, forms, employeeRow.id)
 
   if (view instanceof Error) {
     throw new InternalError(view.message)

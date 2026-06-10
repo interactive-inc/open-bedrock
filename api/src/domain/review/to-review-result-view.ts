@@ -14,6 +14,7 @@ export type ReviewResultView = {
 export function toReviewResultView(
   cycle: ReviewCycle,
   forms: ReadonlyArray<ReviewForm>,
+  subjectEmployeeId: number,
 ): ReviewResultView | Error {
   if (cycle.id === null) {
     return new Error("cannot build result view for unsaved review cycle")
@@ -23,11 +24,7 @@ export function toReviewResultView(
 
   let scoreTotal = 0
 
-  let subjectEmployeeId = 0
-
   for (const form of forms) {
-    subjectEmployeeId = form.subjectEmployeeId
-
     if (form.status === "submitted" && form.score !== null) {
       submittedCount = submittedCount + 1
 
