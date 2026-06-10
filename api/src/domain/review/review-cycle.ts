@@ -53,8 +53,31 @@ export class ReviewCycle implements Props {
     })
   }
 
-  withStatus(status: Props["status"]) {
-    return new ReviewCycle({ ...this.props, status })
+  /**
+   * draft → open への状態遷移。draft 以外からは遷移不可。
+   */
+  open(): ReviewCycle | null {
+    if (this.status !== "draft") {
+      return null
+    }
+    return new ReviewCycle({ ...this.props, status: "open" })
+  }
+
+  /**
+   * open → closed への状態遷移。open 以外からは遷移不可。
+   */
+  close(): ReviewCycle | null {
+    if (this.status !== "open") {
+      return null
+    }
+    return new ReviewCycle({ ...this.props, status: "closed" })
+  }
+
+  /**
+   * 削除可能かどうか。draft 状態のみ削除を許可する。
+   */
+  get isDeletable(): boolean {
+    return this.status === "draft"
   }
 
   withDetails(details: { title: string; period: string; dueDate: string | null }) {
