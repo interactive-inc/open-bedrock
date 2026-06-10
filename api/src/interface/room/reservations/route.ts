@@ -1,7 +1,12 @@
 import { CreateRoomReservation } from "@/application/room/create-room-reservation"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ConflictError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -43,6 +48,9 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in reservation) {
+      if (reservation.reason === "invalid_time_range") {
+        throw new BadRequestError("end_at must be after start_at")
+      }
       throw new ConflictError("the room is already reserved")
     }
 
