@@ -1,7 +1,10 @@
 import { GoalEvaluation } from "@/domain/goal/goal-evaluation"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { goalEvaluations } from "@/schema"
 import { asc, eq } from "drizzle-orm"
+
+export type AlreadyEvaluatedError = { reason: "already_evaluated" }
 
 export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}
@@ -21,7 +24,10 @@ export class GoalEvaluationRepository {
     }
   }
 
-  async create(evaluation: GoalEvaluation): Promise<GoalEvaluation | Error> {
+  // UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
+  async create(
+    evaluation: GoalEvaluation,
+  ): Promise<GoalEvaluation | AlreadyEvaluatedError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(goalEvaluations)
@@ -41,6 +47,9 @@ export class GoalEvaluationRepository {
         ? new Error("failed to create goal evaluation")
         : GoalEvaluation.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return { reason: "already_evaluated" }
+      }
       return error instanceof Error ? error : new Error("failed to create goal evaluation")
     }
   }
