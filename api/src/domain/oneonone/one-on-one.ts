@@ -40,7 +40,11 @@ export class OneOnOne implements Props {
   }
 
   // 新規 1on1 を組み立てる。id は crypto.randomUUID() で採番する。
-  static create(props: z.infer<typeof zNewProps>): OneOnOne {
+  static create(props: z.infer<typeof zNewProps>): OneOnOne | { reason: "self_reference" } {
+    if (props.memberId === props.managerId) {
+      return { reason: "self_reference" }
+    }
+
     return new OneOnOne({
       id: crypto.randomUUID(),
       memberId: props.memberId,

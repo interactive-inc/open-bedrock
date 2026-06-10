@@ -1,6 +1,12 @@
 import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
 import { toCycleStatus } from "@/domain/review/to-cycle-status"
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewCycles } from "@/schema"
@@ -15,11 +21,29 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isAdmin = canAdministerCycle(session.role)
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const query = c.var.database.select().from(reviewCycles)
 
   const rows = isAdmin
-    ? await query.orderBy(asc(reviewCycles.id))
-    : await query.where(eq(reviewCycles.status, "open")).orderBy(asc(reviewCycles.id))
+    ? await query.orderBy(asc(reviewCycles.id)).limit(limit).offset(offset)
+    : await query
+        .where(eq(reviewCycles.status, "open"))
+        .orderBy(asc(reviewCycles.id))
+        .limit(limit)
+        .offset(offset)
 
   const body = rows.map((row) => ({
     id: row.id,
