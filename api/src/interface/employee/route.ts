@@ -78,7 +78,7 @@ export const POST = factory.createHandlers(
     z.object({
       code: codeSchema,
       name: z.string().min(1).max(200),
-      email: z.string().min(1).max(254),
+      email: z.string().email().max(254),
       password: z.string().min(8).max(200),
       role: employeeRoleSchema,
       dept_id: z.number().int().nullable().optional(),

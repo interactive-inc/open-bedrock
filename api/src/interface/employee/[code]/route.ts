@@ -56,7 +56,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       name: z.string().min(1).max(200),
-      email: z.string().min(1).max(254),
+      email: z.string().email().max(254),
       role: employeeRoleSchema,
       dept_id: z.number().int().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
