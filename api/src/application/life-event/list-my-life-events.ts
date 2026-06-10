@@ -4,6 +4,8 @@ import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repo
 
 export type Command = {
   employeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyLifeEvents {
   async run(command: Command): Promise<ReadonlyArray<LifeEvent> | Error> {
     const lifeEventRepository = new LifeEventRepository(this.c)
 
-    return await lifeEventRepository.findByEmployeeId(command.employeeId)
+    return await lifeEventRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

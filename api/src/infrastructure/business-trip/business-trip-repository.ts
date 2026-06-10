@@ -34,14 +34,20 @@ export class BusinessTripRepository {
     }
   }
 
-  // 申請者本人の出張申請を開始日の昇順で返す。
-  async findByTravelerId(travelerId: number): Promise<ReadonlyArray<BusinessTrip> | Error> {
+  // 申請者本人の出張申請を開始日の昇順でページングして返す。
+  async findByTravelerId(props: {
+    travelerId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<BusinessTrip> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(businessTrips)
-        .where(eq(businessTrips.travelerId, travelerId))
+        .where(eq(businessTrips.travelerId, props.travelerId))
         .orderBy(asc(businessTrips.startDate))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => BusinessTrip.fromRow(row))
     } catch (error) {

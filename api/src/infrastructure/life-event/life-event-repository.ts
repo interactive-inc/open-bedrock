@@ -6,14 +6,20 @@ import { asc, eq } from "drizzle-orm"
 export class LifeEventRepository {
   constructor(private readonly c: Context) {}
 
-  // 届出者本人のライフイベント届出を発生日の昇順で返す。
-  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<LifeEvent> | Error> {
+  // 届出者本人のライフイベント届出をイベント日の昇順でページングして返す。
+  async findByEmployeeId(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<LifeEvent> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(lifeEvents)
-        .where(eq(lifeEvents.employeeId, employeeId))
+        .where(eq(lifeEvents.employeeId, props.employeeId))
         .orderBy(asc(lifeEvents.eventDate))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => LifeEvent.fromRow(row))
     } catch (error) {

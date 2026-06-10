@@ -198,6 +198,53 @@ describe("GET /business-trips/me", () => {
     }
   })
 
+  test("applies limit and offset to the listing", async () => {
+    // 同一 DB に 2 件目を作成し、limit が件数を絞り offset が先頭を飛ばすことを検証する。
+    const db = await createTestDb()
+
+    const token = await travelerToken()
+
+    const bindings = { DB: db, JWT_SECRET: jwtSecret, NOW: "2026-01-01T00:00:00.000Z" }
+
+    const created = await app.request(
+      "/business-trips",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          destination: "Nagoya Branch",
+          start_date: "2026-08-01",
+          end_date: "2026-08-02",
+          purpose: "Customer kickoff",
+          estimated_cost: 22000,
+        }),
+      },
+      bindings,
+    )
+
+    expect(created.status).toBe(201)
+
+    const limited = await app.request(
+      "/business-trips/me?limit=1",
+      { headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
+
+    const limitedRows = z.array(businessTripResponseSchema).parse(await limited.json())
+
+    expect(limitedRows.length).toBe(1)
+
+    const skipped = await app.request(
+      "/business-trips/me?offset=1",
+      { headers: { Authorization: `Bearer ${token}` } },
+      bindings,
+    )
+
+    const skippedRows = z.array(businessTripResponseSchema).parse(await skipped.json())
+
+    expect(skippedRows.length).toBe(1)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/business-trips/me", token: null })
 
