@@ -3,8 +3,10 @@ import { GetAntisocialCheck } from "@/application/antisocial-check/get-antisocia
 import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-antisocial-check"
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
 import { factory } from "@/lib/factory"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -36,8 +38,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const antisocialCheck = await new GetAntisocialCheck(c).run({
-    antisocialCheckId: c.req.param("id") ?? "",
+    antisocialCheckId: id,
     requesterId: viewer.employeeId,
   })
 
@@ -77,8 +85,14 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    const id = toResourceId(c.req.param("id") ?? "")
+
+    if (id === null) {
+      throw new BadRequestError("invalid id")
+    }
+
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
-      antisocialCheckId: c.req.param("id") ?? "",
+      antisocialCheckId: id,
       requesterId: viewer.employeeId,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,
@@ -114,8 +128,14 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const result = await new CancelAntisocialCheck(c).run({
-    antisocialCheckId: c.req.param("id") ?? "",
+    antisocialCheckId: id,
     requesterId: viewer.employeeId,
   })
 

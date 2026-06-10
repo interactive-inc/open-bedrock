@@ -4,6 +4,7 @@ import { UpdateResignation } from "@/application/resignation/update-resignation"
 import { Resignation } from "@/domain/resignation/resignation"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
@@ -37,8 +38,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const resignation = await new GetResignation(c).run({
-    resignationId: c.req.param("id") ?? "",
+    resignationId: id,
     employeeId: viewer.employeeId,
   })
 
@@ -91,8 +98,14 @@ export const PUT = factory.createHandlers(
       throw new BadRequestError("resignation_date must be today or in the future")
     }
 
+    const id = toResourceId(c.req.param("id") ?? "")
+
+    if (id === null) {
+      throw new BadRequestError("invalid id")
+    }
+
     const resignation = await new UpdateResignation(c).run({
-      resignationId: c.req.param("id") ?? "",
+      resignationId: id,
       employeeId: viewer.employeeId,
       resignationDate: json.resignation_date,
       lastWorkingDate: json.last_working_date ?? null,
@@ -127,8 +140,14 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const result = await new CancelResignation(c).run({
-    resignationId: c.req.param("id") ?? "",
+    resignationId: id,
     employeeId: viewer.employeeId,
   })
 

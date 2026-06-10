@@ -3,8 +3,10 @@ import { GetCertificateRequest } from "@/application/certificate-request/get-cer
 import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
 import type { CertificateRequest } from "@/domain/certificate-request/certificate-request"
 import { factory } from "@/lib/factory"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -36,8 +38,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const certificateRequest = await new GetCertificateRequest(c).run({
-    certificateRequestId: c.req.param("id") ?? "",
+    certificateRequestId: id,
     requesterId: viewer.employeeId,
   })
 
@@ -77,8 +85,14 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    const id = toResourceId(c.req.param("id") ?? "")
+
+    if (id === null) {
+      throw new BadRequestError("invalid id")
+    }
+
     const certificateRequest = await new UpdateCertificateRequest(c).run({
-      certificateRequestId: c.req.param("id") ?? "",
+      certificateRequestId: id,
       requesterId: viewer.employeeId,
       certificateType: json.certificate_type,
       submitTo: json.submit_to ?? null,
@@ -114,8 +128,14 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const result = await new CancelCertificateRequest(c).run({
-    certificateRequestId: c.req.param("id") ?? "",
+    certificateRequestId: id,
     requesterId: viewer.employeeId,
   })
 

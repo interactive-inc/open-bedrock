@@ -4,8 +4,10 @@ import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
 import type { LifeEvent } from "@/domain/life-event/life-event"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -36,8 +38,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const lifeEvent = await new GetLifeEvent(c).run({
-    lifeEventId: c.req.param("id") ?? "",
+    lifeEventId: id,
     employeeId: viewer.employeeId,
   })
 
@@ -76,8 +84,14 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    const id = toResourceId(c.req.param("id") ?? "")
+
+    if (id === null) {
+      throw new BadRequestError("invalid id")
+    }
+
     const lifeEvent = await new UpdateLifeEvent(c).run({
-      lifeEventId: c.req.param("id") ?? "",
+      lifeEventId: id,
       employeeId: viewer.employeeId,
       eventType: json.event_type,
       eventDate: json.event_date,
@@ -112,8 +126,14 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const result = await new CancelLifeEvent(c).run({
-    lifeEventId: c.req.param("id") ?? "",
+    lifeEventId: id,
     employeeId: viewer.employeeId,
   })
 

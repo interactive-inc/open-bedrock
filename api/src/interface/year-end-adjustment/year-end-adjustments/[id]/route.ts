@@ -3,8 +3,10 @@ import { GetYearEndAdjustment } from "@/application/year-end-adjustment/get-year
 import { UpdateYearEndAdjustment } from "@/application/year-end-adjustment/update-year-end-adjustment"
 import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
 import { factory } from "@/lib/factory"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -34,8 +36,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const yearEndAdjustment = await new GetYearEndAdjustment(c).run({
-    yearEndAdjustmentId: c.req.param("id") ?? "",
+    yearEndAdjustmentId: id,
     employeeId: viewer.employeeId,
   })
 
@@ -73,8 +81,14 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    const id = toResourceId(c.req.param("id") ?? "")
+
+    if (id === null) {
+      throw new BadRequestError("invalid id")
+    }
+
     const yearEndAdjustment = await new UpdateYearEndAdjustment(c).run({
-      yearEndAdjustmentId: c.req.param("id") ?? "",
+      yearEndAdjustmentId: id,
       employeeId: viewer.employeeId,
       targetYear: json.target_year,
       note: json.note ?? null,
@@ -108,8 +122,14 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const id = toResourceId(c.req.param("id") ?? "")
+
+  if (id === null) {
+    throw new BadRequestError("invalid id")
+  }
+
   const result = await new CancelYearEndAdjustment(c).run({
-    yearEndAdjustmentId: c.req.param("id") ?? "",
+    yearEndAdjustmentId: id,
     employeeId: viewer.employeeId,
   })
 
