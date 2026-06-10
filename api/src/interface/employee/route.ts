@@ -1,6 +1,12 @@
 import { RegisterEmployee } from "@/application/employee/register-employee"
 import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
@@ -24,6 +30,8 @@ export const GET = factory.createHandlers(
       q: z.string().optional(),
       dept: z.string().optional(),
       status: z.enum(["active", "leave", "retired"]).optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -51,10 +59,26 @@ export const GET = factory.createHandlers(
       conditions.push(eq(employees.status, query.status))
     }
 
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+
     const rows = await c.var.database
       .select()
       .from(employees)
       .where(conditions.length === 0 ? undefined : and(...conditions))
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       code: row.code,
