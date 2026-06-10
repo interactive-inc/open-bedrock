@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedRoomReservations } from "@/infrastructure/seed/seed-room-reservations"
 import { seedRooms } from "@/infrastructure/seed/seed-rooms"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
@@ -21,6 +22,23 @@ const jwtSecret = "room-reservations-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
 
   await seedD1(
     db,
@@ -124,6 +142,26 @@ describe("POST /rooms/reservations", () => {
       end_at: "2026-05-30T02:00:00Z",
     })
 
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when start_at equals end_at (zero-length)", async () => {
+    const response = await postReservation(await managerToken(), {
+      room_id: 3,
+      start_at: "2026-05-30T01:00:00Z",
+      end_at: "2026-05-30T01:00:00Z",
+      purpose: null,
+    })
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when start_at is after end_at (reversed)", async () => {
+    const response = await postReservation(await managerToken(), {
+      room_id: 3,
+      start_at: "2026-05-30T02:00:00Z",
+      end_at: "2026-05-30T01:00:00Z",
+      purpose: null,
+    })
     expect(response.status).toBe(400)
   })
 
