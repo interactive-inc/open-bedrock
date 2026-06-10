@@ -61,6 +61,85 @@ describe("RoomReservationRepository", () => {
     expect(result).toBeNull()
   })
 
+  test("updateIfNoOverlap succeeds when no overlapping reservation exists", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RoomReservationRepository(context)
+
+    const reservation = RoomReservation.create({
+      roomId: 1,
+      reserverId: 1,
+      startAt: "2026-01-01T10:00:00.000Z",
+      endAt: "2026-01-01T11:00:00.000Z",
+      purpose: "定例会議",
+    })
+
+    const created = await repository.create(reservation)
+
+    if (created instanceof Error) {
+      throw created
+    }
+
+    const updated = reservation
+      .withRescheduled({ startAt: "2026-01-01T14:00:00.000Z", endAt: "2026-01-01T15:00:00.000Z" })
+      .withPurpose("時間変更後の会議")
+
+    const result = await repository.updateIfNoOverlap(updated)
+
+    expect(result).toBeInstanceOf(RoomReservation)
+
+    if (result instanceof Error || result === null) {
+      throw new Error("expected reservation but got null or Error")
+    }
+
+    expect(result.id).toBe(reservation.id)
+    expect(result.startAt).toBe("2026-01-01T14:00:00.000Z")
+    expect(result.endAt).toBe("2026-01-01T15:00:00.000Z")
+    expect(result.purpose).toBe("時間変更後の会議")
+  })
+
+  test("updateIfNoOverlap returns null when overlapping reservation exists", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RoomReservationRepository(context)
+
+    const existing = RoomReservation.create({
+      roomId: 1,
+      reserverId: 2,
+      startAt: "2026-01-01T14:00:00.000Z",
+      endAt: "2026-01-01T15:00:00.000Z",
+      purpose: "他の人の予約",
+    })
+
+    const createdExisting = await repository.create(existing)
+
+    if (createdExisting instanceof Error) {
+      throw createdExisting
+    }
+
+    const target = RoomReservation.create({
+      roomId: 1,
+      reserverId: 1,
+      startAt: "2026-01-01T10:00:00.000Z",
+      endAt: "2026-01-01T11:00:00.000Z",
+      purpose: "自分の予約",
+    })
+
+    const createdTarget = await repository.create(target)
+
+    if (createdTarget instanceof Error) {
+      throw createdTarget
+    }
+
+    const updated = target
+      .withRescheduled({ startAt: "2026-01-01T14:30:00.000Z", endAt: "2026-01-01T15:30:00.000Z" })
+      .withPurpose("時間変更")
+
+    const result = await repository.updateIfNoOverlap(updated)
+
+    expect(result).toBeNull()
+  })
+
   test("create then findOverlapping returns the saved reservation", async () => {
     const { context } = createTestContext()
 
