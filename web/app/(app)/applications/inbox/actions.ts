@@ -1,7 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { approveApplication } from "@/lib/api/approve-application"
+import { getMe } from "@/lib/api/get-me"
 import { rejectApplication } from "@/lib/api/reject-application"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
@@ -41,6 +43,12 @@ export async function decideApplicationAction(
   previousState: DecisionState,
   formData: FormData,
 ): Promise<DecisionState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canDecideApplication(currentUser.role) === false) {
+    return { ok: false, error: "申請を承認・却下する権限がありません" }
+  }
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {

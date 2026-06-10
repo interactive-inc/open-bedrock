@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAsset } from "@/lib/api/create-asset"
 import { deleteAsset } from "@/lib/api/delete-asset"
+import { getMe } from "@/lib/api/get-me"
 import { lendAsset } from "@/lib/api/lend-asset"
 import { returnAsset } from "@/lib/api/return-asset"
 import { updateAsset } from "@/lib/api/update-asset"
 import type { AssetKind } from "@/lib/api/types/asset-types"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 
 export type AssetCreateFormState = {
   ok: boolean
@@ -56,6 +58,12 @@ export async function createAssetAction(
   previousState: AssetCreateFormState,
   formData: FormData,
 ): Promise<AssetCreateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -109,6 +117,12 @@ export async function lendAssetAction(
   previousState: AssetLendFormState,
   formData: FormData,
 ): Promise<AssetLendFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -143,6 +157,12 @@ export async function returnAssetAction(
   previousState: AssetReturnFormState,
   formData: FormData,
 ): Promise<AssetReturnFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -172,6 +192,12 @@ export async function updateAssetAction(
   previousState: AssetUpdateFormState,
   formData: FormData,
 ): Promise<AssetUpdateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""
@@ -226,6 +252,12 @@ export async function deleteAssetAction(
   previousState: AssetDeleteFormState,
   formData: FormData,
 ): Promise<AssetDeleteFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue : ""

@@ -7,10 +7,12 @@ import { createShiftPattern } from "@/lib/api/create-shift-pattern"
 import { createShiftSwapRequest } from "@/lib/api/create-shift-swap-request"
 import { deleteShiftAssignment } from "@/lib/api/delete-shift-assignment"
 import { deleteShiftPattern } from "@/lib/api/delete-shift-pattern"
+import { getMe } from "@/lib/api/get-me"
 import { publishShiftAssignment } from "@/lib/api/publish-shift-assignment"
 import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -63,6 +65,12 @@ export async function createShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const employeeCodeValue = formData.get("employee_code")
 
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue.trim() : ""
@@ -113,6 +121,12 @@ export async function publishShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -135,6 +149,12 @@ export async function createShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const codeValue = formData.get("code")
 
   const code = typeof codeValue === "string" ? codeValue.trim() : ""
@@ -199,6 +219,12 @@ export async function updateShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -231,6 +257,12 @@ export async function deleteShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const assignmentId = toPositiveIntId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
@@ -253,6 +285,12 @@ export async function updateShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const patternId = toPositiveIntId(formData.get("pattern_id"))
 
   if (patternId === null) {
@@ -281,6 +319,12 @@ export async function deleteShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+    return { ok: false, error: "シフトを管理する権限がありません" }
+  }
+
   const patternId = toPositiveIntId(formData.get("pattern_id"))
 
   if (patternId === null) {
