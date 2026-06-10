@@ -1,7 +1,6 @@
 import { Asset } from "@/domain/asset/asset"
 import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
-import { AssetLending } from "@/domain/asset/asset-lending"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
@@ -30,21 +29,15 @@ async function seedLent(context: Context, code: string): Promise<void> {
 
   await seedInStock(context, code)
 
-  const lending = await repository.addLending(
-    AssetLending.create({ assetCode: code, employeeId: 5, lentAt: "2026-01-01T00:00:00.000Z" }),
-  )
+  const lent = await repository.lendFromStock({
+    assetCode: code,
+    employeeId: 5,
+    lentAt: "2026-01-01T00:00:00.000Z",
+  })
 
-  if (lending instanceof Error) {
-    throw new Error("seed lending failed")
-  }
-
-  const asset = await repository.findByCode(code)
-
-  if (asset instanceof Error || asset === null) {
+  if (lent instanceof Error || lent === null) {
     throw new Error("seed lent failed")
   }
-
-  await repository.update(asset.withLendStatus("lent", 5))
 }
 
 describe("UpdateAsset", () => {
