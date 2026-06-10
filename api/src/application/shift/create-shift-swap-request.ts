@@ -38,7 +38,7 @@ export class CreateShiftSwapRequest {
     }
 
     if (target.id === input.requesterEmployeeId) {
-      return { reason: "target_not_found" }
+      return { reason: "self_reference" }
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
