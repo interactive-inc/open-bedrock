@@ -96,6 +96,28 @@ export class CareerApplicationRepository {
     }
   }
 
+  // 指定した求人に対して指定ステータスの応募が存在するか確認する。
+  async countByPostingIdAndStatus(
+    postingId: number,
+    status: CareerApplication["status"],
+  ): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(careerApplications)
+        .where(
+          and(
+            eq(careerApplications.postingId, postingId),
+            eq(careerApplications.status, status),
+          ),
+        )
+
+      return rows.length
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to count career_applications")
+    }
+  }
+
   async findByPostingAndApplicant(
     postingId: number,
     applicantId: number,
