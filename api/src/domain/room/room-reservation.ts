@@ -30,6 +30,10 @@ export class RoomReservation implements Props {
   constructor(private readonly props: Props) {
     zProps.parse(props)
 
+    if (props.startAt >= props.endAt) {
+      throw new Error("startAt must be before endAt")
+    }
+
     Object.assign(this, props)
 
     Object.freeze(this)
