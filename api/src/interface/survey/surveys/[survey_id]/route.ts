@@ -38,12 +38,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
+  let questionsJson: unknown
+  try {
+    questionsJson = JSON.parse(row.questionsJson)
+  } catch {
+    throw new InternalError("invalid questions_json data")
+  }
+
   return c.json(
     {
       id: row.id,
       title: row.title,
       status: row.status,
-      questions_json: JSON.parse(row.questionsJson),
+      questions_json: questionsJson,
     },
     200,
   )
