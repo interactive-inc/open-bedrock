@@ -70,8 +70,12 @@ export const PUT = factory.createHandlers(
     z.object({
       code: codeSchema,
       name: z.string().min(1).max(200),
-      start_time: z.string().min(1),
-      end_time: z.string().min(1),
+      start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, {
+        message: "start_time must be in HH:MM format",
+      }),
+      end_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, {
+        message: "end_time must be in HH:MM format",
+      }),
       break_minutes: z.number().int().nonnegative().default(0),
     }),
   ),

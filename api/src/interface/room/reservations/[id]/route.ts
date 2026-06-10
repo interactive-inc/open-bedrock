@@ -59,11 +59,16 @@ export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      start_at: z.string().min(1),
-      end_at: z.string().min(1),
-      purpose: z.string().max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        start_at: z.string().datetime(),
+        end_at: z.string().datetime(),
+        purpose: z.string().max(3_000).nullable().optional(),
+      })
+      .refine((data) => data.end_at > data.start_at, {
+        message: "end_at must be after start_at",
+        path: ["end_at"],
+      }),
   ),
   async (c) => {
     const viewer = c.var.session
