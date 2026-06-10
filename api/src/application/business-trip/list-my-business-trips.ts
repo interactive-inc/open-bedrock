@@ -4,6 +4,8 @@ import { BusinessTripRepository } from "@/infrastructure/business-trip/business-
 
 export type Command = {
   travelerId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyBusinessTrips {
   async run(command: Command): Promise<ReadonlyArray<BusinessTrip> | Error> {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
-    return await businessTripRepository.findByTravelerId(command.travelerId)
+    return await businessTripRepository.findByTravelerId({
+      travelerId: command.travelerId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

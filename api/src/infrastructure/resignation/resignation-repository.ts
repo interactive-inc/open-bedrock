@@ -9,14 +9,20 @@ export type AlreadyRequestedError = { kind: "already_requested" }
 export class ResignationRepository {
   constructor(private readonly c: Context) {}
 
-  // 申請者本人の退職申請を退職希望日の昇順で返す。
-  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<Resignation> | Error> {
+  // 申請者本人の退職申請を退職希望日の昇順でページングして返す。
+  async findByEmployeeId(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<Resignation> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(resignations)
-        .where(eq(resignations.employeeId, employeeId))
+        .where(eq(resignations.employeeId, props.employeeId))
         .orderBy(asc(resignations.resignationDate))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => Resignation.fromRow(row))
     } catch (error) {

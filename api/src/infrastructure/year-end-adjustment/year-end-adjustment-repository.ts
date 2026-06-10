@@ -6,14 +6,20 @@ import { and, desc, eq } from "drizzle-orm"
 export class YearEndAdjustmentRepository {
   constructor(private readonly c: Context) {}
 
-  // 本人の年末調整申告を対象年の降順で返す。
-  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<YearEndAdjustment> | Error> {
+  // 本人の年末調整申告を対象年の降順でページングして返す。
+  async findByEmployeeId(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<YearEndAdjustment> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(yearEndAdjustments)
-        .where(eq(yearEndAdjustments.employeeId, employeeId))
+        .where(eq(yearEndAdjustments.employeeId, props.employeeId))
         .orderBy(desc(yearEndAdjustments.targetYear))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => YearEndAdjustment.fromRow(row))
     } catch (error) {
