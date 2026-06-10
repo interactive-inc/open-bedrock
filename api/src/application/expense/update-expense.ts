@@ -58,7 +58,19 @@ export class UpdateExpense {
     }
 
     if (saved === null) {
-      return { reason: "expense_not_found" }
+      // update() returned 0 rows — re-read to classify the reason
+      const reloaded = await repository.findById(command.expenseId)
+
+      if (reloaded instanceof Error) {
+        return reloaded
+      }
+
+      if (reloaded === null) {
+        return { reason: "expense_not_found" }
+      }
+
+      // Row exists but status is no longer pending (concurrent approval/rejection)
+      return { reason: "not_editable" }
     }
 
     return saved
