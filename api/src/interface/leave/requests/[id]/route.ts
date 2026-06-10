@@ -42,7 +42,7 @@ function toLeaveRequestId(value: string): number | null {
   return parsed
 }
 
-// GET /leave/requests/:id — 休暇申請の詳細（申請者本人のみ）
+// GET /leave/requests/:id — 休暇申請の詳細（申請者本人または承認権限者）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
 
@@ -59,6 +59,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new GetLeaveRequest(c).run({
     leaveRequestId,
     employeeId: viewer.employeeId,
+    viewerRole: viewer.role,
   })
 
   if (result instanceof Error) {
