@@ -3,7 +3,6 @@ import { GetRoomReservation } from "@/application/room/get-room-reservation"
 import { UpdateRoomReservation } from "@/application/room/update-room-reservation"
 import type { RoomReservation } from "@/domain/room/room-reservation"
 import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
   ConflictError,
@@ -12,50 +11,46 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { toResourceId } from "@/interface/shared/to-resource-id"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 予約をレスポンス用の snake_case に整形する。
-function toResponseBody(reservation: RoomReservation) {
+function toResponseBody(r: RoomReservation) {
   return {
-    id: reservation.id,
-    room_id: reservation.roomId,
-    reserver_id: reservation.reserverId,
-    start_at: reservation.startAt,
-    end_at: reservation.endAt,
-    purpose: reservation.purpose,
+    id: r.id,
+    room_id: r.roomId,
+    reserver_id: r.reserverId,
+    start_at: r.startAt,
+    end_at: r.endAt,
+    purpose: r.purpose,
   }
 }
 
-// GET /rooms/reservations/:id — 予約の詳細（本人のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const reservation = await new GetRoomReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid reservation id")
+  }
+  const r = await new GetRoomReservation(c).run({
+    reservationId: id,
     reserverId: viewer.employeeId,
   })
-
-  if (reservation instanceof Error) {
+  if (r instanceof Error) {
     throw new InternalError("failed to load reservation")
   }
-
-  if ("reason" in reservation) {
-    if (reservation.reason === "reservation_not_found") {
+  if ("reason" in r) {
+    if (r.reason === "reservation_not_found") {
       throw new NotFoundError("reservation not found")
     }
-
     throw new ForbiddenError("not the reserver")
   }
-
-  return c.json(toResponseBody(reservation), 200)
+  return c.json(toResponseBody(r), 200)
 })
-
-// PUT /rooms/reservations/:id — 予約の時刻と用途を変更（本人のみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -66,76 +61,67 @@ export const PUT = factory.createHandlers(
         end_at: z.string().datetime(),
         purpose: z.string().max(3_000).nullable().optional(),
       })
-      .refine((data) => data.end_at > data.start_at, {
+      .refine((d) => d.end_at > d.start_at, {
         message: "end_at must be after start_at",
         path: ["end_at"],
       }),
   ),
   async (c) => {
     const viewer = c.var.session
-
     if (viewer === null) {
       throw new UnauthorizedError()
     }
-
+    const id = toResourceId(c.req.param("id") ?? "")
+    if (id === null) {
+      throw new BadRequestError("invalid reservation id")
+    }
     const json = c.req.valid("json")
-
-    const reservation = await new UpdateRoomReservation(c).run({
-      reservationId: c.req.param("id") ?? "",
+    const r = await new UpdateRoomReservation(c).run({
+      reservationId: id,
       reserverId: viewer.employeeId,
       startAt: json.start_at,
       endAt: json.end_at,
       purpose: json.purpose ?? null,
     })
-
-    if (reservation instanceof Error) {
+    if (r instanceof Error) {
       throw new InternalError("failed to update reservation")
     }
-
-    if ("reason" in reservation) {
-      if (reservation.reason === "invalid_time_range") {
+    if ("reason" in r) {
+      if (r.reason === "invalid_time_range") {
         throw new BadRequestError("end_at must be after start_at")
       }
-
-      if (reservation.reason === "reservation_not_found") {
+      if (r.reason === "reservation_not_found") {
         throw new NotFoundError("reservation not found")
       }
-
-      if (reservation.reason === "not_reserver") {
+      if (r.reason === "not_reserver") {
         throw new ForbiddenError("not the reserver")
       }
-
       throw new ConflictError("the room is already reserved")
     }
-
-    return c.json(toResponseBody(reservation), 200)
+    return c.json(toResponseBody(r), 200)
   },
 )
-
-// DELETE /rooms/reservations/:id — 予約をキャンセル（本人のみ）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const result = await new CancelRoomReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid reservation id")
+  }
+  const r = await new CancelRoomReservation(c).run({
+    reservationId: id,
     reserverId: viewer.employeeId,
   })
-
-  if (result instanceof Error) {
+  if (r instanceof Error) {
     throw new InternalError("failed to cancel reservation")
   }
-
-  if (result.reason === "reservation_not_found") {
+  if (r.reason === "reservation_not_found") {
     throw new NotFoundError("reservation not found")
   }
-
-  if (result.reason === "not_reserver") {
+  if (r.reason === "not_reserver") {
     throw new ForbiddenError("not the reserver")
   }
-
   return c.body(null, 204)
 })

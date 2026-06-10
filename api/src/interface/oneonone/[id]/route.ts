@@ -5,11 +5,13 @@ import type { OneOnOne } from "@/domain/oneonone/one-on-one"
 import type { Context } from "@/env"
 import { factory } from "@/lib/factory"
 import {
+  BadRequestError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { toResourceId } from "@/interface/shared/to-resource-id"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -17,66 +19,52 @@ import { aliasedTable, eq } from "drizzle-orm"
 import { z } from "zod"
 
 const members = aliasedTable(employees, "members")
-
 const managers = aliasedTable(employees, "managers")
-
-// 1on1 を参加者名込みの snake_case レスポンスへ整形する。名前は別クエリで解決する。
-async function toResponseBody(c: Context, oneOnOne: OneOnOne) {
+async function toResponseBody(c: Context, o: OneOnOne) {
   const nameRows = await c.var.database
     .select({ memberName: members.name, managerName: managers.name })
     .from(oneOnOnes)
     .leftJoin(members, eq(members.id, oneOnOnes.memberId))
     .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
-    .where(eq(oneOnOnes.id, oneOnOne.id))
+    .where(eq(oneOnOnes.id, o.id))
     .limit(1)
-
   const nameRow = nameRows.at(0)
-
   return {
-    id: oneOnOne.id,
-    held_at: oneOnOne.heldAt,
+    id: o.id,
+    held_at: o.heldAt,
     member_name: nameRow?.memberName ?? "",
     manager_name: nameRow?.managerName ?? "",
-    topics: oneOnOne.topics,
-    manager_note: oneOnOne.managerNote,
-    next_action: oneOnOne.nextAction,
+    topics: o.topics,
+    manager_note: o.managerNote,
+    next_action: o.nextAction,
   }
 }
 
-// GET /oneonone/:id — 1on1 の詳細（参加者のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const oneOnOne = await new GetOneOnOne(c).run({
-    oneOnOneId: c.req.param("id") ?? "",
-    viewerId: viewer.employeeId,
-  })
-
-  if (oneOnOne instanceof Error) {
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid one-on-one id")
+  }
+  const o = await new GetOneOnOne(c).run({ oneOnOneId: id, viewerId: viewer.employeeId })
+  if (o instanceof Error) {
     throw new InternalError("failed to load one-on-one")
   }
-
-  if ("reason" in oneOnOne) {
-    if (oneOnOne.reason === "one_on_one_not_found") {
+  if ("reason" in o) {
+    if (o.reason === "one_on_one_not_found") {
       throw new NotFoundError("one-on-one not found")
     }
-
     throw new ForbiddenError("not a participant")
   }
-
-  const body = await toResponseBody(c, oneOnOne)
-  const safeBody = {
-    ...body,
-    manager_note: viewer.employeeId === oneOnOne.managerId ? body.manager_note : null,
-  }
-  return c.json(safeBody, 200)
+  const body = await toResponseBody(c, o)
+  return c.json(
+    { ...body, manager_note: viewer.employeeId === o.managerId ? body.manager_note : null },
+    200,
+  )
 })
-
-// PUT /oneonone/:id — 1on1 の記録内容を変更（記録した上長のみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -89,61 +77,51 @@ export const PUT = factory.createHandlers(
   ),
   async (c) => {
     const viewer = c.var.session
-
     if (viewer === null) {
       throw new UnauthorizedError()
     }
-
+    const id = toResourceId(c.req.param("id") ?? "")
+    if (id === null) {
+      throw new BadRequestError("invalid one-on-one id")
+    }
     const json = c.req.valid("json")
-
-    const oneOnOne = await new UpdateOneOnOne(c).run({
-      oneOnOneId: c.req.param("id") ?? "",
+    const o = await new UpdateOneOnOne(c).run({
+      oneOnOneId: id,
       managerId: viewer.employeeId,
       topics: json.topics ?? null,
       managerNote: json.manager_note ?? null,
       nextAction: json.next_action ?? null,
     })
-
-    if (oneOnOne instanceof Error) {
+    if (o instanceof Error) {
       throw new InternalError("failed to update one-on-one")
     }
-
-    if ("reason" in oneOnOne) {
-      if (oneOnOne.reason === "one_on_one_not_found") {
+    if ("reason" in o) {
+      if (o.reason === "one_on_one_not_found") {
         throw new NotFoundError("one-on-one not found")
       }
-
       throw new ForbiddenError("not the recording manager")
     }
-
-    return c.json(await toResponseBody(c, oneOnOne), 200)
+    return c.json(await toResponseBody(c, o), 200)
   },
 )
-
-// DELETE /oneonone/:id — 1on1 の記録を削除（記録した上長のみ）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const result = await new DeleteOneOnOne(c).run({
-    oneOnOneId: c.req.param("id") ?? "",
-    managerId: viewer.employeeId,
-  })
-
-  if (result instanceof Error) {
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid one-on-one id")
+  }
+  const r = await new DeleteOneOnOne(c).run({ oneOnOneId: id, managerId: viewer.employeeId })
+  if (r instanceof Error) {
     throw new InternalError("failed to delete one-on-one")
   }
-
-  if (result.reason === "one_on_one_not_found") {
+  if (r.reason === "one_on_one_not_found") {
     throw new NotFoundError("one-on-one not found")
   }
-
-  if (result.reason === "not_manager") {
+  if (r.reason === "not_manager") {
     throw new ForbiddenError("not the recording manager")
   }
-
   return c.body(null, 204)
 })

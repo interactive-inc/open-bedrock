@@ -4,60 +4,56 @@ import { UpdateRentalReservation } from "@/application/rental/update-rental-rese
 import type { RentalReservation } from "@/domain/rental/rental-reservation"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
-import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { toResourceId } from "@/interface/shared/to-resource-id"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 予約をレスポンス用の snake_case に整形する。
-function toResponseBody(reservation: RentalReservation) {
+function toResponseBody(r: RentalReservation) {
   return {
-    id: reservation.id,
-    requester_id: reservation.requesterId,
-    item_name: reservation.itemName,
-    start_date: reservation.startDate,
-    end_date: reservation.endDate,
-    purpose: reservation.purpose,
-    status: reservation.status,
-    created_at: reservation.createdAt,
+    id: r.id,
+    requester_id: r.requesterId,
+    item_name: r.itemName,
+    start_date: r.startDate,
+    end_date: r.endDate,
+    purpose: r.purpose,
+    status: r.status,
+    created_at: r.createdAt,
   }
 }
 
-// GET /rentals/:id — 予約の詳細（本人のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const reservation = await new GetRentalReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid reservation id")
+  }
+  const r = await new GetRentalReservation(c).run({
+    reservationId: id,
     requesterId: viewer.employeeId,
   })
-
-  if (reservation instanceof Error) {
+  if (r instanceof Error) {
     throw new InternalError("failed to load reservation")
   }
-
-  if ("reason" in reservation) {
-    if (reservation.reason === "reservation_not_found") {
+  if ("reason" in r) {
+    if (r.reason === "reservation_not_found") {
       throw new NotFoundError("reservation not found")
     }
-
     throw new ForbiddenError("not the requester")
   }
-
-  return c.json(toResponseBody(reservation), 200)
+  return c.json(toResponseBody(r), 200)
 })
-
-// PUT /rentals/:id — 予約の品名・期間・用途を変更（本人のみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -76,70 +72,61 @@ export const PUT = factory.createHandlers(
   ),
   async (c) => {
     const viewer = c.var.session
-
     if (viewer === null) {
       throw new UnauthorizedError()
     }
-
+    const id = toResourceId(c.req.param("id") ?? "")
+    if (id === null) {
+      throw new BadRequestError("invalid reservation id")
+    }
     const json = c.req.valid("json")
-
-    const reservation = await new UpdateRentalReservation(c).run({
-      reservationId: c.req.param("id") ?? "",
+    const r = await new UpdateRentalReservation(c).run({
+      reservationId: id,
       requesterId: viewer.employeeId,
       itemName: json.item_name,
       startDate: json.start_date,
       endDate: json.end_date,
       purpose: json.purpose ?? null,
     })
-
-    if (reservation instanceof Error) {
+    if (r instanceof Error) {
       throw new InternalError("failed to update reservation")
     }
-
-    if ("reason" in reservation) {
-      if (reservation.reason === "reservation_not_found") {
+    if ("reason" in r) {
+      if (r.reason === "reservation_not_found") {
         throw new NotFoundError("reservation not found")
       }
-
-      if (reservation.reason === "not_modifiable") {
+      if (r.reason === "not_modifiable") {
         throw new ConflictError("reservation is not modifiable")
       }
-
       throw new ForbiddenError("not the requester")
     }
-
-    return c.json(toResponseBody(reservation), 200)
+    return c.json(toResponseBody(r), 200)
   },
 )
-
-// DELETE /rentals/:id — 予約を取消（本人のみ）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
-
   if (viewer === null) {
     throw new UnauthorizedError()
   }
-
-  const result = await new CancelRentalReservation(c).run({
-    reservationId: c.req.param("id") ?? "",
+  const id = toResourceId(c.req.param("id") ?? "")
+  if (id === null) {
+    throw new BadRequestError("invalid reservation id")
+  }
+  const r = await new CancelRentalReservation(c).run({
+    reservationId: id,
     requesterId: viewer.employeeId,
   })
-
-  if (result instanceof Error) {
+  if (r instanceof Error) {
     throw new InternalError("failed to cancel reservation")
   }
-
-  if (result.reason === "reservation_not_found") {
+  if (r.reason === "reservation_not_found") {
     throw new NotFoundError("reservation not found")
   }
-
-  if (result.reason === "not_requester") {
+  if (r.reason === "not_requester") {
     throw new ForbiddenError("not the requester")
   }
-
-  if (result.reason === "not_modifiable") {
+  if (r.reason === "not_modifiable") {
     throw new ConflictError("reservation is not modifiable")
   }
-
   return c.body(null, 204)
 })
