@@ -6,13 +6,13 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -31,11 +31,7 @@ function toResponseBody(assignment: ShiftAssignment) {
 
 // GET /shift/assignments/:id — シフト割当の詳細（特権ロール）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const assignmentId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(assignmentId) === false) {
-    throw new BadRequestError("invalid assignment id")
-  }
+  const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
 
   const session = c.var.session
 
@@ -75,11 +71,7 @@ export const PUT = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const assignmentId = Number(c.req.param("id") ?? "")
-
-    if (Number.isInteger(assignmentId) === false) {
-      throw new BadRequestError("invalid assignment id")
-    }
+    const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
 
     const session = c.var.session
 
@@ -123,11 +115,7 @@ export const PUT = factory.createHandlers(
 
 // DELETE /shift/assignments/:id — シフト割当を削除（特権ロール）
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const assignmentId = Number(c.req.param("id") ?? "")
-
-  if (Number.isInteger(assignmentId) === false) {
-    throw new BadRequestError("invalid assignment id")
-  }
+  const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
 
   const session = c.var.session
 

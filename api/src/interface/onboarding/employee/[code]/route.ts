@@ -1,5 +1,6 @@
 import { canViewEmployeeOnboarding } from "@/domain/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
@@ -17,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const code = c.req.param("code") ?? ""
+  const code = validateCodeParam(c.req.param("code"), "employee")
 
   const employeeRows = await c.var.database
     .select()

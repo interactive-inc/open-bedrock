@@ -10,6 +10,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -34,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const template = await new GetOnboardingTemplate(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 
   if (template instanceof Error) {
@@ -74,7 +75,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateOnboardingTemplate(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "onboarding template"),
       name: json.name,
       kind: json.kind,
       description: json.description ?? null,
@@ -106,7 +107,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteOnboardingTemplate(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 
   if (result instanceof Error) {

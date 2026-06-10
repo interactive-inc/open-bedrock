@@ -9,6 +9,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -32,7 +33,7 @@ export const POST = factory.createHandlers(
 
     const updated = await new LendAsset(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "asset"),
       employeeCode: json.employee_code,
       now: c.env.NOW ?? new Date().toISOString(),
     })

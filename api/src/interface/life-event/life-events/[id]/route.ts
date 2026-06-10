@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -37,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const lifeEvent = await new GetLifeEvent(c).run({
-    lifeEventId: c.req.param("id") ?? "",
+    lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
     employeeId: viewer.employeeId,
   })
 
@@ -77,7 +78,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const lifeEvent = await new UpdateLifeEvent(c).run({
-      lifeEventId: c.req.param("id") ?? "",
+      lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
       employeeId: viewer.employeeId,
       eventType: json.event_type,
       eventDate: json.event_date,
@@ -113,7 +114,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new CancelLifeEvent(c).run({
-    lifeEventId: c.req.param("id") ?? "",
+    lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
     employeeId: viewer.employeeId,
   })
 

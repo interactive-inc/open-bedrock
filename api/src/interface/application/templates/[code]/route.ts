@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -35,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const code = c.req.param("code") ?? ""
+  const code = validateCodeParam(c.req.param("code"), "application template")
 
   const rows = await c.var.database
     .select()
@@ -98,7 +99,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateApplicationTemplate(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "application template"),
       name: body.name,
       category: body.category,
       description: body.description ?? null,
@@ -132,7 +133,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteApplicationTemplate(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "application template"),
   })
 
   if (result instanceof Error) {

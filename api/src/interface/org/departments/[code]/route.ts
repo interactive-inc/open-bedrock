@@ -11,6 +11,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -35,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const department = await new GetOrgDepartment(c).run({
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "department"),
   })
 
   if (department instanceof Error) {
@@ -71,7 +72,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateOrgDepartment(c).run({
       viewerRole: session.role,
-      code: c.req.param("code") ?? "",
+      code: validateCodeParam(c.req.param("code"), "department"),
       parentCode: json.parent_code ?? null,
       managerEmployeeCode: json.manager_employee_code ?? null,
       order: json.order,
@@ -111,7 +112,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new DeleteOrgDepartment(c).run({
     viewerRole: session.role,
-    code: c.req.param("code") ?? "",
+    code: validateCodeParam(c.req.param("code"), "department"),
   })
 
   if (result instanceof Error) {

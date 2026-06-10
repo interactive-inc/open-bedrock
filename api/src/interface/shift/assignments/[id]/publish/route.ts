@@ -2,21 +2,17 @@ import { PublishShiftAssignment } from "@/application/shift/publish-shift-assign
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // POST /shift/assignments/:id/publish — 特権ロールが未公開の割当を公開する
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
-  const assignmentId = Number(c.req.param("id"))
-
-  if (Number.isInteger(assignmentId) === false) {
-    throw new BadRequestError("invalid assignment id")
-  }
+  const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
 
   const session = c.var.session
 

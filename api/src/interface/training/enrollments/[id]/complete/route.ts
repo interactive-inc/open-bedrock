@@ -2,13 +2,13 @@ import { CompleteTrainingEnrollment } from "@/application/training/complete-trai
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -21,11 +21,7 @@ export const POST = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const enrollmentId = Number(c.req.param("id"))
-
-    if (Number.isInteger(enrollmentId) === false) {
-      throw new BadRequestError("invalid enrollment id")
-    }
+    const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
     const body = c.req.valid("json")
 

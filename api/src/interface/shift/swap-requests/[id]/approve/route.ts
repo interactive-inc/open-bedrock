@@ -2,21 +2,17 @@ import { ApproveShiftSwapRequest } from "@/application/shift/approve-shift-swap-
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // POST /shift/swap-requests/:id/approve — 特権ロールが保留中の交代申請を承認する
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = Number(c.req.param("id"))
-
-  if (Number.isInteger(swapRequestId) === false) {
-    throw new BadRequestError("invalid swap request id")
-  }
+  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 

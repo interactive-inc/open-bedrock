@@ -214,14 +214,14 @@ describe("POST /onboarding/tasks/:id/complete", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 for a non-integer task id", async () => {
+  test("returns 404 for a non-integer task id", async () => {
     const response = await request({
       path: "/onboarding/tasks/abc/complete",
       token: await token(1, "admin"),
       method: "POST",
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
