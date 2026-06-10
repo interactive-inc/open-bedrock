@@ -1,4 +1,5 @@
-import { GoalEvaluation } from "@/domain/goal/goal-evaluation"
+import type { Goal } from "@/domain/goal/goal"
+import { GoalEvaluation, goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { goalEvaluations } from "@/schema"
@@ -46,6 +47,69 @@ export class GoalEvaluationRepository {
       return row === undefined
         ? new Error("failed to create goal evaluation")
         : GoalEvaluation.fromRow(row)
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return { reason: "already_evaluated" }
+      }
+      return error instanceof Error ? error : new Error("failed to create goal evaluation")
+    }
+  }
+
+  // final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
+  // UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
+  async createWithGoalCompletion(
+    evaluation: GoalEvaluation,
+    goal: Goal,
+  ): Promise<GoalEvaluation | AlreadyEvaluatedError | Error> {
+    try {
+      const results = await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `
+          INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
+          VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+          RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
+          `,
+        ).bind(
+          evaluation.goalId,
+          evaluation.evaluatorId,
+          evaluation.kind,
+          evaluation.score,
+          evaluation.comment,
+          evaluation.createdAt,
+        ),
+        this.c.env.DB.prepare(
+          `
+          UPDATE goals SET status = 'done' WHERE id = ?1
+          `,
+        ).bind(goal.id),
+      ])
+
+      const insertResult = results.at(0)
+      const row = insertResult?.results?.at(0) as
+        | {
+            id: number
+            goalId: number
+            evaluatorId: number
+            kind: string
+            score: number | null
+            comment: string | null
+            createdAt: string
+          }
+        | undefined
+
+      if (row === undefined) {
+        return new Error("failed to create goal evaluation")
+      }
+
+      return new GoalEvaluation({
+        id: row.id,
+        goalId: row.goalId,
+        evaluatorId: row.evaluatorId,
+        kind: goalEvaluationKindSchema.parse(row.kind),
+        score: row.score,
+        comment: row.comment,
+        createdAt: row.createdAt,
+      })
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         return { reason: "already_evaluated" }
