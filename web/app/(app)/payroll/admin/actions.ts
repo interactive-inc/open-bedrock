@@ -163,11 +163,23 @@ export async function correctPayslipAction(
     return { ok: false, error: "差引支給額は 0 以上の整数で入力してください" }
   }
 
+  const allowances = toOptionalNonNegativeNumber(formData.get("allowances"))
+
+  if (allowances === null) {
+    return { ok: false, error: "手当は 0 以上の整数で入力してください" }
+  }
+
+  const deductions = toOptionalNonNegativeNumber(formData.get("deductions"))
+
+  if (deductions === null) {
+    return { ok: false, error: "控除は 0 以上の整数で入力してください" }
+  }
+
   const corrected = await correctPayslip(payslipId, {
     period: period,
     base_salary: baseSalary,
-    allowances: toNonNegativeNumber(formData.get("allowances")),
-    deductions: toNonNegativeNumber(formData.get("deductions")),
+    allowances: allowances,
+    deductions: deductions,
     net_pay: netPay,
   })
 
@@ -293,6 +305,22 @@ function toNonNegativeNumber(value: FormDataEntryValue | null): number {
 
   if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
     return 0
+  }
+
+  return parsed
+}
+
+// FormData の数値を 0 以上の整数へ変換する。未入力・空文字・不正値は null を返す。
+// correctPayslipAction で使用し、未入力時に 0 へフォールバックして既存値を上書きするのを防ぐ。
+function toOptionalNonNegativeNumber(value: FormDataEntryValue | null): number | null {
+  if (value === null || (typeof value === "string" && value.trim() === "")) {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
+    return null
   }
 
   return parsed
