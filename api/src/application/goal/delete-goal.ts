@@ -39,7 +39,9 @@ export class DeleteGoal {
       return { reason: "not_owner" }
     }
 
-    const evaluations = await new GoalEvaluationRepository(this.c).findByGoalId(command.goalId)
+    const evalRepo = new GoalEvaluationRepository(this.c)
+
+    const evaluations = await evalRepo.findByGoalId(command.goalId)
 
     if (evaluations instanceof Error) {
       return evaluations
@@ -47,6 +49,12 @@ export class DeleteGoal {
 
     if (hasFinalEvaluation(evaluations)) {
       return { reason: "goal_finalized" }
+    }
+
+    const deletedEvals = await evalRepo.deleteByGoalId(command.goalId)
+
+    if (deletedEvals instanceof Error) {
+      return deletedEvals
     }
 
     const deleted = await repository.delete(command.goalId)
