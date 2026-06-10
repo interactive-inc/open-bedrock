@@ -120,6 +120,7 @@ export const reviewForms = sqliteTable("review_forms", {
   reviewerType: text("reviewer_type").notNull(),
   answers: text("answers").notNull(),
   score: integer("score"),
+  comment: text("comment"),
   status: text("status").notNull(),
   submittedAt: text("submitted_at"),
 })

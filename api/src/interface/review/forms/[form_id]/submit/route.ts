@@ -39,6 +39,7 @@ export const POST = factory.createHandlers(
       formId,
       score: json.score ?? null,
       answers: json.answers ?? [],
+      comment: json.comment ?? null,
       submittedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
@@ -66,6 +67,7 @@ export const POST = factory.createHandlers(
       reviewer_type: submitted.reviewerType,
       answers: submitted.answers,
       score: submitted.score,
+      comment: submitted.comment,
       status: submitted.status,
       submitted_at: submitted.submittedAt,
     }
