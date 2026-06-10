@@ -13,13 +13,13 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// POST /leave/requests/:id/reject — 休暇申請を却下する
+// POST /leave/requests/:id/reject — 休暇申請を却下する（コメント必須）
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
-      comment: z.string().max(3_000).nullable(),
+      comment: z.string().min(1).max(3_000),
     }),
   ),
   async (c) => {

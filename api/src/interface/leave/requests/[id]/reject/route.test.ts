@@ -148,6 +148,39 @@ describe("POST /leave/requests/:id/reject", () => {
     expect(annual?.remaining_days).toBe(15)
   })
 
+  test("returns 400 when comment is empty", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when comment is null", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when comment is omitted", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: {},
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 403 for a member", async () => {
     const response = await request({
       path: "/leave/requests/1/reject",
