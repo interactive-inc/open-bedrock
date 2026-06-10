@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
 import { cors } from "hono/cors"
 import { HTTPException } from "hono/http-exception"
+import { seedRoomReservations } from "@/infrastructure/seed/seed-room-reservations"
 import { seedRooms } from "@/infrastructure/seed/seed-rooms"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
@@ -71,6 +72,19 @@ async function createTestDb(): Promise<D1Database> {
       name: room.name,
       capacity: room.capacity,
       location: room.location,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "room_reservations",
+    seedRoomReservations.map((reservation) => ({
+      id: reservation.id,
+      room_id: reservation.roomId,
+      reserver_id: reservation.reserverId,
+      start_at: reservation.startAt,
+      end_at: reservation.endAt,
+      purpose: reservation.purpose,
     })),
   )
 
@@ -317,5 +331,45 @@ describe("DELETE /rooms/:id", () => {
     const response = await request({ path: "/rooms/1", token: null, method: "DELETE" })
 
     expect(response.status).toBe(401)
+  })
+
+  test("deletes associated room_reservations when deleting a room", async () => {
+    const db = await createTestDb()
+    const token = await adminToken()
+
+    // room 1 has 2 reservations in seed data (ids ...0001 and ...0003)
+    const before = await db
+      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 1")
+      .first<{ cnt: number }>()
+
+    expect(before?.cnt).toBe(2)
+
+    const response = await app.request(
+      "/rooms/1",
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+      {
+        DB: db,
+        JWT_SECRET: jwtSecret,
+        NOW: "2026-01-01T00:00:00.000Z",
+      },
+    )
+
+    expect(response.status).toBe(204)
+
+    const after = await db
+      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 1")
+      .first<{ cnt: number }>()
+
+    expect(after?.cnt).toBe(0)
+
+    // reservations for other rooms remain intact
+    const otherRoom = await db
+      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 2")
+      .first<{ cnt: number }>()
+
+    expect(otherRoom?.cnt).toBe(1)
   })
 })

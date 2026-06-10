@@ -183,4 +183,15 @@ export class RoomReservationRepository {
       return error instanceof Error ? error : new Error("failed to delete room_reservation")
     }
   }
+
+  // 指定した会議室に紐づく予約をすべて削除する。
+  async deleteByRoomId(roomId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(roomReservations).where(eq(roomReservations.roomId, roomId))
+
+      return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete room_reservations")
+    }
+  }
 }
