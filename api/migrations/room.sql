@@ -19,3 +19,5 @@ CREATE TABLE IF NOT EXISTS room_reservations (
 );
 
 CREATE INDEX IF NOT EXISTS idx_room_reservations_room ON room_reservations (room_id);
+
+CREATE INDEX IF NOT EXISTS idx_room_reservations_reserver ON room_reservations (reserver_id);
