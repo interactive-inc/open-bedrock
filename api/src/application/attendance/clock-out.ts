@@ -44,6 +44,10 @@ export class ClockOut {
       clockOutAt: command.now,
     })
 
+    if (workMinutes instanceof Error) {
+      return workMinutes
+    }
+
     const record = await recordRepository.update(
       open.withClosed({
         clockOutAt: command.now,

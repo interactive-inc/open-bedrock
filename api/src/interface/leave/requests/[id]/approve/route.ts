@@ -1,6 +1,5 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { canDecideLeave } from "@/domain/leave/can-decide-leave"
-import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
 import {
   ConflictError,
   ForbiddenError,
@@ -38,18 +37,11 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const fiscalYear = toFiscalYear(c.env.NOW ?? new Date().toISOString())
-
-    if (fiscalYear === null) {
-      throw new InternalError("invalid server time")
-    }
-
     const updated = await new DecideLeaveRequest(c).run({
       leaveRequestId,
       approverId: session.employeeId,
       action: "approve",
       comment: body.comment,
-      fiscalYear,
     })
 
     if (updated instanceof Error) {
@@ -71,6 +63,10 @@ export const POST = factory.createHandlers(
 
       if (updated.failure === "insufficient_balance") {
         throw new ConflictError("insufficient leave balance")
+      }
+
+      if (updated.failure === "invalid_start_date") {
+        throw new InternalError("invalid leave request start date")
       }
 
       throw new NotFoundError("leave request not found")
