@@ -1,11 +1,11 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import type { Context } from "@/env"
 import { thanks, thanksRedemptions } from "@/schema"
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 
-// 残高から差し引く対象とみなす確定済みの交換ステータス。確定は fulfilled の1つだけ。
+// 確定済みの交換ステータス。確定は fulfilled の1つだけ。
 // 承認＝確定（fulfilled）へ直行するため approved は使わない。
-// この集合は getBalance の集計と approveFromPending の残高サブクエリの両方で一致させる。
+// getBalance と approveFromPending はともに fulfilled + pending を差し引いて残高を算出する。
 const settledStatus = "fulfilled"
 
 export type PendingExistsError = { reason: "pending_exists" }
@@ -117,7 +117,8 @@ export class ThanksRedemptionRepository {
   }
 
   // 承認＝確定を 1 ステートメントで原子的に行う。残高チェックを確定 UPDATE の WHERE に畳み込み、
-  // 「pending かつ 当該社員の確定残高 >= point_cost」のときだけ fulfilled へ更新する。
+  // 「pending かつ 当該社員の残高（fulfilled + 他の pending を差し引き） >= point_cost」のときだけ
+  // fulfilled へ更新する。自身の pending 行は差し引き対象から除外し二重カウントを防ぐ。
   // D1 は個々のステートメントを直列化するため、別 ID の同時承認でも合計が残高を超える分は必ず弾かれる
   // （残高がマイナスに割れない）。0 行更新は残高不足 or 既に決裁済みを意味する。
   async approveFromPending(props: {
@@ -132,7 +133,8 @@ export class ThanksRedemptionRepository {
           WHERE ${thanks.recipientEmployeeId} = ${props.employeeId})
         - (SELECT COALESCE(SUM(${thanksRedemptions.pointCost}), 0) FROM ${thanksRedemptions}
           WHERE ${thanksRedemptions.employeeId} = ${props.employeeId}
-            AND ${thanksRedemptions.status} = ${settledStatus})
+            AND ${thanksRedemptions.status} IN (${settledStatus}, 'pending')
+            AND ${thanksRedemptions.id} != ${props.redemptionId})
       ) >= ${thanksRedemptions.pointCost}`
 
       const rows = await this.c.var.database
@@ -240,7 +242,8 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 受領残高を算出する。受領 thanks.points 合計 − 確定交換（fulfilled）の point_cost 合計。
+  // 受領残高を算出する。受領 thanks.points 合計 − 確定・保留中の交換（fulfilled + pending）の
+  // point_cost 合計。pending を含めることで、未決裁の申請分も残高に反映させる。
   // 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
   async getBalance(employeeId: number): Promise<number | Error> {
     try {
@@ -249,7 +252,7 @@ export class ThanksRedemptionRepository {
         .from(thanks)
         .where(eq(thanks.recipientEmployeeId, employeeId))
 
-      const [settledRow] = await this.c.var.database
+      const [deductedRow] = await this.c.var.database
         .select({
           total: sql<number>`COALESCE(SUM(${thanksRedemptions.pointCost}), 0)`,
         })
@@ -257,11 +260,11 @@ export class ThanksRedemptionRepository {
         .where(
           and(
             eq(thanksRedemptions.employeeId, employeeId),
-            eq(thanksRedemptions.status, settledStatus),
+            inArray(thanksRedemptions.status, [settledStatus, "pending"]),
           ),
         )
 
-      return (receivedRow?.total ?? 0) - (settledRow?.total ?? 0)
+      return (receivedRow?.total ?? 0) - (deductedRow?.total ?? 0)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to compute balance")
     }

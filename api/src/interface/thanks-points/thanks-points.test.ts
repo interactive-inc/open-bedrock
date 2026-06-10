@@ -233,6 +233,35 @@ describe("balance", () => {
 
     expect(parsed.balance_points).toBe(0)
   })
+
+  test("pending redemption reduces the visible balance", async () => {
+    const db = await createTestDb()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 60 })
+
+    const requested = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    expect(requested.status).toBe(201)
+
+    // pending 状態でも残高は差し引かれている。
+    const balance = await request({
+      db,
+      path: "/thanks/balance/me",
+      token: await recipientToken(),
+    })
+
+    const parsed = z.object({ balance_points: z.number() }).parse(await balance.json())
+
+    expect(parsed.balance_points).toBe(40)
+  })
 })
 
 describe("rewards", () => {
@@ -791,5 +820,60 @@ describe("atomicity", () => {
     // 在庫は 1 から 0 までしか減らない（マイナスにならない）。
     expect(rewardRow?.stock).toBe(0)
     expect(rewardRow?.stock).toBeGreaterThanOrEqual(0)
+  })
+
+  // approveFromPending の残高サブクエリが fulfilled + pending を差し引くことを確認する。
+  // DB に直接 pending 行を追加し、その分を考慮すると残高不足になるシナリオで承認が拒否されることをテスト。
+  // 部分 unique インデックスを一時的に外して同一社員に 2 pending を作る。
+  test("approval considers other pending redemptions in the balance check", async () => {
+    const db = await createTestDb()
+
+    // E005 に 100pt 付与。
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+
+    const rewardId = await createReward({ db, pointCost: 60 })
+
+    // API 経由で 60pt の pending を 1 件作成。
+    const requested = await request({
+      db,
+      path: "/thanks/redemptions",
+      token: await recipientToken(),
+      method: "POST",
+      body: { reward_id: rewardId },
+    })
+
+    expect(requested.status).toBe(201)
+
+    // 部分 unique インデックスを一時的に削除して 2 件目の pending を挿入可能にする。
+    await db.prepare("DROP INDEX IF EXISTS idx_thanks_redemptions_employee_pending").run()
+
+    // DB に直接 2 件目の pending（60pt）を挿入。
+    // これで合計 pending = 120pt > 残高 100pt。
+    await db
+      .prepare(
+        `INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at)
+         VALUES (?, ?, ?, 'pending', datetime('now'))`,
+      )
+      .bind(5, rewardId, 60)
+      .run()
+
+    // 2 件目の pending の id を取得。
+    const secondRow = await db
+      .prepare(
+        "SELECT id FROM thanks_redemptions WHERE employee_id = 5 AND status = 'pending' ORDER BY id DESC LIMIT 1",
+      )
+      .first<{ id: number }>()
+
+    // 2 件目を承認しようとする。1 件目の pending（60pt）があるため実効残高は 40pt。
+    // 60pt の承認は残高不足で弾かれるべき。
+    const approved = await request({
+      db,
+      path: `/thanks/redemptions/${secondRow?.id}/approve`,
+      token: await adminToken(),
+      method: "POST",
+    })
+
+    // 残高不足で 0 行更新 → 409。
+    expect(approved.status).toBe(409)
   })
 })

@@ -58,6 +58,20 @@ export class ShiftAssignmentRepository {
     }
   }
 
+  async existsByPatternId(patternId: number): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ id: shiftAssignments.id })
+        .from(shiftAssignments)
+        .where(eq(shiftAssignments.patternId, patternId))
+        .limit(1)
+
+      return rows.length > 0
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to check shift_assignments")
+    }
+  }
+
   async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<ShiftAssignment> | Error> {
     try {
       const rows = await this.c.var.database
