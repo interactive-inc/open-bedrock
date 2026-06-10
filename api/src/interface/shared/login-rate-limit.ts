@@ -12,8 +12,6 @@
 //   一部上書きされてもカウントが過小になる方向にしか働かない（過剰ブロックはしない）。
 //   これは Workers KV の特性上の既知の許容範囲とする。
 
-import type { KVNamespace } from "@cloudflare/workers-types"
-
 const LIMIT = 5 // ウィンドウ内の最大失敗数
 const WINDOW_SECONDS = 900 // ウィンドウ幅（秒）。15分
 
