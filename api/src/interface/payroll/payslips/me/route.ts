@@ -1,5 +1,11 @@
 import { factory } from "@/lib/factory"
 import { payslipSearchQueryInputSchema } from "@/interface/payroll/payslips/me/payslip-search-query-input-schema"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { payslips } from "@/schema"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
@@ -16,11 +22,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const parsed = payslipSearchQueryInputSchema.safeParse({
     period: c.req.query("period"),
+    limit: c.req.query("limit"),
+    offset: c.req.query("offset"),
   })
 
   if (parsed.success === false) {
     throw new BadRequestError("invalid query")
   }
+
+  const limit = toBoundedInt({
+    raw: parsed.data.limit,
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: parsed.data.offset,
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
 
   const conditions: Array<SQL> = [eq(payslips.employeeId, session.employeeId)]
 
@@ -32,6 +54,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(payslips)
     .where(and(...conditions))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,

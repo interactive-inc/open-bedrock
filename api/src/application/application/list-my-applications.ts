@@ -4,6 +4,8 @@ import { ApplicationRepository } from "@/infrastructure/application/application-
 
 export type Command = {
   applicantId: number
+  limit?: number
+  offset?: number
 }
 
 /**
@@ -15,6 +17,11 @@ export class ListMyApplications {
   async run(command: Command): Promise<ReadonlyArray<Application> | Error> {
     const applicationRepository = new ApplicationRepository(this.c)
 
-    return await applicationRepository.findByApplicantId(command.applicantId)
+    const opts =
+      command.limit !== undefined && command.offset !== undefined
+        ? { limit: command.limit, offset: command.offset }
+        : undefined
+
+    return await applicationRepository.findByApplicantId(command.applicantId, opts)
   }
 }
