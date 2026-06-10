@@ -89,13 +89,12 @@ export class OnboardingTemplateRepository {
   // テンプレートを削除する。紐づくタスク定義も合わせて削除する。
   async delete(code: string): Promise<null | Error> {
     try {
-      await this.c.var.database
-        .delete(onboardingTemplateTasks)
-        .where(eq(onboardingTemplateTasks.templateCode, code))
-
-      await this.c.var.database
-        .delete(onboardingTemplates)
-        .where(eq(onboardingTemplates.code, code))
+      await this.c.var.database.batch([
+        this.c.var.database
+          .delete(onboardingTemplateTasks)
+          .where(eq(onboardingTemplateTasks.templateCode, code)),
+        this.c.var.database.delete(onboardingTemplates).where(eq(onboardingTemplates.code, code)),
+      ])
 
       return null
     } catch (error) {
