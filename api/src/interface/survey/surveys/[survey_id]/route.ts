@@ -109,7 +109,7 @@ export const PUT = factory.createHandlers(
       }
 
       if (updated.reason === "questions_immutable") {
-        throw new ConflictError("questions not modifiable when survey is closed")
+        throw new ConflictError("questions not modifiable when responses exist")
       }
 
       throw new ForbiddenError()

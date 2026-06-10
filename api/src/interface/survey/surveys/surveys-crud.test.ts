@@ -203,13 +203,13 @@ describe("POST /surveys", () => {
 })
 
 describe("PUT /surveys/:survey_id", () => {
-  test("updates a survey and returns 200", async () => {
+  test("updates a survey without responses and returns 200", async () => {
     const response = await request({
-      path: "/surveys/1",
+      path: "/surveys/2",
       token: await adminToken(),
       method: "PUT",
       body: {
-        title: "Updated Engagement Survey",
+        title: "Updated Remote Work Survey",
         status: "closed",
         questions_json: [{ id: "q1", type: "scale", text: "Updated", min: 1, max: 5 }],
       },
@@ -222,10 +222,40 @@ describe("PUT /surveys/:survey_id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
-      expect(parsed.data.title).toBe("Updated Engagement Survey")
+      expect(parsed.data.id).toBe(2)
+      expect(parsed.data.title).toBe("Updated Remote Work Survey")
       expect(parsed.data.status).toBe("closed")
     }
+  })
+
+  test("returns 409 when changing questions on a survey with responses", async () => {
+    const response = await request({
+      path: "/surveys/1",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        title: "Updated Engagement Survey",
+        status: "open",
+        questions_json: [{ id: "q1", type: "scale", text: "Changed question" }],
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("allows changing questions on a survey without responses", async () => {
+    const response = await request({
+      path: "/surveys/2",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        title: "Updated Remote Work Survey",
+        status: "open",
+        questions_json: [{ id: "q1", type: "text", text: "New question" }],
+      },
+    })
+
+    expect(response.status).toBe(200)
   })
 
   test("returns 403 for a non-admin", async () => {

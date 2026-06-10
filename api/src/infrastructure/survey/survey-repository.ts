@@ -3,7 +3,7 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 
 export type AlreadySubmittedError = { reason: "already_submitted" }
 
@@ -23,6 +23,20 @@ export class SurveyRepository {
       return row === undefined ? null : Survey.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load survey")
+    }
+  }
+
+  // 指定アンケートに紐づく回答件数を返す。
+  async countResponsesBySurveyId(surveyId: number): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(surveyResponses)
+        .where(eq(surveyResponses.surveyId, surveyId))
+
+      return rows.at(0)?.value ?? 0
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to count survey responses")
     }
   }
 

@@ -13,14 +13,8 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
-import {
-  DEFAULT_LIST_LIMIT,
-  MAX_LIST_LIMIT,
-  MAX_LIST_OFFSET,
-  toBoundedInt,
-} from "@/interface/shared/to-bounded-int"
 import { surveyResponses, surveys } from "@/schema"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 // GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー（管理ロールのみ）。
 // 自由記述を含む集計を返すため、回答の機微情報の保護として閲覧を管理ロールに限定する。
@@ -47,27 +41,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  const limit = toBoundedInt({
-    raw: c.req.query("limit"),
-    fallback: DEFAULT_LIST_LIMIT,
-    min: 1,
-    max: MAX_LIST_LIMIT,
-  })
+  const responseCountRows = await c.var.database
+    .select({ value: count() })
+    .from(surveyResponses)
+    .where(eq(surveyResponses.surveyId, surveyId))
 
-  const offset = toBoundedInt({
-    raw: c.req.query("offset"),
-    fallback: 0,
-    min: 0,
-    max: MAX_LIST_OFFSET,
-  })
+  const responseCount = responseCountRows.at(0)?.value ?? 0
 
   const responseRows = await c.var.database
     .select()
     .from(surveyResponses)
     .where(eq(surveyResponses.surveyId, surveyId))
     .orderBy(surveyResponses.id)
-    .limit(limit)
-    .offset(offset)
 
   const responses = responseRows.map((row) => {
     let answersJson: unknown
@@ -119,7 +104,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const responseBody = {
     survey_id: surveyRow.id,
     title: surveyRow.title,
-    response_count: responses.length,
+    response_count: responseCount,
     questions,
   }
 
