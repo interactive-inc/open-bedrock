@@ -46,7 +46,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         capacity: room.capacity,
       },
       available: overlapping.length === 0,
-      conflicts: overlapping.map((reservation) => ({ purpose: reservation.purpose })),
+      conflicts: overlapping.map((reservation) => ({
+        startAt: reservation.startAt,
+        endAt: reservation.endAt,
+      })),
     })
   }
 

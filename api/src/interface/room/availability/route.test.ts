@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedRoomReservations } from "@/infrastructure/seed/seed-room-reservations"
 import { seedRooms } from "@/infrastructure/seed/seed-rooms"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
@@ -15,13 +16,30 @@ const roomAvailabilityResponseSchema = z.object({
     capacity: z.number(),
   }),
   available: z.boolean(),
-  conflicts: z.array(z.object({ purpose: z.string().nullable() })),
+  conflicts: z.array(z.object({ startAt: z.string(), endAt: z.string() })),
 })
 
 const jwtSecret = "room-availability-route-test-secret"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      email: employee.email,
+      password_hash: employee.passwordHash,
+      role: employee.role,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
 
   await seedD1(
     db,
@@ -83,7 +101,8 @@ describe("GET /rooms/availability", () => {
       expect(roomOne?.room.name).toBe("Large Meeting Room A")
       expect(roomOne?.room.capacity).toBe(20)
       expect(roomOne?.available).toBe(false)
-      expect(roomOne?.conflicts[0]?.purpose).toBe("All-hands standup")
+      expect(roomOne?.conflicts[0]?.startAt).toBe("2026-05-29T01:00:00Z")
+      expect(roomOne?.conflicts[0]?.endAt).toBe("2026-05-29T02:00:00Z")
 
       const roomFour = parsed.data.find((row) => row.room.id === 4)
 
