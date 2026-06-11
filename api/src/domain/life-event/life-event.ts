@@ -7,7 +7,7 @@ const zProps = z.object({
   eventType: z.string(),
   eventDate: z.string(),
   detail: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["submitted", "approved", "rejected"]),
   createdAt: z.string(),
 })
 
@@ -64,7 +64,7 @@ export class LifeEvent implements Props {
       eventType: row.eventType,
       eventDate: row.eventDate,
       detail: row.detail,
-      status: row.status,
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }

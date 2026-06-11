@@ -8,7 +8,7 @@ const zProps = z.object({
   submitTo: z.string().nullable(),
   neededBy: z.string().nullable(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["requested", "issued", "rejected"]),
   createdAt: z.string(),
 })
 
@@ -70,7 +70,7 @@ export class CertificateRequest implements Props {
       submitTo: row.submitTo,
       neededBy: row.neededBy,
       note: row.note,
-      status: row.status,
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }
