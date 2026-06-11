@@ -1,4 +1,10 @@
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { trainingCourses } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
@@ -9,7 +15,13 @@ import { z } from "zod"
 
 export const GET = factory.createHandlers(
   verifyBearer,
-  zValidator("query", z.object({ category: z.string().optional(), status: z.string().optional() })),
+  zValidator(
+    "query",
+    z.object({
+      category: z.string().optional(),
+      status: z.enum(["active", "archived"]).optional(),
+    }),
+  ),
   async (c) => {
     const session = c.var.session
 
@@ -18,6 +30,20 @@ export const GET = factory.createHandlers(
     }
 
     const query = c.req.valid("query")
+
+    const limit = toBoundedInt({
+      raw: c.req.query("limit"),
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: c.req.query("offset"),
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
 
     const conditions: Array<SQL> = []
 
@@ -34,6 +60,8 @@ export const GET = factory.createHandlers(
       .from(trainingCourses)
       .where(conditions.length === 0 ? undefined : and(...conditions))
       .orderBy(asc(trainingCourses.id))
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       id: row.id,

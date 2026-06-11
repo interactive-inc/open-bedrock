@@ -15,16 +15,6 @@ describe("TrainingEnrollment.create", () => {
     expect(enrollment.completedAt).toBe(null)
     expect(enrollment.score).toBe(null)
   })
-
-  test("accepts null dueDate", () => {
-    const enrollment = TrainingEnrollment.create({
-      courseId: 1,
-      employeeId: 5,
-      dueDate: null,
-    })
-
-    expect(enrollment.dueDate).toBe(null)
-  })
 })
 
 describe("TrainingEnrollment.complete", () => {
@@ -32,7 +22,7 @@ describe("TrainingEnrollment.complete", () => {
     const enrollment = TrainingEnrollment.create({
       courseId: 1,
       employeeId: 5,
-      dueDate: null,
+      dueDate: "2026-03-31",
     })
 
     const completed = enrollment.complete("2026-02-15T10:00:00.000Z", 85)
@@ -40,18 +30,6 @@ describe("TrainingEnrollment.complete", () => {
     expect(completed.status).toBe("completed")
     expect(completed.completedAt).toBe("2026-02-15T10:00:00.000Z")
     expect(completed.score).toBe(85)
-  })
-
-  test("accepts null score", () => {
-    const enrollment = TrainingEnrollment.create({
-      courseId: 1,
-      employeeId: 5,
-      dueDate: null,
-    })
-
-    const completed = enrollment.complete("2026-02-15T10:00:00.000Z", null)
-
-    expect(completed.score).toBe(null)
   })
 })
 

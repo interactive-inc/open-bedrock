@@ -39,7 +39,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.templates[":code"].$put({
+    const response = await client["application-templates"][":code"].$put({
       param: { code: query.code },
       json: {
         name: query.name,

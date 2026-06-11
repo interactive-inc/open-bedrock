@@ -1,6 +1,12 @@
 import { canManageShift } from "@/domain/shift/can-manage-shift"
 import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, orgDepartments, shiftAssignments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -18,6 +24,8 @@ export const GET = factory.createHandlers(
       from: z.string().optional(),
       to: z.string().optional(),
       dept_code: codeSchema.optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -32,6 +40,20 @@ export const GET = factory.createHandlers(
     if (canManageShift(session.role) === false) {
       throw new ForbiddenError()
     }
+
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
 
     const conditions: Array<SQL> = []
 
@@ -65,6 +87,8 @@ export const GET = factory.createHandlers(
       .leftJoin(employees, eq(employees.id, shiftAssignments.employeeId))
       .where(conditions.length === 0 ? undefined : and(...conditions))
       .orderBy(shiftAssignments.id)
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       id: row.assignment.id,

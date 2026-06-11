@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { SurveyListTable } from "@/app/(app)/surveys/survey-list-table"
+import { SurveyListTable } from "@/app/(app)/surveys/_components/survey-list-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 

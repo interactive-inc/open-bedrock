@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { EmployeeCreateForm } from "@/app/(app)/employees/employee-create-form"
+import { EmployeeCreateForm } from "@/app/(app)/employees/_components/employee-create-form"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 

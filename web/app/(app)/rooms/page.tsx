@@ -1,7 +1,7 @@
 import { Suspense } from "react"
-import { MyReservationsSection } from "@/app/(app)/rooms/my-reservations-section"
-import { RoomAvailabilitySearchForm } from "@/app/(app)/rooms/room-availability-search-form"
-import { RoomAvailabilitySection } from "@/app/(app)/rooms/room-availability-section"
+import { MyReservationsSection } from "@/app/(app)/rooms/_components/my-reservations-section"
+import { RoomAvailabilitySearchForm } from "@/app/(app)/rooms/_components/room-availability-search-form"
+import { RoomAvailabilitySection } from "@/app/(app)/rooms/_components/room-availability-section"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
 

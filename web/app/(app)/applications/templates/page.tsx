@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { CreateTemplateForm } from "@/app/(app)/applications/templates/create-template-form"
+import { CreateTemplateForm } from "@/app/(app)/applications/templates/_components/create-template-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

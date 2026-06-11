@@ -87,12 +87,20 @@ export class NotificationRepository {
     }
   }
 
-  // 通知を1件削除する。
-  async delete(notificationId: number): Promise<null | Error> {
+  // 通知を1件削除する。所有権ガード付き。
+  async delete(notificationId: number, recipientEmployeeId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(notifications).where(eq(notifications.id, notificationId))
+      const rows = await this.c.var.database
+        .delete(notifications)
+        .where(
+          and(
+            eq(notifications.id, notificationId),
+            eq(notifications.recipientEmployeeId, recipientEmployeeId),
+          ),
+        )
+        .returning({ id: notifications.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete notification")
     }

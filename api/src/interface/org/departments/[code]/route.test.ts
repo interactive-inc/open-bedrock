@@ -187,6 +187,42 @@ describe("PUT /org/departments/:code", () => {
 
     expect(response.status).toBe(409)
   })
+
+  test("returns 409 for an indirect circular reference (A→B→A)", async () => {
+    // Seed: D002.parent = D001. Setting D001.parent = D002 creates D001→D002→D001.
+    const response = await request({
+      path: "/org/departments/D001",
+      token: await adminToken(),
+      method: "PUT",
+      body: { parent_code: "D002", order: 1 },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 for a 3-level circular reference (A→B→C→A)", async () => {
+    // Seed: D005.parent = D004, D004.parent = D001. Setting D001.parent = D005 creates D001→D005→D004→D001.
+    const response = await request({
+      path: "/org/departments/D001",
+      token: await adminToken(),
+      method: "PUT",
+      body: { parent_code: "D005", order: 1 },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("allows a valid parent change that does not create a cycle", async () => {
+    // Moving D003 under D002 is fine — no cycle.
+    const response = await request({
+      path: "/org/departments/D003",
+      token: await adminToken(),
+      method: "PUT",
+      body: { parent_code: "D002", order: 1 },
+    })
+
+    expect(response.status).toBe(200)
+  })
 })
 
 describe("DELETE /org/departments/:code", () => {

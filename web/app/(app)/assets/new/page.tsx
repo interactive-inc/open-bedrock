@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { AssetCreateForm } from "@/app/(app)/assets/asset-create-form"
+import { AssetCreateForm } from "@/app/(app)/assets/_components/asset-create-form"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 

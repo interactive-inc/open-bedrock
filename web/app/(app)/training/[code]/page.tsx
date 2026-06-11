@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { EnrollButton } from "@/app/(app)/training/enroll-button"
+import { EnrollButton } from "@/app/(app)/training/_components/enroll-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getTrainingCourse } from "@/lib/api/get-training-course"

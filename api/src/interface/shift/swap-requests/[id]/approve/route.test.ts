@@ -250,7 +250,7 @@ describe("POST /shift/swap-requests/:id/approve", () => {
 
     expect(results.length).toBe(2)
 
-    const recipientIds = results.map((r) => r.recipient_employee_id).sort()
+    const recipientIds = results.map((r) => r.recipient_employee_id).sort((a, b) => a - b)
     expect(recipientIds).toEqual([4, 5])
 
     for (const row of results) {

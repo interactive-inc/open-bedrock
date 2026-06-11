@@ -1,7 +1,7 @@
 import { Suspense } from "react"
-import { GoalFilterForm } from "@/app/(app)/goals/goal-filter-form"
-import { GoalCreateForm } from "@/app/(app)/goals/goal-create-form"
-import { GoalList } from "@/app/(app)/goals/goal-list"
+import { GoalFilterForm } from "@/app/(app)/goals/_components/goal-filter-form"
+import { GoalCreateForm } from "@/app/(app)/goals/_components/goal-create-form"
+import { GoalList } from "@/app/(app)/goals/_components/goal-list"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "目標" }
