@@ -1,3 +1,4 @@
+import { toCycleStatus } from "@/domain/review/to-cycle-status"
 import type { ReviewCycleRow } from "@/schema"
 import { z } from "zod"
 
@@ -88,16 +89,4 @@ export class ReviewCycle implements Props {
       dueDate: details.dueDate,
     })
   }
-}
-
-function toCycleStatus(value: string): "draft" | "open" | "closed" {
-  if (value === "open") {
-    return "open"
-  }
-
-  if (value === "closed") {
-    return "closed"
-  }
-
-  return "draft"
 }
