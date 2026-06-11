@@ -102,6 +102,8 @@ export async function deleteKnowledgeAction(
 
   revalidatePath("/knowledge")
 
+  revalidatePath(`/knowledge/${articleId}`)
+
   return { ok: true, error: null }
 }
 

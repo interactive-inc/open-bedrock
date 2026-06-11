@@ -22,19 +22,26 @@ const initialState: ReviewFormState = { ok: false, error: null }
 // 自分の評価フォーム一覧。pending のフォームにはスコア・コメントの提出フォームを出す。
 // 提出の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
 export function MyReviewForms(props: Props) {
-  const submitAction = useActionState(submitReviewFormAction, initialState)
+  const submitAction = useActionState(
+    async (previousState: ReviewFormState, formData: FormData) => {
+      const next = await submitReviewFormAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("評価フォームを提出しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialState,
+  )
 
   const submitState = submitAction[0]
 
   const submitDispatch = submitAction[1]
 
   const isSubmitting = submitAction[2]
-
-  if (submitState.ok) {
-    toast.success("評価フォームを提出しました")
-  } else if (submitState.error !== null) {
-    toast.error(submitState.error)
-  }
 
   if (props.forms.length === 0) {
     return <p className="text-sm text-muted-foreground">割り当てられた評価フォームはありません</p>

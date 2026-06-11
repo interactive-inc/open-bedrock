@@ -74,7 +74,14 @@ export const GET = factory.createHandlers(
     })
 
     const rows = await c.var.database
-      .select()
+      .select({
+        code: employees.code,
+        name: employees.name,
+        deptName: employees.deptName,
+        position: employees.position,
+        email: employees.email,
+        status: employees.status,
+      })
       .from(employees)
       .where(conditions.length === 0 ? undefined : and(...conditions))
       .limit(limit)
@@ -87,7 +94,6 @@ export const GET = factory.createHandlers(
       position: row.position,
       email: row.email,
       status: row.status,
-      role: row.role,
     }))
 
     return c.json(responseBody, 200)
