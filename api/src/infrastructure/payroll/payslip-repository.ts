@@ -78,13 +78,14 @@ export class PayslipRepository {
   }
 
   // 給与明細の期間と金額を訂正する。id は採番済みの前提。
-  async update(payslip: Payslip): Promise<Payslip | Error> {
+  // 0 行更新（削除済み等）は null を返す。
+  async update(payslip: Payslip): Promise<Payslip | null | Error> {
     if (payslip.id === null) {
       return new Error("payslip id is required to update")
     }
 
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(payslips)
         .set({
           period: payslip.period,
@@ -94,19 +95,26 @@ export class PayslipRepository {
           netPay: payslip.netPay,
         })
         .where(eq(payslips.id, payslip.id))
+        .returning()
 
-      return payslip
+      const row = rows.at(0)
+
+      return row === undefined ? null : Payslip.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update payslip")
     }
   }
 
   // 給与明細を削除する。
-  async delete(id: number): Promise<null | Error> {
+  // draft 状態のみ削除可。issued 等は 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+  async delete(id: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(payslips).where(eq(payslips.id, id))
+      const rows = await this.c.var.database
+        .delete(payslips)
+        .where(and(eq(payslips.id, id), eq(payslips.status, "draft")))
+        .returning({ id: payslips.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete payslip")
     }

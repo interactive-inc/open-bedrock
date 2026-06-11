@@ -44,6 +44,12 @@ export class CorrectSalaryRevision {
       .withNewBaseSalary(command.newBaseSalary)
       .withReason(command.reason)
 
-    return await salaryRevisionRepository.update(corrected)
+    const updated = await salaryRevisionRepository.update(corrected)
+
+    if (updated === null) {
+      return { reason: "salary_revision_not_found" }
+    }
+
+    return updated
   }
 }

@@ -50,6 +50,10 @@ export class CancelPayslip {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "not_cancellable" }
+    }
+
     return { reason: "cancelled" }
   }
 }
