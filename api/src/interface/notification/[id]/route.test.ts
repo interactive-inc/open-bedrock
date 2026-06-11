@@ -105,13 +105,15 @@ describe("GET /notifications/:id", () => {
     }
   })
 
-  test("returns 403 for another employee's notification", async () => {
+  test("returns 404 for another employee's notification", async () => {
     const response = await request({
       path: "/notifications/4",
       token: await tokenFor(5, "member"),
     })
 
-    expect(response.status).toBe(403)
+    // Returns 404 instead of 403 to avoid leaking notification existence
+    // via auto-increment id enumeration.
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for a missing notification", async () => {
