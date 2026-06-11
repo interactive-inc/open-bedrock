@@ -9,7 +9,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { payslips } from "@/schema"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
-import { and, count, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // GET /payslips/me — 本人の給与明細一覧（period で絞り込み可能）
@@ -55,6 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .select()
       .from(payslips)
       .where(and(...conditions))
+      .orderBy(desc(payslips.id))
       .limit(limit)
       .offset(offset),
     c.var.database
