@@ -88,7 +88,7 @@ export const PUT = factory.createHandlers(
       deptId: body.dept_id ?? null,
       deptName: body.dept_name ?? null,
       requiredSkills: body.required_skills ?? null,
-      status: body.status ?? "open",
+      status: body.status,
     })
 
     if (updated instanceof Error) {
