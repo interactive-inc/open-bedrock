@@ -21,6 +21,7 @@ const surveySummaryResponseSchema = z.object({
   survey_id: z.number(),
   title: z.string(),
   response_count: z.number(),
+  is_truncated: z.boolean(),
   questions: z.array(surveyQuestionSummaryResponseSchema).readonly(),
 })
 
@@ -117,6 +118,7 @@ describe("GET /surveys/:survey_id/summary", () => {
     if (parsed.success) {
       expect(parsed.data.survey_id).toBe(1)
       expect(parsed.data.response_count).toBe(3)
+      expect(parsed.data.is_truncated).toBe(false)
       expect(parsed.data.questions.length).toBe(3)
 
       const scale = parsed.data.questions.find((question) => question.id === "q1")
