@@ -103,9 +103,7 @@ export class BusinessTripRepository {
           purpose: businessTrip.purpose,
           estimatedCost: businessTrip.estimatedCost,
         })
-        .where(
-          and(eq(businessTrips.id, businessTrip.id), eq(businessTrips.status, "requested")),
-        )
+        .where(and(eq(businessTrips.id, businessTrip.id), eq(businessTrips.status, "requested")))
         .returning()
 
       return rows.length === 0 ? null : businessTrip

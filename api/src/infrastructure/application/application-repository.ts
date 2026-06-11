@@ -129,13 +129,13 @@ export class ApplicationRepository {
   async delete(applicationId: number): Promise<true | null | Error> {
     try {
       await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          "DELETE FROM applications WHERE id = ?1 AND status = 'pending'",
-        ).bind(applicationId),
+        this.c.env.DB.prepare("DELETE FROM applications WHERE id = ?1 AND status = 'pending'").bind(
+          applicationId,
+        ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        this.c.env.DB.prepare(
-          "DELETE FROM application_approvals WHERE application_id = ?1",
-        ).bind(applicationId),
+        this.c.env.DB.prepare("DELETE FROM application_approvals WHERE application_id = ?1").bind(
+          applicationId,
+        ),
       ])
 
       return true
