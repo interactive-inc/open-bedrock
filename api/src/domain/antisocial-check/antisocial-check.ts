@@ -8,7 +8,7 @@ const zProps = z.object({
   partnerAddress: z.string().nullable(),
   representativeName: z.string().nullable(),
   result: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["requested", "completed"]),
   createdAt: z.string(),
 })
 
@@ -69,7 +69,7 @@ export class AntisocialCheck implements Props {
       partnerAddress: row.partnerAddress,
       representativeName: row.representativeName,
       result: row.result,
-      status: row.status,
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }
