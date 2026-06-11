@@ -1,5 +1,7 @@
 import { SalaryRevision } from "@/domain/payroll/salary-revision"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { salaryRevisions } from "@/schema"
 import { and, desc, eq, lt } from "drizzle-orm"
 
@@ -49,7 +51,9 @@ export class SalaryRevisionRepository {
     }
   }
 
-  async create(salaryRevision: SalaryRevision): Promise<SalaryRevision | Error> {
+  async create(
+    salaryRevision: SalaryRevision,
+  ): Promise<SalaryRevision | UniqueConstraintError | Error> {
     try {
       const rows = await this.c.var.database
         .insert(salaryRevisions)
@@ -69,6 +73,12 @@ export class SalaryRevisionRepository {
         ? new Error("failed to insert salary revision")
         : SalaryRevision.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError(
+          "salary revision already exists for the employee and effective date",
+          { cause: error },
+        )
+      }
       return error instanceof Error ? error : new Error("failed to insert salary revision")
     }
   }
@@ -99,12 +109,15 @@ export class SalaryRevisionRepository {
     }
   }
 
-  // 給与改定を削除する（記録の取消）。
-  async delete(id: number): Promise<null | Error> {
+  // 給与改定を削除する（記録の取消）。0 行削除（存在しない等）は null を返す。
+  async delete(id: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(salaryRevisions).where(eq(salaryRevisions.id, id))
+      const rows = await this.c.var.database
+        .delete(salaryRevisions)
+        .where(eq(salaryRevisions.id, id))
+        .returning({ id: salaryRevisions.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete salary revision")
     }

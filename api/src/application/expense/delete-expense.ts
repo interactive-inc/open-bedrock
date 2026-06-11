@@ -44,17 +44,33 @@ export class DeleteExpense {
     }
 
     // expense_approvals と expenses を D1 batch でアトミックに削除する。
-    // これにより承認処理との TOCTOU 競合で expense_approvals が孤児化するリスクを排除する。
+    // expenses を status='pending' 付きで先に削除し、承認処理との TOCTOU 競合を防ぐ。
+    // 0 行削除（承認済みへ遷移済み）は abortWhenPreviousStatementChangedNoRows で
+    // 後続の expense_approvals 削除ごとロールバックし、孤児化を排除する。
     try {
       const db = this.c.env.DB
       await db.batch([
+        db.prepare("DELETE FROM expenses WHERE id = ?1 AND status = 'pending'").bind(
+          command.expenseId,
+        ),
+        abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM expense_approvals WHERE expense_id = ?1").bind(command.expenseId),
-        db.prepare("DELETE FROM expenses WHERE id = ?1").bind(command.expenseId),
       ])
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return { reason: "not_deletable" }
+      }
       return error instanceof Error ? error : new Error("failed to delete expense")
     }
 
     return { reason: "deleted" }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
