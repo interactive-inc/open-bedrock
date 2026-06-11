@@ -8,7 +8,7 @@ const zProps = z.object({
   submitTo: z.string().nullable(),
   neededBy: z.string().nullable(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["requested", "issued", "rejected"]),
   createdAt: z.string(),
 })
 

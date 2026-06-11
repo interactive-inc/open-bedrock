@@ -7,7 +7,7 @@ const zProps = z.object({
   eventType: z.string(),
   eventDate: z.string(),
   detail: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["submitted", "approved", "rejected"]),
   createdAt: z.string(),
 })
 
