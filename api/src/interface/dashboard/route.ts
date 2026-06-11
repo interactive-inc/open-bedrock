@@ -1,8 +1,9 @@
+import { canViewDashboard } from "@/domain/dashboard/can-view-dashboard"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { applications, employees, goals, surveys } from "@/schema"
 import { count, eq } from "drizzle-orm"
-import { UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /dashboard — 従業員・目標・申請・調査の横断的な集計
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -10,6 +11,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (session === null) {
     throw new UnauthorizedError()
+  }
+
+  if (canViewDashboard(session.role) === false) {
+    throw new ForbiddenError()
   }
 
   const [employeeRows, openGoalRows, pendingApplicationRows, openSurveyRows] =
