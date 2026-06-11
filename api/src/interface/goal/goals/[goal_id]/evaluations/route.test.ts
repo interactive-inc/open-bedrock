@@ -188,6 +188,71 @@ describe("POST /goals/:goal_id/evaluations", () => {
     expect(response.status).toBe(404)
   })
 
+  test("returns 400 when score is negative", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: -1, comment: "negative" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when score exceeds 100", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: 101, comment: "too high" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when score is not an integer", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: 50.5, comment: "decimal" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("accepts score at boundary 0", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: 0, comment: "minimum" },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
+  test("accepts score at boundary 100", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: 100, comment: "maximum" },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
   test("returns 400 when kind is invalid", async () => {
     const response = await requestWithContext({
       db: await createTestDb(),

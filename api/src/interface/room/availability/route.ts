@@ -2,8 +2,14 @@ import { factory } from "@/lib/factory"
 import { roomAvailabilityQuerySchema } from "@/interface/room/availability/room-availability-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { roomReservations, rooms } from "@/schema"
-import { and, eq, gt, gte, lt } from "drizzle-orm"
+import { and, eq, gt, gte, inArray, lt } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -20,26 +26,49 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const query = parsed.data
 
-  // N+1 を避けるため、対象会議室と時間範囲が重なる予約を 1 つの LEFT JOIN で取得する。
-  // 重複予約のない会議室は reservation 側が null のまま 1 行返る。
-  const joinedRows = await c.var.database
-    .select({
-      room: rooms,
-      reservation: roomReservations,
-    })
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
+  // limit/offset はグループ化前の JOIN 行ではなく会議室単位で適用するため、
+  // まず rooms テーブルをページングしてから予約を取得して結合する。
+  const pagedRooms = await c.var.database
+    .select()
     .from(rooms)
-    .leftJoin(
-      roomReservations,
+    .where(gte(rooms.capacity, query.capacity))
+    .orderBy(rooms.id)
+    .limit(limit)
+    .offset(offset)
+
+  if (pagedRooms.length === 0) {
+    return c.json([], 200)
+  }
+
+  const roomIds = pagedRooms.map((r) => r.id)
+
+  // ページング済み会議室に絞って重複予約を取得する。
+  const reservationRows = await c.var.database
+    .select()
+    .from(roomReservations)
+    .where(
       and(
-        eq(roomReservations.roomId, rooms.id),
+        inArray(roomReservations.roomId, roomIds),
         lt(roomReservations.startAt, query.end_at),
         gt(roomReservations.endAt, query.start_at),
       ),
     )
-    .where(gte(rooms.capacity, query.capacity))
 
-  // 会議室 id ごとに「最初に出現した順」でグループ化する。Map の挿入順を保つので
-  // 元実装と同じ会議室並びを保つ。
+  // 会議室 id ごとにグループ化する。Map の挿入順を保つので元実装と同じ並びを保つ。
   const grouped = new Map<
     number,
     {
@@ -48,29 +77,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   >()
 
-  for (const row of joinedRows) {
-    const existing = grouped.get(row.room.id)
+  for (const room of pagedRooms) {
+    grouped.set(room.id, {
+      room: { id: room.id, name: room.name, capacity: room.capacity },
+      conflicts: [],
+    })
+  }
 
-    if (existing === undefined) {
-      grouped.set(row.room.id, {
-        room: {
-          id: row.room.id,
-          name: row.room.name,
-          capacity: row.room.capacity,
-        },
-        conflicts:
-          row.reservation === null
-            ? []
-            : [{ startAt: row.reservation.startAt, endAt: row.reservation.endAt }],
-      })
-      continue
-    }
+  for (const reservation of reservationRows) {
+    const entry = grouped.get(reservation.roomId)
 
-    if (row.reservation !== null) {
-      existing.conflicts.push({
-        startAt: row.reservation.startAt,
-        endAt: row.reservation.endAt,
-      })
+    if (entry !== undefined) {
+      entry.conflicts.push({ startAt: reservation.startAt, endAt: reservation.endAt })
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { cancelResignationAction, updateResignationAction } from "@/app/(app)/resignations/actions"
+import type { ResignationActionState } from "@/app/(app)/resignations/actions"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,7 +86,20 @@ export function MyResignationsList(props: Props) {
 function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateResignationAction, {
+  async function reduce(
+    previousState: ResignationActionState,
+    formData: FormData,
+  ): Promise<ResignationActionState> {
+    const result = await updateResignationAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

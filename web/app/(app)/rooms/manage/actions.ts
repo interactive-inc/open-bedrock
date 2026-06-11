@@ -76,6 +76,7 @@ export async function createRoomAction(
   }
 
   revalidatePath("/rooms/manage")
+  revalidatePath("/rooms")
 
   return { ok: true, error: null }
 }
@@ -123,6 +124,7 @@ export async function updateRoomAction(
   }
 
   revalidatePath("/rooms/manage")
+  revalidatePath("/rooms")
 
   return { ok: true, error: null }
 }
@@ -152,6 +154,7 @@ export async function deleteRoomAction(
   }
 
   revalidatePath("/rooms/manage")
+  revalidatePath("/rooms")
 
   // 削除後は一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。
   redirect("/rooms/manage")

@@ -6,9 +6,17 @@ import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-re
 export class ListRewards {
   constructor(private readonly c: Context) {}
 
-  async run(props: { activeOnly: boolean }): Promise<ReadonlyArray<ThanksReward> | Error> {
+  async run(props: {
+    activeOnly: boolean
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ThanksReward> | Error> {
     const rewardRepository = new ThanksRewardRepository(this.c)
 
-    return rewardRepository.findMany({ activeOnly: props.activeOnly })
+    return rewardRepository.findMany({
+      activeOnly: props.activeOnly,
+      limit: props.limit,
+      offset: props.offset,
+    })
   }
 }

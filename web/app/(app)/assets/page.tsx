@@ -14,8 +14,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getAssetList } from "@/lib/api/get-asset-list"
+import type { AssetKind, AssetStatus } from "@/lib/api/types/asset-types"
 
 export const metadata = { title: "備品" }
+
+const VALID_KINDS: readonly string[] = ["pc", "monitor", "furniture", "other"]
+const VALID_STATUSES: readonly string[] = ["in_stock", "lent"]
+
+function toAssetKind(value: string | undefined): AssetKind | null {
+  return value !== undefined && VALID_KINDS.includes(value) ? (value as AssetKind) : null
+}
+
+function toAssetStatus(value: string | undefined): AssetStatus | null {
+  return value !== undefined && VALID_STATUSES.includes(value) ? (value as AssetStatus) : null
+}
 
 type Props = {
   searchParams: Promise<{ kind?: string; status?: string }>
@@ -25,9 +37,9 @@ type Props = {
 export default async function AssetsPage(props: Props) {
   const searchParams = await props.searchParams
 
-  const kind = searchParams.kind ?? null
+  const kind = toAssetKind(searchParams.kind)
 
-  const status = searchParams.status ?? null
+  const status = toAssetStatus(searchParams.status)
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,8 +65,8 @@ export default async function AssetsPage(props: Props) {
 }
 
 type TableProps = {
-  kind: string | null
-  status: string | null
+  kind: AssetKind | null
+  status: AssetStatus | null
 }
 
 // /assets を認証付きで取得して一覧テーブルを描画する非同期 RSC。

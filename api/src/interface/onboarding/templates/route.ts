@@ -8,9 +8,15 @@ import {
   InternalError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { count, eq } from "drizzle-orm"
+import { count, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -32,15 +38,37 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const kind = parsed.data
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const templateRows = await c.var.database
     .select()
     .from(onboardingTemplates)
     .where(kind === undefined ? undefined : eq(onboardingTemplates.kind, kind))
+    .limit(limit)
+    .offset(offset)
 
-  const taskCountRows = await c.var.database
-    .select({ templateCode: onboardingTemplateTasks.templateCode, total: count() })
-    .from(onboardingTemplateTasks)
-    .groupBy(onboardingTemplateTasks.templateCode)
+  const templateCodes = templateRows.map((row) => row.code)
+
+  const taskCountRows =
+    templateCodes.length === 0
+      ? []
+      : await c.var.database
+          .select({ templateCode: onboardingTemplateTasks.templateCode, total: count() })
+          .from(onboardingTemplateTasks)
+          .where(inArray(onboardingTemplateTasks.templateCode, templateCodes))
+          .groupBy(onboardingTemplateTasks.templateCode)
 
   const taskCountMap = new Map(taskCountRows.map((row) => [row.templateCode, row.total]))
 

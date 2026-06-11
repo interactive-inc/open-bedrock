@@ -22,38 +22,54 @@ function kvKey(ip: string): string {
 /**
  * ウィンドウ内の失敗数が閾値を超えているかチェックする。
  * 超えていれば true を返す（呼び出し側は 429 を返すこと）。
+ * KV 読み取りに失敗した場合はフェイルオープン（false を返す）にしてサービスを継続する。
  */
 export async function checkRateLimit(kv: KVNamespace, ip: string): Promise<boolean> {
-  const raw = await kv.get(kvKey(ip))
-  if (raw === null) return false
+  try {
+    const raw = await kv.get(kvKey(ip))
+    if (raw === null) return false
 
-  const timestamps: number[] = JSON.parse(raw)
-  const now = Math.floor(Date.now() / 1000)
-  const cutoff = now - WINDOW_SECONDS
-  const recent = timestamps.filter((t) => t >= cutoff)
+    const timestamps: number[] = JSON.parse(raw)
+    const now = Math.floor(Date.now() / 1000)
+    const cutoff = now - WINDOW_SECONDS
+    const recent = timestamps.filter((t) => t >= cutoff)
 
-  return recent.length >= LIMIT
+    return recent.length >= LIMIT
+  } catch (error) {
+    console.error("[login-rate-limit] KV read failed, skipping rate limit:", error)
+    return false
+  }
 }
 
 /**
  * ログイン失敗を記録する。
  * ウィンドウ外の古いタイムスタンプは同時に除去する。
+ * KV 操作に失敗した場合はログだけ出してサービスを継続する。
  */
 export async function recordFailure(kv: KVNamespace, ip: string): Promise<void> {
-  const raw = await kv.get(kvKey(ip))
-  const existing: number[] = raw !== null ? JSON.parse(raw) : []
+  try {
+    const raw = await kv.get(kvKey(ip))
+    const existing: number[] = raw !== null ? JSON.parse(raw) : []
 
-  const now = Math.floor(Date.now() / 1000)
-  const cutoff = now - WINDOW_SECONDS
-  const recent = existing.filter((t) => t >= cutoff)
-  recent.push(now)
+    const now = Math.floor(Date.now() / 1000)
+    const cutoff = now - WINDOW_SECONDS
+    const recent = existing.filter((t) => t >= cutoff)
+    recent.push(now)
 
-  await kv.put(kvKey(ip), JSON.stringify(recent), { expirationTtl: WINDOW_SECONDS })
+    await kv.put(kvKey(ip), JSON.stringify(recent), { expirationTtl: WINDOW_SECONDS })
+  } catch (error) {
+    console.error("[login-rate-limit] KV write failed, skipping failure record:", error)
+  }
 }
 
 /**
  * ログイン成功時にカウンタをリセットする（キーを削除する）。
+ * KV 操作に失敗した場合はログだけ出してサービスを継続する。
  */
 export async function clearFailures(kv: KVNamespace, ip: string): Promise<void> {
-  await kv.delete(kvKey(ip))
+  try {
+    await kv.delete(kvKey(ip))
+  } catch (error) {
+    console.error("[login-rate-limit] KV delete failed, skipping failure clear:", error)
+  }
 }

@@ -1,7 +1,6 @@
 import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
 export type Input = {
   viewerRole: string
@@ -12,15 +11,18 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CycleNotFound = { reason: "cycle_not_found" }
 
+export type NotDeletable = { reason: "not_deletable" }
+
 export type Deleted = { reason: "deleted" }
 
 /**
  * 管理権限のある本人が、評価サイクルを削除する。
+ * draft 状態のサイクルのみ削除を許可する。
  */
 export class DeleteReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<Deleted | Forbidden | CycleNotFound | Error> {
+  async run(input: Input): Promise<Deleted | Forbidden | CycleNotFound | NotDeletable | Error> {
     if (canAdministerCycle(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -37,18 +39,19 @@ export class DeleteReviewCycle {
       return { reason: "cycle_not_found" }
     }
 
-    const formRepository = new ReviewFormRepository(this.c)
-
-    const formsDeleted = await formRepository.deleteByCycleId(input.cycleId)
-
-    if (formsDeleted instanceof Error) {
-      return formsDeleted
+    if (!reviewCycle.isDeletable) {
+      return { reason: "not_deletable" }
     }
 
-    const deleted = await repository.delete(input.cycleId)
+    const db = this.c.env.DB
 
-    if (deleted instanceof Error) {
-      return deleted
+    try {
+      await db.batch([
+        db.prepare("DELETE FROM review_forms WHERE cycle_id = ?1").bind(input.cycleId),
+        db.prepare("DELETE FROM review_cycles WHERE id = ?1").bind(input.cycleId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete review cycle")
     }
 
     return { reason: "deleted" }

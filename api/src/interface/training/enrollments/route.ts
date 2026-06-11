@@ -80,7 +80,21 @@ async function resolveTargetEmployeeId(
 
   if (query.employee_id !== undefined) {
     const parsed = Number(query.employee_id)
-    return Number.isInteger(parsed) ? parsed : null
+
+    if (Number.isInteger(parsed) === false || parsed <= 0) {
+      return null
+    }
+
+    // employee_code 指定時と同様に実在確認する（挙動の対称性を保つ）。
+    const rows = await database
+      .select({ id: employees.id })
+      .from(employees)
+      .where(eq(employees.id, parsed))
+      .limit(1)
+
+    const row = rows.at(0)
+
+    return row === undefined ? null : row.id
   }
 
   return viewerEmployeeId
