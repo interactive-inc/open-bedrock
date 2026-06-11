@@ -104,7 +104,7 @@ describe("ApplicationTemplateRepository", () => {
 
     expect(updated).toBeInstanceOf(ApplicationTemplate)
 
-    if (updated instanceof Error) {
+    if (updated instanceof Error || updated === null) {
       throw new Error("update failed")
     }
 
