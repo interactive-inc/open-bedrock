@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /templates。任意で category で絞り込む申請テンプレ一覧。
+// GET /application-templates。任意で category で絞り込む申請テンプレ一覧。
 export async function getApplicationTemplates(category: string | null) {
   const client = await createClient()
 
-  const response = await client.templates.$get({
+  const response = await client["application-templates"].$get({
     query: { category: category ?? undefined },
   })
 

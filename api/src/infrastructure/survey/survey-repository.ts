@@ -3,7 +3,7 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"
-import { and, asc, count, eq } from "drizzle-orm"
+import { and, asc, count, eq, sql } from "drizzle-orm"
 
 export type AlreadySubmittedError = { reason: "already_submitted" }
 
@@ -85,12 +85,55 @@ export class SurveyRepository {
     }
   }
 
-  // アンケートを削除する。
-  async delete(surveyId: number): Promise<null | Error> {
-    try {
-      await this.c.var.database.delete(surveys).where(eq(surveys.id, surveyId))
+  // 回答が存在しない場合のみアンケートを更新する（設問変更時の TOCTOU 競合を防ぐ）。
+  // 回答が1件でもあれば 0 行更新となり null を返す。
+  async updateIfNoResponses(survey: Survey): Promise<Survey | null | Error> {
+    if (survey.id === null) {
+      return new Error("survey id is required")
+    }
 
-      return null
+    try {
+      const result = await this.c.var.database.run(
+        sql`UPDATE surveys
+            SET title = ${survey.title},
+                status = ${survey.status},
+                questions_json = ${JSON.stringify(survey.questionsJson)}
+            WHERE id = ${survey.id}
+              AND NOT EXISTS (
+                SELECT 1 FROM survey_responses WHERE survey_id = ${survey.id}
+              )
+            RETURNING id`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      const rows = await this.c.var.database
+        .select()
+        .from(surveys)
+        .where(eq(surveys.id, survey.id))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to retrieve updated survey")
+        : Survey.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update survey")
+    }
+  }
+
+  // アンケートを削除する。該当行がなければ null を返す。
+  async delete(surveyId: number): Promise<true | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .delete(surveys)
+        .where(eq(surveys.id, surveyId))
+        .returning({ id: surveys.id })
+
+      return rows.at(0) === undefined ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete survey")
     }
@@ -190,33 +233,39 @@ export class SurveyRepository {
     }
   }
 
-  // 回答内容と提出時刻を更新する。
-  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | Error> {
+  // 回答内容と提出時刻を更新する。該当行がなければ null を返す。
+  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | null | Error> {
     if (response.id === null) {
       return new Error("survey response id is required")
     }
 
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(surveyResponses)
         .set({
           answersJson: JSON.stringify(response.answersJson),
           submittedAt: response.submittedAt,
         })
         .where(eq(surveyResponses.id, response.id))
+        .returning()
 
-      return response
+      const row = rows.at(0)
+
+      return row === undefined ? null : SurveyResponse.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update survey response")
     }
   }
 
-  // 回答を削除する。
-  async deleteResponse(responseId: number): Promise<null | Error> {
+  // 回答を削除する。該当行がなければ null を返す。
+  async deleteResponse(responseId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(surveyResponses).where(eq(surveyResponses.id, responseId))
+      const rows = await this.c.var.database
+        .delete(surveyResponses)
+        .where(eq(surveyResponses.id, responseId))
+        .returning({ id: surveyResponses.id })
 
-      return null
+      return rows.at(0) === undefined ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete survey response")
     }

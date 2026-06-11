@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table"
 import { getMyExpenses } from "@/lib/api/get-my-expenses"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
-import { ExpenseCreateForm } from "@/app/(app)/expense/expense-create-form"
+import { ExpenseCreateForm } from "@/app/(app)/expense/_components/expense-create-form"
 
 export const metadata = { title: "経費" }
 

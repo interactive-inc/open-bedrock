@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { toReviewerTypeLabel } from "@/app/(app)/review/to-reviewer-type-label"
+import { toReviewerTypeLabel } from "@/app/(app)/review/_lib/to-reviewer-type-label"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

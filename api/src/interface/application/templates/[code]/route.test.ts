@@ -79,9 +79,9 @@ async function request(
   })
 }
 
-describe("GET /templates/:code", () => {
+describe("GET /application-templates/:code", () => {
   test("returns 200 with the template detail", async () => {
-    const response = await request("/templates/paid_leave", await tokenFor(1, "admin"))
+    const response = await request("/application-templates/paid_leave", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(200)
 
@@ -96,13 +96,13 @@ describe("GET /templates/:code", () => {
   })
 
   test("returns 404 for an unknown code", async () => {
-    const response = await request("/templates/missing", await tokenFor(1, "admin"))
+    const response = await request("/application-templates/missing", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/templates/paid_leave", null)
+    const response = await request("/application-templates/paid_leave", null)
 
     expect(response.status).toBe(401)
   })

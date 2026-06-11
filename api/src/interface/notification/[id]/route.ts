@@ -75,12 +75,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to delete notification")
   }
 
-  if (result.reason === "notification_not_found") {
+  if (result.reason === "not_found") {
     throw new NotFoundError("notification not found")
-  }
-
-  if (result.reason === "notification_forbidden") {
-    throw new ForbiddenError()
   }
 
   return c.body(null, 204)

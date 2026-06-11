@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /templates/:code。指定コードの申請テンプレ詳細。
+// GET /application-templates/:code。指定コードの申請テンプレ詳細。
 export async function getApplicationTemplate(code: string) {
   const client = await createClient()
 
-  const response = await client.templates[":code"].$get({
+  const response = await client["application-templates"][":code"].$get({
     param: { code: code },
   })
 

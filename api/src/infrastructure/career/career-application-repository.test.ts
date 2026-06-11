@@ -4,8 +4,8 @@ import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 // テスト用: career_postings に open な公募を挿入する。
-function seedOpenPosting(db: D1Database, postingId: number): void {
-  db.exec(
+async function seedOpenPosting(db: D1Database, postingId: number): Promise<void> {
+  await db.exec(
     `INSERT INTO career_postings (id, title, status) VALUES (${postingId}, 'Test Posting', 'open')`,
   )
 }
@@ -13,7 +13,7 @@ function seedOpenPosting(db: D1Database, postingId: number): void {
 describe("CareerApplicationRepository", () => {
   test("create then findByPostingAndApplicant round-trips the application", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -45,7 +45,7 @@ describe("CareerApplicationRepository", () => {
 
   test("create returns posting_closed when the posting is not open", async () => {
     const { context, db } = createTestContext()
-    db.exec(
+    await db.exec(
       "INSERT INTO career_postings (id, title, status) VALUES (1, 'Closed Posting', 'closed')",
     )
 
@@ -67,8 +67,8 @@ describe("CareerApplicationRepository", () => {
 
   test("findByApplicantId returns the applicant's applications", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
-    seedOpenPosting(db, 2)
+    await seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 2)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -97,7 +97,7 @@ describe("CareerApplicationRepository", () => {
 
   test("update changes the message and findById round-trips it", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -122,7 +122,7 @@ describe("CareerApplicationRepository", () => {
 
   test("update returns application_decided when status is not applied", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -135,7 +135,7 @@ describe("CareerApplicationRepository", () => {
     }
 
     // 直接 status を変更して選考確定を模擬する
-    db.exec(`UPDATE career_applications SET status = 'accepted' WHERE id = ${created.id}`)
+    await db.exec(`UPDATE career_applications SET status = 'accepted' WHERE id = ${created.id}`)
 
     const result = await repository.update(created.withMessage("updated"))
 
@@ -151,7 +151,7 @@ describe("CareerApplicationRepository", () => {
 
   test("delete removes the application", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -172,7 +172,7 @@ describe("CareerApplicationRepository", () => {
 
   test("delete returns application_decided when status is not applied", async () => {
     const { context, db } = createTestContext()
-    seedOpenPosting(db, 1)
+    await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -185,7 +185,7 @@ describe("CareerApplicationRepository", () => {
     }
 
     // 直接 status を変更して選考確定を模擬する
-    db.exec(`UPDATE career_applications SET status = 'rejected' WHERE id = ${created.id}`)
+    await db.exec(`UPDATE career_applications SET status = 'rejected' WHERE id = ${created.id}`)
 
     const result = await repository.delete(created.id)
 

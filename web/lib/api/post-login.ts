@@ -12,5 +12,11 @@ export async function postLogin(body: LoginRequest) {
     return new Error("failed to login")
   }
 
-  return response.json()
+  const loginResult = await response.json()
+
+  if ("access_token" in loginResult === false) {
+    return new Error("failed to login")
+  }
+
+  return { access_token: loginResult.access_token }
 }

@@ -50,8 +50,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(survey), 200)
 })
 
-// アンケートをレスポンス用の snake_case に整形する。
+// アンケートをレスポンス用の snake_case に整形する。永続化済みの前提で id は number に絞る。
 function toResponseBody(survey: Survey) {
+  if (survey.id === null) {
+    throw new InternalError("survey id is missing")
+  }
+
   return {
     id: survey.id,
     title: survey.title,
@@ -139,6 +143,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "not_deletable") {
     throw new ConflictError("open survey cannot be deleted")
+  }
+
+  if (result.reason === "not_found") {
+    throw new ConflictError("survey was modified concurrently")
   }
 
   return c.body(null, 204)

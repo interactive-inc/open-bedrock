@@ -43,6 +43,12 @@ export class UpdateOneOnOne {
       nextAction: command.nextAction,
     })
 
-    return await oneOnOneRepository.update(updated)
+    const result = await oneOnOneRepository.update(updated)
+
+    if (result === null) {
+      return { reason: "one_on_one_not_found" as const }
+    }
+
+    return result
   }
 }
