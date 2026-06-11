@@ -33,7 +33,6 @@ function toEmployeeListItem(raw: {
   position: string | null
   email: string
   status: string
-  role: string
 }): EmployeeListItem {
   return {
     code: raw.code,
@@ -42,6 +41,5 @@ function toEmployeeListItem(raw: {
     position: raw.position,
     email: raw.email,
     status: raw.status,
-    role: raw.role,
   }
 }

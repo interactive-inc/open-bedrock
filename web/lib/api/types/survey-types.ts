@@ -70,16 +70,16 @@ export type SurveySummary = {
 }
 
 // POST /surveys のリクエストボディ（管理者ロールのみ）。
-// questions_json は設問定義の配列。api 側で内容を検証する。
+// questions_json は設問定義の配列。送信前に SurveyQuestion へ検証済みであること。
 export type CreateSurveyRequest = {
   title: string
   status: "open" | "closed"
-  questions_json: ReadonlyArray<unknown>
+  questions_json: ReadonlyArray<SurveyQuestion>
 }
 
 // PUT /surveys/:survey_id のリクエストボディ（管理者ロールのみ）。
 export type UpdateSurveyRequest = {
   title: string
   status: "open" | "closed"
-  questions_json: ReadonlyArray<unknown>
+  questions_json: ReadonlyArray<SurveyQuestion>
 }
