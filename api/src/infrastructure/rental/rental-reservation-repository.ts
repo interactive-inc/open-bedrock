@@ -1,7 +1,7 @@
 import { RentalReservation } from "@/domain/rental/rental-reservation"
 import type { Context } from "@/env"
 import { rentalReservations } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"
 
 export class RentalReservationRepository {
   constructor(private readonly c: Context) {}
@@ -43,18 +43,59 @@ export class RentalReservationRepository {
     }
   }
 
-  async create(reservation: RentalReservation): Promise<RentalReservation | Error> {
+  // 同一品名の requested 予約のうち、指定期間と重なるものを返す。
+  // 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
+  // excludeId を渡すと当該予約自身を除外する（更新時に自己ヒットを防ぐ）。
+  async findOverlapping(props: {
+    itemName: string
+    startDate: string
+    endDate: string
+    excludeId?: string
+  }): Promise<ReadonlyArray<RentalReservation> | Error> {
     try {
-      await this.c.var.database.insert(rentalReservations).values({
-        id: reservation.id,
-        requesterId: reservation.requesterId,
-        itemName: reservation.itemName,
-        startDate: reservation.startDate,
-        endDate: reservation.endDate,
-        purpose: reservation.purpose,
-        status: reservation.status,
-        createdAt: reservation.createdAt,
-      })
+      const rows = await this.c.var.database
+        .select()
+        .from(rentalReservations)
+        .where(
+          and(
+            eq(rentalReservations.itemName, props.itemName),
+            eq(rentalReservations.status, "requested"),
+            lte(rentalReservations.startDate, props.endDate),
+            gte(rentalReservations.endDate, props.startDate),
+            props.excludeId === undefined ? undefined : ne(rentalReservations.id, props.excludeId),
+          ),
+        )
+
+      return rows.map((row) => RentalReservation.fromRow(row))
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to query rental_reservation overlap")
+    }
+  }
+
+  // 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
+  // 同一品名の requested 予約と期間が重なる行があれば INSERT をスキップし null を返す。
+  async create(reservation: RentalReservation): Promise<RentalReservation | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO rental_reservations (id, requester_id, item_name, start_date, end_date, purpose, status, created_at)
+            SELECT ${reservation.id}, ${reservation.requesterId},
+                   ${reservation.itemName}, ${reservation.startDate},
+                   ${reservation.endDate}, ${reservation.purpose},
+                   ${reservation.status}, ${reservation.createdAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM rental_reservations
+              WHERE item_name = ${reservation.itemName}
+                AND status = 'requested'
+                AND start_date <= ${reservation.endDate}
+                AND end_date >= ${reservation.startDate}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
 
       return reservation
     } catch (error) {

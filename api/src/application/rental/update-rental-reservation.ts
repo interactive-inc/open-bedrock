@@ -19,6 +19,8 @@ export type NotModifiable = { reason: "not_modifiable" }
 
 export type InvalidDateRange = { reason: "invalid_date_range" }
 
+export type OverlappingReservation = { reason: "overlapping_reservation" }
+
 /**
  * レンタル予約の品名・期間・用途を変更する。本人以外の変更を拒否する。
  */
@@ -33,6 +35,7 @@ export class UpdateRentalReservation {
     | NotRequester
     | NotModifiable
     | InvalidDateRange
+    | OverlappingReservation
     | Error
   > {
     const reservationRepository = new RentalReservationRepository(this.c)
@@ -63,6 +66,22 @@ export class UpdateRentalReservation {
 
     if ("reason" in detailed) {
       return detailed
+    }
+
+    // 同一品名・重複期間の requested 予約があれば拒否する（自身を除外）。
+    const overlapping = await reservationRepository.findOverlapping({
+      itemName: command.itemName,
+      startDate: command.startDate,
+      endDate: command.endDate,
+      excludeId: command.reservationId,
+    })
+
+    if (overlapping instanceof Error) {
+      return overlapping
+    }
+
+    if (overlapping.length > 0) {
+      return { reason: "overlapping_reservation" }
     }
 
     const updated = detailed.withPurpose(command.purpose)
