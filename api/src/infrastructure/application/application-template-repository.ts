@@ -8,6 +8,22 @@ import { eq } from "drizzle-orm"
 export class ApplicationTemplateRepository {
   constructor(private readonly c: Context) {}
 
+  async findById(id: number): Promise<ApplicationTemplate | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(applicationTemplates)
+        .where(eq(applicationTemplates.id, id))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ApplicationTemplate.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load application_template")
+    }
+  }
+
   async findByCode(code: string): Promise<ApplicationTemplate | null | Error> {
     try {
       const rows = await this.c.var.database
