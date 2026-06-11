@@ -39,7 +39,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.templates.$post({
+    const response = await client["application-templates"].$post({
       json: {
         code: query.code,
         name: query.name,
