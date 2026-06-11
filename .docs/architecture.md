@@ -10,6 +10,8 @@ api は Cloudflare Workers(wrangler)上で動作する。cli は bun で動作�
 
 api は domain と application と infrastructure と interface の4層で構成する。interface は Next.js App Router 記法(route.ts と動的セグメント [param])でルートを定義し、app.ts が :param に対応づけて登録する。
 
+web の app ディレクトリはルートごとに collocation する。ルート直下には page.tsx と actions.ts(Server Actions)などの規約ファイルだけを置き、画面を構成するコンポーネントは各ルートの \_components 配下、表示用の純関数は \_lib 配下に置く。画面横断の共有コンポーネントは web/components に置き、shadcn 生成物(web/components/ui)は直接編集しない。
+
 ## Data
 
 api は Cloudflare D1(SQLite)を Drizzle ORM 経由で読み書きする。スキーマは api/src/schema.ts に集約する。二重登録を防ぐ整合性は一意索引で担保する(給与明細の社員と期間、感謝の月次原資の社員と期間など)。
@@ -26,7 +28,9 @@ JWT の有効期限は発行から 8 時間。期限切れトークンは 401 �
 
 ## Security
 
-パスワードは PBKDF2-SHA256・10 万反復・個別ソルト(crypto.subtle 実装)でハッシュ化する。旧実装(SHA-256 固定ソルト)からの移行はログイン成功時に自動で行う。
+パスワードは PBKDF2-SHA256・10 万反復・個別ソルト(crypto.subtle 実装)でハッシュ化する。旧実装(SHA-256 固定ソルト)からの移行はログイン成功時に自動で行うほか、一度もログインしないユーザーの旧ハッシュは管理者バッチ(POST /batch/migrate-password-hashes、karte batch migrate-password-hashes)で pbkdf2-wrapped-legacy 形式へ一括移行できる。
+
+ログインは IP 単位とメールアドレス単位の二重のレート制限を KV で行う。KV 未バインドの開発環境では制限をスキップするため、本番では RATE_LIMIT KV のバインドが必須。
 
 CORS は env.CORS_ORIGIN で許可オリジンを制限する。ワイルドカードは使わない。
 

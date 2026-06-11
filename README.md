@@ -66,3 +66,46 @@ bun install
 bun run dev        # wrangler dev
 bun run deploy     # 本番デプロイ
 ```
+
+URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。
+ルート一覧は `api/src/app.ts` を参照。
+
+シードデータ（`api/seeds/`）は開発専用。全ユーザーが同一の既知パスワードのため、
+本番には投入しないこと。詳細は [`api/seeds/README.md`](api/seeds/README.md) を参照。
+
+## Web
+
+```sh
+cd web
+bun install
+bun run dev        # Next.js dev server
+```
+
+ログイン後の画面はドメインごとのルートに collocation されている。
+詳細は [`web/README.md`](web/README.md) を参照。
+
+## テストと検証
+
+```sh
+vp check                 # フォーマット + lint（リポジトリ全体）
+cd api && bun test       # API のテスト
+cd cli && bun test       # CLI のテスト
+cd web && bunx tsc --noEmit   # Web の型検査
+```
+
+api のルートを変更したら `cd api && bun run build:types` で型を再生成すると、
+web の型付きクライアント（hc）が追従する。
+
+## ドキュメント
+
+プロダクトの仕様・用語・業務知識は [`.docs/`](.docs/index.md) に集約している。
+
+- `architecture.md` … ワークスペース構成・レイヤ・認証・セキュリティ
+- `features.md` … 利用者視点の機能一覧
+- `sitemap.md` / `user-flows.md` … web の画面と導線
+- `glossary.md` / `references/terms/` … 制度用語の定義
+- `notes/handbook/` … 入社・休暇・経費などの手続きノート
+
+## ライセンス
+
+[LICENSE](LICENSE) を参照。
