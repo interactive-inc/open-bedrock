@@ -17,6 +17,8 @@ export type CycleNotFound = { reason: "cycle_not_found" }
 
 export type NotModifiable = { reason: "not_modifiable" }
 
+export type NotEditable = { reason: "not_editable" }
+
 /**
  * 管理権限のある本人が、評価サイクルの題目・期間・締切を更新する。
  */
@@ -25,7 +27,7 @@ export class UpdateReviewCycle {
 
   async run(
     input: Input,
-  ): Promise<ReviewCycle | Forbidden | CycleNotFound | NotModifiable | Error> {
+  ): Promise<ReviewCycle | Forbidden | CycleNotFound | NotModifiable | NotEditable | Error> {
     if (canAdministerCycle(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -59,7 +61,7 @@ export class UpdateReviewCycle {
     }
 
     if (updated === null) {
-      return { reason: "cycle_not_found" }
+      return { reason: "not_editable" }
     }
 
     return updated
