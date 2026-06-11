@@ -94,7 +94,7 @@ export class PayslipRepository {
           deductions: payslip.deductions,
           netPay: payslip.netPay,
         })
-        .where(eq(payslips.id, payslip.id))
+        .where(and(eq(payslips.id, payslip.id), eq(payslips.status, "issued")))
         .returning()
 
       const row = rows.at(0)
