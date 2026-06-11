@@ -17,7 +17,9 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CourseNotFound = { reason: "course_not_found" }
 
-export type UpdateFailure = Forbidden | CourseNotFound
+export type CourseArchived = { reason: "course_archived" }
+
+export type UpdateFailure = Forbidden | CourseNotFound | CourseArchived
 
 /**
  * 管理権限を持つ者が研修コースの内容を変更する。code と status は変更しない。
@@ -40,6 +42,10 @@ export class UpdateTrainingCourse {
 
     if (current === null) {
       return { reason: "course_not_found" }
+    }
+
+    if (current.status === "archived") {
+      return { reason: "course_archived" }
     }
 
     const updated = await courseRepository.update(
