@@ -93,9 +93,11 @@ export class OnboardingTemplateRepository {
       const db = this.c.env.DB
       await db.batch([
         db.prepare("DELETE FROM onboarding_template_tasks WHERE template_code = ?1").bind(code),
-        db.prepare(
-          `DELETE FROM onboarding_templates WHERE code = ?1 AND NOT EXISTS (SELECT 1 FROM onboarding_assignments WHERE template_code = ?1 AND status = 'in_progress')`,
-        ).bind(code),
+        db
+          .prepare(
+            `DELETE FROM onboarding_templates WHERE code = ?1 AND NOT EXISTS (SELECT 1 FROM onboarding_assignments WHERE template_code = ?1 AND status = 'in_progress')`,
+          )
+          .bind(code),
         abortWhenPreviousStatementChangedNoRows(db),
       ])
 
