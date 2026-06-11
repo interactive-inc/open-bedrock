@@ -1,9 +1,11 @@
+import { canDecideLeave } from "@/domain/leave/can-decide-leave"
 import type { LeaveRequest } from "@/domain/leave/leave-request"
 import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
 import type { Context } from "@/env"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
 export type Command = {
+  viewerRole: string
   leaveRequestId: number
   approverId: number
   action: "approve" | "reject"
@@ -19,6 +21,8 @@ export type BalanceNotFound = { failure: "balance_not_found" }
 export type InsufficientBalance = { failure: "insufficient_balance" }
 
 export type SelfApproval = { failure: "self_approval" }
+
+export type Forbidden = { failure: "forbidden" }
 
 export type InvalidStartDate = { failure: "invalid_start_date" }
 
@@ -38,9 +42,14 @@ export class DecideLeaveRequest {
     | BalanceNotFound
     | InsufficientBalance
     | SelfApproval
+    | Forbidden
     | InvalidStartDate
     | Error
   > {
+    if (!canDecideLeave(command.viewerRole)) {
+      return { failure: "forbidden" }
+    }
+
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
 
     const existing = await leaveRequestRepository.findById(command.leaveRequestId)

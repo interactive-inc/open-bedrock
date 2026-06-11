@@ -141,10 +141,14 @@ export const POST = factory.createHandlers(
       throw new BadRequestError("invalid thanks")
     }
 
-    const nameById = await toEmployeeNameMap(c, [
-      result.senderEmployeeId,
-      result.recipientEmployeeId,
-    ])
+    let nameById: Map<number, string>
+
+    try {
+      nameById = await toEmployeeNameMap(c, [result.senderEmployeeId, result.recipientEmployeeId])
+    } catch {
+      // names 取得失敗でも thanks は保存済みなので 201 を返す
+      nameById = new Map()
+    }
 
     const responseBody = {
       id: result.id,

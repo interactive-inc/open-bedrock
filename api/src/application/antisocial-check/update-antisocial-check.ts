@@ -1,5 +1,5 @@
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
-import { canManageAntisocialChecks } from "@/domain/antisocial-check/can-manage-antisocial-checks.ts"
+import { canManageAntisocialChecks } from "@/domain/antisocial-check/can-manage-antisocial-checks"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 
