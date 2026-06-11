@@ -14,6 +14,8 @@ export type InsufficientBalanceError = { reason: "insufficient_balance" }
 
 export type OutOfStockError = { reason: "out_of_stock" }
 
+export type RewardInactiveError = { reason: "reward_inactive" }
+
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
 
@@ -71,7 +73,12 @@ export class ThanksRedemptionRepository {
   async createIfSufficientBalance(
     redemption: ThanksRedemption,
   ): Promise<
-    ThanksRedemption | PendingExistsError | InsufficientBalanceError | OutOfStockError | Error
+    | ThanksRedemption
+    | PendingExistsError
+    | InsufficientBalanceError
+    | OutOfStockError
+    | RewardInactiveError
+    | Error
   > {
     try {
       const result = await this.c.var.database.run(
@@ -95,7 +102,9 @@ export class ThanksRedemptionRepository {
                 WHERE ${thanksRewards.id} = ${redemption.rewardId}) IS NULL
               OR (SELECT ${thanksRewards.stock} FROM ${thanksRewards}
                 WHERE ${thanksRewards.id} = ${redemption.rewardId}) > 0
-            )`,
+            )
+            AND (SELECT ${thanksRewards.isActive} FROM ${thanksRewards}
+              WHERE ${thanksRewards.id} = ${redemption.rewardId}) = 1`,
       )
 
       if (result.meta.changes === 0) {
@@ -109,14 +118,21 @@ export class ThanksRedemptionRepository {
           return { reason: "pending_exists" }
         }
 
-        // pending が無いのに 0 行なら、在庫切れか残高不足。在庫を見て区別する。
-        const stockRows = await this.c.var.database
-          .select({ stock: thanksRewards.stock })
+        // pending が無いのに 0 行なら、報酬非アクティブ・在庫切れ・残高不足のいずれか。
+        // 報酬の状態を見て区別する。
+        const rewardRows = await this.c.var.database
+          .select({ stock: thanksRewards.stock, isActive: thanksRewards.isActive })
           .from(thanksRewards)
           .where(eq(thanksRewards.id, redemption.rewardId))
           .limit(1)
 
-        const stock = stockRows.at(0)?.stock ?? null
+        const rewardRow = rewardRows.at(0)
+
+        if (rewardRow !== undefined && !rewardRow.isActive) {
+          return { reason: "reward_inactive" }
+        }
+
+        const stock = rewardRow?.stock ?? null
 
         if (stock !== null && stock <= 0) {
           return { reason: "out_of_stock" }
