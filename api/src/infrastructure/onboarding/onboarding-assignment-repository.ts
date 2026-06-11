@@ -26,15 +26,21 @@ export class OnboardingAssignmentRepository {
         return new Error("failed to insert onboarding assignment")
       }
 
-      for (const task of assignment.tasks) {
-        await this.c.var.database.insert(onboardingTasks).values({
-          assignmentId: assignmentRow.id,
-          templateTaskCode: task.templateTaskCode,
-          title: task.title,
-          sortOrder: task.order,
-          status: task.status,
-          completedAt: task.completedAt,
-        })
+      if (assignment.tasks.length > 0) {
+        const taskStmts = assignment.tasks.map((task) =>
+          this.c.var.database.insert(onboardingTasks).values({
+            assignmentId: assignmentRow.id,
+            templateTaskCode: task.templateTaskCode,
+            title: task.title,
+            sortOrder: task.order,
+            status: task.status,
+            completedAt: task.completedAt,
+          }),
+        )
+
+        await this.c.var.database.batch(
+          taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
+        )
       }
 
       const result = await this.findById(assignmentRow.id)
@@ -142,21 +148,21 @@ export class OnboardingAssignmentRepository {
         return new Error("cannot update unsaved onboarding assignment")
       }
 
-      await this.c.var.database
+      const assignmentStmt = this.c.var.database
         .update(onboardingAssignments)
         .set({ status: assignment.status, assignedAt: assignment.assignedAt })
         .where(eq(onboardingAssignments.id, assignment.id))
 
-      for (const task of assignment.tasks) {
-        if (task.id === null) {
-          continue
-        }
+      const taskStmts = assignment.tasks
+        .filter((task) => task.id !== null)
+        .map((task) =>
+          this.c.var.database
+            .update(onboardingTasks)
+            .set({ status: task.status, completedAt: task.completedAt })
+            .where(eq(onboardingTasks.id, task.id as number)),
+        )
 
-        await this.c.var.database
-          .update(onboardingTasks)
-          .set({ status: task.status, completedAt: task.completedAt })
-          .where(eq(onboardingTasks.id, task.id))
-      }
+      await this.c.var.database.batch([assignmentStmt, ...taskStmts])
 
       const result = await this.findById(assignment.id)
 
