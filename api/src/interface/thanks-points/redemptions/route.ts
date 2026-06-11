@@ -63,6 +63,10 @@ export const POST = factory.createHandlers(
         throw new ConflictError("pending redemption already exists")
       }
 
+      if (result.reason === "reward_inactive") {
+        throw new ConflictError("reward is inactive")
+      }
+
       throw new BadRequestError("reward is not available")
     }
 
