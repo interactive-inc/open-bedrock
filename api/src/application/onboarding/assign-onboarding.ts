@@ -7,6 +7,7 @@ import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -96,6 +97,12 @@ export class AssignOnboarding {
     })
 
     const created = await assignmentRepository.create(assignment)
+
+    // TOCTOU: findActiveByEmployeeAndTemplate で未検出でも並行リクエストが
+    // 先に INSERT した場合、UNIQUE 制約違反で UniqueConstraintError になる。
+    if (created instanceof UniqueConstraintError) {
+      return { reason: "already_assigned" }
+    }
 
     if (created instanceof Error) {
       return created
