@@ -51,12 +51,12 @@ export class UpdateResignation {
       reason: command.reason,
     })
 
-    const result = await resignationRepository.update(updated)
+    const saved = await resignationRepository.update(updated)
 
-    if (result === null) {
+    if (saved === null) {
       return { reason: "not_modifiable" }
     }
 
-    return result
+    return saved
   }
 }

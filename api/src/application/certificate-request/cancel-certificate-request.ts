@@ -49,6 +49,10 @@ export class CancelCertificateRequest {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "not_modifiable" }
+    }
+
     return { reason: "cancelled" }
   }
 }

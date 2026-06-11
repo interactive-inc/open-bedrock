@@ -62,7 +62,7 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 休業申出の種別・期間・備考を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  // 休業申出の種別・期間・備考を更新する。status が "requested" の行のみ対象。
   async update(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -81,18 +81,23 @@ export class FamilyCareLeaveRepository {
         )
         .returning()
 
-      return rows.length === 0 ? null : familyCareLeave
+      const row = rows.at(0)
+
+      return row === undefined ? null : FamilyCareLeave.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update family_care_leave")
     }
   }
 
-  // 休業申出を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 休業申出を削除する。status が "requested" の行のみ対象。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(familyCareLeaves).where(eq(familyCareLeaves.id, id))
+      const rows = await this.c.var.database
+        .delete(familyCareLeaves)
+        .where(and(eq(familyCareLeaves.id, id), eq(familyCareLeaves.status, "requested")))
+        .returning({ id: familyCareLeaves.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete family_care_leave")
     }

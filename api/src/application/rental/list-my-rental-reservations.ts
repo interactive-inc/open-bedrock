@@ -4,6 +4,8 @@ import { RentalReservationRepository } from "@/infrastructure/rental/rental-rese
 
 export type Command = {
   requesterId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyRentalReservations {
   async run(command: Command): Promise<ReadonlyArray<RentalReservation> | Error> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
-    return await reservationRepository.findByRequesterId(command.requesterId)
+    return await reservationRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

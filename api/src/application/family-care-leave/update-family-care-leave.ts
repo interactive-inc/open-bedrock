@@ -66,12 +66,12 @@ export class UpdateFamilyCareLeave {
       return updated
     }
 
-    const result = await familyCareLeaveRepository.update(updated)
+    const saved = await familyCareLeaveRepository.update(updated)
 
-    if (result === null) {
+    if (saved === null) {
       return { reason: "not_modifiable" }
     }
 
-    return result
+    return saved
   }
 }
