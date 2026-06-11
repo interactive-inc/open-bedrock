@@ -55,6 +55,16 @@ export class UpdateCertificateRequest {
       note: command.note,
     })
 
-    return await certificateRequestRepository.update(updated)
+    const result = await certificateRequestRepository.update(updated)
+
+    if (result instanceof Error) {
+      return result
+    }
+
+    if (result === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return result
   }
 }

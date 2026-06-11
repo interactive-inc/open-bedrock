@@ -90,7 +90,7 @@ describe("RentalReservationRepository", () => {
     await repository.create(r2)
     await repository.create(r3)
 
-    const result = await repository.findByRequesterId(1)
+    const result = await repository.findByRequesterId({ requesterId: 1, limit: 50, offset: 0 })
 
     if (result instanceof Error) {
       throw result
@@ -108,7 +108,7 @@ describe("RentalReservationRepository", () => {
 
     const repository = new RentalReservationRepository(context)
 
-    const result = await repository.findByRequesterId(9999)
+    const result = await repository.findByRequesterId({ requesterId: 9999, limit: 50, offset: 0 })
 
     if (result instanceof Error) {
       throw result

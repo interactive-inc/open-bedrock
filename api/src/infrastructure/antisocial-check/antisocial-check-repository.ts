@@ -1,7 +1,7 @@
 import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
 import type { Context } from "@/env"
 import { antisocialChecks } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 
 export class AntisocialCheckRepository {
   constructor(private readonly c: Context) {}
@@ -62,10 +62,10 @@ export class AntisocialCheckRepository {
     }
   }
 
-  // 反社チェック申請の取引先情報と判定結果を更新する。
-  async update(antisocialCheck: AntisocialCheck): Promise<AntisocialCheck | Error> {
+  // 反社チェック申請の取引先情報と判定結果を更新する。status が requested でなければ 0 行更新となり null を返す。
+  async update(antisocialCheck: AntisocialCheck): Promise<AntisocialCheck | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(antisocialChecks)
         .set({
           partnerName: antisocialCheck.partnerName,
@@ -73,18 +73,28 @@ export class AntisocialCheckRepository {
           representativeName: antisocialCheck.representativeName,
           result: antisocialCheck.result,
         })
-        .where(eq(antisocialChecks.id, antisocialCheck.id))
+        .where(
+          and(
+            eq(antisocialChecks.id, antisocialCheck.id),
+            eq(antisocialChecks.status, "requested"),
+          ),
+        )
+        .returning()
 
-      return antisocialCheck
+      const row = rows.at(0)
+
+      return row === undefined ? null : AntisocialCheck.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update antisocial_check")
     }
   }
 
-  // 反社チェック申請を削除する。
+  // 反社チェック申請を削除する。status が requested の行のみ対象とする。
   async delete(id: string): Promise<null | Error> {
     try {
-      await this.c.var.database.delete(antisocialChecks).where(eq(antisocialChecks.id, id))
+      await this.c.var.database
+        .delete(antisocialChecks)
+        .where(and(eq(antisocialChecks.id, id), eq(antisocialChecks.status, "requested")))
 
       return null
     } catch (error) {
