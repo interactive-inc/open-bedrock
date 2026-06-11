@@ -83,4 +83,38 @@ export class CareerPostingRepository {
       return error instanceof Error ? error : new Error("failed to delete career_posting")
     }
   }
+
+  // status='applied' の応募がなければ公募と紐づく応募をアトミックに削除する。
+  // D1 batch で career_applications（withdrawn/rejected）と career_postings を一括削除し、
+  // チェックと削除の間のレースおよび孤児レコードの蓄積を防ぐ。
+  // 戻り値: "deleted" = 削除成功, "has_applied" = 応募ありのためスキップ, Error = DB エラー
+  async deleteIfNoAppliedApplications(
+    postingId: number,
+  ): Promise<"deleted" | "has_applied" | Error> {
+    try {
+      const db = this.c.env.DB
+
+      // applied 状態の応募が存在するか確認する
+      const check = await db
+        .prepare(
+          "SELECT 1 FROM career_applications WHERE posting_id = ?1 AND status = 'applied' LIMIT 1",
+        )
+        .bind(postingId)
+        .all()
+
+      if (check.results.length > 0) {
+        return "has_applied"
+      }
+
+      // career_applications（withdrawn/rejected）と career_postings を D1 batch でアトミックに削除する
+      await db.batch([
+        db.prepare("DELETE FROM career_applications WHERE posting_id = ?1").bind(postingId),
+        db.prepare("DELETE FROM career_postings WHERE id = ?1").bind(postingId),
+      ])
+
+      return "deleted"
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete career_posting")
+    }
+  }
 }

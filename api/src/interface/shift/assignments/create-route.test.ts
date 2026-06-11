@@ -174,6 +174,17 @@ describe("POST /shift/assignments", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 409 for duplicate employee + date assignment", async () => {
+    const response = await request({
+      path: "/shift/assignments",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: { employee_code: "E005", pattern_code: "EARLY", date: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/shift/assignments",

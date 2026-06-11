@@ -62,7 +62,7 @@ describe("ReviewFormRepository", () => {
     }
 
     const updated = await repository.update(
-      found.withSubmission(80, ["回答"], "2026-05-31T00:00:00.000Z"),
+      found.withSubmission(80, ["回答"], "Good progress", "2026-05-31T00:00:00.000Z"),
     )
 
     expect(updated).toBeInstanceOf(ReviewForm)
@@ -73,5 +73,41 @@ describe("ReviewFormRepository", () => {
 
     expect(updated.status).toBe("submitted")
     expect(updated.score).toBe(80)
+  })
+
+  test("update returns null when the form is already submitted", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "review_forms", [
+      {
+        id: 1,
+        cycle_id: 1,
+        subject_employee_id: 2,
+        reviewer_employee_id: 3,
+        reviewer_type: "manager",
+        answers: '["prior answer"]',
+        score: 90,
+        status: "submitted",
+        submitted_at: "2026-05-30T00:00:00.000Z",
+      },
+    ])
+
+    const repository = new ReviewFormRepository(context)
+
+    const form = new ReviewForm({
+      id: 1,
+      cycleId: 1,
+      subjectEmployeeId: 2,
+      reviewerEmployeeId: 3,
+      reviewerType: "manager",
+      answers: ["overwrite attempt"],
+      score: 50,
+      status: "submitted",
+      submittedAt: "2026-05-31T00:00:00.000Z",
+    })
+
+    const result = await repository.update(form)
+
+    expect(result).toBeNull()
   })
 })
