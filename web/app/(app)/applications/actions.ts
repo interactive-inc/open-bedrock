@@ -63,7 +63,7 @@ export async function withdrawApplicationAction(
 }
 
 // payload の FormData 値(JSON 文字列) を unknown へ。解析できなければ Error。
-function toPayload(value: FormDataEntryValue | null): unknown | Error {
+function toPayload(value: FormDataEntryValue | null): unknown {
   if (typeof value !== "string" || value.trim() === "") {
     return new Error("payload is empty")
   }
