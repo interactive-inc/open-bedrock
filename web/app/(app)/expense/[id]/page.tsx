@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
-import { ExpenseDecisionForm } from "@/app/(app)/expense/expense-decision-form"
+import { ExpenseDecisionForm } from "@/app/(app)/expense/_components/expense-decision-form"
 
 export const metadata = { title: "経費詳細" }
 

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { AssetFilterForm } from "@/app/(app)/assets/asset-filter-form"
+import { AssetFilterForm } from "@/app/(app)/assets/_components/asset-filter-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
 import { AssetStatusBadge } from "@/components/asset-status-badge"
 import { Button } from "@/components/ui/button"

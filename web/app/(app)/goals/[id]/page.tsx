@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { GoalEvaluationForm } from "@/app/(app)/goals/[id]/goal-evaluation-form"
+import { GoalEvaluationForm } from "@/app/(app)/goals/[id]/_components/goal-evaluation-form"
 import { getGoal } from "@/lib/api/get-goal"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

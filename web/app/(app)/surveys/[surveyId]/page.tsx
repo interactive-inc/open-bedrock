@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/survey-answer-form"
+import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/_components/survey-answer-form"
 import { getSurvey } from "@/lib/api/get-survey"
-import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/survey-question-schema"
+import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/_lib/survey-question-schema"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { Button } from "@/components/ui/button"
 

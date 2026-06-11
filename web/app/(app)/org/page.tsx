@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { OrgDepartmentManagerSection } from "@/app/(app)/org/departments/org-department-manager-section"
-import { OrgTreeView } from "@/app/(app)/org/org-tree-view"
+import { OrgDepartmentManagerSection } from "@/app/(app)/org/departments/_components/org-department-manager-section"
+import { OrgTreeView } from "@/app/(app)/org/_components/org-tree-view"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "組織" }
