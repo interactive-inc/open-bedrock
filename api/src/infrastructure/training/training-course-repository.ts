@@ -69,7 +69,8 @@ export class TrainingCourseRepository {
   }
 
   // 研修コースの内容と状態を更新する。code をキーに更新し、更新後の行を返す。
-  async update(trainingCourse: TrainingCourse): Promise<TrainingCourse | Error> {
+  // 0 行更新（該当なし）の場合は null を返す。
+  async update(trainingCourse: TrainingCourse): Promise<TrainingCourse | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(trainingCourses)
@@ -86,9 +87,7 @@ export class TrainingCourseRepository {
 
       const row = rows.at(0)
 
-      return row === undefined
-        ? new Error("failed to update training_course")
-        : TrainingCourse.fromRow(row)
+      return row === undefined ? null : TrainingCourse.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update training_course")
     }

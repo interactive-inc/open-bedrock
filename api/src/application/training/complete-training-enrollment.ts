@@ -52,7 +52,7 @@ export class CompleteTrainingEnrollment {
       return { reason: "already_completed" }
     }
 
-    const completed = await enrollmentRepository.update(
+    const completed = await enrollmentRepository.completeEnrollment(
       enrollment.complete(command.completedAt, command.score),
     )
 
