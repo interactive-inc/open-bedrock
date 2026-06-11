@@ -9,18 +9,16 @@ import {
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, count, eq, like, or } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 
-// GET /applications/inbox — 承認待ちの申請一覧（承認権限を持つロールのみ）
+// GET /applications/inbox — 承認待ちの申請一覧。
+// テンプレートの approverRoles に自分のロールが含まれるか、approverRoles が空で
+// canDecideApplication を満たす場合に表示する。DecideApplication の権限判定と対称にする。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
   if (session === null) {
     throw new UnauthorizedError()
-  }
-
-  if (canDecideApplication(session.role) === false) {
-    throw new ForbiddenError()
   }
 
   const limit = toBoundedInt({
@@ -39,12 +37,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   // approverRoles は JSON 配列文字列（例: '["manager","admin"]'）。
   // viewer のロールがリストに含まれるテンプレートの申請だけを返す。
+  // approverRoles が空（"[]"）の場合は canDecideApplication で許可されたロールだけ。
+  // DecideApplication の approverRoles チェックと同じ二分岐に合わせる。
   const rolePattern = `%"${session.role}"%`
+
+  const isPrivileged = canDecideApplication(session.role)
 
   const pendingWithRole = and(
     eq(applications.status, "pending"),
     or(
-      eq(applicationTemplates.approverRoles, "[]"),
+      isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined,
       like(applicationTemplates.approverRoles, rolePattern),
     ),
   )
