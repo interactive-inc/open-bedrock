@@ -84,4 +84,9 @@ export class SalaryRevision implements Props {
   withReason(reason: string | null): SalaryRevision {
     return new SalaryRevision({ ...this.props, reason })
   }
+
+  // 前回基本給を訂正した新しい給与改定を返す。適用日変更で時系列が変わったときに使う。
+  withPreviousBaseSalary(previousBaseSalary: number): SalaryRevision {
+    return new SalaryRevision({ ...this.props, previousBaseSalary })
+  }
 }
