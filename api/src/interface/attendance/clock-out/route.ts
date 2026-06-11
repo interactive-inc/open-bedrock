@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(
     const record = await new ClockOut(c).run({
       employeeId: session.employeeId,
       now: c.env.NOW ?? new Date().toISOString(),
-      note: json.note ?? null,
+      note: json.note === undefined ? undefined : (json.note ?? null),
     })
 
     if (record instanceof Error) {

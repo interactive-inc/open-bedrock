@@ -53,6 +53,10 @@ export class UpdateResignation {
 
     const saved = await resignationRepository.update(updated)
 
+    if (saved instanceof Error) {
+      return saved
+    }
+
     if (saved === null) {
       return { reason: "not_modifiable" }
     }
