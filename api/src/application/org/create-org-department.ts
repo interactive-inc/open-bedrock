@@ -54,18 +54,18 @@ export class CreateOrgDepartment {
       order: command.department.order,
     })
 
-    // 親の存在確認と INSERT はリポジトリ側でアトミックに行う（TOCTOU 対策）。
-    // 親が確認後に削除されても 0 行挿入 = null となり、孤立ノードは作られない。
-    const created = await departmentRepository.createIfParentExists(department)
-
-    if (created === null) {
-      return { reason: "parent_not_found" }
-    }
+    const created = await departmentRepository.create(department)
 
     // findByCode と insert の間に並行リクエストが挿入されると UNIQUE 制約違反になる。
     // リポジトリが UniqueConstraintError として返すので、重複として扱う（TOCTOU 競合対策）。
     if (created instanceof UniqueConstraintError) {
       return { reason: "department_code_conflict" }
+    }
+
+    // ensureParentExists と insert の間に親が削除されると INSERT 0 行になる。
+    // リポジトリが { reason: "parent_not_found" } を返すのでそのまま伝播する。
+    if (!(created instanceof Error) && "reason" in created) {
+      return created
     }
 
     return created

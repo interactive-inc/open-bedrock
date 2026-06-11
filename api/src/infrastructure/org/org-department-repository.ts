@@ -3,7 +3,9 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { orgDepartments, orgMemberships } from "@/schema"
-import { asc, eq, sql } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
+
+export type ParentNotFound = { reason: "parent_not_found" }
 
 export class OrgDepartmentRepository {
   constructor(private readonly c: Context) {}
@@ -69,7 +71,13 @@ export class OrgDepartmentRepository {
     }
   }
 
-  async create(department: OrgDepartment): Promise<OrgDepartment | Error> {
+  async create(department: OrgDepartment): Promise<OrgDepartment | ParentNotFound | Error> {
+    // parentCode が指定されている場合は INSERT ... SELECT ... WHERE EXISTS で
+    // 親の存在をアトミックに検証する（TOCTOU 対策: ensureParentExists 後に親が削除されるケース）。
+    if (department.parentCode !== null) {
+      return this.createWithParentGuard(department)
+    }
+
     try {
       const rows = await this.c.var.database
         .insert(orgDepartments)
@@ -97,37 +105,40 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 親部署が存在するときだけ INSERT する。親の存在確認と INSERT を
-  // INSERT ... SELECT ... WHERE EXISTS でアトミックに行い TOCTOU を防ぐ。
-  // 親が消えていて 0 行挿入なら null を返す。
-  async createIfParentExists(
+  /**
+   * 親コードの存在を INSERT と同一ステートメントで検証する。
+   * 0 行挿入 = 親が存在しない → { reason: "parent_not_found" } を返す。
+   */
+  private async createWithParentGuard(
     department: OrgDepartment,
-  ): Promise<OrgDepartment | null | UniqueConstraintError | Error> {
-    if (department.parentCode === null) {
-      return this.create(department)
-    }
-
+  ): Promise<OrgDepartment | ParentNotFound | Error> {
     try {
-      const result = await this.c.var.database.run(
-        sql`INSERT INTO org_departments (code, department_id, parent_code, manager_employee_code, sort_order)
-            SELECT ${department.code}, ${department.departmentId}, ${department.parentCode},
-                   ${department.managerEmployeeCode}, ${department.order}
-            WHERE EXISTS (
-              SELECT 1 FROM org_departments WHERE code = ${department.parentCode}
-            )`,
+      const result = await this.c.env.DB.prepare(
+        `INSERT INTO org_departments (code, department_id, parent_code, manager_employee_code, sort_order)
+         SELECT ?1, ?2, ?3, ?4, ?5
+         WHERE EXISTS (SELECT 1 FROM org_departments WHERE code = ?3)`,
       )
+        .bind(
+          department.code,
+          department.departmentId,
+          department.parentCode,
+          department.managerEmployeeCode,
+          department.order,
+        )
+        .run()
 
       if (result.meta.changes === 0) {
-        return null
+        return { reason: "parent_not_found" }
       }
 
-      const inserted = await this.findByCode(department.code)
+      // INSERT ... SELECT は RETURNING を使えないため再取得する。
+      const created = await this.findByCode(department.code)
 
-      if (inserted === null) {
-        return new Error("failed to retrieve inserted org_department")
+      if (created instanceof Error) {
+        return created
       }
 
-      return inserted
+      return created ?? new Error("failed to read inserted org_department")
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         return new UniqueConstraintError("department code already exists", { cause: error })

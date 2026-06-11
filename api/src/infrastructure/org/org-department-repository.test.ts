@@ -13,13 +13,13 @@ function makeDepartment(code: string, parentCode: string | null): OrgDepartment 
   })
 }
 
-describe("OrgDepartmentRepository.createIfParentExists", () => {
+describe("OrgDepartmentRepository.create", () => {
   test("creates a root department without a parent", async () => {
     const { context } = createTestContext()
 
     const repository = new OrgDepartmentRepository(context)
 
-    const created = await repository.createIfParentExists(makeDepartment("D801", null))
+    const created = await repository.create(makeDepartment("D801", null))
 
     if (created instanceof OrgDepartment === false) {
       throw new Error("expected created department")
@@ -33,9 +33,9 @@ describe("OrgDepartmentRepository.createIfParentExists", () => {
 
     const repository = new OrgDepartmentRepository(context)
 
-    await repository.createIfParentExists(makeDepartment("D801", null))
+    await repository.create(makeDepartment("D801", null))
 
-    const created = await repository.createIfParentExists(makeDepartment("D802", "D801"))
+    const created = await repository.create(makeDepartment("D802", "D801"))
 
     if (created instanceof OrgDepartment === false) {
       throw new Error("expected created department")
@@ -44,14 +44,14 @@ describe("OrgDepartmentRepository.createIfParentExists", () => {
     expect(created.parentCode).toBe("D801")
   })
 
-  test("returns null when the parent does not exist (no orphan row)", async () => {
+  test("returns parent_not_found when the parent does not exist (no orphan row)", async () => {
     const { context } = createTestContext()
 
     const repository = new OrgDepartmentRepository(context)
 
-    const created = await repository.createIfParentExists(makeDepartment("D803", "D999"))
+    const created = await repository.create(makeDepartment("D803", "D999"))
 
-    expect(created).toBeNull()
+    expect(created).toEqual({ reason: "parent_not_found" })
 
     const orphan = await repository.findByCode("D803")
 
