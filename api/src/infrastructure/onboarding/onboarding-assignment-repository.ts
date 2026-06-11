@@ -246,31 +246,34 @@ export class OnboardingAssignmentRepository {
   }
 
   // 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
+  // assignment を先に DELETE し、ガード文で 0 行なら後続の tasks DELETE を abort する。
   async delete(assignmentId: number): Promise<true | null | Error> {
     try {
-      const deleteAssignment = this.c.var.database
-        .delete(onboardingAssignments)
-        .where(
-          and(
-            eq(onboardingAssignments.id, assignmentId),
-            ne(onboardingAssignments.status, "completed"),
-          ),
-        )
-        .returning({ id: onboardingAssignments.id })
-
-      const deleteTasks = this.c.var.database
-        .delete(onboardingTasks)
-        .where(eq(onboardingTasks.assignmentId, assignmentId))
-
-      const [assignmentRows] = await this.c.var.database.batch([deleteAssignment, deleteTasks])
-
-      if (assignmentRows.length === 0) {
-        return null
-      }
+      const db = this.c.env.DB
+      await db.batch([
+        db
+          .prepare("DELETE FROM onboarding_assignments WHERE id = ?1 AND status != 'completed'")
+          .bind(assignmentId),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db.prepare("DELETE FROM onboarding_tasks WHERE assignment_id = ?1").bind(assignmentId),
+      ])
 
       return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete onboarding assignment")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
+// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }

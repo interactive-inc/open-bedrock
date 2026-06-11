@@ -94,6 +94,10 @@ export const PUT = factory.createHandlers(
         throw new ConflictError("not modifiable")
       }
 
+      if (yearEndAdjustment.reason === "year_conflict") {
+        throw new ConflictError("duplicate target year for this employee")
+      }
+
       throw new ForbiddenError("not the applicant")
     }
 
