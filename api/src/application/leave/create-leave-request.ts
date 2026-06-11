@@ -58,6 +58,13 @@ export class CreateLeaveRequest {
       createdAt: command.createdAt,
     })
 
-    return await repository.create(leaveRequest)
+    const created = await repository.create(leaveRequest)
+
+    // 条件付き INSERT が 0 行だった場合は並行リクエストによる重複
+    if (created === null) {
+      return { failure: "overlapping_leave_request" }
+    }
+
+    return created
   }
 }
