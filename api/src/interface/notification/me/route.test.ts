@@ -95,13 +95,15 @@ describe("GET /notifications/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(notificationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
-      expect(parsed.data[0]?.id).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
+      expect(parsed.data.data[0]?.id).toBe(3)
     }
   })
 
@@ -111,12 +113,14 @@ describe("GET /notifications/me", () => {
       token: await tokenFor(5, "member"),
     })
 
-    const parsed = z.array(notificationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
     }
   })
 
@@ -126,13 +130,15 @@ describe("GET /notifications/me", () => {
       token: await tokenFor(5, "member"),
     })
 
-    const parsed = z.array(notificationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(3)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(3)
     }
   })
 

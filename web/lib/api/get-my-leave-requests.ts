@@ -14,5 +14,7 @@ export async function getMyLeaveRequests(status: LeaveStatus | null) {
     return new Error("failed to load my leave requests")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

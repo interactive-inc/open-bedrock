@@ -102,17 +102,19 @@ describe("GET /shift/swap-requests", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(pendingSwapRequestSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(pendingSwapRequestSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data).toHaveLength(1)
-      expect(parsed.data[0]?.id).toBe(1)
-      expect(parsed.data[0]?.status).toBe("pending")
-      expect(parsed.data[0]?.requester_employee_code).toBe("E005")
-      expect(parsed.data[0]?.target_employee_code).toBe("E004")
-      expect(parsed.data[0]?.note).toBe("Medical appointment")
+      expect(parsed.data.data).toHaveLength(1)
+      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.status).toBe("pending")
+      expect(parsed.data.data[0]?.requester_employee_code).toBe("E005")
+      expect(parsed.data.data[0]?.target_employee_code).toBe("E004")
+      expect(parsed.data.data[0]?.note).toBe("Medical appointment")
     }
   })
 

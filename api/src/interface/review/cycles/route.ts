@@ -10,7 +10,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewCycles } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { asc, count, eq } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -45,6 +45,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         .limit(limit)
         .offset(offset)
 
+  const countQuery = c.var.database.select({ total: count() }).from(reviewCycles)
+
+  const totalRows = isAdmin
+    ? await countQuery
+    : await countQuery.where(eq(reviewCycles.status, "open"))
+
   const body = rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -53,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     due_date: row.dueDate,
   }))
 
-  return c.json(body, 200)
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

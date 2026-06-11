@@ -11,5 +11,7 @@ export async function getMyReviewForms(): Promise<Array<ReviewFormResponse> | Er
     return new Error("failed to load my review forms")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

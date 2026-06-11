@@ -12,5 +12,7 @@ export async function getOnboardingEmployee(code: string) {
     return new Error("failed to load onboarding assignments")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

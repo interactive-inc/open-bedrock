@@ -10,7 +10,7 @@ import {
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, salaryRevisions } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { count, desc, eq } from "drizzle-orm"
 
 // GET /salary-revisions/:employee_code — 特権ロールが対象社員の改定履歴を一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -60,6 +60,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(salaryRevisions)
+    .where(eq(salaryRevisions.employeeId, employee.id))
+
   const responseBody = rows.map((row) => ({
     id: row.id,
     employee_id: row.employeeId,
@@ -70,5 +75,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: row.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

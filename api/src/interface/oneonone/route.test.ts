@@ -87,14 +87,16 @@ describe("GET /oneonones", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(oneOnOneResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(oneOnOneResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
 
-      const session = parsed.data.find((row) => row.held_at === "2026-05-01T05:00:00Z")
+      const session = parsed.data.data.find((row) => row.held_at === "2026-05-01T05:00:00Z")
 
       expect(session?.member_name).toBe("Emery Lane")
       expect(session?.manager_name).toBe("Drew Sato")
@@ -113,7 +115,7 @@ describe("GET /oneonones", () => {
 
     expect(response.status).toBe(200)
 
-    expect(await response.json()).toEqual([])
+    expect(await response.json()).toEqual({ data: [], total: 0 })
   })
 
   test("returns 401 without a bearer token", async () => {

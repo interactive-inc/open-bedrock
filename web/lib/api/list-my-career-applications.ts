@@ -13,5 +13,7 @@ export async function listMyCareerApplications(): Promise<
     return new Error("failed to load career applications")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

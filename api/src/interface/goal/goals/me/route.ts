@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { goals } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /goals/me — 社員本人の目標一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const goals = await new ListMyGoals(c).run({
+  const goalRows = await new ListMyGoals(c).run({
     employeeId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (goals instanceof Error) {
+  if (goalRows instanceof Error) {
     throw new InternalError("failed to load goals")
   }
 
-  const responseBody = goals.map((goal) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(goals)
+    .where(eq(goals.employeeId, viewer.employeeId))
+
+  const responseBody = goalRows.map((goal) => ({
     id: goal.id,
     employee_id: goal.employeeId,
     period: goal.period,
@@ -51,5 +58,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: goal.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

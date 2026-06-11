@@ -203,12 +203,14 @@ describe("POST /thanks", () => {
       token: await recipientToken(),
     })
 
-    const recipientRows = z.array(notificationResponseSchema).safeParse(await recipientInbox.json())
+    const recipientRows = z
+      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .safeParse(await recipientInbox.json())
 
     expect(recipientRows.success).toBe(true)
 
     if (recipientRows.success) {
-      const thanksNotifications = recipientRows.data.filter((row) => row.kind === "thanks")
+      const thanksNotifications = recipientRows.data.data.filter((row) => row.kind === "thanks")
 
       expect(thanksNotifications.length).toBe(1)
       expect(thanksNotifications[0]?.source_domain).toBe("thanks")
@@ -217,12 +219,14 @@ describe("POST /thanks", () => {
 
     const senderInbox = await request({ db, path: "/notifications/me", token: await senderToken() })
 
-    const senderRows = z.array(notificationResponseSchema).safeParse(await senderInbox.json())
+    const senderRows = z
+      .object({ data: z.array(notificationResponseSchema), total: z.number() })
+      .safeParse(await senderInbox.json())
 
     expect(senderRows.success).toBe(true)
 
     if (senderRows.success) {
-      expect(senderRows.data.filter((row) => row.kind === "thanks").length).toBe(0)
+      expect(senderRows.data.data.filter((row) => row.kind === "thanks").length).toBe(0)
     }
   })
 })

@@ -10,5 +10,7 @@ export async function getApplicationInbox() {
     return new Error("failed to load application inbox")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

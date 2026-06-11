@@ -10,5 +10,7 @@ export async function getRoomList() {
     return new Error("failed to load rooms")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

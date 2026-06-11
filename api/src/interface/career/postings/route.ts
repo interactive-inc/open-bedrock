@@ -11,7 +11,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { careerPostings } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { desc, eq } from "drizzle-orm"
+import { count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 // 公募をレスポンス用の snake_case に整形する。
@@ -56,6 +56,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(careerPostings)
+    .where(eq(careerPostings.status, "open"))
+
   const responseBody = rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -65,7 +70,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /career/postings — 公募を新規作成（管理ロールのみ）

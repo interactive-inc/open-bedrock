@@ -13,5 +13,7 @@ export async function listMyYearEndAdjustments(): Promise<
     return new Error("failed to load year end adjustments")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

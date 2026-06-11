@@ -3,7 +3,7 @@ import { likeKeyword } from "@/interface/shared/like-keyword"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { skills } from "@/schema"
-import { and, eq, or } from "drizzle-orm"
+import { and, count, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import {
   DEFAULT_LIST_LIMIT,
@@ -58,11 +58,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(skills)
+    .where(conditions.length === 0 ? undefined : and(...conditions))
+
   const responseBody = rows.map((row) => ({
     code: row.code,
     name: row.name,
     category: row.category,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

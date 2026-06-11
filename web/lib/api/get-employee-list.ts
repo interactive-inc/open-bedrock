@@ -22,7 +22,7 @@ export async function getEmployeeList(filter: EmployeeSearchFilter) {
 
   const employees = await response.json()
 
-  return employees.map(toEmployeeListItem)
+  return employees.data.map(toEmployeeListItem)
 }
 
 // snake_case の生レスポンスを公開 type へ変換する。

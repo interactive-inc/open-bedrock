@@ -8,7 +8,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
@@ -57,6 +57,15 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(applicationTemplates)
+      .where(
+        query.category === undefined
+          ? undefined
+          : eq(applicationTemplates.category, query.category),
+      )
+
     const responseBody = rows.map((row) => ({
       code: row.code,
       name: row.name,
@@ -64,6 +73,6 @@ export const GET = factory.createHandlers(
       description: row.description,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

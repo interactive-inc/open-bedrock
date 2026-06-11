@@ -13,5 +13,7 @@ export async function listMyRoomReservations(): Promise<
     return new Error("failed to load room reservations")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

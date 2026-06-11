@@ -4,7 +4,7 @@ import { toNotificationSearchQuery } from "@/interface/notification/me/to-notifi
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { notifications } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // GET /notifications/me — 本人宛ての通知一覧（新着順）
@@ -35,6 +35,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(query.limit)
     .offset(query.offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(notifications)
+    .where(and(...conditions))
+
   const responseBody = rows.flatMap((row) => {
     const kind = notificationKindSchema.safeParse(row.kind)
 
@@ -57,5 +62,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     ]
   })
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

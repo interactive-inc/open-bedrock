@@ -8,7 +8,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { employeeSkills, skills } from "@/schema"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 // GET /skills/me — 本人の登録スキル一覧（スキルマスタ結合済み）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -40,6 +40,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(employeeSkills)
+    .where(eq(employeeSkills.employeeId, session.employeeId))
+
   const responseBody = rows.map((row) => ({
     skill_code: row.employeeSkill.skillCode,
     skill_name: row.skill?.name ?? "",
@@ -49,5 +54,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     note: row.employeeSkill.note,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

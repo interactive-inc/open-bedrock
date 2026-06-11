@@ -18,7 +18,7 @@ import {
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, eq, or } from "drizzle-orm"
+import { and, count, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 
@@ -87,6 +87,11 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(employees)
+      .where(conditions.length === 0 ? undefined : and(...conditions))
+
     const responseBody = rows.map((row) => ({
       code: row.code,
       name: row.name,
@@ -96,7 +101,7 @@ export const GET = factory.createHandlers(
       status: row.status,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )
 

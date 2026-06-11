@@ -11,5 +11,7 @@ export async function getReviewCycles(): Promise<Array<ReviewCycleResponse> | Er
     return new Error("failed to load review cycles")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

@@ -16,5 +16,7 @@ export async function getSalaryRevisions(
     return new Error("failed to load salary revisions")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

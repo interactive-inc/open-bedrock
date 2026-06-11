@@ -103,12 +103,14 @@ describe("GET /training/courses", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(trainingCourseResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(trainingCourseResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
     }
   })
 
@@ -118,10 +120,12 @@ describe("GET /training/courses", () => {
       await tokenFor(5, "member"),
     )
 
-    const body = z.array(trainingCourseResponseSchema).parse(await response.json())
+    const body = z
+      .object({ data: z.array(trainingCourseResponseSchema), total: z.number() })
+      .parse(await response.json())
 
-    expect(body.length).toBe(1)
-    expect(body[0]?.code).toBe("TR-SEC-01")
+    expect(body.data.length).toBe(1)
+    expect(body.data[0]?.code).toBe("TR-SEC-01")
   })
 
   test("returns 401 without a bearer token", async () => {

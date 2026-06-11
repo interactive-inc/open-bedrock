@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { antisocialChecks } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /antisocial-checks/me — 申請者本人の反社チェック申請一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const antisocialChecks = await new ListMyAntisocialChecks(c).run({
+  const antisocialCheckRows = await new ListMyAntisocialChecks(c).run({
     requesterId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (antisocialChecks instanceof Error) {
+  if (antisocialCheckRows instanceof Error) {
     throw new InternalError("failed to load antisocial checks")
   }
 
-  const responseBody = antisocialChecks.map((antisocialCheck) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(antisocialChecks)
+    .where(eq(antisocialChecks.requesterId, viewer.employeeId))
+
+  const responseBody = antisocialCheckRows.map((antisocialCheck) => ({
     id: antisocialCheck.id,
     requester_id: antisocialCheck.requesterId,
     partner_name: antisocialCheck.partnerName,
@@ -52,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: antisocialCheck.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

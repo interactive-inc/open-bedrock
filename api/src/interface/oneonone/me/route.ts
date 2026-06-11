@@ -9,7 +9,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
-import { aliasedTable, eq, inArray } from "drizzle-orm"
+import { aliasedTable, count, eq, inArray, or } from "drizzle-orm"
 
 const members = aliasedTable(employees, "members")
 
@@ -47,6 +47,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load one-on-ones")
   }
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(oneOnOnes)
+    .where(
+      or(eq(oneOnOnes.memberId, viewer.employeeId), eq(oneOnOnes.managerId, viewer.employeeId)),
+    )
+
   const ids = oneOnOnesList.map((o) => o.id)
 
   const nameRows =
@@ -73,5 +80,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   })
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

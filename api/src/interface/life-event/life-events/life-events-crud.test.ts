@@ -196,13 +196,15 @@ describe("GET /life-events/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(lifeEventResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(lifeEventResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].employee_id).toBe(4)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].employee_id).toBe(4)
     }
   })
 
@@ -236,9 +238,11 @@ describe("GET /life-events/me", () => {
       bindings,
     )
 
-    const limitedRows = z.array(lifeEventResponseSchema).parse(await limited.json())
+    const limitedRows = z
+      .object({ data: z.array(lifeEventResponseSchema), total: z.number() })
+      .parse(await limited.json())
 
-    expect(limitedRows.length).toBe(1)
+    expect(limitedRows.data.length).toBe(1)
 
     const skipped = await app.request(
       "/life-events/me?offset=1",
@@ -246,9 +250,11 @@ describe("GET /life-events/me", () => {
       bindings,
     )
 
-    const skippedRows = z.array(lifeEventResponseSchema).parse(await skipped.json())
+    const skippedRows = z
+      .object({ data: z.array(lifeEventResponseSchema), total: z.number() })
+      .parse(await skipped.json())
 
-    expect(skippedRows.length).toBe(1)
+    expect(skippedRows.data.length).toBe(1)
   })
 
   test("returns 401 without a bearer token", async () => {

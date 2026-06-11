@@ -11,5 +11,7 @@ export async function listMyBusinessTrips(): Promise<ReadonlyArray<BusinessTripR
     return new Error("failed to load business trips")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }
