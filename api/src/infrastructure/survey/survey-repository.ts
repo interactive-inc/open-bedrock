@@ -3,7 +3,7 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"
-import { and, asc, count, eq } from "drizzle-orm"
+import { and, asc, count, eq, sql } from "drizzle-orm"
 
 export type AlreadySubmittedError = { reason: "already_submitted" }
 
@@ -80,6 +80,46 @@ export class SurveyRepository {
       const row = rows.at(0)
 
       return row === undefined ? new Error("failed to update survey") : Survey.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update survey")
+    }
+  }
+
+  // 回答が存在しない場合のみアンケートを更新する（設問変更時の TOCTOU 競合を防ぐ）。
+  // 回答が1件でもあれば 0 行更新となり null を返す。
+  async updateIfNoResponses(survey: Survey): Promise<Survey | null | Error> {
+    if (survey.id === null) {
+      return new Error("survey id is required")
+    }
+
+    try {
+      const result = await this.c.var.database.run(
+        sql`UPDATE surveys
+            SET title = ${survey.title},
+                status = ${survey.status},
+                questions_json = ${JSON.stringify(survey.questionsJson)}
+            WHERE id = ${survey.id}
+              AND NOT EXISTS (
+                SELECT 1 FROM survey_responses WHERE survey_id = ${survey.id}
+              )
+            RETURNING id`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      const rows = await this.c.var.database
+        .select()
+        .from(surveys)
+        .where(eq(surveys.id, survey.id))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to retrieve updated survey")
+        : Survey.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update survey")
     }

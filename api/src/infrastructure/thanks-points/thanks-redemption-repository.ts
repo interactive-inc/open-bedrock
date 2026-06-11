@@ -83,7 +83,7 @@ export class ThanksRedemptionRepository {
                 WHERE ${thanks.recipientEmployeeId} = ${redemption.employeeId})
               - (SELECT COALESCE(SUM(${thanksRedemptions.pointCost}), 0) FROM ${thanksRedemptions}
                 WHERE ${thanksRedemptions.employeeId} = ${redemption.employeeId}
-                  AND ${thanksRedemptions.status} = ${settledStatus})
+                  AND ${thanksRedemptions.status} IN (${settledStatus}, 'pending'))
             ) >= ${redemption.pointCost}
             AND NOT EXISTS (
               SELECT 1 FROM ${thanksRedemptions}

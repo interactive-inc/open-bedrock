@@ -88,10 +88,7 @@ export class NotificationRepository {
   }
 
   // 通知を1件削除する。所有権ガード付き。
-  async delete(
-    notificationId: number,
-    recipientEmployeeId: number,
-  ): Promise<true | null | Error> {
+  async delete(notificationId: number, recipientEmployeeId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(notifications)

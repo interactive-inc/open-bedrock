@@ -73,48 +73,55 @@ export class CareerPostingRepository {
     }
   }
 
-  // 公募を削除する。
-  async delete(postingId: number): Promise<null | Error> {
-    try {
-      await this.c.var.database.delete(careerPostings).where(eq(careerPostings.id, postingId))
-
-      return null
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to delete career_posting")
-    }
-  }
-
   // status='applied' の応募がなければ公募と紐づく応募をアトミックに削除する。
-  // D1 batch で career_applications（withdrawn/rejected）と career_postings を一括削除し、
-  // チェックと削除の間のレースおよび孤児レコードの蓄積を防ぐ。
-  // 戻り値: "deleted" = 削除成功, "has_applied" = 応募ありのためスキップ, Error = DB エラー
-  async deleteIfNoAppliedApplications(
-    postingId: number,
-  ): Promise<"deleted" | "has_applied" | Error> {
+  // D1 batch でチェックと削除を単一トランザクションで実行し TOCTOU を防ぐ。
+  // 0 行削除（applied 応募が存在）なら null を返す。
+  async deleteIfNoAppliedApplications(postingId: number): Promise<true | null | Error> {
     try {
       const db = this.c.env.DB
 
-      // applied 状態の応募が存在するか確認する
-      const check = await db
-        .prepare(
-          "SELECT 1 FROM career_applications WHERE posting_id = ?1 AND status = 'applied' LIMIT 1",
-        )
-        .bind(postingId)
-        .all()
-
-      if (check.results.length > 0) {
-        return "has_applied"
-      }
-
-      // career_applications（withdrawn/rejected）と career_postings を D1 batch でアトミックに削除する
       await db.batch([
-        db.prepare("DELETE FROM career_applications WHERE posting_id = ?1").bind(postingId),
-        db.prepare("DELETE FROM career_postings WHERE id = ?1").bind(postingId),
+        // applied 応募が存在しない場合のみ career_applications（withdrawn/rejected）を削除する
+        db
+          .prepare(
+            `DELETE FROM career_applications
+             WHERE posting_id = ?1
+               AND NOT EXISTS (
+                 SELECT 1 FROM career_applications
+                 WHERE posting_id = ?1 AND status = 'applied'
+               )`,
+          )
+          .bind(postingId),
+        // applied 応募が存在しない場合のみ career_postings を削除する
+        db
+          .prepare(
+            `DELETE FROM career_postings
+             WHERE id = ?1
+               AND NOT EXISTS (
+                 SELECT 1 FROM career_applications
+                 WHERE posting_id = ?1 AND status = 'applied'
+               )`,
+          )
+          .bind(postingId),
+        abortWhenPreviousStatementChangedNoRows(db),
       ])
 
-      return "deleted"
+      return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete career_posting")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
+// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }

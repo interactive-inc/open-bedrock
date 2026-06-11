@@ -58,6 +58,10 @@ export class DeleteOnboardingTemplate {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "template_in_use" }
+    }
+
     return { reason: "deleted" }
   }
 }

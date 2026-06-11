@@ -49,7 +49,7 @@ export class DeleteCareerPosting {
       return result
     }
 
-    if (result === "has_applied") {
+    if (result === null) {
       return { reason: "has_applied_applications" }
     }
 
