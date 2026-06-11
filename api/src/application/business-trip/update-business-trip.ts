@@ -87,6 +87,12 @@ export class UpdateBusinessTrip {
       return updated
     }
 
-    return await businessTripRepository.update(updated)
+    const result = await businessTripRepository.update(updated)
+
+    if (result === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return result
   }
 }

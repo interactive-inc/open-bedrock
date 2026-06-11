@@ -49,10 +49,10 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       code: codeSchema,
-      department_id: z.number(),
+      department_id: z.number().int(),
       parent_code: codeSchema.nullable().optional(),
       manager_employee_code: codeSchema.nullable().optional(),
-      order: z.number(),
+      order: z.number().int(),
     }),
   ),
   async (c) => {

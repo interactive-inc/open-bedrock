@@ -129,13 +129,16 @@ export class ShiftSwapRequestRepository {
     }
   }
 
-  async delete(swapRequestId: number): Promise<null | Error> {
+  async delete(swapRequestId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(shiftSwapRequests)
-        .where(eq(shiftSwapRequests.id, swapRequestId))
+        .where(
+          and(eq(shiftSwapRequests.id, swapRequestId), eq(shiftSwapRequests.status, "pending")),
+        )
+        .returning()
 
-      return null
+      return rows.length === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete shift swap request")
     }

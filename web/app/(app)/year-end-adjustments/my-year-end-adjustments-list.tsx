@@ -130,7 +130,7 @@ function UpdateYearEndAdjustmentDialog(props: { yearEndAdjustment: YearEndAdjust
 
 // 年末調整申告取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelYearEndAdjustmentButton(props: { yearEndAdjustmentId: string }) {
-  const [state, formAction, pending] = useActionState(cancelYearEndAdjustmentAction, {
+  const [_state, formAction, pending] = useActionState(cancelYearEndAdjustmentAction, {
     ok: false,
     error: null,
   })

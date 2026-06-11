@@ -62,7 +62,8 @@ export class ReviewCycleRepository {
     }
   }
 
-  async update(reviewCycle: ReviewCycle): Promise<ReviewCycle | null | Error> {
+  // status のみを更新する。title/period/dueDate の変更は updateDetails を使う。
+  async updateStatus(reviewCycle: ReviewCycle): Promise<ReviewCycle | null | Error> {
     try {
       if (reviewCycle.id === null) {
         return new Error("cannot update unsaved review cycle")

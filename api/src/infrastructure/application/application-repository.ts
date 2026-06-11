@@ -102,6 +102,7 @@ export class ApplicationRepository {
   }
 
   // 申請内容（payload）を更新する。status や currentStep は変更しない。
+  // pending 以外の申請は更新できない（0 行更新で null を返す）。
   async updatePayload(application: Application): Promise<Application | null | Error> {
     try {
       if (application.id === null) {
@@ -111,7 +112,7 @@ export class ApplicationRepository {
       const rows = await this.c.var.database
         .update(applications)
         .set({ payload: JSON.stringify(application.payload) })
-        .where(eq(applications.id, application.id))
+        .where(and(eq(applications.id, application.id), eq(applications.status, "pending")))
         .returning()
 
       const row = rows.at(0)
@@ -123,17 +124,25 @@ export class ApplicationRepository {
   }
 
   // 申請を削除する。承認記録も併せて削除する。
-  async delete(applicationId: number): Promise<null | Error> {
+  // pending 以外の申請は削除できない（0 行削除で null を返す）。
+  // D1 batch でアトミックに削除し、中途失敗による orphan を防ぐ。
+  async delete(applicationId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.batch([
-        this.c.var.database
-          .delete(applicationApprovals)
-          .where(eq(applicationApprovals.applicationId, applicationId)),
-        this.c.var.database.delete(applications).where(eq(applications.id, applicationId)),
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare("DELETE FROM applications WHERE id = ?1 AND status = 'pending'").bind(
+          applicationId,
+        ),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare("DELETE FROM application_approvals WHERE application_id = ?1").bind(
+          applicationId,
+        ),
       ])
 
-      return null
+      return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete application")
     }
   }

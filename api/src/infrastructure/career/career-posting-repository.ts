@@ -1,7 +1,7 @@
 import { CareerPosting } from "@/domain/career/career-posting"
 import type { Context } from "@/env"
 import { careerPostings } from "@/schema"
-import { eq, sql } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
 export class CareerPostingRepository {
   constructor(private readonly c: Context) {}
@@ -84,26 +84,33 @@ export class CareerPostingRepository {
     }
   }
 
-  // status='applied' の応募がなければ公募を削除する。
-  // 単一の DELETE ... WHERE NOT EXISTS で実行し、チェックと削除の間のレースを防ぐ。
+  // status='applied' の応募がなければ公募と紐づく応募をアトミックに削除する。
+  // D1 batch で career_applications（withdrawn/rejected）と career_postings を一括削除し、
+  // チェックと削除の間のレースおよび孤児レコードの蓄積を防ぐ。
   // 戻り値: "deleted" = 削除成功, "has_applied" = 応募ありのためスキップ, Error = DB エラー
   async deleteIfNoAppliedApplications(
     postingId: number,
   ): Promise<"deleted" | "has_applied" | Error> {
     try {
-      const result = await this.c.var.database.run(
-        sql`DELETE FROM career_postings
-            WHERE id = ${postingId}
-              AND NOT EXISTS (
-                SELECT 1 FROM career_applications
-                WHERE posting_id = ${postingId}
-                  AND status = 'applied'
-              )`,
-      )
+      const db = this.c.env.DB
 
-      if (result.meta.changes === 0) {
+      // applied 状態の応募が存在するか確認する
+      const check = await db
+        .prepare(
+          "SELECT 1 FROM career_applications WHERE posting_id = ?1 AND status = 'applied' LIMIT 1",
+        )
+        .bind(postingId)
+        .all()
+
+      if (check.results.length > 0) {
         return "has_applied"
       }
+
+      // career_applications（withdrawn/rejected）と career_postings を D1 batch でアトミックに削除する
+      await db.batch([
+        db.prepare("DELETE FROM career_applications WHERE posting_id = ?1").bind(postingId),
+        db.prepare("DELETE FROM career_postings WHERE id = ?1").bind(postingId),
+      ])
 
       return "deleted"
     } catch (error) {

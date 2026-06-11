@@ -43,6 +43,13 @@ export class UpdateMyCareerApplication {
       return { reason: "application_decided" }
     }
 
-    return await applicationRepository.update(current.withMessage(command.message))
+    const updated = await applicationRepository.update(current.withMessage(command.message))
+
+    // リポジトリ層の status guard で並行変更を検出した場合
+    if (!(updated instanceof Error) && "reason" in updated) {
+      return { reason: "application_decided" }
+    }
+
+    return updated
   }
 }

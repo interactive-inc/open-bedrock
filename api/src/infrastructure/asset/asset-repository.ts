@@ -1,5 +1,7 @@
 import { Asset } from "@/domain/asset/asset"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { assets } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -41,6 +43,11 @@ export class AssetRepository {
 
       return row === undefined ? new Error("failed to insert asset") : Asset.fromRow(row)
     } catch (error) {
+      // (code) の UNIQUE 制約違反 = 並行リクエストによる二重登録。
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("asset code already exists", { cause: error })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert asset")
     }
   }

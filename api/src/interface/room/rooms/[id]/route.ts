@@ -28,7 +28,7 @@ function toResponseBody(room: Room) {
 function toRoomId(value: string): number | null {
   const parsed = Number.parseInt(value, 10)
 
-  return Number.isInteger(parsed) ? parsed : null
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // GET /rooms/:id — 会議室マスタの詳細（要ログイン、閲覧は全ロール）

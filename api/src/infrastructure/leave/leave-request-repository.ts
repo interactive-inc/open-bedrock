@@ -1,7 +1,7 @@
 import { LeaveRequest } from "@/domain/leave/leave-request"
 import type { Context } from "@/env"
 import { leaveBalances, leaveRequests } from "@/schema"
-import { and, eq, gte, inArray, lte, ne } from "drizzle-orm"
+import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 
 export type ApproveWithBalanceOutcome =
   | LeaveRequest
@@ -59,28 +59,40 @@ export class LeaveRequestRepository {
     }
   }
 
-  async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | Error> {
+  // 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
+  // 同一社員の未却下（pending/approved）申請と期間が重なる行があれば INSERT をスキップし null を返す。
+  async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, reason, status, approver_id, decided_comment, created_at)
+            SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
+                   ${leaveRequest.startDate}, ${leaveRequest.endDate},
+                   ${leaveRequest.days}, ${leaveRequest.reason},
+                   ${leaveRequest.status}, ${leaveRequest.approverId},
+                   ${leaveRequest.decidedComment}, ${leaveRequest.createdAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM leave_requests
+              WHERE employee_id = ${leaveRequest.employeeId}
+                AND status IN ('pending', 'approved')
+                AND start_date <= ${leaveRequest.endDate}
+                AND end_date >= ${leaveRequest.startDate}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
       const rows = await this.c.var.database
-        .insert(leaveRequests)
-        .values({
-          employeeId: leaveRequest.employeeId,
-          leaveType: leaveRequest.leaveType,
-          startDate: leaveRequest.startDate,
-          endDate: leaveRequest.endDate,
-          days: leaveRequest.days,
-          reason: leaveRequest.reason,
-          status: leaveRequest.status,
-          approverId: leaveRequest.approverId,
-          decidedComment: leaveRequest.decidedComment,
-          createdAt: leaveRequest.createdAt,
-        })
-        .returning()
+        .select()
+        .from(leaveRequests)
+        .where(eq(leaveRequests.id, Number(result.meta.last_row_id)))
+        .limit(1)
 
       const row = rows.at(0)
 
       return row === undefined
-        ? new Error("failed to insert leave_request")
+        ? new Error("failed to retrieve inserted leave_request")
         : LeaveRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to insert leave_request")
