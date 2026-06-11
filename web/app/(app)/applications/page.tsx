@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { MyApplicationsList } from "@/app/(app)/applications/my-applications-list"
+import { MyApplicationsList } from "@/app/(app)/applications/_components/my-applications-list"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { listMyApplications } from "@/lib/api/list-my-applications"

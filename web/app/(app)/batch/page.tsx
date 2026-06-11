@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { BatchJobList } from "@/app/(app)/batch/batch-job-list"
+import { BatchJobList } from "@/app/(app)/batch/_components/batch-job-list"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 

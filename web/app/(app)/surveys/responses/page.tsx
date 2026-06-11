@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { MyResponsesList } from "@/app/(app)/surveys/my-responses-list"
+import { MyResponsesList } from "@/app/(app)/surveys/_components/my-responses-list"
 import { listMySurveyResponses } from "@/lib/api/list-my-survey-responses"
 import { Skeleton } from "@/components/ui/skeleton"
 

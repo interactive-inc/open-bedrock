@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { AntisocialCheckCreateForm } from "@/app/(app)/antisocial-checks/antisocial-check-create-form"
-import { MyAntisocialChecksSection } from "@/app/(app)/antisocial-checks/my-antisocial-checks-section"
+import { AntisocialCheckCreateForm } from "@/app/(app)/antisocial-checks/_components/antisocial-check-create-form"
+import { MyAntisocialChecksSection } from "@/app/(app)/antisocial-checks/_components/my-antisocial-checks-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "反社チェック申請" }
