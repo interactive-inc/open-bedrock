@@ -47,7 +47,7 @@ export class CancelTrainingEnrollment {
       return { reason: "forbidden" }
     }
 
-    if (enrollment.status === "completed") {
+    if (enrollment.status === "completed" || enrollment.status === "failed") {
       return { reason: "already_completed" }
     }
 

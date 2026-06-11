@@ -100,7 +100,7 @@ describe("PUT /review-cycles/:cycle_id", () => {
   })
 
   test("admin can null out dueDate", async () => {
-    const response = await request("/review-cycles/1", await adminToken(), "PUT", {
+    const response = await request("/review-cycles/3", await adminToken(), "PUT", {
       title: "No Due",
       period: "2026-H1",
       dueDate: null,
