@@ -1,6 +1,8 @@
 import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
 import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 
@@ -51,6 +53,11 @@ export class OnboardingTemplateRepository {
         ? new Error("failed to insert onboarding_template")
         : OnboardingTemplate.fromRow(row, [])
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("onboarding template code already exists", {
+          cause: error,
+        })
+      }
       return error instanceof Error ? error : new Error("failed to insert onboarding_template")
     }
   }
