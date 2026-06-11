@@ -16,6 +16,12 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
   const keyword = c.req.query("q") ?? null
 
   const category = c.req.query("category") ?? null
