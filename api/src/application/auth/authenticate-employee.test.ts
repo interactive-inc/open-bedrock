@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
 import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
 import { toPasswordHash } from "@/domain/auth/to-password-hash"
+import { wrapLegacyHash } from "@/domain/auth/wrap-legacy-hash"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
@@ -109,6 +110,41 @@ describe("AuthenticateEmployee", () => {
 
     expect(isLegacyPasswordHash(found.passwordHash)).toBe(false)
     expect(found.passwordHash.startsWith("pbkdf2:")).toBe(true)
+  })
+
+  test("authenticates against a wrapped-legacy hash and upgrades to pure PBKDF2", async () => {
+    const { context, db } = createTestContext()
+
+    const legacyHash = await toLegacyPasswordHash("wrapped-password")
+    const wrappedHash = await wrapLegacyHash(legacyHash)
+
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+wrapped@example.com",
+      passwordHash: wrappedHash,
+    })
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+wrapped@example.com",
+      password: "wrapped-password",
+      jwtSecret,
+    })
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("expected access token")
+    }
+
+    // ログイン後は純正 PBKDF2 に昇格しているはず。
+    const repository = new EmployeeRepository(context)
+
+    const found = await repository.findByEmail("you+wrapped@example.com")
+
+    if (found === null || found instanceof Error) {
+      throw new Error("employee should exist")
+    }
+
+    expect(found.passwordHash.startsWith("pbkdf2:")).toBe(true)
+    expect(found.passwordHash.startsWith("pbkdf2-wrapped-legacy:")).toBe(false)
   })
 
   test("does not rewrite a hash that is already in the new format", async () => {

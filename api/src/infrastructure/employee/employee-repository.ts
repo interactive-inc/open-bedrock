@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
-import { count, eq, sql } from "drizzle-orm"
+import { count, eq, notLike, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // 新規従業員の登録に必要な値。id は DB が採番するため含めない。
@@ -134,6 +134,21 @@ export class EmployeeRepository {
       return null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update password hash")
+    }
+  }
+
+  // password_hash が純正 PBKDF2 形式でない従業員を全件返す。
+  // 旧形式（hex）とラップ済み旧形式（pbkdf2-wrapped-legacy:）が対象。
+  async findAllWithNonPbkdf2Hash(): Promise<ReadonlyArray<Employee> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(employees)
+        .where(notLike(employees.passwordHash, "pbkdf2:%"))
+
+      return rows.map((row) => Employee.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load employees with legacy hash")
     }
   }
 

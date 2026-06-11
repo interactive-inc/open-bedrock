@@ -1,7 +1,7 @@
 import { Goal } from "@/domain/goal/goal"
 import type { Context } from "@/env"
 import { goals } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq, ne } from "drizzle-orm"
 
 export class GoalRepository {
   constructor(private readonly c: Context) {}
@@ -80,7 +80,7 @@ export class GoalRepository {
           weight: goal.weight,
           status: goal.status,
         })
-        .where(eq(goals.id, goal.id))
+        .where(and(eq(goals.id, goal.id), ne(goals.status, "done")))
         .returning()
 
       const row = rows.at(0)

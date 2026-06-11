@@ -97,7 +97,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/goals/4/evaluations",
+      path: "/goals/3/evaluations",
       token: await tokenFor(9, "member"),
       method: "POST",
       body: { kind: "self", score: 80, comment: "On track" },
@@ -110,7 +110,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.goal_id).toBe(4)
+      expect(parsed.data.goal_id).toBe(3)
       expect(parsed.data.evaluator_id).toBe(9)
       expect(parsed.data.kind).toBe("self")
       expect(parsed.data.score).toBe(80)
@@ -231,7 +231,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/goals/4/evaluations",
+      path: "/goals/3/evaluations",
       token: await tokenFor(9, "member"),
       method: "POST",
       body: { kind: "self", score: 0, comment: "minimum" },
@@ -244,7 +244,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/goals/4/evaluations",
+      path: "/goals/3/evaluations",
       token: await tokenFor(9, "member"),
       method: "POST",
       body: { kind: "self", score: 100, comment: "maximum" },
@@ -277,5 +277,18 @@ describe("POST /goals/:goal_id/evaluations", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  test("returns 409 when same evaluator and kind already exists for the goal", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/4/evaluations",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: { kind: "self", score: 75, comment: "duplicate attempt" },
+    })
+
+    expect(response.status).toBe(409)
   })
 })

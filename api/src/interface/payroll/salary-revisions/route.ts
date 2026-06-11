@@ -1,5 +1,6 @@
 import { CreateSalaryRevision } from "@/application/payroll/create-salary-revision"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -48,6 +49,10 @@ export const POST = factory.createHandlers(
     if ("id" in revision === false) {
       if (revision.reason === "forbidden") {
         throw new ForbiddenError()
+      }
+
+      if (revision.reason === "duplicate_effective_date") {
+        throw new ConflictError("既にこの適用日の給与改定が存在します")
       }
 
       throw new NotFoundError("employee not found")
