@@ -65,6 +65,10 @@ export class UpdateYearEndAdjustment {
       return { reason: "year_conflict" }
     }
 
+    if (saved instanceof Error) {
+      return saved
+    }
+
     if (saved === null) {
       return { reason: "not_modifiable" }
     }
