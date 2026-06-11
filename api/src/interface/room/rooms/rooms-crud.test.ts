@@ -158,6 +158,20 @@ describe("GET /rooms", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("?limit=1 returns only 1 room when seed has 5", async () => {
+    const response = await request({ path: "/rooms?limit=1", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(roomResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+    }
+  })
 })
 
 describe("GET /rooms/:id", () => {

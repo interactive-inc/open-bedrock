@@ -4,6 +4,8 @@ import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
   respondentId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMySurveyResponses {
   async run(command: Command): Promise<ReadonlyArray<SurveyResponse> | Error> {
     const surveyRepository = new SurveyRepository(this.c)
 
-    return await surveyRepository.findResponsesByRespondentId(command.respondentId)
+    return await surveyRepository.findResponsesByRespondentId(
+      command.respondentId,
+      command.limit,
+      command.offset,
+    )
   }
 }

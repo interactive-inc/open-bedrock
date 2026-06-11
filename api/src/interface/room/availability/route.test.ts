@@ -146,6 +146,23 @@ describe("GET /rooms/availability", () => {
     expect(response.status).toBe(400)
   })
 
+  test("?limit=1 returns only 1 room when seed has 5 matching capacity=0", async () => {
+    const response = await getRequest(
+      "/rooms/availability?start_at=2026-05-29T01:30:00Z&end_at=2026-05-29T02:30:00Z&capacity=0&limit=1",
+      await managerToken(),
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+    }
+  })
+
   test("includes all conflicts when a single room has multiple overlapping reservations", async () => {
     // Build a DB with one room that has two reservations both overlapping the query window.
     const db = createD1TestDatabase(loadSchema())

@@ -39,6 +39,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("swap request is not pending")
     }
 
+    if (swapRequest.reason === "assignment_not_found") {
+      throw new ConflictError("assignment not found for swap")
+    }
+
     throw new NotFoundError("swap request not found")
   }
 

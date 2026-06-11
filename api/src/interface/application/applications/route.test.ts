@@ -127,6 +127,20 @@ describe("GET /applications", () => {
     }
   })
 
+  test("returns only 1 application when limit=1", async () => {
+    const response = await request("/applications?limit=1", await tokenFor(5, "member"))
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(applicationMineResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/applications", null)
 

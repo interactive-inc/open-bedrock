@@ -6,12 +6,17 @@ import { asc, eq } from "drizzle-orm"
 export class ReviewCycleRepository {
   constructor(private readonly c: Context) {}
 
-  async findMany(): Promise<ReadonlyArray<ReviewCycle> | Error> {
+  async findMany(props: {
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ReviewCycle> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(reviewCycles)
         .orderBy(asc(reviewCycles.id))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => ReviewCycle.fromRow(row))
     } catch (error) {

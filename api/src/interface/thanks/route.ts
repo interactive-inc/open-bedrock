@@ -1,5 +1,5 @@
-import { ListThanks } from "@/application/thanks/list-thanks"
 import { SendThanks } from "@/application/thanks/send-thanks"
+import { Thanks } from "@/domain/thanks/thanks"
 import type { Context } from "@/env"
 import {
   BadRequestError,
@@ -17,7 +17,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { employees, thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { count, inArray } from "drizzle-orm"
+import { count, desc, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -43,14 +43,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const [thanksList, totalRows] = await Promise.all([
-    new ListThanks(c).run({ limit, offset }),
+  const [dataRows, totalRows] = await c.var.database.batch([
+    c.var.database
+      .select()
+      .from(thanksTable)
+      .orderBy(desc(thanksTable.createdAt), desc(thanksTable.id))
+      .limit(limit)
+      .offset(offset),
     c.var.database.select({ total: count() }).from(thanksTable),
   ])
 
-  if (thanksList instanceof Error) {
-    throw new InternalError("failed to load thanks")
-  }
+  const thanksList = dataRows.map((row) => Thanks.fromRow(row))
 
   const nameById = await toEmployeeNameMap(
     c,
@@ -112,6 +115,10 @@ export const POST = factory.createHandlers(
       // 送信者はセッションから解決済みのはずなので、不在は想定外の内部状態。
       if (result.reason === "sender_not_found") {
         throw new InternalError("sender not found")
+      }
+
+      if (result.reason === "self_thanks") {
+        throw new BadRequestError("cannot send thanks to yourself")
       }
 
       if (result.reason === "insufficient_budget") {

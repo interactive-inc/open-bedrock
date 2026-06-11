@@ -3,6 +3,7 @@ import { CorrectPayslip } from "@/application/payroll/correct-payslip"
 import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import { Payslip } from "@/domain/payroll/payslip"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -125,6 +126,10 @@ export const PUT = factory.createHandlers(
         throw new ForbiddenError()
       }
 
+      if (payslip.reason === "not_editable") {
+        throw new ConflictError("the payslip is not editable")
+      }
+
       throw new NotFoundError("payslip not found")
     }
 
@@ -157,6 +162,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "payslip_not_found") {
     throw new NotFoundError("payslip not found")
+  }
+
+  if (result.reason === "not_cancellable") {
+    throw new ConflictError("only draft payslips can be cancelled")
   }
 
   return c.body(null, 204)
