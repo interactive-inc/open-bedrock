@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { DashboardSummaryCards } from "@/app/(app)/dashboard/dashboard-summary-cards"
+import { DashboardSummaryCards } from "@/app/(app)/dashboard/_components/dashboard-summary-cards"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "ダッシュボード" }

@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { BusinessTripCreateForm } from "@/app/(app)/business-trips/business-trip-create-form"
-import { MyBusinessTripsSection } from "@/app/(app)/business-trips/my-business-trips-section"
+import { BusinessTripCreateForm } from "@/app/(app)/business-trips/_components/business-trip-create-form"
+import { MyBusinessTripsSection } from "@/app/(app)/business-trips/_components/my-business-trips-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "出張申請" }

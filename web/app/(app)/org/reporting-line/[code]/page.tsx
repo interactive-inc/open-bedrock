@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { OrgReportingLineView } from "@/app/(app)/org/reporting-line/[code]/org-reporting-line-view"
+import { OrgReportingLineView } from "@/app/(app)/org/reporting-line/[code]/_components/org-reporting-line-view"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "レポートライン" }

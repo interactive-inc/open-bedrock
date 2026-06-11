@@ -66,14 +66,14 @@ function managerToken(): Promise<string> {
 }
 
 async function getRequest(token: string | null): Promise<Response> {
-  return requestWithContext({ db: await createTestDb(), jwtSecret, path: "/oneonone", token })
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path: "/oneonones", token })
 }
 
 async function postOneOnOne(token: string | null, body: unknown): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),
     jwtSecret,
-    path: "/oneonone",
+    path: "/oneonones",
     token,
     method: "POST",
     body,
@@ -81,7 +81,7 @@ async function postOneOnOne(token: string | null, body: unknown): Promise<Respon
   })
 }
 
-describe("GET /oneonone", () => {
+describe("GET /oneonones", () => {
   test("returns 200 with the participant's history in snake_case shape", async () => {
     const response = await getRequest(await managerToken())
 
@@ -123,7 +123,7 @@ describe("GET /oneonone", () => {
   })
 })
 
-describe("POST /oneonone", () => {
+describe("POST /oneonones", () => {
   test("returns 201 and resolves member/manager into snake_case shape", async () => {
     const response = await postOneOnOne(await managerToken(), {
       member_email: "you+e005@example.com",

@@ -1,6 +1,5 @@
 import { canManageApplicationTemplates } from "@/domain/application/can-manage-application-templates"
 import type { Context } from "@/env"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
 export type Command = {
@@ -20,13 +19,14 @@ export type DeleteFailure = Forbidden | TemplateNotFound | TemplateInUse
 
 /**
  * 管理権限を持つ者が申請テンプレートを削除する。
+ * pending 申請が存在するテンプレートは削除できない（repository 側で
+ * D1 batch によりアトミックに判定する）。
  */
 export class DeleteApplicationTemplate {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Deleted | DeleteFailure | Error> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
-    const applicationRepository = new ApplicationRepository(this.c)
 
     if (canManageApplicationTemplates(command.viewerRole) === false) {
       return { reason: "forbidden" }
@@ -42,22 +42,16 @@ export class DeleteApplicationTemplate {
       return { reason: "template_not_found" }
     }
 
-    if (current.id !== null) {
-      const pendingCount = await applicationRepository.countPendingByTemplateId(current.id)
-
-      if (pendingCount instanceof Error) {
-        return pendingCount
-      }
-
-      if (pendingCount > 0) {
-        return { reason: "template_in_use" }
-      }
-    }
-
+    // D1 batch で pending 申請チェックと削除をアトミックに実行。
+    // null = pending 申請が存在するため削除不可。
     const deleted = await templateRepository.delete(command.code)
 
     if (deleted instanceof Error) {
       return deleted
+    }
+
+    if (deleted === null) {
+      return { reason: "template_in_use" }
     }
 
     return { reason: "deleted" }

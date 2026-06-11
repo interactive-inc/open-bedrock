@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { EmployeeDetail } from "@/app/(app)/employees/[code]/employee-detail"
+import { EmployeeDetail } from "@/app/(app)/employees/[code]/_components/employee-detail"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "従業員詳細" }

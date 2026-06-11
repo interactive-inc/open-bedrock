@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { LifeEventCreateForm } from "@/app/(app)/life-events/life-event-create-form"
-import { MyLifeEventsSection } from "@/app/(app)/life-events/my-life-events-section"
+import { LifeEventCreateForm } from "@/app/(app)/life-events/_components/life-event-create-form"
+import { MyLifeEventsSection } from "@/app/(app)/life-events/_components/my-life-events-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "ライフイベント届出" }

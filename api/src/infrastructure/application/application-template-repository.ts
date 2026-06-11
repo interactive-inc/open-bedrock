@@ -1,7 +1,9 @@
 import { ApplicationTemplate } from "@/domain/application/application-template"
 import type { Context } from "@/env"
-import { applicationTemplates, applications } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { applicationTemplates } from "@/schema"
+import { eq } from "drizzle-orm"
 
 export class ApplicationTemplateRepository {
   constructor(private readonly c: Context) {}
@@ -42,6 +44,12 @@ export class ApplicationTemplateRepository {
         ? new Error("failed to insert application_template")
         : ApplicationTemplate.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("application_template unique constraint violated", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert application_template")
     }
   }
@@ -71,45 +79,40 @@ export class ApplicationTemplateRepository {
     }
   }
 
-  // 申請テンプレートを削除する。pending 状態の申請が紐付いている場合は削除せず null を返す。
+  // pending 申請が存在しない場合のみテンプレートを削除する。
+  // D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
+  // 0 行削除（pending 申請が存在）なら null を返す。
   async delete(code: string): Promise<true | null | Error> {
     try {
-      // テンプレートの id を引く
-      const templateRows = await this.c.var.database
-        .select({ id: applicationTemplates.id })
-        .from(applicationTemplates)
-        .where(eq(applicationTemplates.code, code))
-        .limit(1)
-
-      const template = templateRows.at(0)
-
-      if (template === undefined) {
-        return true
-      }
-
-      // pending 申請があれば削除を拒否
-      const pendingRows = await this.c.var.database
-        .select({ id: applications.id })
-        .from(applications)
-        .where(
-          and(
-            eq(applications.templateId, template.id),
-            eq(applications.status, "pending"),
-          ),
-        )
-        .limit(1)
-
-      if (pendingRows.length > 0) {
-        return null
-      }
-
-      await this.c.var.database
-        .delete(applicationTemplates)
-        .where(eq(applicationTemplates.code, code))
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `DELETE FROM application_templates
+           WHERE code = ?1
+             AND NOT EXISTS (
+               SELECT 1 FROM applications
+               WHERE template_id = (SELECT id FROM application_templates WHERE code = ?1)
+                 AND status = 'pending'
+             )`,
+        ).bind(code),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+      ])
 
       return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete application_template")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
+// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
