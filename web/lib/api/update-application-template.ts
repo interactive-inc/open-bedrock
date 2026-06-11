@@ -4,7 +4,7 @@ import type {
   ApplicationTemplateUpdateRequest,
 } from "@/lib/api/types/application-template-types"
 
-// PUT /templates/:code。管理権限が申請テンプレートの内容を変更する。
+// PUT /application-templates/:code。管理権限が申請テンプレートの内容を変更する。
 // 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。
 export async function updateApplicationTemplate(
   code: string,
@@ -12,7 +12,7 @@ export async function updateApplicationTemplate(
 ): Promise<ApplicationTemplateResponse | Error> {
   const client = await createClient()
 
-  const response = await client.templates[":code"].$put({
+  const response = await client["application-templates"][":code"].$put({
     param: { code: code },
     json: {
       name: request.name,
