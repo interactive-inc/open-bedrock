@@ -50,6 +50,10 @@ export class DeleteShiftAssignment {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "already_published" }
+    }
+
     return { reason: "deleted" }
   }
 }
