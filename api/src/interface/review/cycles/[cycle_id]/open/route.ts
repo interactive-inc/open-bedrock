@@ -36,7 +36,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     }
 
     if (updated.reason === "invalid_transition") {
-      throw new ConflictError("invalid status transition")
+      throw new ConflictError("review cycle cannot be opened from current status")
     }
 
     throw new NotFoundError("review cycle not found")

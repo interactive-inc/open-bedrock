@@ -8,7 +8,7 @@ import { requestWithContext } from "@/interface/shared/test/request-with-context
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { z } from "zod"
 
-const jwtSecret = "review-cycles-open-route-test-secret"
+const jwtSecret = "review-cycles-close-route-test-secret"
 
 const reviewCycleResponseSchema = z.object({
   id: z.number(),
@@ -78,9 +78,9 @@ async function request(
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
 }
 
-describe("POST /review-cycles/:cycle_id/open and /close", () => {
-  test("admin opens the draft cycle and returns 200", async () => {
-    const response = await request("/review-cycles/3/open", await adminToken(), "POST")
+describe("POST /review-cycles/:cycle_id/close", () => {
+  test("admin closes the open cycle and returns 200", async () => {
+    const response = await request("/review-cycles/1/close", await adminToken(), "POST")
 
     expect(response.status).toBe(200)
 
@@ -89,35 +89,23 @@ describe("POST /review-cycles/:cycle_id/open and /close", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.status).toBe("open")
+      expect(parsed.data.status).toBe("closed")
     }
   })
 
-  test("close returns 404 for a missing cycle", async () => {
+  test("returns 404 for a missing cycle", async () => {
     const response = await request("/review-cycles/9999/close", await adminToken(), "POST")
 
     expect(response.status).toBe(404)
   })
 
-  test("member opening a cycle is forbidden", async () => {
-    const response = await request("/review-cycles/1/open", await memberToken(), "POST")
+  test("member closing a cycle is forbidden", async () => {
+    const response = await request("/review-cycles/1/close", await memberToken(), "POST")
 
     expect(response.status).toBe(403)
   })
 
-  test("closed cycle cannot be opened (409)", async () => {
-    const response = await request("/review-cycles/2/open", await adminToken(), "POST")
-
-    expect(response.status).toBe(409)
-  })
-
-  test("already open cycle cannot be opened again (409)", async () => {
-    const response = await request("/review-cycles/1/open", await adminToken(), "POST")
-
-    expect(response.status).toBe(409)
-  })
-
-  test("draft cycle cannot be closed directly (409)", async () => {
+  test("returns 409 when closing a draft cycle", async () => {
     const response = await request("/review-cycles/3/close", await adminToken(), "POST")
 
     expect(response.status).toBe(409)
