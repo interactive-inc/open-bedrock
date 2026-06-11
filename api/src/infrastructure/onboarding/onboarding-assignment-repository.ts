@@ -43,9 +43,17 @@ export class OnboardingAssignmentRepository {
           }),
         )
 
-        await this.c.var.database.batch(
-          taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
-        )
+        try {
+          await this.c.var.database.batch(
+            taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
+          )
+        } catch (err) {
+          // 補償削除: tasks INSERT 失敗時に assignment を削除
+          await this.c.var.database
+            .delete(onboardingAssignments)
+            .where(eq(onboardingAssignments.id, assignmentRow.id))
+          return err instanceof Error ? err : new Error("failed to create tasks")
+        }
       }
 
       const result = await this.findById(assignmentRow.id)
