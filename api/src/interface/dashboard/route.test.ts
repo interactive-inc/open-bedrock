@@ -89,6 +89,14 @@ function adminToken(): Promise<string> {
   })
 }
 
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 3,
+    email: "you+e003@example.com",
+    role: "member",
+  })
+}
+
 async function request(path: string, token: string | null): Promise<Response> {
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
@@ -109,6 +117,12 @@ describe("GET /dashboard", () => {
       expect(parsed.data.pending_application_count).toBe(3)
       expect(parsed.data.open_survey_count).toBe(2)
     }
+  })
+
+  test("returns 403 for member role", async () => {
+    const response = await request("/dashboard", await memberToken())
+
+    expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
