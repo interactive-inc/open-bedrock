@@ -234,7 +234,7 @@ describe("POST /attendance/clock-out", () => {
     expect(row?.note).toBe("leaving early")
   })
 
-  test("persists null note when omitted", async () => {
+  test("preserves clock-in note when clock-out omits note", async () => {
     const db = await createTestDb()
 
     const token = await tokenFor(10, "member")
@@ -263,7 +263,7 @@ describe("POST /attendance/clock-out", () => {
       .prepare("SELECT note FROM attendance_records WHERE employee_id = 10 AND status = 'closed'")
       .first<{ note: string | null }>()
 
-    expect(row?.note).toBeNull()
+    expect(row?.note).toBe("morning")
   })
 
   test("returns 401 without a bearer token", async () => {

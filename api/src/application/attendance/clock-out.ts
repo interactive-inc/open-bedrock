@@ -6,7 +6,7 @@ import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendan
 export type Command = {
   employeeId: number
   now: string
-  note: string | null
+  note?: string | null
 }
 
 export type NotClockedIn = { reason: "not_clocked_in" }
