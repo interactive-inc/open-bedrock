@@ -50,8 +50,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(survey), 200)
 })
 
-// アンケートをレスポンス用の snake_case に整形する。
+// アンケートをレスポンス用の snake_case に整形する。永続化済みの前提で id は number に絞る。
 function toResponseBody(survey: Survey) {
+  if (survey.id === null) {
+    throw new InternalError("survey id is missing")
+  }
+
   return {
     id: survey.id,
     title: survey.title,
