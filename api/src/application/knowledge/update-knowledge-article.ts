@@ -47,6 +47,10 @@ export class UpdateKnowledgeArticle {
 
     const result = await articleRepository.update(updated)
 
+    if (result instanceof Error) {
+      return result
+    }
+
     if (result === null) {
       return { reason: "article_not_found" as const }
     }
