@@ -5,6 +5,7 @@ import { toPreviousBaseSalary } from "@/domain/payroll/to-previous-base-salary"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -17,13 +18,17 @@ export type Command = {
 
 export type EmployeeNotFound = { reason: "employee_not_found" }
 
+export type DuplicateEffectiveDate = { reason: "duplicate_effective_date" }
+
 /**
  * 特権ロールが前回基本給を解決しつつ給与改定を作成する。
  */
 export class CreateSalaryRevision {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<SalaryRevision | Forbidden | EmployeeNotFound | Error> {
+  async run(
+    command: Command,
+  ): Promise<SalaryRevision | Forbidden | EmployeeNotFound | DuplicateEffectiveDate | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -60,6 +65,12 @@ export class CreateSalaryRevision {
       createdAt: command.createdAt,
     })
 
-    return await salaryRevisionRepository.create(salaryRevision)
+    const created = await salaryRevisionRepository.create(salaryRevision)
+
+    if (created instanceof UniqueConstraintError) {
+      return { reason: "duplicate_effective_date" }
+    }
+
+    return created
   }
 }
