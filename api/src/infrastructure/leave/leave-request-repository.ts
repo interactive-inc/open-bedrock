@@ -255,6 +255,7 @@ export class LeaveRequestRepository {
   }
 
   // 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
+  // pending 状態のみ更新可。承認済み・却下済みは 0 行更新となり null を返す（TOCTOU 競合を防ぐ）。
   async revise(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
       if (leaveRequest.id === null) {
@@ -270,7 +271,7 @@ export class LeaveRequestRepository {
           days: leaveRequest.days,
           reason: leaveRequest.reason,
         })
-        .where(eq(leaveRequests.id, leaveRequest.id))
+        .where(and(eq(leaveRequests.id, leaveRequest.id), eq(leaveRequests.status, "pending")))
         .returning()
 
       const row = rows.at(0)
@@ -282,11 +283,15 @@ export class LeaveRequestRepository {
   }
 
   // 休暇申請を削除する。
-  async delete(leaveRequestId: number): Promise<null | Error> {
+  // pending 状態のみ削除可。承認済み・却下済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+  async delete(leaveRequestId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(leaveRequests).where(eq(leaveRequests.id, leaveRequestId))
+      const rows = await this.c.var.database
+        .delete(leaveRequests)
+        .where(and(eq(leaveRequests.id, leaveRequestId), eq(leaveRequests.status, "pending")))
+        .returning({ id: leaveRequests.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete leave_request")
     }
