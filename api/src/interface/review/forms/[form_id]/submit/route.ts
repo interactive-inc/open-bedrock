@@ -72,6 +72,10 @@ export const POST = factory.createHandlers(
         throw new ForbiddenError()
       }
 
+      if (submitted.reason === "cycle_not_open") {
+        throw new ConflictError("review cycle is not open")
+      }
+
       throw new ConflictError("review form cannot be submitted")
     }
 
