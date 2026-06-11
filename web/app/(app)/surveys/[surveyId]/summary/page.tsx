@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summary/survey-question-summary-card"
+import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summary/_components/survey-question-summary-card"
 import { getSurveySummary } from "@/lib/api/get-survey-summary"
 import { Button } from "@/components/ui/button"
 

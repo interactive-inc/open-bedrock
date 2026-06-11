@@ -1,10 +1,10 @@
 import { Suspense } from "react"
-import { RewardManagement } from "@/app/(app)/thanks/reward-management"
-import { ThanksCreateForm } from "@/app/(app)/thanks/thanks-create-form"
-import { ThanksExchangeBalance } from "@/app/(app)/thanks/thanks-exchange-balance"
-import { ThanksList } from "@/app/(app)/thanks/thanks-list"
-import { ThanksRewards } from "@/app/(app)/thanks/thanks-rewards"
-import { ThanksSummary } from "@/app/(app)/thanks/thanks-summary"
+import { RewardManagement } from "@/app/(app)/thanks/_components/reward-management"
+import { ThanksCreateForm } from "@/app/(app)/thanks/_components/thanks-create-form"
+import { ThanksExchangeBalance } from "@/app/(app)/thanks/_components/thanks-exchange-balance"
+import { ThanksList } from "@/app/(app)/thanks/_components/thanks-list"
+import { ThanksRewards } from "@/app/(app)/thanks/_components/thanks-rewards"
+import { ThanksSummary } from "@/app/(app)/thanks/_components/thanks-summary"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "感謝" }

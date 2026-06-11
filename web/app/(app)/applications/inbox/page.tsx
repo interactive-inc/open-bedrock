@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { InboxDecisionForm } from "@/app/(app)/applications/inbox/inbox-decision-form"
+import { InboxDecisionForm } from "@/app/(app)/applications/inbox/_components/inbox-decision-form"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"

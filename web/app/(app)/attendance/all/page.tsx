@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { AttendanceAdminList } from "@/app/(app)/attendance/attendance-admin-list"
-import { AttendanceFilterForm } from "@/app/(app)/attendance/attendance-filter-form"
+import { AttendanceAdminList } from "@/app/(app)/attendance/_components/attendance-admin-list"
+import { AttendanceFilterForm } from "@/app/(app)/attendance/_components/attendance-filter-form"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 

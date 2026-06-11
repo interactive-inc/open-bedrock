@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { CertificateRequestCreateForm } from "@/app/(app)/certificate-requests/certificate-request-create-form"
-import { MyCertificateRequestsSection } from "@/app/(app)/certificate-requests/my-certificate-requests-section"
+import { CertificateRequestCreateForm } from "@/app/(app)/certificate-requests/_components/certificate-request-create-form"
+import { MyCertificateRequestsSection } from "@/app/(app)/certificate-requests/_components/my-certificate-requests-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "証明書発行依頼" }
