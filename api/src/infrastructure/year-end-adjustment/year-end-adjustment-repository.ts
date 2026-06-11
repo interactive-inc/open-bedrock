@@ -87,29 +87,45 @@ export class YearEndAdjustmentRepository {
     }
   }
 
-  // 年末調整申告の対象年・備考を更新する。
-  async update(yearEndAdjustment: YearEndAdjustment): Promise<YearEndAdjustment | Error> {
+  // 年末調整申告の対象年・備考を更新する。status が "submitted" の行のみ対象。
+  async update(yearEndAdjustment: YearEndAdjustment): Promise<YearEndAdjustment | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(yearEndAdjustments)
         .set({
           targetYear: yearEndAdjustment.targetYear,
           note: yearEndAdjustment.note,
         })
-        .where(eq(yearEndAdjustments.id, yearEndAdjustment.id))
+        .where(
+          and(
+            eq(yearEndAdjustments.id, yearEndAdjustment.id),
+            eq(yearEndAdjustments.status, "submitted"),
+          ),
+        )
+        .returning()
 
-      return yearEndAdjustment
+      const row = rows.at(0)
+
+      return row === undefined ? null : YearEndAdjustment.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update year_end_adjustment")
     }
   }
 
-  // 年末調整申告を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 年末調整申告を削除する。status が "submitted" の行のみ対象。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(yearEndAdjustments).where(eq(yearEndAdjustments.id, id))
+      const rows = await this.c.var.database
+        .delete(yearEndAdjustments)
+        .where(
+          and(
+            eq(yearEndAdjustments.id, id),
+            eq(yearEndAdjustments.status, "submitted"),
+          ),
+        )
+        .returning({ id: yearEndAdjustments.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete year_end_adjustment")
     }
