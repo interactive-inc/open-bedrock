@@ -10,7 +10,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import { and, eq, or, sql } from "drizzle-orm"
+import { and, count, desc, eq, or, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -52,12 +52,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   }
 
-  const rows = await c.var.database
-    .select()
-    .from(knowledgeArticles)
-    .where(conditions.length === 0 ? undefined : and(...conditions))
-    .limit(limit)
-    .offset(offset)
+  const where = conditions.length === 0 ? undefined : and(...conditions)
+
+  const [rows, totalRows] = await Promise.all([
+    c.var.database
+      .select()
+      .from(knowledgeArticles)
+      .where(where)
+      .orderBy(desc(knowledgeArticles.id))
+      .limit(limit)
+      .offset(offset),
+    c.var.database.select({ total: count() }).from(knowledgeArticles).where(where),
+  ])
 
   const responseBody = rows.map((row) => ({
     id: row.id,
@@ -65,9 +71,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     title: row.title,
     snippet: row.bodyMd.replace(/\s+/g, " ").trim().slice(0, 200),
     author_id: row.authorId,
+    created_at: row.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /knowledge — ナレッジ記事を新規作成（作成者は本人）

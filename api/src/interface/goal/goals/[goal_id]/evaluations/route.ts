@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       kind: goalEvaluationKindSchema,
-      score: z.number().optional(),
+      score: z.number().safe().int().min(0).max(100).optional(),
       comment: z.string().max(3_000).optional(),
     }),
   ),

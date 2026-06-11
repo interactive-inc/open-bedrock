@@ -6,6 +6,7 @@ import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendan
 export type Command = {
   employeeId: number
   now: string
+  note: string | null
 }
 
 export type NotClockedIn = { reason: "not_clocked_in" }
@@ -13,6 +14,8 @@ export type NotClockedIn = { reason: "not_clocked_in" }
 export type AttendanceNotFound = { reason: "attendance_not_found" }
 
 export type ClockInAtMissing = { reason: "clock_in_at_missing" }
+
+export type AlreadyClockedOut = { reason: "already_clocked_out" }
 
 /**
  * 退勤を打刻する。出勤中の記録に労働時間を確定する。
@@ -22,7 +25,14 @@ export class ClockOut {
 
   async run(
     command: Command,
-  ): Promise<AttendanceRecord | NotClockedIn | AttendanceNotFound | ClockInAtMissing | Error> {
+  ): Promise<
+    | AttendanceRecord
+    | NotClockedIn
+    | AttendanceNotFound
+    | ClockInAtMissing
+    | AlreadyClockedOut
+    | Error
+  > {
     const recordRepository = new AttendanceRecordRepository(this.c)
 
     const open = await recordRepository.findOpenByEmployeeId(command.employeeId)
@@ -52,6 +62,7 @@ export class ClockOut {
       open.withClosed({
         clockOutAt: command.now,
         workMinutes,
+        note: command.note,
       }),
     )
 
@@ -60,7 +71,7 @@ export class ClockOut {
     }
 
     if (record === null) {
-      return { reason: "attendance_not_found" }
+      return { reason: "already_clocked_out" }
     }
 
     return record

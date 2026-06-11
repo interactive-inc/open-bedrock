@@ -38,7 +38,7 @@ export class CreateShiftSwapRequest {
     }
 
     if (target.id === input.requesterEmployeeId) {
-      return { reason: "target_not_found" }
+      return { reason: "self_reference" }
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
@@ -71,7 +71,7 @@ export class CreateShiftSwapRequest {
     const created = await swapRequestRepository.create(swapRequest)
 
     if (created instanceof Error) return created
-    if ("reason" in created) return created
+    if (created === null) return { reason: "already_exists" }
 
     return created
   }

@@ -34,6 +34,11 @@ export class CreateYearEndAdjustment {
       createdAt: command.createdAt,
     })
 
-    return await yearEndAdjustmentRepository.create(yearEndAdjustment)
+    const result = await yearEndAdjustmentRepository.create(yearEndAdjustment)
+
+    // UNIQUE 制約違反（並行リクエストによる二重登録）は already_submitted として扱う。
+    if (result === null) return { kind: "already_submitted" }
+
+    return result
   }
 }

@@ -49,7 +49,7 @@ export class UpdateApplication {
     }
 
     if (updated === null) {
-      return { reason: "application_not_found" }
+      return { reason: "not_pending" }
     }
 
     return updated

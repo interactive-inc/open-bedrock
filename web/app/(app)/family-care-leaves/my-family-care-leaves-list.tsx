@@ -5,6 +5,7 @@ import {
   cancelFamilyCareLeaveAction,
   updateFamilyCareLeaveAction,
 } from "@/app/(app)/family-care-leaves/actions"
+import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leaves/actions"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,7 +93,20 @@ export function MyFamilyCareLeavesList(props: Props) {
 function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateFamilyCareLeaveAction, {
+  async function reduce(
+    previousState: FamilyCareLeaveActionState,
+    formData: FormData,
+  ): Promise<FamilyCareLeaveActionState> {
+    const result = await updateFamilyCareLeaveAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

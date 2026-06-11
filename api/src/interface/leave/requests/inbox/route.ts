@@ -9,7 +9,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { employees, leaveRequests } from "@/schema"
-import { eq } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 
 // GET /leave/requests/inbox — 承認権限者向けの承認待ち一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -42,6 +42,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(leaveRequests)
     .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
     .where(eq(leaveRequests.status, "pending"))
+    .orderBy(desc(leaveRequests.id))
     .limit(limit)
     .offset(offset)
 

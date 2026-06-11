@@ -13,7 +13,9 @@ export type SurveyNotFound = { reason: "survey_not_found" }
 
 export type Deleted = { reason: "deleted" }
 
-export type DeleteFailure = Forbidden | SurveyNotFound
+export type NotDeletable = { reason: "not_deletable" }
+
+export type DeleteFailure = Forbidden | SurveyNotFound | NotDeletable
 
 /**
  * 管理権限を持つ者がアンケートを削除する。
@@ -39,16 +41,19 @@ export class DeleteSurvey {
       return { reason: "survey_not_found" }
     }
 
-    const responsesDeleted = await surveyRepository.deleteResponsesBySurveyId(command.surveyId)
-
-    if (responsesDeleted instanceof Error) {
-      return responsesDeleted
+    if (current.isOpen()) {
+      return { reason: "not_deletable" }
     }
 
-    const deleted = await surveyRepository.delete(command.surveyId)
+    const db = this.c.env.DB
 
-    if (deleted instanceof Error) {
-      return deleted
+    try {
+      await db.batch([
+        db.prepare("DELETE FROM survey_responses WHERE survey_id = ?1").bind(command.surveyId),
+        db.prepare("DELETE FROM surveys WHERE id = ?1").bind(command.surveyId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete survey")
     }
 
     return { reason: "deleted" }
