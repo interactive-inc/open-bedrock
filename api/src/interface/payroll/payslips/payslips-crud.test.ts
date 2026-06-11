@@ -238,12 +238,29 @@ describe("PUT /payslips/:id", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("returns 409 when correcting a draft payslip", async () => {
+    const response = await request({
+      path: "/payslips/4",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        period: "2026-05",
+        base_salary: 310000,
+        allowances: 25000,
+        deductions: 50000,
+        net_pay: 285000,
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
 })
 
 describe("DELETE /payslips/:id", () => {
-  test("admin cancels a payslip and returns 204", async () => {
+  test("admin cancels a draft payslip and returns 204", async () => {
     const response = await request({
-      path: "/payslips/1",
+      path: "/payslips/4",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -251,9 +268,19 @@ describe("DELETE /payslips/:id", () => {
     expect(response.status).toBe(204)
   })
 
-  test("returns 403 for a non-privileged member", async () => {
+  test("returns 409 when cancelling an issued payslip", async () => {
     const response = await request({
       path: "/payslips/1",
+      token: await adminToken(),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 403 for a non-privileged member", async () => {
+    const response = await request({
+      path: "/payslips/4",
       token: await memberToken(),
       method: "DELETE",
     })
