@@ -12,5 +12,7 @@ export async function getApplicationTemplates(category: string | null) {
     return new Error("failed to load application templates")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

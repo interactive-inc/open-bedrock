@@ -10,5 +10,7 @@ export async function getMySkillList() {
     return new Error("failed to load my skills")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

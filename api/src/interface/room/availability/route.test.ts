@@ -89,14 +89,16 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomAvailabilityResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(5)
+      expect(parsed.data.data.length).toBe(5)
 
-      const roomOne = parsed.data.find((row) => row.room.id === 1)
+      const roomOne = parsed.data.data.find((row) => row.room.id === 1)
 
       expect(roomOne?.room.name).toBe("Large Meeting Room A")
       expect(roomOne?.room.capacity).toBe(20)
@@ -104,7 +106,7 @@ describe("GET /rooms/availability", () => {
       expect(roomOne?.conflicts[0]?.startAt).toBe("2026-05-29T01:00:00Z")
       expect(roomOne?.conflicts[0]?.endAt).toBe("2026-05-29T02:00:00Z")
 
-      const roomFour = parsed.data.find((row) => row.room.id === 4)
+      const roomFour = parsed.data.data.find((row) => row.room.id === 4)
 
       expect(roomFour?.available).toBe(true)
       expect(roomFour?.conflicts.length).toBe(0)
@@ -119,12 +121,14 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomAvailabilityResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
     }
   })
 
@@ -154,12 +158,14 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomAvailabilityResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
     }
   })
 
@@ -213,14 +219,16 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomAvailabilityResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
 
-      const roomAlpha = parsed.data.find((row) => row.room.id === 10)
+      const roomAlpha = parsed.data.data.find((row) => row.room.id === 10)
 
       expect(roomAlpha?.available).toBe(false)
       expect(roomAlpha?.conflicts.length).toBe(2)
@@ -294,14 +302,16 @@ describe("GET /rooms/availability", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomAvailabilityResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomAvailabilityResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
 
-      const roomBeta = parsed.data.find((row) => row.room.id === 20)
+      const roomBeta = parsed.data.data.find((row) => row.room.id === 20)
 
       expect(roomBeta?.available).toBe(false)
       expect(roomBeta?.conflicts.length).toBe(2)
@@ -310,7 +320,7 @@ describe("GET /rooms/availability", () => {
 
       expect(betaStartTimes).toEqual(["2026-06-02T10:00:00Z", "2026-06-02T10:30:00Z"])
 
-      const roomGamma = parsed.data.find((row) => row.room.id === 21)
+      const roomGamma = parsed.data.data.find((row) => row.room.id === 21)
 
       expect(roomGamma?.available).toBe(false)
       expect(roomGamma?.conflicts.length).toBe(1)

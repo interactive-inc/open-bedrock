@@ -8,7 +8,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, eq } from "drizzle-orm"
+import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
@@ -66,6 +66,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(goals)
+    .where(and(...conditions))
+
   const responseBody = rows.map((row) => ({
     id: row.id,
     employee_id: row.employeeId,
@@ -76,5 +81,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

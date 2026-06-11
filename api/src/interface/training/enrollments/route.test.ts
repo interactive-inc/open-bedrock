@@ -105,10 +105,12 @@ describe("GET /training/enrollments", () => {
 
     expect(response.status).toBe(200)
 
-    const body = z.array(trainingEnrollmentResponseSchema).parse(await response.json())
+    const body = z
+      .object({ data: z.array(trainingEnrollmentResponseSchema), total: z.number() })
+      .parse(await response.json())
 
-    expect(body.length).toBe(1)
-    expect(body[0]?.employee_id).toBe(5)
+    expect(body.data.length).toBe(1)
+    expect(body.data[0]?.employee_id).toBe(5)
   })
 
   test("a member targeting another employee is forbidden", async () => {
@@ -146,10 +148,12 @@ describe("GET /training/enrollments", () => {
 
     expect(response.status).toBe(200)
 
-    const body = z.array(trainingEnrollmentResponseSchema).parse(await response.json())
+    const body = z
+      .object({ data: z.array(trainingEnrollmentResponseSchema), total: z.number() })
+      .parse(await response.json())
 
-    expect(body.length).toBe(1)
-    expect(body[0]?.employee_id).toBe(5)
+    expect(body.data.length).toBe(1)
+    expect(body.data[0]?.employee_id).toBe(5)
   })
 
   test("returns 401 without a bearer token", async () => {

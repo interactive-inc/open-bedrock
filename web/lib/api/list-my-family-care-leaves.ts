@@ -13,5 +13,7 @@ export async function listMyFamilyCareLeaves(): Promise<
     return new Error("failed to load family care leaves")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

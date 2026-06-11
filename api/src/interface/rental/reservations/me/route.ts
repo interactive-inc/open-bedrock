@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { rentalReservations } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /rentals/me — 申請者本人のレンタル予約一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -41,6 +43,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load reservations")
   }
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(rentalReservations)
+    .where(eq(rentalReservations.requesterId, viewer.employeeId))
+
   const responseBody = reservations.map((reservation) => ({
     id: reservation.id,
     requester_id: reservation.requesterId,
@@ -52,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: reservation.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

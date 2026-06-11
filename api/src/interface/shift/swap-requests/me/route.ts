@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { shiftSwapRequests } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /shift/swap-requests/me — 申請者本人が出したシフト交代申請の一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -41,6 +43,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load swap requests")
   }
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(shiftSwapRequests)
+    .where(eq(shiftSwapRequests.requesterEmployeeId, session.employeeId))
+
   const responseBody = swapRequests.map((swapRequest) => ({
     id: swapRequest.id,
     requester_employee_id: swapRequest.requesterEmployeeId,
@@ -51,5 +58,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     approved_at: swapRequest.approvedAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

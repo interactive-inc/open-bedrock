@@ -11,7 +11,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, trainingEnrollments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { asc, eq } from "drizzle-orm"
+import { asc, count, eq } from "drizzle-orm"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
@@ -69,6 +69,11 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(trainingEnrollments)
+      .where(eq(trainingEnrollments.employeeId, targetEmployeeId))
+
     const responseBody = rows.map((row) => ({
       id: row.id,
       course_id: row.courseId,
@@ -79,7 +84,7 @@ export const GET = factory.createHandlers(
       due_date: row.dueDate,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )
 

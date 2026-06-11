@@ -12,5 +12,7 @@ export async function getThanksRewards(): Promise<Array<ThanksRewardResponse> | 
     return new Error("failed to load thanks rewards")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

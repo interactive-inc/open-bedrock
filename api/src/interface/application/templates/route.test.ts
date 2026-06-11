@@ -83,14 +83,16 @@ describe("GET /application-templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(4)
+      expect(parsed.data.data.length).toBe(4)
 
-      const paidLeave = parsed.data.find((item) => item.code === "paid_leave")
+      const paidLeave = parsed.data.data.find((item) => item.code === "paid_leave")
 
       expect(paidLeave?.name).toBe("Paid Leave Request")
       expect(paidLeave?.category).toBe("attendance")
@@ -105,12 +107,14 @@ describe("GET /application-templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
     }
   })
 
@@ -119,12 +123,14 @@ describe("GET /application-templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
     }
   })
 

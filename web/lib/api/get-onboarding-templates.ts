@@ -13,5 +13,7 @@ export async function getOnboardingTemplates(kind: OnboardingKind | null) {
     return new Error("failed to load onboarding templates")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

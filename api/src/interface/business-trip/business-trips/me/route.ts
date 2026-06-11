@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { businessTrips } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /business-trips/me — 申請者本人の出張申請一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const businessTrips = await new ListMyBusinessTrips(c).run({
+  const businessTripRows = await new ListMyBusinessTrips(c).run({
     travelerId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (businessTrips instanceof Error) {
+  if (businessTripRows instanceof Error) {
     throw new InternalError("failed to load business trips")
   }
 
-  const responseBody = businessTrips.map((businessTrip) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(businessTrips)
+    .where(eq(businessTrips.travelerId, viewer.employeeId))
+
+  const responseBody = businessTripRows.map((businessTrip) => ({
     id: businessTrip.id,
     traveler_id: businessTrip.travelerId,
     destination: businessTrip.destination,
@@ -53,5 +60,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: businessTrip.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

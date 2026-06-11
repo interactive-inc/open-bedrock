@@ -13,5 +13,7 @@ export async function getMyTrainingEnrollments(): Promise<
     return new Error("failed to load my training enrollments")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

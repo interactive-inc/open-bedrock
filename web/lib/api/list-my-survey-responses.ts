@@ -11,5 +11,7 @@ export async function listMySurveyResponses(): Promise<ReadonlyArray<SurveyRespo
     return new Error("failed to load survey responses")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

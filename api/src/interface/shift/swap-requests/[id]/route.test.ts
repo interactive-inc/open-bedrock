@@ -90,13 +90,15 @@ describe("GET /shift/swap-requests/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(shiftSwapRequestResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(shiftSwapRequestResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].requester_employee_id).toBe(5)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].requester_employee_id).toBe(5)
     }
   })
 

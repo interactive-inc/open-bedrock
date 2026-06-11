@@ -14,5 +14,7 @@ export async function getSkillList(query: SkillSearchQuery) {
     return new Error("failed to load skills")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

@@ -16,5 +16,7 @@ export async function getMyShiftAssignments(
     return new Error("failed to load my shift assignments")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

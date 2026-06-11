@@ -100,13 +100,15 @@ describe("GET /assets/lent/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(assetResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(assetResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.code).toBe("A0001")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.code).toBe("A0001")
     }
   })
 

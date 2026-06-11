@@ -86,10 +86,10 @@ describe("GET /applications/me", () => {
 
     const json = await response.json()
 
-    expect(Array.isArray(json)).toBe(true)
-    expect(json.length).toBe(2)
+    expect(Array.isArray(json.data)).toBe(true)
+    expect(json.data.length).toBe(2)
 
-    for (const application of json) {
+    for (const application of json.data) {
       expect([1, 5]).toContain(application.id)
     }
   })
@@ -101,7 +101,7 @@ describe("GET /applications/me", () => {
 
     const json = await response.json()
 
-    expect(json.length).toBe(0)
+    expect(json.data.length).toBe(0)
   })
 
   test("returns 401 without a bearer token", async () => {

@@ -144,14 +144,16 @@ describe("GET /onboarding/employee/:code", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingAssignmentResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingAssignmentResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.employee_code).toBe("E005")
-      expect(parsed.data[0]?.tasks.length).toBe(2)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.employee_code).toBe("E005")
+      expect(parsed.data.data[0]?.tasks.length).toBe(2)
     }
   })
 
@@ -181,9 +183,11 @@ describe("GET /onboarding/employee/:code", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingAssignmentResponseSchema).parse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingAssignmentResponseSchema), total: z.number() })
+      .parse(await response.json())
 
-    expect(parsed.length).toBe(1)
+    expect(parsed.data.length).toBe(1)
   })
 
   test("offset beyond the assignment count returns an empty list", async () => {
@@ -194,9 +198,11 @@ describe("GET /onboarding/employee/:code", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingAssignmentResponseSchema).parse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingAssignmentResponseSchema), total: z.number() })
+      .parse(await response.json())
 
-    expect(parsed.length).toBe(0)
+    expect(parsed.data.length).toBe(0)
   })
 
   test("returns 401 without a bearer token", async () => {

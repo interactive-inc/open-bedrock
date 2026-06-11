@@ -8,7 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /applications/inbox — 承認待ちの申請一覧（承認権限を持つロールのみ）
@@ -50,6 +50,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(applications)
+    .where(eq(applications.status, "pending"))
+
   const responseBody = rows.map((row) => ({
     id: row.application.id,
     template_name: row.templateName ?? "",
@@ -59,5 +64,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: row.application.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

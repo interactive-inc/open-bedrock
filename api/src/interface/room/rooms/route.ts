@@ -4,6 +4,8 @@ import { Room } from "@/domain/room/room"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { rooms } from "@/schema"
+import { count } from "drizzle-orm"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -51,10 +53,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load rooms")
   }
 
-  return c.json(
-    result.map((room) => toResponseBody(room)),
-    200,
-  )
+  const totalRows = await c.var.database.select({ total: count() }).from(rooms)
+
+  const responseBody = result.map((room) => toResponseBody(room))
+
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /rooms — 会議室を新規登録（管理者ロールのみ）

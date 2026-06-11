@@ -10,7 +10,7 @@ import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
-import { asc, eq, inArray } from "drizzle-orm"
+import { asc, count, eq, inArray } from "drizzle-orm"
 
 // GET /onboarding/employee/:code — 指定社員の手続き一覧（特権ロールのみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -72,6 +72,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
           .from(onboardingTasks)
           .where(inArray(onboardingTasks.assignmentId, assignmentIds))
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(onboardingAssignments)
+    .where(eq(onboardingAssignments.employeeId, employee.id))
+
   const body = assignmentRows.map((row) => ({
     id: row.assignment.id,
     employee_code: employee.code,
@@ -93,5 +98,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       })),
   }))
 
-  return c.json(body, 200)
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

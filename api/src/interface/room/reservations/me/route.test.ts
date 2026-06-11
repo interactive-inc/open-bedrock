@@ -100,12 +100,14 @@ describe("GET /rooms/reservations/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomReservationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomReservationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
     }
   })
 
@@ -114,14 +116,16 @@ describe("GET /rooms/reservations/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomReservationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomReservationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
       // start_at 昇順なので最初の予約が返る
-      expect(parsed.data[0]?.purpose).toBe("Standup")
+      expect(parsed.data.data[0]?.purpose).toBe("Standup")
     }
   })
 
@@ -133,13 +137,15 @@ describe("GET /rooms/reservations/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(roomReservationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(roomReservationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.purpose).toBe("Retro")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.purpose).toBe("Retro")
     }
   })
 

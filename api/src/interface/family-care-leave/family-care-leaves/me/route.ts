@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { familyCareLeaves } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /family-care-leaves/me — 申出者本人の休業申出一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const familyCareLeaves = await new ListMyFamilyCareLeaves(c).run({
+  const familyCareLeaveRows = await new ListMyFamilyCareLeaves(c).run({
     employeeId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (familyCareLeaves instanceof Error) {
+  if (familyCareLeaveRows instanceof Error) {
     throw new InternalError("failed to load family care leaves")
   }
 
-  const responseBody = familyCareLeaves.map((familyCareLeave) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(familyCareLeaves)
+    .where(eq(familyCareLeaves.employeeId, viewer.employeeId))
+
+  const responseBody = familyCareLeaveRows.map((familyCareLeave) => ({
     id: familyCareLeave.id,
     employee_id: familyCareLeave.employeeId,
     leave_kind: familyCareLeave.leaveKind,
@@ -52,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: familyCareLeave.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

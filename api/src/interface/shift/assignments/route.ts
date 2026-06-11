@@ -11,7 +11,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, orgDepartments, shiftAssignments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { and, eq, gte, lte } from "drizzle-orm"
+import { and, count, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
@@ -75,7 +75,7 @@ export const GET = factory.createHandlers(
       const department = departments.at(0)
 
       if (department === undefined) {
-        return c.json([], 200)
+        return c.json({ data: [], total: 0 }, 200)
       }
 
       conditions.push(eq(employees.deptId, department.departmentId))
@@ -90,6 +90,12 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(shiftAssignments)
+      .leftJoin(employees, eq(employees.id, shiftAssignments.employeeId))
+      .where(conditions.length === 0 ? undefined : and(...conditions))
+
     const responseBody = rows.map((row) => ({
       id: row.assignment.id,
       employee_id: row.assignment.employeeId,
@@ -99,6 +105,6 @@ export const GET = factory.createHandlers(
       published_at: row.assignment.publishedAt,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

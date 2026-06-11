@@ -81,19 +81,21 @@ describe("GET /batch", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(batchJobResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(batchJobResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(seedBatchJobs.length)
+      expect(parsed.data.data.length).toBe(seedBatchJobs.length)
 
-      const completed = parsed.data.find((job) => job.id === 1)
+      const completed = parsed.data.data.find((job) => job.id === 1)
 
       expect(completed?.started_at).toBe("2026-05-29T18:00:00Z")
       expect(completed?.finished_at).toBe("2026-05-29T18:05:00Z")
 
-      const running = parsed.data.find((job) => job.status === "running")
+      const running = parsed.data.data.find((job) => job.status === "running")
 
       expect(running?.finished_at).toBeNull()
       expect(running?.message).toBeNull()

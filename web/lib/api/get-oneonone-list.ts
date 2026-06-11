@@ -11,5 +11,7 @@ export async function getOneOnOneList() {
     return new Error("failed to load oneonone list")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

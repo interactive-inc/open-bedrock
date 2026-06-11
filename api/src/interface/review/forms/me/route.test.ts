@@ -97,13 +97,15 @@ describe("GET /review-forms/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(reviewFormResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(reviewFormResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((form) => form.reviewer_employee_id === 4)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.data.every((form) => form.reviewer_employee_id === 4)).toBe(true)
     }
   })
 

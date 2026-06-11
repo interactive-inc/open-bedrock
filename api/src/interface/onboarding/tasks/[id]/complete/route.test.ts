@@ -185,12 +185,14 @@ describe("POST /onboarding/tasks/:id/complete", () => {
       token: await token(1, "admin"),
     })
 
-    const parsed = z.array(onboardingAssignmentResponseSchema).safeParse(await showResponse.json())
+    const parsed = z
+      .object({ data: z.array(onboardingAssignmentResponseSchema), total: z.number() })
+      .safeParse(await showResponse.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data[0]?.status).toBe("completed")
+      expect(parsed.data.data[0]?.status).toBe("completed")
     }
   })
 

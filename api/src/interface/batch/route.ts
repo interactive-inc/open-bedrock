@@ -9,7 +9,7 @@ import {
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { batchJobs } from "@/schema"
-import { desc } from "drizzle-orm"
+import { count, desc } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -56,6 +56,8 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database.select({ total: count() }).from(batchJobs)
+
     const responseBody = rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -65,6 +67,6 @@ export const GET = factory.createHandlers(
       message: row.message,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

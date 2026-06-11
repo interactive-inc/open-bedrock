@@ -131,14 +131,16 @@ describe("GET /onboarding/templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
 
-      const engineerJoin = parsed.data.find((template) => template.code === "engineer_join")
+      const engineerJoin = parsed.data.data.find((template) => template.code === "engineer_join")
 
       expect(engineerJoin?.task_count).toBe(2)
     }
@@ -152,13 +154,15 @@ describe("GET /onboarding/templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.code).toBe("common_leave")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.code).toBe("common_leave")
     }
   })
 
@@ -179,14 +183,16 @@ describe("GET /onboarding/templates", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(onboardingTemplateResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(onboardingTemplateResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
 
-      const returned = parsed.data[0]
+      const returned = parsed.data.data[0]
 
       // engineer_join is the first seed template and has 2 tasks
       expect(returned?.code).toBe("engineer_join")

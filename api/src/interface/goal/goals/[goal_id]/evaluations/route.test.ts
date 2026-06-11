@@ -139,13 +139,15 @@ describe("POST /goals/:goal_id/evaluations", () => {
       token: await tokenFor(9, "member"),
     })
 
-    const parsed = z.array(goalResponseSchema).safeParse(await listResponse.json())
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await listResponse.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data[0]?.id).toBe(3)
-      expect(parsed.data[0]?.status).toBe("done")
+      expect(parsed.data.data[0]?.id).toBe(3)
+      expect(parsed.data.data[0]?.status).toBe("done")
     }
   })
 
