@@ -73,7 +73,7 @@ export class SubmitReviewForm {
     }
 
     if (submitted === null) {
-      return new Error("failed to submit review form")
+      return { reason: "already_submitted" as const }
     }
 
     return submitted
