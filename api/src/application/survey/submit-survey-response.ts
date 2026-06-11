@@ -71,7 +71,11 @@ export class SubmitSurveyResponse {
     }
 
     if ("reason" in created) {
-      return created as AlreadySubmittedError
+      if (created.reason === "survey_not_open") {
+        return { reason: "survey_not_open" }
+      }
+
+      return created
     }
 
     if (created.id === null) {

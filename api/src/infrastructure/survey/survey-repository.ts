@@ -5,6 +5,8 @@ import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-const
 import { surveyResponses, surveys } from "@/schema"
 import { and, asc, count, eq, sql } from "drizzle-orm"
 
+export type SurveyNotOpenError = { reason: "survey_not_open" }
+
 export type AlreadySubmittedError = { reason: "already_submitted" }
 
 export class SurveyRepository {
@@ -153,25 +155,37 @@ export class SurveyRepository {
   }
 
   // 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
+  // survey が open のときのみ INSERT する条件付き INSERT で TOCTOU 競合を防ぐ。
   // UNIQUE 制約 (survey_id, respondent_id) に違反した場合は already_submitted を返す。
+  // survey が open でなく 0 行挿入の場合は survey_not_open を返す。
   async createResponse(
     response: SurveyResponse,
-  ): Promise<SurveyResponse | AlreadySubmittedError | Error> {
+  ): Promise<SurveyResponse | AlreadySubmittedError | SurveyNotOpenError | Error> {
     try {
+      const answersJsonStr = JSON.stringify(response.answersJson)
+
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO survey_responses (survey_id, respondent_id, answers_json, submitted_at)
+            SELECT ${response.surveyId}, ${response.respondentId}, ${answersJsonStr}, ${response.submittedAt}
+            WHERE EXISTS (SELECT 1 FROM surveys WHERE id = ${response.surveyId} AND status = 'open')`,
+      )
+
+      if (result.meta.changes === 0) {
+        return { reason: "survey_not_open" }
+      }
+
+      const lastId = Number(result.meta.last_row_id)
+
       const rows = await this.c.var.database
-        .insert(surveyResponses)
-        .values({
-          surveyId: response.surveyId,
-          respondentId: response.respondentId,
-          answersJson: JSON.stringify(response.answersJson),
-          submittedAt: response.submittedAt,
-        })
-        .returning()
+        .select()
+        .from(surveyResponses)
+        .where(eq(surveyResponses.id, lastId))
+        .limit(1)
 
       const row = rows.at(0)
 
       if (row === undefined) {
-        return new Error("failed to insert survey response")
+        return new Error("failed to retrieve inserted survey response")
       }
 
       return SurveyResponse.fromRow(row)
@@ -234,20 +248,50 @@ export class SurveyRepository {
   }
 
   // 回答内容と提出時刻を更新する。該当行がなければ null を返す。
-  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | null | Error> {
+  // survey が open のときのみ UPDATE する条件付き UPDATE で TOCTOU 競合を防ぐ。
+  // survey が open でなく 0 行更新の場合は survey_not_open を返す。
+  async updateResponse(
+    response: SurveyResponse,
+  ): Promise<SurveyResponse | null | SurveyNotOpenError | Error> {
     if (response.id === null) {
       return new Error("survey response id is required")
     }
 
     try {
+      const answersJsonStr = JSON.stringify(response.answersJson)
+
+      const result = await this.c.var.database.run(
+        sql`UPDATE survey_responses
+            SET answers_json = ${answersJsonStr},
+                submitted_at = ${response.submittedAt}
+            WHERE id = ${response.id}
+              AND EXISTS (
+                SELECT 1 FROM surveys
+                WHERE id = (SELECT survey_id FROM survey_responses WHERE id = ${response.id})
+                  AND status = 'open'
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        // 行が存在しない場合と survey が open でない場合を区別する
+        const exists = await this.c.var.database
+          .select({ id: surveyResponses.id })
+          .from(surveyResponses)
+          .where(eq(surveyResponses.id, response.id))
+          .limit(1)
+
+        if (exists.length === 0) {
+          return null
+        }
+
+        return { reason: "survey_not_open" }
+      }
+
       const rows = await this.c.var.database
-        .update(surveyResponses)
-        .set({
-          answersJson: JSON.stringify(response.answersJson),
-          submittedAt: response.submittedAt,
-        })
+        .select()
+        .from(surveyResponses)
         .where(eq(surveyResponses.id, response.id))
-        .returning()
+        .limit(1)
 
       const row = rows.at(0)
 
@@ -258,14 +302,36 @@ export class SurveyRepository {
   }
 
   // 回答を削除する。該当行がなければ null を返す。
-  async deleteResponse(responseId: number): Promise<true | null | Error> {
+  // survey が open のときのみ DELETE する条件付き DELETE で TOCTOU 競合を防ぐ。
+  // survey が open でなく 0 行削除の場合は survey_not_open を返す。
+  async deleteResponse(responseId: number): Promise<true | null | SurveyNotOpenError | Error> {
     try {
-      const rows = await this.c.var.database
-        .delete(surveyResponses)
-        .where(eq(surveyResponses.id, responseId))
-        .returning({ id: surveyResponses.id })
+      const result = await this.c.var.database.run(
+        sql`DELETE FROM survey_responses
+            WHERE id = ${responseId}
+              AND EXISTS (
+                SELECT 1 FROM surveys
+                WHERE id = (SELECT survey_id FROM survey_responses WHERE id = ${responseId})
+                  AND status = 'open'
+              )`,
+      )
 
-      return rows.at(0) === undefined ? null : true
+      if (result.meta.changes === 0) {
+        // 行が存在しない場合と survey が open でない場合を区別する
+        const exists = await this.c.var.database
+          .select({ id: surveyResponses.id })
+          .from(surveyResponses)
+          .where(eq(surveyResponses.id, responseId))
+          .limit(1)
+
+        if (exists.length === 0) {
+          return null
+        }
+
+        return { reason: "survey_not_open" }
+      }
+
+      return true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete survey response")
     }
