@@ -17,6 +17,10 @@ import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { surveyResponses, surveys } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// D1 の応答サイズ上限（16MB）と Worker CPU タイムアウト対策として、集計に使う回答数の上限を設ける。
+// 上限を超える場合は is_truncated: true を付与し、先頭 MAX_SUMMARY_RESPONSES 件で集計する。
+const MAX_SUMMARY_RESPONSES = 1000
+
 // GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー（管理ロールのみ）。
 // 自由記述を含む集計を返すため、回答の機微情報の保護として閲覧を管理ロールに限定する。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -54,6 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(surveyResponses)
     .where(eq(surveyResponses.surveyId, surveyId))
     .orderBy(surveyResponses.id)
+    .limit(MAX_SUMMARY_RESPONSES)
 
   const responses = responseRows.map((row) => {
     let answersJson: unknown
@@ -105,6 +110,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     survey_id: surveyRow.id,
     title: surveyRow.title,
     response_count: responseCount,
+    is_truncated: responseCount > MAX_SUMMARY_RESPONSES,
     questions,
   }
 

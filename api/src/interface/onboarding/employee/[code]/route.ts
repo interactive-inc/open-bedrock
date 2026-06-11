@@ -1,10 +1,16 @@
 import { canViewEmployeeOnboarding } from "@/domain/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
-import { eq } from "drizzle-orm"
+import { asc, eq, inArray } from "drizzle-orm"
 
 // GET /onboarding/employee/:code — 指定社員の手続き一覧（特権ロールのみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -32,17 +38,39 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("employee not found")
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const assignmentRows = await c.var.database
     .select({ assignment: onboardingAssignments, templateName: onboardingTemplates.name })
     .from(onboardingAssignments)
     .leftJoin(onboardingTemplates, eq(onboardingTemplates.code, onboardingAssignments.templateCode))
     .where(eq(onboardingAssignments.employeeId, employee.id))
+    .orderBy(asc(onboardingAssignments.id))
+    .limit(limit)
+    .offset(offset)
 
-  const taskRows = await c.var.database
-    .select({ task: onboardingTasks })
-    .from(onboardingTasks)
-    .innerJoin(onboardingAssignments, eq(onboardingAssignments.id, onboardingTasks.assignmentId))
-    .where(eq(onboardingAssignments.employeeId, employee.id))
+  const assignmentIds = assignmentRows.map((row) => row.assignment.id)
+
+  // タスクは LIMIT 後に返す割り当て分だけ取得する（ページ外の割り当てのタスクを読まない）。
+  const taskRows =
+    assignmentIds.length === 0
+      ? []
+      : await c.var.database
+          .select({ task: onboardingTasks })
+          .from(onboardingTasks)
+          .where(inArray(onboardingTasks.assignmentId, assignmentIds))
 
   const body = assignmentRows.map((row) => ({
     id: row.assignment.id,

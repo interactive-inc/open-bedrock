@@ -100,19 +100,25 @@ async function request(
   })
 }
 
+const payslipListResponseSchema = z.object({
+  data: z.array(payslipResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /payslips/me", () => {
   test("returns 200 with the caller's payslips", async () => {
     const response = await request("/payslips/me", await memberToken())
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(payslipResponseSchema).safeParse(await response.json())
+    const parsed = payslipListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((payslip) => payslip.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data.every((payslip) => payslip.employee_id === 5)).toBe(true)
     }
   })
 
@@ -121,12 +127,13 @@ describe("GET /payslips/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(payslipResponseSchema).safeParse(await response.json())
+    const parsed = payslipListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
+      expect(parsed.data.total).toBe(0)
     }
   })
 

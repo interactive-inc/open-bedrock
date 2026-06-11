@@ -101,18 +101,24 @@ async function request(props: RequestProps): Promise<Response> {
   })
 }
 
+const expenseMineListResponseSchema = z.object({
+  data: z.array(expenseMineResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /expenses/me", () => {
   test("returns 200 with only the token employee's expenses", async () => {
     const response = await request({ path: "/expenses/me", token: await tokenFor(5, "member") })
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(expenseMineResponseSchema).safeParse(await response.json())
+    const parsed = expenseMineListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
     }
   })
 
@@ -124,13 +130,14 @@ describe("GET /expenses/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(expenseMineResponseSchema).safeParse(await response.json())
+    const parsed = expenseMineListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.status).toBe("approved")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0]?.status).toBe("approved")
     }
   })
 

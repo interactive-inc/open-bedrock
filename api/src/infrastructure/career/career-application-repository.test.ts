@@ -48,7 +48,11 @@ describe("CareerApplicationRepository", () => {
       CareerApplication.create({ postingId: 2, applicantId: 7, message: "b" }),
     )
 
-    const applications = await repository.findByApplicantId(7)
+    const applications = await repository.findByApplicantId({
+      applicantId: 7,
+      limit: 50,
+      offset: 0,
+    })
 
     expect(applications).not.toBeInstanceOf(Error)
 
