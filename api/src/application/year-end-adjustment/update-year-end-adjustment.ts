@@ -1,5 +1,6 @@
 import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
 import type { Context } from "@/env"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { YearEndAdjustmentRepository } from "@/infrastructure/year-end-adjustment/year-end-adjustment-repository"
 
 export type Command = {
@@ -15,6 +16,8 @@ export type NotApplicant = { reason: "not_applicant" }
 
 export type NotModifiable = { reason: "not_modifiable" }
 
+export type YearConflict = { reason: "year_conflict" }
+
 /**
  * 年末調整の申告の対象年・備考を変更する。本人以外と、承認済み申告の変更を拒否する。
  */
@@ -23,7 +26,14 @@ export class UpdateYearEndAdjustment {
 
   async run(
     command: Command,
-  ): Promise<YearEndAdjustment | YearEndAdjustmentNotFound | NotApplicant | NotModifiable | Error> {
+  ): Promise<
+    | YearEndAdjustment
+    | YearEndAdjustmentNotFound
+    | NotApplicant
+    | NotModifiable
+    | YearConflict
+    | Error
+  > {
     const yearEndAdjustmentRepository = new YearEndAdjustmentRepository(this.c)
 
     const current = await yearEndAdjustmentRepository.findById(command.yearEndAdjustmentId)
@@ -50,6 +60,10 @@ export class UpdateYearEndAdjustment {
     })
 
     const saved = await yearEndAdjustmentRepository.update(updated)
+
+    if (saved instanceof UniqueConstraintError) {
+      return { reason: "year_conflict" }
+    }
 
     if (saved === null) {
       return { reason: "not_modifiable" }
