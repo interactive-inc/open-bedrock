@@ -2,6 +2,7 @@ import { canManageShift } from "@/domain/shift/can-manage-shift"
 import { ShiftAssignment } from "@/domain/shift/shift-assignment"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
@@ -79,6 +80,12 @@ export class CreateShiftAssignment {
       note: input.note,
     })
 
-    return assignmentRepository.create(assignment)
+    const result = await assignmentRepository.create(assignment)
+
+    if (result instanceof UniqueConstraintError) {
+      return { reason: "duplicate_assignment" }
+    }
+
+    return result
   }
 }

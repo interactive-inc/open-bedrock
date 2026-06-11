@@ -248,7 +248,7 @@ export class OnboardingAssignmentRepository {
   // 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
   async delete(assignmentId: number): Promise<true | null | Error> {
     try {
-      const rows = await this.c.var.database
+      const deleteAssignment = this.c.var.database
         .delete(onboardingAssignments)
         .where(
           and(
@@ -258,13 +258,15 @@ export class OnboardingAssignmentRepository {
         )
         .returning({ id: onboardingAssignments.id })
 
-      if (rows.length === 0) {
-        return null
-      }
-
-      await this.c.var.database
+      const deleteTasks = this.c.var.database
         .delete(onboardingTasks)
         .where(eq(onboardingTasks.assignmentId, assignmentId))
+
+      const [assignmentRows] = await this.c.var.database.batch([deleteAssignment, deleteTasks])
+
+      if (assignmentRows.length === 0) {
+        return null
+      }
 
       return true
     } catch (error) {
