@@ -3,6 +3,7 @@ import { ApplicationApproval } from "@/domain/application/application-approval"
 import type { ApplicationNotFound } from "@/domain/application/application-not-found"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
+import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
 export type Command = {
   viewerRole: string
@@ -33,10 +34,6 @@ export class DecideApplication {
   ): Promise<
     ApplicationDecision | ApplicationNotFound | AlreadyDecided | { reason: "forbidden" } | Error
   > {
-    if (canDecideApplication(command.viewerRole) === false) {
-      return { reason: "forbidden" } as const
-    }
-
     const applicationRepository = new ApplicationRepository(this.c)
 
     const existing = await applicationRepository.findById(command.applicationId)
@@ -47,6 +44,26 @@ export class DecideApplication {
 
     if (existing === null) {
       return { reason: "application_not_found" }
+    }
+
+    const applicationTemplateRepository = new ApplicationTemplateRepository(this.c)
+
+    const template = await applicationTemplateRepository.findById(existing.templateId)
+
+    if (template instanceof Error) return template
+
+    if (template === null) return new Error("template not found")
+
+    // approverRoles が指定されていれば、そのロールのみ承認可能
+    if (template.approverRoles.length > 0) {
+      if (!template.approverRoles.includes(command.viewerRole)) {
+        return { reason: "forbidden" } as const
+      }
+    } else {
+      // approverRoles が空なら従来の canDecideApplication チェック
+      if (canDecideApplication(command.viewerRole) === false) {
+        return { reason: "forbidden" } as const
+      }
     }
 
     if (existing.applicantId === command.approverId) {
