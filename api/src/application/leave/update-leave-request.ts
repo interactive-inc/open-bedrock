@@ -89,8 +89,12 @@ export class UpdateLeaveRequest {
 
     const updated = await repository.revise(revised)
 
-    if (updated === null) {
+    if (updated === "already_decided") {
       return { reason: "not_modifiable" }
+    }
+
+    if (updated === "overlapping") {
+      return { reason: "overlapping_leave_request" }
     }
 
     return updated
