@@ -5,8 +5,6 @@ import type { Context } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
-import { shiftAssignments, shiftSwapRequests } from "@/schema"
-import { eq } from "drizzle-orm"
 
 export type Input = {
   viewerRole: string
@@ -92,24 +90,30 @@ export class ApproveShiftSwapRequest {
     }
 
     // pattern_id を入れ替え、ステータス更新をアトミックに実行する。
+    // status='pending' ガード付きで先にステータスを更新し、並行承認による二重スワップを防ぐ。
+    // 0 行更新（既に承認/却下済み）は abortWhenPreviousStatementChangedNoRows でバッチ全体を中断する。
     const approved = swapRequest.withApproved(input.approvedAt)
 
     try {
-      await this.c.var.database.batch([
-        this.c.var.database
-          .update(shiftAssignments)
-          .set({ patternId: targetAssignment.patternId })
-          .where(eq(shiftAssignments.id, requesterAssignment.id!)),
-        this.c.var.database
-          .update(shiftAssignments)
-          .set({ patternId: requesterAssignment.patternId })
-          .where(eq(shiftAssignments.id, targetAssignment.id!)),
-        this.c.var.database
-          .update(shiftSwapRequests)
-          .set({ status: approved.status, approvedAt: approved.approvedAt })
-          .where(eq(shiftSwapRequests.id, swapRequest.id!)),
+      const db = this.c.env.DB
+      await db.batch([
+        db
+          .prepare(
+            "UPDATE shift_swap_requests SET status = ?1, approved_at = ?2 WHERE id = ?3 AND status = 'pending'",
+          )
+          .bind(approved.status, approved.approvedAt, swapRequest.id),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2")
+          .bind(targetAssignment.patternId, requesterAssignment.id),
+        db
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2")
+          .bind(requesterAssignment.patternId, targetAssignment.id),
       ])
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return { reason: "not_pending" }
+      }
       return error instanceof Error ? error : new Error("failed to swap shift assignments")
     }
 
@@ -154,4 +158,12 @@ export class ApproveShiftSwapRequest {
       console.error("failed to create swap notification for target", targetNotified)
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
