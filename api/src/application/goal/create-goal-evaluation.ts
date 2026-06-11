@@ -4,7 +4,6 @@ import { resolveEvaluationPermission } from "@/domain/goal/resolve-evaluation-pe
 import type { Context } from "@/env"
 import {
   type AlreadyEvaluatedError,
-  type AlreadyFinalizedError,
   type GoalDoneError,
   GoalEvaluationRepository,
 } from "@/infrastructure/goal/goal-evaluation-repository"
