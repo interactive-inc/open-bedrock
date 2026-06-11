@@ -41,6 +41,10 @@ export class CancelRoomReservation {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "reservation_not_found" }
+    }
+
     return { reason: "cancelled" }
   }
 }

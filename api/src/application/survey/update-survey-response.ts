@@ -55,6 +55,12 @@ export class UpdateSurveyResponse {
       submittedAt: command.submittedAt,
     })
 
-    return await surveyRepository.updateResponse(updated)
+    const result = await surveyRepository.updateResponse(updated)
+
+    if (result === null) {
+      return { reason: "response_not_found" }
+    }
+
+    return result
   }
 }
