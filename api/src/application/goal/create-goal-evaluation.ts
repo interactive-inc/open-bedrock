@@ -56,6 +56,24 @@ export class CreateGoalEvaluation {
       return permission
     }
 
+    // self/manager は同一 evaluatorId + kind の重複を禁止する。
+    // DB 側にも UNIQUE 制約があるが、先にチェックして明示的なエラーを返す。
+    if (command.kind === "self" || command.kind === "manager") {
+      const existing = await goalEvaluationRepository.findByGoalId(command.goalId)
+
+      if (existing instanceof Error) {
+        return existing
+      }
+
+      const duplicate = existing.some(
+        (e) => e.evaluatorId === command.evaluatorId && e.kind === command.kind,
+      )
+
+      if (duplicate) {
+        return { reason: "already_evaluated" }
+      }
+    }
+
     const newEvaluation = GoalEvaluation.create({
       goalId: command.goalId,
       evaluatorId: command.evaluatorId,
