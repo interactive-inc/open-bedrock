@@ -67,6 +67,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         gt(roomReservations.endAt, query.start_at),
       ),
     )
+    .limit(500)
 
   // 会議室 id ごとにグループ化する。Map の挿入順を保つので元実装と同じ並びを保つ。
   const grouped = new Map<

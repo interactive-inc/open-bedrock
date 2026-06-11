@@ -2,6 +2,7 @@ import { ApplicationTemplate } from "@/domain/application/application-template"
 import { canManageApplicationTemplates } from "@/domain/application/can-manage-application-templates"
 import type { Context } from "@/env"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -51,6 +52,13 @@ export class CreateApplicationTemplate {
       approverRoles: command.approverRoles,
     })
 
-    return templateRepository.create(template)
+    const result = await templateRepository.create(template)
+
+    // code の重複は事前チェック済みだが、レース時に DB 制約で捕捉される。
+    if (result instanceof UniqueConstraintError) {
+      return { reason: "template_code_conflict" }
+    }
+
+    return result
   }
 }
