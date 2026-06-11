@@ -73,7 +73,9 @@ export class AttendanceRecordRepository {
           workMinutes: attendanceRecord.workMinutes,
           status: attendanceRecord.status,
         })
-        .where(eq(attendanceRecords.id, attendanceRecord.id))
+        .where(
+          and(eq(attendanceRecords.id, attendanceRecord.id), eq(attendanceRecords.status, "open")),
+        )
         .returning()
 
       const row = rows.at(0)
