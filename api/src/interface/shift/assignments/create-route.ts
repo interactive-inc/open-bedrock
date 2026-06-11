@@ -3,6 +3,7 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -54,7 +55,11 @@ export const POST = factory.createHandlers(
         throw new NotFoundError("employee not found")
       }
 
-      throw new NotFoundError("pattern not found")
+      if (assignment.reason === "pattern_not_found") {
+        throw new NotFoundError("pattern not found")
+      }
+
+      throw new ConflictError("shift assignment already exists for this employee and date")
     }
 
     const responseBody = {
