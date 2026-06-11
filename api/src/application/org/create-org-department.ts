@@ -2,6 +2,7 @@ import { canManageOrg } from "@/domain/org/can-manage-org"
 import { OrgDepartment } from "@/domain/org/org-department"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -59,7 +60,15 @@ export class CreateOrgDepartment {
       order: command.department.order,
     })
 
-    return await departmentRepository.create(department)
+    const created = await departmentRepository.create(department)
+
+    // findByCode と insert の間に並行リクエストが挿入されると UNIQUE 制約違反になる。
+    // リポジトリが UniqueConstraintError として返すので、重複として扱う（TOCTOU 競合対策）。
+    if (created instanceof UniqueConstraintError) {
+      return { reason: "department_code_conflict" }
+    }
+
+    return created
   }
 
   private async ensureParentExists(
