@@ -47,13 +47,27 @@ export class DeleteReviewCycle {
 
     try {
       await db.batch([
+        db
+          .prepare("DELETE FROM review_cycles WHERE id = ?1 AND status = 'draft'")
+          .bind(input.cycleId),
+        abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM review_forms WHERE cycle_id = ?1").bind(input.cycleId),
-        db.prepare("DELETE FROM review_cycles WHERE id = ?1").bind(input.cycleId),
       ])
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return { reason: "not_deletable" }
+      }
       return error instanceof Error ? error : new Error("failed to delete review cycle")
     }
 
     return { reason: "deleted" }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
