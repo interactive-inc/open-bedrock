@@ -10,7 +10,7 @@ export type Command = {
   deptId: number | null
   deptName: string | null
   requiredSkills: string | null
-  status: "open" | "closed"
+  status?: "open" | "closed"
 }
 
 export type Forbidden = { reason: "forbidden" }
@@ -46,7 +46,7 @@ export class UpdateCareerPosting {
         deptId: command.deptId,
         deptName: command.deptName,
         requiredSkills: command.requiredSkills,
-        status: command.status,
+        status: command.status ?? current.status,
       }),
     )
 
