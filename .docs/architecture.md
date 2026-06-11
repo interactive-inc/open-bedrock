@@ -10,7 +10,7 @@ api は Cloudflare Workers(wrangler)上で動作する。cli は bun で動作�
 
 api は domain と application と infrastructure と interface の4層で構成する。interface は Next.js App Router 記法(route.ts と動的セグメント [param])でルートを定義し、app.ts が :param に対応づけて登録する。
 
-web の app ディレクトリはルートごとに collocation する。ルート直下には page.tsx と actions.ts(Server Actions)などの規約ファイルだけを置き、画面を構成するコンポーネントは各ルートの _components 配下、表示用の純関数は _lib 配下に置く。画面横断の共有コンポーネントは web/components に置き、shadcn 生成物(web/components/ui)は直接編集しない。
+web の app ディレクトリはルートごとに collocation する。ルート直下には page.tsx と actions.ts(Server Actions)などの規約ファイルだけを置き、画面を構成するコンポーネントは各ルートの \_components 配下、表示用の純関数は \_lib 配下に置く。画面横断の共有コンポーネントは web/components に置き、shadcn 生成物(web/components/ui)は直接編集しない。
 
 ## Data
 
