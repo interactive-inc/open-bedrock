@@ -94,9 +94,7 @@ export class ResignationRepository {
           lastWorkingDate: resignation.lastWorkingDate,
           reason: resignation.reason,
         })
-        .where(
-          and(eq(resignations.id, resignation.id), eq(resignations.status, "requested")),
-        )
+        .where(and(eq(resignations.id, resignation.id), eq(resignations.status, "requested")))
         .returning()
 
       return rows.length === 0 ? null : resignation

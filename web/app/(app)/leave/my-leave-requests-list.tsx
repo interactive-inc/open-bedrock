@@ -167,7 +167,7 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
 
 // 休暇申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
-  const [state, formAction, pending] = useActionState(cancelLeaveRequestAction, {
+  const [_state, formAction, pending] = useActionState(cancelLeaveRequestAction, {
     ok: false,
     error: null,
   })
