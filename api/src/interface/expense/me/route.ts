@@ -8,7 +8,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { expenses } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
@@ -52,13 +52,19 @@ export const GET = factory.createHandlers(
       conditions.push(eq(expenses.status, query.status))
     }
 
-    const rows = await c.var.database
-      .select()
-      .from(expenses)
-      .where(and(...conditions))
-      .orderBy(desc(expenses.id))
-      .limit(limit)
-      .offset(offset)
+    const [rows, totalRows] = await Promise.all([
+      c.var.database
+        .select()
+        .from(expenses)
+        .where(and(...conditions))
+        .orderBy(desc(expenses.id))
+        .limit(limit)
+        .offset(offset),
+      c.var.database
+        .select({ total: count() })
+        .from(expenses)
+        .where(and(...conditions)),
+    ])
 
     const body = rows.map((row) => ({
       id: row.id,
@@ -69,6 +75,6 @@ export const GET = factory.createHandlers(
       created_at: row.createdAt,
     }))
 
-    return c.json(body, 200)
+    return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

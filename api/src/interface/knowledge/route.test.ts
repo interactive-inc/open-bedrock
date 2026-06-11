@@ -75,20 +75,26 @@ async function request(path: string, token: string | null): Promise<Response> {
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
 
+const knowledgeListResponseSchema = z.object({
+  data: z.array(knowledgeSearchResultResponseSchema),
+  total: z.number(),
+})
+
 describe("GET /knowledge", () => {
   test("returns 200 with all articles in CLI search shape", async () => {
     const response = await request("/knowledge", await memberToken())
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(6)
+      expect(parsed.data.data.length).toBe(6)
+      expect(parsed.data.total).toBe(6)
 
-      const first = parsed.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find((item) => item.id === 1)
 
       expect(first?.title).toBe("Remote Work Policy")
       expect(first?.category).toBe("Policy")
@@ -101,13 +107,14 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(2)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(2)
     }
   })
 
@@ -116,13 +123,14 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(1)
     }
   })
 
@@ -131,12 +139,13 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
+      expect(parsed.data.total).toBe(0)
     }
   })
 
@@ -145,12 +154,13 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(6)
     }
   })
 
@@ -159,7 +169,7 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
   })
@@ -169,13 +179,13 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
       // default limit (50) >= 6 seed articles, so all are returned
-      expect(parsed.data.length).toBe(6)
+      expect(parsed.data.data.length).toBe(6)
     }
   })
 
@@ -184,13 +194,13 @@ describe("GET /knowledge", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(knowledgeSearchResultResponseSchema).safeParse(await response.json())
+    const parsed = knowledgeListResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
       // offset clamped to MAX_LIST_OFFSET (2_147_483_647) — far beyond any row
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
     }
   })
 

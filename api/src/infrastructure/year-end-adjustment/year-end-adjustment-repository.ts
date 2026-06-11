@@ -117,12 +117,7 @@ export class YearEndAdjustmentRepository {
     try {
       const rows = await this.c.var.database
         .delete(yearEndAdjustments)
-        .where(
-          and(
-            eq(yearEndAdjustments.id, id),
-            eq(yearEndAdjustments.status, "submitted"),
-          ),
-        )
+        .where(and(eq(yearEndAdjustments.id, id), eq(yearEndAdjustments.status, "submitted")))
         .returning({ id: yearEndAdjustments.id })
 
       return rows.length > 0 ? true : null

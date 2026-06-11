@@ -2,6 +2,7 @@ import { Asset } from "@/domain/asset/asset"
 import { canManageAssets } from "@/domain/asset/can-manage-assets"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -49,6 +50,14 @@ export class RegisterAsset {
       purchasedOn: command.asset.purchasedOn,
     })
 
-    return assetRepository.create(asset)
+    const created = await assetRepository.create(asset)
+
+    // findByCode と insert の間に並行リクエストが挿入されると UNIQUE 制約違反になる。
+    // リポジトリが UniqueConstraintError として返すので、重複として扱う（TOCTOU 競合対策）。
+    if (created instanceof UniqueConstraintError) {
+      return { reason: "asset_code_conflict" }
+    }
+
+    return created
   }
 }

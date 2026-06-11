@@ -68,12 +68,7 @@ export class LifeEventRepository {
           eventDate: lifeEvent.eventDate,
           detail: lifeEvent.detail,
         })
-        .where(
-          and(
-            eq(lifeEvents.id, lifeEvent.id),
-            eq(lifeEvents.status, "submitted"),
-          ),
-        )
+        .where(and(eq(lifeEvents.id, lifeEvent.id), eq(lifeEvents.status, "submitted")))
         .returning()
 
       const row = rows.at(0)
@@ -89,12 +84,7 @@ export class LifeEventRepository {
     try {
       const rows = await this.c.var.database
         .delete(lifeEvents)
-        .where(
-          and(
-            eq(lifeEvents.id, id),
-            eq(lifeEvents.status, "submitted"),
-          ),
-        )
+        .where(and(eq(lifeEvents.id, id), eq(lifeEvents.status, "submitted")))
         .returning({ id: lifeEvents.id })
 
       return rows.length > 0 ? true : null

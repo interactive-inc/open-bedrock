@@ -23,7 +23,7 @@ describe("LeaveRequestRepository", () => {
 
     expect(created).toBeInstanceOf(LeaveRequest)
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error || created === null || created.id === null) {
       throw new Error("create failed")
     }
 
@@ -56,8 +56,8 @@ describe("LeaveRequestRepository", () => {
       }),
     )
 
-    if (created instanceof Error) {
-      throw created
+    if (created instanceof Error || created === null) {
+      throw new Error("create failed")
     }
 
     const updated = await repository.update(
@@ -91,7 +91,7 @@ describe("LeaveRequestRepository", () => {
       }),
     )
 
-    if (created instanceof Error || created.id === null) {
+    if (created instanceof Error || created === null || created.id === null) {
       throw new Error("create failed")
     }
 
@@ -144,7 +144,7 @@ describe("LeaveRequestRepository", () => {
         }),
       )
 
-      if (created instanceof Error || created.id === null) {
+      if (created instanceof Error || created === null || created.id === null) {
         throw new Error("create failed")
       }
 
