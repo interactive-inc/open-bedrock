@@ -4,6 +4,7 @@ import type { TrainingCourse } from "@/domain/training/training-course"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -97,6 +98,10 @@ export const PUT = factory.createHandlers(
     if ("reason" in updated) {
       if (updated.reason === "course_not_found") {
         throw new NotFoundError("course not found")
+      }
+
+      if (updated.reason === "course_archived") {
+        throw new ConflictError("course is archived")
       }
 
       throw new ForbiddenError()

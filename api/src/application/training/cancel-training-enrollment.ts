@@ -12,11 +12,11 @@ export type EnrollmentNotFound = { reason: "enrollment_not_found" }
 
 export type Forbidden = { reason: "forbidden" }
 
-export type AlreadyCompleted = { reason: "already_completed" }
+export type EnrollmentNotCancelable = { reason: "enrollment_not_cancelable" }
 
 export type Cancelled = { reason: "cancelled" }
 
-export type CancelFailure = EnrollmentNotFound | Forbidden | AlreadyCompleted
+export type CancelFailure = EnrollmentNotFound | Forbidden | EnrollmentNotCancelable
 
 /**
  * 受講登録を取り消す。本人または管理権限が必要。完了済みは履歴保全のため取り消せない。
@@ -47,14 +47,14 @@ export class CancelTrainingEnrollment {
       return { reason: "forbidden" }
     }
 
-    if (enrollment.status === "completed") {
-      return { reason: "already_completed" }
-    }
-
     const deleted = await enrollmentRepository.delete(command.enrollmentId)
 
     if (deleted instanceof Error) {
       return deleted
+    }
+
+    if (deleted === null) {
+      return { reason: "enrollment_not_cancelable" }
     }
 
     return { reason: "cancelled" }
