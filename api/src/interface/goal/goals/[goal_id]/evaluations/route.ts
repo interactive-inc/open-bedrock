@@ -60,6 +60,10 @@ export const POST = factory.createHandlers(
         throw new ConflictError("already evaluated")
       }
 
+      if (evaluation.reason === "goal_finalized") {
+        throw new ConflictError("goal is already finalized")
+      }
+
       throw new ForbiddenError()
     }
 

@@ -56,6 +56,10 @@ export class UpdateApplicationTemplate {
       return updated
     }
 
+    if (updated === null) {
+      return { reason: "template_not_found" }
+    }
+
     return updated
   }
 }

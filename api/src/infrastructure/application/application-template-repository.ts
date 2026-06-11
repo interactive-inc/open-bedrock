@@ -55,7 +55,8 @@ export class ApplicationTemplateRepository {
   }
 
   // 申請テンプレートの内容を更新する。code をキーに更新し、更新後の行を返す。
-  async update(template: ApplicationTemplate): Promise<ApplicationTemplate | Error> {
+  // 対象行が存在しない場合は null を返す。
+  async update(template: ApplicationTemplate): Promise<ApplicationTemplate | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(applicationTemplates)
@@ -71,9 +72,7 @@ export class ApplicationTemplateRepository {
 
       const row = rows.at(0)
 
-      return row === undefined
-        ? new Error("failed to update application_template")
-        : ApplicationTemplate.fromRow(row)
+      return row === undefined ? null : ApplicationTemplate.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update application_template")
     }

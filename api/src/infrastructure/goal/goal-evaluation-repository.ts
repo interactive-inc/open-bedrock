@@ -79,7 +79,7 @@ export class GoalEvaluationRepository {
         ),
         this.c.env.DB.prepare(
           `
-          UPDATE goals SET status = 'done' WHERE id = ?1
+          UPDATE goals SET status = 'done' WHERE id = ?1 AND status != 'done'
           `,
         ).bind(goal.id),
       ])

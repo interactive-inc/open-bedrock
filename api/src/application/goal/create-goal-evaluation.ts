@@ -22,6 +22,8 @@ export type GoalNotFound = { reason: "goal_not_found" }
 
 export type AlreadyEvaluated = { reason: "already_evaluated" }
 
+export type GoalFinalized = { reason: "goal_finalized" }
+
 /**
  * 目標の存在確認・権限判定・評価作成・final時の完了反映までを束ねる。
  */
@@ -30,7 +32,7 @@ export class CreateGoalEvaluation {
 
   async run(
     command: Command,
-  ): Promise<GoalEvaluation | GoalNotFound | AlreadyEvaluated | Forbidden | Error> {
+  ): Promise<GoalEvaluation | GoalNotFound | AlreadyEvaluated | GoalFinalized | Forbidden | Error> {
     const goalRepository = new GoalRepository(this.c)
 
     const goalEvaluationRepository = new GoalEvaluationRepository(this.c)
@@ -43,6 +45,10 @@ export class CreateGoalEvaluation {
 
     if (goal === null) {
       return { reason: "goal_not_found" }
+    }
+
+    if (goal.status === "done") {
+      return { reason: "goal_finalized" }
     }
 
     const permission = resolveEvaluationPermission({
