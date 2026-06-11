@@ -137,8 +137,8 @@ describe("POST /family-care-leaves", () => {
       method: "POST",
       body: {
         leave_kind: "childcare",
-        start_date: "2026-10-01",
-        end_date: "2027-03-31",
+        start_date: "2027-04-01",
+        end_date: "2027-09-30",
         note: "育児休業を申し出ます",
       },
     })
@@ -154,6 +154,22 @@ describe("POST /family-care-leaves", () => {
       expect(parsed.data.employee_id).toBe(4)
       expect(parsed.data.note).toBe("育児休業を申し出ます")
     }
+  })
+
+  test("returns 409 when overlapping with an existing leave", async () => {
+    const response = await request({
+      path: "/family-care-leaves",
+      token: await applicantToken(),
+      method: "POST",
+      body: {
+        leave_kind: "childcare",
+        start_date: "2026-10-01",
+        end_date: "2027-03-31",
+        note: null,
+      },
+    })
+
+    expect(response.status).toBe(409)
   })
 
   test("creates a family care leave with null note", async () => {

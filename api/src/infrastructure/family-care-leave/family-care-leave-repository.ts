@@ -1,7 +1,7 @@
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
 import type { Context } from "@/env"
 import { familyCareLeaves } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, gte, lte, ne } from "drizzle-orm"
 
 export class FamilyCareLeaveRepository {
   constructor(private readonly c: Context) {}
@@ -24,6 +24,36 @@ export class FamilyCareLeaveRepository {
       return rows.map((row) => FamilyCareLeave.fromRow(row))
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load family_care_leaves")
+    }
+  }
+
+  // 同一社員の未取消（requested）申出のうち、指定期間と重なるものを返す。
+  // 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
+  // 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
+  // excludeId を渡すと当該申出自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
+  async findOverlapping(props: {
+    employeeId: number
+    startDate: string
+    endDate: string
+    excludeId?: string
+  }): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(familyCareLeaves)
+        .where(
+          and(
+            eq(familyCareLeaves.employeeId, props.employeeId),
+            eq(familyCareLeaves.status, "requested"),
+            lte(familyCareLeaves.startDate, props.endDate),
+            gte(familyCareLeaves.endDate, props.startDate),
+            props.excludeId === undefined ? undefined : ne(familyCareLeaves.id, props.excludeId),
+          ),
+        )
+
+      return rows.map((row) => FamilyCareLeave.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to query family_care_leave overlap")
     }
   }
 
