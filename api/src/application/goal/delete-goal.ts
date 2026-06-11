@@ -51,16 +51,15 @@ export class DeleteGoal {
       return { reason: "goal_finalized" }
     }
 
-    const deletedEvals = await evalRepo.deleteByGoalId(command.goalId)
-
-    if (deletedEvals instanceof Error) {
-      return deletedEvals
-    }
-
-    const deleted = await repository.delete(command.goalId)
-
-    if (deleted instanceof Error) {
-      return deleted
+    try {
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1").bind(
+          command.goalId,
+        ),
+        this.c.env.DB.prepare("DELETE FROM goals WHERE id = ?1").bind(command.goalId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete goal")
     }
 
     return { reason: "deleted" }
