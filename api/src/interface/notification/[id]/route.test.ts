@@ -141,14 +141,16 @@ describe("DELETE /notifications/:id", () => {
     expect(response.status).toBe(204)
   })
 
-  test("returns 403 when deleting another employee's notification", async () => {
+  test("returns 404 when deleting another employee's notification", async () => {
     const response = await request({
       path: "/notifications/4",
       token: await tokenFor(5, "member"),
       method: "DELETE",
     })
 
-    expect(response.status).toBe(403)
+    // DB-level recipientEmployeeId guard returns 404 instead of 403
+    // to avoid leaking existence of other employees' notifications.
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for a missing notification", async () => {

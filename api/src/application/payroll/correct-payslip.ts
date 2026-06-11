@@ -55,6 +55,12 @@ export class CorrectPayslip {
       netPay: command.netPay,
     })
 
-    return await payslipRepository.update(corrected)
+    const updated = await payslipRepository.update(corrected)
+
+    if (updated === null) {
+      return { reason: "payslip_not_found" }
+    }
+
+    return updated
   }
 }
