@@ -95,11 +95,13 @@ export async function deleteOneOnOneAction(
   return { ok: true, error: null }
 }
 
-// 任意テキスト欄の FormData 値を string | null へ。未入力は null。
+// 任意テキスト欄の FormData 値を string | null へ。未入力や空白のみは null。
 function toOptionalText(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value === "") {
+  if (typeof value !== "string") {
     return null
   }
 
-  return value
+  const trimmed = value.trim()
+
+  return trimmed === "" ? null : trimmed
 }

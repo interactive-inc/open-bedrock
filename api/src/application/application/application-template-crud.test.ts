@@ -21,6 +21,19 @@ function seedExpense(db: D1Database): Promise<unknown> {
   ])
 }
 
+function seedPendingApplication(db: D1Database, templateId: number): Promise<void> {
+  return seedD1(db, "applications", [
+    {
+      template_id: templateId,
+      applicant_id: 1,
+      status: "pending",
+      current_step: null,
+      payload: "{}",
+      created_at: "2026-01-01T00:00:00.000Z",
+    },
+  ])
+}
+
 describe("CreateApplicationTemplate", () => {
   test("a privileged role creates a template", async () => {
     const { context } = createTestContext()
@@ -201,5 +214,23 @@ describe("DeleteApplicationTemplate", () => {
     }
 
     expect(result.reason).toBe("template_not_found")
+  })
+
+  test("returns template_in_use when pending applications exist", async () => {
+    const { context, db } = createTestContext()
+
+    await seedExpense(db)
+    await seedPendingApplication(db, 1)
+
+    const result = await new DeleteApplicationTemplate(context).run({
+      viewerRole: "admin",
+      code: "expense",
+    })
+
+    if (result instanceof Error) {
+      throw result
+    }
+
+    expect(result.reason).toBe("template_in_use")
   })
 })
