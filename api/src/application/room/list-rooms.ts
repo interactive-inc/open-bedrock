@@ -8,9 +8,9 @@ import { RoomRepository } from "@/infrastructure/room/room-repository"
 export class ListRooms {
   constructor(private readonly c: Context) {}
 
-  async run(): Promise<ReadonlyArray<Room> | Error> {
+  async run(props: { limit: number; offset: number }): Promise<ReadonlyArray<Room> | Error> {
     const roomRepository = new RoomRepository(this.c)
 
-    return await roomRepository.findAll()
+    return await roomRepository.findAll({ limit: props.limit, offset: props.offset })
   }
 }
