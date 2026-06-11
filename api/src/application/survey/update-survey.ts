@@ -42,24 +42,25 @@ export class UpdateSurvey {
       return { reason: "survey_not_found" }
     }
 
-    if (JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)) {
-      const responseCount = await surveyRepository.countResponsesBySurveyId(command.surveyId)
+    const updated = current.withDetails({
+      title: command.title,
+      status: command.status,
+      questionsJson: command.questionsJson,
+    })
 
-      if (responseCount instanceof Error) {
-        return responseCount
-      }
+    const questionsChanged =
+      JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)
 
-      if (responseCount > 0) {
+    if (questionsChanged) {
+      const result = await surveyRepository.updateIfNoResponses(updated)
+
+      if (result === null) {
         return { reason: "questions_immutable" }
       }
+
+      return result
     }
 
-    return surveyRepository.update(
-      current.withDetails({
-        title: command.title,
-        status: command.status,
-        questionsJson: command.questionsJson,
-      }),
-    )
+    return surveyRepository.update(updated)
   }
 }
