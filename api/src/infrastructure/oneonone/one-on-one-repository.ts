@@ -58,9 +58,10 @@ export class OneOnOneRepository {
   }
 
   // 記録内容（議題・上長メモ・次のアクション）を更新する。
-  async update(oneOnOne: OneOnOne): Promise<OneOnOne | Error> {
+  // 対象行が存在しない場合は null を返す。
+  async update(oneOnOne: OneOnOne): Promise<OneOnOne | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(oneOnOnes)
         .set({
           topics: oneOnOne.topics,
@@ -68,8 +69,11 @@ export class OneOnOneRepository {
           nextAction: oneOnOne.nextAction,
         })
         .where(eq(oneOnOnes.id, oneOnOne.id))
+        .returning()
 
-      return oneOnOne
+      const row = rows.at(0)
+
+      return row === undefined ? null : OneOnOne.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update one_on_one")
     }

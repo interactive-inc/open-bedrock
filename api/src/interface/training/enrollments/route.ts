@@ -2,6 +2,12 @@ import { canManageTraining } from "@/domain/training/can-manage-training"
 import type { Variables } from "@/env"
 import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, trainingEnrollments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -25,6 +31,20 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
+    const limit = toBoundedInt({
+      raw: c.req.query("limit"),
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: c.req.query("offset"),
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+
     const requestsOthers = query.employee_id !== undefined || query.employee_code !== undefined
 
     if (requestsOthers === true && canManageTraining(session.role) === false) {
@@ -46,6 +66,8 @@ export const GET = factory.createHandlers(
       .from(trainingEnrollments)
       .where(eq(trainingEnrollments.employeeId, targetEmployeeId))
       .orderBy(asc(trainingEnrollments.id))
+      .limit(limit)
+      .offset(offset)
 
     const responseBody = rows.map((row) => ({
       id: row.id,
