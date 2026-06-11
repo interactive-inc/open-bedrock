@@ -1,9 +1,5 @@
 import { CreateCareerPosting } from "@/application/career/create-career-posting"
 import type { CareerPosting } from "@/domain/career/career-posting"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { careerPostings } from "@/schema"
-import { eq } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
@@ -11,7 +7,11 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { factory } from "@/lib/factory"
+import { careerPostings } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
+import { desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 // 公募をレスポンス用の snake_case に整形する。
@@ -52,6 +52,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(careerPostings)
     .where(eq(careerPostings.status, "open"))
+    .orderBy(desc(careerPostings.id))
     .limit(limit)
     .offset(offset)
 
