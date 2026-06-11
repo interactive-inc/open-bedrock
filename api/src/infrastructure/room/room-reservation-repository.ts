@@ -160,10 +160,10 @@ export class RoomReservationRepository {
     }
   }
 
-  // 予約の開始終了時刻と用途を更新する。
-  async update(reservation: RoomReservation): Promise<RoomReservation | Error> {
+  // 予約の開始終了時刻と用途を更新する。対象が存在しなければ null を返す。
+  async update(reservation: RoomReservation): Promise<RoomReservation | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(roomReservations)
         .set({
           startAt: reservation.startAt,
@@ -171,10 +171,33 @@ export class RoomReservationRepository {
           purpose: reservation.purpose,
         })
         .where(eq(roomReservations.id, reservation.id))
+        .returning({ id: roomReservations.id })
+
+      if (rows.length === 0) {
+        return null
+      }
 
       return reservation
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update room_reservation")
+    }
+  }
+
+  // 予約者本人の予約を削除する。所有権チェックと削除をアトミックに行う。
+  async deleteByIdAndReserverId(id: string, reserverId: number): Promise<true | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .delete(roomReservations)
+        .where(and(eq(roomReservations.id, id), eq(roomReservations.reserverId, reserverId)))
+        .returning({ id: roomReservations.id })
+
+      if (rows.length === 0) {
+        return null
+      }
+
+      return true
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete room_reservation")
     }
   }
 
