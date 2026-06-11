@@ -41,6 +41,8 @@ export class SetReviewCycleStatus {
       return { reason: "cycle_not_found" }
     }
 
+    const previousStatus = reviewCycle.status
+
     const transitioned =
       input.status === "open"
         ? reviewCycle.open()
@@ -52,14 +54,14 @@ export class SetReviewCycleStatus {
       return { reason: "invalid_transition" }
     }
 
-    const updated = await repository.updateStatus(transitioned)
+    const updated = await repository.updateStatus(transitioned, previousStatus)
 
     if (updated instanceof Error) {
       return updated
     }
 
     if (updated === null) {
-      return { reason: "cycle_not_found" }
+      return { reason: "invalid_transition" }
     }
 
     return updated
