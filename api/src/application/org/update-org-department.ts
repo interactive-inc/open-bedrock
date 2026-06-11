@@ -19,8 +19,11 @@ export type ParentNotFound = { reason: "parent_not_found" }
 
 export type InvalidParent = { reason: "invalid_parent" }
 
+export type CircularReference = { reason: "circular_reference" }
+
 /**
- * 権限を確認し、部署ノードの親・責任者・表示順を変更する。自分自身を親にすることは拒否する。
+ * 権限を確認し、部署ノードの親・責任者・表示順を変更する。
+ * 自分自身を親にする直接自己参照、および間接的な循環参照を拒否する。
  */
 export class UpdateOrgDepartment {
   constructor(private readonly c: Context) {}
@@ -28,7 +31,13 @@ export class UpdateOrgDepartment {
   async run(
     command: Command,
   ): Promise<
-    OrgDepartment | OrgForbidden | DepartmentNotFound | ParentNotFound | InvalidParent | Error
+    | OrgDepartment
+    | OrgForbidden
+    | DepartmentNotFound
+    | ParentNotFound
+    | InvalidParent
+    | CircularReference
+    | Error
   > {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
@@ -56,6 +65,24 @@ export class UpdateOrgDepartment {
       return parentChecked
     }
 
+    // 間接的な循環参照を検出する。
+    // 新しい親から親チェーンを辿り、自分自身（code）に到達したら循環として拒否する。
+    if (command.parentCode !== null) {
+      const circularCheck = await this.detectCircularReference(
+        departmentRepository,
+        command.code,
+        command.parentCode,
+      )
+
+      if (circularCheck instanceof Error) {
+        return circularCheck
+      }
+
+      if (circularCheck) {
+        return { reason: "circular_reference" }
+      }
+    }
+
     const updated = current
       .withParent(command.parentCode)
       .updateManager(command.managerEmployeeCode)
@@ -72,6 +99,53 @@ export class UpdateOrgDepartment {
     }
 
     return saved
+  }
+
+  /**
+   * 新しい parentCode から親チェーンを辿り、code に到達するかを判定する。
+   * 全部署を 1 回ロードして in-memory で探索する（部署数は少ない前提）。
+   * visited ガードにより、既存データに循環がある場合でも無限ループしない。
+   */
+  private async detectCircularReference(
+    repository: OrgDepartmentRepository,
+    code: string,
+    newParentCode: string,
+  ): Promise<boolean | Error> {
+    const allDepartments = await repository.findAll()
+
+    if (allDepartments instanceof Error) {
+      return allDepartments
+    }
+
+    const parentByCode = new Map<string, string | null>()
+
+    for (const department of allDepartments) {
+      parentByCode.set(department.code, department.parentCode)
+    }
+
+    // 変更後の親チェーンをシミュレートするため、自分のエントリを更新する。
+    parentByCode.set(code, newParentCode)
+
+    const visited = new Set<string>()
+
+    let current: string | null | undefined = newParentCode
+
+    while (current !== null && current !== undefined) {
+      if (current === code) {
+        return true
+      }
+
+      if (visited.has(current)) {
+        // 既存データに循環がある（自分とは無関係）。無限ループを防いで抜ける。
+        break
+      }
+
+      visited.add(current)
+
+      current = parentByCode.get(current) ?? null
+    }
+
+    return false
   }
 
   private async ensureParentExists(

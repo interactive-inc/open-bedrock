@@ -95,6 +95,10 @@ export const PUT = factory.createHandlers(
         throw new NotFoundError("parent department not found")
       }
 
+      if (updated.reason === "circular_reference") {
+        throw new ConflictError("circular reference detected in department hierarchy")
+      }
+
       throw new ConflictError("a department cannot be its own parent")
     }
 
