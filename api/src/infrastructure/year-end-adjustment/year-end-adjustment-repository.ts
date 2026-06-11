@@ -1,6 +1,7 @@
 import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { yearEndAdjustments } from "@/schema"
 import { and, desc, eq } from "drizzle-orm"
 
@@ -108,6 +109,11 @@ export class YearEndAdjustmentRepository {
 
       return row === undefined ? null : YearEndAdjustment.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("year_end_adjustment unique constraint violated", {
+          cause: error,
+        })
+      }
       return error instanceof Error ? error : new Error("failed to update year_end_adjustment")
     }
   }
