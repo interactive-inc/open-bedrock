@@ -21,6 +21,7 @@ const reviewFormResponseSchema = z.object({
   reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),
   answers: z.array(z.unknown()).readonly(),
   score: z.number().nullable(),
+  comment: z.string().nullable(),
   status: z.enum(["pending", "submitted"]),
   submitted_at: z.string().nullable(),
 })
@@ -68,6 +69,7 @@ async function createTestDb(): Promise<D1Database> {
       reviewer_type: form.reviewerType,
       answers: JSON.stringify(form.answers),
       score: form.score,
+      comment: form.comment,
       status: form.status,
       submitted_at: form.submittedAt,
     })),
@@ -118,6 +120,42 @@ describe("POST /review-forms/:form_id/submit", () => {
       expect(parsed.data.status).toBe("submitted")
       expect(parsed.data.score).toBe(75)
       expect(parsed.data.submitted_at).toBe(fixedNow)
+    }
+  })
+
+  test("comment is saved and returned in the response", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 80,
+      answers: ["good"],
+      comment: "Excellent collaboration this quarter",
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewFormResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.comment).toBe("Excellent collaboration this quarter")
+      expect(parsed.data.status).toBe("submitted")
+    }
+  })
+
+  test("comment defaults to null when omitted", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 75,
+      answers: ["on track"],
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewFormResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.comment).toBeNull()
     }
   })
 
