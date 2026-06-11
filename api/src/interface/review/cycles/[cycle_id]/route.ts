@@ -58,6 +58,10 @@ export const PUT = factory.createHandlers(
         throw new ConflictError("not modifiable")
       }
 
+      if (updated.reason === "not_editable") {
+        throw new ConflictError("not editable")
+      }
+
       throw new NotFoundError("review cycle not found")
     }
 
