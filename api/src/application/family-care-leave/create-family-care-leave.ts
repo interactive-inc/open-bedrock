@@ -13,13 +13,17 @@ export type Command = {
 
 export type InvalidDateRange = { reason: "invalid_date_range" }
 
+export type OverlappingLeave = { reason: "overlapping_leave" }
+
 /**
  * 休業申出を作成する。status は "requested" で登録する。
  */
 export class CreateFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<FamilyCareLeave | InvalidDateRange | Error> {
+  async run(
+    command: Command,
+  ): Promise<FamilyCareLeave | InvalidDateRange | OverlappingLeave | Error> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const familyCareLeave = FamilyCareLeave.create({
@@ -33,6 +37,20 @@ export class CreateFamilyCareLeave {
 
     if ("reason" in familyCareLeave) {
       return familyCareLeave
+    }
+
+    const overlapping = await familyCareLeaveRepository.findOverlapping({
+      employeeId: command.employeeId,
+      startDate: command.startDate,
+      endDate: command.endDate,
+    })
+
+    if (overlapping instanceof Error) {
+      return overlapping
+    }
+
+    if (overlapping.length > 0) {
+      return { reason: "overlapping_leave" }
     }
 
     return await familyCareLeaveRepository.create(familyCareLeave)
