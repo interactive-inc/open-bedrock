@@ -42,7 +42,7 @@ export class UpdateReviewCycle {
       return { reason: "cycle_not_found" }
     }
 
-    if (reviewCycle.status === "closed") {
+    if (reviewCycle.status !== "draft") {
       return { reason: "not_modifiable" }
     }
 
