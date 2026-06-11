@@ -1,5 +1,7 @@
 import { OrgDepartment } from "@/domain/org/org-department"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { orgDepartments, orgMemberships } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 
@@ -86,6 +88,11 @@ export class OrgDepartmentRepository {
         ? new Error("failed to insert org_department")
         : OrgDepartmentRepository.toEntity(row)
     } catch (error) {
+      // (code) の UNIQUE 制約違反 = 並行リクエストによる二重登録。
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("department code already exists", { cause: error })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert org_department")
     }
   }
