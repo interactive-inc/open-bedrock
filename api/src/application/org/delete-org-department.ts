@@ -18,6 +18,7 @@ export type Deleted = { reason: "deleted" }
 /**
  * 権限を確認し、子ノードと所属メンバーを持たない部署ノードを削除する。
  * 子や所属が残っている場合はデータを孤立させないため拒否する。
+ * チェックと削除は D1 batch でアトミックに行い TOCTOU を防ぐ。
  */
 export class DeleteOrgDepartment {
   constructor(private readonly c: Context) {}
@@ -41,38 +42,16 @@ export class DeleteOrgDepartment {
       return { reason: "department_not_found" }
     }
 
-    const inUse = await this.isInUse(command.code)
-
-    if (inUse instanceof Error) {
-      return inUse
-    }
-
-    if (inUse === true) {
-      return { reason: "department_in_use" }
-    }
-
     const deleted = await departmentRepository.delete(command.code)
 
     if (deleted instanceof Error) {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "department_in_use" }
+    }
+
     return { reason: "deleted" }
-  }
-
-  private async isInUse(code: string): Promise<boolean | Error> {
-    const departmentRepository = new OrgDepartmentRepository(this.c)
-
-    const hasChildren = await departmentRepository.hasChildren(code)
-
-    if (hasChildren instanceof Error) {
-      return hasChildren
-    }
-
-    if (hasChildren === true) {
-      return true
-    }
-
-    return await departmentRepository.hasMembers(code)
   }
 }
