@@ -1,31 +1,48 @@
 import { CareerApplication } from "@/domain/career/career-application"
 import type { Context } from "@/env"
 import { careerApplications } from "@/schema"
-import { and, asc, count, eq } from "drizzle-orm"
+import { and, asc, count, eq, sql } from "drizzle-orm"
 
 export type AlreadyAppliedError = { reason: "already_applied" }
+
+export type PostingClosedError = { reason: "posting_closed" }
+
+export type ApplicationDecidedError = { reason: "application_decided" }
 
 export class CareerApplicationRepository {
   constructor(private readonly c: Context) {}
 
+  // 公募が open のときだけ INSERT する。公募が closed なら posting_closed、重複なら already_applied を返す。
+  // INSERT ... SELECT ... WHERE EXISTS で公募ステータス確認と INSERT をアトミックに行い TOCTOU を防ぐ。
   async create(
     careerApplication: CareerApplication,
-  ): Promise<CareerApplication | AlreadyAppliedError | Error> {
+  ): Promise<CareerApplication | AlreadyAppliedError | PostingClosedError | Error> {
     try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO career_applications (posting_id, applicant_id, message, status)
+            SELECT ${careerApplication.postingId}, ${careerApplication.applicantId},
+                   ${careerApplication.message}, ${careerApplication.status}
+            WHERE EXISTS (
+              SELECT 1 FROM career_postings
+              WHERE id = ${careerApplication.postingId} AND status = 'open'
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return { reason: "posting_closed" }
+      }
+
+      // last_insert_rowid で採番された行を取得する
       const rows = await this.c.var.database
-        .insert(careerApplications)
-        .values({
-          postingId: careerApplication.postingId,
-          applicantId: careerApplication.applicantId,
-          message: careerApplication.message,
-          status: careerApplication.status,
-        })
-        .returning()
+        .select()
+        .from(careerApplications)
+        .where(eq(careerApplications.id, Number(result.meta.last_row_id)))
+        .limit(1)
 
       const row = rows.at(0)
 
       return row === undefined
-        ? new Error("failed to insert career application")
+        ? new Error("failed to retrieve inserted career application")
         : CareerApplication.fromRow(row)
     } catch (error) {
       if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
@@ -67,17 +84,26 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募メッセージを更新する。id が未採番なら更新できない。
-  async update(careerApplication: CareerApplication): Promise<CareerApplication | Error> {
+  // 応募メッセージを更新する。status = 'applied' のときだけ更新を許可し、
+  // 選考確定済み（accepted/rejected）の応募は null を返す。
+  async update(
+    careerApplication: CareerApplication,
+  ): Promise<CareerApplication | ApplicationDecidedError | Error> {
     if (careerApplication.id === null) {
       return new Error("cannot update an unsaved career application")
     }
 
     try {
-      await this.c.var.database
-        .update(careerApplications)
-        .set({ message: careerApplication.message })
-        .where(eq(careerApplications.id, careerApplication.id))
+      const result = await this.c.var.database.run(
+        sql`UPDATE career_applications
+            SET message = ${careerApplication.message}
+            WHERE id = ${careerApplication.id}
+              AND status = 'applied'`,
+      )
+
+      if (result.meta.changes === 0) {
+        return { reason: "application_decided" }
+      }
 
       return careerApplication
     } catch (error) {
@@ -85,10 +111,19 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募を削除する。
-  async delete(id: number): Promise<null | Error> {
+  // 応募を削除する。status = 'applied' のときだけ削除を許可し、
+  // 選考確定済み（accepted/rejected）の応募は application_decided を返す。
+  async delete(id: number): Promise<null | ApplicationDecidedError | Error> {
     try {
-      await this.c.var.database.delete(careerApplications).where(eq(careerApplications.id, id))
+      const result = await this.c.var.database.run(
+        sql`DELETE FROM career_applications
+            WHERE id = ${id}
+              AND status = 'applied'`,
+      )
+
+      if (result.meta.changes === 0) {
+        return { reason: "application_decided" }
+      }
 
       return null
     } catch (error) {
