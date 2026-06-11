@@ -1,20 +1,34 @@
-import { getEmployeeList } from "@/lib/api/get-employee-list"
-import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
+import { createClient } from "@/lib/api/hc-client"
+import type { EmployeeDetailItem } from "@/lib/api/types/employee-list-item"
 
-// 単一従業員取得。api に詳細エンドポイントが無いため、
-// GET /employees の結果から code 一致を探す（見つからなければ null）。
-export async function getEmployeeByCode(code: string): Promise<EmployeeListItem | null | Error> {
-  const employees = await getEmployeeList({ q: null, dept: null, status: null })
+// GET /employees/:code。従業員 1 件の詳細（role 含む）を取得する。
+// 該当なし（404）は null、その他の失敗は Error を返す。
+export async function getEmployeeByCode(code: string): Promise<EmployeeDetailItem | null | Error> {
+  const client = await createClient()
 
-  if (employees instanceof Error) {
-    return employees
+  const response = await client.employees[":code"].$get({
+    param: { code: code },
+  })
+
+  const status: number = response.status
+
+  if (status === 404) {
+    return null
   }
 
-  for (const employee of employees) {
-    if (employee.code === code) {
-      return employee
-    }
+  if (status >= 400) {
+    return new Error("failed to load employee")
   }
 
-  return null
+  const employee = await response.json()
+
+  return {
+    code: employee.code,
+    name: employee.name,
+    deptName: employee.dept_name,
+    position: employee.position,
+    email: employee.email,
+    status: employee.status,
+    role: employee.role,
+  }
 }

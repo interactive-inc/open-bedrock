@@ -7,5 +7,15 @@ export type EmployeeListItem = {
   position: string | null
   email: string
   status: string
+}
+
+// GET /employees/:code の詳細。一覧と違い role を含む。
+export type EmployeeDetailItem = {
+  code: string
+  name: string
+  deptName: string | null
+  position: string | null
+  email: string
+  status: string
   role: string
 }
