@@ -102,6 +102,7 @@ describe("ReviewFormRepository", () => {
       reviewerType: "manager",
       answers: ["overwrite attempt"],
       score: 50,
+      comment: null,
       status: "submitted",
       submittedAt: "2026-05-31T00:00:00.000Z",
     })
