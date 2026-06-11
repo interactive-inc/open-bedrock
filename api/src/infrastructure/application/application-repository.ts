@@ -102,6 +102,7 @@ export class ApplicationRepository {
   }
 
   // 申請内容（payload）を更新する。status や currentStep は変更しない。
+  // pending 以外の申請は更新できない（0 行更新で null を返す）。
   async updatePayload(application: Application): Promise<Application | null | Error> {
     try {
       if (application.id === null) {
@@ -111,7 +112,7 @@ export class ApplicationRepository {
       const rows = await this.c.var.database
         .update(applications)
         .set({ payload: JSON.stringify(application.payload) })
-        .where(eq(applications.id, application.id))
+        .where(and(eq(applications.id, application.id), eq(applications.status, "pending")))
         .returning()
 
       const row = rows.at(0)
@@ -123,16 +124,23 @@ export class ApplicationRepository {
   }
 
   // 申請を削除する。承認記録も併せて削除する。
-  async delete(applicationId: number): Promise<null | Error> {
+  // pending 以外の申請は削除できない（0 行削除で null を返す）。
+  async delete(applicationId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.batch([
-        this.c.var.database
-          .delete(applicationApprovals)
-          .where(eq(applicationApprovals.applicationId, applicationId)),
-        this.c.var.database.delete(applications).where(eq(applications.id, applicationId)),
-      ])
+      const rows = await this.c.var.database
+        .delete(applications)
+        .where(and(eq(applications.id, applicationId), eq(applications.status, "pending")))
+        .returning({ id: applications.id })
 
-      return null
+      if (rows.length === 0) {
+        return null
+      }
+
+      await this.c.var.database
+        .delete(applicationApprovals)
+        .where(eq(applicationApprovals.applicationId, applicationId))
+
+      return true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete application")
     }
