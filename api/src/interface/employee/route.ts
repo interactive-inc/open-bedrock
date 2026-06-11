@@ -158,6 +158,10 @@ export const POST = factory.createHandlers(
         throw new BadRequestError("password must be at least 8 characters")
       }
 
+      if (created.reason === "email_conflict") {
+        throw new ConflictError("email already exists")
+      }
+
       throw new ConflictError("employee code already exists")
     }
 

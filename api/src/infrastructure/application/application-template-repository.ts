@@ -1,5 +1,7 @@
 import { ApplicationTemplate } from "@/domain/application/application-template"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { applicationTemplates } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -42,6 +44,12 @@ export class ApplicationTemplateRepository {
         ? new Error("failed to insert application_template")
         : ApplicationTemplate.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("application_template unique constraint violated", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert application_template")
     }
   }
