@@ -30,7 +30,6 @@ export function EmployeeTable(props: Props) {
           <TableHead>役職</TableHead>
           <TableHead>メール</TableHead>
           <TableHead>在籍状況</TableHead>
-          <TableHead>ロール</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -54,8 +53,6 @@ export function EmployeeTable(props: Props) {
             <TableCell>
               <EmployeeStatusBadge status={employee.status} />
             </TableCell>
-
-            <TableCell>{employee.role}</TableCell>
           </TableRow>
         ))}
       </TableBody>

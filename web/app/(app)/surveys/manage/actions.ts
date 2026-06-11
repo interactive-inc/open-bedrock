@@ -8,6 +8,7 @@ import { deleteSurvey } from "@/lib/api/delete-survey"
 import { getMe } from "@/lib/api/get-me"
 import { updateSurvey } from "@/lib/api/update-survey"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 // アンケート作成・編集フォームの useActionState 結果。
@@ -18,10 +19,16 @@ export type SurveyFormState = {
 
 const statusSchema = z.enum(["open", "closed"])
 
-const questionsJsonSchema = z.array(z.unknown())
+const questionsJsonSchema = z.array(
+  z.object({
+    id: z.string(),
+    type: z.enum(["scale", "choice", "text"]),
+    text: z.string(),
+  }),
+)
 
 // FormData の questions テキストを設問配列へ検証付きで変換する。空なら空配列、不正なら Error。
-function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<unknown> | Error {
+function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<SurveyQuestion> | Error {
   if (typeof value !== "string" || value.trim() === "") {
     return []
   }
@@ -30,7 +37,7 @@ function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<unknow
     const parsed = questionsJsonSchema.safeParse(JSON.parse(value))
 
     if (parsed.success === false) {
-      return new Error("設問は配列形式の JSON で入力してください")
+      return new Error("設問は id/type/text を持つ配列形式の JSON で入力してください")
     }
 
     return parsed.data

@@ -6,7 +6,7 @@ import { createEmployee } from "@/lib/api/create-employee"
 import { deleteEmployee } from "@/lib/api/delete-employee"
 import { getMe } from "@/lib/api/get-me"
 import { updateEmployee } from "@/lib/api/update-employee"
-import type { EmployeeStatus } from "@/lib/api/types/employee-types"
+import type { EmployeeRole, EmployeeStatus } from "@/lib/api/types/employee-types"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
@@ -26,6 +26,23 @@ export type EmployeeDeleteFormState = {
 }
 
 const employeeStatuses: ReadonlyArray<EmployeeStatus> = ["active", "leave", "retired"]
+
+const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "admin"]
+
+// FormData の文字列をロール enum へ検証付きで変換する。不正なら null。
+function toRole(value: FormDataEntryValue | null): EmployeeRole | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  for (const role of employeeRoles) {
+    if (role === value) {
+      return role
+    }
+  }
+
+  return null
+}
 
 // FormData の文字列を在籍状況 enum へ検証付きで変換する。不正なら null。
 function toStatus(value: FormDataEntryValue | null): EmployeeStatus | null {
@@ -70,7 +87,7 @@ export async function createEmployeeAction(
 
   const password = toText(formData.get("password"))
 
-  const role = toText(formData.get("role"))
+  const role = toRole(formData.get("role"))
 
   const status = toStatus(formData.get("status"))
 
@@ -127,7 +144,7 @@ export async function updateEmployeeAction(
 
   const email = toText(formData.get("email"))
 
-  const role = toText(formData.get("role"))
+  const role = toRole(formData.get("role"))
 
   const status = toStatus(formData.get("status"))
 

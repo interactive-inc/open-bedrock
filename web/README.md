@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# web
 
-## Getting Started
+open-karte の Web UI。Next.js (App Router) + React + Tailwind + shadcn/ui。
 
-First, run the development server:
+API（`api` ワークスペース）に HTTP で接続して動作する。データのソースオブトゥルースは常に API 側にあり、この UI は申請・承認・記録の閲覧と操作を提供する。
+
+## 開発
+
+リポジトリルートから:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make dev   # api / web / cli をまとめて起動
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+web 単体で起動する場合:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+bun run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ディレクトリ
 
-## Learn More
+- `app/(app)/` … 認証後の画面。ドメインごとのルートに page.tsx とコンポーネントを collocation
+- `app/(auth)/` … ログイン画面
+- `components/` … 画面横断の共有コンポーネント
+- `components/ui/` … shadcn 生成物（直接編集しない）
+- `components/ui.custom/` … shadcn をラップした独自コンポーネント
+- `lib/api/` … API クライアント関数（1 関数 1 ファイル）
+- `lib/<domain>/` … 権限判定などのドメインロジック
 
-To learn more about Next.js, take a look at the following resources:
+## 規約
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+コーディング規約は `.claude/rules/` を参照。変更後は `vp check` を通すこと。

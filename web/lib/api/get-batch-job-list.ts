@@ -5,7 +5,7 @@ import { createClient } from "@/lib/api/hc-client"
 export async function getBatchJobList() {
   const client = await createClient()
 
-  const response = await client.batch.$get()
+  const response = await client.batch.$get({ query: {} })
 
   if (response.status >= 400) {
     return new Error("failed to load batch jobs")
