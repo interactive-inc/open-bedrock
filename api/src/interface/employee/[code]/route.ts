@@ -112,6 +112,10 @@ export const PUT = factory.createHandlers(
         throw new ForbiddenError("cannot remove the last admin")
       }
 
+      if (updated.reason === "email_conflict") {
+        throw new ConflictError("email already exists")
+      }
+
       throw new ForbiddenError()
     }
 
