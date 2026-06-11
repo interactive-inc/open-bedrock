@@ -49,6 +49,11 @@ export class WithdrawCareerApplication {
       return deleted
     }
 
+    // リポジトリ層の status guard で並行変更を検出した場合
+    if (deleted !== null && "reason" in deleted) {
+      return { reason: "application_decided" }
+    }
+
     return { reason: "withdrawn" }
   }
 }

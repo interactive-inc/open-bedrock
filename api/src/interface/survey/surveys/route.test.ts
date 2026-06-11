@@ -108,6 +108,21 @@ describe("GET /surveys", () => {
     }
   })
 
+  test("returns only 1 survey when limit=1", async () => {
+    const response = await request({ path: "/surveys?limit=1", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(surveyListItemResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+      expect(parsed.data[0]?.status).toBe("open")
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/surveys", token: null })
 

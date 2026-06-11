@@ -145,6 +145,20 @@ describe("GET /skills", () => {
     }
   })
 
+  test("returns only 1 skill when limit=1", async () => {
+    const response = await request({ path: "/skills?limit=1", token: await memberToken() })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(skillResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/skills", token: null })
 

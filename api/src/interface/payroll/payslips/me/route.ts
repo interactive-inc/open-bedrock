@@ -9,7 +9,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { payslips } from "@/schema"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
-import { and, eq } from "drizzle-orm"
+import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // GET /payslips/me — 本人の給与明細一覧（period で絞り込み可能）
@@ -50,12 +50,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     conditions.push(eq(payslips.period, parsed.data.period))
   }
 
-  const rows = await c.var.database
-    .select()
-    .from(payslips)
-    .where(and(...conditions))
-    .limit(limit)
-    .offset(offset)
+  const [rows, totalRows] = await Promise.all([
+    c.var.database
+      .select()
+      .from(payslips)
+      .where(and(...conditions))
+      .limit(limit)
+      .offset(offset),
+    c.var.database
+      .select({ total: count() })
+      .from(payslips)
+      .where(and(...conditions)),
+  ])
 
   const responseBody = rows.map((row) => ({
     id: row.id,
@@ -69,5 +75,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

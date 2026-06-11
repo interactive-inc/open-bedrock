@@ -1,7 +1,7 @@
 import { ReviewForm } from "@/domain/review/review-form"
 import type { Context } from "@/env"
 import { reviewForms } from "@/schema"
-import { eq } from "drizzle-orm"
+import { and, eq, ne } from "drizzle-orm"
 
 export class ReviewFormRepository {
   constructor(private readonly c: Context) {}
@@ -43,7 +43,7 @@ export class ReviewFormRepository {
           status: reviewForm.status,
           submittedAt: reviewForm.submittedAt,
         })
-        .where(eq(reviewForms.id, reviewForm.id))
+        .where(and(eq(reviewForms.id, reviewForm.id), ne(reviewForms.status, "submitted")))
         .returning()
 
       const row = rows.at(0)

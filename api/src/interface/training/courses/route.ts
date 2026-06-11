@@ -1,6 +1,7 @@
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { trainingCourses } from "@/schema"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -10,6 +11,12 @@ export const GET = factory.createHandlers(
   verifyBearer,
   zValidator("query", z.object({ category: z.string().optional(), status: z.string().optional() })),
   async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
     const query = c.req.valid("query")
 
     const conditions: Array<SQL> = []

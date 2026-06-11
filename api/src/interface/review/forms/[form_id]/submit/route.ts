@@ -20,7 +20,22 @@ export const POST = factory.createHandlers(
     z.object({
       // スコアは 0〜100 の整数。負数・小数・巨大値は averageScore 算出を歪めるため弾く。
       score: z.number().int().min(0).max(100).optional(),
-      answers: z.array(z.unknown()).max(200).optional(),
+      // 要素数に加えてシリアライズ後のバイト長も制限し、巨大ペイロードの格納を防ぐ
+      // （survey の answers_json が jsonPayloadSchema(10_000) で課す上限と同じ値）。
+      answers: z
+        .array(z.unknown())
+        .max(200)
+        .refine(
+          (value) => {
+            try {
+              return JSON.stringify(value).length <= 10_000
+            } catch {
+              return false
+            }
+          },
+          { message: "answers exceeds 10000 characters when serialized" },
+        )
+        .optional(),
       comment: z.string().max(3_000).optional(),
     }),
   ),

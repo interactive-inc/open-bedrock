@@ -43,14 +43,16 @@ export class DeleteExpense {
       return { reason: "not_deletable" }
     }
 
-    const deleted = await repository.delete(command.expenseId)
-
-    if (deleted instanceof Error) {
-      return deleted
-    }
-
-    if (deleted === null) {
-      return { reason: "not_deletable" }
+    // expense_approvals と expenses を D1 batch でアトミックに削除する。
+    // これにより承認処理との TOCTOU 競合で expense_approvals が孤児化するリスクを排除する。
+    try {
+      const db = this.c.env.DB
+      await db.batch([
+        db.prepare("DELETE FROM expense_approvals WHERE expense_id = ?1").bind(command.expenseId),
+        db.prepare("DELETE FROM expenses WHERE id = ?1").bind(command.expenseId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete expense")
     }
 
     return { reason: "deleted" }
