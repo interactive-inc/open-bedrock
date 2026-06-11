@@ -21,6 +21,10 @@ export type RecipientNotFound = { reason: "recipient_not_found" }
 
 export type InvalidThanks = { reason: "invalid_thanks" }
 
+export type SenderInactive = { reason: "sender_inactive" }
+
+export type RecipientInactive = { reason: "recipient_inactive" }
+
 export type SelfThanks = { reason: "self_thanks" }
 
 export type InvalidPoints = { reason: "invalid_points" }
@@ -39,7 +43,9 @@ export class SendThanks {
   ): Promise<
     | Thanks
     | SenderNotFound
+    | SenderInactive
     | RecipientNotFound
+    | RecipientInactive
     | SelfThanks
     | InvalidThanks
     | InvalidPoints
@@ -60,6 +66,10 @@ export class SendThanks {
       return { reason: "sender_not_found" }
     }
 
+    if (sender.status === "retired") {
+      return { reason: "sender_inactive" }
+    }
+
     const recipient = await employeeRepository.findByCode(command.recipientEmployeeCode)
 
     if (recipient instanceof Error) {
@@ -68,6 +78,10 @@ export class SendThanks {
 
     if (recipient === null) {
       return { reason: "recipient_not_found" }
+    }
+
+    if (recipient.status === "retired") {
+      return { reason: "recipient_inactive" }
     }
 
     if (sender.id === recipient.id) {
