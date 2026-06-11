@@ -112,13 +112,26 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 部署ノードを削除する。子ノード・所属の検査は呼び出し側で行う。
-  async delete(code: string): Promise<null | Error> {
+  // 子ノード・所属メンバーが存在しない場合のみ部署ノードを削除する。
+  // D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
+  // 0 行削除（子 or メンバーが存在）なら null を返す。
+  async delete(code: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(orgDepartments).where(eq(orgDepartments.code, code))
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `DELETE FROM org_departments
+           WHERE code = ?1
+             AND NOT EXISTS (SELECT 1 FROM org_departments WHERE parent_code = ?1)
+             AND NOT EXISTS (SELECT 1 FROM org_memberships WHERE department_code = ?1)`,
+        ).bind(code),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+      ])
 
-      return null
+      return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete org_department")
     }
   }
@@ -132,4 +145,14 @@ export class OrgDepartmentRepository {
       order: row.sortOrder,
     })
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
+// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
