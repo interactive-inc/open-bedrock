@@ -58,7 +58,7 @@ export const PUT = factory.createHandlers(
     z.object({
       parent_code: codeSchema.nullable().optional(),
       manager_employee_code: codeSchema.nullable().optional(),
-      order: z.number(),
+      order: z.number().int(),
     }),
   ),
   async (c) => {
