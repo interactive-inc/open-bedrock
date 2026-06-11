@@ -18,6 +18,8 @@ export type InsufficientBalance = { reason: "insufficient_balance" }
 
 export type SelfApprovalForbidden = { reason: "self_approval_forbidden" }
 
+export type SelfDecisionForbidden = { reason: "self_decision" }
+
 // 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
 // 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
 export type FulfilledWithStockError = {
@@ -32,6 +34,7 @@ export type DecideResult =
   | AlreadyDecided
   | InsufficientBalance
   | SelfApprovalForbidden
+  | SelfDecisionForbidden
   | FulfilledWithStockError
   | Error
 
@@ -52,6 +55,10 @@ export class DecideRedemption {
 
     if (existing === null) {
       return { reason: "redemption_not_found" }
+    }
+
+    if (existing.employeeId === command.deciderId) {
+      return { reason: "self_decision" }
     }
 
     if (command.action === "reject") {

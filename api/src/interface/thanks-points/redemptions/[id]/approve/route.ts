@@ -54,7 +54,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("insufficient balance")
     }
 
-    if (result.reason === "self_approval_forbidden") {
+    if (result.reason === "self_approval_forbidden" || result.reason === "self_decision") {
       throw new ForbiddenError("cannot approve own redemption")
     }
 
