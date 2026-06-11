@@ -38,6 +38,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new DecideLeaveRequest(c).run({
+      viewerRole: session.role,
       leaveRequestId,
       approverId: session.employeeId,
       action: "reject",
@@ -49,6 +50,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("failure" in updated) {
+      if (updated.failure === "forbidden") {
+        throw new ForbiddenError()
+      }
+
       if (updated.failure === "self_approval") {
         throw new ForbiddenError()
       }
