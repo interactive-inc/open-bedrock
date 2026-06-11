@@ -41,6 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   if ("reason" in result) {
+    // 他人の通知も 404 にして、連番 ID による存在推測（列挙）を防ぐ。
     throw new NotFoundError("notification not found")
   }
 
