@@ -39,6 +39,10 @@ describe("ReviewFormRepository", () => {
   test("update persists the submission", async () => {
     const { context, db } = createTestContext()
 
+    await seedD1(db, "review_cycles", [
+      { id: 1, title: "2026-H1", period: "2026-H1", status: "open", due_date: null },
+    ])
+
     await seedD1(db, "review_forms", [
       {
         id: 1,
@@ -67,7 +71,7 @@ describe("ReviewFormRepository", () => {
 
     expect(updated).toBeInstanceOf(ReviewForm)
 
-    if (updated instanceof Error || updated === null) {
+    if (updated instanceof Error || updated === null || (updated !== null && "reason" in updated)) {
       throw new Error("update failed")
     }
 
