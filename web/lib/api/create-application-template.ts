@@ -4,13 +4,13 @@ import type {
   ApplicationTemplateResponse,
 } from "@/lib/api/types/application-template-types"
 
-// POST /templates。管理権限が申請テンプレートを作成する。
+// POST /application-templates。管理権限が申請テンプレートを作成する。
 export async function createApplicationTemplate(
   request: ApplicationTemplateCreateRequest,
 ): Promise<ApplicationTemplateResponse | Error> {
   const client = await createClient()
 
-  const response = await client.templates.$post({
+  const response = await client["application-templates"].$post({
     json: {
       code: request.code,
       name: request.name,
