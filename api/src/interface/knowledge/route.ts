@@ -10,7 +10,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import { and, count, eq, or, sql } from "drizzle-orm"
+import { and, count, desc, eq, or, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -55,7 +55,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const where = conditions.length === 0 ? undefined : and(...conditions)
 
   const [rows, totalRows] = await Promise.all([
-    c.var.database.select().from(knowledgeArticles).where(where).limit(limit).offset(offset),
+    c.var.database
+      .select()
+      .from(knowledgeArticles)
+      .where(where)
+      .orderBy(desc(knowledgeArticles.id))
+      .limit(limit)
+      .offset(offset),
     c.var.database.select({ total: count() }).from(knowledgeArticles).where(where),
   ])
 
