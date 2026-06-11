@@ -64,7 +64,7 @@ export class LifeEvent implements Props {
       eventType: row.eventType,
       eventDate: row.eventDate,
       detail: row.detail,
-      status: row.status,
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }
