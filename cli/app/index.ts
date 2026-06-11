@@ -202,6 +202,8 @@ import salaryRevisionCorrectHandler from "@/app/salary-revision/correct/route"
 import salaryRevisionCancelHandler from "@/app/salary-revision/cancel/route"
 import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
 import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
+import reviewCycleOpenHandler from "@/app/review/cycle/open/route"
+import reviewCycleCloseHandler from "@/app/review/cycle/close/route"
 import cmd1on1DeleteHandler from "@/app/1on1/delete/route"
 import cmd1on1EditHandler from "@/app/1on1/edit/route"
 import cmd1on1MineHandler from "@/app/1on1/mine/route"
@@ -508,6 +510,8 @@ routes.post("/salary-revision/correct", ...salaryRevisionCorrectHandler)
 routes.post("/salary-revision/cancel", ...salaryRevisionCancelHandler)
 routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
 routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
+routes.post("/review/cycle/open", ...reviewCycleOpenHandler)
+routes.post("/review/cycle/close", ...reviewCycleCloseHandler)
 
 // #100: 未登録だったルートを追加（ファイル構造から POST パスを導出）
 routes.post("/1on1/delete", ...cmd1on1DeleteHandler)
