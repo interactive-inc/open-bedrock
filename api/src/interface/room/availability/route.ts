@@ -37,6 +37,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       ),
     )
     .where(gte(rooms.capacity, query.capacity))
+    .limit(200)
 
   // 会議室 id ごとに「最初に出現した順」でグループ化する。Map の挿入順を保つので
   // 元実装と同じ会議室並びを保つ。

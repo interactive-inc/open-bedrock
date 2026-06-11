@@ -26,13 +26,24 @@ export class ThanksRewardRepository {
   }
 
   // カタログ一覧を新しい順で取得する。activeOnly=true なら有効なものだけ。
-  async findMany(props: { activeOnly: boolean }): Promise<ReadonlyArray<ThanksReward> | Error> {
+  async findMany(props: {
+    activeOnly: boolean
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<ThanksReward> | Error> {
     try {
       const base = this.c.var.database.select().from(thanksRewards)
 
       const rows = props.activeOnly
-        ? await base.where(eq(thanksRewards.isActive, true)).orderBy(desc(thanksRewards.id))
-        : await base.orderBy(desc(thanksRewards.id))
+        ? await base
+            .where(eq(thanksRewards.isActive, true))
+            .orderBy(desc(thanksRewards.id))
+            .limit(props.limit)
+            .offset(props.offset)
+        : await base
+            .orderBy(desc(thanksRewards.id))
+            .limit(props.limit)
+            .offset(props.offset)
 
       return rows.map((row) => ThanksReward.fromRow(row))
     } catch (error) {
