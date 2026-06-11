@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { shiftPatterns } from "@/schema"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 
 export class ShiftPatternRepository {
   constructor(private readonly c: Context) {}
@@ -92,11 +92,20 @@ export class ShiftPatternRepository {
     }
   }
 
-  async delete(patternId: number): Promise<null | Error> {
+  // 割当から参照されていない場合のみ削除する。チェックと削除を atomic に行い、
+  // 競合状態でアサインが挿入されても参照整合性を壊さない。
+  // 0 行削除（アサインが存在した等）は null、1 行以上削除は true を返す。
+  async delete(patternId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(shiftPatterns).where(eq(shiftPatterns.id, patternId))
+      const result = await this.c.var.database.run(
+        sql`DELETE FROM shift_patterns
+            WHERE id = ${patternId}
+            AND NOT EXISTS (
+              SELECT 1 FROM shift_assignments WHERE pattern_id = ${patternId}
+            )`,
+      )
 
-      return null
+      return result.meta.changes === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete shift pattern")
     }

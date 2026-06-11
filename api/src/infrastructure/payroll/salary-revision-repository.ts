@@ -91,7 +91,11 @@ export class SalaryRevisionRepository {
 
   // 既存の給与改定の適用日・前回基本給・改定後基本給・理由を訂正する。id は採番済みの前提。
   // 0 行更新（削除済み等）は null を返す。
-  async update(salaryRevision: SalaryRevision): Promise<SalaryRevision | null | Error> {
+  // 適用日の変更で UNIQUE 制約（employee_id, effective_date）に当たった場合は
+  // UniqueConstraintError を返す。
+  async update(
+    salaryRevision: SalaryRevision,
+  ): Promise<SalaryRevision | UniqueConstraintError | null | Error> {
     if (salaryRevision.id === null) {
       return new Error("salary revision id is required to update")
     }
@@ -112,6 +116,12 @@ export class SalaryRevisionRepository {
 
       return row === undefined ? null : SalaryRevision.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError(
+          "salary revision already exists for the employee and effective date",
+          { cause: error },
+        )
+      }
       return error instanceof Error ? error : new Error("failed to update salary revision")
     }
   }
