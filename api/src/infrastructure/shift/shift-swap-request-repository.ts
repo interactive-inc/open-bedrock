@@ -1,9 +1,7 @@
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
 import type { Context } from "@/env"
 import { shiftSwapRequests } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
-
-export type AlreadyExistsError = { reason: "already_exists" }
+import { and, asc, eq, sql } from "drizzle-orm"
 
 export class ShiftSwapRequestRepository {
   constructor(private readonly c: Context) {}
@@ -67,31 +65,40 @@ export class ShiftSwapRequestRepository {
     }
   }
 
-  async create(
-    swapRequest: ShiftSwapRequest,
-  ): Promise<ShiftSwapRequest | AlreadyExistsError | Error> {
+  // pending 重複がなければ INSERT し、既に pending があれば null を返す。
+  // INSERT ... SELECT ... WHERE NOT EXISTS でチェックと挿入をアトミックに行い TOCTOU を防ぐ。
+  async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO shift_swap_requests (requester_employee_id, target_employee_id, date, note, status, approved_at)
+            SELECT ${swapRequest.requesterEmployeeId}, ${swapRequest.targetEmployeeId},
+                   ${swapRequest.date}, ${swapRequest.note}, ${swapRequest.status}, ${swapRequest.approvedAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM shift_swap_requests
+              WHERE requester_employee_id = ${swapRequest.requesterEmployeeId}
+                AND target_employee_id = ${swapRequest.targetEmployeeId}
+                AND date = ${swapRequest.date}
+                AND status = 'pending'
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      // last_insert_rowid で採番された行を取得する
       const rows = await this.c.var.database
-        .insert(shiftSwapRequests)
-        .values({
-          requesterEmployeeId: swapRequest.requesterEmployeeId,
-          targetEmployeeId: swapRequest.targetEmployeeId,
-          date: swapRequest.date,
-          note: swapRequest.note,
-          status: swapRequest.status,
-          approvedAt: swapRequest.approvedAt,
-        })
-        .returning()
+        .select()
+        .from(shiftSwapRequests)
+        .where(eq(shiftSwapRequests.id, Number(result.meta.last_row_id)))
+        .limit(1)
 
       const row = rows.at(0)
 
       return row === undefined
-        ? new Error("failed to insert shift swap request")
+        ? new Error("failed to retrieve inserted shift swap request")
         : ShiftSwapRequest.fromRow(row)
     } catch (error) {
-      if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
-        return { reason: "already_exists" }
-      }
       return error instanceof Error ? error : new Error("failed to insert shift swap request")
     }
   }
