@@ -2,6 +2,7 @@ import { Application } from "@/domain/application/application"
 import { ApplicationApproval } from "@/domain/application/application-approval"
 import type { Context } from "@/env"
 import { applicationApprovals, applications } from "@/schema"
+import { DEFAULT_LIST_LIMIT } from "@/interface/shared/to-bounded-int"
 import { and, count, desc, eq } from "drizzle-orm"
 
 export class ApplicationRepository {
@@ -19,8 +20,9 @@ export class ApplicationRepository {
         .where(eq(applications.applicantId, applicantId))
         .orderBy(desc(applications.createdAt))
 
-      const rows =
-        opts !== undefined ? await query.limit(opts.limit).offset(opts.offset) : await query
+      const rows = opts !== undefined
+        ? await query.limit(opts.limit).offset(opts.offset)
+        : await query.limit(DEFAULT_LIST_LIMIT)
 
       const applicationList: Array<Application> = []
 
