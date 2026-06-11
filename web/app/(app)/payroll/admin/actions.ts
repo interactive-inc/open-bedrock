@@ -176,6 +176,7 @@ export async function correctPayslipAction(
   }
 
   revalidatePath("/payroll")
+  revalidatePath("/payroll/[id]", "page")
 
   return { ok: true, error: null }
 }
@@ -204,6 +205,7 @@ export async function cancelPayslipAction(
   }
 
   revalidatePath("/payroll")
+  revalidatePath("/payroll/[id]", "page")
 
   return { ok: true, error: null }
 }
