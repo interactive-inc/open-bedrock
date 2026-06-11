@@ -84,19 +84,22 @@ export class ResignationRepository {
     }
   }
 
-  // 退職申請の退職希望日・最終出社日・理由を更新する。
-  async update(resignation: Resignation): Promise<Resignation | Error> {
+  // 退職申請の退職希望日・最終出社日・理由を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  async update(resignation: Resignation): Promise<Resignation | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(resignations)
         .set({
           resignationDate: resignation.resignationDate,
           lastWorkingDate: resignation.lastWorkingDate,
           reason: resignation.reason,
         })
-        .where(eq(resignations.id, resignation.id))
+        .where(
+          and(eq(resignations.id, resignation.id), eq(resignations.status, "requested")),
+        )
+        .returning()
 
-      return resignation
+      return rows.length === 0 ? null : resignation
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update resignation")
     }

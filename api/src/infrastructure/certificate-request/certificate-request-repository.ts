@@ -1,7 +1,7 @@
 import { CertificateRequest } from "@/domain/certificate-request/certificate-request"
 import type { Context } from "@/env"
 import { certificateRequests } from "@/schema"
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 
 export class CertificateRequestRepository {
   constructor(private readonly c: Context) {}
@@ -56,10 +56,10 @@ export class CertificateRequestRepository {
     }
   }
 
-  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。
-  async update(certificateRequest: CertificateRequest): Promise<CertificateRequest | Error> {
+  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  async update(certificateRequest: CertificateRequest): Promise<CertificateRequest | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(certificateRequests)
         .set({
           certificateType: certificateRequest.certificateType,
@@ -67,9 +67,15 @@ export class CertificateRequestRepository {
           neededBy: certificateRequest.neededBy,
           note: certificateRequest.note,
         })
-        .where(eq(certificateRequests.id, certificateRequest.id))
+        .where(
+          and(
+            eq(certificateRequests.id, certificateRequest.id),
+            eq(certificateRequests.status, "requested"),
+          ),
+        )
+        .returning()
 
-      return certificateRequest
+      return rows.length === 0 ? null : certificateRequest
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update certificate_request")
     }
