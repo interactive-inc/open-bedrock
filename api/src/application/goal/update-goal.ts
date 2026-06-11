@@ -66,7 +66,7 @@ export class UpdateGoal {
     }
 
     if (saved === null) {
-      return { reason: "goal_not_found" }
+      return { reason: "goal_finalized" }
     }
 
     return saved

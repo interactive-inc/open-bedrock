@@ -23,6 +23,7 @@ import attendanceListHandler from "@/app/attendance/list/route"
 import attendanceMeHandler from "@/app/attendance/me/route"
 import attendanceSummaryHandler from "@/app/attendance/summary/route"
 import batchHandler from "@/app/batch/route"
+import batchMigratePasswordHashesHandler from "@/app/batch/migrate-password-hashes/route"
 import careerApplyHandler from "@/app/career/apply/[posting_id]/route"
 import careerHandler from "@/app/career/route"
 import careerPostingsHandler from "@/app/career/postings/route"
@@ -436,6 +437,7 @@ routes.post("/shift/swap", ...shiftSwapHandler)
 routes.post("/shift/swap-approve/:id?", ...shiftSwapApproveHandler)
 
 routes.post("/batch", ...batchHandler)
+routes.post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesHandler)
 routes.post("/dashboard", ...dashboardHandler)
 routes.post("/business-trip", ...businessTripHandler)
 routes.post("/business-trip/request", ...businessTripRequestHandler)

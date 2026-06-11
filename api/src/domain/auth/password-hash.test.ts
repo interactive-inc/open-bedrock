@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
 import { toPasswordHash } from "@/domain/auth/to-password-hash"
 import { verifyPassword } from "@/domain/auth/verify-password"
+import { isWrappedLegacyHash, wrapLegacyHash } from "@/domain/auth/wrap-legacy-hash"
 
 describe("toPasswordHash (PBKDF2 new format)", () => {
   test("returns a string with the pbkdf2 prefix and 4 colon-separated parts", async () => {
@@ -58,6 +59,36 @@ describe("verifyPassword (legacy format)", () => {
   })
 })
 
+describe("verifyPassword (wrapped-legacy format)", () => {
+  test("verifies a wrapped-legacy hash for the correct password", async () => {
+    const legacyHash = await toLegacyPasswordHash("my-secret")
+    const wrapped = await wrapLegacyHash(legacyHash)
+
+    expect(isWrappedLegacyHash(wrapped)).toBe(true)
+    expect(await verifyPassword("my-secret", wrapped)).toBe(true)
+  })
+
+  test("rejects the wrong password against a wrapped-legacy hash", async () => {
+    const legacyHash = await toLegacyPasswordHash("my-secret")
+    const wrapped = await wrapLegacyHash(legacyHash)
+
+    expect(await verifyPassword("wrong-password", wrapped)).toBe(false)
+  })
+
+  test("produces a different wrapped hash each call (random salt)", async () => {
+    const legacyHash = await toLegacyPasswordHash("password")
+    const a = await wrapLegacyHash(legacyHash)
+    const b = await wrapLegacyHash(legacyHash)
+
+    expect(a).not.toBe(b)
+  })
+
+  test("returns false for a malformed wrapped-legacy stored value", async () => {
+    expect(await verifyPassword("anything", "pbkdf2-wrapped-legacy:bad")).toBe(false)
+    expect(await verifyPassword("anything", "pbkdf2-wrapped-legacy:abc:def:ghi")).toBe(false)
+  })
+})
+
 describe("isLegacyPasswordHash", () => {
   test("returns false for new-format pbkdf2 strings", async () => {
     const hashed = await toPasswordHash("anything")
@@ -69,5 +100,33 @@ describe("isLegacyPasswordHash", () => {
     expect(
       isLegacyPasswordHash("44e344c78f1e77e914869063226486fc93854d35c34911ab34936b26c077d247"),
     ).toBe(true)
+  })
+
+  test("returns false for wrapped-legacy format", async () => {
+    const legacyHash = await toLegacyPasswordHash("password")
+    const wrapped = await wrapLegacyHash(legacyHash)
+
+    expect(isLegacyPasswordHash(wrapped)).toBe(false)
+  })
+})
+
+describe("isWrappedLegacyHash", () => {
+  test("returns true for pbkdf2-wrapped-legacy strings", async () => {
+    const legacyHash = await toLegacyPasswordHash("password")
+    const wrapped = await wrapLegacyHash(legacyHash)
+
+    expect(isWrappedLegacyHash(wrapped)).toBe(true)
+  })
+
+  test("returns false for new-format pbkdf2 strings", async () => {
+    const hashed = await toPasswordHash("anything")
+
+    expect(isWrappedLegacyHash(hashed)).toBe(false)
+  })
+
+  test("returns false for raw hex strings (legacy)", () => {
+    expect(
+      isWrappedLegacyHash("44e344c78f1e77e914869063226486fc93854d35c34911ab34936b26c077d247"),
+    ).toBe(false)
   })
 })

@@ -71,8 +71,15 @@ export class UpdateRoomReservation {
       return result
     }
 
-    // null は並行リクエストによる重複（存在は確認済みのため）
+    // null は「重複予約」か「並行削除」のどちらか — findById で区別する
     if (result === null) {
+      const stillExists = await reservationRepository.findById(command.reservationId)
+      if (stillExists instanceof Error) {
+        return stillExists
+      }
+      if (stillExists === null) {
+        return { reason: "reservation_not_found" }
+      }
       return { reason: "room_already_reserved" }
     }
 

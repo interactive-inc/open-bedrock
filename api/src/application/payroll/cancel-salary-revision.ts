@@ -41,6 +41,10 @@ export class CancelSalaryRevision {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "salary_revision_not_found" }
+    }
+
     return { reason: "cancelled" }
   }
 }

@@ -75,9 +75,7 @@ export class ReviewCycleRepository {
       const rows = await this.c.var.database
         .update(reviewCycles)
         .set({ status: reviewCycle.status })
-        .where(
-          and(eq(reviewCycles.id, reviewCycle.id), eq(reviewCycles.status, previousStatus)),
-        )
+        .where(and(eq(reviewCycles.id, reviewCycle.id), eq(reviewCycles.status, previousStatus)))
         .returning()
 
       const row = rows.at(0)
@@ -101,9 +99,7 @@ export class ReviewCycleRepository {
           period: reviewCycle.period,
           dueDate: reviewCycle.dueDate,
         })
-        .where(
-          and(ne(reviewCycles.status, "closed"), eq(reviewCycles.id, reviewCycle.id)),
-        )
+        .where(and(ne(reviewCycles.status, "closed"), eq(reviewCycles.id, reviewCycle.id)))
         .returning()
 
       const row = rows.at(0)

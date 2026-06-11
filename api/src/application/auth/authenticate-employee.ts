@@ -3,6 +3,7 @@ import { decoyPasswordHash } from "@/domain/auth/decoy-password-hash"
 import { isLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
 import { toPasswordHash } from "@/domain/auth/to-password-hash"
 import { verifyPassword } from "@/domain/auth/verify-password"
+import { isWrappedLegacyHash } from "@/domain/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -15,10 +16,9 @@ export type Command = {
 
 export type InvalidCredentials = { reason: "invalid_credentials" }
 
-/**
- * メールとパスワードを照合し、成功時にアクセストークンを発行する。
- * 旧フォーマット（固定ソルト SHA-256）で認証成功した場合は、新フォーマット（PBKDF2）で再ハッシュして書き戻す。
- */
+// メールとパスワードを照合し、成功時にアクセストークンを発行する。
+// 旧フォーマット（固定ソルト SHA-256）またはラップ済み旧形式（pbkdf2-wrapped-legacy）で
+// 認証成功した場合は、新フォーマット（PBKDF2）で再ハッシュして書き戻す。
 export class AuthenticateEmployee {
   constructor(private readonly c: Context) {}
 
@@ -46,10 +46,11 @@ export class AuthenticateEmployee {
       return { reason: "invalid_credentials" }
     }
 
-    if (isLegacyPasswordHash(found.passwordHash)) {
+    // 旧形式またはラップ済み旧形式は純正 PBKDF2 に昇格する。
+    // 書き戻し失敗はログイン体験を妨げないため握りつぶす（次回ログインで再試行される）。
+    if (isLegacyPasswordHash(found.passwordHash) || isWrappedLegacyHash(found.passwordHash)) {
       const newHash = await toPasswordHash(command.password)
 
-      // 書き戻し失敗はログイン体験を妨げないため握りつぶす（次回ログインで再試行される）。
       await employeeRepository.updatePasswordHash(found.id, newHash)
     }
 
