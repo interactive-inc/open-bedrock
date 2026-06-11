@@ -58,7 +58,7 @@ export class UpdateExpense {
     }
 
     if (saved === null) {
-      return { reason: "expense_not_found" }
+      return { reason: "not_editable" }
     }
 
     return saved
