@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { shiftAssignments } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, isNull } from "drizzle-orm"
 
 export class ShiftAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -135,13 +135,14 @@ export class ShiftAssignmentRepository {
     }
   }
 
-  async delete(assignmentId: number): Promise<null | Error> {
+  async delete(assignmentId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(shiftAssignments)
-        .where(eq(shiftAssignments.id, assignmentId))
+        .where(and(eq(shiftAssignments.id, assignmentId), isNull(shiftAssignments.publishedAt)))
+        .returning({ id: shiftAssignments.id })
 
-      return null
+      return rows.length === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete shift assignment")
     }
