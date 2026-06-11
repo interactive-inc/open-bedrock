@@ -112,12 +112,15 @@ export class BusinessTripRepository {
     }
   }
 
-  // 出張申請を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 出張申請を削除する。status が requested のときのみ削除し、0 行削除は null を返す。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(businessTrips).where(eq(businessTrips.id, id))
+      const rows = await this.c.var.database
+        .delete(businessTrips)
+        .where(and(eq(businessTrips.id, id), eq(businessTrips.status, "requested")))
+        .returning({ id: businessTrips.id })
 
-      return null
+      return rows.length === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete business_trip")
     }
