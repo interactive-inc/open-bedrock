@@ -89,7 +89,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const survey = Survey.fromRow(surveyRow)
 
   if (survey instanceof Error) {
-    throw new InternalError(survey.message)
+    throw new InternalError("internal server error")
   }
 
   for (const candidate of survey.questionsJson) {
