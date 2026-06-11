@@ -43,7 +43,16 @@ describe("SurveyRepository", () => {
   })
 
   test("createResponse then findResponseBySurveyIdAndRespondentId round-trips the response", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "surveys", [
+      {
+        id: 1,
+        title: "テスト調査",
+        status: "open",
+        questions_json: JSON.stringify([{ id: "q1", label: "満足度" }]),
+      },
+    ])
 
     const repository = new SurveyRepository(context)
 

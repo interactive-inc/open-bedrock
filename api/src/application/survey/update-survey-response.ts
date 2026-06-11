@@ -61,6 +61,10 @@ export class UpdateSurveyResponse {
       return { reason: "response_not_found" }
     }
 
+    if (!(result instanceof Error) && "reason" in result) {
+      return { reason: "survey_not_open" }
+    }
+
     return result
   }
 }

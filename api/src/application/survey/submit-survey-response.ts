@@ -3,6 +3,7 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import {
   type AlreadySubmittedError,
+  type SurveyNotOpenError,
   SurveyRepository,
 } from "@/infrastructure/survey/survey-repository"
 
@@ -71,6 +72,10 @@ export class SubmitSurveyResponse {
     }
 
     if ("reason" in created) {
+      if ((created as SurveyNotOpenError).reason === "survey_not_open") {
+        return { reason: "survey_not_open" }
+      }
+
       return created as AlreadySubmittedError
     }
 

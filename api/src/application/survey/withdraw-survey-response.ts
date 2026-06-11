@@ -59,6 +59,10 @@ export class WithdrawSurveyResponse {
       return { reason: "response_not_found" }
     }
 
+    if (deleted !== true && "reason" in deleted) {
+      return { reason: "survey_not_open" }
+    }
+
     return { reason: "withdrawn" }
   }
 }
