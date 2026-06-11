@@ -17,4 +17,12 @@ URL は次の規約で統一する。
 - 承認待ち一覧は /inbox サブリソース(/expenses/inbox、/leave/requests/inbox)
 - 状態遷移は資源配下の動詞 POST(/applications/:id/approve、/review-cycles/:cycle_id/open、/attendance/clock-in)
 
+## リスト系レスポンス
+
+limit と offset を受けるリスト系 GET は、配列ではなく data と total を持つオブジェクトを返す。total は絞り込み条件適用後・limit/offset 適用前の総件数で、クライアントはこれで次ページの有無を判定する。
+
+```json
+{ "data": [], "total": 0 }
+```
+
 ルートの一覧は api/src/app.ts を、各エンドポイントの入出力は api/src/interface 配下の実装を参照する。
