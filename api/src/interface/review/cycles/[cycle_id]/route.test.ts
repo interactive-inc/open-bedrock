@@ -162,4 +162,16 @@ describe("DELETE /review-cycles/:cycle_id", () => {
 
     expect(response.status).toBe(403)
   })
+
+  test("open cycle cannot be deleted (409)", async () => {
+    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
+
+  test("closed cycle cannot be deleted (409)", async () => {
+    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
 })
