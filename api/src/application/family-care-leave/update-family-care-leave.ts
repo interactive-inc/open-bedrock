@@ -68,6 +68,10 @@ export class UpdateFamilyCareLeave {
 
     const saved = await familyCareLeaveRepository.update(updated)
 
+    if (saved instanceof Error) {
+      return saved
+    }
+
     if (saved === null) {
       return { reason: "not_modifiable" }
     }
