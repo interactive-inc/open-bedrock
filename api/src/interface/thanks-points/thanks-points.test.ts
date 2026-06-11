@@ -315,6 +315,35 @@ describe("rewards", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("?limit=1 returns only the first reward when 2 exist", async () => {
+    const db = await createTestDb()
+
+    // Create two rewards.
+    await request({
+      db,
+      path: "/thanks/rewards",
+      token: await adminToken(),
+      method: "POST",
+      body: { name: "図書カード", point_cost: 50, stock: null },
+    })
+
+    await request({
+      db,
+      path: "/thanks/rewards",
+      token: await adminToken(),
+      method: "POST",
+      body: { name: "クオカード", point_cost: 100, stock: null },
+    })
+
+    const list = await request({ db, path: "/thanks/rewards?limit=1", token: await senderToken() })
+
+    expect(list.status).toBe(200)
+
+    const parsed = z.array(z.object({ name: z.string() })).parse(await list.json())
+
+    expect(parsed.length).toBe(1)
+  })
 })
 
 describe("redemption", () => {

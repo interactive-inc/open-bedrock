@@ -9,6 +9,12 @@ import {
   InternalError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -22,8 +28,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rewards = await new ListRewards(c).run({
     activeOnly: canManageRewards(session.role) === false,
+    limit,
+    offset,
   })
 
   if (rewards instanceof Error) {
