@@ -55,6 +55,12 @@ export class CreateBusinessTrip {
       return businessTrip
     }
 
-    return await businessTripRepository.create(businessTrip)
+    const result = await businessTripRepository.create(businessTrip)
+
+    if (result === null) {
+      return { reason: "overlapping_trip" }
+    }
+
+    return result
   }
 }

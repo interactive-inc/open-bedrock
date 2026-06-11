@@ -58,7 +58,7 @@ export class CorrectPayslip {
     const updated = await payslipRepository.update(corrected)
 
     if (updated === null) {
-      return { reason: "payslip_not_found" }
+      return { reason: "not_editable" }
     }
 
     return updated
