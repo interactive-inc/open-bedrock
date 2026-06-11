@@ -7,13 +7,19 @@ export class FamilyCareLeaveRepository {
   constructor(private readonly c: Context) {}
 
   // 申出者本人の休業申出を開始日の昇順で返す。
-  async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
+  async findByEmployeeId(props: {
+    employeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(familyCareLeaves)
-        .where(eq(familyCareLeaves.employeeId, employeeId))
+        .where(eq(familyCareLeaves.employeeId, props.employeeId))
         .orderBy(asc(familyCareLeaves.startDate))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => FamilyCareLeave.fromRow(row))
     } catch (error) {

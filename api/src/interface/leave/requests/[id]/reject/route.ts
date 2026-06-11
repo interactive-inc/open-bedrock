@@ -13,13 +13,13 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// POST /leave/requests/:id/reject — 休暇申請を却下する
+// POST /leave/requests/:id/reject — 休暇申請を却下する（コメント必須）
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
-      comment: z.string().max(3_000).nullable(),
+      comment: z.string().min(1).max(3_000),
     }),
   ),
   async (c) => {
@@ -64,6 +64,20 @@ export const POST = factory.createHandlers(
       throw new NotFoundError("leave request not found")
     }
 
-    return c.json({ status: updated.status }, 200)
+    const responseBody = {
+      id: updated.id,
+      employee_id: updated.employeeId,
+      leave_type: updated.leaveType,
+      start_date: updated.startDate,
+      end_date: updated.endDate,
+      days: updated.days,
+      reason: updated.reason,
+      status: updated.status,
+      approver_id: updated.approverId,
+      decided_comment: updated.decidedComment,
+      created_at: updated.createdAt,
+    }
+
+    return c.json(responseBody, 200)
   },
 )
