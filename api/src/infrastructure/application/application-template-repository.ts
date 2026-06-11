@@ -1,7 +1,7 @@
 import { ApplicationTemplate } from "@/domain/application/application-template"
 import type { Context } from "@/env"
-import { applicationTemplates } from "@/schema"
-import { eq } from "drizzle-orm"
+import { applicationTemplates, applications } from "@/schema"
+import { and, eq } from "drizzle-orm"
 
 export class ApplicationTemplateRepository {
   constructor(private readonly c: Context) {}
@@ -71,14 +71,43 @@ export class ApplicationTemplateRepository {
     }
   }
 
-  // 申請テンプレートを削除する。
-  async delete(code: string): Promise<null | Error> {
+  // 申請テンプレートを削除する。pending 状態の申請が紐付いている場合は削除せず null を返す。
+  async delete(code: string): Promise<true | null | Error> {
     try {
+      // テンプレートの id を引く
+      const templateRows = await this.c.var.database
+        .select({ id: applicationTemplates.id })
+        .from(applicationTemplates)
+        .where(eq(applicationTemplates.code, code))
+        .limit(1)
+
+      const template = templateRows.at(0)
+
+      if (template === undefined) {
+        return true
+      }
+
+      // pending 申請があれば削除を拒否
+      const pendingRows = await this.c.var.database
+        .select({ id: applications.id })
+        .from(applications)
+        .where(
+          and(
+            eq(applications.templateId, template.id),
+            eq(applications.status, "pending"),
+          ),
+        )
+        .limit(1)
+
+      if (pendingRows.length > 0) {
+        return null
+      }
+
       await this.c.var.database
         .delete(applicationTemplates)
         .where(eq(applicationTemplates.code, code))
 
-      return null
+      return true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete application_template")
     }

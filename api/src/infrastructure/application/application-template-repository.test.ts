@@ -131,10 +131,49 @@ describe("ApplicationTemplateRepository", () => {
 
     const deleted = await repository.delete("expense")
 
-    expect(deleted).toBeNull()
+    expect(deleted).toBe(true)
 
     const found = await repository.findByCode("expense")
 
     expect(found).toBeNull()
+  })
+
+  test("delete returns null when pending applications exist", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "expense",
+        name: "経費申請",
+        category: "expense",
+        description: null,
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+
+    await seedD1(db, "applications", [
+      {
+        id: 1,
+        template_id: 1,
+        applicant_id: 1,
+        status: "pending",
+        current_step: null,
+        payload: "{}",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ])
+
+    const repository = new ApplicationTemplateRepository(context)
+
+    const deleted = await repository.delete("expense")
+
+    expect(deleted).toBeNull()
+
+    // テンプレートが残存していることを確認
+    const found = await repository.findByCode("expense")
+
+    expect(found).toBeInstanceOf(ApplicationTemplate)
   })
 })
