@@ -3,7 +3,6 @@ import { SurveyResponse } from "@/domain/survey/survey-response"
 import type { Context } from "@/env"
 import {
   type AlreadySubmittedError,
-  type SurveyNotOpenError,
   SurveyRepository,
 } from "@/infrastructure/survey/survey-repository"
 
