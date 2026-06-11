@@ -94,11 +94,15 @@ export class ExpenseRepository {
   }
 
   // 経費申請を削除する。
-  async delete(expenseId: number): Promise<null | Error> {
+  // pending 状態のみ削除可。承認済み・却下済み・精算済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+  async delete(expenseId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(expenses).where(eq(expenses.id, expenseId))
+      const rows = await this.c.var.database
+        .delete(expenses)
+        .where(and(eq(expenses.id, expenseId), eq(expenses.status, "pending")))
+        .returning({ id: expenses.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete expense")
     }

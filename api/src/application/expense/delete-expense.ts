@@ -49,6 +49,10 @@ export class DeleteExpense {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "not_deletable" }
+    }
+
     return { reason: "deleted" }
   }
 }
