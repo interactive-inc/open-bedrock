@@ -18,6 +18,8 @@ export type RoomAlreadyReserved = { reason: "room_already_reserved" }
 
 export type InvalidTimeRange = { reason: "invalid_time_range" }
 
+export type StartInPast = { reason: "start_in_past" }
+
 /**
  * 会議室予約の時刻と用途を変更する。本人以外の変更と、変更後の時間帯の重複を拒否する。
  */
@@ -32,10 +34,16 @@ export class UpdateRoomReservation {
     | NotReserver
     | RoomAlreadyReserved
     | InvalidTimeRange
+    | StartInPast
     | Error
   > {
     if (command.startAt >= command.endAt) {
       return { reason: "invalid_time_range" }
+    }
+
+    const now = this.c.env.NOW ?? new Date().toISOString()
+    if (command.startAt < now) {
+      return { reason: "start_in_past" }
     }
 
     const reservationRepository = new RoomReservationRepository(this.c)

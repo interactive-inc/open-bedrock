@@ -11,6 +11,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
+  UnprocessableEntityError,
 } from "@/interface/lib/errors"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
@@ -98,6 +99,10 @@ export const PUT = factory.createHandlers(
         throw new BadRequestError("end_at must be after start_at")
       }
 
+      if (reservation.reason === "start_in_past") {
+        throw new UnprocessableEntityError("start_at must be in the future")
+      }
+
       if (reservation.reason === "reservation_not_found") {
         throw new NotFoundError("reservation not found")
       }
@@ -132,10 +137,6 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "reservation_not_found") {
     throw new NotFoundError("reservation not found")
-  }
-
-  if (result.reason === "not_reserver") {
-    throw new ForbiddenError("not the reserver")
   }
 
   return c.body(null, 204)

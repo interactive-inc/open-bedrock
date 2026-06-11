@@ -87,7 +87,7 @@ async function postReservation(token: string | null, body: unknown): Promise<Res
     token,
     method: "POST",
     body,
-    now: "2026-05-29T09:00:00Z",
+    now: "2026-05-29T00:00:00Z",
   })
 }
 

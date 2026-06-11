@@ -33,6 +33,12 @@ export class BadRequestError extends HTTPException {
   }
 }
 
+export class UnprocessableEntityError extends HTTPException {
+  constructor(message: string) {
+    super(422, { message })
+  }
+}
+
 export class InternalError extends HTTPException {
   constructor(message: string) {
     super(500, { message })

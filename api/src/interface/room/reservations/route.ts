@@ -7,6 +7,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
+  UnprocessableEntityError,
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -51,6 +52,9 @@ export const POST = factory.createHandlers(
     if ("reason" in reservation) {
       if (reservation.reason === "invalid_time_range") {
         throw new BadRequestError("end_at must be after start_at")
+      }
+      if (reservation.reason === "start_in_past") {
+        throw new UnprocessableEntityError("start_at must be in the future")
       }
       if (reservation.reason === "room_not_found") {
         throw new NotFoundError("room not found")
