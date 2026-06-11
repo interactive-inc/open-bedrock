@@ -23,9 +23,7 @@ export class RentalReservationRepository {
             eq(rentalReservations.status, "requested"),
             lte(rentalReservations.startDate, query.endDate),
             gte(rentalReservations.endDate, query.startDate),
-            query.excludeId !== undefined
-              ? ne(rentalReservations.id, query.excludeId)
-              : undefined,
+            query.excludeId !== undefined ? ne(rentalReservations.id, query.excludeId) : undefined,
           ),
         )
 
