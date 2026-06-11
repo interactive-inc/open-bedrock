@@ -572,7 +572,10 @@ export const roomReservations = sqliteTable(
     endAt: text("end_at").notNull(),
     purpose: text("purpose"),
   },
-  (table) => [index("idx_room_reservations_reserver").on(table.reserverId)],
+  (table) => [
+    index("idx_room_reservations_reserver").on(table.reserverId),
+    index("idx_room_reservations_overlap").on(table.roomId, table.startAt, table.endAt),
+  ],
 )
 
 export type RoomReservationRow = InferSelectModel<typeof roomReservations>
