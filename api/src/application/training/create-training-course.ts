@@ -1,6 +1,7 @@
 import { canManageTraining } from "@/domain/training/can-manage-training"
 import { TrainingCourse } from "@/domain/training/training-course"
 import type { Context } from "@/env"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 
 export type Command = {
@@ -49,6 +50,12 @@ export class CreateTrainingCourse {
       isRequired: command.isRequired,
     })
 
-    return courseRepository.create(trainingCourse)
+    const result = await courseRepository.create(trainingCourse)
+
+    if (result instanceof UniqueConstraintError) {
+      return { reason: "course_code_conflict" }
+    }
+
+    return result
   }
 }

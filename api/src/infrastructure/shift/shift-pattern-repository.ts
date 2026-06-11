@@ -1,5 +1,7 @@
 import { ShiftPattern } from "@/domain/shift/shift-pattern"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { shiftPatterns } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -57,6 +59,9 @@ export class ShiftPatternRepository {
         ? new Error("failed to insert shift pattern")
         : ShiftPattern.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("shift pattern already exists", { cause: error })
+      }
       return error instanceof Error ? error : new Error("failed to insert shift pattern")
     }
   }

@@ -1,5 +1,7 @@
 import { ShiftAssignment } from "@/domain/shift/shift-assignment"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { shiftAssignments } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 
@@ -60,6 +62,9 @@ export class ShiftAssignmentRepository {
         ? new Error("failed to insert shift assignment")
         : ShiftAssignment.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("shift assignment already exists", { cause: error })
+      }
       return error instanceof Error ? error : new Error("failed to insert shift assignment")
     }
   }
