@@ -66,7 +66,7 @@ async function recordByKey(kv: KVNamespace, key: string): Promise<void> {
     const recent = existing.filter((t) => t >= cutoff)
     recent.push(now)
 
-    await kv.put(key, JSON.stringify(recent), { expirationTtl: WINDOW_SECONDS })
+    await kv.put(key, JSON.stringify(recent), { expirationTtl: WINDOW_SECONDS * 2 })
   } catch (error) {
     console.error("[login-rate-limit] KV write failed, skipping failure record:", error)
   }
