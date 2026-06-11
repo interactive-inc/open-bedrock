@@ -45,6 +45,12 @@ export class UpdateKnowledgeArticle {
       bodyMd: command.bodyMd,
     })
 
-    return await articleRepository.update(updated)
+    const result = await articleRepository.update(updated)
+
+    if (result === null) {
+      return { reason: "article_not_found" as const }
+    }
+
+    return result
   }
 }

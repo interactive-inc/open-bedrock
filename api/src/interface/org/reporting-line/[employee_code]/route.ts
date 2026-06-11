@@ -46,12 +46,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   >()
 
   for (const row of allRows) {
-    lookup.set(row.membership.employeeCode, {
-      employeeName: row.employeeName,
-      departmentCode: row.membership.departmentCode,
-      position: row.position,
-      managerEmployeeCode: row.membership.managerEmployeeCode,
-    })
+    // 同一 employeeCode が複数 membership を持つ場合、最初のエントリのみ使う
+    if (!lookup.has(row.membership.employeeCode)) {
+      lookup.set(row.membership.employeeCode, {
+        employeeName: row.employeeName,
+        departmentCode: row.membership.departmentCode,
+        position: row.position,
+        managerEmployeeCode: row.membership.managerEmployeeCode,
+      })
+    }
   }
 
   const entry = lookup.get(employeeCode)
