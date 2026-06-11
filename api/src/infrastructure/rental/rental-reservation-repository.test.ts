@@ -208,7 +208,7 @@ describe("RentalReservationRepository", () => {
 
     const deleted = await repository.delete(reservation.id)
 
-    expect(deleted).toBeNull()
+    expect(deleted).toBe(true)
 
     const found = await repository.findById(reservation.id)
 
