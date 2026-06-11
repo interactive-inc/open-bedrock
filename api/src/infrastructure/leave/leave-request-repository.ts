@@ -291,8 +291,8 @@ export class LeaveRequestRepository {
                 WHERE employee_id = ${leaveRequest.employeeId}
                   AND status IN ('pending', 'approved')
                   AND id != ${leaveRequest.id}
-                  AND start_date < ${leaveRequest.endDate}
-                  AND end_date > ${leaveRequest.startDate}
+                  AND start_date <= ${leaveRequest.endDate}
+                  AND end_date >= ${leaveRequest.startDate}
               )`,
       )
 
