@@ -1,7 +1,7 @@
 import { ReviewForm } from "@/domain/review/review-form"
 import type { Context } from "@/env"
 import { reviewCycles, reviewForms } from "@/schema"
-import { and, eq, inArray, ne, sql } from "drizzle-orm"
+import { and, eq, inArray, ne } from "drizzle-orm"
 
 export type CycleNotOpenError = { reason: "cycle_not_open" }
 
