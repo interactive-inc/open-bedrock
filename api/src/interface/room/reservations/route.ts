@@ -16,7 +16,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        room_id: z.number().int(),
+        room_id: z.number().int().positive(),
         start_at: z.string().datetime(),
         end_at: z.string().datetime(),
         purpose: z.string().max(3_000).nullable().optional(),
