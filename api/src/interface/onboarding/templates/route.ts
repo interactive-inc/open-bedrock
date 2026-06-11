@@ -72,6 +72,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const taskCountMap = new Map(taskCountRows.map((row) => [row.templateCode, row.total]))
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(onboardingTemplates)
+    .where(kind === undefined ? undefined : eq(onboardingTemplates.kind, kind))
+
   const body = templateRows.map((template) => ({
     code: template.code,
     name: template.name,
@@ -80,7 +85,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     task_count: taskCountMap.get(template.code) ?? 0,
   }))
 
-  return c.json(body, 200)
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /onboarding/templates — テンプレートを新規作成（管理権限のみ）

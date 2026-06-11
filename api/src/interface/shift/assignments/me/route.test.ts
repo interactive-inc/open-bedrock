@@ -103,15 +103,17 @@ describe("GET /shift/assignments/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(shiftAssignmentResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(shiftAssignmentResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
       // id=2 は publishedAt が null（下書き）なので除外され、公開済みの 1 件のみ返る
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data.every((row) => row.employee_id === 5)).toBe(true)
-      expect(parsed.data.every((row) => row.published_at !== null)).toBe(true)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data.every((row) => row.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.every((row) => row.published_at !== null)).toBe(true)
     }
   })
 
@@ -121,14 +123,16 @@ describe("GET /shift/assignments/me", () => {
       token: await tokenFor(5, "member"),
     })
 
-    const parsed = z.array(shiftAssignmentResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(shiftAssignmentResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
       // id=1 は公開済み (2026-06-01)。id=2 は下書き (2026-06-02) なので対象外。
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(1)
     }
   })
 
@@ -139,12 +143,14 @@ describe("GET /shift/assignments/me", () => {
       token: await tokenFor(5, "member"),
     })
 
-    const parsed = z.array(shiftAssignmentResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(shiftAssignmentResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
     }
   })
 

@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { careerApplications } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /career/applications/me — 応募者本人の公募応募一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -41,6 +43,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load applications")
   }
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(careerApplications)
+    .where(eq(careerApplications.applicantId, viewer.employeeId))
+
   const responseBody = applications.map((application) => ({
     id: application.id,
     posting_id: application.postingId,
@@ -49,5 +56,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: application.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

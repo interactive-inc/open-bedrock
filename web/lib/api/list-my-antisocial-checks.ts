@@ -13,5 +13,7 @@ export async function listMyAntisocialChecks(): Promise<
     return new Error("failed to load antisocial checks")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

@@ -11,5 +11,7 @@ export async function getShiftPatterns(): Promise<Array<ShiftPatternResponse> | 
     return new Error("failed to load shift patterns")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

@@ -19,7 +19,7 @@ import {
 } from "@/interface/lib/errors"
 import { employees, shiftSwapRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -66,6 +66,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(shiftSwapRequests)
+    .where(eq(shiftSwapRequests.status, "pending"))
+
   const responseBody = rows.map((row) => ({
     id: row.swapRequest.id,
     requester_employee_code: row.requesterCode ?? "",
@@ -76,7 +81,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     approved_at: row.swapRequest.approvedAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /shift/swap-requests — 認証された本人がシフト交代を申請する

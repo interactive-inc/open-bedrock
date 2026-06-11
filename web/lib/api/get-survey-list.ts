@@ -10,5 +10,7 @@ export async function getSurveyList() {
     return new Error("failed to load surveys")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

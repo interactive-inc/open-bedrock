@@ -17,5 +17,7 @@ export async function getGoalList(query: GoalSearchQuery) {
     return new Error("failed to load goals")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

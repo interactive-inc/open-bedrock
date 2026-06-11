@@ -76,12 +76,14 @@ describe("GET /review-cycles", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(reviewCycleResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(reviewCycleResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
     }
   })
 

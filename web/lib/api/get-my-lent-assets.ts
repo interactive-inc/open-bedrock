@@ -10,5 +10,7 @@ export async function getMyLentAssets() {
     return new Error("failed to load lent assets")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

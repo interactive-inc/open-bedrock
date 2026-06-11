@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { yearEndAdjustments } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /year-end-adjustments/me — 本人の年末調整申告一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const yearEndAdjustments = await new ListMyYearEndAdjustments(c).run({
+  const yearEndAdjustmentRows = await new ListMyYearEndAdjustments(c).run({
     employeeId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (yearEndAdjustments instanceof Error) {
+  if (yearEndAdjustmentRows instanceof Error) {
     throw new InternalError("failed to load year end adjustments")
   }
 
-  const responseBody = yearEndAdjustments.map((yearEndAdjustment) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(yearEndAdjustments)
+    .where(eq(yearEndAdjustments.employeeId, viewer.employeeId))
+
+  const responseBody = yearEndAdjustmentRows.map((yearEndAdjustment) => ({
     id: yearEndAdjustment.id,
     employee_id: yearEndAdjustment.employeeId,
     target_year: yearEndAdjustment.targetYear,
@@ -50,5 +57,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: yearEndAdjustment.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

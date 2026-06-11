@@ -11,5 +11,7 @@ export async function getBatchJobList() {
     return new Error("failed to load batch jobs")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

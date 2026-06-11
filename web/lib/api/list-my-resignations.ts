@@ -11,5 +11,7 @@ export async function listMyResignations(): Promise<ReadonlyArray<ResignationRes
     return new Error("failed to load resignations")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

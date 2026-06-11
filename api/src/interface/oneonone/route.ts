@@ -17,7 +17,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { employees, oneOnOnes } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { aliasedTable, desc, eq, or } from "drizzle-orm"
+import { aliasedTable, count, desc, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 const members = aliasedTable(employees, "members")
@@ -58,6 +58,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(oneOnOnes)
+    .where(
+      or(eq(oneOnOnes.memberId, session.employeeId), eq(oneOnOnes.managerId, session.employeeId)),
+    )
+
   const responseBody = rows.map((row) => ({
     id: row.oneOnOne.id,
     held_at: row.oneOnOne.heldAt,
@@ -68,7 +75,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     next_action: row.oneOnOne.nextAction,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // POST /oneonone — マネージャーが 1on1 を記録する

@@ -9,6 +9,7 @@ import {
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { shiftPatterns } from "@/schema"
+import { count } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -42,6 +43,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database.select({ total: count() }).from(shiftPatterns)
+
   const responseBody = rows.map((row) => ({
     id: row.id,
     code: row.code,
@@ -51,5 +54,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     break_minutes: row.breakMinutes,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

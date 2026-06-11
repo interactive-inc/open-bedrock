@@ -281,11 +281,14 @@ describe("rewards", () => {
     const list = await request({ db, path: "/thanks/rewards", token: await senderToken() })
 
     const parsed = z
-      .array(z.object({ name: z.string(), point_cost: z.number() }))
+      .object({
+        data: z.array(z.object({ name: z.string(), point_cost: z.number() })),
+        total: z.number(),
+      })
       .parse(await list.json())
 
-    expect(parsed.length).toBe(1)
-    expect(parsed[0]?.point_cost).toBe(50)
+    expect(parsed.data.length).toBe(1)
+    expect(parsed.data[0]?.point_cost).toBe(50)
   })
 
   test("non-admin cannot create a reward", async () => {
@@ -340,9 +343,11 @@ describe("rewards", () => {
 
     expect(list.status).toBe(200)
 
-    const parsed = z.array(z.object({ name: z.string() })).parse(await list.json())
+    const parsed = z
+      .object({ data: z.array(z.object({ name: z.string() })), total: z.number() })
+      .parse(await list.json())
 
-    expect(parsed.length).toBe(1)
+    expect(parsed.data.length).toBe(1)
   })
 })
 
@@ -645,9 +650,10 @@ describe("redemption", () => {
 })
 
 describe("redemption pagination", () => {
-  const redemptionListSchema = z.array(
-    z.object({ id: z.number(), employee_id: z.number(), status: z.string() }),
-  )
+  const redemptionListSchema = z.object({
+    data: z.array(z.object({ id: z.number(), employee_id: z.number(), status: z.string() })),
+    total: z.number(),
+  })
 
   // 同時 pending は 1 件までなので、申請→却下で解決済みの交換を 1 件積み増す。
   async function createRejectedRedemption(props: {
@@ -696,7 +702,7 @@ describe("redemption pagination", () => {
 
     const list1 = redemptionListSchema.parse(await page1.json())
 
-    expect(list1.length).toBe(2)
+    expect(list1.data.length).toBe(2)
 
     const page2 = await request({
       db,
@@ -708,10 +714,10 @@ describe("redemption pagination", () => {
 
     const list2 = redemptionListSchema.parse(await page2.json())
 
-    expect(list2.length).toBe(1)
+    expect(list2.data.length).toBe(1)
 
     // ページ間で id が重複しない（新しい順）。
-    expect(list1.map((row) => row.id)).not.toContain(list2[0]?.id)
+    expect(list1.data.map((row) => row.id)).not.toContain(list2.data[0]?.id)
   })
 
   test("limits and offsets the pending inbox", async () => {
@@ -749,7 +755,7 @@ describe("redemption pagination", () => {
 
     const list1 = redemptionListSchema.parse(await page1.json())
 
-    expect(list1.length).toBe(1)
+    expect(list1.data.length).toBe(1)
 
     const page2 = await request({
       db,
@@ -761,8 +767,8 @@ describe("redemption pagination", () => {
 
     const list2 = redemptionListSchema.parse(await page2.json())
 
-    expect(list2.length).toBe(1)
-    expect(list1[0]?.id).not.toBe(list2[0]?.id)
+    expect(list2.data.length).toBe(1)
+    expect(list1.data[0]?.id).not.toBe(list2.data[0]?.id)
   })
 })
 

@@ -11,5 +11,7 @@ export async function getTrainingCourses(): Promise<Array<TrainingCourseResponse
     return new Error("failed to load training courses")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

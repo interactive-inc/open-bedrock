@@ -9,7 +9,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { trainingCourses } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { z } from "zod"
 
@@ -63,6 +63,11 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(trainingCourses)
+      .where(conditions.length === 0 ? undefined : and(...conditions))
+
     const responseBody = rows.map((row) => ({
       id: row.id,
       code: row.code,
@@ -74,6 +79,6 @@ export const GET = factory.createHandlers(
       status: row.status,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

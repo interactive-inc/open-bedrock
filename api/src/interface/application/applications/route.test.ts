@@ -99,14 +99,16 @@ describe("GET /applications", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationMineResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
 
-      const first = parsed.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find((item) => item.id === 1)
 
       expect(first?.template_name).toBe("Paid Leave Request")
     }
@@ -117,13 +119,15 @@ describe("GET /applications", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationMineResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.status).toBe("approved")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.status).toBe("approved")
     }
   })
 
@@ -132,12 +136,14 @@ describe("GET /applications", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationMineResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
+      expect(parsed.data.data.length).toBe(1)
     }
   })
 

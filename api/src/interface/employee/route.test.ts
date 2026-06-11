@@ -59,14 +59,16 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(14)
+      expect(parsed.data.data.length).toBe(14)
 
-      const lead = parsed.data.find((employee) => employee.code === "E001")
+      const lead = parsed.data.data.find((employee) => employee.code === "E001")
 
       expect(lead?.name).toBe("Alex Carter")
       expect(lead?.dept_name).toBe("Corporate Planning")
@@ -79,12 +81,14 @@ describe("GET /employees", () => {
   test("never leaks passwordHash id deptId deptName or role", async () => {
     const response = await request("/employees", await adminToken())
 
-    const parsed = z.array(z.record(z.string(), z.unknown())).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(z.record(z.string(), z.unknown())), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      for (const row of parsed.data) {
+      for (const row of parsed.data.data) {
         expect("passwordHash" in row).toBe(false)
         expect("password_hash" in row).toBe(false)
         expect("id" in row).toBe(false)
@@ -100,13 +104,15 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.code).toBe("E004")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.code).toBe("E004")
     }
   })
 
@@ -115,12 +121,14 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
     }
   })
 
@@ -129,12 +137,14 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
     }
   })
 
@@ -143,12 +153,14 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
     }
   })
 
@@ -157,12 +169,14 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(12)
+      expect(parsed.data.data.length).toBe(12)
     }
   })
 
@@ -171,13 +185,15 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.code).toBe("E017")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.code).toBe("E017")
     }
   })
 
@@ -186,13 +202,15 @@ describe("GET /employees", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.code).toBe("E018")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.code).toBe("E018")
     }
   })
 

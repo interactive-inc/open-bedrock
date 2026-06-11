@@ -11,5 +11,7 @@ export async function getMyNotifications(): Promise<Array<NotificationResponse> 
     return new Error("failed to load my notifications")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

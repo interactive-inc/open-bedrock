@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { lifeEvents } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /life-events/me — 届出者本人のライフイベント届出一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const lifeEvents = await new ListMyLifeEvents(c).run({
+  const lifeEventRows = await new ListMyLifeEvents(c).run({
     employeeId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (lifeEvents instanceof Error) {
+  if (lifeEventRows instanceof Error) {
     throw new InternalError("failed to load life events")
   }
 
-  const responseBody = lifeEvents.map((lifeEvent) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(lifeEvents)
+    .where(eq(lifeEvents.employeeId, viewer.employeeId))
+
+  const responseBody = lifeEventRows.map((lifeEvent) => ({
     id: lifeEvent.id,
     employee_id: lifeEvent.employeeId,
     event_type: lifeEvent.eventType,
@@ -51,5 +58,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: lifeEvent.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

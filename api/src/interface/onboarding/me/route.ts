@@ -8,7 +8,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 // GET /onboarding/me — 本人に割り当てられたタスク一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -40,6 +40,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(onboardingTasks)
+    .innerJoin(onboardingAssignments, eq(onboardingAssignments.id, onboardingTasks.assignmentId))
+    .where(eq(onboardingAssignments.employeeId, session.employeeId))
+
   const body = rows.map((row) => ({
     id: row.task.id,
     template_task_code: row.task.templateTaskCode,
@@ -49,5 +55,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     completed_at: row.task.completedAt,
   }))
 
-  return c.json(body, 200)
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
