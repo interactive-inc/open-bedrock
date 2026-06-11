@@ -125,23 +125,24 @@ export class ApplicationRepository {
 
   // 申請を削除する。承認記録も併せて削除する。
   // pending 以外の申請は削除できない（0 行削除で null を返す）。
+  // D1 batch でアトミックに削除し、中途失敗による orphan を防ぐ。
   async delete(applicationId: number): Promise<true | null | Error> {
     try {
-      const rows = await this.c.var.database
-        .delete(applications)
-        .where(and(eq(applications.id, applicationId), eq(applications.status, "pending")))
-        .returning({ id: applications.id })
-
-      if (rows.length === 0) {
-        return null
-      }
-
-      await this.c.var.database
-        .delete(applicationApprovals)
-        .where(eq(applicationApprovals.applicationId, applicationId))
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          "DELETE FROM applications WHERE id = ?1 AND status = 'pending'",
+        ).bind(applicationId),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(
+          "DELETE FROM application_approvals WHERE application_id = ?1",
+        ).bind(applicationId),
+      ])
 
       return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete application")
     }
   }
