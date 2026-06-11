@@ -1,5 +1,7 @@
 import { OneOnOne } from "@/domain/oneonone/one-on-one"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { oneOnOnes } from "@/schema"
 import { desc, eq, or } from "drizzle-orm"
 
@@ -57,6 +59,9 @@ export class OneOnOneRepository {
 
       return oneOnOne
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("one_on_one already exists", { cause: error })
+      }
       return error instanceof Error ? error : new Error("failed to save one_on_one")
     }
   }
@@ -83,12 +88,15 @@ export class OneOnOneRepository {
     }
   }
 
-  // 1on1 の記録を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 1on1 の記録を削除する。対象行が存在しない場合は null を返す。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(oneOnOnes).where(eq(oneOnOnes.id, id))
+      const rows = await this.c.var.database
+        .delete(oneOnOnes)
+        .where(eq(oneOnOnes.id, id))
+        .returning({ id: oneOnOnes.id })
 
-      return null
+      return rows.length === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete one_on_one")
     }
