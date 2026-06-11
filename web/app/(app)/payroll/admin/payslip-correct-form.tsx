@@ -129,8 +129,8 @@ export function PayslipCorrectForm() {
             type="number"
             min={0}
             step={1}
-            placeholder="275000"
-            required
+            placeholder="自動算出"
+            readOnly
           />
         </Field>
 

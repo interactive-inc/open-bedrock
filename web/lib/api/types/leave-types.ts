@@ -49,16 +49,16 @@ export type LeaveRequestCreateRequest = {
 // POST /leave/requests のレスポンス (作成された leave request エンティティ)。
 export type LeaveRequestCreated = {
   id: number
-  employeeId: number
-  leaveType: LeaveType
-  startDate: string
-  endDate: string
+  employee_id: number
+  leave_type: LeaveType
+  start_date: string
+  end_date: string
   days: number
   reason: string | null
   status: LeaveStatus
-  approverId: number | null
-  decidedComment: string | null
-  createdAt: string
+  approver_id: number | null
+  decided_comment: string | null
+  created_at: string
 }
 
 // POST /leave/requests/:id/approve | reject のレスポンス。

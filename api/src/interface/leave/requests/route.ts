@@ -60,16 +60,16 @@ export const POST = factory.createHandlers(
 
     const responseBody = {
       id: created.id,
-      employeeId: created.employeeId,
-      leaveType: created.leaveType,
-      startDate: created.startDate,
-      endDate: created.endDate,
+      employee_id: created.employeeId,
+      leave_type: created.leaveType,
+      start_date: created.startDate,
+      end_date: created.endDate,
       days: created.days,
       reason: created.reason,
       status: created.status,
-      approverId: created.approverId,
-      decidedComment: created.decidedComment,
-      createdAt: created.createdAt,
+      approver_id: created.approverId,
+      decided_comment: created.decidedComment,
+      created_at: created.createdAt,
     }
 
     return c.json(responseBody, 201)

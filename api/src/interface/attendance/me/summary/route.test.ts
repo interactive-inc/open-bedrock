@@ -92,4 +92,39 @@ describe("GET /attendance/me/summary", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 400 for an invalid month format", async () => {
+    const response = await getRequest(
+      "/attendance/me/summary?month=invalid",
+      await tokenFor(5, "member"),
+    )
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 for a single-digit month", async () => {
+    const response = await getRequest(
+      "/attendance/me/summary?month=2026-1",
+      await tokenFor(5, "member"),
+    )
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 200 for a valid YYYY-MM month", async () => {
+    const response = await getRequest(
+      "/attendance/me/summary?month=2024-01",
+      await tokenFor(5, "member"),
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = attendanceSummaryResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.month).toBe("2024-01")
+    }
+  })
 })

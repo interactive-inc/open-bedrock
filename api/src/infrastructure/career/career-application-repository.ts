@@ -36,13 +36,19 @@ export class CareerApplicationRepository {
   }
 
   // 応募者本人の応募を id の昇順で返す。
-  async findByApplicantId(applicantId: number): Promise<ReadonlyArray<CareerApplication> | Error> {
+  async findByApplicantId(props: {
+    applicantId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<CareerApplication> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(careerApplications)
-        .where(eq(careerApplications.applicantId, applicantId))
+        .where(eq(careerApplications.applicantId, props.applicantId))
         .orderBy(asc(careerApplications.id))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => CareerApplication.fromRow(row))
     } catch (error) {

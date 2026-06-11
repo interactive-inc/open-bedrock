@@ -13,7 +13,9 @@ export type SurveyNotFound = { reason: "survey_not_found" }
 
 export type Deleted = { reason: "deleted" }
 
-export type DeleteFailure = Forbidden | SurveyNotFound
+export type NotDeletable = { reason: "not_deletable" }
+
+export type DeleteFailure = Forbidden | SurveyNotFound | NotDeletable
 
 /**
  * 管理権限を持つ者がアンケートを削除する。
@@ -37,6 +39,10 @@ export class DeleteSurvey {
 
     if (current === null) {
       return { reason: "survey_not_found" }
+    }
+
+    if (current.isOpen()) {
+      return { reason: "not_deletable" }
     }
 
     const responsesDeleted = await surveyRepository.deleteResponsesBySurveyId(command.surveyId)
