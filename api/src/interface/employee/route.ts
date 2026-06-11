@@ -18,7 +18,7 @@ import {
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, count, eq, or } from "drizzle-orm"
+import { and, asc, count, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 
@@ -84,6 +84,7 @@ export const GET = factory.createHandlers(
       })
       .from(employees)
       .where(conditions.length === 0 ? undefined : and(...conditions))
+      .orderBy(asc(employees.code))
       .limit(limit)
       .offset(offset)
 

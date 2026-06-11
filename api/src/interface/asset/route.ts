@@ -7,7 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { assets } from "@/schema"
-import { and, count, eq } from "drizzle-orm"
+import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -66,6 +66,7 @@ export const GET = factory.createHandlers(
       .select()
       .from(assets)
       .where(conditions.length === 0 ? undefined : and(...conditions))
+      .orderBy(asc(assets.code))
       .limit(limit)
       .offset(offset)
 
