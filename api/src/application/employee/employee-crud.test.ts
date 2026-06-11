@@ -560,6 +560,39 @@ describe("DeleteEmployee", () => {
     expect(manager).toBeNull()
   })
 
+  test("deletes employee atomically within a single batch (no separate delete call)", async () => {
+    const { context, db } = createTestContext()
+
+    const id = await seedEmployee(context, "E911")
+
+    // 関連レコードを1つ挿入して、batch が実行されることを確認する
+    await db
+      .prepare(
+        "INSERT INTO leave_balances (employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES (?1, '2026', 'annual', 20, 0, 20)",
+      )
+      .bind(id)
+      .run()
+
+    const result = await new DeleteEmployee(context).run({
+      viewerRole: "admin",
+      viewerEmployeeId: id + 1,
+      code: "E911",
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+
+    // 従業員本体が batch 内で削除されていることを確認
+    const found = await new EmployeeRepository(context).findByCode("E911")
+    expect(found).toBeNull()
+
+    // 関連レコードも削除されている
+    const balanceCount = await db
+      .prepare("SELECT COUNT(*) as c FROM leave_balances WHERE employee_id = ?1")
+      .bind(id)
+      .first("c")
+    expect(balanceCount).toBe(0)
+  })
+
   test("nullifies thanks_redemptions.decider_id when the decider employee is deleted", async () => {
     const { context, db } = createTestContext()
 
