@@ -162,6 +162,70 @@ describe("POST /attendance/clock-out", () => {
     expect(response.status).toBe(409)
   })
 
+  test("persists note when provided", async () => {
+    const db = await createTestDb()
+
+    const token = await tokenFor(10, "member")
+
+    await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-in",
+      token,
+      now: "2026-05-29T09:00:00Z",
+      body: {},
+    })
+
+    const outResponse = await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-out",
+      token,
+      now: "2026-05-29T18:30:00Z",
+      body: { note: "leaving early" },
+    })
+
+    expect(outResponse.status).toBe(200)
+
+    const row = await db
+      .prepare("SELECT note FROM attendance_records WHERE employee_id = 10 AND status = 'closed'")
+      .first<{ note: string | null }>()
+
+    expect(row?.note).toBe("leaving early")
+  })
+
+  test("persists null note when omitted", async () => {
+    const db = await createTestDb()
+
+    const token = await tokenFor(10, "member")
+
+    await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-in",
+      token,
+      now: "2026-05-29T09:00:00Z",
+      body: { note: "morning" },
+    })
+
+    const outResponse = await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-out",
+      token,
+      now: "2026-05-29T18:30:00Z",
+      body: {},
+    })
+
+    expect(outResponse.status).toBe(200)
+
+    const row = await db
+      .prepare("SELECT note FROM attendance_records WHERE employee_id = 10 AND status = 'closed'")
+      .first<{ note: string | null }>()
+
+    expect(row?.note).toBeNull()
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await send({
       db: await createTestDb(),

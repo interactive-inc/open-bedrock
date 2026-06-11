@@ -14,5 +14,6 @@ export async function getKnowledgeList(query: KnowledgeSearchQuery) {
     return new Error("failed to load knowledge")
   }
 
-  return response.json()
+  const body = await response.json()
+  return body.data
 }

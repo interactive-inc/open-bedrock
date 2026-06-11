@@ -153,6 +153,36 @@ describe("POST /notifications", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when source_id is negative", async () => {
+    const response = await request({
+      path: "/notifications",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        recipient_employee_code: "E005",
+        title: "Manual notification",
+        source_id: -1,
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when source_id is a decimal", async () => {
+    const response = await request({
+      path: "/notifications",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        recipient_employee_code: "E005",
+        title: "Manual notification",
+        source_id: 1.5,
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/notifications",

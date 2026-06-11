@@ -16,7 +16,6 @@ const employeeResponseSchema = z.object({
   position: z.string().nullable(),
   email: z.string(),
   status: z.string(),
-  role: z.string(),
 })
 
 async function createTestDb(): Promise<D1Database> {
@@ -74,11 +73,10 @@ describe("GET /employees", () => {
       expect(lead?.position).toBe("CTO")
       expect(lead?.email).toBe("you+e001@example.com")
       expect(lead?.status).toBe("active")
-      expect(lead?.role).toBe("admin")
     }
   })
 
-  test("never leaks passwordHash id deptId or deptName", async () => {
+  test("never leaks passwordHash id deptId deptName or role", async () => {
     const response = await request("/employees", await adminToken())
 
     const parsed = z.array(z.record(z.string(), z.unknown())).safeParse(await response.json())
@@ -86,12 +84,14 @@ describe("GET /employees", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      const first = parsed.data[0] ?? {}
-
-      expect("passwordHash" in first).toBe(false)
-      expect("id" in first).toBe(false)
-      expect("deptId" in first).toBe(false)
-      expect("deptName" in first).toBe(false)
+      for (const row of parsed.data) {
+        expect("passwordHash" in row).toBe(false)
+        expect("password_hash" in row).toBe(false)
+        expect("id" in row).toBe(false)
+        expect("deptId" in row).toBe(false)
+        expect("deptName" in row).toBe(false)
+        expect("role" in row).toBe(false)
+      }
     }
   })
 

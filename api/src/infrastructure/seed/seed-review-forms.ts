@@ -6,6 +6,7 @@ type SeedReviewForm = {
   reviewerType: "self" | "manager" | "peer" | "subordinate"
   answers: ReadonlyArray<unknown>
   score: number | null
+  comment: string | null
   status: "pending" | "submitted"
   submittedAt: string | null
 }
@@ -20,6 +21,7 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
     reviewerType: "self",
     answers: [],
     score: null,
+    comment: null,
     status: "pending",
     submittedAt: null,
   },
@@ -31,6 +33,7 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
     reviewerType: "manager",
     answers: [],
     score: null,
+    comment: null,
     status: "pending",
     submittedAt: null,
   },
@@ -42,6 +45,7 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
     reviewerType: "manager",
     answers: ["Strong collaboration"],
     score: 80,
+    comment: "Great teamwork this quarter",
     status: "submitted",
     submittedAt: "2025-12-20T00:00:00Z",
   },

@@ -96,6 +96,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
+  if (result.reason === "not_deletable") {
+    throw new ConflictError("not deletable")
+  }
+
   if (result.reason === "cycle_not_found") {
     throw new NotFoundError("review cycle not found")
   }

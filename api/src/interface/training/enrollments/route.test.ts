@@ -129,6 +129,29 @@ describe("GET /training/enrollments", () => {
     expect(response.status).toBe(404)
   })
 
+  test("returns 404 for an unknown employee_id", async () => {
+    const response = await request(
+      "/training/enrollments?employee_id=9999",
+      await tokenFor(1, "admin"),
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test("a privileged role views another's status by employee_id", async () => {
+    const response = await request(
+      "/training/enrollments?employee_id=5",
+      await tokenFor(1, "admin"),
+    )
+
+    expect(response.status).toBe(200)
+
+    const body = z.array(trainingEnrollmentResponseSchema).parse(await response.json())
+
+    expect(body.length).toBe(1)
+    expect(body[0]?.employee_id).toBe(5)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/training/enrollments", null)
 

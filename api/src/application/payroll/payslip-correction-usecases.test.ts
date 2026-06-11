@@ -26,6 +26,28 @@ async function seedPayslip(context: Context): Promise<number> {
   return created.id
 }
 
+async function seedDraftPayslip(context: Context): Promise<number> {
+  const created = await new PayslipRepository(context).create(
+    new Payslip({
+      id: null,
+      employeeId: 5,
+      period: "2026-05",
+      baseSalary: 300000,
+      allowances: 20000,
+      deductions: 45000,
+      netPay: 275000,
+      issuedAt: null,
+      status: "draft",
+    }),
+  )
+
+  if (created instanceof Error || created.id === null) {
+    throw new Error("seed failed")
+  }
+
+  return created.id
+}
+
 describe("CorrectPayslip", () => {
   test("privileged role corrects period and amounts with the given values", async () => {
     const { context } = createTestContext()
@@ -93,13 +115,35 @@ describe("CorrectPayslip", () => {
       expect(result.reason).toBe("payslip_not_found")
     }
   })
+
+  test("returns not_editable for a draft payslip", async () => {
+    const { context } = createTestContext()
+
+    const payslipId = await seedDraftPayslip(context)
+
+    const result = await new CorrectPayslip(context).run({
+      viewerRole: "admin",
+      payslipId: payslipId,
+      period: "2026-05",
+      baseSalary: 310000,
+      allowances: 25000,
+      deductions: 50000,
+      netPay: 285000,
+    })
+
+    expect(result instanceof Payslip).toBe(false)
+
+    if (result instanceof Payslip === false && result instanceof Error === false) {
+      expect(result.reason).toBe("not_editable")
+    }
+  })
 })
 
 describe("CancelPayslip", () => {
-  test("privileged role cancels the payslip", async () => {
+  test("privileged role cancels a draft payslip", async () => {
     const { context } = createTestContext()
 
-    const payslipId = await seedPayslip(context)
+    const payslipId = await seedDraftPayslip(context)
 
     const result = await new CancelPayslip(context).run({
       viewerRole: "admin",
@@ -117,10 +161,27 @@ describe("CancelPayslip", () => {
     expect(after).toBeNull()
   })
 
-  test("returns forbidden for a non-privileged role", async () => {
+  test("returns not_cancellable for an issued payslip", async () => {
     const { context } = createTestContext()
 
     const payslipId = await seedPayslip(context)
+
+    const result = await new CancelPayslip(context).run({
+      viewerRole: "admin",
+      payslipId: payslipId,
+    })
+
+    if (result instanceof Error) {
+      throw new Error("expected a tagged result")
+    }
+
+    expect(result.reason).toBe("not_cancellable")
+  })
+
+  test("returns forbidden for a non-privileged role", async () => {
+    const { context } = createTestContext()
+
+    const payslipId = await seedDraftPayslip(context)
 
     const result = await new CancelPayslip(context).run({
       viewerRole: "member",
