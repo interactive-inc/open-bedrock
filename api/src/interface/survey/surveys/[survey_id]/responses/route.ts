@@ -61,6 +61,6 @@ export const POST = factory.createHandlers(
       submitted_at: submission.submittedAt,
     }
 
-    return c.json(responseBody, 201)
+    return c.json(responseBody, 200)
   },
 )
