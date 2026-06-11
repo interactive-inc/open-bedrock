@@ -6,41 +6,32 @@ export type Command = {
   viewerEmployeeId: number
 }
 
-export type NotificationNotFound = { reason: "notification_not_found" }
-
-export type NotificationForbidden = { reason: "notification_forbidden" }
+export type NotificationNotFound = { reason: "not_found" }
 
 export type Deleted = { reason: "deleted" }
 
 /**
- * 本人宛ての通知を削除する。他人宛ての削除を拒否する。
+ * 本人宛ての通知を削除する。所有権ガードは DB レベルで行う。
  */
 export class DeleteNotification {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<Deleted | NotificationNotFound | NotificationForbidden | Error> {
+  ): Promise<Deleted | NotificationNotFound | Error> {
     const repository = new NotificationRepository(this.c)
 
-    const notification = await repository.findById(command.notificationId)
-
-    if (notification instanceof Error) {
-      return notification
-    }
-
-    if (notification === null) {
-      return { reason: "notification_not_found" }
-    }
-
-    if (notification.recipientEmployeeId !== command.viewerEmployeeId) {
-      return { reason: "notification_forbidden" }
-    }
-
-    const deleted = await repository.delete(command.notificationId)
+    const deleted = await repository.delete(
+      command.notificationId,
+      command.viewerEmployeeId,
+    )
 
     if (deleted instanceof Error) {
       return deleted
+    }
+
+    if (deleted === null) {
+      return { reason: "not_found" }
     }
 
     return { reason: "deleted" }
