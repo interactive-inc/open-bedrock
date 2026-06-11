@@ -9,7 +9,11 @@ export class OneOnOneRepository {
   // 1on1 id で1件取得する。存在しなければ null。
   async findById(id: string): Promise<OneOnOne | null | Error> {
     try {
-      const rows = await this.c.var.database.select().from(oneOnOnes).where(eq(oneOnOnes.id, id)).limit(1)
+      const rows = await this.c.var.database
+        .select()
+        .from(oneOnOnes)
+        .where(eq(oneOnOnes.id, id))
+        .limit(1)
 
       const row = rows.at(0)
 

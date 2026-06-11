@@ -47,9 +47,9 @@ export class DeleteReviewCycle {
 
     try {
       await db.batch([
-        db.prepare("DELETE FROM review_cycles WHERE id = ?1 AND status = 'draft'").bind(
-          input.cycleId,
-        ),
+        db
+          .prepare("DELETE FROM review_cycles WHERE id = ?1 AND status = 'draft'")
+          .bind(input.cycleId),
         abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM review_forms WHERE cycle_id = ?1").bind(input.cycleId),
       ])
