@@ -1,7 +1,7 @@
 import { BusinessTrip } from "@/domain/business-trip/business-trip"
 import type { Context } from "@/env"
 import { businessTrips } from "@/schema"
-import { and, asc, eq, lte, gte, ne } from "drizzle-orm"
+import { and, asc, eq, inArray, lte, gte, ne, sql } from "drizzle-orm"
 
 export class BusinessTripRepository {
   constructor(private readonly c: Context) {}
@@ -20,6 +20,7 @@ export class BusinessTripRepository {
         .where(
           and(
             eq(businessTrips.travelerId, query.travelerId),
+            inArray(businessTrips.status, ["requested", "approved"]),
             lte(businessTrips.startDate, query.endDate),
             gte(businessTrips.endDate, query.startDate),
             query.excludeBusinessTripId === null
@@ -71,19 +72,26 @@ export class BusinessTripRepository {
     }
   }
 
-  async create(businessTrip: BusinessTrip): Promise<BusinessTrip | Error> {
+  async create(businessTrip: BusinessTrip): Promise<BusinessTrip | null | Error> {
     try {
-      await this.c.var.database.insert(businessTrips).values({
-        id: businessTrip.id,
-        travelerId: businessTrip.travelerId,
-        destination: businessTrip.destination,
-        startDate: businessTrip.startDate,
-        endDate: businessTrip.endDate,
-        purpose: businessTrip.purpose,
-        estimatedCost: businessTrip.estimatedCost,
-        status: businessTrip.status,
-        createdAt: businessTrip.createdAt,
-      })
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO business_trips (id, traveler_id, destination, start_date, end_date, purpose, estimated_cost, status, created_at)
+            SELECT ${businessTrip.id}, ${businessTrip.travelerId}, ${businessTrip.destination},
+                   ${businessTrip.startDate}, ${businessTrip.endDate},
+                   ${businessTrip.purpose}, ${businessTrip.estimatedCost},
+                   ${businessTrip.status}, ${businessTrip.createdAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM business_trips
+              WHERE traveler_id = ${businessTrip.travelerId}
+                AND status IN ('requested', 'approved')
+                AND start_date <= ${businessTrip.endDate}
+                AND end_date >= ${businessTrip.startDate}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
 
       return businessTrip
     } catch (error) {
