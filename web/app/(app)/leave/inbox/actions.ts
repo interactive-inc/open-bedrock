@@ -79,6 +79,7 @@ export async function decideLeaveRequestAction(
   }
 
   revalidatePath("/leave/inbox")
+  revalidatePath("/leave")
 
   return result
 }
