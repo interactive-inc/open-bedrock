@@ -1,10 +1,5 @@
 import { MarkNotificationRead } from "@/application/notification/mark-notification-read"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -29,11 +24,8 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   if ("reason" in result) {
-    if (result.reason === "notification_not_found") {
-      throw new NotFoundError("notification not found")
-    }
-
-    throw new ForbiddenError()
+    // 他人の通知も 404 にして、連番 ID による存在推測（列挙）を防ぐ。
+    throw new NotFoundError("notification not found")
   }
 
   const responseBody = {
