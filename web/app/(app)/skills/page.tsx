@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { SkillSearchForm } from "@/app/(app)/skills/skill-search-form"
-import { SkillTable } from "@/app/(app)/skills/skill-table"
+import { SkillSearchForm } from "@/app/(app)/skills/_components/skill-search-form"
+import { SkillTable } from "@/app/(app)/skills/_components/skill-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
