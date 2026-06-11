@@ -105,13 +105,15 @@ describe("GET /career/applications/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(careerApplicationResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(careerApplicationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].applicant_id).toBe(6)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].applicant_id).toBe(6)
     }
   })
 

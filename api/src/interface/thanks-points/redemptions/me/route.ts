@@ -9,6 +9,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
+import { thanksRedemptions } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /thanks/redemptions/me — 自分の交換申請の一覧（新しい順・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -42,7 +44,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load redemptions")
   }
 
-  return c.json(redemptions.map(toRedemptionResponse), 200)
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(thanksRedemptions)
+    .where(eq(thanksRedemptions.employeeId, session.employeeId))
+
+  const responseBody = redemptions.map(toRedemptionResponse)
+
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
 
 // 交換申請集約を snake_case のレスポンスへ写す。

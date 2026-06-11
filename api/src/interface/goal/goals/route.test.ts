@@ -91,13 +91,15 @@ describe("GET /goals", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(goalResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((goal) => goal.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
     }
   })
 
@@ -111,13 +113,15 @@ describe("GET /goals", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(goalResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.id).toBe(4)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe(4)
     }
   })
 
@@ -131,13 +135,15 @@ describe("GET /goals", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(goalResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
-      expect(parsed.data.every((goal) => goal.employee_id === 5)).toBe(true)
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
     }
   })
 

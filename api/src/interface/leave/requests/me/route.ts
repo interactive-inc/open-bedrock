@@ -9,7 +9,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { leaveRequests } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 // GET /leave/requests/me — 本人の休暇申請一覧（status で絞り込み可能）
@@ -60,6 +60,11 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(leaveRequests)
+      .where(and(...conditions))
+
     const responseBody = rows.map((row) => ({
       id: row.id,
       leave_type: row.leaveType,
@@ -70,6 +75,6 @@ export const GET = factory.createHandlers(
       created_at: row.createdAt,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

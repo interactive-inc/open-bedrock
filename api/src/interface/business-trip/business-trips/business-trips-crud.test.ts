@@ -206,13 +206,15 @@ describe("GET /business-trips/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(businessTripResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(businessTripResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].traveler_id).toBe(4)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].traveler_id).toBe(4)
     }
   })
 
@@ -248,9 +250,11 @@ describe("GET /business-trips/me", () => {
       bindings,
     )
 
-    const limitedRows = z.array(businessTripResponseSchema).parse(await limited.json())
+    const limitedRows = z
+      .object({ data: z.array(businessTripResponseSchema), total: z.number() })
+      .parse(await limited.json())
 
-    expect(limitedRows.length).toBe(1)
+    expect(limitedRows.data.length).toBe(1)
 
     const skipped = await app.request(
       "/business-trips/me?offset=1",
@@ -258,9 +262,11 @@ describe("GET /business-trips/me", () => {
       bindings,
     )
 
-    const skippedRows = z.array(businessTripResponseSchema).parse(await skipped.json())
+    const skippedRows = z
+      .object({ data: z.array(businessTripResponseSchema), total: z.number() })
+      .parse(await skipped.json())
 
-    expect(skippedRows.length).toBe(1)
+    expect(skippedRows.data.length).toBe(1)
   })
 
   test("returns 401 without a bearer token", async () => {

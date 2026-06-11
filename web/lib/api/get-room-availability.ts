@@ -18,5 +18,7 @@ export async function getRoomAvailability(search: RoomAvailabilitySearch) {
     return new Error("failed to load room availability")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

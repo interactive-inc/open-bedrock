@@ -13,5 +13,7 @@ export async function listMyCertificateRequests(): Promise<
     return new Error("failed to load certificate requests")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { applications } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /applications/me — 申請者本人の申請一覧（ユースケース経由）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const applications = await new ListMyApplications(c).run({
+  const applicationRows = await new ListMyApplications(c).run({
     applicantId: session.employeeId,
     limit,
     offset,
   })
 
-  if (applications instanceof Error) {
+  if (applicationRows instanceof Error) {
     throw new InternalError("failed to load applications")
   }
 
-  const responseBody = applications.map((application) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(applications)
+    .where(eq(applications.applicantId, session.employeeId))
+
+  const responseBody = applicationRows.map((application) => ({
     id: application.id,
     template_id: application.templateId,
     status: application.status,
@@ -50,5 +57,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: application.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

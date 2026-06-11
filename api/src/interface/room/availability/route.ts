@@ -9,7 +9,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { roomReservations, rooms } from "@/schema"
-import { and, gt, gte, inArray, lt } from "drizzle-orm"
+import { and, count, gt, gte, inArray, lt } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -50,8 +50,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(rooms)
+    .where(gte(rooms.capacity, query.capacity))
+
   if (pagedRooms.length === 0) {
-    return c.json([], 200)
+    return c.json({ data: [], total: totalRows.at(0)?.total ?? 0 }, 200)
   }
 
   const roomIds = pagedRooms.map((r) => r.id)
@@ -102,5 +107,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     conflicts,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

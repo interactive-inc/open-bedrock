@@ -95,14 +95,16 @@ describe("GET /skills/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(employeeSkillResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(employeeSkillResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
 
-      const typescript = parsed.data.find((row) => row.skill_code === "typescript")
+      const typescript = parsed.data.data.find((row) => row.skill_code === "typescript")
 
       expect(typescript?.skill_name).toBe("TypeScript")
       expect(typescript?.skill_category).toBe("Programming")

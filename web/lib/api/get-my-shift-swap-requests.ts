@@ -11,5 +11,7 @@ export async function getMyShiftSwapRequests(): Promise<Array<ShiftSwapRequestRe
     return new Error("failed to load my shift swap requests")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

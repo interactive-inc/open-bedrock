@@ -100,14 +100,16 @@ describe("GET /applications/inbox", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(applicationInboxResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(applicationInboxResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(3)
+      expect(parsed.data.data.length).toBe(3)
 
-      const first = parsed.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find((item) => item.id === 1)
 
       expect(first?.template_name).toBe("Paid Leave Request")
       expect(first?.applicant_name).toBe("Emery Lane")

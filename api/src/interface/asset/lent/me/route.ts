@@ -7,7 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { assets } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { and, count, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /assets/lent/me — 本人が現在借り受けている資産一覧
@@ -39,6 +39,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(limit)
     .offset(offset)
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(assets)
+    .where(and(eq(assets.status, "lent"), eq(assets.holderEmployeeId, session.employeeId)))
+
   const responseBody = rows.map((row) => ({
     code: row.code,
     name: row.name,
@@ -49,5 +54,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     holder_employee_id: row.holderEmployeeId,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

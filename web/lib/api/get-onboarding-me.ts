@@ -10,5 +10,7 @@ export async function getOnboardingMe() {
     return new Error("failed to load onboarding tasks")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

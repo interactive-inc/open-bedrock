@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { certificateRequests } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /certificate-requests/me — 依頼者本人の証明書発行依頼一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -31,17 +33,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const certificateRequests = await new ListMyCertificateRequests(c).run({
+  const certificateRequestRows = await new ListMyCertificateRequests(c).run({
     requesterId: viewer.employeeId,
     limit,
     offset,
   })
 
-  if (certificateRequests instanceof Error) {
+  if (certificateRequestRows instanceof Error) {
     throw new InternalError("failed to load certificate requests")
   }
 
-  const responseBody = certificateRequests.map((certificateRequest) => ({
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(certificateRequests)
+    .where(eq(certificateRequests.requesterId, viewer.employeeId))
+
+  const responseBody = certificateRequestRows.map((certificateRequest) => ({
     id: certificateRequest.id,
     requester_id: certificateRequest.requesterId,
     certificate_type: certificateRequest.certificateType,
@@ -52,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: certificateRequest.createdAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

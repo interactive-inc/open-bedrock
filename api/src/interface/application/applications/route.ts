@@ -2,7 +2,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { applications, applicationTemplates } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, eq } from "drizzle-orm"
+import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import {
@@ -61,6 +61,11 @@ export const GET = factory.createHandlers(
       .limit(limit)
       .offset(offset)
 
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(applications)
+      .where(and(...conditions))
+
     const responseBody = rows.map((row) => ({
       id: row.application.id,
       template_name: row.templateName ?? "",
@@ -69,6 +74,6 @@ export const GET = factory.createHandlers(
       created_at: row.application.createdAt,
     }))
 
-    return c.json(responseBody, 200)
+    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
   },
 )

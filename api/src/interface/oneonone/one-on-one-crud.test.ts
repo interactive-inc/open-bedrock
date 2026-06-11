@@ -104,12 +104,14 @@ describe("GET /oneonones/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(oneOnOneResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(oneOnOneResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.data.length).toBe(2)
     }
   })
 

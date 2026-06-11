@@ -8,6 +8,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { surveyResponses } from "@/schema"
+import { count, eq } from "drizzle-orm"
 
 // GET /surveys/responses/me — 回答者本人のアンケート回答一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -41,6 +43,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load survey responses")
   }
 
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(surveyResponses)
+    .where(eq(surveyResponses.respondentId, viewer.employeeId))
+
   const responseBody = responses.map((response) => ({
     id: response.id,
     survey_id: response.surveyId,
@@ -49,5 +56,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     submitted_at: response.submittedAt,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

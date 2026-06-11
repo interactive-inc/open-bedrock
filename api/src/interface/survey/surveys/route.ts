@@ -3,7 +3,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { surveys } from "@/schema"
-import { eq } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -37,6 +37,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(surveys.id)
     .limit(limit)
     .offset(offset)
+
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(surveys)
+    .where(eq(surveys.status, "open"))
+
   const responseBody = rows.map((row) => {
     const survey = Survey.fromRow(row)
     if (survey instanceof Error) {
@@ -49,5 +55,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       questions_json: survey.questionsJson,
     }
   })
-  return c.json(responseBody, 200)
+
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

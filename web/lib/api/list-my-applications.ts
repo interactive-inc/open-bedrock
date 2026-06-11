@@ -10,5 +10,7 @@ export async function listMyApplications() {
     return new Error("failed to load my applications")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

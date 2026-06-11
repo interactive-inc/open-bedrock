@@ -204,13 +204,15 @@ describe("GET /family-care-leaves/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(familyCareLeaveResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(familyCareLeaveResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].employee_id).toBe(4)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].employee_id).toBe(4)
     }
   })
 

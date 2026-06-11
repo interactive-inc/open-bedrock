@@ -194,13 +194,15 @@ describe("GET /year-end-adjustments/me", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z.array(yearEndAdjustmentResponseSchema).safeParse(await response.json())
+    const parsed = z
+      .object({ data: z.array(yearEndAdjustmentResponseSchema), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0].employee_id).toBe(4)
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0].employee_id).toBe(4)
     }
   })
 
@@ -210,18 +212,22 @@ describe("GET /year-end-adjustments/me", () => {
       token: await applicantToken(),
     })
 
-    const limitedRows = z.array(yearEndAdjustmentResponseSchema).parse(await limited.json())
+    const limitedRows = z
+      .object({ data: z.array(yearEndAdjustmentResponseSchema), total: z.number() })
+      .parse(await limited.json())
 
-    expect(limitedRows.length).toBe(1)
+    expect(limitedRows.data.length).toBe(1)
 
     const skipped = await request({
       path: "/year-end-adjustments/me?offset=1",
       token: await applicantToken(),
     })
 
-    const skippedRows = z.array(yearEndAdjustmentResponseSchema).parse(await skipped.json())
+    const skippedRows = z
+      .object({ data: z.array(yearEndAdjustmentResponseSchema), total: z.number() })
+      .parse(await skipped.json())
 
-    expect(skippedRows.length).toBe(0)
+    expect(skippedRows.data.length).toBe(0)
   })
 
   test("returns 401 without a bearer token", async () => {

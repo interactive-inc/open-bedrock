@@ -85,20 +85,22 @@ describe("GET /career/postings", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = careerPostingResponseSchema.array().safeParse(await response.json())
+    const parsed = z
+      .object({ data: careerPostingResponseSchema.array(), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.every((posting) => posting.status === "open")).toBe(true)
+      expect(parsed.data.data.every((posting) => posting.status === "open")).toBe(true)
 
-      const first = parsed.data.find((posting) => posting.id === 1)
+      const first = parsed.data.data.find((posting) => posting.id === 1)
 
       expect(first?.title).toBe("Product Development Lead")
       expect(first?.dept_name).toBe("Engineering")
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
-      const closed = parsed.data.find((posting) => posting.id === 3)
+      const closed = parsed.data.data.find((posting) => posting.id === 3)
 
       expect(closed).toBeUndefined()
     }
@@ -112,13 +114,15 @@ describe("GET /career/postings", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = careerPostingResponseSchema.array().safeParse(await response.json())
+    const parsed = z
+      .object({ data: careerPostingResponseSchema.array(), total: z.number() })
+      .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(1)
-      expect(parsed.data[0]?.status).toBe("open")
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.status).toBe("open")
     }
   })
 

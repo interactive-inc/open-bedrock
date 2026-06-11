@@ -10,5 +10,7 @@ export async function getCareerPostings() {
     return new Error("failed to load career postings")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

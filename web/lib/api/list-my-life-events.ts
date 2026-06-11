@@ -11,5 +11,7 @@ export async function listMyLifeEvents(): Promise<ReadonlyArray<LifeEventRespons
     return new Error("failed to load life events")
   }
 
-  return response.json()
+  const body = await response.json()
+
+  return body.data
 }

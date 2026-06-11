@@ -9,7 +9,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewForms } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { asc, count, eq } from "drizzle-orm"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -35,6 +35,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(asc(reviewForms.id))
     .limit(limit)
     .offset(offset)
+
+  const totalRows = await c.var.database
+    .select({ total: count() })
+    .from(reviewForms)
+    .where(eq(reviewForms.reviewerEmployeeId, session.employeeId))
+
   const body = rows.map((row) => ({
     id: row.id,
     cycle_id: row.cycleId,
@@ -46,5 +52,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
     submitted_at: row.submittedAt,
   }))
-  return c.json(body, 200)
+
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })
