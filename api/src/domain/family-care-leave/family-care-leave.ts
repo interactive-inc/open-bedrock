@@ -8,7 +8,7 @@ const zProps = z.object({
   startDate: z.string(),
   endDate: z.string(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["requested"]),
   createdAt: z.string(),
 })
 
@@ -74,7 +74,7 @@ export class FamilyCareLeave implements Props {
       startDate: row.startDate,
       endDate: row.endDate,
       note: row.note,
-      status: row.status,
+      status: row.status as Props["status"],
       createdAt: row.createdAt,
     })
   }
