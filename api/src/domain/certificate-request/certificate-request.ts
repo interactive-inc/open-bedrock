@@ -70,7 +70,7 @@ export class CertificateRequest implements Props {
       submitTo: row.submitTo,
       neededBy: row.neededBy,
       note: row.note,
-      status: row.status,
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }
