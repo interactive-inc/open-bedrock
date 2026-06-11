@@ -1,6 +1,8 @@
 import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
 import { and, asc, count, eq, inArray, ne } from "drizzle-orm"
 
@@ -9,6 +11,9 @@ export class OnboardingAssignmentRepository {
 
   async create(assignment: OnboardingAssignment): Promise<OnboardingAssignment | Error> {
     try {
+      // assignment の id は AUTOINCREMENT のため先に INSERT して採番し、
+      // 続けて tasks を batch INSERT する。tasks の batch は D1 内部で
+      // トランザクション化されるため個別タスク間はアトミック。
       const assignmentRows = await this.c.var.database
         .insert(onboardingAssignments)
         .values({
@@ -51,6 +56,11 @@ export class OnboardingAssignmentRepository {
 
       return result
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("onboarding assignment already exists", {
+          cause: error,
+        })
+      }
       return error instanceof Error ? error : new Error("failed to insert onboarding assignment")
     }
   }
