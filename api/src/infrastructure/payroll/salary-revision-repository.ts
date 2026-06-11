@@ -74,13 +74,14 @@ export class SalaryRevisionRepository {
   }
 
   // 既存の給与改定の適用日・改定後基本給・理由を訂正する。id は採番済みの前提。
-  async update(salaryRevision: SalaryRevision): Promise<SalaryRevision | Error> {
+  // 0 行更新（削除済み等）は null を返す。
+  async update(salaryRevision: SalaryRevision): Promise<SalaryRevision | null | Error> {
     if (salaryRevision.id === null) {
       return new Error("salary revision id is required to update")
     }
 
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(salaryRevisions)
         .set({
           effectiveDate: salaryRevision.effectiveDate,
@@ -88,8 +89,11 @@ export class SalaryRevisionRepository {
           reason: salaryRevision.reason,
         })
         .where(eq(salaryRevisions.id, salaryRevision.id))
+        .returning()
 
-      return salaryRevision
+      const row = rows.at(0)
+
+      return row === undefined ? null : SalaryRevision.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update salary revision")
     }
