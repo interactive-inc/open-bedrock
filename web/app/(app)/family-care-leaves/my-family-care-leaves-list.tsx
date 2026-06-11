@@ -6,6 +6,17 @@ import {
   updateFamilyCareLeaveAction,
 } from "@/app/(app)/family-care-leaves/actions"
 import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leaves/actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -172,20 +183,40 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
   )
 }
 
-// 休業申出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+// 休業申出取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
-  const [state, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
+  const [, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
     ok: false,
     error: null,
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="family_care_leave_id" value={props.familyCareLeaveId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+    <AlertDialog>
+      <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={pending} />}>
         取消
-      </Button>
-    </form>
+      </AlertDialogTrigger>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>休業申出を取り消しますか？</AlertDialogTitle>
+
+          <AlertDialogDescription>
+            この休業申出の取消後は、再度申出が必要になります。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>やめる</AlertDialogCancel>
+
+          <form action={formAction}>
+            <input type="hidden" name="family_care_leave_id" value={props.familyCareLeaveId} />
+
+            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
+              取消する
+            </AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

@@ -91,25 +91,6 @@ export class ShiftAssignmentRepository {
     }
   }
 
-  async findByEmployeeIdAndDate(
-    employeeId: number,
-    date: string,
-  ): Promise<ShiftAssignment | null | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select()
-        .from(shiftAssignments)
-        .where(and(eq(shiftAssignments.employeeId, employeeId), eq(shiftAssignments.date, date)))
-        .limit(1)
-
-      const row = rows.at(0)
-
-      return row === undefined ? null : ShiftAssignment.fromRow(row)
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to load shift_assignment")
-    }
-  }
-
   async findByEmployeeId(employeeId: number): Promise<ReadonlyArray<ShiftAssignment> | Error> {
     try {
       const rows = await this.c.var.database

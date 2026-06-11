@@ -49,6 +49,10 @@ export class CancelShiftSwapRequest {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "already_approved" }
+    }
+
     return { reason: "cancelled" }
   }
 }

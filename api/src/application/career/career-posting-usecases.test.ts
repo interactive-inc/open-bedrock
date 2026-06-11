@@ -5,6 +5,7 @@ import { DeleteCareerPosting } from "@/application/career/delete-career-posting"
 import { GetCareerPosting } from "@/application/career/get-career-posting"
 import { UpdateCareerPosting } from "@/application/career/update-career-posting"
 import { CareerPosting } from "@/domain/career/career-posting"
+import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
@@ -238,5 +239,37 @@ describe("DeleteCareerPosting", () => {
     }
 
     expect(result.reason).toBe("has_applied_applications")
+  })
+
+  test("deletes rejected applications atomically when deleting a posting", async () => {
+    const { context, db } = createTestContext()
+
+    const postingId = await seedPosting(context)
+
+    // Seed a rejected application directly (no use case sets status=rejected on career_applications)
+    await db
+      .prepare(
+        "INSERT INTO career_applications (posting_id, applicant_id, message, status) VALUES (?1, ?2, NULL, 'rejected')",
+      )
+      .bind(postingId, 10)
+      .run()
+
+    // Now delete the posting — should succeed (no applied applications)
+    const result = await new DeleteCareerPosting(context).run({
+      viewerRole: "admin",
+      postingId,
+    })
+
+    if (result instanceof Error) {
+      throw new Error("unexpected error")
+    }
+
+    expect(result.reason).toBe("deleted")
+
+    // Verify the rejected application was also deleted (no orphan records)
+    const applicationRepository = new CareerApplicationRepository(context)
+    const count = await applicationRepository.countByPostingIdAndStatus(postingId, "rejected")
+
+    expect(count).toBe(0)
   })
 })

@@ -91,10 +91,10 @@ export class BusinessTripRepository {
     }
   }
 
-  // 出張申請の行き先・期間・目的・概算費用を更新する。
-  async update(businessTrip: BusinessTrip): Promise<BusinessTrip | Error> {
+  // 出張申請の行き先・期間・目的・概算費用を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  async update(businessTrip: BusinessTrip): Promise<BusinessTrip | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(businessTrips)
         .set({
           destination: businessTrip.destination,
@@ -103,9 +103,10 @@ export class BusinessTripRepository {
           purpose: businessTrip.purpose,
           estimatedCost: businessTrip.estimatedCost,
         })
-        .where(eq(businessTrips.id, businessTrip.id))
+        .where(and(eq(businessTrips.id, businessTrip.id), eq(businessTrips.status, "requested")))
+        .returning()
 
-      return businessTrip
+      return rows.length === 0 ? null : businessTrip
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update business_trip")
     }

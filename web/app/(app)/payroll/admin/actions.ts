@@ -125,7 +125,7 @@ export async function createSalaryRevisionAction(
   return { ok: true, error: null }
 }
 
-// 給与明細の訂正 Server Action。payslip_id/period/base_salary 必須、手当・控除は任意。
+// 給与明細の訂正 Server Action。payslip_id/period/base_salary/allowances/deductions 必須（0 以上の整数）。
 // net_pay は base_salary + allowances - deductions で自動算出する。
 export async function correctPayslipAction(
   previousState: PayrollAdminFormState,
@@ -157,9 +157,17 @@ export async function correctPayslipAction(
     return { ok: false, error: "基本給は 0 以上の整数で入力してください" }
   }
 
-  const allowances = toNonNegativeNumber(formData.get("allowances"))
+  const allowances = Number(formData.get("allowances"))
 
-  const deductions = toNonNegativeNumber(formData.get("deductions"))
+  if (!Number.isFinite(allowances) || !Number.isInteger(allowances) || allowances < 0) {
+    return { ok: false, error: "手当は 0 以上の整数で入力してください" }
+  }
+
+  const deductions = Number(formData.get("deductions"))
+
+  if (!Number.isFinite(deductions) || !Number.isInteger(deductions) || deductions < 0) {
+    return { ok: false, error: "控除は 0 以上の整数で入力してください" }
+  }
 
   const netPay = baseSalary + allowances - deductions
 

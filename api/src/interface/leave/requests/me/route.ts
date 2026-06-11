@@ -9,7 +9,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { leaveRequests } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 // GET /leave/requests/me — 本人の休暇申請一覧（status で絞り込み可能）
@@ -56,6 +56,7 @@ export const GET = factory.createHandlers(
       .select()
       .from(leaveRequests)
       .where(and(...conditions))
+      .orderBy(desc(leaveRequests.id))
       .limit(limit)
       .offset(offset)
 

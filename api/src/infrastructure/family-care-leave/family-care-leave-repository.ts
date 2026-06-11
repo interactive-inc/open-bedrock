@@ -1,7 +1,7 @@
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
 import type { Context } from "@/env"
 import { familyCareLeaves } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 export class FamilyCareLeaveRepository {
   constructor(private readonly c: Context) {}
@@ -62,10 +62,10 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 休業申出の種別・期間・備考を更新する。
-  async update(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | Error> {
+  // 休業申出の種別・期間・備考を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  async update(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(familyCareLeaves)
         .set({
           leaveKind: familyCareLeave.leaveKind,
@@ -73,9 +73,15 @@ export class FamilyCareLeaveRepository {
           endDate: familyCareLeave.endDate,
           note: familyCareLeave.note,
         })
-        .where(eq(familyCareLeaves.id, familyCareLeave.id))
+        .where(
+          and(
+            eq(familyCareLeaves.id, familyCareLeave.id),
+            eq(familyCareLeaves.status, "requested"),
+          ),
+        )
+        .returning()
 
-      return familyCareLeave
+      return rows.length === 0 ? null : familyCareLeave
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update family_care_leave")
     }

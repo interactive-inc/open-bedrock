@@ -48,6 +48,10 @@ export class WithdrawApplication {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "not_pending" }
+    }
+
     return { reason: "withdrawn" }
   }
 }

@@ -14,5 +14,6 @@ export async function getMyExpenses(status: ExpenseStatus | null) {
     return new Error("failed to load my expenses")
   }
 
-  return response.json()
+  const body = await response.json()
+  return body.data
 }
