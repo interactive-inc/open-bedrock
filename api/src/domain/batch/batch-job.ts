@@ -28,5 +28,7 @@ export class BatchJob implements Props {
     zProps.parse(props)
 
     Object.assign(this, props)
+
+    Object.freeze(this)
   }
 }

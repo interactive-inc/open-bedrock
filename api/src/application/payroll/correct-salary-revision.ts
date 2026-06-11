@@ -58,6 +58,10 @@ export class CorrectSalaryRevision {
 
     const updated = await salaryRevisionRepository.update(corrected)
 
+    if (updated instanceof Error && !(updated instanceof UniqueConstraintError)) {
+      return updated
+    }
+
     if (updated instanceof UniqueConstraintError) {
       return { reason: "duplicate_effective_date" }
     }

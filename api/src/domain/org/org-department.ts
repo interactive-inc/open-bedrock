@@ -25,6 +25,8 @@ export class OrgDepartment implements Props {
     zProps.parse(props)
 
     Object.assign(this, props)
+
+    Object.freeze(this)
   }
 
   static create(props: Props) {
