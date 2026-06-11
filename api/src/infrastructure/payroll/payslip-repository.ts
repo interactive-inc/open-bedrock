@@ -101,6 +101,11 @@ export class PayslipRepository {
 
       return row === undefined ? null : Payslip.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("payslip period already exists for employee", {
+          cause: error,
+        })
+      }
       return error instanceof Error ? error : new Error("failed to update payslip")
     }
   }
