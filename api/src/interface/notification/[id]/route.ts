@@ -1,12 +1,7 @@
 import { DeleteNotification } from "@/application/notification/delete-notification"
 import { GetNotification } from "@/application/notification/get-notification"
 import type { Notification } from "@/domain/notification/notification"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
@@ -46,11 +41,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   if ("reason" in result) {
-    if (result.reason === "notification_not_found") {
-      throw new NotFoundError("notification not found")
-    }
-
-    throw new ForbiddenError()
+    // 他人の通知も 404 にして、連番 ID による存在推測（列挙）を防ぐ。
+    throw new NotFoundError("notification not found")
   }
 
   return c.json(toResponseBody(result), 200)
