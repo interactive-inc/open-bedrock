@@ -183,6 +183,30 @@ describe("POST /review-forms/:form_id/submit", () => {
     expect(response.status).toBe(409)
   })
 
+  test("rejects a negative score with 400", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: -1,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("rejects a score above 100 with 400", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 101,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("rejects a non-integer score with 400", async () => {
+    const response = await request("/review-forms/1/submit", await memberToken(), "POST", {
+      score: 75.5,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/review-forms/1/submit", null, "POST", { score: 75 })
 

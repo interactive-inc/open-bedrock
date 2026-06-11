@@ -18,7 +18,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      score: z.number().optional(),
+      // スコアは 0〜100 の整数。負数・小数・巨大値は averageScore 算出を歪めるため弾く。
+      score: z.number().int().min(0).max(100).optional(),
       // 要素数に加えてシリアライズ後のバイト長も制限し、巨大ペイロードの格納を防ぐ
       // （survey の answers_json が jsonPayloadSchema(10_000) で課す上限と同じ値）。
       answers: z
