@@ -94,12 +94,7 @@ export class FamilyCareLeaveRepository {
     try {
       const rows = await this.c.var.database
         .delete(familyCareLeaves)
-        .where(
-          and(
-            eq(familyCareLeaves.id, id),
-            eq(familyCareLeaves.status, "requested"),
-          ),
-        )
+        .where(and(eq(familyCareLeaves.id, id), eq(familyCareLeaves.status, "requested")))
         .returning({ id: familyCareLeaves.id })
 
       return rows.length > 0 ? true : null

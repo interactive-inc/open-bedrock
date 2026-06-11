@@ -94,12 +94,7 @@ export class ResignationRepository {
           lastWorkingDate: resignation.lastWorkingDate,
           reason: resignation.reason,
         })
-        .where(
-          and(
-            eq(resignations.id, resignation.id),
-            eq(resignations.status, "requested"),
-          ),
-        )
+        .where(and(eq(resignations.id, resignation.id), eq(resignations.status, "requested")))
         .returning()
 
       const row = rows.at(0)
@@ -115,12 +110,7 @@ export class ResignationRepository {
     try {
       const rows = await this.c.var.database
         .delete(resignations)
-        .where(
-          and(
-            eq(resignations.id, id),
-            eq(resignations.status, "requested"),
-          ),
-        )
+        .where(and(eq(resignations.id, id), eq(resignations.status, "requested")))
         .returning({ id: resignations.id })
 
       return rows.length > 0 ? true : null

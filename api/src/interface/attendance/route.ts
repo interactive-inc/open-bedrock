@@ -10,7 +10,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
-import { and, asc, eq, gte, lte } from "drizzle-orm"
+import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /attendance — 勤怠検索（他人の閲覧は権限ロールのみ）
@@ -73,13 +73,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const rows = await c.var.database
-    .select()
-    .from(attendanceRecords)
-    .where(conditions.length === 0 ? undefined : and(...conditions))
-    .orderBy(asc(attendanceRecords.id))
-    .limit(limit)
-    .offset(offset)
+  const where = conditions.length === 0 ? undefined : and(...conditions)
+
+  const [rows, totalRows] = await Promise.all([
+    c.var.database
+      .select()
+      .from(attendanceRecords)
+      .where(where)
+      .orderBy(asc(attendanceRecords.id))
+      .limit(limit)
+      .offset(offset),
+    c.var.database.select({ total: count() }).from(attendanceRecords).where(where),
+  ])
 
   const responseBody = rows.map((row) => ({
     id: row.id,
@@ -91,5 +96,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: row.status,
   }))
 
-  return c.json(responseBody, 200)
+  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

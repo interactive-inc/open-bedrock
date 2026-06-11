@@ -52,7 +52,7 @@ export class SetReviewCycleStatus {
       return { reason: "invalid_transition" }
     }
 
-    const updated = await repository.update(transitioned)
+    const updated = await repository.updateStatus(transitioned)
 
     if (updated instanceof Error) {
       return updated

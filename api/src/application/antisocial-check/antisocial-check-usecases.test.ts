@@ -95,7 +95,11 @@ describe("ListMyAntisocialChecks", () => {
 
     await seedCheck(context, 6)
 
-    const result = await new ListMyAntisocialChecks(context).run({ requesterId: 5, limit: 50, offset: 0 })
+    const result = await new ListMyAntisocialChecks(context).run({
+      requesterId: 5,
+      limit: 50,
+      offset: 0,
+    })
 
     if (result instanceof Error) {
       throw new Error("list failed")

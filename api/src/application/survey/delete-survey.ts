@@ -45,16 +45,15 @@ export class DeleteSurvey {
       return { reason: "not_deletable" }
     }
 
-    const responsesDeleted = await surveyRepository.deleteResponsesBySurveyId(command.surveyId)
+    const db = this.c.env.DB
 
-    if (responsesDeleted instanceof Error) {
-      return responsesDeleted
-    }
-
-    const deleted = await surveyRepository.delete(command.surveyId)
-
-    if (deleted instanceof Error) {
-      return deleted
+    try {
+      await db.batch([
+        db.prepare("DELETE FROM survey_responses WHERE survey_id = ?1").bind(command.surveyId),
+        db.prepare("DELETE FROM surveys WHERE id = ?1").bind(command.surveyId),
+      ])
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete survey")
     }
 
     return { reason: "deleted" }

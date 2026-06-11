@@ -47,6 +47,10 @@ export const POST = factory.createHandlers(
         throw new ConflictError("clock-in time is missing")
       }
 
+      if (record.reason === "already_clocked_out") {
+        throw new ConflictError("already clocked out")
+      }
+
       throw new NotFoundError("attendance not found")
     }
 

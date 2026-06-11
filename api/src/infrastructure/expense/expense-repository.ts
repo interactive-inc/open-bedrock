@@ -61,7 +61,7 @@ export class ExpenseRepository {
           note: expense.note,
           status: expense.status,
         })
-        .where(eq(expenses.id, expense.id))
+        .where(and(eq(expenses.id, expense.id), eq(expenses.status, "pending")))
         .returning()
 
       const row = rows.at(0)
