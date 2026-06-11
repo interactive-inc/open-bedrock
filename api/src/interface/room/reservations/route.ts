@@ -5,6 +5,7 @@ import {
   BadRequestError,
   ConflictError,
   InternalError,
+  NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -50,6 +51,9 @@ export const POST = factory.createHandlers(
     if ("reason" in reservation) {
       if (reservation.reason === "invalid_time_range") {
         throw new BadRequestError("end_at must be after start_at")
+      }
+      if (reservation.reason === "room_not_found") {
+        throw new NotFoundError("room not found")
       }
       throw new ConflictError("the room is already reserved")
     }

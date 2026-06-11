@@ -77,9 +77,9 @@ async function request(
   })
 }
 
-describe("GET /templates", () => {
+describe("GET /application-templates", () => {
   test("returns 200 with the template columns", async () => {
-    const response = await request("/templates", await tokenFor(1, "admin"))
+    const response = await request("/application-templates", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(200)
 
@@ -98,7 +98,10 @@ describe("GET /templates", () => {
   })
 
   test("filters by category", async () => {
-    const response = await request("/templates?category=attendance", await tokenFor(1, "admin"))
+    const response = await request(
+      "/application-templates?category=attendance",
+      await tokenFor(1, "admin"),
+    )
 
     expect(response.status).toBe(200)
 
@@ -112,7 +115,7 @@ describe("GET /templates", () => {
   })
 
   test("returns only 1 template when limit=1", async () => {
-    const response = await request("/templates?limit=1", await tokenFor(1, "admin"))
+    const response = await request("/application-templates?limit=1", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(200)
 
@@ -126,7 +129,7 @@ describe("GET /templates", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/templates", null)
+    const response = await request("/application-templates", null)
 
     expect(response.status).toBe(401)
   })

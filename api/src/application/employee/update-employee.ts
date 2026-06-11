@@ -26,6 +26,8 @@ export type EmployeeNotFound = { reason: "employee_not_found" }
 
 export type CannotDemoteSelf = { reason: "cannot_demote_self" }
 
+export type EmailConflict = { reason: "email_conflict" }
+
 export type LastAdmin = { reason: "last_admin" }
 
 export type UpdateEmployeeFailure =
@@ -33,6 +35,7 @@ export type UpdateEmployeeFailure =
   | RoleEscalationForbidden
   | EmployeeNotFound
   | CannotDemoteSelf
+  | EmailConflict
   | LastAdmin
 
 /**
@@ -83,6 +86,19 @@ export class UpdateEmployee {
     // ロール変更は admin のみ許可
     if (command.profile.role !== employee.role && command.viewerRole !== "admin") {
       return { reason: "role_escalation_forbidden" }
+    }
+
+    // メール変更時は重複チェック
+    if (command.profile.email.toLowerCase() !== employee.email.toLowerCase()) {
+      const existingByEmail = await employeeRepository.findByEmail(command.profile.email)
+
+      if (existingByEmail instanceof Error) {
+        return existingByEmail
+      }
+
+      if (existingByEmail !== null && existingByEmail.id !== employee.id) {
+        return { reason: "email_conflict" }
+      }
     }
 
     const updated = await employeeRepository.updateProfile(employee.withProfile(command.profile))

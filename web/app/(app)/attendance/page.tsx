@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { AttendanceClockForm } from "@/app/(app)/attendance/attendance-clock-form"
-import { AttendanceFilterForm } from "@/app/(app)/attendance/attendance-filter-form"
-import { AttendanceSummaryCard } from "@/app/(app)/attendance/attendance-summary-card"
-import { MyAttendanceList } from "@/app/(app)/attendance/my-attendance-list"
+import { AttendanceClockForm } from "@/app/(app)/attendance/_components/attendance-clock-form"
+import { AttendanceFilterForm } from "@/app/(app)/attendance/_components/attendance-filter-form"
+import { AttendanceSummaryCard } from "@/app/(app)/attendance/_components/attendance-summary-card"
+import { MyAttendanceList } from "@/app/(app)/attendance/_components/my-attendance-list"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 

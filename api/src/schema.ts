@@ -7,7 +7,7 @@ export const employees = sqliteTable("employees", {
   id: integer("id").primaryKey(),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: text("role").notNull(),
   deptId: integer("dept_id"),

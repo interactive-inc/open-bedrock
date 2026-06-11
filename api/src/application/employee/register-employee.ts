@@ -3,6 +3,7 @@ import type { Employee } from "@/domain/employee/employee"
 import { canManageEmployees } from "@/domain/employee/can-manage-employees"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -25,6 +26,8 @@ export type RoleEscalationForbidden = { reason: "role_escalation_forbidden" }
 
 export type CodeConflict = { reason: "employee_code_conflict" }
 
+export type EmailConflict = { reason: "email_conflict" }
+
 export type WeakPassword = { reason: "weak_password" }
 
 // パスワード最低文字数。route 層の zod 検証と二重で防御する。
@@ -38,7 +41,15 @@ export class RegisterEmployee {
 
   async run(
     command: Command,
-  ): Promise<Employee | Forbidden | RoleEscalationForbidden | CodeConflict | WeakPassword | Error> {
+  ): Promise<
+    | Employee
+    | Forbidden
+    | RoleEscalationForbidden
+    | CodeConflict
+    | EmailConflict
+    | WeakPassword
+    | Error
+  > {
     const employeeRepository = new EmployeeRepository(this.c)
 
     if (canManageEmployees(command.viewerRole) === false) {
@@ -67,12 +78,12 @@ export class RegisterEmployee {
     return this.persist(command)
   }
 
-  private async persist(command: Command): Promise<Employee | Error> {
+  private async persist(command: Command): Promise<Employee | EmailConflict | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const passwordHash = await toPasswordHash(command.employee.password)
 
-    return employeeRepository.create({
+    const result = await employeeRepository.create({
       code: command.employee.code,
       name: command.employee.name,
       email: command.employee.email,
@@ -83,5 +94,12 @@ export class RegisterEmployee {
       position: command.employee.position,
       status: command.employee.status,
     })
+
+    // code の重複は事前チェック済みなので、ここで UniqueConstraintError が出るのは email の重複。
+    if (result instanceof UniqueConstraintError) {
+      return { reason: "email_conflict" }
+    }
+
+    return result
   }
 }
