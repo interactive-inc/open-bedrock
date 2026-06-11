@@ -151,7 +151,7 @@ function UpdateApplicationDialog(props: {
 
 // 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawApplicationButton(props: { applicationId: number }) {
-  const [state, formAction, pending] = useActionState(withdrawApplicationAction, {
+  const [_state, formAction, pending] = useActionState(withdrawApplicationAction, {
     ok: false,
     error: null,
   })
