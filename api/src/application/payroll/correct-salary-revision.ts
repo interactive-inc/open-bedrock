@@ -4,6 +4,7 @@ import type { SalaryRevision } from "@/domain/payroll/salary-revision"
 import { toPreviousBaseSalary } from "@/domain/payroll/to-previous-base-salary"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -15,6 +16,8 @@ export type Command = {
 
 export type SalaryRevisionNotFound = { reason: "salary_revision_not_found" }
 
+export type DuplicateEffectiveDate = { reason: "duplicate_effective_date" }
+
 /**
  * 特権ロールが既存の給与改定の適用日・改定後基本給・理由を訂正する。計算は持たず渡された値で記録する。
  */
@@ -23,7 +26,7 @@ export class CorrectSalaryRevision {
 
   async run(
     command: Command,
-  ): Promise<SalaryRevision | Forbidden | SalaryRevisionNotFound | Error> {
+  ): Promise<SalaryRevision | Forbidden | SalaryRevisionNotFound | DuplicateEffectiveDate | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -54,6 +57,10 @@ export class CorrectSalaryRevision {
     }
 
     const updated = await salaryRevisionRepository.update(corrected)
+
+    if (updated instanceof UniqueConstraintError) {
+      return { reason: "duplicate_effective_date" }
+    }
 
     if (updated === null) {
       return { reason: "salary_revision_not_found" }

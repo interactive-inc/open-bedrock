@@ -2,6 +2,7 @@ import { CancelSalaryRevision } from "@/application/payroll/cancel-salary-revisi
 import { CorrectSalaryRevision } from "@/application/payroll/correct-salary-revision"
 import { SalaryRevision } from "@/domain/payroll/salary-revision"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -68,6 +69,10 @@ export const PUT = factory.createHandlers(
 
     if (corrected.reason === "forbidden") {
       throw new ForbiddenError()
+    }
+
+    if (corrected.reason === "duplicate_effective_date") {
+      throw new ConflictError("effective date already exists for this employee")
     }
 
     throw new NotFoundError("salary revision not found")
