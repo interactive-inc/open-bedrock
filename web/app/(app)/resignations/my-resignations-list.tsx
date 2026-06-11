@@ -3,6 +3,17 @@
 import { useActionState, useState } from "react"
 import { cancelResignationAction, updateResignationAction } from "@/app/(app)/resignations/actions"
 import type { ResignationActionState } from "@/app/(app)/resignations/actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -152,20 +163,40 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
   )
 }
 
-// 退職申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+// 退職申請取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelResignationButton(props: { resignationId: string }) {
-  const [_state, formAction, pending] = useActionState(cancelResignationAction, {
+  const [, formAction, pending] = useActionState(cancelResignationAction, {
     ok: false,
     error: null,
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="resignation_id" value={props.resignationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
+    <AlertDialog>
+      <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={pending} />}>
         取消
-      </Button>
-    </form>
+      </AlertDialogTrigger>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>退職申請を取り消しますか？</AlertDialogTitle>
+
+          <AlertDialogDescription>
+            この退職申請の取消後は、再度申請が必要になります。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>やめる</AlertDialogCancel>
+
+          <form action={formAction}>
+            <input type="hidden" name="resignation_id" value={props.resignationId} />
+
+            <AlertDialogAction type="submit" variant="destructive" disabled={pending}>
+              取消する
+            </AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
