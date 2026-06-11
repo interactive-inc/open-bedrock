@@ -40,7 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const responseBody = rows.map((row) => {
     const survey = Survey.fromRow(row)
     if (survey instanceof Error) {
-      throw new InternalError(survey.message)
+      throw new InternalError("internal server error")
     }
     return {
       id: row.id,

@@ -19,7 +19,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new MigrateLegacyHashes(c).run()
 
   if (result instanceof Error) {
-    throw new InternalError(result.message)
+    throw new InternalError("internal server error")
   }
 
   return c.json(result, 200)
