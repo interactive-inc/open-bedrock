@@ -293,14 +293,24 @@ describe("PUT /surveys/:survey_id", () => {
 })
 
 describe("DELETE /surveys/:survey_id", () => {
-  test("deletes a survey and returns 204", async () => {
+  test("deletes a closed survey and returns 204", async () => {
+    const response = await request({
+      path: "/surveys/3",
+      token: await adminToken(),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(204)
+  })
+
+  test("returns 409 when deleting an open survey", async () => {
     const response = await request({
       path: "/surveys/1",
       token: await adminToken(),
       method: "DELETE",
     })
 
-    expect(response.status).toBe(204)
+    expect(response.status).toBe(409)
   })
 
   test("returns 403 for a non-admin", async () => {
@@ -343,6 +353,9 @@ describe("DELETE /surveys/:survey_id", () => {
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
+    // Close survey 1 directly so the deletion guard allows it.
+    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = 1").run()
+
     // Survey 1 has 3 seed responses. Confirm they exist via summary.
     const summaryBefore = await testApp.request(
       "/surveys/1/summary",
@@ -356,7 +369,7 @@ describe("DELETE /surveys/:survey_id", () => {
 
     expect(bodyBefore.response_count).toBe(3)
 
-    // Delete the survey.
+    // Delete the now-closed survey.
     const deleteRes = await testApp.request(
       "/surveys/1",
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },

@@ -173,6 +173,32 @@ describe("GET /onboarding/employee/:code", () => {
     expect(response.status).toBe(404)
   })
 
+  test("limit=1 returns at most one assignment", async () => {
+    const response = await request({
+      path: "/onboarding/employee/E005?limit=1",
+      token: await token(1, "admin"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(onboardingAssignmentResponseSchema).parse(await response.json())
+
+    expect(parsed.length).toBe(1)
+  })
+
+  test("offset beyond the assignment count returns an empty list", async () => {
+    const response = await request({
+      path: "/onboarding/employee/E005?offset=1",
+      token: await token(1, "admin"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(onboardingAssignmentResponseSchema).parse(await response.json())
+
+    expect(parsed.length).toBe(0)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({ path: "/onboarding/employee/E005", token: null })
 

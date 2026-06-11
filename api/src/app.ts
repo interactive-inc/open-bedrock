@@ -197,6 +197,8 @@ export const app = factory
       return c.json({ error: error.message }, error.status)
     }
 
+    console.error("[unhandled error]", error)
+
     return c.json({ error: "internal server error" }, 500)
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))

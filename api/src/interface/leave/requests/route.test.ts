@@ -11,16 +11,16 @@ import { z } from "zod"
 
 const leaveRequestCreateResponseSchema = z.object({
   id: z.number(),
-  employeeId: z.number(),
-  leaveType: z.enum(["annual", "special"]),
-  startDate: z.string(),
-  endDate: z.string(),
+  employee_id: z.number(),
+  leave_type: z.enum(["annual", "special"]),
+  start_date: z.string(),
+  end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
-  approverId: z.number().nullable(),
-  decidedComment: z.string().nullable(),
-  createdAt: z.string(),
+  approver_id: z.number().nullable(),
+  decided_comment: z.string().nullable(),
+  created_at: z.string(),
 })
 
 const jwtSecret = "leave-requests-route-test-secret"
@@ -124,10 +124,10 @@ describe("POST /leave/requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employeeId).toBe(5)
+      expect(parsed.data.employee_id).toBe(5)
       expect(parsed.data.days).toBe(5)
       expect(parsed.data.status).toBe("pending")
-      expect(parsed.data.approverId).toBeNull()
+      expect(parsed.data.approver_id).toBeNull()
     }
   })
 

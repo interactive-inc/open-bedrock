@@ -151,6 +151,18 @@ describe("DELETE /review-cycles/:cycle_id", () => {
     expect(response.status).toBe(204)
   })
 
+  test("returns 409 when deleting an open cycle", async () => {
+    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 when deleting a closed cycle", async () => {
+    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
+
   test("returns 404 for a missing cycle", async () => {
     const response = await request("/review-cycles/9999", await adminToken(), "DELETE")
 
@@ -161,5 +173,17 @@ describe("DELETE /review-cycles/:cycle_id", () => {
     const response = await request("/review-cycles/1", await memberToken(), "DELETE")
 
     expect(response.status).toBe(403)
+  })
+
+  test("open cycle cannot be deleted (409)", async () => {
+    const response = await request("/review-cycles/1", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
+  })
+
+  test("closed cycle cannot be deleted (409)", async () => {
+    const response = await request("/review-cycles/2", await adminToken(), "DELETE")
+
+    expect(response.status).toBe(409)
   })
 })

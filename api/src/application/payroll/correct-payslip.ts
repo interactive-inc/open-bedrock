@@ -16,13 +16,17 @@ export type Command = {
 
 export type PayslipNotFound = { reason: "payslip_not_found" }
 
+export type NotEditable = { reason: "not_editable" }
+
 /**
  * 特権ロールが給与明細の期間と金額を訂正する。金額は渡された値をそのまま記録する。
  */
 export class CorrectPayslip {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Payslip | Forbidden | PayslipNotFound | Error> {
+  async run(
+    command: Command,
+  ): Promise<Payslip | Forbidden | PayslipNotFound | NotEditable | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -37,6 +41,10 @@ export class CorrectPayslip {
 
     if (current === null) {
       return { reason: "payslip_not_found" }
+    }
+
+    if (current.status !== "issued") {
+      return { reason: "not_editable" }
     }
 
     const corrected = current.withCorrected({

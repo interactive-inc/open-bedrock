@@ -7,6 +7,7 @@ import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { eq } from "drizzle-orm"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -146,6 +147,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "forbidden") {
     throw new ForbiddenError()
+  }
+
+  if (result.reason === "template_in_use") {
+    throw new ConflictError("template is in use by pending applications")
   }
 
   return c.body(null, 204)

@@ -4,6 +4,8 @@ import { CareerApplicationRepository } from "@/infrastructure/career/career-appl
 
 export type Command = {
   applicantId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyCareerApplications {
   async run(command: Command): Promise<ReadonlyArray<CareerApplication> | Error> {
     const applicationRepository = new CareerApplicationRepository(this.c)
 
-    return await applicationRepository.findByApplicantId(command.applicantId)
+    return await applicationRepository.findByApplicantId({
+      applicantId: command.applicantId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }
