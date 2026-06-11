@@ -81,6 +81,7 @@ export const PUT = factory.createHandlers(
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
       antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
       requesterId: viewer.employeeId,
+      viewerRole: viewer.role,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,
       representativeName: json.representative_name ?? null,
@@ -98,6 +99,10 @@ export const PUT = factory.createHandlers(
 
       if (antisocialCheck.reason === "not_modifiable") {
         throw new ConflictError("not modifiable")
+      }
+
+      if (antisocialCheck.reason === "result_forbidden") {
+        throw new ForbiddenError("only managers can set the result")
       }
 
       throw new ForbiddenError("not the requester")

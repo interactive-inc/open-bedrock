@@ -111,7 +111,7 @@ describe("ListMyAntisocialChecks", () => {
 })
 
 describe("UpdateAntisocialCheck", () => {
-  test("updates the details and result for the requester", async () => {
+  test("updates the details and result for a manager requester", async () => {
     const { context } = createTestContext()
 
     const checkId = await seedCheck(context, 5)
@@ -119,6 +119,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
+      viewerRole: "admin",
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -135,6 +136,49 @@ describe("UpdateAntisocialCheck", () => {
     expect(result.result).toBe("clear")
   })
 
+  test("allows a non-manager requester to update details but ignores result", async () => {
+    const { context } = createTestContext()
+
+    const checkId = await seedCheck(context, 5)
+
+    const result = await new UpdateAntisocialCheck(context).run({
+      antisocialCheckId: checkId,
+      requesterId: 5,
+      viewerRole: "employee",
+      partnerName: "Demo Partners LLC",
+      partnerAddress: "4-5-6 Placeholder, Example City",
+      representativeName: "Alex Sample",
+      result: null,
+    })
+
+    expect(result).toBeInstanceOf(AntisocialCheck)
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("update failed")
+    }
+
+    expect(result.partnerName).toBe("Demo Partners LLC")
+    expect(result.result).toBe(null)
+  })
+
+  test("rejects result change from a non-manager requester with result_forbidden", async () => {
+    const { context } = createTestContext()
+
+    const checkId = await seedCheck(context, 5)
+
+    const result = await new UpdateAntisocialCheck(context).run({
+      antisocialCheckId: checkId,
+      requesterId: 5,
+      viewerRole: "employee",
+      partnerName: "Demo Partners LLC",
+      partnerAddress: null,
+      representativeName: null,
+      result: "clear",
+    })
+
+    expect(result).toEqual({ reason: "result_forbidden" })
+  })
+
   test("rejects a non requester with not_requester", async () => {
     const { context } = createTestContext()
 
@@ -143,6 +187,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 6,
+      viewerRole: "employee",
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,

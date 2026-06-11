@@ -267,28 +267,61 @@ export class LeaveRequestRepository {
   }
 
   // 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
-  // pending 状態のみ更新可。承認済み・却下済みは 0 行更新となり null を返す（TOCTOU 競合を防ぐ）。
-  async revise(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
+  // pending 状態のみ更新可かつ重複なしの条件で UPDATE する（TOCTOU 競合を防ぐ）。
+  // 0 行更新の場合は status を再確認し "already_decided" か "overlapping" を返す。
+  async revise(
+    leaveRequest: LeaveRequest,
+  ): Promise<LeaveRequest | "already_decided" | "overlapping" | Error> {
     try {
       if (leaveRequest.id === null) {
         return new Error("cannot revise unsaved leave request")
       }
 
+      const result = await this.c.var.database.run(
+        sql`UPDATE leave_requests
+            SET leave_type = ${leaveRequest.leaveType},
+                start_date = ${leaveRequest.startDate},
+                end_date   = ${leaveRequest.endDate},
+                days       = ${leaveRequest.days},
+                reason     = ${leaveRequest.reason}
+            WHERE id = ${leaveRequest.id}
+              AND status = 'pending'
+              AND NOT EXISTS (
+                SELECT 1 FROM leave_requests
+                WHERE employee_id = ${leaveRequest.employeeId}
+                  AND status IN ('pending', 'approved')
+                  AND id != ${leaveRequest.id}
+                  AND start_date <= ${leaveRequest.endDate}
+                  AND end_date >= ${leaveRequest.startDate}
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        // 0 行更新: status が pending でないか、重複があるかを区別する。
+        const current = await this.findById(leaveRequest.id)
+
+        if (current instanceof Error) {
+          return current
+        }
+
+        if (current === null || current.status !== "pending") {
+          return "already_decided"
+        }
+
+        return "overlapping"
+      }
+
       const rows = await this.c.var.database
-        .update(leaveRequests)
-        .set({
-          leaveType: leaveRequest.leaveType,
-          startDate: leaveRequest.startDate,
-          endDate: leaveRequest.endDate,
-          days: leaveRequest.days,
-          reason: leaveRequest.reason,
-        })
-        .where(and(eq(leaveRequests.id, leaveRequest.id), eq(leaveRequests.status, "pending")))
-        .returning()
+        .select()
+        .from(leaveRequests)
+        .where(eq(leaveRequests.id, leaveRequest.id))
+        .limit(1)
 
       const row = rows.at(0)
 
-      return row === undefined ? null : LeaveRequest.fromRow(row)
+      return row === undefined
+        ? new Error("failed to retrieve revised leave_request")
+        : LeaveRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to revise leave_request")
     }
