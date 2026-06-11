@@ -32,10 +32,10 @@ export class EmployeeSkillRepository {
     }
   }
 
-  // 業務キー（employeeId×skillCode）で1件削除する。
-  async delete(key: EmployeeSkillKey): Promise<null | Error> {
+  // 業務キー（employeeId×skillCode）で1件削除する。対象行が存在しない場合は null を返す。
+  async delete(key: EmployeeSkillKey): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(employeeSkills)
         .where(
           and(
@@ -43,8 +43,9 @@ export class EmployeeSkillRepository {
             eq(employeeSkills.skillCode, key.skillCode),
           ),
         )
+        .returning({ employeeId: employeeSkills.employeeId })
 
-      return null
+      return rows.length === 0 ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete employee_skill")
     }

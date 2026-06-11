@@ -4,6 +4,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
   BadRequestError,
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -119,6 +120,9 @@ export const POST = factory.createHandlers(
     if ("reason" in created) {
       if (created.reason === "self_reference") {
         throw new BadRequestError("member and manager must be different")
+      }
+      if (created.reason === "duplicate") {
+        throw new ConflictError("one-on-one already exists")
       }
       throw new NotFoundError("member not found")
     }
