@@ -3,6 +3,7 @@ import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import { Payslip } from "@/domain/payroll/payslip"
 import type { Context } from "@/env"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -18,6 +19,8 @@ export type PayslipNotFound = { reason: "payslip_not_found" }
 
 export type NotEditable = { reason: "not_editable" }
 
+export type DuplicatePeriod = { reason: "duplicate_period" }
+
 /**
  * 特権ロールが給与明細の期間と金額を訂正する。金額は渡された値をそのまま記録する。
  */
@@ -26,7 +29,7 @@ export class CorrectPayslip {
 
   async run(
     command: Command,
-  ): Promise<Payslip | Forbidden | PayslipNotFound | NotEditable | Error> {
+  ): Promise<Payslip | Forbidden | PayslipNotFound | NotEditable | DuplicatePeriod | Error> {
     if (canManagePayroll(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -56,6 +59,14 @@ export class CorrectPayslip {
     })
 
     const updated = await payslipRepository.update(corrected)
+
+    if (updated instanceof UniqueConstraintError) {
+      return { reason: "duplicate_period" }
+    }
+
+    if (updated instanceof Error) {
+      return updated
+    }
 
     if (updated === null) {
       return { reason: "not_editable" }

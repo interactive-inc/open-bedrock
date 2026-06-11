@@ -126,6 +126,10 @@ export const PUT = factory.createHandlers(
         throw new ForbiddenError()
       }
 
+      if (payslip.reason === "duplicate_period") {
+        throw new ConflictError("payslip period already exists for the employee")
+      }
+
       if (payslip.reason === "not_editable") {
         throw new ConflictError("the payslip is not editable")
       }
