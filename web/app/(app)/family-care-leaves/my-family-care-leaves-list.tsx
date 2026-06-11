@@ -5,6 +5,7 @@ import {
   cancelFamilyCareLeaveAction,
   updateFamilyCareLeaveAction,
 } from "@/app/(app)/family-care-leaves/actions"
+import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leaves/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -81,7 +82,20 @@ export function MyFamilyCareLeavesList(props: Props) {
 function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateFamilyCareLeaveAction, {
+  async function reduce(
+    previousState: FamilyCareLeaveActionState,
+    formData: FormData,
+  ): Promise<FamilyCareLeaveActionState> {
+    const result = await updateFamilyCareLeaveAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
@@ -160,7 +174,7 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
 
 // 休業申出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
-  const [state, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
+  const [_state, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
     ok: false,
     error: null,
   })

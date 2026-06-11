@@ -18,7 +18,17 @@ const leaveBalanceResponseSchema = z.object({
 })
 
 const leaveDecisionResponseSchema = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  leave_type: z.enum(["annual", "special"]),
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+  reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
+  approver_id: z.number().nullable(),
+  decided_comment: z.string().nullable(),
+  created_at: z.string(),
 })
 
 const jwtSecret = "leave-requests-reject-route-test-secret"
@@ -129,6 +139,10 @@ describe("POST /leave/requests/:id/reject", () => {
 
     if (rejectParsed.success) {
       expect(rejectParsed.data.status).toBe("rejected")
+      expect(rejectParsed.data.approver_id).toBe(4)
+      expect(rejectParsed.data.decided_comment).toBe("not this time")
+      expect(rejectParsed.data.employee_id).toBe(5)
+      expect(rejectParsed.data.leave_type).toBe("annual")
     }
 
     const ownerToken = await tokenFor(5, "member")
@@ -146,6 +160,39 @@ describe("POST /leave/requests/:id/reject", () => {
     const annual = balances.find((row) => row.leave_type === "annual")
 
     expect(annual?.remaining_days).toBe(15)
+  })
+
+  test("returns 400 when comment is empty", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when comment is null", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when comment is omitted", async () => {
+    const response = await request({
+      path: "/leave/requests/1/reject",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: {},
+    })
+
+    expect(response.status).toBe(400)
   })
 
   test("returns 403 for a member", async () => {

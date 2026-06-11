@@ -90,7 +90,7 @@ export class UpdateLeaveRequest {
     const updated = await repository.revise(revised)
 
     if (updated === null) {
-      return { reason: "leave_request_not_found" }
+      return { reason: "not_modifiable" }
     }
 
     return updated

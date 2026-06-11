@@ -44,4 +44,15 @@ export const seedPayslips: ReadonlyArray<SeedPayslip> = [
     issuedAt: "2026-03-25T00:00:00Z",
     status: "issued",
   },
+  {
+    id: 4,
+    employeeId: 1,
+    period: "2026-05",
+    baseSalary: 280000,
+    allowances: 10000,
+    deductions: 40000,
+    netPay: 250000,
+    issuedAt: null,
+    status: "draft",
+  },
 ]

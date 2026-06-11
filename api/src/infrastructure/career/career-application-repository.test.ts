@@ -3,9 +3,17 @@ import { CareerApplicationRepository } from "@/infrastructure/career/career-appl
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
+// テスト用: career_postings に open な公募を挿入する。
+function seedOpenPosting(db: D1Database, postingId: number): void {
+  db.exec(
+    `INSERT INTO career_postings (id, title, status) VALUES (${postingId}, 'Test Posting', 'open')`,
+  )
+}
+
 describe("CareerApplicationRepository", () => {
   test("create then findByPostingAndApplicant round-trips the application", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -35,8 +43,32 @@ describe("CareerApplicationRepository", () => {
     expect(found.status).toBe("applied")
   })
 
+  test("create returns posting_closed when the posting is not open", async () => {
+    const { context, db } = createTestContext()
+    db.exec(
+      "INSERT INTO career_postings (id, title, status) VALUES (1, 'Closed Posting', 'closed')",
+    )
+
+    const repository = new CareerApplicationRepository(context)
+
+    const result = await repository.create(
+      CareerApplication.create({ postingId: 1, applicantId: 2, message: null }),
+    )
+
+    expect(result).not.toBeInstanceOf(Error)
+    expect(result).not.toBeInstanceOf(CareerApplication)
+
+    if (result instanceof Error || result instanceof CareerApplication) {
+      throw new Error("unexpected result")
+    }
+
+    expect(result.reason).toBe("posting_closed")
+  })
+
   test("findByApplicantId returns the applicant's applications", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
+    seedOpenPosting(db, 2)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -48,7 +80,11 @@ describe("CareerApplicationRepository", () => {
       CareerApplication.create({ postingId: 2, applicantId: 7, message: "b" }),
     )
 
-    const applications = await repository.findByApplicantId(7)
+    const applications = await repository.findByApplicantId({
+      applicantId: 7,
+      limit: 50,
+      offset: 0,
+    })
 
     expect(applications).not.toBeInstanceOf(Error)
 
@@ -60,7 +96,8 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("update changes the message and findById round-trips it", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -83,8 +120,38 @@ describe("CareerApplicationRepository", () => {
     expect(found.message).toBe("after")
   })
 
+  test("update returns application_decided when status is not applied", async () => {
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
+
+    const repository = new CareerApplicationRepository(context)
+
+    const created = await repository.create(
+      CareerApplication.create({ postingId: 1, applicantId: 8, message: "msg" }),
+    )
+
+    if (created instanceof Error || "reason" in created || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    // 直接 status を変更して選考確定を模擬する
+    db.exec(`UPDATE career_applications SET status = 'accepted' WHERE id = ${created.id}`)
+
+    const result = await repository.update(created.withMessage("updated"))
+
+    expect(result).not.toBeInstanceOf(Error)
+    expect(result).not.toBeInstanceOf(CareerApplication)
+
+    if (result instanceof Error || result instanceof CareerApplication) {
+      throw new Error("unexpected result")
+    }
+
+    expect(result.reason).toBe("application_decided")
+  })
+
   test("delete removes the application", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
 
@@ -101,5 +168,37 @@ describe("CareerApplicationRepository", () => {
     const found = await repository.findById(created.id)
 
     expect(found).toBe(null)
+  })
+
+  test("delete returns application_decided when status is not applied", async () => {
+    const { context, db } = createTestContext()
+    seedOpenPosting(db, 1)
+
+    const repository = new CareerApplicationRepository(context)
+
+    const created = await repository.create(
+      CareerApplication.create({ postingId: 1, applicantId: 9, message: "x" }),
+    )
+
+    if (created instanceof Error || "reason" in created || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    // 直接 status を変更して選考確定を模擬する
+    db.exec(`UPDATE career_applications SET status = 'rejected' WHERE id = ${created.id}`)
+
+    const result = await repository.delete(created.id)
+
+    expect(result).not.toBe(null)
+
+    if (result instanceof Error || result === null) {
+      throw new Error("unexpected result")
+    }
+
+    expect(result.reason).toBe("application_decided")
+
+    // 行が残っていることを確認
+    const found = await repository.findById(created.id)
+    expect(found).not.toBe(null)
   })
 })

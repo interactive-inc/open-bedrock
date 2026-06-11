@@ -71,6 +71,7 @@ export class AttendanceRecordRepository {
         .set({
           clockOutAt: attendanceRecord.clockOutAt,
           workMinutes: attendanceRecord.workMinutes,
+          note: attendanceRecord.note,
           status: attendanceRecord.status,
         })
         .where(eq(attendanceRecords.id, attendanceRecord.id))

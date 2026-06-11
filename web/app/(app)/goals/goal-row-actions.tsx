@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { deleteGoalAction, updateGoalAction } from "@/app/(app)/goals/actions"
+import type { GoalActionState } from "@/app/(app)/goals/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -41,7 +42,20 @@ export function GoalRowActions(props: Props) {
 function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateGoalAction, {
+  async function reduce(
+    previousState: GoalActionState,
+    formData: FormData,
+  ): Promise<GoalActionState> {
+    const result = await updateGoalAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
@@ -104,7 +118,7 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
 
 // 目標削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeleteGoalButton(props: { goalId: number }) {
-  const [state, formAction, pending] = useActionState(deleteGoalAction, {
+  const [_state, formAction, pending] = useActionState(deleteGoalAction, {
     ok: false,
     error: null,
   })

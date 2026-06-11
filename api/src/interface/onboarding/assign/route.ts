@@ -1,5 +1,6 @@
 import { AssignOnboarding } from "@/application/onboarding/assign-onboarding"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -43,6 +44,9 @@ export const POST = factory.createHandlers(
     if ("reason" in result) {
       if (result.reason === "forbidden") {
         throw new ForbiddenError("not authorized")
+      }
+      if (result.reason === "already_assigned") {
+        throw new ConflictError("template already assigned to this employee")
       }
       throw new NotFoundError(result.reason)
     }
