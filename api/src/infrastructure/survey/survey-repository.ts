@@ -85,12 +85,15 @@ export class SurveyRepository {
     }
   }
 
-  // アンケートを削除する。
-  async delete(surveyId: number): Promise<null | Error> {
+  // アンケートを削除する。該当行がなければ null を返す。
+  async delete(surveyId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(surveys).where(eq(surveys.id, surveyId))
+      const rows = await this.c.var.database
+        .delete(surveys)
+        .where(eq(surveys.id, surveyId))
+        .returning({ id: surveys.id })
 
-      return null
+      return rows.at(0) === undefined ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete survey")
     }
@@ -190,33 +193,39 @@ export class SurveyRepository {
     }
   }
 
-  // 回答内容と提出時刻を更新する。
-  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | Error> {
+  // 回答内容と提出時刻を更新する。該当行がなければ null を返す。
+  async updateResponse(response: SurveyResponse): Promise<SurveyResponse | null | Error> {
     if (response.id === null) {
       return new Error("survey response id is required")
     }
 
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(surveyResponses)
         .set({
           answersJson: JSON.stringify(response.answersJson),
           submittedAt: response.submittedAt,
         })
         .where(eq(surveyResponses.id, response.id))
+        .returning()
 
-      return response
+      const row = rows.at(0)
+
+      return row === undefined ? null : SurveyResponse.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update survey response")
     }
   }
 
-  // 回答を削除する。
-  async deleteResponse(responseId: number): Promise<null | Error> {
+  // 回答を削除する。該当行がなければ null を返す。
+  async deleteResponse(responseId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(surveyResponses).where(eq(surveyResponses.id, responseId))
+      const rows = await this.c.var.database
+        .delete(surveyResponses)
+        .where(eq(surveyResponses.id, responseId))
+        .returning({ id: surveyResponses.id })
 
-      return null
+      return rows.at(0) === undefined ? null : true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete survey response")
     }

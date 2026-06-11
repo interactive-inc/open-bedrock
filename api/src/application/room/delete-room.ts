@@ -17,6 +17,7 @@ export type DeleteRoomFailure = DeleteForbidden | DeleteRoomNotFound
 
 /**
  * 権限と存在を確認し、紐づく予約と会議室マスタを D1 batch でアトミックに削除する。
+ * rooms DELETE に RETURNING id を付与し、0 行削除（TOCTOU 競合）は not_found として扱う。
  */
 export class DeleteRoom {
   constructor(private readonly c: Context) {}
@@ -41,10 +42,16 @@ export class DeleteRoom {
     try {
       const db = this.c.env.DB
 
-      await db.batch([
+      const results = await db.batch([
         db.prepare("DELETE FROM room_reservations WHERE room_id = ?1").bind(command.roomId),
-        db.prepare("DELETE FROM rooms WHERE id = ?1").bind(command.roomId),
+        db.prepare("DELETE FROM rooms WHERE id = ?1 RETURNING id").bind(command.roomId),
       ])
+
+      const roomDeleteResult = results.at(1)
+
+      if (roomDeleteResult === undefined || roomDeleteResult.results.length === 0) {
+        return { reason: "room_not_found" }
+      }
 
       return { reason: "deleted" }
     } catch (error) {
