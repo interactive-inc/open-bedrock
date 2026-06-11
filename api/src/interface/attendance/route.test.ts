@@ -91,6 +91,18 @@ describe("GET /attendance", () => {
     expect(response.status).toBe(403)
   })
 
+  test("returns 400 when from is not a valid date format", async () => {
+    const response = await getRequest("/attendance?from=aaa", await tokenFor(1, "admin"))
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when to is not a valid date format", async () => {
+    const response = await getRequest("/attendance?to=2026/06/01", await tokenFor(1, "admin"))
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await getRequest("/attendance", null)
 

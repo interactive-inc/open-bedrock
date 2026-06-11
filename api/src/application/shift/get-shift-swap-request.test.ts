@@ -20,7 +20,7 @@ async function createSwapRequest(
 
   const result = await repository.create(swapRequest)
 
-  if (result instanceof Error || "reason" in result) {
+  if (result === null || result instanceof Error) {
     throw new Error("failed to create swap request")
   }
 

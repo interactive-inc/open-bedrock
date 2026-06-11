@@ -45,13 +45,18 @@ export class RoomReservationRepository {
   }
 
   // 予約者本人の予約を開始時刻の昇順で返す。
-  async findByReserverId(reserverId: number): Promise<ReadonlyArray<RoomReservation> | Error> {
+  async findByReserverId(
+    reserverId: number,
+    pagination: { limit: number; offset: number },
+  ): Promise<ReadonlyArray<RoomReservation> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(roomReservations)
         .where(eq(roomReservations.reserverId, reserverId))
         .orderBy(asc(roomReservations.startAt))
+        .limit(pagination.limit)
+        .offset(pagination.offset)
 
       const reservations: Array<RoomReservation> = []
 

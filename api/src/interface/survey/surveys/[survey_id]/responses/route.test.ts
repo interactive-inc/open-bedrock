@@ -98,7 +98,7 @@ async function request(props: {
 }
 
 describe("POST /surveys/:survey_id/responses", () => {
-  test("returns 200 with the created snake_case response", async () => {
+  test("returns 201 with the created snake_case response", async () => {
     const response = await request({
       path: "/surveys/2/responses",
       token: await memberToken(),
@@ -106,7 +106,7 @@ describe("POST /surveys/:survey_id/responses", () => {
       body: { answers_json: { q1: 4, q2: "1 day/week" } },
     })
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(201)
 
     const parsed = surveySubmissionResponseSchema.safeParse(await response.json())
 

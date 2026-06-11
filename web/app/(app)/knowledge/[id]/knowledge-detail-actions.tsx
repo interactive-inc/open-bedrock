@@ -35,7 +35,20 @@ export function KnowledgeDetailActions(props: Props) {
 function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateKnowledgeAction, {
+  async function reduce(
+    previousState: { ok: boolean; error: string | null },
+    formData: FormData,
+  ): Promise<{ ok: boolean; error: string | null }> {
+    const result = await updateKnowledgeAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
