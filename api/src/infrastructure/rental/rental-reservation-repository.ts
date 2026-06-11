@@ -90,13 +90,15 @@ export class RentalReservationRepository {
   }
 
   // 予約を削除する。status が requested の行のみ対象とする。
-  async delete(id: string): Promise<null | Error> {
+  // 0 行削除（対象なし or status が requested でない）なら null を返す。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(rentalReservations)
         .where(and(eq(rentalReservations.id, id), eq(rentalReservations.status, "requested")))
+        .returning({ id: rentalReservations.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete rental_reservation")
     }
