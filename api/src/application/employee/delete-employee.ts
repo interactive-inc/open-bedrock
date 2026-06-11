@@ -52,19 +52,14 @@ export class DeleteEmployee {
       return cascadeResult
     }
 
-    const deleted = await employeeRepository.delete(command.code)
-
-    if (deleted instanceof Error) {
-      return deleted
-    }
-
     return { reason: "deleted" }
   }
 
   /**
-   * 従業員に紐づく全関連レコードを D1 batch で一括削除する。
+   * 従業員に紐づく全関連レコードと従業員本体を単一の D1 batch で一括削除する。
    * 子テーブル（goal_evaluations, onboarding_tasks 等）はサブクエリで先に削除する。
    * nullable な外部キー（assets.holder_employee_id 等）は NULL に更新する。
+   * 従業員本体の DELETE を batch 末尾に含めてアトミック性を保証する。
    */
   private async deleteRelatedRecords(
     employeeId: number,
@@ -166,6 +161,9 @@ export class DeleteEmployee {
         db
           .prepare("UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1")
           .bind(employeeId),
+
+        // --- 従業員本体を batch 末尾で削除（アトミック性を保証） ---
+        db.prepare("DELETE FROM employees WHERE code = ?1").bind(employeeCode),
       ])
 
       return null
