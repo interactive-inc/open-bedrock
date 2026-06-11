@@ -54,6 +54,12 @@ export class DecideRedemption {
       return { reason: "redemption_not_found" }
     }
 
+    // 承認・却下のどちらも「決裁」行為。利益相反を避けるため、
+    // 申請者本人による自己決裁は action を問わずここで弾く。
+    if (existing.employeeId === command.deciderId) {
+      return { reason: "self_approval_forbidden" }
+    }
+
     if (command.action === "reject") {
       return this.reject(command)
     }

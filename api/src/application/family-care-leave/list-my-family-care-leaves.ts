@@ -4,6 +4,8 @@ import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/fa
 
 export type Command = {
   employeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyFamilyCareLeaves {
   async run(command: Command): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
-    return await familyCareLeaveRepository.findByEmployeeId(command.employeeId)
+    return await familyCareLeaveRepository.findByEmployeeId({
+      employeeId: command.employeeId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

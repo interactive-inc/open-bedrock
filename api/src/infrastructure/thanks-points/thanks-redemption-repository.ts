@@ -1,6 +1,6 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
 import type { Context } from "@/env"
-import { thanks, thanksRedemptions } from "@/schema"
+import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
 
 // 確定済みの交換ステータス。確定は fulfilled の1つだけ。
@@ -11,6 +11,8 @@ const settledStatus = "fulfilled"
 export type PendingExistsError = { reason: "pending_exists" }
 
 export type InsufficientBalanceError = { reason: "insufficient_balance" }
+
+export type OutOfStockError = { reason: "out_of_stock" }
 
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
@@ -61,14 +63,16 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 残高チェックと重複 pending チェックを INSERT の SELECT ... WHERE に畳み込んだ 1 ステートメントで
-  // アトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
-  // 同時に複数の申請が試みられても残高がマイナスに割れない。
-  // 0 行挿入（changes === 0）は残高不足または既に pending が存在することを意味する。
-  // どちらの原因かは hasPendingByEmployee で判定する（INSERT が弾いた後なので競合の心配は不要）。
+  // 残高チェック・重複 pending チェック・在庫チェックを INSERT の SELECT ... WHERE に畳み込んだ
+  // 1 ステートメントでアトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
+  // 同時に複数の申請が試みられても残高がマイナスに割れず、在庫ゼロの報酬への申請も通らない。
+  // 0 行挿入（changes === 0）は残高不足・既に pending が存在・在庫切れのいずれかを意味する。
+  // 原因は hasPendingByEmployee と在庫の再 SELECT で判定する（INSERT が弾いた後なので競合の心配は不要）。
   async createIfSufficientBalance(
     redemption: ThanksRedemption,
-  ): Promise<ThanksRedemption | PendingExistsError | InsufficientBalanceError | Error> {
+  ): Promise<
+    ThanksRedemption | PendingExistsError | InsufficientBalanceError | OutOfStockError | Error
+  > {
     try {
       const result = await this.c.var.database.run(
         sql`INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id)
@@ -85,6 +89,12 @@ export class ThanksRedemptionRepository {
               SELECT 1 FROM ${thanksRedemptions}
               WHERE ${thanksRedemptions.employeeId} = ${redemption.employeeId}
                 AND ${thanksRedemptions.status} = 'pending'
+            )
+            AND (
+              (SELECT ${thanksRewards.stock} FROM ${thanksRewards}
+                WHERE ${thanksRewards.id} = ${redemption.rewardId}) IS NULL
+              OR (SELECT ${thanksRewards.stock} FROM ${thanksRewards}
+                WHERE ${thanksRewards.id} = ${redemption.rewardId}) > 0
             )`,
       )
 
@@ -95,7 +105,24 @@ export class ThanksRedemptionRepository {
           return hasPending
         }
 
-        return hasPending ? { reason: "pending_exists" } : { reason: "insufficient_balance" }
+        if (hasPending) {
+          return { reason: "pending_exists" }
+        }
+
+        // pending が無いのに 0 行なら、在庫切れか残高不足。在庫を見て区別する。
+        const stockRows = await this.c.var.database
+          .select({ stock: thanksRewards.stock })
+          .from(thanksRewards)
+          .where(eq(thanksRewards.id, redemption.rewardId))
+          .limit(1)
+
+        const stock = stockRows.at(0)?.stock ?? null
+
+        if (stock !== null && stock <= 0) {
+          return { reason: "out_of_stock" }
+        }
+
+        return { reason: "insufficient_balance" }
       }
 
       const lastId = result.meta.last_row_id

@@ -118,7 +118,7 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
 
 // 目標削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeleteGoalButton(props: { goalId: number }) {
-  const [state, formAction, pending] = useActionState(deleteGoalAction, {
+  const [_state, formAction, pending] = useActionState(deleteGoalAction, {
     ok: false,
     error: null,
   })

@@ -194,6 +194,22 @@ describe("POST /onboarding/assign", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 409 when the same template is assigned to the same employee twice", async () => {
+    const db = await createTestDb()
+
+    // employee E005 already has assignment id 100 for engineer_join (seed data)
+    const secondResponse = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/onboarding/assign",
+      token: await token(2, "hr"),
+      method: "POST",
+      body: { employee_code: "E005", template_code: "engineer_join" },
+    })
+
+    expect(secondResponse.status).toBe(409)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/onboarding/assign",

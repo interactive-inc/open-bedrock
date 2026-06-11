@@ -4,11 +4,31 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { skills } from "@/schema"
 import { and, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const q = c.req.query("q") ?? null
 
   const category = c.req.query("category") ?? null
+
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
 
   const conditions: Array<SQL> = []
 
@@ -28,6 +48,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(skills)
     .where(conditions.length === 0 ? undefined : and(...conditions))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     code: row.code,

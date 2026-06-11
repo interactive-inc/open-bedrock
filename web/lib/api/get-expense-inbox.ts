@@ -10,5 +10,6 @@ export async function getExpenseInbox() {
     return new Error("failed to load expense inbox")
   }
 
-  return response.json()
+  const body = await response.json()
+  return body.data
 }

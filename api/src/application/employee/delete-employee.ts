@@ -1,4 +1,4 @@
-import { canManageEmployees } from "@/domain/employee/can-manage-employees"
+import { canDeleteEmployee } from "@/domain/employee/can-delete-employee"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
@@ -28,7 +28,7 @@ export class DeleteEmployee {
   async run(command: Command): Promise<Deleted | DeleteEmployeeFailure | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageEmployees(command.viewerRole) === false) {
+    if (canDeleteEmployee(command.viewerRole) === false) {
       return { reason: "forbidden" }
     }
 

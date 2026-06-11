@@ -15,5 +15,6 @@ export async function getMyPayslips(
     return new Error("failed to load my payslips")
   }
 
-  return response.json()
+  const body = await response.json()
+  return body.data
 }

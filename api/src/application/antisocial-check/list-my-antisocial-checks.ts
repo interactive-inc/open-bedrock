@@ -4,6 +4,8 @@ import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/ant
 
 export type Command = {
   requesterId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyAntisocialChecks {
   async run(command: Command): Promise<ReadonlyArray<AntisocialCheck> | Error> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
 
-    return await antisocialCheckRepository.findByRequesterId(command.requesterId)
+    return await antisocialCheckRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }
