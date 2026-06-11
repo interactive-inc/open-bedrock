@@ -45,6 +45,10 @@ export class UpdateOneOnOne {
 
     const result = await oneOnOneRepository.update(updated)
 
+    if (result instanceof Error) {
+      return result
+    }
+
     if (result === null) {
       return { reason: "one_on_one_not_found" as const }
     }

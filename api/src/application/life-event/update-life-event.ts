@@ -53,6 +53,10 @@ export class UpdateLifeEvent {
 
     const saved = await lifeEventRepository.update(updated)
 
+    if (saved instanceof Error) {
+      return saved
+    }
+
     if (saved === null) {
       return { reason: "not_modifiable" }
     }
