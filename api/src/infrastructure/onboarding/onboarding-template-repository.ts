@@ -87,17 +87,23 @@ export class OnboardingTemplateRepository {
   }
 
   // テンプレートを削除する。紐づくタスク定義も合わせて削除する。
-  async delete(code: string): Promise<null | Error> {
+  // アクティブ（in_progress）な割り当てが存在する場合は削除せず null を返す（TOCTOU 競合を防ぐ）。
+  async delete(code: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.batch([
-        this.c.var.database
-          .delete(onboardingTemplateTasks)
-          .where(eq(onboardingTemplateTasks.templateCode, code)),
-        this.c.var.database.delete(onboardingTemplates).where(eq(onboardingTemplates.code, code)),
+      const db = this.c.env.DB
+      await db.batch([
+        db.prepare("DELETE FROM onboarding_template_tasks WHERE template_code = ?1").bind(code),
+        db.prepare(
+          `DELETE FROM onboarding_templates WHERE code = ?1 AND NOT EXISTS (SELECT 1 FROM onboarding_assignments WHERE template_code = ?1 AND status = 'in_progress')`,
+        ).bind(code),
+        abortWhenPreviousStatementChangedNoRows(db),
       ])
 
-      return null
+      return true
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
       return error instanceof Error ? error : new Error("failed to delete onboarding_template")
     }
   }
@@ -117,4 +123,12 @@ export class OnboardingTemplateRepository {
       return error instanceof Error ? error : new Error("failed to load onboarding_template_tasks")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
