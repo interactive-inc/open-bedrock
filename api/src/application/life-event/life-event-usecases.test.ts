@@ -94,7 +94,7 @@ describe("ListMyLifeEvents", () => {
 
     await seedEvent(context, 6)
 
-    const result = await new ListMyLifeEvents(context).run({ employeeId: 5 })
+    const result = await new ListMyLifeEvents(context).run({ employeeId: 5, limit: 50, offset: 0 })
 
     if (result instanceof Error) {
       throw new Error("list failed")

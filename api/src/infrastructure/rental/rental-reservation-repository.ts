@@ -1,10 +1,37 @@
 import { RentalReservation } from "@/domain/rental/rental-reservation"
 import type { Context } from "@/env"
 import { rentalReservations } from "@/schema"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, gte, lte, ne } from "drizzle-orm"
 
 export class RentalReservationRepository {
   constructor(private readonly c: Context) {}
+
+  // 同一品名・期間が重複する requested 予約を返す。excludeId を指定すると自身を除外できる。
+  async findOverlapping(query: {
+    itemName: string
+    startDate: string
+    endDate: string
+    excludeId?: string
+  }): Promise<ReadonlyArray<RentalReservation> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(rentalReservations)
+        .where(
+          and(
+            eq(rentalReservations.itemName, query.itemName),
+            eq(rentalReservations.status, "requested"),
+            lte(rentalReservations.startDate, query.endDate),
+            gte(rentalReservations.endDate, query.startDate),
+            query.excludeId !== undefined ? ne(rentalReservations.id, query.excludeId) : undefined,
+          ),
+        )
+
+      return rows.map((row) => RentalReservation.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load rental_reservations")
+    }
+  }
 
   // 申請者本人の予約を開始日の昇順で返す。
   async findByRequesterId(props: {
