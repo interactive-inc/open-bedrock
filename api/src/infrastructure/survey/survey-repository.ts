@@ -63,7 +63,8 @@ export class SurveyRepository {
   }
 
   // アンケートの内容（タイトル・状態・設問）を id をキーに更新し、更新後の行を返す。
-  async update(survey: Survey): Promise<Survey | Error> {
+  // 該当行がなければ null を返す。
+  async update(survey: Survey): Promise<Survey | null | Error> {
     if (survey.id === null) {
       return new Error("survey id is required")
     }
@@ -81,7 +82,7 @@ export class SurveyRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? new Error("failed to update survey") : Survey.fromRow(row)
+      return row === undefined ? null : Survey.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update survey")
     }

@@ -4,6 +4,7 @@ import { resolveEvaluationPermission } from "@/domain/goal/resolve-evaluation-pe
 import type { Context } from "@/env"
 import {
   type AlreadyEvaluatedError,
+  type GoalDoneError,
   GoalEvaluationRepository,
 } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -92,7 +93,20 @@ export class CreateGoalEvaluation {
     // final 評価は goal の status='done' 更新と D1 batch でアトミックに行う。
     // 非 final 評価は単独 INSERT で十分。
     if (command.kind === "final") {
-      return await goalEvaluationRepository.createWithGoalCompletion(newEvaluation, goal)
+      const result = await goalEvaluationRepository.createWithGoalCompletion(newEvaluation, goal)
+
+      if (result instanceof Error) {
+        return result
+      }
+
+      if ("reason" in result) {
+        if (result.reason === "already_finalized") {
+          return { reason: "goal_finalized" } as GoalFinalized
+        }
+        return result as AlreadyEvaluatedError
+      }
+
+      return result
     }
 
     const evaluation = await goalEvaluationRepository.create(newEvaluation)
@@ -102,6 +116,9 @@ export class CreateGoalEvaluation {
     }
 
     if ("reason" in evaluation) {
+      if ((evaluation as GoalDoneError).reason === "goal_done") {
+        return { reason: "goal_finalized" } as GoalFinalized
+      }
       return evaluation as AlreadyEvaluatedError
     }
 
