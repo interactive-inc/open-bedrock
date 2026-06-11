@@ -1,7 +1,7 @@
 import { ReviewCycle } from "@/domain/review/review-cycle"
 import type { Context } from "@/env"
 import { reviewCycles } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq, ne } from "drizzle-orm"
 
 export class ReviewCycleRepository {
   constructor(private readonly c: Context) {}
@@ -63,7 +63,10 @@ export class ReviewCycleRepository {
   }
 
   // status のみを更新する。title/period/dueDate の変更は updateDetails を使う。
-  async updateStatus(reviewCycle: ReviewCycle): Promise<ReviewCycle | null | Error> {
+  async updateStatus(
+    reviewCycle: ReviewCycle,
+    previousStatus: ReviewCycle["status"],
+  ): Promise<ReviewCycle | null | Error> {
     try {
       if (reviewCycle.id === null) {
         return new Error("cannot update unsaved review cycle")
@@ -72,7 +75,9 @@ export class ReviewCycleRepository {
       const rows = await this.c.var.database
         .update(reviewCycles)
         .set({ status: reviewCycle.status })
-        .where(eq(reviewCycles.id, reviewCycle.id))
+        .where(
+          and(eq(reviewCycles.id, reviewCycle.id), eq(reviewCycles.status, previousStatus)),
+        )
         .returning()
 
       const row = rows.at(0)
@@ -96,7 +101,9 @@ export class ReviewCycleRepository {
           period: reviewCycle.period,
           dueDate: reviewCycle.dueDate,
         })
-        .where(eq(reviewCycles.id, reviewCycle.id))
+        .where(
+          and(ne(reviewCycles.status, "closed"), eq(reviewCycles.id, reviewCycle.id)),
+        )
         .returning()
 
       const row = rows.at(0)
