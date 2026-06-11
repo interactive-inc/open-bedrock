@@ -40,19 +40,26 @@ const initialState: ShiftFormState = { ok: false, error: null }
 // 横断のシフト割当一覧。未公開の割当には公開ボタン、特権ロールには変更・削除も出す。
 // 公開の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
 export function ShiftAssignmentList(props: Props) {
-  const publishAction = useActionState(publishShiftAssignmentAction, initialState)
+  const publishAction = useActionState(
+    async (previousState: ShiftFormState, formData: FormData) => {
+      const next = await publishShiftAssignmentAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("シフトを公開しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialState,
+  )
 
   const publishState = publishAction[0]
 
   const publishDispatch = publishAction[1]
 
   const isPublishing = publishAction[2]
-
-  if (publishState.ok) {
-    toast.success("シフトを公開しました")
-  } else if (publishState.error !== null) {
-    toast.error(publishState.error)
-  }
 
   if (props.assignments.length === 0) {
     return <p className="text-sm text-muted-foreground">シフト割当はありません</p>

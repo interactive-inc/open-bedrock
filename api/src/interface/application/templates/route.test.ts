@@ -111,6 +111,20 @@ describe("GET /templates", () => {
     }
   })
 
+  test("returns only 1 template when limit=1", async () => {
+    const response = await request("/templates?limit=1", await tokenFor(1, "admin"))
+
+    expect(response.status).toBe(200)
+
+    const parsed = z.array(applicationTemplateResponseSchema).safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.length).toBe(1)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request("/templates", null)
 

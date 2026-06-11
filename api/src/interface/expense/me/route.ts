@@ -8,7 +8,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { expenses } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, eq } from "drizzle-orm"
+import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
@@ -57,6 +57,7 @@ export const GET = factory.createHandlers(
         .select()
         .from(expenses)
         .where(and(...conditions))
+        .orderBy(desc(expenses.id))
         .limit(limit)
         .offset(offset),
       c.var.database

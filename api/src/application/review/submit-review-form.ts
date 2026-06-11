@@ -9,6 +9,7 @@ export type Input = {
   formId: number
   score: number | null
   answers: ReadonlyArray<unknown>
+  comment: string | null
   submittedAt: string
 }
 
@@ -65,7 +66,7 @@ export class SubmitReviewForm {
     }
 
     const submitted = await formRepository.update(
-      form.withSubmission(input.score, input.answers, input.submittedAt),
+      form.withSubmission(input.score, input.answers, input.comment, input.submittedAt),
     )
 
     if (submitted instanceof Error) {

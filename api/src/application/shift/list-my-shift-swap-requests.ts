@@ -4,6 +4,8 @@ import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-re
 
 export type Input = {
   requesterEmployeeId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyShiftSwapRequests {
   async run(input: Input): Promise<ReadonlyArray<ShiftSwapRequest> | Error> {
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
 
-    return swapRequestRepository.findByRequesterId(input.requesterEmployeeId)
+    return swapRequestRepository.findByRequesterId({
+      requesterEmployeeId: input.requesterEmployeeId,
+      limit: input.limit,
+      offset: input.offset,
+    })
   }
 }

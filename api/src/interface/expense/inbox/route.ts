@@ -8,7 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
-import { count, eq } from "drizzle-orm"
+import { count, desc, eq } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要）
@@ -43,6 +43,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .from(expenses)
       .leftJoin(employees, eq(employees.id, expenses.employeeId))
       .where(eq(expenses.status, "pending"))
+      .orderBy(desc(expenses.id))
       .limit(limit)
       .offset(offset),
     c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending")),

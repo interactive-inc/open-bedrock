@@ -39,6 +39,7 @@ export class ReviewFormRepository {
         .set({
           answers: JSON.stringify(reviewForm.answers),
           score: reviewForm.score,
+          comment: reviewForm.comment,
           status: reviewForm.status,
           submittedAt: reviewForm.submittedAt,
         })

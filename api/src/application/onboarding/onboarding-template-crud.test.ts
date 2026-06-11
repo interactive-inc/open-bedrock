@@ -2,9 +2,12 @@ import { CreateOnboardingTemplate } from "@/application/onboarding/create-onboar
 import { DeleteOnboardingTemplate } from "@/application/onboarding/delete-onboarding-template"
 import { GetOnboardingTemplate } from "@/application/onboarding/get-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/application/onboarding/update-onboarding-template"
+import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
 import type { Context } from "@/env"
+import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { employees } from "@/schema"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
@@ -22,6 +25,44 @@ async function seedTemplate(context: Context): Promise<void> {
 
   if (created instanceof Error) {
     throw new Error("seed template failed")
+  }
+}
+
+async function seedInProgressAssignment(context: Context, templateCode: string): Promise<void> {
+  await context.var.database.insert(employees).values({
+    id: 9001,
+    code: "E9001",
+    name: "Test User",
+    email: "test9001@example.com",
+    passwordHash: "x",
+    role: "member",
+    deptId: 1,
+    deptName: "Dept",
+    position: "Staff",
+    status: "active",
+  })
+
+  const assignmentRepository = new OnboardingAssignmentRepository(context)
+
+  const template = new OnboardingTemplate({
+    id: 1,
+    code: templateCode,
+    name: "入社手続き",
+    kind: "join",
+    description: null,
+    tasks: [],
+  })
+
+  const created = await assignmentRepository.create(
+    OnboardingAssignment.create({
+      employeeId: 9001,
+      template,
+      assignedAt: "2026-01-01T00:00:00.000Z",
+    }),
+  )
+
+  if (created instanceof Error) {
+    throw new Error("seed assignment failed")
   }
 }
 
@@ -221,5 +262,23 @@ describe("DeleteOnboardingTemplate", () => {
     if (result instanceof Error === false) {
       expect(result.reason).toBe("forbidden")
     }
+  })
+
+  test("returns template_in_use when in_progress assignments exist", async () => {
+    const { context } = createTestContext()
+
+    await seedTemplate(context)
+    await seedInProgressAssignment(context, "join-default")
+
+    const result = await new DeleteOnboardingTemplate(context).run({
+      viewerRole: "admin",
+      code: "join-default",
+    })
+
+    if (result instanceof Error) {
+      throw result
+    }
+
+    expect(result.reason).toBe("template_in_use")
   })
 })

@@ -120,6 +120,7 @@ export const reviewForms = sqliteTable("review_forms", {
   reviewerType: text("reviewer_type").notNull(),
   answers: text("answers").notNull(),
   score: integer("score"),
+  comment: text("comment"),
   status: text("status").notNull(),
   submittedAt: text("submitted_at"),
 })
@@ -182,7 +183,10 @@ export const shiftAssignments = sqliteTable(
     note: text("note"),
     publishedAt: text("published_at"),
   },
-  (table) => [index("idx_shift_assignments_pattern").on(table.patternId)],
+  (table) => [
+    index("idx_shift_assignments_pattern").on(table.patternId),
+    uniqueIndex("uq_shift_assignment_employee_date").on(table.employeeId, table.date),
+  ],
 )
 
 export type ShiftAssignmentRow = InferSelectModel<typeof shiftAssignments>
@@ -702,14 +706,19 @@ export const certificateRequests = sqliteTable("certificate_requests", {
 export type CertificateRequestRow = InferSelectModel<typeof certificateRequests>
 
 // 年末調整の申告受付（提出状況の記録のみ。税額の計算や判定は持たない）
-export const yearEndAdjustments = sqliteTable("year_end_adjustments", {
-  id: text("id").primaryKey(),
-  employeeId: integer("employee_id").notNull(),
-  targetYear: integer("target_year").notNull(),
-  note: text("note"),
-  status: text("status").notNull(),
-  createdAt: text("created_at").notNull(),
-})
+export const yearEndAdjustments = sqliteTable(
+  "year_end_adjustments",
+  {
+    id: text("id").primaryKey(),
+    employeeId: integer("employee_id").notNull(),
+    targetYear: integer("target_year").notNull(),
+    note: text("note"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一社員・同一年度の二重申告を禁止する。
+  (table) => [uniqueIndex("uq_yea_employee_year").on(table.employeeId, table.targetYear)],
+)
 
 export type YearEndAdjustmentRow = InferSelectModel<typeof yearEndAdjustments>
 

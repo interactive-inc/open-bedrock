@@ -23,7 +23,7 @@ export const POST = factory.createHandlers(
       title: z.string().min(1).max(500),
       body: z.string().max(5_000).optional(),
       source_domain: z.string().max(100).optional(),
-      source_id: z.number().optional(),
+      source_id: z.number().int().positive().safe().optional(),
     }),
   ),
   async (c) => {
