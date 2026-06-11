@@ -105,14 +105,14 @@ describe("POST /notifications/:id/read", () => {
     }
   })
 
-  test("returns 403 for another employee's notification", async () => {
+  test("returns 404 for another employee's notification (no ID enumeration)", async () => {
     const response = await request({
       path: "/notifications/4/read",
       token: await tokenFor(5, "member"),
       method: "POST",
     })
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for a missing notification", async () => {
