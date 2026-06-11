@@ -67,7 +67,7 @@ describe("SurveyRepository", () => {
 
     expect(created).toBeInstanceOf(SurveyResponse)
 
-    if (created instanceof Error || created === null || created.id === null) {
+    if (created instanceof Error || "reason" in created || created.id === null) {
       throw new Error("createResponse failed")
     }
 
