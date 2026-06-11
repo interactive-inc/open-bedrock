@@ -1,6 +1,7 @@
 import type { Forbidden } from "@/domain/payroll/payroll-access"
 import { canManagePayroll } from "@/domain/payroll/payroll-access"
 import type { SalaryRevision } from "@/domain/payroll/salary-revision"
+import { toPreviousBaseSalary } from "@/domain/payroll/to-previous-base-salary"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
 
@@ -39,10 +40,18 @@ export class CorrectSalaryRevision {
       return { reason: "salary_revision_not_found" }
     }
 
-    const corrected = current
+    const withDetails = current
       .withEffectiveDate(command.effectiveDate)
       .withNewBaseSalary(command.newBaseSalary)
       .withReason(command.reason)
+
+    // 適用日が変わると時系列上の直前の改定も変わりうるため、前回基本給を解決し直す。
+    // 自分自身を直前として拾わないよう excludeId で除外する。
+    const corrected = await this.toCorrectedWithPreviousBaseSalary(withDetails, current)
+
+    if (corrected instanceof Error) {
+      return corrected
+    }
 
     const updated = await salaryRevisionRepository.update(corrected)
 
@@ -51,5 +60,27 @@ export class CorrectSalaryRevision {
     }
 
     return updated
+  }
+
+  // 適用日が変更された場合のみ、直前の改定から前回基本給を再解決する。
+  private async toCorrectedWithPreviousBaseSalary(
+    withDetails: SalaryRevision,
+    current: SalaryRevision,
+  ): Promise<SalaryRevision | Error> {
+    if (withDetails.effectiveDate === current.effectiveDate) {
+      return withDetails
+    }
+
+    const priorRevision = await new SalaryRevisionRepository(this.c).findLatestBeforeDate(
+      current.employeeId,
+      withDetails.effectiveDate,
+      current.id,
+    )
+
+    if (priorRevision instanceof Error) {
+      return priorRevision
+    }
+
+    return withDetails.withPreviousBaseSalary(toPreviousBaseSalary({ priorRevision }))
   }
 }
