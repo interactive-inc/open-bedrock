@@ -35,17 +35,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .limit(query.limit)
     .offset(query.offset)
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    recipient_employee_id: row.recipientEmployeeId,
-    source_domain: row.sourceDomain,
-    source_id: row.sourceId,
-    kind: notificationKindSchema.parse(row.kind),
-    title: row.title,
-    body: row.body,
-    is_read: row.isRead !== 0,
-    created_at: row.createdAt,
-  }))
+  const responseBody = rows.flatMap((row) => {
+    const kind = notificationKindSchema.safeParse(row.kind)
+
+    if (!kind.success) {
+      return []
+    }
+
+    return [
+      {
+        id: row.id,
+        recipient_employee_id: row.recipientEmployeeId,
+        source_domain: row.sourceDomain,
+        source_id: row.sourceId,
+        kind: kind.data,
+        title: row.title,
+        body: row.body,
+        is_read: row.isRead !== 0,
+        created_at: row.createdAt,
+      },
+    ]
+  })
 
   return c.json(responseBody, 200)
 })
