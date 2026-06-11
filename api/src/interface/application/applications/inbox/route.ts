@@ -8,7 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { count, eq } from "drizzle-orm"
+import { and, count, eq, like } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /applications/inbox — 承認待ちの申請一覧（承認権限を持つロールのみ）
@@ -37,6 +37,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
+  // approverRoles は JSON 配列文字列（例: '["manager","admin"]'）。
+  // viewer のロールがリストに含まれるテンプレートの申請だけを返す。
+  const rolePattern = `%"${session.role}"%`
+
+  const pendingWithRole = and(
+    eq(applications.status, "pending"),
+    like(applicationTemplates.approverRoles, rolePattern),
+  )
+
   const rows = await c.var.database
     .select({
       application: applications,
@@ -44,16 +53,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       applicantName: employees.name,
     })
     .from(applications)
-    .leftJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
+    .innerJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
     .leftJoin(employees, eq(employees.id, applications.applicantId))
-    .where(eq(applications.status, "pending"))
+    .where(pendingWithRole)
     .limit(limit)
     .offset(offset)
 
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(applications)
-    .where(eq(applications.status, "pending"))
+    .innerJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
+    .where(pendingWithRole)
 
   const responseBody = rows.map((row) => ({
     id: row.application.id,
