@@ -227,19 +227,28 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // 割り当てとその配下タスクを削除する。
-  async delete(assignmentId: number): Promise<null | Error> {
+  // 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
+  async delete(assignmentId: number): Promise<true | null | Error> {
     try {
-      await this.c.var.database.batch([
-        this.c.var.database
-          .delete(onboardingTasks)
-          .where(eq(onboardingTasks.assignmentId, assignmentId)),
-        this.c.var.database
-          .delete(onboardingAssignments)
-          .where(eq(onboardingAssignments.id, assignmentId)),
-      ])
+      const rows = await this.c.var.database
+        .delete(onboardingAssignments)
+        .where(
+          and(
+            eq(onboardingAssignments.id, assignmentId),
+            ne(onboardingAssignments.status, "completed"),
+          ),
+        )
+        .returning({ id: onboardingAssignments.id })
 
-      return null
+      if (rows.length === 0) {
+        return null
+      }
+
+      await this.c.var.database
+        .delete(onboardingTasks)
+        .where(eq(onboardingTasks.assignmentId, assignmentId))
+
+      return true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete onboarding assignment")
     }
