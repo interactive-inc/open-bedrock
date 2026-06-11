@@ -98,7 +98,11 @@ describe("ListMyBusinessTrips", () => {
 
     await seedTrip(context, 6)
 
-    const result = await new ListMyBusinessTrips(context).run({ travelerId: 5 })
+    const result = await new ListMyBusinessTrips(context).run({
+      travelerId: 5,
+      limit: 50,
+      offset: 0,
+    })
 
     if (result instanceof Error) {
       throw new Error("list failed")

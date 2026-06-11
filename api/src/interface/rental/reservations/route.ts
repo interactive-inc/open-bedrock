@@ -2,7 +2,12 @@ import { CreateRentalReservation } from "@/application/rental/create-rental-rese
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -45,6 +50,10 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in reservation) {
+      if (reservation.reason === "overlapping_reservation") {
+        throw new ConflictError("an overlapping rental reservation already exists")
+      }
+
       throw new BadRequestError("end_date must be on or after start_date")
     }
 
