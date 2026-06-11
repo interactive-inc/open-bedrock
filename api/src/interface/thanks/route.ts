@@ -3,6 +3,7 @@ import { Thanks } from "@/domain/thanks/thanks"
 import type { Context } from "@/env"
 import {
   BadRequestError,
+  ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
@@ -108,6 +109,14 @@ export const POST = factory.createHandlers(
     }
 
     if ("reason" in result) {
+      if (result.reason === "sender_inactive") {
+        throw new ForbiddenError("sender is no longer active")
+      }
+
+      if (result.reason === "recipient_inactive") {
+        throw new NotFoundError("recipient not found")
+      }
+
       if (result.reason === "recipient_not_found") {
         throw new NotFoundError("recipient not found")
       }

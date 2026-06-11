@@ -78,7 +78,9 @@ export class RegisterEmployee {
     return this.persist(command)
   }
 
-  private async persist(command: Command): Promise<Employee | EmailConflict | Error> {
+  private async persist(
+    command: Command,
+  ): Promise<Employee | CodeConflict | EmailConflict | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const passwordHash = await toPasswordHash(command.employee.password)
@@ -95,8 +97,11 @@ export class RegisterEmployee {
       status: command.employee.status,
     })
 
-    // code の重複は事前チェック済みなので、ここで UniqueConstraintError が出るのは email の重複。
     if (result instanceof UniqueConstraintError) {
+      const causeMsg = result.cause instanceof Error ? result.cause.message : ""
+      if (/employees\.code/i.test(causeMsg)) {
+        return { reason: "employee_code_conflict" }
+      }
       return { reason: "email_conflict" }
     }
 

@@ -2,6 +2,7 @@ import type { Employee } from "@/domain/employee/employee"
 import { canManageEmployees } from "@/domain/employee/can-manage-employees"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   viewerRole: string
@@ -102,6 +103,10 @@ export class UpdateEmployee {
     }
 
     const updated = await employeeRepository.updateProfile(employee.withProfile(command.profile))
+
+    if (updated instanceof UniqueConstraintError) {
+      return { reason: "email_conflict" }
+    }
 
     if (updated instanceof Error) {
       return updated
