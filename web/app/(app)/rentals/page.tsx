@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { MyReservationsSection } from "@/app/(app)/rentals/my-reservations-section"
-import { RentalReservationCreateForm } from "@/app/(app)/rentals/rental-reservation-create-form"
+import { MyReservationsSection } from "@/app/(app)/rentals/_components/my-reservations-section"
+import { RentalReservationCreateForm } from "@/app/(app)/rentals/_components/rental-reservation-create-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "レンタル" }

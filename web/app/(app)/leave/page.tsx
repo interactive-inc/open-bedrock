@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { LeaveBalanceCards } from "@/app/(app)/leave/leave-balance-cards"
-import { LeaveRequestCreateForm } from "@/app/(app)/leave/leave-request-create-form"
-import { MyLeaveRequestsTable } from "@/app/(app)/leave/my-leave-requests-table"
+import { LeaveBalanceCards } from "@/app/(app)/leave/_components/leave-balance-cards"
+import { LeaveRequestCreateForm } from "@/app/(app)/leave/_components/leave-request-create-form"
+import { MyLeaveRequestsTable } from "@/app/(app)/leave/_components/my-leave-requests-table"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 

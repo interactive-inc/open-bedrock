@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { NotificationCreateForm } from "@/app/(app)/notifications/notification-create-form"
-import { NotificationList } from "@/app/(app)/notifications/notification-list"
+import { NotificationCreateForm } from "@/app/(app)/notifications/_components/notification-create-form"
+import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"

@@ -43,7 +43,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       throw new InternalError(survey.message)
     }
     return {
-      id: survey.id,
+      id: row.id,
       title: survey.title,
       status: survey.status,
       questions_json: survey.questionsJson,

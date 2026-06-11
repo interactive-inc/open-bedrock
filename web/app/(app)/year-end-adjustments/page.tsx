@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { YearEndAdjustmentCreateForm } from "@/app/(app)/year-end-adjustments/year-end-adjustment-create-form"
-import { MyYearEndAdjustmentsSection } from "@/app/(app)/year-end-adjustments/my-year-end-adjustments-section"
+import { YearEndAdjustmentCreateForm } from "@/app/(app)/year-end-adjustments/_components/year-end-adjustment-create-form"
+import { MyYearEndAdjustmentsSection } from "@/app/(app)/year-end-adjustments/_components/my-year-end-adjustments-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "年末調整" }

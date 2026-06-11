@@ -1,5 +1,7 @@
 import { Employee } from "@/domain/employee/employee"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
 import { count, eq, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -80,6 +82,12 @@ export class EmployeeRepository {
 
       return row === undefined ? new Error("failed to insert employee") : Employee.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("employee unique constraint violated", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to insert employee")
     }
   }
@@ -105,6 +113,12 @@ export class EmployeeRepository {
 
       return row === undefined ? null : Employee.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("employee unique constraint violated", {
+          cause: error,
+        })
+      }
+
       return error instanceof Error ? error : new Error("failed to update employee")
     }
   }

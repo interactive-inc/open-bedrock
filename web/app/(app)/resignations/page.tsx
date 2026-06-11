@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { MyResignationsSection } from "@/app/(app)/resignations/my-resignations-section"
-import { ResignationCreateForm } from "@/app/(app)/resignations/resignation-create-form"
+import { MyResignationsSection } from "@/app/(app)/resignations/_components/my-resignations-section"
+import { ResignationCreateForm } from "@/app/(app)/resignations/_components/resignation-create-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "退職申請" }

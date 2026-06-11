@@ -16,7 +16,7 @@ export async function toPasswordHash(plainPassword: string): Promise<string> {
 // 既知のソルト・反復回数で PBKDF2 ハッシュを再計算する。検証側で使う内部ユーティリティ。
 export async function derivePbkdf2(
   plainPassword: string,
-  salt: Uint8Array,
+  salt: Uint8Array<ArrayBuffer>,
   iterations: number,
   keyLength: number,
 ): Promise<Uint8Array> {
@@ -56,7 +56,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
 }
 
 // base64 文字列を Uint8Array に戻す。
-export function base64ToBytes(value: string): Uint8Array {
+export function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
   const binary = atob(value)
 
   const bytes = new Uint8Array(binary.length)

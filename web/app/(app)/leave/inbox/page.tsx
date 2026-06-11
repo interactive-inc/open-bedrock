@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Suspense } from "react"
-import { LeaveInboxDecisionForm } from "@/app/(app)/leave/inbox/leave-inbox-decision-form"
+import { LeaveInboxDecisionForm } from "@/app/(app)/leave/inbox/_components/leave-inbox-decision-form"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { Button } from "@/components/ui/button"

@@ -17,6 +17,15 @@ import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// JSON 文字列を unknown へ。解析できなければ null を返し、呼び出し側の zod 検証で弾く。
+function toParsedJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
 // 申請テンプレートをレスポンス用の snake_case に整形する。
 function toResponseBody(template: ApplicationTemplate) {
   return {
@@ -52,17 +61,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   let schemaJson: unknown
-  let approverRoles: unknown
   try {
     schemaJson = JSON.parse(row.schemaJson)
   } catch {
     throw new InternalError("invalid schema_json data")
   }
-  try {
-    approverRoles = JSON.parse(row.approverRoles)
-  } catch {
+
+  const approverRolesParsed = z.array(z.string()).safeParse(toParsedJson(row.approverRoles))
+
+  if (approverRolesParsed.success === false) {
     throw new InternalError("invalid approver_roles data")
   }
+
+  const approverRoles = approverRolesParsed.data
 
   const responseBody = {
     code: row.code,

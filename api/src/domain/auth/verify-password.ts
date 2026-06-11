@@ -31,8 +31,8 @@ export async function verifyPassword(
 
 type ParsedPbkdf2 = {
   iterations: number
-  salt: Uint8Array
-  hash: Uint8Array
+  salt: Uint8Array<ArrayBuffer>
+  hash: Uint8Array<ArrayBuffer>
 }
 
 // 保存フォーマット `pbkdf2:<iterations>:<base64(salt)>:<base64(hash)>` を分解する。

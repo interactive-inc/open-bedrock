@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { FamilyCareLeaveCreateForm } from "@/app/(app)/family-care-leaves/family-care-leave-create-form"
-import { MyFamilyCareLeavesSection } from "@/app/(app)/family-care-leaves/my-family-care-leaves-section"
+import { FamilyCareLeaveCreateForm } from "@/app/(app)/family-care-leaves/_components/family-care-leave-create-form"
+import { MyFamilyCareLeavesSection } from "@/app/(app)/family-care-leaves/_components/my-family-care-leaves-section"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "産休・育休・介護休業の申出" }

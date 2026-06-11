@@ -19,7 +19,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      status: z.string().optional(),
+      status: z.enum(["pending", "approved", "rejected"]).optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
