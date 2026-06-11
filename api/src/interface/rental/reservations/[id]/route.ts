@@ -107,6 +107,10 @@ export const PUT = factory.createHandlers(
         throw new BadRequestError("invalid date range")
       }
 
+      if (reservation.reason === "overlapping_reservation") {
+        throw new ConflictError("an overlapping rental reservation already exists")
+      }
+
       if (reservation.reason === "not_modifiable") {
         throw new ConflictError("reservation is not modifiable")
       }
