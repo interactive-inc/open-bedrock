@@ -41,6 +41,10 @@ export class DeleteOneOnOne {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "one_on_one_not_found" }
+    }
+
     return { reason: "deleted" }
   }
 }

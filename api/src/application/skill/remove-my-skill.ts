@@ -41,6 +41,10 @@ export class RemoveMySkill {
       return deleted
     }
 
+    if (deleted === null) {
+      return { reason: "skill_not_registered" }
+    }
+
     return { reason: "removed" }
   }
 }

@@ -2,6 +2,7 @@ import { OneOnOne } from "@/domain/oneonone/one-on-one"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   memberEmail: string
@@ -16,13 +17,17 @@ export type MemberNotFound = { reason: "member_not_found" }
 
 export type SelfReference = { reason: "self_reference" }
 
+export type Duplicate = { reason: "duplicate" }
+
 /**
  * マネージャーが対象社員との 1on1 を記録する。
  */
 export class CreateOneOnOne {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<OneOnOne | MemberNotFound | SelfReference | Error> {
+  async run(
+    command: Command,
+  ): Promise<OneOnOne | MemberNotFound | SelfReference | Duplicate | Error> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const oneOnOneRepository = new OneOnOneRepository(this.c)
@@ -50,6 +55,12 @@ export class CreateOneOnOne {
       return oneOnOne
     }
 
-    return await oneOnOneRepository.save(oneOnOne)
+    const saved = await oneOnOneRepository.save(oneOnOne)
+
+    if (saved instanceof UniqueConstraintError) {
+      return { reason: "duplicate" }
+    }
+
+    return saved
   }
 }
