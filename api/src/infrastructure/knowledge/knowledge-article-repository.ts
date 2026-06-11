@@ -48,7 +48,8 @@ export class KnowledgeArticleRepository {
   }
 
   // 記事の表題・カテゴリ・タグ・本文を更新する。
-  async update(article: KnowledgeArticle): Promise<KnowledgeArticle | Error> {
+  // 該当行が存在しなかった場合は null を返す。
+  async update(article: KnowledgeArticle): Promise<KnowledgeArticle | null | Error> {
     try {
       if (article.id === null) {
         return new Error("cannot update unsaved knowledge_article")
@@ -67,9 +68,7 @@ export class KnowledgeArticleRepository {
 
       const row = rows.at(0)
 
-      return row === undefined
-        ? new Error("failed to update knowledge_article")
-        : KnowledgeArticle.fromRow(row)
+      return row === undefined ? null : KnowledgeArticle.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update knowledge_article")
     }
