@@ -84,30 +84,46 @@ export class ResignationRepository {
     }
   }
 
-  // 退職申請の退職希望日・最終出社日・理由を更新する。
-  async update(resignation: Resignation): Promise<Resignation | Error> {
+  // 退職申請の退職希望日・最終出社日・理由を更新する。status が "requested" の行のみ対象。
+  async update(resignation: Resignation): Promise<Resignation | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(resignations)
         .set({
           resignationDate: resignation.resignationDate,
           lastWorkingDate: resignation.lastWorkingDate,
           reason: resignation.reason,
         })
-        .where(eq(resignations.id, resignation.id))
+        .where(
+          and(
+            eq(resignations.id, resignation.id),
+            eq(resignations.status, "requested"),
+          ),
+        )
+        .returning()
 
-      return resignation
+      const row = rows.at(0)
+
+      return row === undefined ? null : Resignation.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update resignation")
     }
   }
 
-  // 退職申請を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 退職申請を削除する。status が "requested" の行のみ対象。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(resignations).where(eq(resignations.id, id))
+      const rows = await this.c.var.database
+        .delete(resignations)
+        .where(
+          and(
+            eq(resignations.id, id),
+            eq(resignations.status, "requested"),
+          ),
+        )
+        .returning({ id: resignations.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete resignation")
     }
