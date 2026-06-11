@@ -7,6 +7,10 @@ import { asc, eq } from "drizzle-orm"
 
 export type AlreadyEvaluatedError = { reason: "already_evaluated" }
 
+export type GoalDoneError = { reason: "goal_done" }
+
+export type AlreadyFinalizedError = { reason: "already_finalized" }
+
 export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}
 
@@ -26,27 +30,54 @@ export class GoalEvaluationRepository {
   }
 
   // UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
+  // goal の status が 'done' の場合は 0 行挿入となり goal_done を返す。
   async create(
     evaluation: GoalEvaluation,
-  ): Promise<GoalEvaluation | AlreadyEvaluatedError | Error> {
+  ): Promise<GoalEvaluation | AlreadyEvaluatedError | GoalDoneError | Error> {
     try {
-      const rows = await this.c.var.database
-        .insert(goalEvaluations)
-        .values({
-          goalId: evaluation.goalId,
-          evaluatorId: evaluation.evaluatorId,
-          kind: evaluation.kind,
-          score: evaluation.score,
-          comment: evaluation.comment,
-          createdAt: evaluation.createdAt,
-        })
-        .returning()
+      const result = await this.c.env.DB.prepare(
+        `
+        INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
+        SELECT ?1, ?2, ?3, ?4, ?5, ?6
+        WHERE EXISTS (SELECT 1 FROM goals WHERE id = ?1 AND status != 'done')
+        RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
+        `,
+      )
+        .bind(
+          evaluation.goalId,
+          evaluation.evaluatorId,
+          evaluation.kind,
+          evaluation.score,
+          evaluation.comment,
+          evaluation.createdAt,
+        )
+        .all()
 
-      const row = rows.at(0)
+      const row = result.results.at(0) as
+        | {
+            id: number
+            goalId: number
+            evaluatorId: number
+            kind: string
+            score: number | null
+            comment: string | null
+            createdAt: string
+          }
+        | undefined
 
-      return row === undefined
-        ? new Error("failed to create goal evaluation")
-        : GoalEvaluation.fromRow(row)
+      if (row === undefined) {
+        return { reason: "goal_done" }
+      }
+
+      return new GoalEvaluation({
+        id: row.id,
+        goalId: row.goalId,
+        evaluatorId: row.evaluatorId,
+        kind: goalEvaluationKindSchema.parse(row.kind),
+        score: row.score,
+        comment: row.comment,
+        createdAt: row.createdAt,
+      })
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         return { reason: "already_evaluated" }
@@ -56,35 +87,43 @@ export class GoalEvaluationRepository {
   }
 
   // final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
+  // UPDATE が 0 行（既に done）なら abortWhenPreviousStatementChangedNoRows で中断する。
   // UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
   async createWithGoalCompletion(
     evaluation: GoalEvaluation,
     goal: Goal,
-  ): Promise<GoalEvaluation | AlreadyEvaluatedError | Error> {
+  ): Promise<GoalEvaluation | AlreadyEvaluatedError | AlreadyFinalizedError | Error> {
     try {
-      const results = await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          `
+      const db = this.c.env.DB
+
+      const results = await db.batch([
+        db
+          .prepare(
+            `
+          UPDATE goals SET status = 'done' WHERE id = ?1 AND status != 'done'
+          `,
+          )
+          .bind(goal.id),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
+            `
           INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
           VALUES (?1, ?2, ?3, ?4, ?5, ?6)
           RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
           `,
-        ).bind(
-          evaluation.goalId,
-          evaluation.evaluatorId,
-          evaluation.kind,
-          evaluation.score,
-          evaluation.comment,
-          evaluation.createdAt,
-        ),
-        this.c.env.DB.prepare(
-          `
-          UPDATE goals SET status = 'done' WHERE id = ?1 AND status != 'done'
-          `,
-        ).bind(goal.id),
+          )
+          .bind(
+            evaluation.goalId,
+            evaluation.evaluatorId,
+            evaluation.kind,
+            evaluation.score,
+            evaluation.comment,
+            evaluation.createdAt,
+          ),
       ])
 
-      const insertResult = results.at(0)
+      const insertResult = results.at(2)
       const row = insertResult?.results?.at(0) as
         | {
             id: number
@@ -111,6 +150,9 @@ export class GoalEvaluationRepository {
         createdAt: row.createdAt,
       })
     } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return { reason: "already_finalized" }
+      }
       if (isUniqueConstraintError(error)) {
         return { reason: "already_evaluated" }
       }
@@ -136,4 +178,12 @@ export class GoalEvaluationRepository {
       return error instanceof Error ? error : new Error("failed to delete goal evaluations")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }

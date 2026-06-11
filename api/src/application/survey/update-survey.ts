@@ -61,6 +61,12 @@ export class UpdateSurvey {
       return result
     }
 
-    return surveyRepository.update(updated)
+    const result = await surveyRepository.update(updated)
+
+    if (result === null) {
+      return { reason: "survey_not_found" }
+    }
+
+    return result
   }
 }
