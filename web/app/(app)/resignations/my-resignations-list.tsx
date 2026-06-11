@@ -154,7 +154,7 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
 
 // 退職申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelResignationButton(props: { resignationId: string }) {
-  const [state, formAction, pending] = useActionState(cancelResignationAction, {
+  const [_state, formAction, pending] = useActionState(cancelResignationAction, {
     ok: false,
     error: null,
   })
