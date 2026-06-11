@@ -20,9 +20,10 @@ export class ApplicationRepository {
         .where(eq(applications.applicantId, applicantId))
         .orderBy(desc(applications.createdAt))
 
-      const rows = opts !== undefined
-        ? await query.limit(opts.limit).offset(opts.offset)
-        : await query.limit(DEFAULT_LIST_LIMIT)
+      const rows =
+        opts !== undefined
+          ? await query.limit(opts.limit).offset(opts.offset)
+          : await query.limit(DEFAULT_LIST_LIMIT)
 
       const applicationList: Array<Application> = []
 

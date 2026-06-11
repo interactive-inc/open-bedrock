@@ -16,15 +16,10 @@ export type Deleted = { reason: "deleted" }
 export class DeleteNotification {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Deleted | NotificationNotFound | Error> {
+  async run(command: Command): Promise<Deleted | NotificationNotFound | Error> {
     const repository = new NotificationRepository(this.c)
 
-    const deleted = await repository.delete(
-      command.notificationId,
-      command.viewerEmployeeId,
-    )
+    const deleted = await repository.delete(command.notificationId, command.viewerEmployeeId)
 
     if (deleted instanceof Error) {
       return deleted

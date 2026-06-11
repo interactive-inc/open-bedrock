@@ -42,7 +42,13 @@ export class RegisterEmployee {
   async run(
     command: Command,
   ): Promise<
-    Employee | Forbidden | RoleEscalationForbidden | CodeConflict | EmailConflict | WeakPassword | Error
+    | Employee
+    | Forbidden
+    | RoleEscalationForbidden
+    | CodeConflict
+    | EmailConflict
+    | WeakPassword
+    | Error
   > {
     const employeeRepository = new EmployeeRepository(this.c)
 
