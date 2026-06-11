@@ -53,6 +53,16 @@ export class UpdateAntisocialCheck {
       result: command.result,
     })
 
-    return await antisocialCheckRepository.update(updated)
+    const result = await antisocialCheckRepository.update(updated)
+
+    if (result instanceof Error) {
+      return result
+    }
+
+    if (result === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return result
   }
 }

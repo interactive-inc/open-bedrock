@@ -1,7 +1,7 @@
 import { LifeEvent } from "@/domain/life-event/life-event"
 import type { Context } from "@/env"
 import { lifeEvents } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 
 export class LifeEventRepository {
   constructor(private readonly c: Context) {}
@@ -58,30 +58,36 @@ export class LifeEventRepository {
     }
   }
 
-  // ライフイベント届出の種別・発生日・詳細を更新する。
-  async update(lifeEvent: LifeEvent): Promise<LifeEvent | Error> {
+  // ライフイベント届出の種別・発生日・詳細を更新する。status が "submitted" の行のみ対象。
+  async update(lifeEvent: LifeEvent): Promise<LifeEvent | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .update(lifeEvents)
         .set({
           eventType: lifeEvent.eventType,
           eventDate: lifeEvent.eventDate,
           detail: lifeEvent.detail,
         })
-        .where(eq(lifeEvents.id, lifeEvent.id))
+        .where(and(eq(lifeEvents.id, lifeEvent.id), eq(lifeEvents.status, "submitted")))
+        .returning()
 
-      return lifeEvent
+      const row = rows.at(0)
+
+      return row === undefined ? null : LifeEvent.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update life_event")
     }
   }
 
-  // ライフイベント届出を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // ライフイベント届出を削除する。status が "submitted" の行のみ対象。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(lifeEvents).where(eq(lifeEvents.id, id))
+      const rows = await this.c.var.database
+        .delete(lifeEvents)
+        .where(and(eq(lifeEvents.id, id), eq(lifeEvents.status, "submitted")))
+        .returning({ id: lifeEvents.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete life_event")
     }

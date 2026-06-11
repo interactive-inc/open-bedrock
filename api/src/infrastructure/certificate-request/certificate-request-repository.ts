@@ -7,13 +7,19 @@ export class CertificateRequestRepository {
   constructor(private readonly c: Context) {}
 
   // 依頼者本人の証明書発行依頼を作成日時の降順で返す。
-  async findByRequesterId(requesterId: number): Promise<ReadonlyArray<CertificateRequest> | Error> {
+  async findByRequesterId(props: {
+    requesterId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<CertificateRequest> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(certificateRequests)
-        .where(eq(certificateRequests.requesterId, requesterId))
+        .where(eq(certificateRequests.requesterId, props.requesterId))
         .orderBy(desc(certificateRequests.createdAt))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => CertificateRequest.fromRow(row))
     } catch (error) {
@@ -56,7 +62,7 @@ export class CertificateRequestRepository {
     }
   }
 
-  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。status が requested でなければ 0 行更新となり null を返す。
   async update(certificateRequest: CertificateRequest): Promise<CertificateRequest | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -75,18 +81,23 @@ export class CertificateRequestRepository {
         )
         .returning()
 
-      return rows.length === 0 ? null : certificateRequest
+      const row = rows.at(0)
+
+      return row === undefined ? null : CertificateRequest.fromRow(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update certificate_request")
     }
   }
 
-  // 証明書発行依頼を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 証明書発行依頼を削除する。status が requested の行のみ対象とする。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(certificateRequests).where(eq(certificateRequests.id, id))
+      const rows = await this.c.var.database
+        .delete(certificateRequests)
+        .where(and(eq(certificateRequests.id, id), eq(certificateRequests.status, "requested")))
+        .returning({ id: certificateRequests.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete certificate_request")
     }

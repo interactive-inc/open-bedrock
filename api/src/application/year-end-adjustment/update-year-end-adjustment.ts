@@ -49,6 +49,12 @@ export class UpdateYearEndAdjustment {
       note: command.note,
     })
 
-    return await yearEndAdjustmentRepository.update(updated)
+    const saved = await yearEndAdjustmentRepository.update(updated)
+
+    if (saved === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return saved
   }
 }

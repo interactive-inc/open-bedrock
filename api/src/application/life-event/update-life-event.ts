@@ -51,6 +51,12 @@ export class UpdateLifeEvent {
       detail: command.detail,
     })
 
-    return await lifeEventRepository.update(updated)
+    const saved = await lifeEventRepository.update(updated)
+
+    if (saved === null) {
+      return { reason: "not_modifiable" }
+    }
+
+    return saved
   }
 }

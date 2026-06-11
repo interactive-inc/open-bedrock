@@ -7,13 +7,19 @@ export class RentalReservationRepository {
   constructor(private readonly c: Context) {}
 
   // 申請者本人の予約を開始日の昇順で返す。
-  async findByRequesterId(requesterId: number): Promise<ReadonlyArray<RentalReservation> | Error> {
+  async findByRequesterId(props: {
+    requesterId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<RentalReservation> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(rentalReservations)
-        .where(eq(rentalReservations.requesterId, requesterId))
+        .where(eq(rentalReservations.requesterId, props.requesterId))
         .orderBy(asc(rentalReservations.startDate))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => RentalReservation.fromRow(row))
     } catch (error) {

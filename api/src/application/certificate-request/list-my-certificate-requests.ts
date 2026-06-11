@@ -4,6 +4,8 @@ import { CertificateRequestRepository } from "@/infrastructure/certificate-reque
 
 export type Command = {
   requesterId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,10 @@ export class ListMyCertificateRequests {
   async run(command: Command): Promise<ReadonlyArray<CertificateRequest> | Error> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
-    return await certificateRequestRepository.findByRequesterId(command.requesterId)
+    return await certificateRequestRepository.findByRequesterId({
+      requesterId: command.requesterId,
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }
