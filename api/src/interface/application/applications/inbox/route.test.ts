@@ -123,9 +123,116 @@ describe("GET /applications/inbox", () => {
     expect(response.status).toBe(401)
   })
 
-  test("returns 403 for a non-privileged role", async () => {
+  test("returns 200 with empty data for a role not listed in any approverRoles", async () => {
     const response = await request("/applications/inbox", await tokenFor(99, "member"))
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(applicationInboxResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(0)
+      expect(parsed.data.total).toBe(0)
+    }
+  })
+
+  test("returns only templates matching the viewer role in approverRoles", async () => {
+    const db = createD1TestDatabase(loadSchema())
+
+    // template 10: approverRoles に "accountant" を含む
+    await seedD1(db, "application_templates", [
+      {
+        id: 10,
+        code: "accounting_only",
+        name: "Accounting Template",
+        category: "accounting",
+        description: null,
+        schema_json: "{}",
+        approver_roles: JSON.stringify(["accountant"]),
+      },
+      {
+        id: 11,
+        code: "manager_only",
+        name: "Manager Template",
+        category: "general",
+        description: null,
+        schema_json: "{}",
+        approver_roles: JSON.stringify(["manager"]),
+      },
+    ])
+
+    await seedD1(db, "applications", [
+      {
+        id: 100,
+        template_id: 10,
+        applicant_id: 5,
+        status: "pending",
+        current_step: null,
+        payload: "{}",
+        created_at: "2026-01-01T00:00:00Z",
+      },
+      {
+        id: 101,
+        template_id: 11,
+        applicant_id: 5,
+        status: "pending",
+        current_step: null,
+        payload: "{}",
+        created_at: "2026-01-01T00:00:00Z",
+      },
+    ])
+
+    await seedD1(db, "employees", [
+      {
+        id: 5,
+        code: "E005",
+        name: "Emery Lane",
+        email: "you+e005@example.com",
+        password_hash: "hash",
+        role: "member",
+        dept_id: 3,
+        dept_name: "Engineering",
+        position: "Engineer",
+        status: "active",
+      },
+      {
+        id: 99,
+        code: "E099",
+        name: "Robin Uchida",
+        email: "you+e099@example.com",
+        password_hash: "hash",
+        role: "accountant",
+        dept_id: 6,
+        dept_name: "Administration",
+        position: "Accountant",
+        status: "active",
+      },
+    ])
+
+    const accountantToken = await tokenFor(99, "accountant")
+
+    const accountantResponse = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/inbox",
+      token: accountantToken,
+    })
+
+    expect(accountantResponse.status).toBe(200)
+
+    const accountantParsed = z
+      .object({ data: z.array(applicationInboxResponseSchema), total: z.number() })
+      .safeParse(await accountantResponse.json())
+
+    expect(accountantParsed.success).toBe(true)
+
+    if (accountantParsed.success) {
+      expect(accountantParsed.data.data.length).toBe(1)
+      expect(accountantParsed.data.data[0].id).toBe(100)
+    }
   })
 })
