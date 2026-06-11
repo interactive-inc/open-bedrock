@@ -5,6 +5,7 @@ import { EmployeeRepository } from "@/infrastructure/employee/employee-repositor
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import {
   type AlreadyEnrolledError,
+  type CourseArchivedError,
   TrainingEnrollmentRepository,
 } from "@/infrastructure/training/training-enrollment-repository"
 
@@ -64,22 +65,8 @@ export class EnrollTraining {
       return { reason: "course_not_found" }
     }
 
-    if (course.status === "archived") {
-      return { reason: "course_archived" }
-    }
-
     if (course.id === null) {
       return new Error("training course is not persisted")
-    }
-
-    const duplicate = await enrollmentRepository.findByCourseAndEmployee(course.id, employeeId)
-
-    if (duplicate instanceof Error) {
-      return duplicate
-    }
-
-    if (duplicate !== null) {
-      return { reason: "already_enrolled" }
     }
 
     const enrollment = TrainingEnrollment.create({
@@ -88,6 +75,8 @@ export class EnrollTraining {
       dueDate: command.dueDate,
     })
 
+    // INSERT...SELECT WHERE EXISTS でコースがアーカイブ済みでないことをアトミックに検証する。
+    // UNIQUE 制約で重複登録も検出する。
     const created = await enrollmentRepository.create(enrollment)
 
     if (created instanceof Error) {
@@ -95,7 +84,7 @@ export class EnrollTraining {
     }
 
     if ("reason" in created) {
-      return created as AlreadyEnrolledError
+      return created as AlreadyEnrolledError | CourseArchivedError
     }
 
     return created

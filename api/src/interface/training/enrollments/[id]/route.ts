@@ -130,8 +130,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  if (result.reason === "already_completed") {
-    throw new ConflictError("already completed")
+  if (result.reason === "enrollment_not_cancelable") {
+    throw new ConflictError("enrollment is completed or failed and cannot be cancelled")
   }
 
   return c.body(null, 204)

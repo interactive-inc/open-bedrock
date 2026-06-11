@@ -51,7 +51,9 @@ export class RescheduleTrainingEnrollment {
       return { reason: "already_completed" }
     }
 
-    const updated = await enrollmentRepository.update(enrollment.withRescheduled(command.dueDate))
+    const updated = await enrollmentRepository.rescheduleEnrollment(
+      enrollment.withRescheduled(command.dueDate),
+    )
 
     if (updated instanceof Error) {
       return updated
