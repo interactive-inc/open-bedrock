@@ -9,7 +9,8 @@ const zProps = z.object({
   reviewerEmployeeId: z.number(),
   reviewerType: z.enum(["self", "manager", "peer", "subordinate"]),
   answers: z.array(z.unknown()).readonly(),
-  score: z.number().nullable(),
+  // 0〜100 の整数のみ。DB に不正値が混入しても fromRow で弾く。
+  score: z.number().int().min(0).max(100).nullable(),
   comment: z.string().nullable(),
   status: z.enum(["pending", "submitted"]),
   submittedAt: z.string().nullable(),
