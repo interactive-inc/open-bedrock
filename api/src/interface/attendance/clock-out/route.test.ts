@@ -162,6 +162,46 @@ describe("POST /attendance/clock-out", () => {
     expect(response.status).toBe(409)
   })
 
+  test("returns 409 when already clocked out (concurrent request)", async () => {
+    const db = await createTestDb()
+
+    const token = await tokenFor(10, "member")
+
+    // Clock in
+    await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-in",
+      token,
+      now: "2026-05-29T09:00:00Z",
+      body: {},
+    })
+
+    // First clock-out succeeds
+    const first = await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-out",
+      token,
+      now: "2026-05-29T18:00:00Z",
+      body: {},
+    })
+
+    expect(first.status).toBe(200)
+
+    // Second clock-out should fail with 409
+    const second = await send({
+      db,
+      method: "POST",
+      path: "/attendance/clock-out",
+      token,
+      now: "2026-05-29T18:30:00Z",
+      body: {},
+    })
+
+    expect(second.status).toBe(409)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await send({
       db: await createTestDb(),
