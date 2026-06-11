@@ -18,7 +18,17 @@ const leaveBalanceResponseSchema = z.object({
 })
 
 const leaveDecisionResponseSchema = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  leave_type: z.enum(["annual", "special"]),
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+  reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
+  approver_id: z.number().nullable(),
+  decided_comment: z.string().nullable(),
+  created_at: z.string(),
 })
 
 const leaveRequestRowSchema = z.object({
@@ -133,6 +143,10 @@ describe("POST /leave/requests/:id/approve", () => {
 
     if (approveParsed.success) {
       expect(approveParsed.data.status).toBe("approved")
+      expect(approveParsed.data.approver_id).toBe(4)
+      expect(approveParsed.data.decided_comment).toBe("approved")
+      expect(approveParsed.data.employee_id).toBe(5)
+      expect(approveParsed.data.leave_type).toBe("annual")
     }
 
     const ownerToken = await tokenFor(5, "member")

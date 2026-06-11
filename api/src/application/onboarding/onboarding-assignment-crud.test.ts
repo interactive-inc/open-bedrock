@@ -1,3 +1,4 @@
+import { AssignOnboarding } from "@/application/onboarding/assign-onboarding"
 import { CancelOnboardingAssignment } from "@/application/onboarding/cancel-onboarding-assignment"
 import { CompleteOnboardingTask } from "@/application/onboarding/complete-onboarding-task"
 import { GetOnboardingAssignment } from "@/application/onboarding/get-onboarding-assignment"
@@ -8,7 +9,8 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
 import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
-import { employees } from "@/schema"
+import { employees, onboardingTasks } from "@/schema"
+import { eq } from "drizzle-orm"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
@@ -181,6 +183,28 @@ describe("CancelOnboardingAssignment", () => {
     expect(found).toBeNull()
   })
 
+  test("cancel removes orphaned onboarding_tasks for the assignment", async () => {
+    const { context } = createTestContext()
+
+    const employeeId = await seedEmployee(context, "E105B")
+
+    const assignmentId = await seedAssignment(context, employeeId)
+
+    const result = await new CancelOnboardingAssignment(context).run({
+      assignmentId,
+      viewerRole: "admin",
+    })
+
+    expect(result).toEqual({ reason: "cancelled" })
+
+    const remainingTasks = await context.var.database
+      .select()
+      .from(onboardingTasks)
+      .where(eq(onboardingTasks.assignmentId, assignmentId))
+
+    expect(remainingTasks.length).toBe(0)
+  })
+
   test("a member is forbidden", async () => {
     const { context } = createTestContext()
 
@@ -280,5 +304,86 @@ describe("UncompleteOnboardingTask", () => {
     })
 
     expect(result).toEqual({ reason: "task_not_found" })
+  })
+})
+
+async function seedTemplate(context: Context): Promise<void> {
+  const { onboardingTemplates: tbl, onboardingTemplateTasks: ttbl } = await import("@/schema")
+
+  await context.var.database.insert(tbl).values({
+    id: template.id,
+    code: template.code,
+    name: template.name,
+    kind: template.kind,
+    description: template.description,
+  })
+
+  for (const task of template.tasks) {
+    await context.var.database.insert(ttbl).values({
+      templateCode: template.code,
+      code: task.code,
+      title: task.title,
+      sortOrder: task.order,
+      ownerRole: task.ownerRole,
+    })
+  }
+}
+
+describe("AssignOnboarding duplicate check", () => {
+  test("assigning the same template twice returns already_assigned", async () => {
+    const { context } = createTestContext()
+
+    await seedEmployee(context, "E201")
+    await seedTemplate(context)
+
+    const firstResult = await new AssignOnboarding(context).run({
+      viewerRole: "hr",
+      employeeCode: "E201",
+      templateCode: template.code,
+      assignedAt: "2026-05-01T00:00:00.000Z",
+    })
+
+    if (firstResult instanceof Error || "reason" in firstResult) {
+      throw new Error("first assignment failed")
+    }
+
+    const secondResult = await new AssignOnboarding(context).run({
+      viewerRole: "hr",
+      employeeCode: "E201",
+      templateCode: template.code,
+      assignedAt: "2026-05-02T00:00:00.000Z",
+    })
+
+    expect(secondResult).toEqual({ reason: "already_assigned" })
+  })
+
+  test("allows assigning after the previous assignment is completed", async () => {
+    const { context } = createTestContext()
+
+    const employeeId = await seedEmployee(context, "E202")
+    await seedTemplate(context)
+
+    const firstAssignmentId = await seedAssignment(context, employeeId)
+
+    // manually mark the assignment as completed
+    const repository = new OnboardingAssignmentRepository(context)
+
+    const firstAssignment = await repository.findById(firstAssignmentId)
+
+    if (firstAssignment === null || firstAssignment instanceof Error) {
+      throw new Error("seed assignment not found")
+    }
+
+    await repository.update(firstAssignment.updateStatus("completed"))
+
+    const secondResult = await new AssignOnboarding(context).run({
+      viewerRole: "hr",
+      employeeCode: "E202",
+      templateCode: template.code,
+      assignedAt: "2026-06-01T00:00:00.000Z",
+    })
+
+    expect(secondResult instanceof Error).toBe(false)
+    expect("reason" in secondResult && secondResult.reason === "already_assigned").toBe(false)
   })
 })

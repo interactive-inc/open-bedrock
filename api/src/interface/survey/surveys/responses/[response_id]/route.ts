@@ -31,7 +31,7 @@ function toResponseBody(response: SurveyResponse) {
 function toResponseId(value: string): number | null {
   const parsed = Number(value)
 
-  return Number.isInteger(parsed) ? parsed : null
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // GET /surveys/responses/:response_id — 回答の詳細（本人のみ）

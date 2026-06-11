@@ -13,9 +13,14 @@ export class RoomRepository {
   constructor(private readonly c: Context) {}
 
   // 会議室マスタを id の昇順で返す。
-  async findAll(): Promise<ReadonlyArray<Room> | Error> {
+  async findAll(props: { limit: number; offset: number }): Promise<ReadonlyArray<Room> | Error> {
     try {
-      const rows = await this.c.var.database.select().from(rooms).orderBy(asc(rooms.id))
+      const rows = await this.c.var.database
+        .select()
+        .from(rooms)
+        .orderBy(asc(rooms.id))
+        .limit(props.limit)
+        .offset(props.offset)
 
       return rows.map((row) => Room.fromRow(row))
     } catch (error) {
