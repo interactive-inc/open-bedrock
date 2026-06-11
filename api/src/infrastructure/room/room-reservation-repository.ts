@@ -178,12 +178,19 @@ export class RoomReservationRepository {
     }
   }
 
-  // 予約を削除する。
-  async delete(id: string): Promise<null | Error> {
+  // 予約を削除する。削除できた場合は true、対象が存在しなかった場合は null を返す。
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database.delete(roomReservations).where(eq(roomReservations.id, id))
+      const rows = await this.c.var.database
+        .delete(roomReservations)
+        .where(eq(roomReservations.id, id))
+        .returning({ id: roomReservations.id })
 
-      return null
+      if (rows.length === 0) {
+        return null
+      }
+
+      return true
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete room_reservation")
     }

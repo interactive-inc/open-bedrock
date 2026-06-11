@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { EmployeeListSection } from "@/app/(app)/employees/employee-list-section"
-import { EmployeeSearchForm } from "@/app/(app)/employees/employee-search-form"
+import { EmployeeListSection } from "@/app/(app)/employees/_components/employee-list-section"
+import { EmployeeSearchForm } from "@/app/(app)/employees/_components/employee-search-form"
 import { Skeleton } from "@/components/ui/skeleton"
 import type {
   EmployeeSearchFilter,

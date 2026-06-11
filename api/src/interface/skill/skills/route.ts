@@ -1,5 +1,6 @@
 import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { skills } from "@/schema"
 import { and, eq, or } from "drizzle-orm"
@@ -12,6 +13,12 @@ import {
 } from "@/interface/shared/to-bounded-int"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
   const q = c.req.query("q") ?? null
 
   const category = c.req.query("category") ?? null

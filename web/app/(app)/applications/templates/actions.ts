@@ -24,7 +24,7 @@ function parseApproverRoles(value: FormDataEntryValue | null): ReadonlyArray<str
 }
 
 // schema_json は JSON テキストを解析する。空文字は空オブジェクト。解析失敗は Error。
-function parseSchemaJson(value: FormDataEntryValue | null): unknown | Error {
+function parseSchemaJson(value: FormDataEntryValue | null): unknown {
   const text = typeof value === "string" ? value.trim() : ""
 
   if (text === "") {

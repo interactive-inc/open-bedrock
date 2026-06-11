@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { KnowledgeResultList } from "@/app/(app)/knowledge/knowledge-result-list"
-import { KnowledgeSearchForm } from "@/app/(app)/knowledge/knowledge-search-form"
+import { KnowledgeResultList } from "@/app/(app)/knowledge/_components/knowledge-result-list"
+import { KnowledgeSearchForm } from "@/app/(app)/knowledge/_components/knowledge-search-form"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "ナレッジ" }

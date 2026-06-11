@@ -80,18 +80,22 @@ async function request(
   })
 }
 
-describe("PUT /templates/:code", () => {
+describe("PUT /application-templates/:code", () => {
   test("privileged role updates a template and returns 200", async () => {
-    const response = await request("/templates/paid_leave", await tokenFor(1, "admin"), {
-      method: "PUT",
-      body: {
-        name: "Updated Paid Leave",
-        category: "attendance",
-        description: "更新後の説明",
-        schema_json: { type: "object" },
-        approver_roles: ["manager", "hr"],
+    const response = await request(
+      "/application-templates/paid_leave",
+      await tokenFor(1, "admin"),
+      {
+        method: "PUT",
+        body: {
+          name: "Updated Paid Leave",
+          category: "attendance",
+          description: "更新後の説明",
+          schema_json: { type: "object" },
+          approver_roles: ["manager", "hr"],
+        },
       },
-    })
+    )
 
     expect(response.status).toBe(200)
 
@@ -106,16 +110,20 @@ describe("PUT /templates/:code", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/templates/paid_leave", await tokenFor(5, "member"), {
-      method: "PUT",
-      body: { name: "X", category: "attendance", schema_json: {} },
-    })
+    const response = await request(
+      "/application-templates/paid_leave",
+      await tokenFor(5, "member"),
+      {
+        method: "PUT",
+        body: { name: "X", category: "attendance", schema_json: {} },
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("unknown code returns 404", async () => {
-    const response = await request("/templates/missing", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates/missing", await tokenFor(1, "admin"), {
       method: "PUT",
       body: { name: "X", category: "general", schema_json: {} },
     })
@@ -124,7 +132,7 @@ describe("PUT /templates/:code", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/templates/paid_leave", null, {
+    const response = await request("/application-templates/paid_leave", null, {
       method: "PUT",
       body: { name: "X", category: "attendance", schema_json: {} },
     })
@@ -133,25 +141,33 @@ describe("PUT /templates/:code", () => {
   })
 })
 
-describe("DELETE /templates/:code", () => {
+describe("DELETE /application-templates/:code", () => {
   test("privileged role deletes a template and returns 204", async () => {
-    const response = await request("/templates/paid_leave", await tokenFor(1, "admin"), {
-      method: "DELETE",
-    })
+    const response = await request(
+      "/application-templates/paid_leave",
+      await tokenFor(1, "admin"),
+      {
+        method: "DELETE",
+      },
+    )
 
     expect(response.status).toBe(204)
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/templates/paid_leave", await tokenFor(5, "member"), {
-      method: "DELETE",
-    })
+    const response = await request(
+      "/application-templates/paid_leave",
+      await tokenFor(5, "member"),
+      {
+        method: "DELETE",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("unknown code returns 404", async () => {
-    const response = await request("/templates/missing", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates/missing", await tokenFor(1, "admin"), {
       method: "DELETE",
     })
 
@@ -159,7 +175,7 @@ describe("DELETE /templates/:code", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/templates/paid_leave", null, {
+    const response = await request("/application-templates/paid_leave", null, {
       method: "DELETE",
     })
 

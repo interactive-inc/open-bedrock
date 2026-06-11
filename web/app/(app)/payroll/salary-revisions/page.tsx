@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { SalaryRevisionRowActions } from "@/app/(app)/payroll/salary-revisions/salary-revision-row-actions"
+import { SalaryRevisionRowActions } from "@/app/(app)/payroll/salary-revisions/_components/salary-revision-row-actions"
 import { getMe } from "@/lib/api/get-me"
 import { getSalaryRevisions } from "@/lib/api/get-salary-revisions"
 import { canManagePayroll } from "@/lib/payroll/can-manage-payroll"

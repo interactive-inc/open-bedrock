@@ -145,5 +145,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ConflictError("open survey cannot be deleted")
   }
 
+  if (result.reason === "not_found") {
+    throw new ConflictError("survey was modified concurrently")
+  }
+
   return c.body(null, 204)
 })
