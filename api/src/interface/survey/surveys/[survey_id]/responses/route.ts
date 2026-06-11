@@ -4,7 +4,6 @@ import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import {
-  BadRequestError,
   ConflictError,
   InternalError,
   NotFoundError,
@@ -50,7 +49,7 @@ export const POST = factory.createHandlers(
         throw new ConflictError("already submitted")
       }
 
-      throw new BadRequestError("survey is not open")
+      throw new ConflictError("the survey is no longer open")
     }
 
     const responseBody = {

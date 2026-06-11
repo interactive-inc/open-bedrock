@@ -152,7 +152,7 @@ describe("POST /surveys/:survey_id/responses", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 when the survey is not open", async () => {
+  test("returns 409 when the survey is not open", async () => {
     const response = await request({
       path: "/surveys/3/responses",
       token: await memberToken(),
@@ -160,7 +160,7 @@ describe("POST /surveys/:survey_id/responses", () => {
       body: { answers_json: { q1: 4 } },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(409)
   })
 
   test("returns 409 when the respondent already submitted", async () => {
