@@ -61,6 +61,11 @@ export class ApplyToCareerPosting {
       return created
     }
 
+    // 条件付き INSERT で公募が closed に変更されていた場合
+    if ("reason" in created && created.reason === "posting_closed") {
+      return { reason: "posting_not_open" }
+    }
+
     // 一意制約違反（並行リクエストによる二重応募）
     if ("reason" in created && created.reason === "already_applied") {
       return { reason: "already_applied" }
