@@ -8,7 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, count, eq, like } from "drizzle-orm"
+import { and, count, eq, like, or } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /applications/inbox — 承認待ちの申請一覧（承認権限を持つロールのみ）
@@ -43,7 +43,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const pendingWithRole = and(
     eq(applications.status, "pending"),
-    like(applicationTemplates.approverRoles, rolePattern),
+    or(
+      eq(applicationTemplates.approverRoles, "[]"),
+      like(applicationTemplates.approverRoles, rolePattern),
+    ),
   )
 
   const rows = await c.var.database
