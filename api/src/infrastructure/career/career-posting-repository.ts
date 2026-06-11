@@ -1,7 +1,7 @@
 import { CareerPosting } from "@/domain/career/career-posting"
 import type { Context } from "@/env"
 import { careerPostings } from "@/schema"
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 
 export class CareerPostingRepository {
   constructor(private readonly c: Context) {}
@@ -79,6 +79,33 @@ export class CareerPostingRepository {
       await this.c.var.database.delete(careerPostings).where(eq(careerPostings.id, postingId))
 
       return null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete career_posting")
+    }
+  }
+
+  // status='applied' の応募がなければ公募を削除する。
+  // 単一の DELETE ... WHERE NOT EXISTS で実行し、チェックと削除の間のレースを防ぐ。
+  // 戻り値: "deleted" = 削除成功, "has_applied" = 応募ありのためスキップ, Error = DB エラー
+  async deleteIfNoAppliedApplications(
+    postingId: number,
+  ): Promise<"deleted" | "has_applied" | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`DELETE FROM career_postings
+            WHERE id = ${postingId}
+              AND NOT EXISTS (
+                SELECT 1 FROM career_applications
+                WHERE posting_id = ${postingId}
+                  AND status = 'applied'
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return "has_applied"
+      }
+
+      return "deleted"
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete career_posting")
     }
