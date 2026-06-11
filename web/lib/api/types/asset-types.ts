@@ -19,8 +19,8 @@ export type AssetResponse = {
 
 // GET /assets のクエリ。kind / status で絞り込む。値なしは null。
 export type AssetSearchQuery = {
-  kind: string | null
-  status: string | null
+  kind: AssetKind | null
+  status: AssetStatus | null
 }
 
 // POST /assets のリクエスト body。serial / purchased_on は任意。
