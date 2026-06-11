@@ -159,9 +159,7 @@ export class DeleteEmployee {
           )
           .bind(employeeCode),
         db
-          .prepare(
-            "UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1",
-          )
+          .prepare("UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1")
           .bind(employeeId),
 
         // --- 従業員本体を batch 末尾で削除（アトミック性を保証） ---
