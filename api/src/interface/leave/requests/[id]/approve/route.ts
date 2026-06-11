@@ -72,6 +72,20 @@ export const POST = factory.createHandlers(
       throw new NotFoundError("leave request not found")
     }
 
-    return c.json({ status: updated.status }, 200)
+    const responseBody = {
+      id: updated.id,
+      employee_id: updated.employeeId,
+      leave_type: updated.leaveType,
+      start_date: updated.startDate,
+      end_date: updated.endDate,
+      days: updated.days,
+      reason: updated.reason,
+      status: updated.status,
+      approver_id: updated.approverId,
+      decided_comment: updated.decidedComment,
+      created_at: updated.createdAt,
+    }
+
+    return c.json(responseBody, 200)
   },
 )

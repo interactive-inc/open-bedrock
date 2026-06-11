@@ -1,6 +1,5 @@
 import type { ReviewCycle } from "@/domain/review/review-cycle"
 import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
-import { toCycleStatus } from "@/domain/review/to-cycle-status"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
@@ -14,13 +13,18 @@ export type Forbidden = { reason: "forbidden" }
 
 export type CycleNotFound = { reason: "cycle_not_found" }
 
+export type InvalidTransition = { reason: "invalid_transition" }
+
 /**
  * 管理権限のある本人が、評価サイクルの状態（open / closed）を更新する。
+ * 許可する遷移: draft→open, open→closed のみ。
  */
 export class SetReviewCycleStatus {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ReviewCycle | Forbidden | CycleNotFound | Error> {
+  async run(
+    input: Input,
+  ): Promise<ReviewCycle | Forbidden | CycleNotFound | InvalidTransition | Error> {
     if (canAdministerCycle(input.viewerRole) === false) {
       return { reason: "forbidden" }
     }
@@ -37,7 +41,18 @@ export class SetReviewCycleStatus {
       return { reason: "cycle_not_found" }
     }
 
-    const updated = await repository.update(reviewCycle.withStatus(toCycleStatus(input.status)))
+    const transitioned =
+      input.status === "open"
+        ? reviewCycle.open()
+        : input.status === "closed"
+          ? reviewCycle.close()
+          : null
+
+    if (transitioned === null) {
+      return { reason: "invalid_transition" }
+    }
+
+    const updated = await repository.update(transitioned)
 
     if (updated instanceof Error) {
       return updated

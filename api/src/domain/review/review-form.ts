@@ -10,6 +10,7 @@ const zProps = z.object({
   reviewerType: z.enum(["self", "manager", "peer", "subordinate"]),
   answers: z.array(z.unknown()).readonly(),
   score: z.number().nullable(),
+  comment: z.string().nullable(),
   status: z.enum(["pending", "submitted"]),
   submittedAt: z.string().nullable(),
 })
@@ -24,6 +25,7 @@ export class ReviewForm implements Props {
   readonly reviewerType!: Props["reviewerType"]
   readonly answers!: Props["answers"]
   readonly score!: Props["score"]
+  readonly comment!: Props["comment"]
   readonly status!: Props["status"]
   readonly submittedAt!: Props["submittedAt"]
 
@@ -42,16 +44,23 @@ export class ReviewForm implements Props {
       reviewerType: toReviewerType(row.reviewerType),
       answers: toAnswers(row.answers),
       score: row.score,
+      comment: row.comment ?? null,
       status: toFormStatus(row.status),
       submittedAt: row.submittedAt,
     })
   }
 
-  withSubmission(score: Props["score"], answers: Props["answers"], submittedAt: string) {
+  withSubmission(
+    score: Props["score"],
+    answers: Props["answers"],
+    comment: Props["comment"],
+    submittedAt: string,
+  ) {
     return new ReviewForm({
       ...this.props,
       score,
       answers,
+      comment,
       status: "submitted",
       submittedAt,
     })

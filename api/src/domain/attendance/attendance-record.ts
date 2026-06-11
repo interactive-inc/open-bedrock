@@ -73,12 +73,13 @@ export class AttendanceRecord implements Props {
     })
   }
 
-  // 退勤打刻で労働時間を確定し閉じる。
-  withClosed(props: { clockOutAt: string; workMinutes: number }) {
+  // 退勤打刻で労働時間を確定し閉じる。note が渡されれば上書きする。
+  withClosed(props: { clockOutAt: string; workMinutes: number; note?: string | null }) {
     return new AttendanceRecord({
       ...this.props,
       clockOutAt: props.clockOutAt,
       workMinutes: props.workMinutes,
+      note: props.note !== undefined ? props.note : this.props.note,
       status: "closed",
     })
   }

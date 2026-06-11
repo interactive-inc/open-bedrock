@@ -149,6 +149,8 @@ export async function lendAssetAction(
 
   revalidatePath(`/assets/${code}`)
 
+  revalidatePath("/assets/lent/me")
+
   return { ok: true, error: null }
 }
 

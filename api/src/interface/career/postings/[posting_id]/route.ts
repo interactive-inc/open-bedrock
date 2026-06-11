@@ -4,8 +4,8 @@ import { UpdateCareerPosting } from "@/application/career/update-career-posting"
 import type { CareerPosting } from "@/domain/career/career-posting"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { validateIntParam } from "@/interface/shared/validate-int-param"
 import {
-  BadRequestError,
   ConflictError,
   ForbiddenError,
   InternalError,
@@ -27,13 +27,6 @@ function toResponseBody(posting: CareerPosting) {
   }
 }
 
-// パスの posting_id を整数に変換する。不正なら null。
-function toPostingId(raw: string): number | null {
-  const parsed = Number(raw)
-
-  return Number.isInteger(parsed) ? parsed : null
-}
-
 // GET /career/postings/:posting_id — 公募の詳細（管理ロールのみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -42,11 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const postingId = toPostingId(c.req.param("posting_id") ?? "")
-
-  if (postingId === null) {
-    throw new BadRequestError("invalid posting id")
-  }
+  const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const posting = await new GetCareerPosting(c).run({
     viewerRole: session.role,
@@ -75,7 +64,7 @@ export const PUT = factory.createHandlers(
     "json",
     z.object({
       title: z.string().min(1).max(500),
-      dept_id: z.number().int().nullable().optional(),
+      dept_id: z.number().int().positive().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
       required_skills: z.string().max(3_000).nullable().optional(),
       status: z.enum(["open", "closed"]).optional(),
@@ -88,11 +77,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const postingId = toPostingId(c.req.param("posting_id") ?? "")
-
-    if (postingId === null) {
-      throw new BadRequestError("invalid posting id")
-    }
+    const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
     const body = c.req.valid("json")
 
@@ -130,11 +115,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const postingId = toPostingId(c.req.param("posting_id") ?? "")
-
-  if (postingId === null) {
-    throw new BadRequestError("invalid posting id")
-  }
+  const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const result = await new DeleteCareerPosting(c).run({
     viewerRole: session.role,

@@ -15,6 +15,10 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  if (c.var.session === null) {
+    throw new UnauthorizedError()
+  }
+
   const articleId = validateIntParam(c.req.param("id"), "knowledge")
 
   const rows = await c.var.database
@@ -36,6 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     tags: row.tags,
     body_md: row.bodyMd,
     author_id: row.authorId,
+    created_at: row.createdAt,
   }
 
   return c.json(responseBody, 200)
