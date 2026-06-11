@@ -73,9 +73,7 @@ export class UpdateRoomReservation {
 
     // null は「重複予約」か「並行削除」のどちらか — findById で区別する
     if (result === null) {
-      const stillExists = await reservationRepository.findById(
-        command.reservationId,
-      )
+      const stillExists = await reservationRepository.findById(command.reservationId)
       if (stillExists instanceof Error) {
         return stillExists
       }
