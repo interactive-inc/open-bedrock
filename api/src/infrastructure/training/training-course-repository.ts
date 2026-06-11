@@ -1,5 +1,7 @@
 import { TrainingCourse } from "@/domain/training/training-course"
 import type { Context } from "@/env"
+import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { trainingCourses } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -59,6 +61,9 @@ export class TrainingCourseRepository {
         ? new Error("failed to insert training_course")
         : TrainingCourse.fromRow(row)
     } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("training course already exists", { cause: error })
+      }
       return error instanceof Error ? error : new Error("failed to insert training_course")
     }
   }

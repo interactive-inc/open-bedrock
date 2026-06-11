@@ -1,6 +1,7 @@
 import { canManageShift } from "@/domain/shift/can-manage-shift"
 import { ShiftPattern } from "@/domain/shift/shift-pattern"
 import type { Context } from "@/env"
+import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
@@ -49,6 +50,12 @@ export class CreateShiftPattern {
       breakMinutes: input.pattern.breakMinutes,
     })
 
-    return patternRepository.create(pattern)
+    const result = await patternRepository.create(pattern)
+
+    if (result instanceof UniqueConstraintError) {
+      return { reason: "code_conflict" }
+    }
+
+    return result
   }
 }
