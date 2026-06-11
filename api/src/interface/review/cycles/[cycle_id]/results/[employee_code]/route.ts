@@ -60,7 +60,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   })
   const view = toReviewResultView(cycle, forms, employeeRow.id)
   if (view instanceof Error) {
-    throw new InternalError(view.message)
+    throw new InternalError("internal server error")
   }
   const body = {
     cycle_id: view.cycleId,
