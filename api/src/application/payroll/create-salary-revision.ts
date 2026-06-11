@@ -67,6 +67,10 @@ export class CreateSalaryRevision {
 
     const created = await salaryRevisionRepository.create(salaryRevision)
 
+    if (created instanceof Error && !(created instanceof UniqueConstraintError)) {
+      return created
+    }
+
     if (created instanceof UniqueConstraintError) {
       return { reason: "duplicate_effective_date" }
     }
