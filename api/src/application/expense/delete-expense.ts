@@ -50,9 +50,9 @@ export class DeleteExpense {
     try {
       const db = this.c.env.DB
       await db.batch([
-        db.prepare("DELETE FROM expenses WHERE id = ?1 AND status = 'pending'").bind(
-          command.expenseId,
-        ),
+        db
+          .prepare("DELETE FROM expenses WHERE id = ?1 AND status = 'pending'")
+          .bind(command.expenseId),
         abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM expense_approvals WHERE expense_id = ?1").bind(command.expenseId),
       ])
