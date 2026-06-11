@@ -2,7 +2,7 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task"
 import type { Context } from "@/env"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
-import { asc, eq, inArray } from "drizzle-orm"
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm"
 
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -26,15 +26,21 @@ export class OnboardingAssignmentRepository {
         return new Error("failed to insert onboarding assignment")
       }
 
-      for (const task of assignment.tasks) {
-        await this.c.var.database.insert(onboardingTasks).values({
-          assignmentId: assignmentRow.id,
-          templateTaskCode: task.templateTaskCode,
-          title: task.title,
-          sortOrder: task.order,
-          status: task.status,
-          completedAt: task.completedAt,
-        })
+      if (assignment.tasks.length > 0) {
+        const taskStmts = assignment.tasks.map((task) =>
+          this.c.var.database.insert(onboardingTasks).values({
+            assignmentId: assignmentRow.id,
+            templateTaskCode: task.templateTaskCode,
+            title: task.title,
+            sortOrder: task.order,
+            status: task.status,
+            completedAt: task.completedAt,
+          }),
+        )
+
+        await this.c.var.database.batch(
+          taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
+        )
       }
 
       const result = await this.findById(assignmentRow.id)
@@ -142,21 +148,21 @@ export class OnboardingAssignmentRepository {
         return new Error("cannot update unsaved onboarding assignment")
       }
 
-      await this.c.var.database
+      const assignmentStmt = this.c.var.database
         .update(onboardingAssignments)
         .set({ status: assignment.status, assignedAt: assignment.assignedAt })
         .where(eq(onboardingAssignments.id, assignment.id))
 
-      for (const task of assignment.tasks) {
-        if (task.id === null) {
-          continue
-        }
+      const taskStmts = assignment.tasks
+        .filter((task) => task.id !== null)
+        .map((task) =>
+          this.c.var.database
+            .update(onboardingTasks)
+            .set({ status: task.status, completedAt: task.completedAt })
+            .where(eq(onboardingTasks.id, task.id as number)),
+        )
 
-        await this.c.var.database
-          .update(onboardingTasks)
-          .set({ status: task.status, completedAt: task.completedAt })
-          .where(eq(onboardingTasks.id, task.id))
-      }
+      await this.c.var.database.batch([assignmentStmt, ...taskStmts])
 
       const result = await this.findById(assignment.id)
 
@@ -167,6 +173,57 @@ export class OnboardingAssignmentRepository {
       return result
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding assignment")
+    }
+  }
+
+  // employee_id と templateCode の組み合わせで completed 以外の割り当てを探す。
+  async findActiveByEmployeeAndTemplate(
+    employeeId: number,
+    templateCode: string,
+  ): Promise<OnboardingAssignment | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(onboardingAssignments)
+        .where(
+          and(
+            eq(onboardingAssignments.employeeId, employeeId),
+            eq(onboardingAssignments.templateCode, templateCode),
+            ne(onboardingAssignments.status, "completed"),
+          ),
+        )
+        .limit(1)
+
+      const row = rows.at(0)
+
+      if (row === undefined) {
+        return null
+      }
+
+      return this.findById(row.id)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to check existing assignment")
+    }
+  }
+
+  // 指定テンプレートコードに紐づく in_progress 状態の割り当て数を返す。
+  async countActiveByTemplateCode(templateCode: string): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(onboardingAssignments)
+        .where(
+          and(
+            eq(onboardingAssignments.templateCode, templateCode),
+            eq(onboardingAssignments.status, "in_progress"),
+          ),
+        )
+
+      return rows.at(0)?.value ?? 0
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to count active onboarding assignments")
     }
   }
 

@@ -2,6 +2,7 @@ import { SetReviewCycleStatus } from "@/application/review/set-review-cycle-stat
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -32,6 +33,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   if ("reason" in updated) {
     if (updated.reason === "forbidden") {
       throw new ForbiddenError()
+    }
+
+    if (updated.reason === "invalid_transition") {
+      throw new ConflictError("review cycle cannot be closed from current status")
     }
 
     throw new NotFoundError("review cycle not found")

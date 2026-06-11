@@ -5,6 +5,12 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { careerPostings } from "@/schema"
 import { eq } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -28,10 +34,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const limit = toBoundedInt({
+    raw: c.req.query("limit"),
+    fallback: DEFAULT_LIST_LIMIT,
+    min: 1,
+    max: MAX_LIST_LIMIT,
+  })
+
+  const offset = toBoundedInt({
+    raw: c.req.query("offset"),
+    fallback: 0,
+    min: 0,
+    max: MAX_LIST_OFFSET,
+  })
+
   const rows = await c.var.database
     .select()
     .from(careerPostings)
     .where(eq(careerPostings.status, "open"))
+    .limit(limit)
+    .offset(offset)
 
   const responseBody = rows.map((row) => ({
     id: row.id,
@@ -52,7 +74,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       title: z.string().min(1).max(500),
-      dept_id: z.number().int().nullable().optional(),
+      dept_id: z.number().int().positive().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
       required_skills: z.string().max(3_000).nullable().optional(),
       status: z.enum(["open", "closed"]).optional(),

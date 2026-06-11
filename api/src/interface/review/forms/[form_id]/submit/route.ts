@@ -19,7 +19,22 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       score: z.number().optional(),
-      answers: z.array(z.unknown()).max(200).optional(),
+      // 要素数に加えてシリアライズ後のバイト長も制限し、巨大ペイロードの格納を防ぐ
+      // （survey の answers_json が jsonPayloadSchema(10_000) で課す上限と同じ値）。
+      answers: z
+        .array(z.unknown())
+        .max(200)
+        .refine(
+          (value) => {
+            try {
+              return JSON.stringify(value).length <= 10_000
+            } catch {
+              return false
+            }
+          },
+          { message: "answers exceeds 10000 characters when serialized" },
+        )
+        .optional(),
       comment: z.string().max(3_000).optional(),
     }),
   ),
@@ -39,6 +54,7 @@ export const POST = factory.createHandlers(
       formId,
       score: json.score ?? null,
       answers: json.answers ?? [],
+      comment: json.comment ?? null,
       submittedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
@@ -66,6 +82,7 @@ export const POST = factory.createHandlers(
       reviewer_type: submitted.reviewerType,
       answers: submitted.answers,
       score: submitted.score,
+      comment: submitted.comment,
       status: submitted.status,
       submitted_at: submitted.submittedAt,
     }

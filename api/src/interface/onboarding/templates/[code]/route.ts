@@ -5,6 +5,7 @@ import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
+  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
@@ -120,6 +121,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   if (result.reason === "forbidden") {
     throw new ForbiddenError()
+  }
+
+  if (result.reason === "template_in_use") {
+    throw new ConflictError("template is in use by active onboarding assignments")
   }
 
   return c.body(null, 204)
