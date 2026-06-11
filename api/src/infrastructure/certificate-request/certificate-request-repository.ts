@@ -90,13 +90,14 @@ export class CertificateRequestRepository {
   }
 
   // 証明書発行依頼を削除する。status が requested の行のみ対象とする。
-  async delete(id: string): Promise<null | Error> {
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(certificateRequests)
         .where(and(eq(certificateRequests.id, id), eq(certificateRequests.status, "requested")))
+        .returning({ id: certificateRequests.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete certificate_request")
     }

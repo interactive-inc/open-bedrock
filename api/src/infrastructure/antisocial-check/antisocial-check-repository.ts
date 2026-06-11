@@ -90,13 +90,14 @@ export class AntisocialCheckRepository {
   }
 
   // 反社チェック申請を削除する。status が requested の行のみ対象とする。
-  async delete(id: string): Promise<null | Error> {
+  async delete(id: string): Promise<true | null | Error> {
     try {
-      await this.c.var.database
+      const rows = await this.c.var.database
         .delete(antisocialChecks)
         .where(and(eq(antisocialChecks.id, id), eq(antisocialChecks.status, "requested")))
+        .returning({ id: antisocialChecks.id })
 
-      return null
+      return rows.length > 0 ? true : null
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to delete antisocial_check")
     }
