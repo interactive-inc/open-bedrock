@@ -160,6 +160,8 @@ export class SurveyRepository {
   // 回答者本人の回答を提出時刻の昇順で返す。
   async findResponsesByRespondentId(
     respondentId: number,
+    limit: number,
+    offset: number,
   ): Promise<ReadonlyArray<SurveyResponse> | Error> {
     try {
       const rows = await this.c.var.database
@@ -167,6 +169,8 @@ export class SurveyRepository {
         .from(surveyResponses)
         .where(eq(surveyResponses.respondentId, respondentId))
         .orderBy(asc(surveyResponses.submittedAt))
+        .limit(limit)
+        .offset(offset)
 
       const responses: Array<SurveyResponse> = []
 

@@ -142,6 +142,28 @@ describe("POST /career/postings", () => {
     expect(response.status).toBe(400)
   })
 
+  test("returns 400 when dept_id is zero", async () => {
+    const response = await request({
+      path: "/career/postings",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: { title: "Invalid Dept", dept_id: 0 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when dept_id is negative", async () => {
+    const response = await request({
+      path: "/career/postings",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: { title: "Invalid Dept", dept_id: -1 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/career/postings",
@@ -257,6 +279,28 @@ describe("PUT /career/postings/:posting_id", () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when dept_id is zero", async () => {
+    const response = await request({
+      path: "/career/postings/1",
+      token: await tokenFor(1, "admin"),
+      method: "PUT",
+      body: { title: "Updated Lead", dept_id: 0 },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when dept_id is negative", async () => {
+    const response = await request({
+      path: "/career/postings/1",
+      token: await tokenFor(1, "admin"),
+      method: "PUT",
+      body: { title: "Updated Lead", dept_id: -5 },
+    })
+
+    expect(response.status).toBe(400)
   })
 })
 

@@ -8,7 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
-import { eq } from "drizzle-orm"
+import { count, desc, eq } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要）
@@ -37,13 +37,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const rows = await c.var.database
-    .select({ expense: expenses, applicantName: employees.name })
-    .from(expenses)
-    .leftJoin(employees, eq(employees.id, expenses.employeeId))
-    .where(eq(expenses.status, "pending"))
-    .limit(limit)
-    .offset(offset)
+  const [rows, totalRows] = await Promise.all([
+    c.var.database
+      .select({ expense: expenses, applicantName: employees.name })
+      .from(expenses)
+      .leftJoin(employees, eq(employees.id, expenses.employeeId))
+      .where(eq(expenses.status, "pending"))
+      .orderBy(desc(expenses.id))
+      .limit(limit)
+      .offset(offset),
+    c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending")),
+  ])
 
   const body = rows.map((row) => ({
     id: row.expense.id,
@@ -55,5 +59,5 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: row.expense.createdAt,
   }))
 
-  return c.json(body, 200)
+  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
 })

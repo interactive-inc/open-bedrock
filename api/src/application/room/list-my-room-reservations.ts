@@ -4,6 +4,8 @@ import { RoomReservationRepository } from "@/infrastructure/room/room-reservatio
 
 export type Command = {
   reserverId: number
+  limit: number
+  offset: number
 }
 
 /**
@@ -15,6 +17,9 @@ export class ListMyRoomReservations {
   async run(command: Command): Promise<ReadonlyArray<RoomReservation> | Error> {
     const reservationRepository = new RoomReservationRepository(this.c)
 
-    return await reservationRepository.findByReserverId(command.reserverId)
+    return await reservationRepository.findByReserverId(command.reserverId, {
+      limit: command.limit,
+      offset: command.offset,
+    })
   }
 }

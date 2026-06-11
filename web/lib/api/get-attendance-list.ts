@@ -19,5 +19,6 @@ export async function getAttendanceList(query: AttendanceSearchQuery) {
     return new Error("failed to load attendance list")
   }
 
-  return response.json()
+  const body = await response.json()
+  return body.data
 }
