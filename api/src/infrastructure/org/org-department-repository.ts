@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { orgDepartments, orgMemberships } from "@/schema"
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, sql } from "drizzle-orm"
 
 export class OrgDepartmentRepository {
   constructor(private readonly c: Context) {}
@@ -89,6 +89,46 @@ export class OrgDepartmentRepository {
         : OrgDepartmentRepository.toEntity(row)
     } catch (error) {
       // (code) の UNIQUE 制約違反 = 並行リクエストによる二重登録。
+      if (isUniqueConstraintError(error)) {
+        return new UniqueConstraintError("department code already exists", { cause: error })
+      }
+
+      return error instanceof Error ? error : new Error("failed to insert org_department")
+    }
+  }
+
+  // 親部署が存在するときだけ INSERT する。親の存在確認と INSERT を
+  // INSERT ... SELECT ... WHERE EXISTS でアトミックに行い TOCTOU を防ぐ。
+  // 親が消えていて 0 行挿入なら null を返す。
+  async createIfParentExists(
+    department: OrgDepartment,
+  ): Promise<OrgDepartment | null | UniqueConstraintError | Error> {
+    if (department.parentCode === null) {
+      return this.create(department)
+    }
+
+    try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO org_departments (code, department_id, parent_code, manager_employee_code, sort_order)
+            SELECT ${department.code}, ${department.departmentId}, ${department.parentCode},
+                   ${department.managerEmployeeCode}, ${department.order}
+            WHERE EXISTS (
+              SELECT 1 FROM org_departments WHERE code = ${department.parentCode}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      const inserted = await this.findByCode(department.code)
+
+      if (inserted === null) {
+        return new Error("failed to retrieve inserted org_department")
+      }
+
+      return inserted
+    } catch (error) {
       if (isUniqueConstraintError(error)) {
         return new UniqueConstraintError("department code already exists", { cause: error })
       }
