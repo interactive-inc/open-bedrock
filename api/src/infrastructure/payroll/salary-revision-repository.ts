@@ -3,27 +3,33 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { salaryRevisions } from "@/schema"
-import { and, desc, eq, lt } from "drizzle-orm"
+import { and, desc, eq, lt, ne } from "drizzle-orm"
 
 export class SalaryRevisionRepository {
   constructor(private readonly c: Context) {}
 
   // 指定 effectiveDate より前で最も新しい改定を返す。バックデート登録時の「前回基本給」解決に使う。
   // effectiveDate が同日のものは含めない（直前の改定のみ対象）。
+  // excludeId を渡すとその改定を除外する（訂正時に自分自身を直前として拾わないため）。
   async findLatestBeforeDate(
     employeeId: number,
     effectiveDate: string,
+    excludeId: number | null = null,
   ): Promise<SalaryRevision | null | Error> {
     try {
+      const conditions = [
+        eq(salaryRevisions.employeeId, employeeId),
+        lt(salaryRevisions.effectiveDate, effectiveDate),
+      ]
+
+      if (excludeId !== null) {
+        conditions.push(ne(salaryRevisions.id, excludeId))
+      }
+
       const rows = await this.c.var.database
         .select()
         .from(salaryRevisions)
-        .where(
-          and(
-            eq(salaryRevisions.employeeId, employeeId),
-            lt(salaryRevisions.effectiveDate, effectiveDate),
-          ),
-        )
+        .where(and(...conditions))
         .orderBy(desc(salaryRevisions.effectiveDate), desc(salaryRevisions.id))
         .limit(1)
 
@@ -83,7 +89,7 @@ export class SalaryRevisionRepository {
     }
   }
 
-  // 既存の給与改定の適用日・改定後基本給・理由を訂正する。id は採番済みの前提。
+  // 既存の給与改定の適用日・前回基本給・改定後基本給・理由を訂正する。id は採番済みの前提。
   // 0 行更新（削除済み等）は null を返す。
   async update(salaryRevision: SalaryRevision): Promise<SalaryRevision | null | Error> {
     if (salaryRevision.id === null) {
@@ -95,6 +101,7 @@ export class SalaryRevisionRepository {
         .update(salaryRevisions)
         .set({
           effectiveDate: salaryRevision.effectiveDate,
+          previousBaseSalary: salaryRevision.previousBaseSalary,
           newBaseSalary: salaryRevision.newBaseSalary,
           reason: salaryRevision.reason,
         })

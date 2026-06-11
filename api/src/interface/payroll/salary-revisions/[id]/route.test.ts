@@ -108,8 +108,8 @@ describe("PUT /salary-revisions/:id", () => {
       expect(parsed.data.effective_date).toBe("2025-05-01")
       expect(parsed.data.new_base_salary).toBe(310000)
       expect(parsed.data.reason).toBe("correction")
-      // previous_base_salary は訂正対象外で元の値を保つ。
-      expect(parsed.data.previous_base_salary).toBe(280000)
+      // 適用日が変わったため前回基本給は再解決される。直前の改定がないので 0。
+      expect(parsed.data.previous_base_salary).toBe(0)
     }
   })
 
