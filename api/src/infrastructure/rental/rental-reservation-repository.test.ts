@@ -19,6 +19,10 @@ describe("RentalReservationRepository", () => {
       createdAt: "2026-06-01T00:00:00Z",
     })
 
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
     const created = await repository.create(reservation)
 
     expect(created).toBeInstanceOf(RentalReservation)
@@ -86,6 +90,14 @@ describe("RentalReservationRepository", () => {
       createdAt: "2026-06-01T00:00:00Z",
     })
 
+    if (
+      !(r1 instanceof RentalReservation) ||
+      !(r2 instanceof RentalReservation) ||
+      !(r3 instanceof RentalReservation)
+    ) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
     await repository.create(r1)
     await repository.create(r2)
     await repository.create(r3)
@@ -131,15 +143,23 @@ describe("RentalReservationRepository", () => {
       createdAt: "2026-06-01T00:00:00Z",
     })
 
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
     await repository.create(reservation)
 
-    const updated = reservation
-      .withDetails({
-        itemName: "Large Monitor",
-        startDate: "2026-06-15",
-        endDate: "2026-06-20",
-      })
-      .withPurpose("Remote work")
+    const withDetails = reservation.withDetails({
+      itemName: "Large Monitor",
+      startDate: "2026-06-15",
+      endDate: "2026-06-20",
+    })
+
+    if (!(withDetails instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range in withDetails")
+    }
+
+    const updated = withDetails.withPurpose("Remote work")
 
     const result = await repository.update(updated)
 
@@ -204,6 +224,10 @@ describe("RentalReservationRepository", () => {
       createdAt: "2026-06-01T00:00:00Z",
     })
 
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
     await repository.create(reservation)
 
     const deleted = await repository.delete(reservation.id)
@@ -259,6 +283,10 @@ describe("RentalReservationRepository", () => {
       createdAt: "2026-06-01T00:00:00Z",
     })
 
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
     const created = await repository.create(reservation)
 
     if (created instanceof Error) {
@@ -272,5 +300,106 @@ describe("RentalReservationRepository", () => {
     }
 
     expect(found.purpose).toBeNull()
+  })
+
+  test("findOverlapping returns reservations with same itemName and overlapping dates", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    const overlapping = await repository.findOverlapping({
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+    })
+
+    if (overlapping instanceof Error) {
+      throw overlapping
+    }
+
+    expect(overlapping.length).toBe(1)
+    expect(overlapping[0]?.id).toBe(existing.id)
+  })
+
+  test("findOverlapping excludes the reservation by excludeId", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    const overlapping = await repository.findOverlapping({
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+      excludeId: existing.id,
+    })
+
+    if (overlapping instanceof Error) {
+      throw overlapping
+    }
+
+    expect(overlapping.length).toBe(0)
+  })
+
+  test("findOverlapping returns empty when different itemName", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    const overlapping = await repository.findOverlapping({
+      itemName: "Camera",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+    })
+
+    if (overlapping instanceof Error) {
+      throw overlapping
+    }
+
+    expect(overlapping.length).toBe(0)
   })
 })
