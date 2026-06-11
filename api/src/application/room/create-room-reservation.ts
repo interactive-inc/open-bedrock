@@ -17,6 +17,8 @@ export type RoomAlreadyReserved = { reason: "room_already_reserved" }
 
 export type InvalidTimeRange = { reason: "invalid_time_range" }
 
+export type StartInPast = { reason: "start_in_past" }
+
 /**
  * 会議室を予約する。会議室が存在しない場合、重複時は判別可能な失敗を返す。
  */
@@ -25,9 +27,16 @@ export class CreateRoomReservation {
 
   async run(
     command: Command,
-  ): Promise<RoomReservation | RoomNotFound | RoomAlreadyReserved | InvalidTimeRange | Error> {
+  ): Promise<
+    RoomReservation | RoomNotFound | RoomAlreadyReserved | InvalidTimeRange | StartInPast | Error
+  > {
     if (command.startAt >= command.endAt) {
       return { reason: "invalid_time_range" }
+    }
+
+    const now = this.c.env.NOW ?? new Date().toISOString()
+    if (command.startAt < now) {
+      return { reason: "start_in_past" }
     }
 
     const roomRepository = new RoomRepository(this.c)

@@ -222,14 +222,16 @@ describe("DELETE /rooms/reservations/:id", () => {
     expect(response.status).toBe(204)
   })
 
-  test("returns 403 when cancelling another person's reservation", async () => {
+  test("returns 404 when cancelling another person's reservation", async () => {
     const response = await request({
       path: `/rooms/reservations/${othersReservationId}`,
       token: await managerToken(),
       method: "DELETE",
     })
 
-    expect(response.status).toBe(403)
+    // Atomic ownership check: deleteByIdAndReserverId returns null for both
+    // non-existent and non-owned reservations to avoid leaking existence.
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for an unknown reservation", async () => {
