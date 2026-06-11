@@ -46,12 +46,6 @@ export class CreateOrgDepartment {
       return { reason: "department_code_conflict" }
     }
 
-    const parentChecked = await this.ensureParentExists(command.department.parentCode)
-
-    if (parentChecked !== null) {
-      return parentChecked
-    }
-
     const department = OrgDepartment.create({
       code: command.department.code,
       departmentId: command.department.departmentId,
@@ -60,7 +54,13 @@ export class CreateOrgDepartment {
       order: command.department.order,
     })
 
-    const created = await departmentRepository.create(department)
+    // 親の存在確認と INSERT はリポジトリ側でアトミックに行う（TOCTOU 対策）。
+    // 親が確認後に削除されても 0 行挿入 = null となり、孤立ノードは作られない。
+    const created = await departmentRepository.createIfParentExists(department)
+
+    if (created === null) {
+      return { reason: "parent_not_found" }
+    }
 
     // findByCode と insert の間に並行リクエストが挿入されると UNIQUE 制約違反になる。
     // リポジトリが UniqueConstraintError として返すので、重複として扱う（TOCTOU 競合対策）。
@@ -69,25 +69,5 @@ export class CreateOrgDepartment {
     }
 
     return created
-  }
-
-  private async ensureParentExists(
-    parentCode: string | null,
-  ): Promise<ParentNotFound | Error | null> {
-    if (parentCode === null) {
-      return null
-    }
-
-    const parent = await new OrgDepartmentRepository(this.c).findByCode(parentCode)
-
-    if (parent instanceof Error) {
-      return parent
-    }
-
-    if (parent === null) {
-      return { reason: "parent_not_found" }
-    }
-
-    return null
   }
 }
