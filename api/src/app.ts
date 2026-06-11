@@ -26,6 +26,7 @@ import * as attendanceMeRoute from "@/interface/attendance/me/route"
 import * as attendanceMeSummaryRoute from "@/interface/attendance/me/summary/route"
 import * as authLoginRoute from "@/interface/auth/login/route"
 import * as authMeRoute from "@/interface/auth/me/route"
+import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
 import * as batchRoute from "@/interface/batch/route"
 import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
 import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
@@ -207,6 +208,7 @@ export const app = factory
   .get("/employees", ...employeeListRoute.GET)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/batch", ...batchRoute.GET)
+  .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
   .get("/org/tree", ...orgTreeRoute.GET)
   .get("/org/departments/:code/members", ...orgDepartmentMembersRoute.GET)
   .get("/org/reporting-line/:employee_code", ...orgReportingLineRoute.GET)
