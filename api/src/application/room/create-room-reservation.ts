@@ -1,6 +1,7 @@
 import { RoomReservation } from "@/domain/room/room-reservation"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
+import { RoomRepository } from "@/infrastructure/room/room-repository"
 
 export type Command = {
   roomId: number
@@ -10,21 +11,35 @@ export type Command = {
   purpose: string | null
 }
 
+export type RoomNotFound = { reason: "room_not_found" }
+
 export type RoomAlreadyReserved = { reason: "room_already_reserved" }
 
 export type InvalidTimeRange = { reason: "invalid_time_range" }
 
 /**
- * 会議室を予約する。重複時は判別可能な失敗を返す。
+ * 会議室を予約する。会議室が存在しない場合、重複時は判別可能な失敗を返す。
  */
 export class CreateRoomReservation {
   constructor(private readonly c: Context) {}
 
   async run(
     command: Command,
-  ): Promise<RoomReservation | RoomAlreadyReserved | InvalidTimeRange | Error> {
+  ): Promise<RoomReservation | RoomNotFound | RoomAlreadyReserved | InvalidTimeRange | Error> {
     if (command.startAt >= command.endAt) {
       return { reason: "invalid_time_range" }
+    }
+
+    const roomRepository = new RoomRepository(this.c)
+
+    const room = await roomRepository.findById(command.roomId)
+
+    if (room instanceof Error) {
+      return room
+    }
+
+    if (room === null) {
+      return { reason: "room_not_found" }
     }
 
     const reservationRepository = new RoomReservationRepository(this.c)
