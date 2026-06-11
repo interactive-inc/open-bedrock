@@ -17,7 +17,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.oneonone[":id"].$get({
+    const response = await client.oneonones[":id"].$get({
       param: { id: query.id },
     })
 

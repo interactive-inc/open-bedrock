@@ -39,7 +39,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client.oneonone.$post({ json })
+    const response = await client.oneonones.$post({ json })
 
     return c.json(await response.json())
   },

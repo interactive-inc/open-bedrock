@@ -80,9 +80,9 @@ async function request(
   })
 }
 
-describe("POST /templates", () => {
+describe("POST /application-templates", () => {
   test("privileged role creates a template and returns 201", async () => {
-    const response = await request("/templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "admin"), {
       method: "POST",
       body: {
         code: "new_template",
@@ -106,7 +106,7 @@ describe("POST /templates", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/templates", await tokenFor(5, "member"), {
+    const response = await request("/application-templates", await tokenFor(5, "member"), {
       method: "POST",
       body: { code: "member_template", name: "X", category: "general", schema_json: {} },
     })
@@ -115,7 +115,7 @@ describe("POST /templates", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "admin"), {
       method: "POST",
       body: { code: "paid_leave", name: "Duplicate", category: "attendance", schema_json: {} },
     })
@@ -124,7 +124,7 @@ describe("POST /templates", () => {
   })
 
   test("returns 400 when a required field is missing", async () => {
-    const response = await request("/templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "admin"), {
       method: "POST",
       body: { name: "No Code", category: "general", schema_json: {} },
     })
@@ -133,7 +133,7 @@ describe("POST /templates", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/templates", null, {
+    const response = await request("/application-templates", null, {
       method: "POST",
       body: { code: "x", name: "X", category: "general", schema_json: {} },
     })
