@@ -18,7 +18,8 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      score: z.number().optional(),
+      // スコアは 0〜100 の整数。負数・小数・巨大値は averageScore 算出を歪めるため弾く。
+      score: z.number().int().min(0).max(100).optional(),
       answers: z.array(z.unknown()).max(200).optional(),
       comment: z.string().max(3_000).optional(),
     }),
