@@ -12,7 +12,7 @@ export async function updateOneOnOne(id: string, request: OneOnOneUpdateRequest)
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update oneonone")
+    return new Error("1on1記録の変更に失敗しました")
   }
 
   return response.json()

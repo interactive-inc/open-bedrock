@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // DELETE /shift/patterns/:id。特権ロールがシフトパターンを削除する。成功時は null。
 export async function deleteShiftPattern(id: number): Promise<null | Error> {
@@ -9,7 +10,12 @@ export async function deleteShiftPattern(id: number): Promise<null | Error> {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to delete shift pattern")
+    return toResponseError(response, {
+      fallback: "シフトパターンの削除に失敗しました",
+      conflictMessages: {
+        "pattern is in use by assignments": "割当で使用中のシフトパターンは削除できません",
+      },
+    })
   }
 
   return null

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   ShiftAssignmentCreateRequest,
   ShiftAssignmentResponse,
@@ -20,7 +21,13 @@ export async function createShiftAssignment(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create shift assignment")
+    return toResponseError(response, {
+      fallback: "シフトの割り当てに失敗しました",
+      conflictMessages: {
+        "shift assignment already exists for this employee and date":
+          "この社員・日付のシフトは既に割り当てられています",
+      },
+    })
   }
 
   return response.json()

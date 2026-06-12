@@ -68,7 +68,7 @@ export async function requestRedemptionAction(
   const requested = await requestRedemption(rewardId)
 
   if (requested instanceof Error) {
-    return { ok: false, error: "交換の申請に失敗しました（残高不足または在庫切れ）" }
+    return { ok: false, error: requested.message }
   }
 
   revalidatePath("/thanks")
@@ -109,7 +109,7 @@ export async function createRewardAction(
   const created = await createReward({ name, point_cost: pointCost, stock })
 
   if (created instanceof Error) {
-    return { ok: false, error: "景品の登録に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/thanks")

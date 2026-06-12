@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   RentalReservationResponse,
   RentalReservationUpdateRequest,
@@ -18,7 +19,14 @@ export async function updateRentalReservation(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update rental reservation")
+    return toResponseError(response, {
+      fallback: "レンタル予約の変更に失敗しました",
+      conflictMessages: {
+        "an overlapping rental reservation already exists":
+          "期間が重複するレンタル予約が既にあります",
+        "reservation is not modifiable": "この予約は変更できません",
+      },
+    })
   }
 
   return response.json()

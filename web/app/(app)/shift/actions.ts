@@ -52,7 +52,7 @@ export async function createShiftSwapRequestAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "交代申請の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/shift")
@@ -108,7 +108,7 @@ export async function createShiftAssignmentAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "シフト割当の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/shift")
@@ -136,7 +136,7 @@ export async function publishShiftAssignmentAction(
   const published = await publishShiftAssignment(assignmentId)
 
   if (published instanceof Error) {
-    return { ok: false, error: "シフト割当の公開に失敗しました" }
+    return { ok: false, error: published.message }
   }
 
   revalidatePath("/shift")
@@ -206,7 +206,7 @@ export async function createShiftPatternAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "シフトパターンの作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/shift")
@@ -244,7 +244,7 @@ export async function updateShiftAssignmentAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "シフト割当の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/shift")
@@ -272,7 +272,7 @@ export async function deleteShiftAssignmentAction(
   const deleted = await deleteShiftAssignment(assignmentId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "シフト割当の削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/shift")
@@ -306,7 +306,7 @@ export async function updateShiftPatternAction(
   const updated = await updateShiftPattern(patternId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "シフトパターンの変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/shift")
@@ -334,7 +334,7 @@ export async function deleteShiftPatternAction(
   const deleted = await deleteShiftPattern(patternId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "シフトパターンの削除に失敗しました（割当から参照中の可能性）" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/shift")
@@ -356,7 +356,7 @@ export async function cancelShiftSwapRequestAction(
   const cancelled = await cancelShiftSwapRequest(swapRequestId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "交代申請の取り下げに失敗しました（承認済みの可能性）" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/shift")

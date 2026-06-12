@@ -21,7 +21,7 @@ export async function updateCareerPosting(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update career posting")
+    return new Error("社内公募の変更に失敗しました")
   }
 
   return response.json()

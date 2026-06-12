@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   TrainingEnrollmentCreateRequest,
   TrainingEnrollmentResponse,
@@ -15,7 +16,13 @@ export async function createTrainingEnrollment(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create training enrollment")
+    return toResponseError(response, {
+      fallback: "研修の受講申込に失敗しました",
+      conflictMessages: {
+        "course is archived": "このコースはアーカイブされています",
+        "already enrolled": "このコースは既に受講申込済みです",
+      },
+    })
   }
 
   return response.json()

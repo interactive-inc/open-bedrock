@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ThanksRedemptionResponse } from "@/lib/api/types/thanks-points-types"
 
 // POST /thanks/redemptions。受領残高から交換を申請する。
@@ -11,7 +12,15 @@ export async function requestRedemption(
   const response = await client.thanks.redemptions.$post({ json: { reward_id: rewardId } })
 
   if (response.status >= 400) {
-    return new Error("failed to request redemption")
+    return toResponseError(response, {
+      fallback: "ポイント交換の申請に失敗しました",
+      conflictMessages: {
+        "insufficient balance": "受領ポイントの残高が不足しています",
+        "reward out of stock": "この景品は在庫切れです",
+        "pending redemption already exists": "保留中の交換申請が既にあります",
+        "reward is inactive": "この景品は現在交換できません",
+      },
+    })
   }
 
   return response.json()

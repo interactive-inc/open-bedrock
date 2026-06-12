@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftPatternCreateRequest, ShiftPatternResponse } from "@/lib/api/types/shift-types"
 
 // POST /shift/patterns。特権ロールがシフトパターンを作成する。
@@ -18,7 +19,12 @@ export async function createShiftPattern(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create shift pattern")
+    return toResponseError(response, {
+      fallback: "シフトパターンの作成に失敗しました",
+      conflictMessages: {
+        "pattern code already exists": "このパターンコードは既に使用されています",
+      },
+    })
   }
 
   return response.json()

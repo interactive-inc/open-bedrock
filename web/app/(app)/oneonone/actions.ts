@@ -37,7 +37,7 @@ export async function createOneOnOneAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "1on1 の記録に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/oneonone")
@@ -64,7 +64,7 @@ export async function updateOneOnOneAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "1on1 の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/oneonone")
@@ -87,7 +87,7 @@ export async function deleteOneOnOneAction(
   const deleted = await deleteOneOnOne(oneOnOneId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "1on1 の削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/oneonone")

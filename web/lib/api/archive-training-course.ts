@@ -10,7 +10,7 @@ export async function archiveTrainingCourse(code: string): Promise<null | Error>
   })
 
   if (response.status >= 400) {
-    return new Error("failed to archive training course")
+    return new Error("研修コースのアーカイブに失敗しました")
   }
 
   return null
