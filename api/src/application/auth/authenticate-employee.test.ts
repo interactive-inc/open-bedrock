@@ -11,7 +11,12 @@ const jwtSecret = "authenticate-employee-test-secret"
 
 async function insertEmployee(
   db: D1Database,
-  overrides: { id: number; email: string; passwordHash: string },
+  overrides: {
+    id: number
+    email: string
+    passwordHash: string
+    status?: "active" | "leave" | "retired"
+  },
 ): Promise<void> {
   await seedD1(db, "employees", [
     {
@@ -24,7 +29,7 @@ async function insertEmployee(
       dept_id: null,
       dept_name: null,
       position: null,
-      status: "active",
+      status: overrides.status ?? "active",
     },
   ])
 }
@@ -145,6 +150,53 @@ describe("AuthenticateEmployee", () => {
 
     expect(found.passwordHash.startsWith("pbkdf2:")).toBe(true)
     expect(found.passwordHash.startsWith("pbkdf2-wrapped-legacy:")).toBe(false)
+  })
+
+  test("rejects a retired employee with the correct password as invalid_credentials (#775)", async () => {
+    const { context, db } = createTestContext()
+
+    const hash = await toPasswordHash("supersecret")
+
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+retired@example.com",
+      passwordHash: hash,
+      status: "retired",
+    })
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+retired@example.com",
+      password: "supersecret",
+      jwtSecret,
+    })
+
+    // 在籍状態の漏えいを避けるため資格情報エラーと同一レスポンスを返す。
+    expect(result).toEqual({ reason: "invalid_credentials" })
+  })
+
+  test("allows a leave employee to authenticate (#775, leave は現状許可)", async () => {
+    const { context, db } = createTestContext()
+
+    const hash = await toPasswordHash("supersecret")
+
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+leave@example.com",
+      passwordHash: hash,
+      status: "leave",
+    })
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+leave@example.com",
+      password: "supersecret",
+      jwtSecret,
+    })
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("expected access token")
+    }
+
+    expect(result.accessToken.length > 0).toBe(true)
   })
 
   test("does not rewrite a hash that is already in the new format", async () => {

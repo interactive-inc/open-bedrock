@@ -29,6 +29,11 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("employee not found")
   }
 
+  // 退職者の既存トークンを即時無効化する。
+  if (employee.status === "retired") {
+    throw new UnauthorizedError("employee is retired")
+  }
+
   c.set("session", { ...payload, role: employee.role })
 
   await next()
