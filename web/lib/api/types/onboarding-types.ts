@@ -51,12 +51,14 @@ export type OnboardingTask = {
 }
 
 // POST /onboarding/assign / GET /onboarding/employee/:code の各要素。
+// template_name は assign(POST) / employee(GET一覧) には含まれるが、
+// assignments/:id の GET/PUT レスポンスには含まれないため任意とする。
 export type OnboardingAssignment = {
   id: number
   employee_code: string
   employee_name: string
   template_code: string
-  template_name: string
+  template_name?: string
   kind: OnboardingKind
   status: OnboardingAssignmentStatus
   assigned_at: string
