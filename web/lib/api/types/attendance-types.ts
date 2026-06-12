@@ -2,14 +2,17 @@
 // api と疎結合にするため api 側からは import しない。
 
 // api/src/attendance/attendance-record-schema.ts と同形。
+// API は snake_case で返す（GET /attendance・/attendance/me の各要素、
+// POST /attendance/clock-in・/attendance/clock-out のレスポンス）。
+// id は attendanceRecords.id（schema 上 integer）なので number。
 // status は open（打刻中）/ closed（退勤済）など api 側の文字列。
 export type AttendanceRecord = {
   id: number
-  employeeId: number
-  workDate: string
-  clockInAt: string | null
-  clockOutAt: string | null
-  workMinutes: number | null
+  employee_id: number
+  work_date: string
+  clock_in_at: string | null
+  clock_out_at: string | null
+  work_minutes: number | null
   status: string
 }
 

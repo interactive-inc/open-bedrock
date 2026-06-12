@@ -25,9 +25,11 @@ export type ExpenseInboxResponse = {
   created_at: string
 }
 
-// GET /expenses/:id のレスポンス（経費詳細）。
+// GET /expenses/:id のレスポンス（経費詳細）。api は snake_case で返す。
+// employee_id も含まれる（[id]/route.ts の body 構築）。
 export type ExpenseDetailResponse = {
   id: number
+  employee_id: number
   applicant_name: string
   category: ExpenseCategory
   amount: number
@@ -37,16 +39,17 @@ export type ExpenseDetailResponse = {
   created_at: string
 }
 
-// POST /expenses のレスポンス（作成された経費。内部表現の camelCase）。
+// POST /expenses のレスポンス（作成された経費。api は snake_case で返す）。
+// id は Expense ドメインで number | null（永続化前は null）。
 export type ExpenseCreatedResponse = {
-  id: number
-  employeeId: number
+  id: number | null
+  employee_id: number
   category: ExpenseCategory
   amount: number
-  spentAt: string
+  spent_at: string
   note: string | null
   status: ExpenseStatus
-  createdAt: string
+  created_at: string
 }
 
 // POST /expenses/:id/approve|reject のレスポンス。
