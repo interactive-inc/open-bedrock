@@ -204,6 +204,80 @@ describe("DeleteSurvey", () => {
 
     expect(result.reason).toBe("forbidden")
   })
+
+  test("removes the survey and its responses from the database", async () => {
+    const { context } = createTestContext()
+
+    const surveyId = await seedSurvey(context, "open")
+
+    await seedResponse(context, surveyId, 1)
+
+    const db = context.env.DB
+
+    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
+
+    const result = await new DeleteSurvey(context).run({
+      viewerRole: "admin",
+      surveyId: surveyId,
+    })
+
+    if (result instanceof Error) {
+      throw new Error("expected tagged result")
+    }
+
+    expect(result.reason).toBe("deleted")
+
+    const surveyRepository = new SurveyRepository(context)
+
+    const survey = await surveyRepository.findById(surveyId)
+
+    expect(survey).toBe(null)
+
+    const responseCount = await surveyRepository.countResponsesBySurveyId(surveyId)
+
+    expect(responseCount).toBe(0)
+  })
+
+  // D1 の json_extract('', '$') を使ったガード。
+  // 親 DELETE が 0 行のとき malformed JSON エラーでバッチを中断し、
+  // 後続の survey_responses 削除を防ぐ（レースコンディション対策）。
+  // open のまま batch を直接実行し、回答が残ることを検証する。
+  test("guard aborts batch so responses survive when survey delete matches no rows", async () => {
+    const { context } = createTestContext()
+
+    const surveyId = await seedSurvey(context, "open")
+
+    await seedResponse(context, surveyId, 1)
+
+    const db = context.env.DB
+
+    // 修正後の DeleteSurvey と同一の 3 ステートメント列を直接実行する。
+    // 親 DELETE は status != 'open' に一致せず 0 行になり、ガードで中断される。
+    let aborted = false
+
+    try {
+      await db.batch([
+        db.prepare("DELETE FROM surveys WHERE id = ?1 AND status != 'open'").bind(surveyId),
+        db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok"),
+        db.prepare("DELETE FROM survey_responses WHERE survey_id = ?1").bind(surveyId),
+      ])
+    } catch (error) {
+      aborted = error instanceof Error && error.message.includes("malformed JSON")
+    }
+
+    expect(aborted).toBe(true)
+
+    const surveyRepository = new SurveyRepository(context)
+
+    // アンケート本体も回答も残っている
+    const survey = await surveyRepository.findById(surveyId)
+
+    expect(survey).not.toBe(null)
+
+    const responseCount = await surveyRepository.countResponsesBySurveyId(surveyId)
+
+    expect(responseCount).toBe(1)
+  })
 })
 
 // --- UpdateSurvey ---
