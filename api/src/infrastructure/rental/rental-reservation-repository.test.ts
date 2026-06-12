@@ -402,4 +402,313 @@ describe("RentalReservationRepository", () => {
 
     expect(overlapping.length).toBe(0)
   })
+
+  test("createIfNoOverlap creates the reservation when no overlap exists", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const reservation = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-12",
+      purpose: "Client presentation",
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const created = await repository.createIfNoOverlap(reservation)
+
+    expect(created).toBeInstanceOf(RentalReservation)
+
+    if (created instanceof Error || created === null) {
+      throw new Error("expected reservation but got null or Error")
+    }
+
+    const found = await repository.findById(reservation.id)
+
+    expect(found).toBeInstanceOf(RentalReservation)
+  })
+
+  test("createIfNoOverlap returns null when an overlapping requested reservation exists", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    const overlapping = RentalReservation.create({
+      requesterId: 2,
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+      purpose: null,
+      createdAt: "2026-06-02T00:00:00Z",
+    })
+
+    if (!(overlapping instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const created = await repository.createIfNoOverlap(overlapping)
+
+    expect(created).toBeNull()
+
+    const found = await repository.findById(overlapping.id)
+
+    expect(found).toBeNull()
+  })
+
+  test("createIfNoOverlap succeeds for the same period when itemName differs", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    const other = RentalReservation.create({
+      requesterId: 2,
+      itemName: "Camera",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-02T00:00:00Z",
+    })
+
+    if (!(other instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const created = await repository.createIfNoOverlap(other)
+
+    expect(created).toBeInstanceOf(RentalReservation)
+  })
+
+  test("createIfNoOverlap ignores non-requested existing rows", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "rental_reservations", [
+      {
+        id: "40000000-0000-0000-0000-000000000001",
+        requester_id: 1,
+        item_name: "Projector",
+        start_date: "2026-06-10",
+        end_date: "2026-06-15",
+        purpose: null,
+        status: "rejected",
+        created_at: "2026-06-01T00:00:00Z",
+      },
+    ])
+
+    const repository = new RentalReservationRepository(context)
+
+    const reservation = RentalReservation.create({
+      requesterId: 2,
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+      purpose: null,
+      createdAt: "2026-06-02T00:00:00Z",
+    })
+
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const created = await repository.createIfNoOverlap(reservation)
+
+    expect(created).toBeInstanceOf(RentalReservation)
+  })
+
+  test("createIfNoOverlap treats touching boundaries as overlap (inclusive)", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const existing = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-12",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(existing instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(existing)
+
+    // 新予約の start_date が既存の end_date と一致する境界は inclusive 比較で重複扱い。
+    const touching = RentalReservation.create({
+      requesterId: 2,
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-02T00:00:00Z",
+    })
+
+    if (!(touching instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const created = await repository.createIfNoOverlap(touching)
+
+    expect(created).toBeNull()
+  })
+
+  test("updateIfNoOverlap returns null when it overlaps another reservation", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const a = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-12",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    const b = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-20",
+      endDate: "2026-06-25",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(a instanceof RentalReservation) || !(b instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(a)
+    await repository.create(b)
+
+    // b を a と重なる期間に変更しようとすると重複で null。
+    const conflicting = b.withDetails({
+      itemName: "Projector",
+      startDate: "2026-06-11",
+      endDate: "2026-06-15",
+    })
+
+    if (!(conflicting instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const result = await repository.updateIfNoOverlap(conflicting)
+
+    expect(result).toBeNull()
+  })
+
+  test("updateIfNoOverlap succeeds when only the reservation itself overlaps", async () => {
+    const { context } = createTestContext()
+
+    const repository = new RentalReservationRepository(context)
+
+    const reservation = RentalReservation.create({
+      requesterId: 1,
+      itemName: "Projector",
+      startDate: "2026-06-10",
+      endDate: "2026-06-15",
+      purpose: null,
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    if (!(reservation instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    await repository.create(reservation)
+
+    // 自身としか重ならない変更は自身を除外するため成功する。
+    const changed = reservation.withDetails({
+      itemName: "Projector",
+      startDate: "2026-06-12",
+      endDate: "2026-06-18",
+    })
+
+    if (!(changed instanceof RentalReservation)) {
+      throw new Error("unexpected invalid_date_range")
+    }
+
+    const result = await repository.updateIfNoOverlap(changed)
+
+    expect(result).toBeInstanceOf(RentalReservation)
+
+    if (result instanceof Error || result === null) {
+      throw new Error("expected reservation but got null or Error")
+    }
+
+    expect(result.startDate).toBe("2026-06-12")
+    expect(result.endDate).toBe("2026-06-18")
+  })
+
+  test("updateIfNoOverlap returns null when the row status is not requested", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "rental_reservations", [
+      {
+        id: "50000000-0000-0000-0000-000000000001",
+        requester_id: 1,
+        item_name: "Projector",
+        start_date: "2026-06-10",
+        end_date: "2026-06-12",
+        purpose: null,
+        status: "approved",
+        created_at: "2026-06-01T00:00:00Z",
+      },
+    ])
+
+    const repository = new RentalReservationRepository(context)
+
+    const target = new RentalReservation({
+      id: "50000000-0000-0000-0000-000000000001",
+      requesterId: 1,
+      itemName: "Updated Item",
+      startDate: "2026-07-01",
+      endDate: "2026-07-05",
+      purpose: "New purpose",
+      status: "requested",
+      createdAt: "2026-06-01T00:00:00Z",
+    })
+
+    const result = await repository.updateIfNoOverlap(target)
+
+    expect(result).toBeNull()
+  })
 })

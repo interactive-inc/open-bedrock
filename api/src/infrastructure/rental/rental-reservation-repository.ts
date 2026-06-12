@@ -1,7 +1,7 @@
 import { RentalReservation } from "@/domain/rental/rental-reservation"
 import type { Context } from "@/env"
 import { rentalReservations } from "@/schema"
-import { and, asc, eq, gte, lte, ne } from "drizzle-orm"
+import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"
 
 export class RentalReservationRepository {
   constructor(private readonly c: Context) {}
@@ -86,6 +86,70 @@ export class RentalReservationRepository {
       return reservation
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to save rental_reservation")
+    }
+  }
+
+  // 重複予約がなければ INSERT し、競合があれば null を返す。チェックと INSERT をアトミックに行う。
+  // 重複判定は findOverlapping と同じく inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+  async createIfNoOverlap(
+    reservation: RentalReservation,
+  ): Promise<RentalReservation | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO rental_reservations (id, requester_id, item_name, start_date, end_date, purpose, status, created_at)
+            SELECT ${reservation.id}, ${reservation.requesterId}, ${reservation.itemName},
+                   ${reservation.startDate}, ${reservation.endDate}, ${reservation.purpose},
+                   ${reservation.status}, ${reservation.createdAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM rental_reservations
+              WHERE item_name = ${reservation.itemName}
+                AND status = 'requested'
+                AND start_date <= ${reservation.endDate}
+                AND end_date >= ${reservation.startDate}
+            )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      return reservation
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to save rental_reservation")
+    }
+  }
+
+  // 重複予約がなければ UPDATE し、競合があれば null を返す。チェックと UPDATE をアトミックに行う。
+  // 自身は重複判定から除外し、重複判定は inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+  async updateIfNoOverlap(
+    reservation: RentalReservation,
+  ): Promise<RentalReservation | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`UPDATE rental_reservations
+            SET item_name  = ${reservation.itemName},
+                start_date = ${reservation.startDate},
+                end_date   = ${reservation.endDate},
+                purpose    = ${reservation.purpose}
+            WHERE id = ${reservation.id}
+              AND status = 'requested'
+              AND NOT EXISTS (
+                SELECT 1 FROM rental_reservations
+                WHERE item_name = ${reservation.itemName}
+                  AND status = 'requested'
+                  AND id != ${reservation.id}
+                  AND start_date <= ${reservation.endDate}
+                  AND end_date >= ${reservation.startDate}
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      return reservation
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update rental_reservation")
     }
   }
 

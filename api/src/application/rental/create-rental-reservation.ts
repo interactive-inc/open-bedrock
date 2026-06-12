@@ -39,24 +39,14 @@ export class CreateRentalReservation {
       return reservation
     }
 
-    // 同一品名・重複期間の requested 予約があれば拒否する。
-    const overlapping = await reservationRepository.findOverlapping({
-      itemName: command.itemName,
-      startDate: command.startDate,
-      endDate: command.endDate,
-    })
+    // 同一品名・重複期間の requested 予約があれば、条件付き INSERT が 0 行となり null を返す。
+    const created = await reservationRepository.createIfNoOverlap(reservation)
 
-    if (overlapping instanceof Error) {
-      return overlapping
+    if (created instanceof Error) {
+      return created
     }
 
-    if (overlapping.length > 0) {
-      return { reason: "overlapping_reservation" }
-    }
-
-    const created = await reservationRepository.create(reservation)
-
-    // 条件付き INSERT が 0 行だった場合は並行リクエストによる重複
+    // 条件付き INSERT が 0 行だった場合は重複（並行リクエスト含む）
     if (created === null) {
       return { reason: "overlapping_reservation" }
     }
