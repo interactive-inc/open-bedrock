@@ -1,7 +1,7 @@
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
 import type { Context } from "@/env"
 import { familyCareLeaves } from "@/schema"
-import { and, asc, eq, gte, lte, ne } from "drizzle-orm"
+import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"
 
 export class FamilyCareLeaveRepository {
   constructor(private readonly c: Context) {}
@@ -73,19 +73,30 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  async create(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | Error> {
+  // 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
+  // 同一社員の未取消（requested）申出と期間が重なる行があれば INSERT をスキップし null を返す。
+  // 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + inclusive）。
+  async create(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
-      await this.c.var.database.insert(familyCareLeaves).values({
-        id: familyCareLeave.id,
-        employeeId: familyCareLeave.employeeId,
-        leaveKind: familyCareLeave.leaveKind,
-        startDate: familyCareLeave.startDate,
-        endDate: familyCareLeave.endDate,
-        note: familyCareLeave.note,
-        status: familyCareLeave.status,
-        createdAt: familyCareLeave.createdAt,
-      })
+      const result = await this.c.var.database.run(
+        sql`INSERT INTO family_care_leaves (id, employee_id, leave_kind, start_date, end_date, note, status, created_at)
+            SELECT ${familyCareLeave.id}, ${familyCareLeave.employeeId}, ${familyCareLeave.leaveKind},
+                   ${familyCareLeave.startDate}, ${familyCareLeave.endDate}, ${familyCareLeave.note},
+                   ${familyCareLeave.status}, ${familyCareLeave.createdAt}
+            WHERE NOT EXISTS (
+              SELECT 1 FROM family_care_leaves
+              WHERE employee_id = ${familyCareLeave.employeeId}
+                AND status = 'requested'
+                AND start_date <= ${familyCareLeave.endDate}
+                AND end_date >= ${familyCareLeave.startDate}
+            )`,
+      )
 
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      // id は呼び出し側で採番済みの文字列なので、成功時はそのまま返す。
       return familyCareLeave
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to save family_care_leave")
