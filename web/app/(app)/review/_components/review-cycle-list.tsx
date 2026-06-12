@@ -42,49 +42,61 @@ type Props = {
 const initialState: ReviewFormState = { ok: false, error: null }
 
 // 評価サイクル一覧。各サイクルを Card で並べる。特権ロールには draft→open / open→closed の操作を出す。
-// 開閉の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+// 開閉・削除の結果は action のラッパ内で toast() 通知する（レンダー本体・useEffect は使わない）。
 export function ReviewCycleList(props: Props) {
-  const openAction = useActionState(openReviewCycleAction, initialState)
+  // 開始フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
+  const openAction = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
+    const next = await openReviewCycleAction(previousState, formData)
 
-  const openState = openAction[0]
+    if (next.ok) {
+      toast.success("サイクルを開始しました")
+    } else if (next.error !== null) {
+      toast.error(next.error)
+    }
+
+    return next
+  }, initialState)
 
   const openDispatch = openAction[1]
 
   const isOpening = openAction[2]
 
-  const closeAction = useActionState(closeReviewCycleAction, initialState)
+  // 終了フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
+  const closeAction = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
+    const next = await closeReviewCycleAction(previousState, formData)
 
-  const closeState = closeAction[0]
+    if (next.ok) {
+      toast.success("サイクルを終了しました")
+    } else if (next.error !== null) {
+      toast.error(next.error)
+    }
+
+    return next
+  }, initialState)
 
   const closeDispatch = closeAction[1]
 
   const isClosing = closeAction[2]
 
-  const deleteAction = useActionState(deleteReviewCycleAction, initialState)
+  // 削除フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
+  const deleteAction = useActionState(
+    async (previousState: ReviewFormState, formData: FormData) => {
+      const next = await deleteReviewCycleAction(previousState, formData)
 
-  const deleteState = deleteAction[0]
+      if (next.ok) {
+        toast.success("サイクルを削除しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialState,
+  )
 
   const deleteDispatch = deleteAction[1]
 
   const isDeleting = deleteAction[2]
-
-  if (deleteState.ok) {
-    toast.success("サイクルを削除しました")
-  } else if (deleteState.error !== null) {
-    toast.error(deleteState.error)
-  }
-
-  if (openState.ok) {
-    toast.success("サイクルを開始しました")
-  } else if (openState.error !== null) {
-    toast.error(openState.error)
-  }
-
-  if (closeState.ok) {
-    toast.success("サイクルを終了しました")
-  } else if (closeState.error !== null) {
-    toast.error(closeState.error)
-  }
 
   if (props.cycles.length === 0) {
     return <p className="text-sm text-muted-foreground">評価サイクルはありません</p>
