@@ -39,20 +39,17 @@ export class CreateFamilyCareLeave {
       return familyCareLeave
     }
 
-    const overlapping = await familyCareLeaveRepository.findOverlapping({
-      employeeId: command.employeeId,
-      startDate: command.startDate,
-      endDate: command.endDate,
-    })
+    const created = await familyCareLeaveRepository.create(familyCareLeave)
 
-    if (overlapping instanceof Error) {
-      return overlapping
+    if (created instanceof Error) {
+      return created
     }
 
-    if (overlapping.length > 0) {
+    // 条件付き INSERT が 0 行だった場合は並行リクエストによる期間重複。
+    if (created === null) {
       return { reason: "overlapping_leave" }
     }
 
-    return await familyCareLeaveRepository.create(familyCareLeave)
+    return created
   }
 }
