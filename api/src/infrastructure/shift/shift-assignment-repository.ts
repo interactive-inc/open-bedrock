@@ -110,21 +110,42 @@ export class ShiftAssignmentRepository {
     }
   }
 
+  // 未公開（published_at IS NULL）の割当のみを公開済みにする。既に公開済みなら 0 行更新で null を返す。
+  async markPublished(
+    assignmentId: number,
+    publishedAt: string,
+  ): Promise<ShiftAssignment | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(shiftAssignments)
+        .set({ publishedAt })
+        .where(and(eq(shiftAssignments.id, assignmentId), isNull(shiftAssignments.publishedAt)))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ShiftAssignment.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to publish shift assignment")
+    }
+  }
+
   async update(assignment: ShiftAssignment): Promise<ShiftAssignment | null | Error> {
     try {
       if (assignment.id === null) {
         return new Error("cannot update unsaved shift assignment")
       }
 
+      // 未公開の行のみ更新する。公開済み（published_at IS NOT NULL）は対象外で 0 行更新になる。
+      // publishedAt は publish 専用の markPublished で扱うため、ここでは set しない。
       const rows = await this.c.var.database
         .update(shiftAssignments)
         .set({
           patternId: assignment.patternId,
           date: assignment.date,
           note: assignment.note,
-          publishedAt: assignment.publishedAt,
         })
-        .where(eq(shiftAssignments.id, assignment.id))
+        .where(and(eq(shiftAssignments.id, assignment.id), isNull(shiftAssignments.publishedAt)))
         .returning()
 
       const row = rows.at(0)
