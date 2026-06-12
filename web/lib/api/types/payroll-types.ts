@@ -32,12 +32,13 @@ export type PayslipDetailResponse = {
 }
 
 // POST /payslips のリクエスト body（特権ロールが対象社員の明細を発行）。
+// allowances / deductions は api 側 zValidator が .default(0) のため省略可（payslips/route.ts）。
 export type PayslipIssueRequest = {
   employee_code: string
   period: string
   base_salary: number
-  allowances: number
-  deductions: number
+  allowances?: number
+  deductions?: number
 }
 
 // PUT /payslips/:id のリクエスト body（特権ロールが期間と金額を訂正）。
