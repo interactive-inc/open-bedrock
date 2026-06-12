@@ -78,4 +78,18 @@ describe("POST /auth/login", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("returns 401 for a retired employee with the correct password (#775)", async () => {
+    // E018 は seed 上 retired。資格情報エラーと同一の 401 を返す。
+    const response = await postLogin({ email: "you+e018@example.com", password: "password" })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("returns 200 for a leave employee (#775, leave は現状許可)", async () => {
+    // E017 は seed 上 leave。休職中のログインは現仕様で許可。
+    const response = await postLogin({ email: "you+e017@example.com", password: "password" })
+
+    expect(response.status).toBe(200)
+  })
 })

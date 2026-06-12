@@ -108,4 +108,30 @@ describe("GET /me", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 401 for a retired employee with a valid token (#775)", async () => {
+    // E018 は seed 上 retired。退職者の既存トークンは即時無効化する。
+    const token = await createTestToken(jwtSecret, {
+      employeeId: 18,
+      email: "you+e018@example.com",
+      role: "member",
+    })
+
+    const response = await getMe(token)
+
+    expect(response.status).toBe(401)
+  })
+
+  test("returns 200 for a leave employee with a valid token (#775, leave は現状許可)", async () => {
+    // E017 は seed 上 leave。休職中の API 利用は現仕様で許可。
+    const token = await createTestToken(jwtSecret, {
+      employeeId: 17,
+      email: "you+e017@example.com",
+      role: "member",
+    })
+
+    const response = await getMe(token)
+
+    expect(response.status).toBe(200)
+  })
 })
