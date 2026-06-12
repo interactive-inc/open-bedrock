@@ -26,7 +26,7 @@ export async function createResignationAction(
   const created = await createResignation(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "退職申請の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/resignations")
@@ -54,7 +54,7 @@ export async function updateResignationAction(
   const updated = await updateResignation(resignationId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "退職申請の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/resignations")
@@ -76,7 +76,7 @@ export async function cancelResignationAction(
   const cancelled = await cancelResignation(resignationId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "退職申請の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/resignations")

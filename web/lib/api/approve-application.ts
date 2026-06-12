@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // POST /applications/:id/approve。任意コメント付きで申請を承認する。
 export async function approveApplication(id: number, comment: string | null) {
@@ -10,7 +11,12 @@ export async function approveApplication(id: number, comment: string | null) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to approve application")
+    return toResponseError(response, {
+      fallback: "申請の承認に失敗しました",
+      conflictMessages: {
+        "already decided": "この申請は既に審査済みです",
+      },
+    })
   }
 
   return response.json()

@@ -26,7 +26,7 @@ export async function createBusinessTripAction(
   const created = await createBusinessTrip(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "出張申請の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/business-trips")
@@ -54,7 +54,7 @@ export async function updateBusinessTripAction(
   const updated = await updateBusinessTrip(businessTripId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "出張申請の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/business-trips")
@@ -76,7 +76,7 @@ export async function cancelBusinessTripAction(
   const cancelled = await cancelBusinessTrip(businessTripId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "出張申請の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/business-trips")

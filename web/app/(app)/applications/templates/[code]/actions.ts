@@ -58,7 +58,7 @@ export async function submitApplicationAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "申請の提出に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   redirect(`/applications/${created.id}`)
