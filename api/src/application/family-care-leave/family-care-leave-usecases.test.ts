@@ -160,6 +160,63 @@ describe("UpdateFamilyCareLeave", () => {
 
     expect(result).toEqual({ reason: "not_applicant" })
   })
+
+  test("rejects an update that overlaps another own leave with overlapping_leave", async () => {
+    const { context } = createTestContext()
+
+    // employee 5 の既存申出（2026-10-01〜2027-03-31）に加えて、重ならない別期間の申出を追加する。
+    const leaveId = await seedLeave(context, 5)
+
+    const other = await new CreateFamilyCareLeave(context).run({
+      employeeId: 5,
+      leaveKind: "family_care",
+      startDate: "2027-05-01",
+      endDate: "2027-05-31",
+      note: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    if (other instanceof Error || "reason" in other) {
+      throw new Error("seed second leave failed")
+    }
+
+    // 1件目を2件目（2027-05-01〜2027-05-31）と重なる期間へ変更しようとすると重複。
+    const result = await new UpdateFamilyCareLeave(context).run({
+      familyCareLeaveId: leaveId,
+      employeeId: 5,
+      leaveKind: "childcare",
+      startDate: "2027-05-10",
+      endDate: "2027-05-20",
+      note: null,
+    })
+
+    expect(result).toEqual({ reason: "overlapping_leave" })
+  })
+
+  test("allows an update that only overlaps the leave itself (self-exclusion)", async () => {
+    const { context } = createTestContext()
+
+    const leaveId = await seedLeave(context, 5)
+
+    // 自身としか重ならない期間変更は自己除外により成功する。
+    const result = await new UpdateFamilyCareLeave(context).run({
+      familyCareLeaveId: leaveId,
+      employeeId: 5,
+      leaveKind: "childcare",
+      startDate: "2026-10-15",
+      endDate: "2027-02-28",
+      note: null,
+    })
+
+    expect(result).toBeInstanceOf(FamilyCareLeave)
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("update failed")
+    }
+
+    expect(result.startDate).toBe("2026-10-15")
+    expect(result.endDate).toBe("2027-02-28")
+  })
 })
 
 describe("CancelFamilyCareLeave", () => {
