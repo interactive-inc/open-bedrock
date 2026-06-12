@@ -52,7 +52,7 @@ export async function createReviewCycleAction(
   const created = await createReviewCycle({ title: title, period: period, dueDate: dueDate })
 
   if (created instanceof Error) {
-    return { ok: false, error: "評価サイクルの作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/review")
@@ -80,7 +80,7 @@ export async function openReviewCycleAction(
   const opened = await openReviewCycle(cycleId)
 
   if (opened instanceof Error) {
-    return { ok: false, error: "サイクルの開始に失敗しました" }
+    return { ok: false, error: opened.message }
   }
 
   revalidatePath("/review")
@@ -108,7 +108,7 @@ export async function closeReviewCycleAction(
   const closed = await closeReviewCycle(cycleId)
 
   if (closed instanceof Error) {
-    return { ok: false, error: "サイクルの終了に失敗しました" }
+    return { ok: false, error: closed.message }
   }
 
   revalidatePath("/review")
@@ -161,7 +161,7 @@ export async function updateReviewCycleAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "評価サイクルの更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/review")
@@ -189,7 +189,7 @@ export async function deleteReviewCycleAction(
   const deleted = await deleteReviewCycle(cycleId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "評価サイクルの削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/review")
@@ -229,7 +229,7 @@ export async function submitReviewFormAction(
   })
 
   if (submitted instanceof Error) {
-    return { ok: false, error: "評価フォームの提出に失敗しました" }
+    return { ok: false, error: submitted.message }
   }
 
   revalidatePath("/review")

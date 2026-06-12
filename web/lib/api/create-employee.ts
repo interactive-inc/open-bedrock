@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { EmployeeCreateRequest } from "@/lib/api/types/employee-types"
 
 // POST /employees。従業員を新規登録する（権限が必要）。
@@ -9,7 +10,13 @@ export async function createEmployee(request: EmployeeCreateRequest) {
   const response = await client.employees.$post({ json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to create employee")
+    return toResponseError(response, {
+      fallback: "従業員の登録に失敗しました",
+      conflictMessages: {
+        "email already exists": "このメールアドレスは既に登録されています",
+        "employee code already exists": "この従業員コードは既に登録されています",
+      },
+    })
   }
 
   return response.json()

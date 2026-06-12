@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { CreateSurveyRequest } from "@/lib/api/types/survey-types"
 
 // POST /surveys。アンケートを新規作成する（管理者ロールのみ）。
@@ -15,7 +16,9 @@ export async function createSurvey(request: CreateSurveyRequest) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create survey")
+    return toResponseError(response, {
+      fallback: "アンケートの作成に失敗しました",
+    })
   }
 
   return response.json()

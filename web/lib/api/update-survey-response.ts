@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { SurveyResponseItem, UpdateSurveyResponseRequest } from "@/lib/api/types/survey-types"
 
 // PUT /surveys/responses/:id。自分のアンケート回答を差し替える。
@@ -15,7 +16,12 @@ export async function updateSurveyResponse(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update survey response")
+    return toResponseError(response, {
+      fallback: "アンケート回答の変更に失敗しました",
+      conflictMessages: {
+        "the survey is no longer open": "このアンケートは公開を終了しています",
+      },
+    })
   }
 
   return response.json()

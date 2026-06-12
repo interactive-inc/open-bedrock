@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   OnboardingTemplateDetail,
   OnboardingTemplateUpdateRequest,
@@ -22,7 +23,9 @@ export async function updateOnboardingTemplate(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update onboarding template")
+    return toResponseError(response, {
+      fallback: "オンボーディングテンプレートの変更に失敗しました",
+    })
   }
 
   return response.json()

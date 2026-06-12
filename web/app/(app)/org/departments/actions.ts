@@ -53,10 +53,7 @@ export async function createOrgDepartmentAction(
   })
 
   if (created instanceof Error) {
-    return {
-      ok: false,
-      error: "部署の作成に失敗しました（権限またはコード重複の可能性があります）",
-    }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/org")
@@ -95,7 +92,7 @@ export async function updateOrgDepartmentAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "部署の変更に失敗しました（権限または親指定の可能性があります）" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/org")
@@ -123,10 +120,7 @@ export async function deleteOrgDepartmentAction(
   const deleted = await deleteOrgDepartment(code)
 
   if (deleted instanceof Error) {
-    return {
-      ok: false,
-      error: "部署の削除に失敗しました（子部署や所属が残っている可能性があります）",
-    }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/org")

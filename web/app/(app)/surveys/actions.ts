@@ -40,7 +40,7 @@ export async function submitSurveyResponseAction(
   })
 
   if (submission instanceof Error) {
-    return { status: "error", message: "回答の送信に失敗しました" }
+    return { status: "error", message: submission.message }
   }
 
   revalidatePath(`/surveys/${surveyId}`)
@@ -84,7 +84,7 @@ export async function updateSurveyResponseAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "回答の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/surveys/responses")
@@ -107,7 +107,7 @@ export async function withdrawSurveyResponseAction(
   const result = await withdrawSurveyResponse(responseId)
 
   if (result instanceof Error) {
-    return { ok: false, error: "回答の取り下げに失敗しました" }
+    return { ok: false, error: result.message }
   }
 
   revalidatePath("/surveys/responses")
