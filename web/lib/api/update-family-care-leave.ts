@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   FamilyCareLeaveResponse,
   FamilyCareLeaveUpdateRequest,
@@ -17,7 +18,12 @@ export async function updateFamilyCareLeave(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update family care leave")
+    return toResponseError(response, {
+      fallback: "休業申出の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この休業申出は変更できません",
+      },
+    })
   }
 
   return response.json()

@@ -21,7 +21,7 @@ export async function clockInAction(
   const record = await clockInAttendance({ note })
 
   if (record instanceof Error) {
-    return { ok: false, error: "出勤打刻に失敗しました（打刻中の可能性があります）" }
+    return { ok: false, error: record.message }
   }
 
   revalidatePath("/attendance")
@@ -40,7 +40,7 @@ export async function clockOutAction(
   const record = await clockOutAttendance({ note })
 
   if (record instanceof Error) {
-    return { ok: false, error: "退勤打刻に失敗しました（未打刻の可能性があります）" }
+    return { ok: false, error: record.message }
   }
 
   revalidatePath("/attendance")

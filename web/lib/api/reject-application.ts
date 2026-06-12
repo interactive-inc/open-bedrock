@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // POST /applications/:id/reject。コメント必須で申請を却下する。
 export async function rejectApplication(id: number, comment: string) {
@@ -10,7 +11,12 @@ export async function rejectApplication(id: number, comment: string) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to reject application")
+    return toResponseError(response, {
+      fallback: "申請の却下に失敗しました",
+      conflictMessages: {
+        "already decided": "この申請は既に審査済みです",
+      },
+    })
   }
 
   return response.json()

@@ -94,7 +94,7 @@ export async function submitExpenseAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "経費の申請に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/expense")
@@ -128,7 +128,7 @@ export async function approveExpenseAction(
   const decided = await approveExpense(expenseId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "承認に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   revalidatePath("/expense/inbox")
@@ -168,7 +168,7 @@ export async function rejectExpenseAction(
   const decided = await rejectExpense(expenseId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "却下に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   revalidatePath("/expense/inbox")
@@ -226,7 +226,7 @@ export async function updateExpenseAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "経費の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/expense")
@@ -252,7 +252,7 @@ export async function deleteExpenseAction(
   const deleted = await deleteExpense(expenseId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "経費の取り下げに失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/expense")

@@ -26,7 +26,7 @@ export async function createLifeEventAction(
   const created = await createLifeEvent(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "ライフイベント届出の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/life-events")
@@ -54,7 +54,7 @@ export async function updateLifeEventAction(
   const updated = await updateLifeEvent(lifeEventId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "ライフイベント届出の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/life-events")
@@ -76,7 +76,7 @@ export async function cancelLifeEventAction(
   const cancelled = await cancelLifeEvent(lifeEventId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "ライフイベント届出の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/life-events")
