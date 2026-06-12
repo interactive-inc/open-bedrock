@@ -26,7 +26,7 @@ export async function createCertificateRequestAction(
   const created = await createCertificateRequest(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "証明書発行依頼の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/certificate-requests")
@@ -54,7 +54,7 @@ export async function updateCertificateRequestAction(
   const updated = await updateCertificateRequest(certificateRequestId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "証明書発行依頼の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/certificate-requests")
@@ -76,7 +76,7 @@ export async function cancelCertificateRequestAction(
   const cancelled = await cancelCertificateRequest(certificateRequestId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "証明書発行依頼の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/certificate-requests")

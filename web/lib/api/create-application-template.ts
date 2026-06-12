@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   ApplicationTemplateCreateRequest,
   ApplicationTemplateResponse,
@@ -22,7 +23,12 @@ export async function createApplicationTemplate(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create application template")
+    return toResponseError(response, {
+      fallback: "申請テンプレートの作成に失敗しました",
+      conflictMessages: {
+        "template code already exists": "同じコードの申請テンプレートが既に存在します",
+      },
+    })
   }
 
   return response.json()

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   CertificateRequestResponse,
   CertificateRequestUpdateRequest,
@@ -17,7 +18,12 @@ export async function updateCertificateRequest(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update certificate request")
+    return toResponseError(response, {
+      fallback: "証明書発行依頼の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この証明書発行依頼は変更できません",
+      },
+    })
   }
 
   return response.json()

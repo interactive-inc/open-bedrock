@@ -17,7 +17,7 @@ async function approve(applicationId: number, comment: string | null): Promise<D
   const decided = await approveApplication(applicationId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "承認に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   return { ok: true, error: null }
@@ -32,7 +32,7 @@ async function reject(applicationId: number, comment: string | null): Promise<De
   const decided = await rejectApplication(applicationId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "却下に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   return { ok: true, error: null }

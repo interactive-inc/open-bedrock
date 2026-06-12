@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   BusinessTripResponse,
   BusinessTripUpdateRequest,
@@ -17,7 +18,13 @@ export async function updateBusinessTrip(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update business trip")
+    return toResponseError(response, {
+      fallback: "出張申請の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この出張申請は変更できません",
+        "overlapping business trip already exists": "期間が重複する出張申請が既にあります",
+      },
+    })
   }
 
   return response.json()

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // POST /expenses/:id/approve。任意コメント付きで経費を承認する。
 export async function approveExpense(id: number, comment: string | null) {
@@ -10,7 +11,12 @@ export async function approveExpense(id: number, comment: string | null) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to approve expense")
+    return toResponseError(response, {
+      fallback: "経費申請の承認に失敗しました",
+      conflictMessages: {
+        "already decided": "この経費申請は既に決定済みです",
+      },
+    })
   }
 
   return response.json()

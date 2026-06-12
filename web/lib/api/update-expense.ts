@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ExpenseUpdatedResponse, ExpenseUpdateRequest } from "@/lib/api/types/expense-types"
 
 // PUT /expenses/:id。経費の申請内容を変更する。
@@ -15,7 +16,12 @@ export async function updateExpense(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update expense")
+    return toResponseError(response, {
+      fallback: "経費申請の変更に失敗しました",
+      conflictMessages: {
+        "the expense is not editable": "この経費申請は変更できません",
+      },
+    })
   }
 
   return response.json()
