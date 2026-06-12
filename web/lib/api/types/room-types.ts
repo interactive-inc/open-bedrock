@@ -37,12 +37,13 @@ export type RoomReservationCreateRequest = {
 }
 
 // POST /rooms/reservations のレスポンス (作成された reservation エンティティ)。
+// id は UUID 文字列、フィールドは snake_case で返る。
 export type RoomReservationCreated = {
-  id: number
-  roomId: number
-  reserverId: number
-  startAt: string
-  endAt: string
+  id: string
+  room_id: number
+  reserver_id: number
+  start_at: string
+  end_at: string
   purpose: string | null
 }
 

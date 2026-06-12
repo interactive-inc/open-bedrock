@@ -6,15 +6,15 @@ export type AssetKind = "pc" | "monitor" | "furniture" | "other"
 // 物品の在庫状態。in_stock=在庫, lent=貸与中。
 export type AssetStatus = "in_stock" | "lent"
 
-// GET /assets・GET /assets/:code・GET /assets/lent/me の各要素（物品。内部表現の camelCase）。
+// GET /assets・GET /assets/:code・GET /assets/lent/me の各要素（物品。API は snake_case で返す）。
 export type AssetResponse = {
   code: string
   name: string
   kind: string
   serial: string | null
-  purchasedOn: string | null
+  purchased_on: string | null
   status: string
-  holderEmployeeId: number | null
+  holder_employee_id: number | null
 }
 
 // GET /assets のクエリ。kind / status で絞り込む。値なしは null。

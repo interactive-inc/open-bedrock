@@ -4,7 +4,7 @@
 // api/src/oneonone/one-on-one-response-schema.ts と同形。
 // GET /oneonone と POST /oneonone のレスポンス。フィールドは snake_case のまま受ける。
 export type OneOnOne = {
-  id: number
+  id: string
   held_at: string
   member_name: string
   manager_name: string
