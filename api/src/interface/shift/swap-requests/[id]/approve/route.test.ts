@@ -301,6 +301,39 @@ describe("POST /shift/swap-requests/:id/approve", () => {
     expect(response.status).toBe(404)
   })
 
+  test("requester with manager role cannot self-approve (forbidden)", async () => {
+    // swap request id=1 の申請者は employee 5。manager ロールでも当事者は承認できない。
+    const response = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(5, "manager"),
+      method: "POST",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("target with manager role cannot self-approve (forbidden)", async () => {
+    // swap request id=1 の交代相手は employee 4。manager ロールでも当事者は承認できない。
+    const response = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("third-party manager can approve (not a party to the swap)", async () => {
+    // swap request id=1 の当事者は employee 5 と 4。第三者 manager (employee 1) は従来どおり承認できる。
+    const response = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(1, "manager"),
+      method: "POST",
+    })
+
+    expect(response.status).toBe(200)
+  })
+
   test("member is forbidden", async () => {
     const response = await request({
       path: "/shift/swap-requests/1/approve",
