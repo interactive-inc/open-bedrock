@@ -26,7 +26,7 @@ export async function createYearEndAdjustmentAction(
   const created = await createYearEndAdjustment(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "年末調整の申告に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/year-end-adjustments")
@@ -54,7 +54,7 @@ export async function updateYearEndAdjustmentAction(
   const updated = await updateYearEndAdjustment(yearEndAdjustmentId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "年末調整申告の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/year-end-adjustments")
@@ -76,7 +76,7 @@ export async function cancelYearEndAdjustmentAction(
   const cancelled = await cancelYearEndAdjustment(yearEndAdjustmentId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "年末調整申告の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/year-end-adjustments")
