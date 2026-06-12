@@ -302,6 +302,31 @@ describe("PUT /family-care-leaves/:id", () => {
     }
   })
 
+  test("returns 200 when changing only its own period (self-exclusion)", async () => {
+    const response = await request({
+      path: `/family-care-leaves/${ownFamilyCareLeaveId}`,
+      token: await applicantToken(),
+      method: "PUT",
+      body: {
+        leave_kind: "childcare",
+        start_date: "2026-10-15",
+        end_date: "2027-02-28",
+        note: null,
+      },
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = familyCareLeaveResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.start_date).toBe("2026-10-15")
+      expect(parsed.data.end_date).toBe("2027-02-28")
+    }
+  })
+
   test("returns 403 when updating another person's family care leave", async () => {
     const response = await request({
       path: `/family-care-leaves/${othersFamilyCareLeaveId}`,

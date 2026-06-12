@@ -103,6 +103,42 @@ export class FamilyCareLeaveRepository {
     }
   }
 
+  // 重複チェックと UPDATE をアトミックに行い TOCTOU 競合を防ぐ。
+  // 自身を除外した同一社員の未取消（requested）申出と期間が重なる行があれば UPDATE をスキップし null を返す。
+  // status が "requested" でない行も 0 行更新で null。
+  // 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + 自身除外 + inclusive）。
+  async updateIfNoOverlap(
+    familyCareLeave: FamilyCareLeave,
+  ): Promise<FamilyCareLeave | null | Error> {
+    try {
+      const result = await this.c.var.database.run(
+        sql`UPDATE family_care_leaves
+            SET leave_kind = ${familyCareLeave.leaveKind},
+                start_date = ${familyCareLeave.startDate},
+                end_date   = ${familyCareLeave.endDate},
+                note       = ${familyCareLeave.note}
+            WHERE id = ${familyCareLeave.id}
+              AND status = 'requested'
+              AND NOT EXISTS (
+                SELECT 1 FROM family_care_leaves
+                WHERE employee_id = ${familyCareLeave.employeeId}
+                  AND status = 'requested'
+                  AND id != ${familyCareLeave.id}
+                  AND start_date <= ${familyCareLeave.endDate}
+                  AND end_date >= ${familyCareLeave.startDate}
+              )`,
+      )
+
+      if (result.meta.changes === 0) {
+        return null
+      }
+
+      return familyCareLeave
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update family_care_leave")
+    }
+  }
+
   // 休業申出の種別・期間・備考を更新する。status が "requested" の行のみ対象。
   async update(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
