@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   LeaveRequestDetailResponse,
   LeaveRequestUpdateRequest,
@@ -18,7 +19,13 @@ export async function updateLeaveRequest(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update leave request")
+    return toResponseError(response, {
+      fallback: "休暇申請の変更に失敗しました",
+      conflictMessages: {
+        "an overlapping leave request already exists": "期間が重複する休暇申請が既にあります",
+        "the leave request is already decided": "決定済みの休暇申請は変更できません",
+      },
+    })
   }
 
   return response.json()

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   AntisocialCheckResponse,
   AntisocialCheckUpdateRequest,
@@ -17,7 +18,12 @@ export async function updateAntisocialCheck(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update antisocial check")
+    return toResponseError(response, {
+      fallback: "反社チェック申請の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "完了済みの反社チェックは更新できません",
+      },
+    })
   }
 
   return response.json()

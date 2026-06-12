@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   YearEndAdjustmentResponse,
   YearEndAdjustmentUpdateRequest,
@@ -17,7 +18,13 @@ export async function updateYearEndAdjustment(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update year end adjustment")
+    return toResponseError(response, {
+      fallback: "年末調整申告の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この年末調整申告は変更できません",
+        "duplicate target year for this employee": "同一年度の年末調整は既に提出されています",
+      },
+    })
   }
 
   return response.json()
