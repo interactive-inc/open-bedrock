@@ -63,7 +63,7 @@ export async function issuePayslipAction(
   })
 
   if (issued instanceof Error) {
-    return { ok: false, error: "給与明細の発行に失敗しました" }
+    return { ok: false, error: issued.message }
   }
 
   revalidatePath("/payroll")
@@ -117,7 +117,7 @@ export async function createSalaryRevisionAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "給与改定の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/payroll/salary-revisions")
@@ -180,7 +180,7 @@ export async function correctPayslipAction(
   })
 
   if (corrected instanceof Error) {
-    return { ok: false, error: "給与明細の訂正に失敗しました" }
+    return { ok: false, error: corrected.message }
   }
 
   revalidatePath("/payroll")
@@ -209,7 +209,7 @@ export async function cancelPayslipAction(
   const cancelled = await cancelPayslip(payslipId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "給与明細の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/payroll")
@@ -261,7 +261,7 @@ export async function correctSalaryRevisionAction(
   })
 
   if (corrected instanceof Error) {
-    return { ok: false, error: "給与改定の訂正に失敗しました" }
+    return { ok: false, error: corrected.message }
   }
 
   revalidatePath("/payroll/salary-revisions")

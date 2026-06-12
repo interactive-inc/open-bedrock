@@ -54,7 +54,7 @@ export async function createLeaveRequestAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "休暇申請の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/leave")
@@ -109,7 +109,7 @@ export async function updateLeaveRequestAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "休暇申請の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/leave")
@@ -132,7 +132,7 @@ export async function cancelLeaveRequestAction(
   const cancelled = await cancelLeaveRequest(leaveRequestId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "休暇申請の取り下げに失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/leave")
