@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { AssetUpdateRequest } from "@/lib/api/types/asset-types"
 
 // PUT /assets/:code。物品の名称・種別・シリアル・購入日を変更する（管理者ロールのみ）。
@@ -9,7 +10,9 @@ export async function updateAsset(code: string, request: AssetUpdateRequest) {
   const response = await client.assets[":code"].$put({ param: { code }, json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to update asset")
+    return toResponseError(response, {
+      fallback: "物品の変更に失敗しました",
+    })
   }
 
   return response.json()

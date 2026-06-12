@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 type Props = {
   employeeCode: string
@@ -17,7 +18,13 @@ export async function postOnboardingAssign(props: Props) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to assign onboarding")
+    return toResponseError(response, {
+      fallback: "オンボーディングの割り当てに失敗しました",
+      conflictMessages: {
+        "template already assigned to this employee":
+          "このテンプレートはこの社員に既に割り当て済みです",
+      },
+    })
   }
 
   return response.json()

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // POST /onboarding/tasks/:id/uncomplete。タスクの完了を取り消して更新後のタスクを返す。
 export async function postOnboardingTaskUncomplete(taskId: number) {
@@ -9,7 +10,9 @@ export async function postOnboardingTaskUncomplete(taskId: number) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to uncomplete onboarding task")
+    return toResponseError(response, {
+      fallback: "オンボーディングタスクの完了取消に失敗しました",
+    })
   }
 
   return response.json()

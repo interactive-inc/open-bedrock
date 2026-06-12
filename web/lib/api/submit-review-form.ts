@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewFormSubmitRequest } from "@/lib/api/types/review-types"
 
 type Props = {
@@ -28,7 +29,13 @@ export async function submitReviewForm(props: Props) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to submit review form")
+    return toResponseError(response, {
+      fallback: "評価フォームの提出に失敗しました",
+      conflictMessages: {
+        "review cycle is not open": "評価サイクルが開始されていないため提出できません",
+        "review form cannot be submitted": "この評価フォームは提出できません",
+      },
+    })
   }
 
   return response.json()

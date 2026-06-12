@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { SubmitSurveyResponseRequest } from "@/lib/api/types/survey-types"
 
 // アンケート回答を送信する。POST /surveys/:survey_id/responses。
@@ -11,7 +12,13 @@ export async function submitSurveyResponse(surveyId: number, body: SubmitSurveyR
   })
 
   if (response.status >= 400) {
-    return new Error("failed to submit survey response")
+    return toResponseError(response, {
+      fallback: "アンケート回答の送信に失敗しました",
+      conflictMessages: {
+        "already submitted": "このアンケートには既に回答済みです",
+        "the survey is no longer open": "このアンケートは公開を終了しています",
+      },
+    })
   }
 
   return response.json()

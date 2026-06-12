@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { GoalCreateRequest } from "@/lib/api/types/goal-types"
 
 // POST /goals。session トークンで目標を新規作成する。
@@ -9,7 +10,9 @@ export async function createGoal(request: GoalCreateRequest) {
   const response = await client.goals.$post({ json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to create goal")
+    return toResponseError(response, {
+      fallback: "目標の作成に失敗しました",
+    })
   }
 
   return response.json()
