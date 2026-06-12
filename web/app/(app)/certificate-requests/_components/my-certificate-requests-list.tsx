@@ -5,6 +5,7 @@ import {
   cancelCertificateRequestAction,
   updateCertificateRequestAction,
 } from "@/app/(app)/certificate-requests/actions"
+import type { CertificateRequestActionState } from "@/app/(app)/certificate-requests/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -80,7 +81,20 @@ export function MyCertificateRequestsList(props: Props) {
 function UpdateCertificateRequestDialog(props: { certificateRequest: CertificateRequestResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateCertificateRequestAction, {
+  async function reduce(
+    previousState: CertificateRequestActionState,
+    formData: FormData,
+  ): Promise<CertificateRequestActionState> {
+    const result = await updateCertificateRequestAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
