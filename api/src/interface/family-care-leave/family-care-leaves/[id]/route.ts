@@ -107,6 +107,10 @@ export const PUT = factory.createHandlers(
         throw new BadRequestError("invalid date range")
       }
 
+      if (familyCareLeave.reason === "overlapping_leave") {
+        throw new ConflictError("overlapping family care leave already exists")
+      }
+
       if (familyCareLeave.reason === "not_modifiable") {
         throw new ConflictError("not modifiable")
       }
