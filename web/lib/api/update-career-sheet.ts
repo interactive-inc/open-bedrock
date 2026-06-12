@@ -8,7 +8,7 @@ export async function updateCareerSheet(body: CareerSheetUpdateRequest) {
   const response = await client.career.sheet.me.$put({ json: body })
 
   if (response.status >= 400) {
-    return new Error("failed to update career sheet")
+    return new Error("キャリアシートの更新に失敗しました")
   }
 
   return response.json()

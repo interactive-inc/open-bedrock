@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   ShiftSwapRequestCreateRequest,
   ShiftSwapRequestResponse,
@@ -19,7 +20,12 @@ export async function createShiftSwapRequest(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create shift swap request")
+    return toResponseError(response, {
+      fallback: "シフト交代の申請に失敗しました",
+      conflictMessages: {
+        "pending swap request already exists": "保留中の交代申請が既にあります",
+      },
+    })
   }
 
   return response.json()

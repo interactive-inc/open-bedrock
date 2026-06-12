@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 
 export type ShiftAssignmentUpdateRequest = {
@@ -20,7 +21,12 @@ export async function updateShiftAssignment(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update shift assignment")
+    return toResponseError(response, {
+      fallback: "シフト割当の変更に失敗しました",
+      conflictMessages: {
+        "shift assignment is already published": "公開済みのシフト割当は変更できません",
+      },
+    })
   }
 
   return response.json()

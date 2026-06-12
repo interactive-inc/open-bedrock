@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { TrainingEnrollmentResponse } from "@/lib/api/types/training-types"
 
 // POST /training/enrollments/:id/complete。受講を完了にして更新後の受講を返す。
@@ -13,7 +14,12 @@ export async function completeTrainingEnrollment(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to complete training enrollment")
+    return toResponseError(response, {
+      fallback: "受講の完了に失敗しました",
+      conflictMessages: {
+        "already completed": "この受講は既に完了しています",
+      },
+    })
   }
 
   return response.json()

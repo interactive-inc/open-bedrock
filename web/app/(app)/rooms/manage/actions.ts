@@ -72,7 +72,7 @@ export async function createRoomAction(
   const created = await createRoom({ name: name, capacity: capacity, location: location })
 
   if (created instanceof Error) {
-    return { ok: false, error: "会議室の登録に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/rooms/manage")
@@ -120,7 +120,7 @@ export async function updateRoomAction(
   const updated = await updateRoom(roomId, { name: name, capacity: capacity, location: location })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "会議室の更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/rooms/manage")
@@ -150,7 +150,7 @@ export async function deleteRoomAction(
   const deleted = await deleteRoom(roomId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "会議室の削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/rooms/manage")

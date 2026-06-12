@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   CareerApplication,
   CareerApplicationUpdateRequest,
@@ -18,7 +19,12 @@ export async function updateCareerApplication(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update career application")
+    return toResponseError(response, {
+      fallback: "応募内容の変更に失敗しました",
+      conflictMessages: {
+        "the application is already decided": "選考確定済みの応募は変更できません",
+      },
+    })
   }
 
   return response.json()

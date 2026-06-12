@@ -48,7 +48,7 @@ export async function updateCareerSheetAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "キャリアシートの更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/career")
@@ -74,7 +74,7 @@ export async function applyCareerPostingAction(
   const created = await applyCareerPosting(postingId, { message })
 
   if (created instanceof Error) {
-    return { ok: false, error: "応募に失敗しました（既に応募済みの可能性があります）" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/career")
@@ -101,7 +101,7 @@ export async function updateCareerApplicationAction(
   const updated = await updateCareerApplication(applicationId, { message })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "応募の変更に失敗しました（選考が確定している可能性があります）" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/career")
@@ -124,10 +124,7 @@ export async function withdrawCareerApplicationAction(
   const withdrawn = await withdrawCareerApplication(applicationId)
 
   if (withdrawn instanceof Error) {
-    return {
-      ok: false,
-      error: "応募の取り下げに失敗しました（選考が確定している可能性があります）",
-    }
+    return { ok: false, error: withdrawn.message }
   }
 
   revalidatePath("/career")
@@ -173,7 +170,7 @@ export async function createCareerPostingAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "公募の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/career")
@@ -219,7 +216,7 @@ export async function updateCareerPostingAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "公募の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/career")
@@ -247,7 +244,7 @@ export async function deleteCareerPostingAction(
   const deleted = await deleteCareerPosting(postingId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "公募の削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/career")

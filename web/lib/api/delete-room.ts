@@ -8,7 +8,7 @@ export async function deleteRoom(id: number): Promise<null | Error> {
   const response = await client.rooms[":id"].$delete({ param: { id: String(id) } })
 
   if (response.status >= 400) {
-    return new Error("failed to delete room")
+    return new Error("会議室の削除に失敗しました")
   }
 
   return null

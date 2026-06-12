@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   RoomReservationResponse,
   RoomReservationUpdateRequest,
@@ -18,7 +19,12 @@ export async function updateRoomReservation(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update room reservation")
+    return toResponseError(response, {
+      fallback: "会議室予約の変更に失敗しました",
+      conflictMessages: {
+        "the room is already reserved": "この時間帯の会議室は既に予約されています",
+      },
+    })
   }
 
   return response.json()
