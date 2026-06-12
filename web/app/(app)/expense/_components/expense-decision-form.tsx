@@ -25,7 +25,21 @@ const initialRejectState: ExpenseDecisionFormState = {
 // 1 件の経費に対する承認・却下フォーム。承認はコメント任意、却下は理由必須。
 // 承認と却下で別フォーム・別 action を持ち、結果を toast() で通知する。
 export function ExpenseDecisionForm(props: Props) {
-  const approveAction = useActionState(approveExpenseAction, initialApproveState)
+  // 承認フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
+  const approveAction = useActionState(
+    async (previousState: ExpenseDecisionFormState, formData: FormData) => {
+      const next = await approveExpenseAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("経費を承認しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialApproveState,
+  )
 
   const approveState = approveAction[0]
 
@@ -33,7 +47,21 @@ export function ExpenseDecisionForm(props: Props) {
 
   const isApproving = approveAction[2]
 
-  const rejectAction = useActionState(rejectExpenseAction, initialRejectState)
+  // 却下フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
+  const rejectAction = useActionState(
+    async (previousState: ExpenseDecisionFormState, formData: FormData) => {
+      const next = await rejectExpenseAction(previousState, formData)
+
+      if (next.ok) {
+        toast.success("経費を却下しました")
+      } else if (next.error !== null) {
+        toast.error(next.error)
+      }
+
+      return next
+    },
+    initialRejectState,
+  )
 
   const rejectState = rejectAction[0]
 
@@ -42,32 +70,6 @@ export function ExpenseDecisionForm(props: Props) {
   const isRejecting = rejectAction[2]
 
   const isDecided = approveState.ok || rejectState.ok
-
-  // 承認フォームのラッパ。結果を toast し action へ反映する。
-  async function handleApprove(formData: FormData): Promise<void> {
-    const result = await approveExpenseAction(approveState, formData)
-
-    if (result.ok) {
-      toast.success("経費を承認しました")
-    } else if (result.error !== null) {
-      toast.error(result.error)
-    }
-
-    dispatchApprove(formData)
-  }
-
-  // 却下フォームのラッパ。結果を toast し action へ反映する。
-  async function handleReject(formData: FormData): Promise<void> {
-    const result = await rejectExpenseAction(rejectState, formData)
-
-    if (result.ok) {
-      toast.success("経費を却下しました")
-    } else if (result.error !== null) {
-      toast.error(result.error)
-    }
-
-    dispatchReject(formData)
-  }
 
   if (isDecided) {
     return (
@@ -79,7 +81,7 @@ export function ExpenseDecisionForm(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <form action={handleApprove}>
+      <form action={dispatchApprove}>
         <FieldGroup>
           <input type="hidden" name="expense_id" value={props.expenseId} />
 
@@ -105,7 +107,7 @@ export function ExpenseDecisionForm(props: Props) {
         </FieldGroup>
       </form>
 
-      <form action={handleReject}>
+      <form action={dispatchReject}>
         <FieldGroup>
           <input type="hidden" name="expense_id" value={props.expenseId} />
 
