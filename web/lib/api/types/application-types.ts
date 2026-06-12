@@ -10,15 +10,16 @@ export type ApplicationTemplateResponse = {
   description: string | null
 }
 
-// GET /templates/:code。詳細は schemaJson と approverRoles を含む内部表現を返す。
+// GET /templates/:code。api は snake_case で返し、id は含まれない
+// （templates/[code]/route.ts の responseBody は code/name/category/description/
+// schema_json/approver_roles のみ）。
 export type ApplicationTemplateDetail = {
-  id: number
   code: string
   name: string
   category: string
   description: string | null
-  schemaJson: unknown
-  approverRoles: ReadonlyArray<string>
+  schema_json: unknown
+  approver_roles: ReadonlyArray<string>
 }
 
 // GET /applications の各要素（自分の申請一覧）。
