@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { createKnowledgeAction } from "@/app/(app)/knowledge/actions"
+import type { KnowledgeActionState } from "@/app/(app)/knowledge/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,7 +20,20 @@ import { Textarea } from "@/components/ui/textarea"
 export function KnowledgeCreateForm() {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(createKnowledgeAction, {
+  async function reduce(
+    previousState: KnowledgeActionState,
+    formData: FormData,
+  ): Promise<KnowledgeActionState> {
+    const result = await createKnowledgeAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

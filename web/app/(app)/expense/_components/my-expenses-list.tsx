@@ -2,7 +2,9 @@
 
 import Link from "next/link"
 import { useActionState, useState } from "react"
+import { toast } from "sonner"
 import { deleteExpenseAction, updateExpenseAction } from "@/app/(app)/expense/actions"
+import type { ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -97,7 +99,24 @@ export function MyExpensesList(props: Props) {
 function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
   const [open, setOpen] = useState(false)
 
-  const action = useActionState(updateExpenseAction, { ok: false, error: null })
+  async function reduce(
+    previousState: ExpenseUpdateFormState,
+    formData: FormData,
+  ): Promise<ExpenseUpdateFormState> {
+    const result = await updateExpenseAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("経費を更新しました")
+
+      setOpen(false)
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const action = useActionState(reduce, { ok: false, error: null })
 
   const state = action[0]
 

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { cancelRoomReservationAction, updateRoomReservationAction } from "@/app/(app)/rooms/actions"
+import type { RoomReservationActionState } from "@/app/(app)/rooms/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -74,7 +75,20 @@ export function MyReservationsList(props: Props) {
 function UpdateReservationDialog(props: { reservation: RoomReservationResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateRoomReservationAction, {
+  async function reduce(
+    previousState: RoomReservationActionState,
+    formData: FormData,
+  ): Promise<RoomReservationActionState> {
+    const result = await updateRoomReservationAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

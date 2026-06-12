@@ -5,6 +5,7 @@ import {
   cancelAntisocialCheckAction,
   updateAntisocialCheckAction,
 } from "@/app/(app)/antisocial-checks/actions"
+import type { AntisocialCheckActionState } from "@/app/(app)/antisocial-checks/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -80,7 +81,20 @@ export function MyAntisocialChecksList(props: Props) {
 function UpdateAntisocialCheckDialog(props: { antisocialCheck: AntisocialCheckResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateAntisocialCheckAction, {
+  async function reduce(
+    previousState: AntisocialCheckActionState,
+    formData: FormData,
+  ): Promise<AntisocialCheckActionState> {
+    const result = await updateAntisocialCheckAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

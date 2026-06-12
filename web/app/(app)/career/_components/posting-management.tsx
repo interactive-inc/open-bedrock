@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { deleteCareerPostingAction, updateCareerPostingAction } from "@/app/(app)/career/actions"
+import type { CareerPostingFormState } from "@/app/(app)/career/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -34,7 +35,20 @@ export function PostingManagement(props: Props) {
 function UpdatePostingDialog(props: { posting: CareerPosting }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateCareerPostingAction, {
+  async function reduce(
+    previousState: CareerPostingFormState,
+    formData: FormData,
+  ): Promise<CareerPostingFormState> {
+    const result = await updateCareerPostingAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
