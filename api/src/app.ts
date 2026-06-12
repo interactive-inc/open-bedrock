@@ -449,3 +449,6 @@ export type AppType = typeof app
 // hc の型計算を api 側（型解決できる環境）で済ませた Client 型。
 // web/cli はこれを使うと、HonoBase の schema 抽出が正しく効きレスポンス型が推論される。
 export type ApiClient = ReturnType<typeof hc<AppType>>
+
+// hc の型計算を api 側で済ませたファクトリ。web/cli はキャストなしでこれを使う。
+export const hcWithType = (...args: Parameters<typeof hc>): ApiClient => hc<AppType>(...args)
