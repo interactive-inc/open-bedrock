@@ -28,12 +28,27 @@ export type ShiftPatternResponse = {
   break_minutes: number
 }
 
-// POST /shift/swap-requests, POST /shift/swap-requests/:id/approve のレスポンス（交代申請）。
+// GET /shift/swap-requests/me, POST /shift/swap-requests,
+// POST /shift/swap-requests/:id/approve, GET/PUT /shift/swap-requests/:id のレスポンス（交代申請）。
+// 申請者・対象は社員 ID（number）で返る。
 // status は api が任意文字列で返すため string。id は採番前 null を含む。
 export type ShiftSwapRequestResponse = {
   id: number | null
   requester_employee_id: number
   target_employee_id: number
+  date: string
+  note: string | null
+  status: string
+  approved_at: string | null
+}
+
+// GET /shift/swap-requests（承認者向け inbox）の各要素。
+// inbox は employees を JOIN して社員 ID ではなく社員コード（string）を返すため /me と別形。
+// 該当者が見つからない場合 api 側は空文字を返す（route.ts の `?? ""`）。
+export type ShiftSwapRequestInboxResponse = {
+  id: number
+  requester_employee_code: string
+  target_employee_code: string
   date: string
   note: string | null
   status: string
