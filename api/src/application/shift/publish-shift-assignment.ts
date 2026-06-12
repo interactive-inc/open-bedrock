@@ -44,14 +44,28 @@ export class PublishShiftAssignment {
       return { reason: "already_published" }
     }
 
-    const published = await assignmentRepository.update(assignment.withPublished(input.publishedAt))
+    const published = await assignmentRepository.markPublished(
+      input.assignmentId,
+      input.publishedAt,
+    )
 
     if (published instanceof Error) {
       return published
     }
 
+    // 0 行更新（null）は事前チェック後に並行 publish 等で状態が変わったケース。再取得して理由を判別する。
     if (published === null) {
-      return { reason: "assignment_not_found" }
+      const latest = await assignmentRepository.findById(input.assignmentId)
+
+      if (latest instanceof Error) {
+        return latest
+      }
+
+      if (latest === null) {
+        return { reason: "assignment_not_found" }
+      }
+
+      return { reason: "already_published" }
     }
 
     return published

@@ -75,7 +75,22 @@ export class UpdateShiftAssignment {
       return saved
     }
 
+    // 0 行更新（null）は事前チェック後に並行 publish 等で状態が変わったケース。再取得して理由を判別する。
     if (saved === null) {
+      const latest = await assignmentRepository.findById(input.assignmentId)
+
+      if (latest instanceof Error) {
+        return latest
+      }
+
+      if (latest === null) {
+        return { reason: "assignment_not_found" }
+      }
+
+      if (latest.isModifiable === false) {
+        return { reason: "already_published" }
+      }
+
       return { reason: "assignment_not_found" }
     }
 
