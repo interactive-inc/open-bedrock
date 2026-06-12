@@ -26,7 +26,7 @@ export async function createFamilyCareLeaveAction(
   const created = await createFamilyCareLeave(fields)
 
   if (created instanceof Error) {
-    return { ok: false, error: "休業申出の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/family-care-leaves")
@@ -54,7 +54,7 @@ export async function updateFamilyCareLeaveAction(
   const updated = await updateFamilyCareLeave(familyCareLeaveId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "休業申出の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/family-care-leaves")
@@ -76,7 +76,7 @@ export async function cancelFamilyCareLeaveAction(
   const cancelled = await cancelFamilyCareLeave(familyCareLeaveId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "休業申出の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/family-care-leaves")

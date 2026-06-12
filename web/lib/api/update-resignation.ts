@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   ResignationResponse,
   ResignationUpdateRequest,
@@ -17,7 +18,12 @@ export async function updateResignation(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update resignation")
+    return toResponseError(response, {
+      fallback: "退職申請の変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この退職申請は変更できません",
+      },
+    })
   }
 
   return response.json()

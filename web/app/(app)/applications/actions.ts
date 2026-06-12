@@ -32,7 +32,7 @@ export async function updateApplicationAction(
   const updated = await updateApplication(applicationId, payload)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "申請の更新に失敗しました（審査済みの可能性があります）" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/applications")
@@ -54,7 +54,7 @@ export async function withdrawApplicationAction(
   const withdrawn = await withdrawApplication(applicationId)
 
   if (withdrawn instanceof Error) {
-    return { ok: false, error: "申請の取り下げに失敗しました" }
+    return { ok: false, error: withdrawn.message }
   }
 
   revalidatePath("/applications")

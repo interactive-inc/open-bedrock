@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   ApplicationTemplateResponse,
   ApplicationTemplateUpdateRequest,
@@ -24,7 +25,7 @@ export async function updateApplicationTemplate(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update application template")
+    return toResponseError(response, { fallback: "申請テンプレートの変更に失敗しました" })
   }
 
   return response.json()

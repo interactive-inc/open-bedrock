@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // POST /expenses/:id/reject。理由コメント必須で経費を却下する。
 export async function rejectExpense(id: number, comment: string) {
@@ -10,7 +11,12 @@ export async function rejectExpense(id: number, comment: string) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to reject expense")
+    return toResponseError(response, {
+      fallback: "経費申請の却下に失敗しました",
+      conflictMessages: {
+        "already decided": "この経費申請は既に決定済みです",
+      },
+    })
   }
 
   return response.json()

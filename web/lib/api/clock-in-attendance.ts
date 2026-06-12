@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { AttendanceClockRequest } from "@/lib/api/types/attendance-types"
 
 // POST /attendance/clock-in。session cookie のトークンで出勤打刻する。
@@ -12,7 +13,12 @@ export async function clockInAttendance(request: AttendanceClockRequest) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to clock in")
+    return toResponseError(response, {
+      fallback: "出勤打刻に失敗しました",
+      conflictMessages: {
+        "already clocked in": "既に出勤打刻済みです",
+      },
+    })
   }
 
   return response.json()

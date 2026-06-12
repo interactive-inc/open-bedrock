@@ -96,7 +96,7 @@ export async function createApplicationTemplateAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "テンプレートの作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/applications/templates")
@@ -161,7 +161,7 @@ export async function updateApplicationTemplateAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "テンプレートの変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/applications/templates")
@@ -191,7 +191,7 @@ export async function deleteApplicationTemplateAction(
   const deleted = await deleteApplicationTemplate(code)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "テンプレートの削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/applications/templates")

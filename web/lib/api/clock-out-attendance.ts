@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { AttendanceClockRequest } from "@/lib/api/types/attendance-types"
 
 // POST /attendance/clock-out。session cookie のトークンで退勤打刻する。
@@ -12,7 +13,14 @@ export async function clockOutAttendance(request: AttendanceClockRequest) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to clock out")
+    return toResponseError(response, {
+      fallback: "退勤打刻に失敗しました",
+      conflictMessages: {
+        "not clocked in": "出勤打刻がされていません",
+        "clock-in time is missing": "出勤打刻の時刻が記録されていません",
+        "already clocked out": "既に退勤打刻済みです",
+      },
+    })
   }
 
   return response.json()
