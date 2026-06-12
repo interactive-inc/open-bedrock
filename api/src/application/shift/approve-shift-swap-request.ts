@@ -8,6 +8,7 @@ import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-re
 
 export type Input = {
   viewerRole: string
+  approverId: number
   swapRequestId: number
   approvedAt: string
 }
@@ -54,6 +55,14 @@ export class ApproveShiftSwapRequest {
 
     if (swapRequest === null) {
       return { reason: "swap_request_not_found" }
+    }
+
+    // 当事者（申請者・交代相手）による自己承認を拒否する。他の承認系と同じ本人ガード。
+    if (
+      input.approverId === swapRequest.requesterEmployeeId ||
+      input.approverId === swapRequest.targetEmployeeId
+    ) {
+      return { reason: "forbidden" }
     }
 
     if (swapRequest.status !== "pending") {
