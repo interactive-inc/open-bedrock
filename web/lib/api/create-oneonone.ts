@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { OneOnOneCreateRequest } from "@/lib/api/types/oneonone-types"
 
 // POST /oneonones。session cookie のトークンで 1on1 記録を新規作成する。
@@ -10,7 +11,12 @@ export async function createOneOnOne(request: OneOnOneCreateRequest) {
   const response = await client.oneonones.$post({ json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to create oneonone")
+    return toResponseError(response, {
+      fallback: "1on1記録の作成に失敗しました",
+      conflictMessages: {
+        "one-on-one already exists": "この日付の1on1記録は既に存在します",
+      },
+    })
   }
 
   return response.json()

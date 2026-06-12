@@ -10,7 +10,7 @@ export async function deleteOneOnOne(id: string): Promise<null | Error> {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to delete oneonone")
+    return new Error("1on1記録の削除に失敗しました")
   }
 
   return null

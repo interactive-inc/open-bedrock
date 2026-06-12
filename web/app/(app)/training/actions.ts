@@ -33,7 +33,7 @@ export async function createTrainingEnrollmentAction(
   const created = await createTrainingEnrollment({ course_code: courseCode })
 
   if (created instanceof Error) {
-    return { ok: false, error: "受講の申込に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/training")
@@ -63,7 +63,7 @@ export async function completeTrainingEnrollmentAction(
   const completed = await completeTrainingEnrollment(enrollmentId)
 
   if (completed instanceof Error) {
-    return { ok: false, error: "受講の完了に失敗しました" }
+    return { ok: false, error: completed.message }
   }
 
   revalidatePath("/training")
@@ -135,7 +135,7 @@ export async function createTrainingCourseAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "コースの作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/training")
@@ -165,7 +165,7 @@ export async function cancelTrainingEnrollmentAction(
   const cancelled = await cancelTrainingEnrollment(enrollmentId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "受講の取り消しに失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/training")
@@ -236,7 +236,7 @@ export async function updateTrainingCourseAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "コースの変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/training")
@@ -266,7 +266,7 @@ export async function archiveTrainingCourseAction(
   const archived = await archiveTrainingCourse(code)
 
   if (archived instanceof Error) {
-    return { ok: false, error: "コースのアーカイブに失敗しました" }
+    return { ok: false, error: archived.message }
   }
 
   revalidatePath("/training")

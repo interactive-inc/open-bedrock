@@ -19,7 +19,7 @@ export async function createCareerPosting(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create career posting")
+    return new Error("社内公募の作成に失敗しました")
   }
 
   return response.json()

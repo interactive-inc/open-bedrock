@@ -9,7 +9,7 @@ export async function updateRoom(id: number, request: RoomUpdateRequest) {
   const response = await client.rooms[":id"].$put({ param: { id: String(id) }, json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to update room")
+    return new Error("会議室の変更に失敗しました")
   }
 
   return response.json()

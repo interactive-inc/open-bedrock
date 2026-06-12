@@ -10,7 +10,7 @@ export async function cancelRoomReservation(id: string): Promise<null | Error> {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to cancel room reservation")
+    return new Error("会議室予約のキャンセルに失敗しました")
   }
 
   return null

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftPatternResponse } from "@/lib/api/types/shift-types"
 
 export type ShiftPatternUpdateRequest = {
@@ -22,7 +23,12 @@ export async function updateShiftPattern(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update shift pattern")
+    return toResponseError(response, {
+      fallback: "シフトパターンの変更に失敗しました",
+      conflictMessages: {
+        "pattern code already exists": "このパターンコードは既に使用されています",
+      },
+    })
   }
 
   return response.json()

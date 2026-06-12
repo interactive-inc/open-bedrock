@@ -47,7 +47,7 @@ export async function createRentalReservationAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "予約の申請に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/rentals")
@@ -93,7 +93,7 @@ export async function updateRentalReservationAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "予約の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/rentals")
@@ -115,7 +115,7 @@ export async function cancelRentalReservationAction(
   const cancelled = await cancelRentalReservation(reservationId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "予約の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/rentals")

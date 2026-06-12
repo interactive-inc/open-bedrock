@@ -15,7 +15,7 @@ export async function createReward(request: {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create reward")
+    return new Error("景品の登録に失敗しました")
   }
 
   return response.json()
