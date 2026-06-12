@@ -68,32 +68,33 @@ export class UpdateRentalReservation {
       return detailed
     }
 
-    // 同一品名・重複期間の requested 予約があれば拒否する（自身を除外）。
-    const overlapping = await reservationRepository.findOverlapping({
-      itemName: command.itemName,
-      startDate: command.startDate,
-      endDate: command.endDate,
-      excludeId: command.reservationId,
-    })
-
-    if (overlapping instanceof Error) {
-      return overlapping
-    }
-
-    if (overlapping.length > 0) {
-      return { reason: "overlapping_reservation" }
-    }
-
     const updated = detailed.withPurpose(command.purpose)
 
-    const result = await reservationRepository.update(updated)
+    // 同一品名・重複期間の requested 予約（自身を除く）があれば 0 行更新となり null を返す。
+    // チェックと UPDATE をアトミックに行い、並行リクエストによる二重予約を防ぐ。
+    const result = await reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
       return result
     }
 
+    // 0 行更新の理由（消失 / status 変更 / 重複）を再取得して判別する。
     if (result === null) {
-      return { reason: "not_modifiable" }
+      const latest = await reservationRepository.findById(command.reservationId)
+
+      if (latest instanceof Error) {
+        return latest
+      }
+
+      if (latest === null) {
+        return { reason: "reservation_not_found" }
+      }
+
+      if (latest.status !== "requested") {
+        return { reason: "not_modifiable" }
+      }
+
+      return { reason: "overlapping_reservation" }
     }
 
     return result
