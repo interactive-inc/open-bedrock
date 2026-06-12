@@ -41,7 +41,7 @@ export async function createGoalAction(
   const goal = await createGoal({ period, title, weight, kpi })
 
   if (goal instanceof Error) {
-    return { ok: false, error: "目標の作成に失敗しました" }
+    return { ok: false, error: goal.message }
   }
 
   revalidatePath("/goals")
@@ -83,7 +83,7 @@ export async function updateGoalAction(
   const goal = await updateGoal(goalId, { period, title, weight, kpi })
 
   if (goal instanceof Error) {
-    return { ok: false, error: "目標の変更に失敗しました" }
+    return { ok: false, error: goal.message }
   }
 
   revalidatePath("/goals")
@@ -106,7 +106,7 @@ export async function deleteGoalAction(
   const deleted = await deleteGoal(goalId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "目標の削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/goals")
@@ -145,7 +145,7 @@ export async function createGoalEvaluationAction(
   })
 
   if (evaluation instanceof Error) {
-    return { ok: false, error: "評価の登録に失敗しました" }
+    return { ok: false, error: evaluation.message }
   }
 
   revalidatePath("/goals")

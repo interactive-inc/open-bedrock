@@ -1,5 +1,6 @@
 import type { ApiClient } from "api/app"
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 
 // api の zValidator が宣言する json 入力型をそのまま使う（手動型と二重管理しない）。
 type GoalEvaluationCreateRequest = Parameters<
@@ -23,7 +24,13 @@ export async function createGoalEvaluation(props: Props) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create goal evaluation")
+    return toResponseError(response, {
+      fallback: "目標評価の登録に失敗しました",
+      conflictMessages: {
+        "already evaluated": "この目標は既に評価済みです",
+        "goal is already finalized": "確定済みの目標には評価を登録できません",
+      },
+    })
   }
 
   return response.json()

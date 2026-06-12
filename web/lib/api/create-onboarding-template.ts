@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   OnboardingTemplateCreateRequest,
   OnboardingTemplateDetail,
@@ -21,7 +22,12 @@ export async function createOnboardingTemplate(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to create onboarding template")
+    return toResponseError(response, {
+      fallback: "オンボーディングテンプレートの作成に失敗しました",
+      conflictMessages: {
+        "template code already exists": "このテンプレートコードは既に存在します",
+      },
+    })
   }
 
   return response.json()

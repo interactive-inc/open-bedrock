@@ -112,10 +112,7 @@ export async function createEmployeeAction(
   })
 
   if (created instanceof Error) {
-    return {
-      ok: false,
-      error: "従業員の登録に失敗しました（コードが重複している可能性があります）",
-    }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/employees")
@@ -167,7 +164,7 @@ export async function updateEmployeeAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "従業員の更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/employees")
@@ -197,7 +194,7 @@ export async function deleteEmployeeAction(
   const deleted = await deleteEmployee(code)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "従業員の削除に失敗しました（自分自身は削除できません）" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/employees")

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { EmployeeUpdateRequest } from "@/lib/api/types/employee-types"
 
 // PUT /employees/:code。従業員の氏名・メール・ロール・部署・役職・在籍状況を変更する（権限が必要）。
@@ -12,7 +13,12 @@ export async function updateEmployee(code: string, request: EmployeeUpdateReques
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update employee")
+    return toResponseError(response, {
+      fallback: "従業員の変更に失敗しました",
+      conflictMessages: {
+        "email already exists": "このメールアドレスは既に登録されています",
+      },
+    })
   }
 
   return response.json()
