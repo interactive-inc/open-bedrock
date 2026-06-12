@@ -5,6 +5,7 @@ import {
   updateSurveyResponseAction,
   withdrawSurveyResponseAction,
 } from "@/app/(app)/surveys/actions"
+import type { MyResponseActionState } from "@/app/(app)/surveys/actions"
 import type { SurveyResponseItem } from "@/lib/api/types/survey-types"
 import { Button } from "@/components/ui/button"
 import {
@@ -89,7 +90,20 @@ export function MyResponsesList(props: Props) {
 function UpdateResponseDialog(props: { responseId: number; response: SurveyResponseItem }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateSurveyResponseAction, {
+  async function reduce(
+    previousState: MyResponseActionState,
+    formData: FormData,
+  ): Promise<MyResponseActionState> {
+    const result = await updateSurveyResponseAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

@@ -5,6 +5,7 @@ import {
   cancelBusinessTripAction,
   updateBusinessTripAction,
 } from "@/app/(app)/business-trips/actions"
+import type { BusinessTripActionState } from "@/app/(app)/business-trips/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -83,7 +84,20 @@ export function MyBusinessTripsList(props: Props) {
 function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateBusinessTripAction, {
+  async function reduce(
+    previousState: BusinessTripActionState,
+    formData: FormData,
+  ): Promise<BusinessTripActionState> {
+    const result = await updateBusinessTripAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

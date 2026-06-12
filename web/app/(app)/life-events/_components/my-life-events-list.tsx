@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import { cancelLifeEventAction, updateLifeEventAction } from "@/app/(app)/life-events/actions"
+import type { LifeEventActionState } from "@/app/(app)/life-events/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -74,7 +75,20 @@ export function MyLifeEventsList(props: Props) {
 function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateLifeEventAction, {
+  async function reduce(
+    previousState: LifeEventActionState,
+    formData: FormData,
+  ): Promise<LifeEventActionState> {
+    const result = await updateLifeEventAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

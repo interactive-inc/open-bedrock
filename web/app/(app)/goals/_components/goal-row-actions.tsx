@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "sonner"
 import { deleteGoalAction, updateGoalAction } from "@/app/(app)/goals/actions"
 import type { GoalActionState } from "@/app/(app)/goals/actions"
 import {
@@ -60,7 +61,11 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
     const result = await updateGoalAction(previousState, formData)
 
     if (result.ok) {
+      toast.success("目標を更新しました")
+
       setOpen(false)
+    } else if (result.error !== null) {
+      toast.error(result.error)
     }
 
     return result

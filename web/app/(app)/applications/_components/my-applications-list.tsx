@@ -6,6 +6,7 @@ import {
   updateApplicationAction,
   withdrawApplicationAction,
 } from "@/app/(app)/applications/actions"
+import type { ApplicationActionState } from "@/app/(app)/applications/actions"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -106,7 +107,20 @@ function UpdateApplicationDialog(props: {
 }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateApplicationAction, {
+  async function reduce(
+    previousState: ApplicationActionState,
+    formData: FormData,
+  ): Promise<ApplicationActionState> {
+    const result = await updateApplicationAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

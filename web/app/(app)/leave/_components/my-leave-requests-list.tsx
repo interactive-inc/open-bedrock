@@ -1,7 +1,9 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "sonner"
 import { cancelLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/leave/actions"
+import type { LeaveActionState } from "@/app/(app)/leave/actions"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { Button } from "@/components/ui/button"
@@ -90,7 +92,24 @@ export function MyLeaveRequestsList(props: Props) {
 function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateLeaveRequestAction, {
+  async function reduce(
+    previousState: LeaveActionState,
+    formData: FormData,
+  ): Promise<LeaveActionState> {
+    const result = await updateLeaveRequestAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("休暇申請を更新しました")
+
+      setOpen(false)
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

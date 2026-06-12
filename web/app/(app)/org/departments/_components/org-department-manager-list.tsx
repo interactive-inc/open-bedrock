@@ -1,11 +1,13 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { toast } from "sonner"
 import {
   createOrgDepartmentAction,
   deleteOrgDepartmentAction,
   updateOrgDepartmentAction,
 } from "@/app/(app)/org/departments/actions"
+import type { OrgDepartmentActionState } from "@/app/(app)/org/departments/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -85,7 +87,22 @@ export function OrgDepartmentManagerList(props: Props) {
 
 // 部署ノード作成フォーム。コード・マスタ ID・表示順は必須、親と責任者は任意。
 function CreateDepartmentForm() {
-  const [state, formAction, pending] = useActionState(createOrgDepartmentAction, {
+  async function reduce(
+    previousState: OrgDepartmentActionState,
+    formData: FormData,
+  ): Promise<OrgDepartmentActionState> {
+    const result = await createOrgDepartmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("部署を作成しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
@@ -137,7 +154,24 @@ function CreateDepartmentForm() {
 function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateOrgDepartmentAction, {
+  async function reduce(
+    previousState: OrgDepartmentActionState,
+    formData: FormData,
+  ): Promise<OrgDepartmentActionState> {
+    const result = await updateOrgDepartmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("部署を更新しました")
+
+      setOpen(false)
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
