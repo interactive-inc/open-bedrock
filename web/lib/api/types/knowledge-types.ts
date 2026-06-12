@@ -7,23 +7,30 @@ export type KnowledgeSearchQuery = {
   category: string | null
 }
 
-// GET /knowledge の一覧要素。
-// api/src/knowledge/knowledge-search-result-schema.ts と同形。
+// GET /knowledge の一覧要素（レスポンスは { data, total } で包まれ data の各要素）。
+// api は snake_case で返し、interface/knowledge/route.ts の responseBody は
+// id/category/title/snippet に加えて author_id/created_at を含む。
+// id は knowledgeArticles.id（schema 上 integer）なので number。author_id も integer。
 export type KnowledgeSearchResult = {
   id: number
   category: string
   title: string
   snippet: string
+  author_id: number
+  created_at: string
 }
 
 // GET /knowledge/:id の詳細。tags は値が無いとき null。
-// api/src/knowledge/knowledge-detail-response-schema.ts と同形。
+// interface/knowledge/[id]/route.ts の responseBody は id/title/category/tags/body_md に加えて
+// author_id/created_at を含む。author_id は integer（number）、created_at は text（string）。
 export type KnowledgeDetailResponse = {
   id: number
   title: string
   category: string
   tags: string | null
   body_md: string
+  author_id: number
+  created_at: string
 }
 
 // POST /knowledge のリクエストボディ。
