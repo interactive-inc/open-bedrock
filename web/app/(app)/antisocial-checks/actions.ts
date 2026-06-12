@@ -54,7 +54,7 @@ export async function updateAntisocialCheckAction(
   const updated = await updateAntisocialCheck(antisocialCheckId, fields)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "反社チェック申請の変更に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/antisocial-checks")
@@ -76,7 +76,7 @@ export async function cancelAntisocialCheckAction(
   const cancelled = await cancelAntisocialCheck(antisocialCheckId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "反社チェック申請の取消に失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/antisocial-checks")

@@ -20,7 +20,7 @@ async function approve(
   const decided = await approveLeaveRequest(leaveRequestId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "承認に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   return { ok: true, error: null }
@@ -35,7 +35,7 @@ async function reject(leaveRequestId: number, comment: string | null): Promise<L
   const decided = await rejectLeaveRequest(leaveRequestId, comment)
 
   if (decided instanceof Error) {
-    return { ok: false, error: "却下に失敗しました" }
+    return { ok: false, error: decided.message }
   }
 
   return { ok: true, error: null }
