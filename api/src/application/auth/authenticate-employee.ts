@@ -46,6 +46,12 @@ export class AuthenticateEmployee {
       return { reason: "invalid_credentials" }
     }
 
+    // NOTE: 休職中（leave）のログイン可否は仕様確認待ち（#775）。現状は許可。
+    // 退職者はログイン不可。資格情報エラーと同一レスポンスにして在籍状態の漏えいを避ける。
+    if (found.status === "retired") {
+      return { reason: "invalid_credentials" }
+    }
+
     // 旧形式またはラップ済み旧形式は純正 PBKDF2 に昇格する。
     // 書き戻し失敗はログイン体験を妨げないため握りつぶす（次回ログインで再試行される）。
     if (isLegacyPasswordHash(found.passwordHash) || isWrappedLegacyHash(found.passwordHash)) {
