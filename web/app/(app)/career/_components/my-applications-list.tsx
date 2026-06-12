@@ -5,6 +5,7 @@ import {
   updateCareerApplicationAction,
   withdrawCareerApplicationAction,
 } from "@/app/(app)/career/actions"
+import type { CareerApplicationActionState } from "@/app/(app)/career/actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -99,7 +100,20 @@ export function MyApplicationsList(props: Props) {
 function UpdateApplicationDialog(props: { applicationId: number; application: CareerApplication }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateCareerApplicationAction, {
+  async function reduce(
+    previousState: CareerApplicationActionState,
+    formData: FormData,
+  ): Promise<CareerApplicationActionState> {
+    const result = await updateCareerApplicationAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

@@ -5,6 +5,7 @@ import {
   cancelRentalReservationAction,
   updateRentalReservationAction,
 } from "@/app/(app)/rentals/actions"
+import type { RentalReservationActionState } from "@/app/(app)/rentals/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -80,7 +81,20 @@ export function MyReservationsList(props: Props) {
 function UpdateReservationDialog(props: { reservation: RentalReservationResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateRentalReservationAction, {
+  async function reduce(
+    previousState: RentalReservationActionState,
+    formData: FormData,
+  ): Promise<RentalReservationActionState> {
+    const result = await updateRentalReservationAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

@@ -5,6 +5,7 @@ import {
   cancelYearEndAdjustmentAction,
   updateYearEndAdjustmentAction,
 } from "@/app/(app)/year-end-adjustments/actions"
+import type { YearEndAdjustmentActionState } from "@/app/(app)/year-end-adjustments/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -74,7 +75,20 @@ export function MyYearEndAdjustmentsList(props: Props) {
 function UpdateYearEndAdjustmentDialog(props: { yearEndAdjustment: YearEndAdjustmentResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateYearEndAdjustmentAction, {
+  async function reduce(
+    previousState: YearEndAdjustmentActionState,
+    formData: FormData,
+  ): Promise<YearEndAdjustmentActionState> {
+    const result = await updateYearEndAdjustmentAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

@@ -5,6 +5,7 @@ import {
   deleteOnboardingTemplateAction,
   updateOnboardingTemplateAction,
 } from "@/app/(app)/onboarding/actions"
+import type { TemplateMutationState } from "@/app/(app)/onboarding/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,7 +40,20 @@ export function TemplateManagement(props: Props) {
 function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateOnboardingTemplateAction, {
+  async function reduce(
+    previousState: TemplateMutationState,
+    formData: FormData,
+  ): Promise<TemplateMutationState> {
+    const result = await updateOnboardingTemplateAction(previousState, formData)
+
+    if (result.ok) {
+      setOpen(false)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     message: null,
   })
