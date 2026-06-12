@@ -8,7 +8,7 @@ export async function createRoom(request: RoomCreateRequest) {
   const response = await client.rooms.$post({ json: request })
 
   if (response.status >= 400) {
-    return new Error("failed to create room")
+    return new Error("会議室の登録に失敗しました")
   }
 
   return response.json()

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type {
   TrainingCourseResponse,
   TrainingCourseUpdateRequest,
@@ -24,7 +25,12 @@ export async function updateTrainingCourse(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update training course")
+    return toResponseError(response, {
+      fallback: "研修コースの変更に失敗しました",
+      conflictMessages: {
+        "course is archived": "このコースはアーカイブされています",
+      },
+    })
   }
 
   return response.json()

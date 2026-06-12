@@ -50,10 +50,7 @@ export async function createRoomReservationAction(
   })
 
   if (created instanceof Error) {
-    return {
-      ok: false,
-      error: "予約の作成に失敗しました（時間帯が重複している可能性があります）",
-    }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/rooms")
@@ -96,10 +93,7 @@ export async function updateRoomReservationAction(
   })
 
   if (updated instanceof Error) {
-    return {
-      ok: false,
-      error: "予約の変更に失敗しました（時間帯が重複している可能性があります）",
-    }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/rooms")
@@ -121,7 +115,7 @@ export async function cancelRoomReservationAction(
   const cancelled = await cancelRoomReservation(reservationId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, error: "予約のキャンセルに失敗しました" }
+    return { ok: false, error: cancelled.message }
   }
 
   revalidatePath("/rooms")
