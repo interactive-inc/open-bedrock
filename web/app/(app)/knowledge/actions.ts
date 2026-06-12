@@ -36,7 +36,7 @@ export async function createKnowledgeAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "記事の作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/knowledge")

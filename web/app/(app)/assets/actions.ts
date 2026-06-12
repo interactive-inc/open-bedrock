@@ -104,7 +104,7 @@ export async function createAssetAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "物品の登録に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/assets")
@@ -142,7 +142,7 @@ export async function lendAssetAction(
   const lent = await lendAsset(code, employeeCode)
 
   if (lent instanceof Error) {
-    return { ok: false, error: "貸与に失敗しました" }
+    return { ok: false, error: lent.message }
   }
 
   revalidatePath("/assets")
@@ -176,7 +176,7 @@ export async function returnAssetAction(
   const returned = await returnAsset(code)
 
   if (returned instanceof Error) {
-    return { ok: false, error: "返却に失敗しました" }
+    return { ok: false, error: returned.message }
   }
 
   revalidatePath("/assets")
@@ -239,7 +239,7 @@ export async function updateAssetAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "物品の更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/assets")
@@ -271,7 +271,7 @@ export async function deleteAssetAction(
   const deleted = await deleteAsset(code)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "物品の削除に失敗しました（貸与中は削除できません）" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/assets")

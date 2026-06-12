@@ -85,7 +85,7 @@ export async function createSurveyAction(
   })
 
   if (created instanceof Error) {
-    return { ok: false, error: "アンケートの作成に失敗しました" }
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/surveys/manage")
@@ -138,7 +138,7 @@ export async function updateSurveyAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, error: "アンケートの更新に失敗しました" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/surveys/manage")
@@ -167,7 +167,7 @@ export async function deleteSurveyAction(
   const deleted = await deleteSurvey(surveyId)
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "アンケートの削除に失敗しました" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/surveys/manage")

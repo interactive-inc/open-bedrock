@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewCycleUpdateRequest } from "@/lib/api/types/review-types"
 
 // PUT /review-cycles/:cycle_id。特権ロールがサイクルの題目・期間・締切を更新する。
@@ -16,7 +17,13 @@ export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpd
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update review cycle")
+    return toResponseError(response, {
+      fallback: "評価サイクルの変更に失敗しました",
+      conflictMessages: {
+        "not modifiable": "この評価サイクルは変更できません",
+        "not editable": "この評価サイクルは編集できません",
+      },
+    })
   }
 
   return response.json()

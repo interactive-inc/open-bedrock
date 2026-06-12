@@ -47,7 +47,7 @@ export async function assignOnboardingAction(
   const assignment = await postOnboardingAssign({ employeeCode, templateCode })
 
   if (assignment instanceof Error) {
-    return { ok: false, message: "割当に失敗しました" }
+    return { ok: false, message: assignment.message }
   }
 
   revalidatePath(`/onboarding/employee/${employeeCode}`)
@@ -83,7 +83,7 @@ export async function completeOnboardingTaskAction(
   const task = await postOnboardingTaskComplete(taskId)
 
   if (task instanceof Error) {
-    return { ok: false, message: "完了処理に失敗しました" }
+    return { ok: false, message: task.message }
   }
 
   revalidatePath("/onboarding/me")
@@ -114,7 +114,7 @@ export async function uncompleteOnboardingTaskAction(
   const task = await postOnboardingTaskUncomplete(taskId)
 
   if (task instanceof Error) {
-    return { ok: false, message: "取り消しに失敗しました" }
+    return { ok: false, message: task.message }
   }
 
   revalidatePath("/onboarding/me")
@@ -165,7 +165,7 @@ export async function rescheduleOnboardingAssignmentAction(
   const updated = await updateOnboardingAssignment(assignmentId, assignedAt)
 
   if (updated instanceof Error) {
-    return { ok: false, message: "割当日の変更に失敗しました" }
+    return { ok: false, message: updated.message }
   }
 
   if (typeof employeeCode === "string" && employeeCode !== "") {
@@ -206,7 +206,7 @@ export async function cancelOnboardingAssignmentAction(
   const cancelled = await cancelOnboardingAssignment(assignmentId)
 
   if (cancelled instanceof Error) {
-    return { ok: false, message: "割り当ての取り消しに失敗しました" }
+    return { ok: false, message: cancelled.message }
   }
 
   if (typeof employeeCode === "string" && employeeCode !== "") {
@@ -288,7 +288,7 @@ export async function createOnboardingTemplateAction(
   const created = await createOnboardingTemplate(input)
 
   if (created instanceof Error) {
-    return { ok: false, message: "テンプレートの作成に失敗しました" }
+    return { ok: false, message: created.message }
   }
 
   revalidatePath("/onboarding")
@@ -321,7 +321,7 @@ export async function updateOnboardingTemplateAction(
   })
 
   if (updated instanceof Error) {
-    return { ok: false, message: "テンプレートの変更に失敗しました" }
+    return { ok: false, message: updated.message }
   }
 
   revalidatePath("/onboarding")
@@ -350,7 +350,7 @@ export async function deleteOnboardingTemplateAction(
   const deleted = await deleteOnboardingTemplate(code)
 
   if (deleted instanceof Error) {
-    return { ok: false, message: "テンプレートの削除に失敗しました" }
+    return { ok: false, message: deleted.message }
   }
 
   revalidatePath("/onboarding")

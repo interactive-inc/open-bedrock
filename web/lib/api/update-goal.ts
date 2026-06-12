@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toResponseError } from "@/lib/api/to-response-error"
 import type { GoalResponse, GoalUpdateRequest } from "@/lib/api/types/goal-types"
 
 // PUT /goals/:goalId。目標の定義を変更する。
@@ -15,7 +16,12 @@ export async function updateGoal(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to update goal")
+    return toResponseError(response, {
+      fallback: "目標の変更に失敗しました",
+      conflictMessages: {
+        "the goal is already finalized": "確定済みの目標は変更できません",
+      },
+    })
   }
 
   return response.json()
