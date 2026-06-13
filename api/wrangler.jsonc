@@ -21,4 +21,14 @@
       "id": "REPLACE_WITH_KV_NAMESPACE_ID",
     },
   ],
+  // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（60 秒あたり 600 リクエスト/IP）。
+  // namespace_id はアカウント内で一意な正整数文字列（任意の値を割り当ててよい）。
+  // period は 10 または 60 のみ。binding 未設定の環境ではミドルウェアがスキップする。
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 600, "period": 60 },
+    },
+  ],
 }

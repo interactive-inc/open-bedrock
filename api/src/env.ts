@@ -14,6 +14,9 @@ export type Bindings = {
   // ログインエンドポイントのレート制限カウンターを保持する KV namespace。
   // `wrangler kv:namespace create RATE_LIMIT` で発行し wrangler.jsonc に設定する。
   RATE_LIMIT?: KVNamespace
+  // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（Workers Rate Limiting binding）。
+  // wrangler.jsonc の ratelimits で設定する。未設定（ローカル開発・テスト）ではスキップする。
+  API_RATE_LIMITER?: RateLimit
 }
 
 // 認証済みの本人（セッション）。
