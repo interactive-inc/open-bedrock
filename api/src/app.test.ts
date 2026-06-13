@@ -74,3 +74,23 @@ describe("CORS", () => {
     expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull()
   })
 })
+
+describe("security headers", () => {
+  test("レスポンスに X-Content-Type-Options: nosniff が付く", async () => {
+    const response = await app.request("/health", { method: "GET" }, makeBindings())
+
+    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff")
+  })
+
+  test("レスポンスに Strict-Transport-Security が付く", async () => {
+    const response = await app.request("/health", { method: "GET" }, makeBindings())
+
+    expect(response.headers.get("Strict-Transport-Security")).not.toBeNull()
+  })
+
+  test("別オリジン利用を阻害する CORP は付けない（CORS が制御を担う）", async () => {
+    const response = await app.request("/health", { method: "GET" }, makeBindings())
+
+    expect(response.headers.get("Cross-Origin-Resource-Policy")).toBeNull()
+  })
+})
