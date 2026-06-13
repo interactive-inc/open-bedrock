@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getKnowledgeDetail } from "@/lib/api/get-knowledge-detail"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 export const metadata = { title: "ナレッジ詳細" }
 
@@ -36,7 +37,7 @@ export default async function KnowledgeDetailPage(props: Props) {
   const article = await getKnowledgeDetail(knowledgeId)
 
   if (article instanceof Error) {
-    notFound()
+    handleDetailError(article)
   }
 
   const tags = toTags(article.tags)

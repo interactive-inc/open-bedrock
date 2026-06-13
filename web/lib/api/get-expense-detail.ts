@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { ApiResponseError } from "@/lib/api/api-response-error"
 
 // GET /expenses/:id。1 件の経費詳細を取得する。
 export async function getExpenseDetail(id: number) {
@@ -9,7 +10,7 @@ export async function getExpenseDetail(id: number) {
   })
 
   if (response.status >= 400) {
-    return new Error("failed to load expense detail")
+    return new ApiResponseError(response.status, "failed to load expense detail")
   }
 
   return response.json()

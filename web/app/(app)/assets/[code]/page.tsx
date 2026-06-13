@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
 import { AssetLendForm } from "@/app/(app)/assets/_components/asset-lend-form"
 import { AssetReturnForm } from "@/app/(app)/assets/_components/asset-return-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
@@ -7,6 +6,7 @@ import { AssetStatusBadge } from "@/components/asset-status-badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getAssetByCode } from "@/lib/api/get-asset-by-code"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 export const metadata = { title: "備品詳細" }
 
@@ -21,7 +21,7 @@ export default async function AssetDetailPage(props: Props) {
   const asset = await getAssetByCode(params.code)
 
   if (asset instanceof Error) {
-    notFound()
+    handleDetailError(asset)
   }
 
   return (

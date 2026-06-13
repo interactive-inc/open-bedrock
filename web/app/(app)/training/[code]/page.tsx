@@ -1,9 +1,9 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
 import { EnrollButton } from "@/app/(app)/training/_components/enroll-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getTrainingCourse } from "@/lib/api/get-training-course"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 type Props = {
   params: Promise<{ code: string }>
@@ -17,7 +17,7 @@ export default async function TrainingCourseDetailPage(props: Props) {
   const course = await getTrainingCourse(params.code)
 
   if (course instanceof Error) {
-    notFound()
+    handleDetailError(course)
   }
 
   return (

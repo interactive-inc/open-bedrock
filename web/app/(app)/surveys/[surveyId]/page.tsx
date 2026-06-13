@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/_components/survey-answer-form"
 import { getSurvey } from "@/lib/api/get-survey"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/_lib/survey-question-schema"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { Button } from "@/components/ui/button"
@@ -27,7 +28,7 @@ export default async function SurveyAnswerPage(props: Props) {
   const survey = await getSurvey(surveyId)
 
   if (survey instanceof Error) {
-    return <p className="text-sm text-destructive">アンケートの取得に失敗しました</p>
+    handleDetailError(survey)
   }
 
   if (survey === null) {
