@@ -3,6 +3,7 @@ import { ListOrgDepartments } from "@/application/org/list-org-departments"
 import type { OrgDepartment } from "@/domain/org/org-department"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
 import {
   ConflictError,
   ForbiddenError,
@@ -39,7 +40,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to load departments")
   }
 
-  return c.json(departments.map(toResponseBody), 200)
+  if (departments.length > MAX_ORG_NODES) {
+    console.warn(`[org] department list exceeded ${MAX_ORG_NODES} nodes; response truncated`)
+  }
+
+  const bounded = departments.slice(0, MAX_ORG_NODES)
+
+  return c.json(bounded.map(toResponseBody), 200)
 })
 
 // POST /org/departments — 部署ノードを作成（権限が必要）
