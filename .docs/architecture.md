@@ -32,7 +32,11 @@ JWT の有効期限は発行から 8 時間。期限切れトークンは 401 �
 
 ログインは IP 単位とメールアドレス単位の二重のレート制限を KV で行う。KV 未バインドの開発環境では制限をスキップするため、本番では RATE_LIMIT KV のバインドが必須。
 
+ログイン以外のエンドポイントの全体的なレート制限はアプリ層では行わない。Workers KV は同一キーへの高頻度書き込みに向かず、全リクエストでのカウンタ更新が現実的でないため。代わりに Cloudflare のレート制限ルール(WAF / Rate Limiting Rules)をエッジで適用する方針とする。
+
 CORS は env.CORS_ORIGIN で許可オリジンを制限する。ワイルドカードは使わない。
+
+API レスポンスには hono/secure-headers で X-Content-Type-Options: nosniff、Strict-Transport-Security(HSTS)、X-Frame-Options などのセキュリティヘッダを付与する。別オリジンの正規クライアント(web / cli)からの利用を阻害しないよう COOP / CORP は無効化し、クロスオリジンの制御は CORS に委ねる。
 
 リクエストボディは 1 MB を上限とする(Hono bodyLimit ミドルウェア)。フリーテキストフィールドは最大 200〜50,000 字、ID・コード類は最大 200 字のバリデーションを各ルートに設ける。日付フィールドは ISO 8601 形式(YYYY-MM-DD)を強制する。
 
