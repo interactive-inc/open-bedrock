@@ -1,6 +1,6 @@
 import { loadConfig, saveConfig } from "@/lib/config/config"
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { mkdir, mkdtemp, rm, stat } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -39,6 +39,22 @@ describe("config", () => {
 
     expect(loaded.base_url).toBe("http://example.test")
     expect(loaded.token).toBe("secret-token")
+  })
+
+  test("saveConfig re-hardens an existing world-readable file to 0600", async () => {
+    // 旧 CLI・復元・手動作成などで緩い権限のファイルが先に存在するケースを再現する。
+    await mkdir(tempDir, { recursive: true })
+
+    const file = join(tempDir, "config.json")
+
+    await writeFile(file, "{}\n")
+    await chmod(file, 0o644)
+
+    await saveConfig({ base_url: "http://example.test", token: "secret-token" })
+
+    const fileStat = await stat(file)
+
+    expect(fileStat.mode & 0o777).toBe(0o600)
   })
 
   test("loadConfig returns defaults when the file does not exist", async () => {
