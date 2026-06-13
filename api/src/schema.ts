@@ -2,6 +2,12 @@ import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
+// このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
+// api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
+// 再生成は行わない）。一意・部分インデックスは migration を正として定義し、ORM からの可視性の
+// ため、特に WHERE 付き部分インデックス（二重登録・TOCTOU 防止の要）を各テーブルにも宣言する。
+// インデックスを追加・変更する際は migration を更新すること。
+
 // 従業員台帳
 export const employees = sqliteTable("employees", {
   id: integer("id").primaryKey(),
@@ -192,15 +198,24 @@ export const shiftAssignments = sqliteTable(
 export type ShiftAssignmentRow = InferSelectModel<typeof shiftAssignments>
 
 // シフト交代申請（申請者と交代相手・対象日・承認状態）
-export const shiftSwapRequests = sqliteTable("shift_swap_requests", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  requesterEmployeeId: integer("requester_employee_id").notNull(),
-  targetEmployeeId: integer("target_employee_id").notNull(),
-  date: text("date").notNull(),
-  note: text("note"),
-  status: text("status").notNull(),
-  approvedAt: text("approved_at"),
-})
+export const shiftSwapRequests = sqliteTable(
+  "shift_swap_requests",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    requesterEmployeeId: integer("requester_employee_id").notNull(),
+    targetEmployeeId: integer("target_employee_id").notNull(),
+    date: text("date").notNull(),
+    note: text("note"),
+    status: text("status").notNull(),
+    approvedAt: text("approved_at"),
+  },
+  // 同一の依頼者・対象者・日付で pending の交代申請は 1 件まで（二重申請を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_shift_swap_requests_pending")
+      .on(table.requesterEmployeeId, table.targetEmployeeId, table.date)
+      .where(sql`status = 'pending'`),
+  ],
+)
 
 export type ShiftSwapRequestRow = InferSelectModel<typeof shiftSwapRequests>
 
@@ -352,16 +367,25 @@ export const assetLendings = sqliteTable("asset_lendings", {
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>
 
 // 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。
-export const attendanceRecords = sqliteTable("attendance_records", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  workDate: text("work_date").notNull(),
-  clockInAt: text("clock_in_at"),
-  clockOutAt: text("clock_out_at"),
-  workMinutes: integer("work_minutes"),
-  note: text("note"),
-  status: text("status").notNull(),
-})
+export const attendanceRecords = sqliteTable(
+  "attendance_records",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    workDate: text("work_date").notNull(),
+    clockInAt: text("clock_in_at"),
+    clockOutAt: text("clock_out_at"),
+    workMinutes: integer("work_minutes"),
+    note: text("note"),
+    status: text("status").notNull(),
+  },
+  // 打刻中(open)は 1 社員 1 件まで。clock-in の二重実行を DB レベルで弾く（TOCTOU 防止）。
+  (table) => [
+    uniqueIndex("idx_attendance_records_employee_open_unique")
+      .on(table.employeeId)
+      .where(sql`status = 'open'`),
+  ],
+)
 
 export type AttendanceRecordRow = InferSelectModel<typeof attendanceRecords>
 
@@ -454,15 +478,24 @@ export const goals = sqliteTable("goals", {
 export type GoalRow = InferSelectModel<typeof goals>
 
 // 目標への評価（自己・上長・最終）
-export const goalEvaluations = sqliteTable("goal_evaluations", {
-  id: integer("id").primaryKey(),
-  goalId: integer("goal_id").notNull(),
-  evaluatorId: integer("evaluator_id").notNull(),
-  kind: text("kind").notNull(),
-  score: integer("score"),
-  comment: text("comment"),
-  createdAt: text("created_at").notNull(),
-})
+export const goalEvaluations = sqliteTable(
+  "goal_evaluations",
+  {
+    id: integer("id").primaryKey(),
+    goalId: integer("goal_id").notNull(),
+    evaluatorId: integer("evaluator_id").notNull(),
+    kind: text("kind").notNull(),
+    score: integer("score"),
+    comment: text("comment"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 1 目標につき final 評価は 1 件まで（最終評価の二重登録を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_goal_evaluations_goal_final")
+      .on(table.goalId)
+      .where(sql`kind = 'final'`),
+  ],
+)
 
 export type GoalEvaluationRow = InferSelectModel<typeof goalEvaluations>
 
@@ -538,16 +571,25 @@ export type ThanksRewardRow = InferSelectModel<typeof thanksRewards>
 
 // サンクスポイントの交換申請。状態は pending→fulfilled（確定）/rejected（却下）。
 // point_cost は申請時点の交換コストを写し取り、後からカタログ価格が変わってもブレないようにする。
-export const thanksRedemptions = sqliteTable("thanks_redemptions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  rewardId: integer("reward_id").notNull(),
-  pointCost: integer("point_cost").notNull(),
-  status: text("status").notNull().$type<"pending" | "rejected" | "fulfilled">(),
-  createdAt: text("created_at").notNull(),
-  decidedAt: text("decided_at"),
-  deciderId: integer("decider_id"),
-})
+export const thanksRedemptions = sqliteTable(
+  "thanks_redemptions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    rewardId: integer("reward_id").notNull(),
+    pointCost: integer("point_cost").notNull(),
+    status: text("status").notNull().$type<"pending" | "rejected" | "fulfilled">(),
+    createdAt: text("created_at").notNull(),
+    decidedAt: text("decided_at"),
+    deciderId: integer("decider_id"),
+  },
+  // 1 社員につき pending の交換申請は 1 件まで（二重申請・残高の二重引当を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_thanks_redemptions_employee_pending")
+      .on(table.employeeId)
+      .where(sql`status = 'pending'`),
+  ],
+)
 
 export type ThanksRedemptionRow = InferSelectModel<typeof thanksRedemptions>
 
@@ -655,15 +697,24 @@ export const rentalReservations = sqliteTable("rental_reservations", {
 export type RentalReservationRow = InferSelectModel<typeof rentalReservations>
 
 // 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ）
-export const resignations = sqliteTable("resignations", {
-  id: text("id").primaryKey(),
-  employeeId: integer("employee_id").notNull(),
-  resignationDate: text("resignation_date").notNull(),
-  lastWorkingDate: text("last_working_date"),
-  reason: text("reason"),
-  status: text("status").notNull(),
-  createdAt: text("created_at").notNull(),
-})
+export const resignations = sqliteTable(
+  "resignations",
+  {
+    id: text("id").primaryKey(),
+    employeeId: integer("employee_id").notNull(),
+    resignationDate: text("resignation_date").notNull(),
+    lastWorkingDate: text("last_working_date"),
+    reason: text("reason"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  // 1 社員につき requested の退職申請は 1 件まで（二重申請を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_resignations_employee_requested")
+      .on(table.employeeId)
+      .where(sql`status = 'requested'`),
+  ],
+)
 
 export type ResignationRow = InferSelectModel<typeof resignations>
 
