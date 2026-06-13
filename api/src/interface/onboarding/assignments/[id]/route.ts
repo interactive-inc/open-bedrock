@@ -71,7 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 // PUT /onboarding/assignments/:id — 割当日を変更（特権ロールのみ）
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator("json", z.object({ assigned_at: z.string().min(1) })),
+  zValidator("json", z.object({ assigned_at: z.string().datetime() })),
   async (c) => {
     const session = c.var.session
 
