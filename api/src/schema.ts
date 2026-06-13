@@ -4,9 +4,10 @@ import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "driz
 
 // このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
 // api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
-// 再生成は行わない）。一意・部分インデックスは migration を正として定義し、ORM からの可視性の
-// ため、特に WHERE 付き部分インデックス（二重登録・TOCTOU 防止の要）を各テーブルにも宣言する。
-// インデックスを追加・変更する際は migration を更新すること。
+// 再生成は行わない）。migration が持つ一意インデックス・部分インデックス（二重登録・TOCTOU 防止）
+// は、ORM からの可視性とドリフト検知のため schema.ts にも宣言して同期させている（性能用の
+// 非一意インデックスは除く）。インデックスを追加・変更する際は migration を正として更新し、
+// 一意・部分インデックスは本ファイルにも反映すること。
 
 // 従業員台帳
 export const employees = sqliteTable("employees", {
@@ -94,15 +95,22 @@ export const trainingCourses = sqliteTable("training_courses", {
 export type TrainingCourseRow = InferSelectModel<typeof trainingCourses>
 
 // 受講登録（社員ごとのコース受講状況・スコア・期限）。
-export const trainingEnrollments = sqliteTable("training_enrollments", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  courseId: integer("course_id").notNull(),
-  employeeId: integer("employee_id").notNull(),
-  status: text("status").notNull(),
-  completedAt: text("completed_at"),
-  score: integer("score"),
-  dueDate: text("due_date"),
-})
+export const trainingEnrollments = sqliteTable(
+  "training_enrollments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    courseId: integer("course_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    status: text("status").notNull(),
+    completedAt: text("completed_at"),
+    score: integer("score"),
+    dueDate: text("due_date"),
+  },
+  // 同一コース・同一社員の受講登録は 1 件まで（重複受講を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_training_enrollments_course_employee").on(table.courseId, table.employeeId),
+  ],
+)
 
 export type TrainingEnrollmentRow = InferSelectModel<typeof trainingEnrollments>
 
@@ -154,15 +162,22 @@ export const payslips = sqliteTable(
 export type PayslipRow = InferSelectModel<typeof payslips>
 
 // 給与改定の履歴（基本給の改定・前回基本給・適用日）
-export const salaryRevisions = sqliteTable("salary_revisions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  effectiveDate: text("effective_date").notNull(),
-  previousBaseSalary: integer("previous_base_salary").notNull(),
-  newBaseSalary: integer("new_base_salary").notNull(),
-  reason: text("reason"),
-  createdAt: text("created_at").notNull(),
-})
+export const salaryRevisions = sqliteTable(
+  "salary_revisions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    effectiveDate: text("effective_date").notNull(),
+    previousBaseSalary: integer("previous_base_salary").notNull(),
+    newBaseSalary: integer("new_base_salary").notNull(),
+    reason: text("reason"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一社員・同一適用日の給与改定は 1 件まで（二重登録を防ぐ）。
+  (table) => [
+    uniqueIndex("uq_salary_revisions_employee_date").on(table.employeeId, table.effectiveDate),
+  ],
+)
 
 export type SalaryRevisionRow = InferSelectModel<typeof salaryRevisions>
 
@@ -279,14 +294,23 @@ export const onboardingTemplateTasks = sqliteTable(
 export type OnboardingTemplateTaskRow = InferSelectModel<typeof onboardingTemplateTasks>
 
 // 社員へのテンプレート割り当て（手続きの進行状態）
-export const onboardingAssignments = sqliteTable("onboarding_assignments", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: integer("employee_id").notNull(),
-  templateCode: text("template_code").notNull(),
-  kind: text("kind").notNull(),
-  status: text("status").notNull(),
-  assignedAt: text("assigned_at").notNull(),
-})
+export const onboardingAssignments = sqliteTable(
+  "onboarding_assignments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    templateCode: text("template_code").notNull(),
+    kind: text("kind").notNull(),
+    status: text("status").notNull(),
+    assignedAt: text("assigned_at").notNull(),
+  },
+  // 同一社員・同一テンプレートで未完了の割当は 1 件まで（重複割当を防ぐ）。
+  (table) => [
+    uniqueIndex("uq_onboarding_assignments_employee_template")
+      .on(table.employeeId, table.templateCode)
+      .where(sql`status != 'completed'`),
+  ],
+)
 
 export type OnboardingAssignmentRow = InferSelectModel<typeof onboardingAssignments>
 
@@ -414,13 +438,20 @@ export const careerPostings = sqliteTable("career_postings", {
 export type CareerPostingRow = InferSelectModel<typeof careerPostings>
 
 // 公募への応募（応募者・メッセージ・状態）。id は AUTOINCREMENT。
-export const careerApplications = sqliteTable("career_applications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  postingId: integer("posting_id").notNull(),
-  applicantId: integer("applicant_id").notNull(),
-  message: text("message"),
-  status: text("status").notNull(),
-})
+export const careerApplications = sqliteTable(
+  "career_applications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    postingId: integer("posting_id").notNull(),
+    applicantId: integer("applicant_id").notNull(),
+    message: text("message"),
+    status: text("status").notNull(),
+  },
+  // 同一公募への重複応募を防ぐ。
+  (table) => [
+    uniqueIndex("idx_career_applications_posting_applicant").on(table.postingId, table.applicantId),
+  ],
+)
 
 export type CareerApplicationRow = InferSelectModel<typeof careerApplications>
 
@@ -490,10 +521,14 @@ export const goalEvaluations = sqliteTable(
     createdAt: text("created_at").notNull(),
   },
   // 1 目標につき final 評価は 1 件まで（最終評価の二重登録を防ぐ）。
+  // self / manager は 1 目標・1 評価者・1 種別につき 1 件まで。
   (table) => [
     uniqueIndex("idx_goal_evaluations_goal_final")
       .on(table.goalId)
       .where(sql`kind = 'final'`),
+    uniqueIndex("idx_goal_evaluations_evaluator_kind")
+      .on(table.goalId, table.evaluatorId, table.kind)
+      .where(sql`kind IN ('self', 'manager')`),
   ],
 )
 
@@ -657,13 +692,20 @@ export const surveys = sqliteTable("surveys", {
 export type SurveyRow = InferSelectModel<typeof surveys>
 
 // アンケートへの回答。id は自動採番。answers_json は回答内容の JSON 文字列。
-export const surveyResponses = sqliteTable("survey_responses", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  surveyId: integer("survey_id").notNull(),
-  respondentId: integer("respondent_id").notNull(),
-  answersJson: text("answers_json").notNull(),
-  submittedAt: text("submitted_at").notNull(),
-})
+export const surveyResponses = sqliteTable(
+  "survey_responses",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    surveyId: integer("survey_id").notNull(),
+    respondentId: integer("respondent_id").notNull(),
+    answersJson: text("answers_json").notNull(),
+    submittedAt: text("submitted_at").notNull(),
+  },
+  // 1 アンケートにつき 1 回答者 1 件まで（二重回答を防ぐ）。
+  (table) => [
+    uniqueIndex("idx_survey_responses_survey_respondent").on(table.surveyId, table.respondentId),
+  ],
+)
 
 export type SurveyResponseRow = InferSelectModel<typeof surveyResponses>
 
