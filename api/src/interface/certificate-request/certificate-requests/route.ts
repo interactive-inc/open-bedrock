@@ -2,6 +2,7 @@ import { CreateCertificateRequest } from "@/application/certificate-request/crea
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -12,7 +13,7 @@ export const POST = factory.createHandlers(
     z.object({
       certificate_type: z.string().min(1).max(200),
       submit_to: z.string().max(500).nullable().optional(),
-      needed_by: z.string().max(100).nullable().optional(),
+      needed_by: isoDate.nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),

@@ -179,6 +179,22 @@ describe("POST /certificate-requests", () => {
     }
   })
 
+  test("rejects a non-ISO or impossible needed_by with 400", async () => {
+    for (const neededBy of ["whenever", "2026/08/01", "2026-02-30"]) {
+      const response = await request({
+        path: "/certificate-requests",
+        token: await requesterToken(),
+        method: "POST",
+        body: {
+          certificate_type: "employment",
+          needed_by: neededBy,
+        },
+      })
+
+      expect(response.status).toBe(400)
+    }
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/certificate-requests",
