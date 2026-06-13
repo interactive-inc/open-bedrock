@@ -4,6 +4,7 @@ import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 export const metadata = { title: "申請詳細" }
 
@@ -35,7 +36,7 @@ export default async function ApplicationDetailPage(props: Props) {
   const application = await getApplicationDetail(applicationId)
 
   if (application instanceof Error) {
-    notFound()
+    handleDetailError(application)
   }
 
   return (
