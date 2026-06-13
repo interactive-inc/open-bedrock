@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { ApiResponseError } from "@/lib/api/api-response-error"
 
 // 指定アンケートを取得する。GET /surveys/:survey_id。
 export async function getSurvey(surveyId: number) {
@@ -15,7 +16,7 @@ export async function getSurvey(surveyId: number) {
   }
 
   if (status >= 400) {
-    return new Error("failed to load survey")
+    return new ApiResponseError(status, "failed to load survey")
   }
 
   return response.json()

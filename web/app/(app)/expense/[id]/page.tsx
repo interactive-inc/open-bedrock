@@ -4,6 +4,7 @@ import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
+import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
 import { ExpenseDecisionForm } from "@/app/(app)/expense/_components/expense-decision-form"
 
@@ -47,7 +48,7 @@ async function ExpenseDetailView(props: ViewProps) {
   const expense = await getExpenseDetail(expenseId)
 
   if (expense instanceof Error) {
-    return <p className="text-sm text-destructive">経費詳細の取得に失敗しました</p>
+    handleDetailError(expense)
   }
 
   const isPending = expense.status === "pending"
