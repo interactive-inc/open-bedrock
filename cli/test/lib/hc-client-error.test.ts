@@ -26,6 +26,24 @@ async function whoamiWith(status: number, body: string): Promise<Response> {
   }
 }
 
+function fetchRejecting(error: Error): typeof fetch {
+  return Object.assign(() => Promise.reject(error), { preconnect: fetch.preconnect })
+}
+
+async function whoamiRejectingWith(error: Error): Promise<Response> {
+  const spy = spyOn(globalThis, "fetch").mockImplementation(fetchRejecting(error))
+
+  try {
+    return await app.request("/whoami", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    })
+  } finally {
+    spy.mockRestore()
+  }
+}
+
 describe("hc client error handling (#96)", () => {
   test("surfaces a 4xx API error instead of returning it as success", async () => {
     const response = await whoamiWith(403, "forbidden")
@@ -56,5 +74,32 @@ describe("hc client error handling (#96)", () => {
     expect(response.status).toBe(200)
 
     expect(await response.text()).toContain("You Example")
+  })
+
+  test("adds a 'karte login' hint on 401", async () => {
+    const response = await whoamiWith(401, JSON.stringify({ error: "invalid token" }))
+
+    expect(response.status).toBe(401)
+
+    expect(await response.text()).toContain("karte login")
+  })
+
+  test("adds a permission hint on 403", async () => {
+    const response = await whoamiWith(403, "forbidden")
+
+    expect(response.status).toBe(403)
+
+    const text = await response.text()
+
+    expect(text).toContain("forbidden")
+    expect(text).toContain("権限")
+  })
+
+  test("surfaces a connection failure with the api base url instead of a raw fetch error", async () => {
+    const response = await whoamiRejectingWith(new TypeError("fetch failed"))
+
+    expect(response.status).toBe(500)
+
+    expect(await response.text()).toContain("接続できませんでした")
   })
 })
