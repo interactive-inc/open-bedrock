@@ -17,7 +17,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      score: z.number().optional(),
+      score: z.number().safe().int().min(0).max(100).optional(),
     }),
   ),
   async (c) => {
