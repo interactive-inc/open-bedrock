@@ -94,3 +94,39 @@ describe("security headers", () => {
     expect(response.headers.get("Cross-Origin-Resource-Policy")).toBeNull()
   })
 })
+
+function makeLimiter(success: boolean): RateLimit {
+  return { limit: () => Promise.resolve({ success }) }
+}
+
+describe("rate limiting", () => {
+  test("binding 未設定ならレート制限をスキップする", async () => {
+    const response = await app.request("/health", { method: "GET" }, makeBindings())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("上限超過(success:false)なら 429 を返す（認証前に弾く）", async () => {
+    const bindings = { ...makeBindings(), API_RATE_LIMITER: makeLimiter(false) }
+
+    const response = await app.request("/employees", { method: "GET" }, bindings)
+
+    expect(response.status).toBe(429)
+  })
+
+  test("上限内(success:true)なら通常処理に進む（未認証で 401）", async () => {
+    const bindings = { ...makeBindings(), API_RATE_LIMITER: makeLimiter(true) }
+
+    const response = await app.request("/employees", { method: "GET" }, bindings)
+
+    expect(response.status).toBe(401)
+  })
+
+  test("/health は binding があっても対象外", async () => {
+    const bindings = { ...makeBindings(), API_RATE_LIMITER: makeLimiter(false) }
+
+    const response = await app.request("/health", { method: "GET" }, bindings)
+
+    expect(response.status).toBe(200)
+  })
+})
