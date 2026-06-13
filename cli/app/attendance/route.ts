@@ -7,6 +7,6 @@ usage:
   karte attendance clock-out [--note <n>]               退勤打刻
   karte attendance me [--from <d>] [--to <d>]           自分の勤怠
   karte attendance summary [--month <m>]                月次サマリ
-  karte attendance list [--employee-id <n>] [--from <d>] [--to <d>]`
+  karte attendance list [--employee-id <id>] [--from <d>] [--to <d>]   (employee-id は数値ID)`
 
 export default factory.createHandlers((c) => c.text(help))
