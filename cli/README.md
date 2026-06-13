@@ -25,3 +25,10 @@ bun index.ts app inbox
 - `lib/` … 共通処理（引数変換 router、http クライアント、config 読み書き、表示整形）
 
 コマンドの一覧は `index.ts` のヘルプを、各コマンドの入出力は `app/` 配下の実装を参照する。
+
+## 社員の指定
+
+一覧系コマンドで他者を指定するフラグは、叩く API のパラメータに合わせて 2 種類ある。どちらも管理者・マネージャ向けの任意フラグで、省略時は本人が対象になる。
+
+- `--employee-id <id>` … 数値の社員 ID。`goal` / `attendance` の一覧で使う（API が `employee_id` を受けるため）
+- `--employee-code <code>` … 文字列の社員コード。`training` / `shift` / `org` / `payroll` などで使う（API が `employee_code` を受けるため）
