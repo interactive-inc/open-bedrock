@@ -2,6 +2,7 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -35,8 +36,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(orgMemberships)
     .leftJoin(employees, eq(employees.code, orgMemberships.employeeCode))
     .where(eq(orgMemberships.departmentCode, code))
+    .limit(MAX_ORG_NODES + 1)
 
-  const body = rows.map((row) => ({
+  if (rows.length > MAX_ORG_NODES) {
+    console.warn(`[org] department ${code} members exceeded ${MAX_ORG_NODES}; response truncated`)
+  }
+
+  const body = rows.slice(0, MAX_ORG_NODES).map((row) => ({
     employee_code: row.membership.employeeCode,
     employee_name: row.employeeName ?? "",
     position: row.position ?? null,
