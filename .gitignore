@@ -24,3 +24,9 @@ storybook-static/
 # macOS
 .DS_Store
 .funnel
+
+# Playwright MCP（ブラウザ検証時の生成物。コンソールログ等）
+.playwright-mcp/
+
+# 検証時のスクリーンショット（リポジトリ直下に出力される一時生成物）
+/*.png
