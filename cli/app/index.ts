@@ -1,5 +1,7 @@
 import { HTTPException } from "hono/http-exception"
 import { factory } from "@/factory"
+import { loadConfig } from "@/lib/config/config"
+import { toConnectionErrorMessage } from "@/lib/http/to-connection-error-message"
 import appApproveHandler from "@/app/app/approve/[app_id]/route"
 import appHandler from "@/app/app/route"
 import appInboxHandler from "@/app/app/inbox/route"
@@ -270,13 +272,33 @@ import trainingShowHandler from "@/app/training/show/route"
 
 const base = factory.createApp()
 
-base.onError((error, c) => {
+base.onError(async (error, c) => {
   // ハンドラに到達して投げられたエラーであることを示すマーカー。
   // 未登録パスで Hono が返す素の 404 と、ハンドラ由来の 404 を index.ts で区別する。
   c.header("x-karte-handler-error", "1")
 
   if (error instanceof HTTPException) {
+    if (error.status === 401) {
+      return c.text(
+        `${error.message}\n認証されていません。'karte login' でログインしてください。`,
+        error.status,
+      )
+    }
+
+    if (error.status === 403) {
+      return c.text(`${error.message}\nこの操作を実行する権限がありません。`, error.status)
+    }
+
     return c.text(error.message, error.status)
+  }
+
+  // HTTPException でない = API への接続失敗・タイムアウトなど。接続先を添えて案内する。
+  const config = await loadConfig()
+
+  const connectionMessage = toConnectionErrorMessage(error, config.base_url)
+
+  if (connectionMessage !== null) {
+    return c.text(connectionMessage, 500)
   }
 
   return c.text(error instanceof Error ? error.message : String(error), 500)
