@@ -48,6 +48,7 @@ export function AssetLendForm(props: Props) {
         <Input
           name="employee_code"
           placeholder="従業員コード"
+          aria-label="従業員コード"
           className="w-48"
           aria-invalid={state.error !== null}
           required
