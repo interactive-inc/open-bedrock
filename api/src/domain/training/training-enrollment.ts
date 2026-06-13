@@ -7,7 +7,7 @@ const zProps = z.object({
   employeeId: z.number(),
   status: z.enum(["enrolled", "completed", "failed"]),
   completedAt: z.string().nullable(),
-  score: z.number().nullable(),
+  score: z.number().safe().int().min(0).max(100).nullable(),
   dueDate: z.string().nullable(),
 })
 

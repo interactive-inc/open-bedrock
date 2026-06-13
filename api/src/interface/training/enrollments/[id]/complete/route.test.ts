@@ -118,6 +118,21 @@ describe("POST /training/enrollments/:id/complete", () => {
     expect(body.score).toBe(85)
   })
 
+  test("rejects an out-of-range or non-integer score with 400", async () => {
+    for (const score of [150, -5, 85.5]) {
+      const response = await request(
+        "/training/enrollments/1/complete",
+        await tokenFor(5, "member"),
+        {
+          method: "POST",
+          body: { score: score },
+        },
+      )
+
+      expect(response.status).toBe(400)
+    }
+  })
+
   test("returns 404 for a missing enrollment", async () => {
     const response = await request(
       "/training/enrollments/999/complete",
