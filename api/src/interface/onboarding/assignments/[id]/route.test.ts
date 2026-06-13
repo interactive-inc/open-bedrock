@@ -238,6 +238,17 @@ describe("PUT /onboarding/assignments/:id", () => {
     expect(response.status).toBe(404)
   })
 
+  test("rejects a non-ISO-datetime assigned_at with 400", async () => {
+    const response = await request({
+      path: "/onboarding/assignments/100",
+      token: await token(1, "admin"),
+      method: "PUT",
+      body: { assigned_at: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
   test("returns 401 without a bearer token", async () => {
     const response = await request({
       path: "/onboarding/assignments/100",
