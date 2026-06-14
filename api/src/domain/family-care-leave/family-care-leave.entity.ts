@@ -74,7 +74,7 @@ export class FamilyCareLeave implements Props {
       startDate: row.startDate,
       endDate: row.endDate,
       note: row.note,
-      status: row.status as Props["status"],
+      status: zProps.shape.status.parse(row.status),
       createdAt: row.createdAt,
     })
   }

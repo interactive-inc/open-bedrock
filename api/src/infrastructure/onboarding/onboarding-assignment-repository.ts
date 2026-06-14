@@ -171,14 +171,20 @@ export class OnboardingAssignmentRepository {
         .set({ status: assignment.status, assignedAt: assignment.assignedAt })
         .where(eq(onboardingAssignments.id, assignment.id))
 
-      const taskStmts = assignment.tasks
-        .filter((task) => task.id !== null)
-        .map((task) =>
+      const taskStmts = assignment.tasks.flatMap((task) => {
+        if (task.id === null) {
+          return []
+        }
+
+        const taskId = task.id
+
+        return [
           this.c.var.database
             .update(onboardingTasks)
             .set({ status: task.status, completedAt: task.completedAt })
-            .where(eq(onboardingTasks.id, task.id as number)),
-        )
+            .where(eq(onboardingTasks.id, taskId)),
+        ]
+      })
 
       await this.c.var.database.batch([assignmentStmt, ...taskStmts])
 

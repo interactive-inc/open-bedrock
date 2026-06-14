@@ -2,11 +2,7 @@ import type { Forbidden } from "@/lib/goal/goal-access"
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
 import type { Context } from "@/env"
-import {
-  type AlreadyEvaluatedError,
-  type GoalDoneError,
-  GoalEvaluationRepository,
-} from "@/infrastructure/goal/goal-evaluation-repository"
+import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 
 export type Command = {
@@ -101,9 +97,10 @@ export class CreateGoalEvaluation {
 
       if ("reason" in result) {
         if (result.reason === "already_finalized") {
-          return { reason: "goal_finalized" } as GoalFinalized
+          return { reason: "goal_finalized" }
         }
-        return result as AlreadyEvaluatedError
+
+        return result
       }
 
       return result
@@ -116,10 +113,11 @@ export class CreateGoalEvaluation {
     }
 
     if ("reason" in evaluation) {
-      if ((evaluation as GoalDoneError).reason === "goal_done") {
-        return { reason: "goal_finalized" } as GoalFinalized
+      if (evaluation.reason === "goal_done") {
+        return { reason: "goal_finalized" }
       }
-      return evaluation as AlreadyEvaluatedError
+
+      return evaluation
     }
 
     return evaluation

@@ -9,7 +9,7 @@ export async function getSurvey(surveyId: number) {
     param: { survey_id: String(surveyId) },
   })
 
-  const status = response.status as number
+  const status: number = response.status
 
   if (status === 404) {
     return null
