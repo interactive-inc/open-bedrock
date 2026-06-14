@@ -51,9 +51,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     ),
   )
 
+  // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
   const rows = await c.var.database
     .select({
-      application: applications,
+      id: applications.id,
+      currentStep: applications.currentStep,
+      status: applications.status,
+      createdAt: applications.createdAt,
       templateName: applicationTemplates.name,
       applicantName: employees.name,
     })
@@ -71,12 +75,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(pendingWithRole)
 
   const responseBody = rows.map((row) => ({
-    id: row.application.id,
+    id: row.id,
     template_name: row.templateName ?? "",
     applicant_name: row.applicantName ?? "",
-    current_step: row.application.currentStep,
-    status: row.application.status,
-    created_at: row.application.createdAt,
+    current_step: row.currentStep,
+    status: row.status,
+    created_at: row.createdAt,
   }))
 
   return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
