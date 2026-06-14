@@ -32,6 +32,23 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 - 自分のリソースは `/me`、承認待ちは `/inbox` のサブリソース
 - 状態遷移は資源配下の動詞 POST（`/applications/:id/approve`、`/review-cycles/:cycle_id/open`）
 
+## ローカル起動・動作確認
+
+全アプリ同時起動は `make dev`（`bun install` のうえ `portless`）。個別に動かす手順は以下。
+
+api（Cloudflare Workers / wrangler、ポート 8787）:
+
+- 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
+- `cp api/.dev.vars.example api/.dev.vars` で `JWT_SECRET` を用意する（無いとログインが 500 になる。`.dev.vars` は gitignore 済み）
+- `cd api && bun run dev`（= `wrangler dev`）。`/` は 404 が正常（ルート未定義）。`/employees` は未認証で 401
+- seed の全ユーザーは共通パスワード `password`、メールは `you+e001@example.com` 形式。`E001` が admin
+- 動作確認例: `POST /auth/login` で access_token を取得し、`Authorization: Bearer` で `/me` や `/employees` を叩く
+
+web（Next.js、ポート 3000）:
+
+- `cd web && NEXT_PUBLIC_API_URL=http://localhost:8787 bun run dev`（既定の API ベース URL も同値）
+- 観測した注意点: web 単体で `next dev` すると `api/app`（`exports.default` が `./src/app.ts`）から `hcWithType` を実行時 import する関係で、bundler が api ソースの `@/` エイリアスを解決できず `Module not found: @/interface/...` になる（Turbopack / webpack 双方で再現）。ブラウザ確認が必要なときは `make dev`（portless）経由を優先し、直 `next dev` で同症状が出たらこの点を疑う
+
 ## 変更時の確認
 
 - 変更後は `vp check` を通す。`api` の変更はテスト（`cd api && bun test`）も実行する
