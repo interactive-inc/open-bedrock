@@ -53,8 +53,15 @@ export const GET = factory.createHandlers(
       conditions.push(eq(applications.status, query.status))
     }
 
+    // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
     const rows = await c.var.database
-      .select({ application: applications, templateName: applicationTemplates.name })
+      .select({
+        id: applications.id,
+        status: applications.status,
+        currentStep: applications.currentStep,
+        createdAt: applications.createdAt,
+        templateName: applicationTemplates.name,
+      })
       .from(applications)
       .leftJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
       .where(and(...conditions))
@@ -67,11 +74,11 @@ export const GET = factory.createHandlers(
       .where(and(...conditions))
 
     const responseBody = rows.map((row) => ({
-      id: row.application.id,
+      id: row.id,
       template_name: row.templateName ?? "",
-      status: row.application.status,
-      current_step: row.application.currentStep,
-      created_at: row.application.createdAt,
+      status: row.status,
+      current_step: row.currentStep,
+      created_at: row.createdAt,
     }))
 
     return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
