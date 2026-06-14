@@ -6,8 +6,6 @@ paths:
 
 ## 編集禁止
 
-- `src/components/ui/**` は shadcn CLI が生成・管理するライブラリ領域。直接編集しない
-- スタイル変更やバリアント追加は別ファイル（例: `src/components/ui.custom/`）でラップする
 - 型エラー（未使用 import 等）が出ても手で直さず、shadcn の更新を待つか tsconfig 側で exclude
 - コンポーネント追加は shadcn CLI（MCP / `vp dlx shadcn@latest add ...`）経由のみ
 
