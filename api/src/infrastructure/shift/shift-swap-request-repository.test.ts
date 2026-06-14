@@ -1,4 +1,4 @@
-import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
+import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

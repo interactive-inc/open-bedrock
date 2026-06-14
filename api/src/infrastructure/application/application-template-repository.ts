@@ -1,4 +1,4 @@
-import { ApplicationTemplate } from "@/domain/application/application-template"
+import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

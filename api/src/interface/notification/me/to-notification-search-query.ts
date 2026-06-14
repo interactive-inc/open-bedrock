@@ -1,4 +1,4 @@
-import type { NotificationSearchQuery } from "@/domain/notification/notification-search-query"
+import type { NotificationSearchQuery } from "@/interface/notification/notification-search-query"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

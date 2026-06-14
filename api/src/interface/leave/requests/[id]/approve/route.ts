@@ -1,5 +1,5 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
-import { canDecideLeave } from "@/domain/leave/can-decide-leave"
+import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import {
   ConflictError,
   ForbiddenError,

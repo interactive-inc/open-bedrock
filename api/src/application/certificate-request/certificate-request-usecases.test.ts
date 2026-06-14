@@ -4,7 +4,7 @@ import { CreateCertificateRequest } from "@/application/certificate-request/crea
 import { GetCertificateRequest } from "@/application/certificate-request/get-certificate-request"
 import { ListMyCertificateRequests } from "@/application/certificate-request/list-my-certificate-requests"
 import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
-import { CertificateRequest } from "@/domain/certificate-request/certificate-request"
+import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

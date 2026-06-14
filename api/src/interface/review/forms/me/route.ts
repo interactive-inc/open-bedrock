@@ -1,4 +1,4 @@
-import { toAnswers } from "@/domain/review/review-form-helpers"
+import { toAnswers } from "@/lib/review/review-form-helpers"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,

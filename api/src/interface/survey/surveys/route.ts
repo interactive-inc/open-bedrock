@@ -1,4 +1,4 @@
-import { Survey } from "@/domain/survey/survey"
+import { Survey } from "@/domain/survey/survey.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"

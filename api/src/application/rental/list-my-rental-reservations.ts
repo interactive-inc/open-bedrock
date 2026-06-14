@@ -1,4 +1,4 @@
-import type { RentalReservation } from "@/domain/rental/rental-reservation"
+import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
 import type { Context } from "@/env"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
 

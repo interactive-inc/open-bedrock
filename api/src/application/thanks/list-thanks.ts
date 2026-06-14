@@ -1,4 +1,4 @@
-import type { Thanks } from "@/domain/thanks/thanks"
+import type { Thanks } from "@/domain/thanks/thanks.entity"
 import type { Context } from "@/env"
 import { ThanksRepository } from "@/infrastructure/thanks/thanks-repository"
 

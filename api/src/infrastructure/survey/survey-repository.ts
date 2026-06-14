@@ -1,5 +1,5 @@
-import { Survey } from "@/domain/survey/survey"
-import { SurveyResponse } from "@/domain/survey/survey-response"
+import { Survey } from "@/domain/survey/survey.entity"
+import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { surveyResponses, surveys } from "@/schema"

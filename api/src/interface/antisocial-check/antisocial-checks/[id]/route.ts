@@ -1,7 +1,7 @@
 import { CancelAntisocialCheck } from "@/application/antisocial-check/cancel-antisocial-check"
 import { GetAntisocialCheck } from "@/application/antisocial-check/get-antisocial-check"
 import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-antisocial-check"
-import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
+import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

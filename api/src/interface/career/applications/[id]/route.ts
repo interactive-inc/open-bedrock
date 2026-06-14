@@ -1,7 +1,7 @@
 import { GetCareerApplication } from "@/application/career/get-career-application"
 import { UpdateMyCareerApplication } from "@/application/career/update-my-career-application"
 import { WithdrawCareerApplication } from "@/application/career/withdraw-career-application"
-import type { CareerApplication } from "@/domain/career/career-application"
+import type { CareerApplication } from "@/domain/career/career-application.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

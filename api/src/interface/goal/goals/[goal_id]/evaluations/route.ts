@@ -1,6 +1,6 @@
 import { CreateGoalEvaluation } from "@/application/goal/create-goal-evaluation"
 import { factory } from "@/lib/factory"
-import { goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation"
+import { goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation.entity"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {

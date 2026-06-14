@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
+import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"

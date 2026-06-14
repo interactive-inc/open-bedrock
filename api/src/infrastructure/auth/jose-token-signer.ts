@@ -1,4 +1,4 @@
-import type { TokenPayload } from "@/domain/auth/token-payload"
+import type { TokenPayload } from "@/lib/auth/token-payload"
 import { SignJWT } from "jose"
 
 export class JoseTokenSigner {

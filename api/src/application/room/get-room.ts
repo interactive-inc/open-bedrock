@@ -1,4 +1,4 @@
-import type { Room } from "@/domain/room/room"
+import type { Room } from "@/domain/room/room.entity"
 import type { Context } from "@/env"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 

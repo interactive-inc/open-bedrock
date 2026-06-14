@@ -1,4 +1,4 @@
-import { Application } from "@/domain/application/application"
+import { Application } from "@/domain/application/application.entity"
 import { GetApplication } from "@/application/application/get-application"
 import { ListMyApplications } from "@/application/application/list-my-applications"
 import { UpdateApplication } from "@/application/application/update-application"

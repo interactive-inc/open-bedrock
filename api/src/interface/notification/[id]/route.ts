@@ -1,6 +1,6 @@
 import { DeleteNotification } from "@/application/notification/delete-notification"
 import { GetNotification } from "@/application/notification/get-notification"
-import type { Notification } from "@/domain/notification/notification"
+import type { Notification } from "@/domain/notification/notification.entity"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

@@ -1,7 +1,7 @@
 import { CancelLifeEvent } from "@/application/life-event/cancel-life-event"
 import { GetLifeEvent } from "@/application/life-event/get-life-event"
 import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
-import type { LifeEvent } from "@/domain/life-event/life-event"
+import type { LifeEvent } from "@/domain/life-event/life-event.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

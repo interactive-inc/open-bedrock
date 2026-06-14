@@ -1,4 +1,4 @@
-import { canDecideLeave } from "@/domain/leave/can-decide-leave"
+import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,

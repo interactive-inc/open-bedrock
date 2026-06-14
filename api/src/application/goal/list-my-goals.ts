@@ -1,4 +1,4 @@
-import type { Goal } from "@/domain/goal/goal"
+import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 

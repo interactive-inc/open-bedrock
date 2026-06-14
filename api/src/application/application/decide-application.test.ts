@@ -1,5 +1,5 @@
-import { Application } from "@/domain/application/application"
-import { ApplicationTemplate } from "@/domain/application/application-template"
+import { Application } from "@/domain/application/application.entity"
+import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { DecideApplication } from "@/application/application/decide-application"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"

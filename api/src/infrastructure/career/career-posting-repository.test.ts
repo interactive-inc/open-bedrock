@@ -1,4 +1,4 @@
-import { CareerPosting } from "@/domain/career/career-posting"
+import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

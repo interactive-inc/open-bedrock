@@ -1,5 +1,5 @@
-import type { Asset } from "@/domain/asset/asset"
-import { canManageAssets } from "@/domain/asset/can-manage-assets"
+import type { Asset } from "@/domain/asset/asset.entity"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"

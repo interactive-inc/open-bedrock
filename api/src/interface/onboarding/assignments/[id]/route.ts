@@ -1,8 +1,8 @@
 import { CancelOnboardingAssignment } from "@/application/onboarding/cancel-onboarding-assignment"
 import { GetOnboardingAssignment } from "@/application/onboarding/get-onboarding-assignment"
 import { UpdateOnboardingAssignment } from "@/application/onboarding/update-onboarding-assignment"
-import type { Employee } from "@/domain/employee/employee"
-import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment"
+import type { Employee } from "@/domain/employee/employee.entity"
+import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import {
   ConflictError,
   ForbiddenError,

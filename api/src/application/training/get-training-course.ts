@@ -1,4 +1,4 @@
-import type { TrainingCourse } from "@/domain/training/training-course"
+import type { TrainingCourse } from "@/domain/training/training-course.entity"
 import type { Context } from "@/env"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 

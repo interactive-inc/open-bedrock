@@ -1,6 +1,6 @@
 import { CancelShiftSwapRequest } from "@/application/shift/cancel-shift-swap-request"
 import { GetShiftSwapRequest } from "@/application/shift/get-shift-swap-request"
-import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
+import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

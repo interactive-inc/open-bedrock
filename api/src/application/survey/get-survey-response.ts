@@ -1,4 +1,4 @@
-import type { SurveyResponse } from "@/domain/survey/survey-response"
+import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 

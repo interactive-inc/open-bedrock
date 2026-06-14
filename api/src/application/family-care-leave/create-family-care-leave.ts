@@ -1,4 +1,4 @@
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
+import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 

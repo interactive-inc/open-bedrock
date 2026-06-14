@@ -1,8 +1,8 @@
-import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
-import { ReviewCycle } from "@/domain/review/review-cycle"
-import { ReviewForm } from "@/domain/review/review-form"
-import { toCycleStatus } from "@/domain/review/to-cycle-status"
-import { toReviewResultView } from "@/domain/review/to-review-result-view"
+import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
+import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
+import { ReviewCycle } from "@/domain/review/review-cycle.entity"
+import { ReviewForm } from "@/domain/review/review-form.entity"
+import { toReviewResultView } from "@/lib/review/to-review-result-view"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
@@ -55,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     id: cycleRow.id,
     title: cycleRow.title,
     period: cycleRow.period,
-    status: toCycleStatus(cycleRow.status),
+    status: toReviewCycleStatus(cycleRow.status),
     dueDate: cycleRow.dueDate,
   })
   const view = toReviewResultView(cycle, forms, employeeRow.id)

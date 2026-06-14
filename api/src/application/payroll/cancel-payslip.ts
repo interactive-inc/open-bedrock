@@ -1,5 +1,5 @@
-import type { Forbidden } from "@/domain/payroll/payroll-access"
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
+import type { Forbidden } from "@/lib/payroll/payroll-access"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
 import type { Context } from "@/env"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
 

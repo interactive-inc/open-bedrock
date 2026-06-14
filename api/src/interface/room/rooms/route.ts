@@ -1,6 +1,6 @@
 import { ListRooms } from "@/application/room/list-rooms"
 import { RegisterRoom } from "@/application/room/register-room"
-import { Room } from "@/domain/room/room"
+import { Room } from "@/domain/room/room.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"

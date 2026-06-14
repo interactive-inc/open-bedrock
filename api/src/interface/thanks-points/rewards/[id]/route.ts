@@ -1,7 +1,7 @@
 import { UpdateReward } from "@/application/thanks-points/update-reward"
-import { canManageRewards } from "@/domain/thanks-points/can-manage-rewards"
-import { toPositiveInt } from "@/domain/thanks-points/to-positive-int"
-import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward"
+import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
+import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
+import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
 import {
   BadRequestError,
   ForbiddenError,

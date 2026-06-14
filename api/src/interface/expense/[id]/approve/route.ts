@@ -1,5 +1,5 @@
 import { DecideExpense } from "@/application/expense/decide-expense"
-import { canDecideExpense } from "@/domain/expense/can-decide-expense"
+import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { validateIntParam } from "@/interface/shared/validate-int-param"

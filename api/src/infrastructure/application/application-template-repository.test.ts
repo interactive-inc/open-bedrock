@@ -1,4 +1,4 @@
-import { ApplicationTemplate } from "@/domain/application/application-template"
+import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

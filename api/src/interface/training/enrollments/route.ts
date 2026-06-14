@@ -1,4 +1,4 @@
-import { canManageTraining } from "@/domain/training/can-manage-training"
+import { canManageTraining } from "@/lib/training/can-manage-training"
 import type { Variables } from "@/env"
 import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"

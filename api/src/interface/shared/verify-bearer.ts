@@ -1,4 +1,4 @@
-import { tokenPayloadSchema } from "@/domain/auth/token-payload"
+import { tokenPayloadSchema } from "@/lib/auth/token-payload"
 import type { HonoEnv } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UnauthorizedError } from "@/interface/lib/errors"

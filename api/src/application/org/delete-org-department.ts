@@ -1,4 +1,4 @@
-import { canManageOrg } from "@/domain/org/can-manage-org"
+import { canManageOrg } from "@/lib/org/can-manage-org"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 

@@ -1,5 +1,5 @@
 import { CreateCareerPosting } from "@/application/career/create-career-posting"
-import type { CareerPosting } from "@/domain/career/career-posting"
+import type { CareerPosting } from "@/domain/career/career-posting.entity"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

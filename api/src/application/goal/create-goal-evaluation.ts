@@ -1,6 +1,6 @@
-import type { Forbidden } from "@/domain/goal/goal-access"
-import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation"
-import { resolveEvaluationPermission } from "@/domain/goal/resolve-evaluation-permission"
+import type { Forbidden } from "@/lib/goal/goal-access"
+import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
+import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
 import type { Context } from "@/env"
 import {
   type AlreadyEvaluatedError,

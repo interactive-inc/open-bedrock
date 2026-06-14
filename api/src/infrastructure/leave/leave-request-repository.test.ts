@@ -1,4 +1,4 @@
-import { LeaveRequest } from "@/domain/leave/leave-request"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

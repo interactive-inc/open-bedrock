@@ -1,4 +1,4 @@
-import type { TokenPayload } from "@/domain/auth/token-payload"
+import type { TokenPayload } from "@/lib/auth/token-payload"
 import type { schema } from "@/schema"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 

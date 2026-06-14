@@ -1,4 +1,4 @@
-import { CareerSheet } from "@/domain/career/career-sheet"
+import { CareerSheet } from "@/domain/career/career-sheet.entity"
 import type { Context } from "@/env"
 import { CareerSheetRepository } from "@/infrastructure/career/career-sheet-repository"
 

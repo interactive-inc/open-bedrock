@@ -1,4 +1,4 @@
-import type { Expense } from "@/domain/expense/expense"
+import type { Expense } from "@/domain/expense/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 

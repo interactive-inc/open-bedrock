@@ -1,4 +1,4 @@
-import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
+import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

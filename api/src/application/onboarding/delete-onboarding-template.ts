@@ -1,4 +1,4 @@
-import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
+import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"

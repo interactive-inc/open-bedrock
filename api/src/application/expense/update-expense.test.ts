@@ -1,4 +1,4 @@
-import { Expense } from "@/domain/expense/expense"
+import { Expense } from "@/domain/expense/expense.entity"
 import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"

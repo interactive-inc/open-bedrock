@@ -1,7 +1,7 @@
 import { CancelCertificateRequest } from "@/application/certificate-request/cancel-certificate-request"
 import { GetCertificateRequest } from "@/application/certificate-request/get-certificate-request"
 import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
-import type { CertificateRequest } from "@/domain/certificate-request/certificate-request"
+import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

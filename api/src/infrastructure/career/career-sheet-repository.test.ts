@@ -1,4 +1,4 @@
-import { CareerSheet } from "@/domain/career/career-sheet"
+import { CareerSheet } from "@/domain/career/career-sheet.entity"
 import { CareerSheetRepository } from "@/infrastructure/career/career-sheet-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

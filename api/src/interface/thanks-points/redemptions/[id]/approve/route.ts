@@ -1,6 +1,6 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
-import { canDecideRedemption } from "@/domain/thanks-points/can-decide-redemption"
-import { toPositiveInt } from "@/domain/thanks-points/to-positive-int"
+import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
+import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import {
   BadRequestError,
   ConflictError,

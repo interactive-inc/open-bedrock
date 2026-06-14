@@ -1,5 +1,4 @@
-import type { AttendanceRecord } from "@/domain/attendance/attendance-record"
-import { toWorkMinutes } from "@/domain/attendance/to-work-minutes"
+import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
 
@@ -49,7 +48,7 @@ export class ClockOut {
       return { reason: "clock_in_at_missing" }
     }
 
-    const workMinutes = toWorkMinutes({
+    const workMinutes = AttendanceRecord.toWorkMinutes({
       clockInAt: open.clockInAt,
       clockOutAt: command.now,
     })

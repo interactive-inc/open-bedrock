@@ -1,4 +1,4 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

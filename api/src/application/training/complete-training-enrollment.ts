@@ -1,5 +1,5 @@
-import { canCompleteEnrollment } from "@/domain/training/can-complete-enrollment"
-import type { TrainingEnrollment } from "@/domain/training/training-enrollment"
+import { canCompleteEnrollment } from "@/lib/training/can-complete-enrollment"
+import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 

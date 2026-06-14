@@ -1,7 +1,7 @@
 import { CancelResignation } from "@/application/resignation/cancel-resignation"
 import { GetResignation } from "@/application/resignation/get-resignation"
 import { UpdateResignation } from "@/application/resignation/update-resignation"
-import { Resignation } from "@/domain/resignation/resignation"
+import { Resignation } from "@/domain/resignation/resignation.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

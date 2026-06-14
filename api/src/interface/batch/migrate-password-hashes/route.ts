@@ -1,5 +1,5 @@
 import { MigrateLegacyHashes } from "@/application/batch/migrate-legacy-hashes"
-import { canManageBatch } from "@/domain/batch/can-manage-batch"
+import { canManageBatch } from "@/lib/batch/can-manage-batch"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"

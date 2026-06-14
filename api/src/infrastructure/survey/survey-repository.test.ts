@@ -1,5 +1,5 @@
-import { Survey } from "@/domain/survey/survey"
-import { SurveyResponse } from "@/domain/survey/survey-response"
+import { Survey } from "@/domain/survey/survey.entity"
+import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

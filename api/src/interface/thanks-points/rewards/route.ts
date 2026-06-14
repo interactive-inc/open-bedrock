@@ -1,8 +1,8 @@
 import { CreateReward } from "@/application/thanks-points/create-reward"
 import { ListRewards } from "@/application/thanks-points/list-rewards"
-import { canManageRewards } from "@/domain/thanks-points/can-manage-rewards"
-import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward"
-import type { ThanksReward } from "@/domain/thanks-points/thanks-reward"
+import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
+import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
+import type { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
 import {
   BadRequestError,
   ForbiddenError,

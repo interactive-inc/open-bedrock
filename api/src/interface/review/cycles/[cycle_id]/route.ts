@@ -1,6 +1,6 @@
 import { DeleteReviewCycle } from "@/application/review/delete-review-cycle"
 import { UpdateReviewCycle } from "@/application/review/update-review-cycle"
-import { ReviewCycle } from "@/domain/review/review-cycle"
+import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

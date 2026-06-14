@@ -1,6 +1,6 @@
 import { CreateSurvey } from "@/application/survey/create-survey"
-import { Survey } from "@/domain/survey/survey"
-import { surveyQuestionSchema } from "@/domain/survey/survey-question"
+import { Survey } from "@/domain/survey/survey.entity"
+import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"

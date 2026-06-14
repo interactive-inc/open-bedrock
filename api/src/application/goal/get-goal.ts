@@ -1,6 +1,6 @@
-import type { Goal } from "@/domain/goal/goal"
+import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
-import { canViewOthers } from "@/domain/goal/goal-access"
+import { canViewOthers } from "@/lib/goal/goal-access"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 
 export type Command = {

@@ -1,6 +1,6 @@
 import { CreateOrgDepartment } from "@/application/org/create-org-department"
 import { ListOrgDepartments } from "@/application/org/list-org-departments"
-import type { OrgDepartment } from "@/domain/org/org-department"
+import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"

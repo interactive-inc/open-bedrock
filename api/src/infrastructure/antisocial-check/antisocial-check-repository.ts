@@ -1,4 +1,4 @@
-import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
+import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
 import { antisocialChecks } from "@/schema"
 import { and, desc, eq } from "drizzle-orm"

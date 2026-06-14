@@ -1,5 +1,5 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
-import { Thanks } from "@/domain/thanks/thanks"
+import { Thanks } from "@/domain/thanks/thanks.entity"
 import type { Context } from "@/env"
 import {
   BadRequestError,

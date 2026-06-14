@@ -1,4 +1,4 @@
-import { canManageSurveys } from "@/domain/survey/can-manage-surveys"
+import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 

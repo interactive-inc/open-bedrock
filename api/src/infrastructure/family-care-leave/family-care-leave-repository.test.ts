@@ -1,4 +1,4 @@
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
+import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { familyCareLeaves } from "@/schema"

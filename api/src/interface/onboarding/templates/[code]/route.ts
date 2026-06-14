@@ -1,7 +1,7 @@
 import { DeleteOnboardingTemplate } from "@/application/onboarding/delete-onboarding-template"
 import { GetOnboardingTemplate } from "@/application/onboarding/get-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/application/onboarding/update-onboarding-template"
-import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
+import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

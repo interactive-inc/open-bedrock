@@ -1,4 +1,4 @@
-import { Resignation } from "@/domain/resignation/resignation"
+import { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
 

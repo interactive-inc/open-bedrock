@@ -1,4 +1,4 @@
-import { canManageRooms } from "@/domain/room/can-manage-rooms"
+import { canManageRooms } from "@/lib/room/can-manage-rooms"
 import type { Context } from "@/env"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 

@@ -1,4 +1,4 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
+import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"

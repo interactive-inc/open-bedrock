@@ -1,4 +1,4 @@
-import { canManageTraining } from "@/domain/training/can-manage-training"
+import { canManageTraining } from "@/lib/training/can-manage-training"
 import type { Context } from "@/env"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 

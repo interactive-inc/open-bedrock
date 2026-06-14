@@ -1,4 +1,4 @@
-import { canViewEmployeeOnboarding } from "@/domain/onboarding/can-view-employee-onboarding"
+import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

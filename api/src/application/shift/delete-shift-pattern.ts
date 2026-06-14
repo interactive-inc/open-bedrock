@@ -1,4 +1,4 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
 import type { Context } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 

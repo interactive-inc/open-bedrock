@@ -1,4 +1,4 @@
-import { resolveAttendanceSearchQuery } from "@/domain/attendance/resolve-attendance-search-query"
+import { resolveAttendanceSearchQuery } from "@/interface/attendance/resolve-attendance-search-query"
 import { attendanceListQuerySchema } from "@/interface/attendance/attendance-list-query"
 import {
   DEFAULT_LIST_LIMIT,

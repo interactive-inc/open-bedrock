@@ -1,4 +1,4 @@
-import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
+import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"

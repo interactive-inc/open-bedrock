@@ -1,4 +1,4 @@
-import { AttendanceRecord } from "@/domain/attendance/attendance-record"
+import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

@@ -1,4 +1,4 @@
-import { canManageCareerPostings } from "@/domain/career/can-manage-career-postings"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import type { Context } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 

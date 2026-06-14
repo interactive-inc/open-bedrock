@@ -1,7 +1,7 @@
 import { CancelRentalReservation } from "@/application/rental/cancel-rental-reservation"
 import { GetRentalReservation } from "@/application/rental/get-rental-reservation"
 import { UpdateRentalReservation } from "@/application/rental/update-rental-reservation"
-import type { RentalReservation } from "@/domain/rental/rental-reservation"
+import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

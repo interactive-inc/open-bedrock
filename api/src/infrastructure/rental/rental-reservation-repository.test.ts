@@ -1,4 +1,4 @@
-import { RentalReservation } from "@/domain/rental/rental-reservation"
+import { RentalReservation } from "@/domain/rental/rental-reservation.entity"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

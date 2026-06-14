@@ -1,4 +1,4 @@
-import { OneOnOne } from "@/domain/oneonone/one-on-one"
+import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

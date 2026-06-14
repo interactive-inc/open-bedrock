@@ -4,7 +4,7 @@ import { CreateFamilyCareLeave } from "@/application/family-care-leave/create-fa
 import { GetFamilyCareLeave } from "@/application/family-care-leave/get-family-care-leave"
 import { ListMyFamilyCareLeaves } from "@/application/family-care-leave/list-my-family-care-leaves"
 import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-family-care-leave"
-import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
+import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

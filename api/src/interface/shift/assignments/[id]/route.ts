@@ -1,7 +1,7 @@
 import { DeleteShiftAssignment } from "@/application/shift/delete-shift-assignment"
 import { GetShiftAssignment } from "@/application/shift/get-shift-assignment"
 import { UpdateShiftAssignment } from "@/application/shift/update-shift-assignment"
-import type { ShiftAssignment } from "@/domain/shift/shift-assignment"
+import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

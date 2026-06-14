@@ -1,5 +1,5 @@
-import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
-import { ThanksReward } from "@/domain/thanks-points/thanks-reward"
+import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
 import { CreateReward } from "@/application/thanks-points/create-reward"
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
 import { ListMyRedemptions } from "@/application/thanks-points/list-my-redemptions"

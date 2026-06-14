@@ -1,4 +1,4 @@
-import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
+import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 

@@ -1,7 +1,7 @@
 import { CancelFamilyCareLeave } from "@/application/family-care-leave/cancel-family-care-leave"
 import { GetFamilyCareLeave } from "@/application/family-care-leave/get-family-care-leave"
 import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-family-care-leave"
-import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave"
+import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

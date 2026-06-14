@@ -1,5 +1,5 @@
-import type { Employee } from "@/domain/employee/employee"
-import { canManageEmployees } from "@/domain/employee/can-manage-employees"
+import type { Employee } from "@/domain/employee/employee.entity"
+import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

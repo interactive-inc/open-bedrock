@@ -1,4 +1,4 @@
-import { ShiftPattern } from "@/domain/shift/shift-pattern"
+import { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

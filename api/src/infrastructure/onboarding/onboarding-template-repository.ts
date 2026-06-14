@@ -1,5 +1,5 @@
-import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
-import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task"
+import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
+import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

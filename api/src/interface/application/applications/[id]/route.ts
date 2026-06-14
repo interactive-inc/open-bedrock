@@ -1,6 +1,6 @@
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
-import { canDecideApplication } from "@/domain/application/can-decide-application"
+import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"

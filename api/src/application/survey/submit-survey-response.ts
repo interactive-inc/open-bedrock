@@ -1,5 +1,5 @@
 import type { SurveySubmissionView } from "@/application/survey/survey-submission-view"
-import { SurveyResponse } from "@/domain/survey/survey-response"
+import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import {
   type AlreadySubmittedError,

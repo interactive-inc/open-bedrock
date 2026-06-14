@@ -1,6 +1,6 @@
 import { ArchiveTrainingCourse } from "@/application/training/archive-training-course"
 import { UpdateTrainingCourse } from "@/application/training/update-training-course"
-import type { TrainingCourse } from "@/domain/training/training-course"
+import type { TrainingCourse } from "@/domain/training/training-course.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

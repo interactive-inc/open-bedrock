@@ -1,5 +1,5 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
-import { Thanks } from "@/domain/thanks/thanks"
+import { Thanks } from "@/domain/thanks/thanks.entity"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

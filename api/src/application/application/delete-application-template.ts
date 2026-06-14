@@ -1,4 +1,4 @@
-import { canManageApplicationTemplates } from "@/domain/application/can-manage-application-templates"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import type { Context } from "@/env"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
