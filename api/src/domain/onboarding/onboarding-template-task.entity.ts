@@ -10,7 +10,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// テンプレートに含まれるタスク定義（並び順・担当ロール）。
+/** テンプレートに含まれるタスク定義（並び順・担当ロール）。 */
 export class OnboardingTemplateTask implements Props {
   readonly code!: Props["code"]
 

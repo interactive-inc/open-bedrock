@@ -14,10 +14,12 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 交換申請の1件。集約ルート。状態は申請(pending)→確定(fulfilled)/却下(rejected)。
-// 承認＝確定の状態遷移は二重消費を原子的に防ぐため repository の条件付き UPDATE で行う。
+/**
+ * 交換申請の1件。集約ルート。状態は申請(pending)→確定(fulfilled)/却下(rejected)。
+ * 承認＝確定の状態遷移は二重消費を原子的に防ぐため repository の条件付き UPDATE で行う。
+ */
 export class ThanksRedemption implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -42,7 +44,7 @@ export class ThanksRedemption implements Props {
     Object.freeze(this)
   }
 
-  // 新規の交換申請を組み立てる。初期状態は pending。
+  /** 新規の交換申請を組み立てる。初期状態は pending。 */
   static create(props: {
     employeeId: number
     rewardId: number

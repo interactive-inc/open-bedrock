@@ -11,8 +11,10 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 従業員ごとの登録スキル（レベル・経験年数・補足）。集約ルート。
-// 主キーは employeeId×skillCode の業務キー。
+/**
+ * 従業員ごとの登録スキル（レベル・経験年数・補足）。集約ルート。
+ * 主キーは employeeId×skillCode の業務キー。
+ */
 export class EmployeeSkill implements Props {
   readonly employeeId!: Props["employeeId"]
 
@@ -32,7 +34,7 @@ export class EmployeeSkill implements Props {
     Object.freeze(this)
   }
 
-  // 登録・更新するスキルを組み立てる。業務キーを含む全フィールドを受け取る。
+  /** 登録・更新するスキルを組み立てる。業務キーを含む全フィールドを受け取る。 */
   static create(props: {
     employeeId: number
     skillCode: string
@@ -49,7 +51,7 @@ export class EmployeeSkill implements Props {
     })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: EmployeeSkillRow): EmployeeSkill {
     return new EmployeeSkill({
       employeeId: row.employeeId,

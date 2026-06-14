@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 社内公募（部署・必要スキル・公開状態）。集約ルート。
+/** 社内公募（部署・必要スキル・公開状態）。集約ルート。 */
 export class CareerPosting implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly title!: Props["title"]
@@ -35,7 +35,7 @@ export class CareerPosting implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する社内公募を組み立てる。id は未採番、status は引数で受ける。
+  /** 新規作成する社内公募を組み立てる。id は未採番、status は引数で受ける。 */
   static create(props: {
     title: string
     deptId: number | null
@@ -53,7 +53,7 @@ export class CareerPosting implements Props {
     })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: CareerPostingRow): CareerPosting {
     return new CareerPosting({
       id: row.id,
@@ -65,7 +65,7 @@ export class CareerPosting implements Props {
     })
   }
 
-  // 内容（タイトル・部署・必要スキル・状態）を変更した新しい公募を返す。id は保つ。
+  /** 内容（タイトル・部署・必要スキル・状態）を変更した新しい公募を返す。id は保つ。 */
   withDetails(props: {
     title: string
     deptId: number | null

@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 申請（テンプレートに紐づく申請者の提出）。集約ルート。
+/** 申請（テンプレートに紐づく申請者の提出）。集約ルート。 */
 export class Application implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly templateId!: Props["templateId"]
@@ -38,7 +38,7 @@ export class Application implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する申請を組み立てる。id は未採番、初期状態は pending。
+  /** 新規作成する申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
     templateId: number
     applicantId: number

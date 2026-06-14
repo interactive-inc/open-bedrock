@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// シフト割当（社員ごとの日次シフト。publishedAt:null は下書き）。集約ルート。
+/** シフト割当（社員ごとの日次シフト。publishedAt:null は下書き）。集約ルート。 */
 export class ShiftAssignment implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -39,7 +39,7 @@ export class ShiftAssignment implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する割当を組み立てる。id は未採番、未公開。
+  /** 新規作成する割当を組み立てる。id は未採番、未公開。 */
   static create(props: {
     employeeId: number
     patternId: number | null
@@ -71,7 +71,7 @@ export class ShiftAssignment implements Props {
     return new ShiftAssignment({ ...this.props, publishedAt })
   }
 
-  // パターン・日付・備考を変更した新しい割当を返す。
+  /** パターン・日付・備考を変更した新しい割当を返す。 */
   withDetails(props: {
     patternId: number | null
     date: string

@@ -7,8 +7,10 @@ export type Props = {
   memberCountsByCode: ReadonlyMap<string, number>
 }
 
-// 親子関係と order から部署ツリーを再帰的に組む純粋関数。
-// visited ガードにより、既存データに循環がある場合でも無限再帰しない。
+/**
+ * 親子関係と order から部署ツリーを再帰的に組む純粋関数。
+ * visited ガードにより、既存データに循環がある場合でも無限再帰しない。
+ */
 export function buildDepartmentTree(props: Props): ReadonlyArray<DepartmentTreeNode> {
   const departmentsByParent = new Map<string, Array<OrgDepartment>>()
 

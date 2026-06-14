@@ -38,8 +38,10 @@ export async function verifyPassword(
   return constantTimeEqualBytes(computed, parsed.hash)
 }
 
-// ラップ済み旧形式の検証: 平文 → 旧形式 hex → PBKDF2 照合。
-// hash-of-hash なので定数時間比較はバイト列レベルで行う。
+/**
+ * ラップ済み旧形式の検証: 平文 → 旧形式 hex → PBKDF2 照合。
+ * hash-of-hash なので定数時間比較はバイト列レベルで行う。
+ */
 async function verifyWrappedLegacy(plainPassword: string, storedHash: string): Promise<boolean> {
   const parsed = parseWrappedLegacyHash(storedHash)
 

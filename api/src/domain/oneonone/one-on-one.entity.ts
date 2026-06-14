@@ -15,7 +15,7 @@ type Props = z.infer<typeof zProps>
 
 const zNewProps = zProps.omit({ id: true })
 
-// 1on1 1件の記録。集約ルート。
+/** 1on1 1件の記録。集約ルート。 */
 export class OneOnOne implements Props {
   readonly id!: Props["id"]
 
@@ -39,7 +39,7 @@ export class OneOnOne implements Props {
     Object.freeze(this)
   }
 
-  // 新規 1on1 を組み立てる。id は crypto.randomUUID() で採番する。
+  /** 新規 1on1 を組み立てる。id は crypto.randomUUID() で採番する。 */
   static create(props: z.infer<typeof zNewProps>): OneOnOne | { reason: "self_reference" } {
     if (props.memberId === props.managerId) {
       return { reason: "self_reference" }
@@ -56,7 +56,7 @@ export class OneOnOne implements Props {
     })
   }
 
-  // DB の行から復元する。
+  /** DB の行から復元する。 */
   static fromRow(row: OneOnOneRow): OneOnOne {
     return new OneOnOne({
       id: row.id,
@@ -69,7 +69,7 @@ export class OneOnOne implements Props {
     })
   }
 
-  // 記録内容（議題・上長メモ・次のアクション）を差し替えた新しい記録を返す。
+  /** 記録内容（議題・上長メモ・次のアクション）を差し替えた新しい記録を返す。 */
   withRecord(props: {
     topics: string | null
     managerNote: string | null

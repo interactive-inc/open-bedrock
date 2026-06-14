@@ -15,9 +15,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 評価サイクル（多面評価の実施単位・期間・状態）。集約ルート。
+/** 評価サイクル（多面評価の実施単位・期間・状態）。集約ルート。 */
 export class ReviewCycle implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly title!: Props["title"]
@@ -36,7 +36,7 @@ export class ReviewCycle implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する評価サイクルを組み立てる。id は未採番、初期状態は draft。
+  /** 新規作成する評価サイクルを組み立てる。id は未採番、初期状態は draft。 */
   static create(props: { title: string; period: string; dueDate: string | null }): ReviewCycle {
     return new ReviewCycle({
       id: null,

@@ -13,7 +13,7 @@ export type Props = {
   records: ReadonlyArray<AttendanceRecord>
 }
 
-// 退勤済み(closed)の記録だけを合算して月次の勤怠集計を組む純粋関数。
+/** 退勤済み(closed)の記録だけを合算して月次の勤怠集計を組む純粋関数。 */
 export function summarizeAttendance(props: Props): AttendanceSummary {
   let workDays = 0
 

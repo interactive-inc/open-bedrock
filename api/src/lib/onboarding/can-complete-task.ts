@@ -6,7 +6,7 @@ export type Props = {
   viewerRole: string
 }
 
-// タスク完了の権限判定。本人か特権ロールのみ許可する純粋関数。
+/** タスク完了の権限判定。本人か特権ロールのみ許可する純粋関数。 */
 export function canCompleteTask(props: Props): boolean {
   const isOwner = props.taskEmployeeId === props.viewerEmployeeId
 

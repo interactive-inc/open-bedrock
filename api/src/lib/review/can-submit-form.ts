@@ -3,7 +3,7 @@ export type Props = {
   viewerEmployeeId: number
 }
 
-// フォームの提出が、割り当てられた本人によるものかを判定する純粋関数。
+/** フォームの提出が、割り当てられた本人によるものかを判定する純粋関数。 */
 export function canSubmitForm(props: Props): boolean {
   return props.reviewerEmployeeId === props.viewerEmployeeId
 }

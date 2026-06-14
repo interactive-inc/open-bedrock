@@ -9,7 +9,7 @@ export type Props = {
   viewerRole: string
 }
 
-// self は本人のみ、manager/final は特権ロールのみ許可する。
+/** self は本人のみ、manager/final は特権ロールのみ許可する。 */
 export function resolveEvaluationPermission(props: Props): null | Forbidden {
   if (props.kind === "self") {
     const isOwner = props.goalEmployeeId === props.viewerEmployeeId

@@ -10,7 +10,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 社員ごとのキャリアシート（目標・強み）。employeeId が主キーの集約ルート。
+/** 社員ごとのキャリアシート（目標・強み）。employeeId が主キーの集約ルート。 */
 export class CareerSheet implements Props {
   readonly employeeId!: Props["employeeId"]
 
@@ -28,7 +28,7 @@ export class CareerSheet implements Props {
     Object.freeze(this)
   }
 
-  // 本人のキャリアシートを組み立てる。employeeId が主キーのためすべて指定する。
+  /** 本人のキャリアシートを組み立てる。employeeId が主キーのためすべて指定する。 */
   static create(props: {
     employeeId: number
     goalsText: string | null
@@ -43,7 +43,7 @@ export class CareerSheet implements Props {
     })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: CareerSheetRow): CareerSheet {
     return new CareerSheet({
       employeeId: row.employeeId,

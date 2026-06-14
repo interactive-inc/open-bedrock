@@ -27,7 +27,7 @@ export class Room implements Props {
     Object.freeze(this)
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: RoomRow): Room {
     return new Room({
       id: row.id,
@@ -37,7 +37,7 @@ export class Room implements Props {
     })
   }
 
-  // 名称・定員・所在地を差し替える。id は保つ。
+  /** 名称・定員・所在地を差し替える。id は保つ。 */
   withDetails(details: {
     name: Props["name"]
     capacity: Props["capacity"]

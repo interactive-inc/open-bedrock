@@ -64,7 +64,7 @@ export class Employee implements Props {
     return new Employee({ ...this.props, status })
   }
 
-  // 氏名・メール・ロール・部署・役職・在籍状況を差し替えた新しい従業員を返す。
+  /** 氏名・メール・ロール・部署・役職・在籍状況を差し替えた新しい従業員を返す。 */
   withProfile(profile: {
     name: Props["name"]
     email: Props["email"]

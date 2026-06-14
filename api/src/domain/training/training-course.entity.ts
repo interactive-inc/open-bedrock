@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 研修コース（コード・タイトル・カテゴリ・必須フラグ・状態）。集約ルート。
+/** 研修コース（コード・タイトル・カテゴリ・必須フラグ・状態）。集約ルート。 */
 export class TrainingCourse implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly code!: Props["code"]
@@ -41,7 +41,7 @@ export class TrainingCourse implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する研修コースを組み立てる。id は未採番、初期状態は active。
+  /** 新規作成する研修コースを組み立てる。id は未採番、初期状態は active。 */
   static create(props: {
     code: string
     title: string
@@ -75,7 +75,7 @@ export class TrainingCourse implements Props {
     })
   }
 
-  // 内容（タイトル・カテゴリ・説明・所要時間・必須フラグ）を変更した新しいコースを返す。code と status は保つ。
+  /** 内容（タイトル・カテゴリ・説明・所要時間・必須フラグ）を変更した新しいコースを返す。code と status は保つ。 */
   withDetails(props: {
     title: string
     category: string

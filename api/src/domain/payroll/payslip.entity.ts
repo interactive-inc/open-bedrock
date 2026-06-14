@@ -15,9 +15,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 給与明細（社員ごと・期間ごとの支給額と差引支給額・発行状態）。集約ルート。
+/** 給与明細（社員ごと・期間ごとの支給額と差引支給額・発行状態）。集約ルート。 */
 export class Payslip implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -44,7 +44,7 @@ export class Payslip implements Props {
     Object.freeze(this)
   }
 
-  // 発行済みの給与明細を組み立てる。id は未採番、状態は issued。
+  /** 発行済みの給与明細を組み立てる。id は未採番、状態は issued。 */
   static create(props: {
     employeeId: number
     period: string
@@ -81,12 +81,12 @@ export class Payslip implements Props {
     })
   }
 
-  // 基本給に手当を足し控除を引いた差引支給額を求める。
+  /** 基本給に手当を足し控除を引いた差引支給額を求める。 */
   static toNetPay(props: { baseSalary: number; allowances: number; deductions: number }): number {
     return props.baseSalary + props.allowances - props.deductions
   }
 
-  // 期間と金額を訂正した新しい給与明細を返す。金額は渡された値をそのまま記録する。
+  /** 期間と金額を訂正した新しい給与明細を返す。金額は渡された値をそのまま記録する。 */
   withCorrected(props: {
     period: string
     baseSalary: number

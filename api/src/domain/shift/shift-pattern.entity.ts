@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// シフトパターン（勤務時間帯と休憩の雛形）。集約ルート。
+/** シフトパターン（勤務時間帯と休憩の雛形）。集約ルート。 */
 export class ShiftPattern implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly code!: Props["code"]
@@ -35,7 +35,7 @@ export class ShiftPattern implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成するシフトパターンを組み立てる。id は未採番。
+  /** 新規作成するシフトパターンを組み立てる。id は未採番。 */
   static create(props: {
     code: string
     name: string
@@ -64,7 +64,7 @@ export class ShiftPattern implements Props {
     })
   }
 
-  // コード・名前・勤務時間・休憩を変更した新しいパターンを返す。
+  /** コード・名前・勤務時間・休憩を変更した新しいパターンを返す。 */
   withDetails(props: {
     code: string
     name: string

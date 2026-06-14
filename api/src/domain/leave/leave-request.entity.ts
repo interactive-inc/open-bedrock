@@ -19,9 +19,9 @@ type Props = z.infer<typeof zProps>
 
 const millisecondsPerDay = 24 * 60 * 60 * 1000
 
-// 休暇申請（社員ごとの期間・日数・状態・承認）。集約ルート。
+/** 休暇申請（社員ごとの期間・日数・状態・承認）。集約ルート。 */
 export class LeaveRequest implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -52,7 +52,7 @@ export class LeaveRequest implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する休暇申請を組み立てる。id は未採番、初期状態は pending。
+  /** 新規作成する休暇申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
     employeeId: number
     leaveType: "annual" | "special"
@@ -77,7 +77,7 @@ export class LeaveRequest implements Props {
     })
   }
 
-  // 開始日〜終了日（両端含む）の暦日数を求める。不正な日付・逆転は Error。
+  /** 開始日〜終了日（両端含む）の暦日数を求める。不正な日付・逆転は Error。 */
   static daysBetween(startDate: string, endDate: string): number | Error {
     const start = Date.parse(`${startDate}T00:00:00Z`)
 
@@ -123,12 +123,12 @@ export class LeaveRequest implements Props {
     })
   }
 
-  // pending の申請のみ変更・取り下げできる。決定済みは不可。
+  /** pending の申請のみ変更・取り下げできる。決定済みは不可。 */
   get isModifiable(): boolean {
     return this.status === "pending"
   }
 
-  // 申請内容（種別・期間・日数・理由）を差し替えた新しい申請を返す。
+  /** 申請内容（種別・期間・日数・理由）を差し替えた新しい申請を返す。 */
   withRevised(props: {
     leaveType: "annual" | "special"
     startDate: string

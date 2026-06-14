@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 年末調整の申告受付（対象年・備考の提出状況の記録のみ。税額の計算や判定は持たない）。集約ルート。
+/** 年末調整の申告受付（対象年・備考の提出状況の記録のみ。税額の計算や判定は持たない）。集約ルート。 */
 export class YearEndAdjustment implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -35,7 +35,7 @@ export class YearEndAdjustment implements Props {
     Object.freeze(this)
   }
 
-  // 新規の年末調整申告を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。
+  /** 新規の年末調整申告を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。 */
   static create(props: {
     employeeId: number
     targetYear: number
@@ -67,7 +67,7 @@ export class YearEndAdjustment implements Props {
     return this.status === "submitted"
   }
 
-  // 申告内容を変更した新しい年末調整申告を返す。
+  /** 申告内容を変更した新しい年末調整申告を返す。 */
   withDetails(props: { targetYear: number; note: string | null }): YearEndAdjustment {
     return new YearEndAdjustment({
       ...this.props,

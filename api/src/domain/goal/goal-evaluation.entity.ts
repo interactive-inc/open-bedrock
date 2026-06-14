@@ -17,9 +17,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 目標への評価（自己・上長・最終）。集約ルート。
+/** 目標への評価（自己・上長・最終）。集約ルート。 */
 export class GoalEvaluation implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly goalId!: Props["goalId"]
@@ -42,7 +42,7 @@ export class GoalEvaluation implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する評価を組み立てる。id は未採番。
+  /** 新規作成する評価を組み立てる。id は未採番。 */
   static create(props: {
     goalId: number
     evaluatorId: number

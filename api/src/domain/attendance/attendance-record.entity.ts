@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 勤怠記録の集約ルート。出勤(open)から退勤(closed)で労働時間が確定する。
+/** 勤怠記録の集約ルート。出勤(open)から退勤(closed)で労働時間が確定する。 */
 export class AttendanceRecord implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -41,7 +41,7 @@ export class AttendanceRecord implements Props {
     Object.freeze(this)
   }
 
-  // 出勤打刻で新規の勤怠記録を組み立てる。workDate は打刻時刻の日付部分、初期状態は open。
+  /** 出勤打刻で新規の勤怠記録を組み立てる。workDate は打刻時刻の日付部分、初期状態は open。 */
   static create(props: {
     employeeId: number
     clockInAt: string
@@ -59,7 +59,7 @@ export class AttendanceRecord implements Props {
     })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: AttendanceRecordRow): AttendanceRecord {
     return new AttendanceRecord({
       id: row.id,
@@ -73,7 +73,7 @@ export class AttendanceRecord implements Props {
     })
   }
 
-  // 出勤・退勤打刻から労働時間（分）を求める。不正な打刻・逆転は Error。
+  /** 出勤・退勤打刻から労働時間（分）を求める。不正な打刻・逆転は Error。 */
   static toWorkMinutes(props: { clockInAt: string; clockOutAt: string }): number | Error {
     const startMs = Date.parse(props.clockInAt)
 
@@ -96,7 +96,7 @@ export class AttendanceRecord implements Props {
     return diffMinutes
   }
 
-  // 退勤打刻で労働時間を確定し閉じる。note が渡されれば上書きする。
+  /** 退勤打刻で労働時間を確定し閉じる。note が渡されれば上書きする。 */
   withClosed(props: { clockOutAt: string; workMinutes: number; note?: string | null }) {
     return new AttendanceRecord({
       ...this.props,

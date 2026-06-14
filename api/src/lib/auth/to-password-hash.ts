@@ -39,12 +39,12 @@ export async function derivePbkdf2(
   return new Uint8Array(bits)
 }
 
-// 内部用: PBKDF2 結果を保存フォーマット文字列に変換する。
+/** 内部用: PBKDF2 結果を保存フォーマット文字列に変換する。 */
 export function formatPbkdf2(iterations: number, salt: Uint8Array, hash: Uint8Array): string {
   return `pbkdf2:${iterations}:${bytesToBase64(salt)}:${bytesToBase64(hash)}`
 }
 
-// Uint8Array を base64 文字列に変換する（Workers / Bun の標準 btoa 経由）。
+/** Uint8Array を base64 文字列に変換する（Workers / Bun の標準 btoa 経由）。 */
 export function bytesToBase64(bytes: Uint8Array): string {
   let binary = ""
 
@@ -55,7 +55,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary)
 }
 
-// base64 文字列を Uint8Array に戻す。
+/** base64 文字列を Uint8Array に戻す。 */
 export function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
   const binary = atob(value)
 

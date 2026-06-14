@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// レンタル予約（物の貸与を期間と用途で申請・記録する）。集約ルート。
+/** レンタル予約（物の貸与を期間と用途で申請・記録する）。集約ルート。 */
 export class RentalReservation implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly requesterId!: Props["requesterId"]
@@ -41,7 +41,7 @@ export class RentalReservation implements Props {
     Object.freeze(this)
   }
 
-  // 新規予約を組み立てる。id は crypto.randomUUID() で採番し、初期状態は requested。
+  /** 新規予約を組み立てる。id は crypto.randomUUID() で採番し、初期状態は requested。 */
   static create(props: {
     requesterId: number
     itemName: string
@@ -79,12 +79,12 @@ export class RentalReservation implements Props {
     })
   }
 
-  // 用途を変更した新しい予約を返す。
+  /** 用途を変更した新しい予約を返す。 */
   withPurpose(purpose: string | null) {
     return new RentalReservation({ ...this.props, purpose })
   }
 
-  // 品名と期間を変更した新しい予約を返す。
+  /** 品名と期間を変更した新しい予約を返す。 */
   withDetails(props: {
     itemName: string
     startDate: string

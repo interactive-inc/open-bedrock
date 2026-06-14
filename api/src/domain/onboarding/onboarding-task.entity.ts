@@ -13,12 +13,12 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 割り当てから展開された個別タスク。OnboardingAssignment 集約の子エンティティ。
+/** 割り当てから展開された個別タスク。OnboardingAssignment 集約の子エンティティ。 */
 export class OnboardingTask implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
-  // 割り当てが未採番のあいだは null。
+  /** 割り当てが未採番のあいだは null。 */
   readonly assignmentId!: Props["assignmentId"]
 
   readonly templateTaskCode!: Props["templateTaskCode"]
@@ -39,7 +39,7 @@ export class OnboardingTask implements Props {
     Object.freeze(this)
   }
 
-  // 新規タスクを組み立てる。id・assignmentId は未採番、状態は pending。
+  /** 新規タスクを組み立てる。id・assignmentId は未採番、状態は pending。 */
   static create(props: { templateTaskCode: string; title: string; order: number }): OnboardingTask {
     return new OnboardingTask({
       id: null,
@@ -68,7 +68,7 @@ export class OnboardingTask implements Props {
     return new OnboardingTask({ ...this.props, status: "done", completedAt })
   }
 
-  // 完了を取り消し pending に戻したタスクを返す。
+  /** 完了を取り消し pending に戻したタスクを返す。 */
   uncomplete() {
     return new OnboardingTask({ ...this.props, status: "pending", completedAt: null })
   }

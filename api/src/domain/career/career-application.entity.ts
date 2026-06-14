@@ -11,9 +11,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 公募への応募。集約ルート。
+/** 公募への応募。集約ルート。 */
 export class CareerApplication implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly postingId!: Props["postingId"]
@@ -32,7 +32,7 @@ export class CareerApplication implements Props {
     Object.freeze(this)
   }
 
-  // 新規の応募を組み立てる。id は未採番、初期状態は applied。
+  /** 新規の応募を組み立てる。id は未採番、初期状態は applied。 */
   static create(props: {
     postingId: number
     applicantId: number
@@ -47,12 +47,12 @@ export class CareerApplication implements Props {
     })
   }
 
-  // 応募メッセージを差し替えた新しい応募を返す。
+  /** 応募メッセージを差し替えた新しい応募を返す。 */
   withMessage(message: string | null): CareerApplication {
     return new CareerApplication({ ...this.props, message })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: CareerApplicationRow): CareerApplication {
     return new CareerApplication({
       id: row.id,

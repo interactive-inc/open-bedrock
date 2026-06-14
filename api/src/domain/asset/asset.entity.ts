@@ -13,7 +13,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 資産台帳の1件（在庫/貸出状態と保有者を持つ）。集約ルート。
+/** 資産台帳の1件（在庫/貸出状態と保有者を持つ）。集約ルート。 */
 export class Asset implements Props {
   readonly code!: Props["code"]
 
@@ -37,7 +37,7 @@ export class Asset implements Props {
     Object.freeze(this)
   }
 
-  // 新規登録する資産を組み立てる。初期状態は在庫・保有者なし。
+  /** 新規登録する資産を組み立てる。初期状態は在庫・保有者なし。 */
   static create(props: {
     code: string
     name: string
@@ -56,7 +56,7 @@ export class Asset implements Props {
     })
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: AssetRow): Asset {
     return new Asset({
       code: row.code,
@@ -69,7 +69,7 @@ export class Asset implements Props {
     })
   }
 
-  // 名称・種別・シリアル・購入日を差し替える。在庫/貸出状態と保有者は保つ。
+  /** 名称・種別・シリアル・購入日を差し替える。在庫/貸出状態と保有者は保つ。 */
   withDetails(details: {
     name: Props["name"]
     kind: Props["kind"]

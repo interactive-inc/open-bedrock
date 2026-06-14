@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 入社/退職手続きのテンプレート（チェックリストの雛形）。読み取り中心のマスタ集約。
+/** 入社/退職手続きのテンプレート（チェックリストの雛形）。読み取り中心のマスタ集約。 */
 export class OnboardingTemplate implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly code!: Props["code"]
@@ -36,7 +36,7 @@ export class OnboardingTemplate implements Props {
     Object.freeze(this)
   }
 
-  // 新規テンプレートを組み立てる。id は未採番、tasks は空で作成する。
+  /** 新規テンプレートを組み立てる。id は未採番、tasks は空で作成する。 */
   static create(props: {
     code: string
     name: string
@@ -67,7 +67,7 @@ export class OnboardingTemplate implements Props {
     })
   }
 
-  // 名称・種別・説明を変更した新しいテンプレートを返す。code と tasks は保つ。
+  /** 名称・種別・説明を変更した新しいテンプレートを返す。code と tasks は保つ。 */
   withDetails(props: {
     name: string
     kind: "join" | "leave"

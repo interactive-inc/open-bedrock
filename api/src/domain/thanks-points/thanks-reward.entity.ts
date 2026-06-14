@@ -2,7 +2,7 @@ import { maxRewardPointCost } from "@/lib/thanks-points/monthly-budget-points"
 import type { ThanksRewardRow } from "@/schema"
 import { z } from "zod"
 
-// カタログ名は必須・最大長 200。交換コストは 1 以上・整数・上限あり。在庫は null（無制限）か 0 以上の整数。
+/** カタログ名は必須・最大長 200。交換コストは 1 以上・整数・上限あり。在庫は null（無制限）か 0 以上の整数。 */
 export const rewardNameSchema = z.string().trim().min(1).max(200)
 
 export const rewardPointCostSchema = z.number().int().positive().max(maxRewardPointCost)
@@ -20,9 +20,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 交換カタログの1件。集約ルート。
+/** 交換カタログの1件。集約ルート。 */
 export class ThanksReward implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly name!: Props["name"]
@@ -43,7 +43,7 @@ export class ThanksReward implements Props {
     Object.freeze(this)
   }
 
-  // 新規カタログを組み立てる。名前・コスト・在庫の不備は Error。
+  /** 新規カタログを組み立てる。名前・コスト・在庫の不備は Error。 */
   static create(props: {
     name: string
     pointCost: number
