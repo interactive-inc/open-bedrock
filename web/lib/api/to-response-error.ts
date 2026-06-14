@@ -40,9 +40,9 @@ async function readApiErrorMessage(response: { json(): Promise<unknown> }): Prom
       typeof body === "object" &&
       body !== null &&
       "error" in body &&
-      typeof (body as { error: unknown }).error === "string"
+      typeof body.error === "string"
     ) {
-      return (body as { error: string }).error
+      return body.error
     }
 
     return null

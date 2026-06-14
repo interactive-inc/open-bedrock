@@ -18,15 +18,15 @@ import type { AssetKind, AssetStatus } from "@/lib/api/types/asset-types"
 
 export const metadata = { title: "備品" }
 
-const VALID_KINDS: readonly string[] = ["pc", "monitor", "furniture", "other"]
-const VALID_STATUSES: readonly string[] = ["in_stock", "lent"]
+const VALID_KINDS = ["pc", "monitor", "furniture", "other"] as const
+const VALID_STATUSES = ["in_stock", "lent"] as const
 
 function toAssetKind(value: string | undefined): AssetKind | null {
-  return value !== undefined && VALID_KINDS.includes(value) ? (value as AssetKind) : null
+  return VALID_KINDS.find((kind) => kind === value) ?? null
 }
 
 function toAssetStatus(value: string | undefined): AssetStatus | null {
-  return value !== undefined && VALID_STATUSES.includes(value) ? (value as AssetStatus) : null
+  return VALID_STATUSES.find((status) => status === value) ?? null
 }
 
 type Props = {

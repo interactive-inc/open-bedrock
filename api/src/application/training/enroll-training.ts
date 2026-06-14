@@ -3,11 +3,7 @@ import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
-import {
-  type AlreadyEnrolledError,
-  type CourseArchivedError,
-  TrainingEnrollmentRepository,
-} from "@/infrastructure/training/training-enrollment-repository"
+import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number
@@ -84,7 +80,7 @@ export class EnrollTraining {
     }
 
     if ("reason" in created) {
-      return created as AlreadyEnrolledError | CourseArchivedError
+      return created
     }
 
     return created
