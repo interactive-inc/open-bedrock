@@ -34,20 +34,22 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 
 ## ローカル起動・動作確認
 
-全アプリ同時起動は `make dev`（`bun install` のうえ `portless`）。個別に動かす手順は以下。
+起動は portless 経由が前提（`make dev` = `bun install` のうえ `portless`）。
 
-api（Cloudflare Workers / wrangler、ポート 8787）:
+ブラウザで確認する手順:
 
+- まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cp api/.dev.vars.example api/.dev.vars` で `JWT_SECRET` を用意する（無いとログインが 500 になる。`.dev.vars` は gitignore 済み）
-- `cd api && bun run dev`（= `wrangler dev`）。`/` は 404 が正常（ルート未定義）。`/employees` は未認証で 401
-- seed の全ユーザーは共通パスワード `password`、メールは `you+e001@example.com` 形式。`E001` が admin
-- 動作確認例: `POST /auth/login` で access_token を取得し、`Authorization: Bearer` で `/me` や `/employees` を叩く
+- リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://karte.open.localhost`、api は `https://api.karte.open.localhost`（実体は `localhost:8787`）。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
+- ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
-web（Next.js、ポート 3000）:
+api 単体の疎通だけ見るなら `cd api && bun run dev`（= `wrangler dev`、ポート 8787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /auth/login` で access_token を取り `Authorization: Bearer` で叩く。
 
-- `cd web && NEXT_PUBLIC_API_URL=http://localhost:8787 bun run dev`（既定の API ベース URL も同値）
-- 観測した注意点: web 単体で `next dev` すると `api/app`（`exports.default` が `./src/app.ts`）から `hcWithType` を実行時 import する関係で、bundler が api ソースの `@/` エイリアスを解決できず `Module not found: @/interface/...` になる（Turbopack / webpack 双方で再現）。ブラウザ確認が必要なときは `make dev`（portless）経由を優先し、直 `next dev` で同症状が出たらこの点を疑う
+web↔api クライアントの約束:
+
+- web/cli は `api/app` から `AppType` / `ApiClient` を type-only で import し、`hc<AppType>()` を自前で生成する（`web/lib/api/hc-client.ts`、`cli/lib/http/hc-client.ts` 参照）
+- `api/app` の `exports.default` は `./src/app.ts`。ここから実行時の値（旧 `hcWithType` 等）を import すると、bundler が app.ts 経由で全ルートと api の `@/` を取り込もうとして `Module not found: @/interface/...` で dev ビルドが落ちる。クライアント側は必ず型のみ参照にすること
 
 ## 変更時の確認
 
