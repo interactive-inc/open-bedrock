@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// ライフイベント届出（種別・発生日・詳細の記録。法的判定や給付金計算は持たず記録のみ）。集約ルート。
+/** ライフイベント届出（種別・発生日・詳細の記録。法的判定や給付金計算は持たず記録のみ）。集約ルート。 */
 export class LifeEvent implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -38,7 +38,7 @@ export class LifeEvent implements Props {
     Object.freeze(this)
   }
 
-  // 新規ライフイベント届出を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。
+  /** 新規ライフイベント届出を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。 */
   static create(props: {
     employeeId: number
     eventType: string
@@ -73,7 +73,7 @@ export class LifeEvent implements Props {
     return this.status === "submitted"
   }
 
-  // 届出内容を変更した新しいライフイベント届出を返す。
+  /** 届出内容を変更した新しいライフイベント届出を返す。 */
   withDetails(props: { eventType: string; eventDate: string; detail: string | null }): LifeEvent {
     return new LifeEvent({
       ...this.props,

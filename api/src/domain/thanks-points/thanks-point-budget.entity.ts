@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 月次の贈与原資レコード。集約ルート。残量は granted − consumed で算出する。
+/** 月次の贈与原資レコード。集約ルート。残量は granted − consumed で算出する。 */
 export class ThanksPointBudget implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -62,7 +62,7 @@ export class ThanksPointBudget implements Props {
     })
   }
 
-  // 残量。granted − consumed。下限は 0（負にしない）。
+  /** 残量。granted − consumed。下限は 0（負にしない）。 */
   get remainingPoints(): number {
     const remaining = this.props.grantedPoints - this.props.consumedPoints
 

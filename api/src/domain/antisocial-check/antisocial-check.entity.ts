@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 反社チェックの申請（取引先の確認情報と判定結果を記録）。集約ルート。
+/** 反社チェックの申請（取引先の確認情報と判定結果を記録）。集約ルート。 */
 export class AntisocialCheck implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly requesterId!: Props["requesterId"]
@@ -41,7 +41,7 @@ export class AntisocialCheck implements Props {
     Object.freeze(this)
   }
 
-  // 新規反社チェック申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。
+  /** 新規反社チェック申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
     requesterId: number
     partnerName: string
@@ -74,7 +74,7 @@ export class AntisocialCheck implements Props {
     })
   }
 
-  // 申請内容と判定結果を変更した新しい反社チェック申請を返す。
+  /** 申請内容と判定結果を変更した新しい反社チェック申請を返す。 */
   withDetails(props: {
     partnerName: string
     partnerAddress: string | null

@@ -22,7 +22,7 @@ export async function wrapLegacyHash(legacyHexHash: string): Promise<string> {
   return `pbkdf2-wrapped-legacy:${PBKDF2_ITERATIONS}:${bytesToBase64(salt)}:${bytesToBase64(hash)}`
 }
 
-// 保存値がラップ済み旧形式かを判定する。
+/** 保存値がラップ済み旧形式かを判定する。 */
 export function isWrappedLegacyHash(storedHash: string): boolean {
   return storedHash.startsWith(WRAPPED_LEGACY_PREFIX)
 }

@@ -13,7 +13,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// ナレッジ記事。id は新規作成時 null、DB 採番後に確定する。
+/** ナレッジ記事。id は新規作成時 null、DB 採番後に確定する。 */
 export class KnowledgeArticle implements Props {
   readonly id!: Props["id"]
 
@@ -37,7 +37,7 @@ export class KnowledgeArticle implements Props {
     Object.freeze(this)
   }
 
-  // 新規記事を組み立てる。id は未採番のため null。
+  /** 新規記事を組み立てる。id は未採番のため null。 */
   static create(props: {
     title: string
     category: string
@@ -69,7 +69,7 @@ export class KnowledgeArticle implements Props {
     })
   }
 
-  // 表題・カテゴリ・タグ・本文を更新した新しい記事を返す。
+  /** 表題・カテゴリ・タグ・本文を更新した新しい記事を返す。 */
   withContent(props: {
     title: string
     category: string

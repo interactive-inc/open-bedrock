@@ -26,9 +26,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 社員宛ての通知1件。集約ルート。
+/** 社員宛ての通知1件。集約ルート。 */
 export class Notification implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly recipientEmployeeId!: Props["recipientEmployeeId"]
@@ -55,7 +55,7 @@ export class Notification implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する通知を組み立てる。id は未採番、初期状態は未読。
+  /** 新規作成する通知を組み立てる。id は未採番、初期状態は未読。 */
   static create(props: {
     recipientEmployeeId: number
     kind: NotificationKind

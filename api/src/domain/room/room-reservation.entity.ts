@@ -14,9 +14,9 @@ type Props = z.infer<typeof zProps>
 
 export type InvalidTimeRange = { reason: "invalid_time_range" }
 
-// 会議室予約（重複は start_at/end_at の範囲で判定）。集約ルート。
+/** 会議室予約（重複は start_at/end_at の範囲で判定）。集約ルート。 */
 export class RoomReservation implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly roomId!: Props["roomId"]
@@ -35,7 +35,7 @@ export class RoomReservation implements Props {
     Object.freeze(this)
   }
 
-  // 新規予約を組み立てる。id は crypto.randomUUID() で採番する。
+  /** 新規予約を組み立てる。id は crypto.randomUUID() で採番する。 */
   static create(props: {
     roomId: number
     reserverId: number
@@ -80,12 +80,12 @@ export class RoomReservation implements Props {
     return new RoomReservation(parsed.data)
   }
 
-  // 用途を変更した新しい予約を返す。
+  /** 用途を変更した新しい予約を返す。 */
   withPurpose(purpose: string | null) {
     return new RoomReservation({ ...this.props, purpose })
   }
 
-  // 開始終了時刻を変更した新しい予約を返す。
+  /** 開始終了時刻を変更した新しい予約を返す。 */
   withRescheduled(props: { startAt: string; endAt: string }): RoomReservation | InvalidTimeRange {
     if (props.startAt >= props.endAt) {
       return { reason: "invalid_time_range" }

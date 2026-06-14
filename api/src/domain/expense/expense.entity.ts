@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 経費申請（社員ごとの立替・経費の記録と承認状態）。集約ルート。
+/** 経費申請（社員ごとの立替・経費の記録と承認状態）。集約ルート。 */
 export class Expense implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -41,7 +41,7 @@ export class Expense implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する経費申請を組み立てる。id は未採番、初期状態は pending。
+  /** 新規作成する経費申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
     employeeId: number
     category: Props["category"]
@@ -79,7 +79,7 @@ export class Expense implements Props {
     return new Expense({ ...this.props, status })
   }
 
-  // 申請内容（種別・金額・利用日・備考）を変更した新しい経費申請を返す。
+  /** 申請内容（種別・金額・利用日・備考）を変更した新しい経費申請を返す。 */
   withDetails(props: {
     category: Props["category"]
     amount: number

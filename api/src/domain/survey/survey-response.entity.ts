@@ -11,9 +11,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// アンケートへの回答（回答者ごとの回答内容と提出時刻）。Survey 集約の内部エンティティ。
+/** アンケートへの回答（回答者ごとの回答内容と提出時刻）。Survey 集約の内部エンティティ。 */
 export class SurveyResponse implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly surveyId!: Props["surveyId"]
@@ -32,7 +32,7 @@ export class SurveyResponse implements Props {
     Object.freeze(this)
   }
 
-  // 新規提出する回答を組み立てる。id は未採番。
+  /** 新規提出する回答を組み立てる。id は未採番。 */
   static create(props: {
     surveyId: number
     respondentId: number
@@ -64,7 +64,7 @@ export class SurveyResponse implements Props {
     })
   }
 
-  // 回答内容と提出時刻を差し替えた新しいインスタンスを返す。
+  /** 回答内容と提出時刻を差し替えた新しいインスタンスを返す。 */
   withAnswers(props: { answersJson: unknown; submittedAt: string }): SurveyResponse {
     return new SurveyResponse({
       id: this.id,

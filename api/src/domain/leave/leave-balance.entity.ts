@@ -12,7 +12,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 年度ごとの休暇残数。employeeId × fiscalYear × leaveType を論理キーとする集約ルート。
+/** 年度ごとの休暇残数。employeeId × fiscalYear × leaveType を論理キーとする集約ルート。 */
 export class LeaveBalance implements Props {
   readonly employeeId!: Props["employeeId"]
 

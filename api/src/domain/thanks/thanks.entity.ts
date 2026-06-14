@@ -1,7 +1,7 @@
 import type { ThanksRow } from "@/schema"
 import { z } from "zod"
 
-// 感謝メッセージの必須・最大長の不変条件。空白のみは不可、1000 文字まで。
+/** 感謝メッセージの必須・最大長の不変条件。空白のみは不可、1000 文字まで。 */
 export const thanksMessageSchema = z.string().trim().min(1).max(1000)
 
 const zProps = z.object({
@@ -15,10 +15,12 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 感謝（サンクス）1件。集約ルート。
-// points は感謝に添えるサンクスポイント。0 はメッセージのみの感謝。負値は不可。
+/**
+ * 感謝（サンクス）1件。集約ルート。
+ * points は感謝に添えるサンクスポイント。0 はメッセージのみの感謝。負値は不可。
+ */
 export class Thanks implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly senderEmployeeId!: Props["senderEmployeeId"]
@@ -39,8 +41,10 @@ export class Thanks implements Props {
     Object.freeze(this)
   }
 
-  // 新規の感謝を組み立てる。自己宛て送信・メッセージ不備・不正なポイントは Error を返す。
-  // points は 0 以上の整数（呼び出し側で上限・原資チェック済みの値を渡す前提）。
+  /**
+   * 新規の感謝を組み立てる。自己宛て送信・メッセージ不備・不正なポイントは Error を返す。
+   * points は 0 以上の整数（呼び出し側で上限・原資チェック済みの値を渡す前提）。
+   */
   static create(props: {
     senderEmployeeId: number
     recipientEmployeeId: number

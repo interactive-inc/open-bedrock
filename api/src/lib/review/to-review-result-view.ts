@@ -10,7 +10,7 @@ export type ReviewResultView = {
   forms: ReadonlyArray<ReviewForm>
 }
 
-// 提出済みフォームのスコアを集計し、被評価者ごとの結果ビューを組み立てる純粋関数。
+/** 提出済みフォームのスコアを集計し、被評価者ごとの結果ビューを組み立てる純粋関数。 */
 export function toReviewResultView(
   cycle: ReviewCycle,
   forms: ReadonlyArray<ReviewForm>,

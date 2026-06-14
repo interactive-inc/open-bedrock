@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 産休・育休・介護休業の申出（種別・期間・備考の記録。給付金額の計算や判定は持たず記録のみ）。集約ルート。
+/** 産休・育休・介護休業の申出（種別・期間・備考の記録。給付金額の計算や判定は持たず記録のみ）。集約ルート。 */
 export class FamilyCareLeave implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -41,7 +41,7 @@ export class FamilyCareLeave implements Props {
     Object.freeze(this)
   }
 
-  // 新規の休業申出を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。
+  /** 新規の休業申出を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
     employeeId: number
     leaveKind: string
@@ -79,7 +79,7 @@ export class FamilyCareLeave implements Props {
     })
   }
 
-  // 申出内容を変更した新しい休業申出を返す。
+  /** 申出内容を変更した新しい休業申出を返す。 */
   withDetails(props: {
     leaveKind: string
     startDate: string

@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 目標（社員ごと・評価期間ごとの目標と重み・状態）。集約ルート。
+/** 目標（社員ごと・評価期間ごとの目標と重み・状態）。集約ルート。 */
 export class Goal implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -38,7 +38,7 @@ export class Goal implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する目標を組み立てる。id は未採番、初期状態は draft。
+  /** 新規作成する目標を組み立てる。id は未採番、初期状態は draft。 */
   static create(props: {
     employeeId: number
     period: string
@@ -73,7 +73,7 @@ export class Goal implements Props {
     return new Goal({ ...this.props, status })
   }
 
-  // 目標の定義（期間・タイトル・KPI・重み）を差し替えた写しを返す。
+  /** 目標の定義（期間・タイトル・KPI・重み）を差し替えた写しを返す。 */
   withDetails(props: {
     period: Props["period"]
     title: Props["title"]

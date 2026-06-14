@@ -14,9 +14,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 証明書発行依頼（証明書種別・提出先・希望日・備考の記録。発行判定や計算は持たず記録のみ）。集約ルート。
+/** 証明書発行依頼（証明書種別・提出先・希望日・備考の記録。発行判定や計算は持たず記録のみ）。集約ルート。 */
 export class CertificateRequest implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly requesterId!: Props["requesterId"]
@@ -41,7 +41,7 @@ export class CertificateRequest implements Props {
     Object.freeze(this)
   }
 
-  // 新規証明書発行依頼を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。
+  /** 新規証明書発行依頼を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
     requesterId: number
     certificateType: string
@@ -75,7 +75,7 @@ export class CertificateRequest implements Props {
     })
   }
 
-  // 依頼内容を変更した新しい証明書発行依頼を返す。
+  /** 依頼内容を変更した新しい証明書発行依頼を返す。 */
   withDetails(props: {
     certificateType: string
     submitTo: string | null

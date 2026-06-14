@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// シフト交代申請（申請者と交代相手・対象日・承認状態）。集約ルート。
+/** シフト交代申請（申請者と交代相手・対象日・承認状態）。集約ルート。 */
 export class ShiftSwapRequest implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly requesterEmployeeId!: Props["requesterEmployeeId"]
@@ -38,7 +38,7 @@ export class ShiftSwapRequest implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する交代申請を組み立てる。id は未採番、初期状態は pending。
+  /** 新規作成する交代申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
     requesterEmployeeId: number
     targetEmployeeId: number

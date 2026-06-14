@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 退職申請（退職希望日・最終出社日・理由の記録。法的判定は持たず記録のみ）。集約ルート。
+/** 退職申請（退職希望日・最終出社日・理由の記録。法的判定は持たず記録のみ）。集約ルート。 */
 export class Resignation implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -38,7 +38,7 @@ export class Resignation implements Props {
     Object.freeze(this)
   }
 
-  // 新規退職申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。
+  /** 新規退職申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
     employeeId: number
     resignationDate: string
@@ -73,7 +73,7 @@ export class Resignation implements Props {
     return this.status === "requested"
   }
 
-  // 申請内容を変更した新しい退職申請を返す。
+  /** 申請内容を変更した新しい退職申請を返す。 */
   withDetails(props: {
     resignationDate: string
     lastWorkingDate: string | null

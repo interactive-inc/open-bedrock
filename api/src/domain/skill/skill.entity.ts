@@ -9,7 +9,7 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// スキルマスタの1件（コード・名称・分類）。集約ルート。
+/** スキルマスタの1件（コード・名称・分類）。集約ルート。 */
 export class Skill implements Props {
   readonly code!: Props["code"]
 
@@ -25,7 +25,7 @@ export class Skill implements Props {
     Object.freeze(this)
   }
 
-  // 永続化された行から復元する。
+  /** 永続化された行から復元する。 */
   static fromRow(row: SkillRow): Skill {
     return new Skill({
       code: row.code,

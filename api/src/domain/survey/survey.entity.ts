@@ -10,9 +10,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// アンケート（設問定義と公開状態）。集約ルート。
+/** アンケート（設問定義と公開状態）。集約ルート。 */
 export class Survey implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly title!: Props["title"]
@@ -29,7 +29,7 @@ export class Survey implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成するアンケートを組み立てる。id は未採番。
+  /** 新規作成するアンケートを組み立てる。id は未採番。 */
   static create(props: {
     title: string
     status: "open" | "closed"
@@ -58,7 +58,7 @@ export class Survey implements Props {
     })
   }
 
-  // 内容（タイトル・状態・設問）を変更した新しいアンケートを返す。id は保つ。
+  /** 内容（タイトル・状態・設問）を変更した新しいアンケートを返す。id は保つ。 */
   withDetails(props: {
     title: string
     status: "open" | "closed"

@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 申請テンプレート（申請の種別ごとの定義）。集約ルート。
+/** 申請テンプレート（申請の種別ごとの定義）。集約ルート。 */
 export class ApplicationTemplate implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly code!: Props["code"]
@@ -38,7 +38,7 @@ export class ApplicationTemplate implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する申請テンプレートを組み立てる。id は未採番。
+  /** 新規作成する申請テンプレートを組み立てる。id は未採番。 */
   static create(props: {
     code: string
     name: string
@@ -82,7 +82,7 @@ export class ApplicationTemplate implements Props {
     })
   }
 
-  // 内容（名称・カテゴリ・説明・スキーマ・承認ロール）を変更した新しいテンプレートを返す。code は保つ。
+  /** 内容（名称・カテゴリ・説明・スキーマ・承認ロール）を変更した新しいテンプレートを返す。code は保つ。 */
   withDetails(props: {
     name: string
     category: string

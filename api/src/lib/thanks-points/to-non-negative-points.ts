@@ -1,7 +1,9 @@
 import { maxPointsPerThanks } from "@/lib/thanks-points/monthly-budget-points"
 
-// 感謝に添えるポイントを検証する。0 はメッセージのみの感謝として許容する。
-// 負値・非整数・非数・上限超過は Error。null/undefined は 0 とみなす。
+/**
+ * 感謝に添えるポイントを検証する。0 はメッセージのみの感謝として許容する。
+ * 負値・非整数・非数・上限超過は Error。null/undefined は 0 とみなす。
+ */
 export function toNonNegativePoints(raw: number | null | undefined): number | Error {
   if (raw === null || raw === undefined) {
     return 0

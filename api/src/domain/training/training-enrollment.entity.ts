@@ -13,9 +13,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 受講登録（社員ごとのコース受講状況・スコア・期限）。集約ルート。
+/** 受講登録（社員ごとのコース受講状況・スコア・期限）。集約ルート。 */
 export class TrainingEnrollment implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly courseId!: Props["courseId"]
@@ -38,7 +38,7 @@ export class TrainingEnrollment implements Props {
     Object.freeze(this)
   }
 
-  // 新規受講登録を組み立てる。id は未採番、初期状態は enrolled。
+  /** 新規受講登録を組み立てる。id は未採番、初期状態は enrolled。 */
   static create(props: {
     courseId: number
     employeeId: number
@@ -76,7 +76,7 @@ export class TrainingEnrollment implements Props {
     })
   }
 
-  // 受講期限を変更した新しい受講登録を返す。
+  /** 受講期限を変更した新しい受講登録を返す。 */
   withRescheduled(dueDate: string | null): TrainingEnrollment {
     return new TrainingEnrollment({
       ...this.props,

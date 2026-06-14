@@ -12,9 +12,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 経費への承認/却下アクションの記録。Expense 集約の内部エンティティ。
+/** 経費への承認/却下アクションの記録。Expense 集約の内部エンティティ。 */
 export class ExpenseApproval implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly expenseId!: Props["expenseId"]
@@ -35,7 +35,7 @@ export class ExpenseApproval implements Props {
     Object.freeze(this)
   }
 
-  // 新規作成する承認記録を組み立てる。id は未採番。
+  /** 新規作成する承認記録を組み立てる。id は未採番。 */
   static create(props: {
     expenseId: number
     approverId: number

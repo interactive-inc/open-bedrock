@@ -15,9 +15,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 出張申請（行き先・期間・目的・概算費用の記録。金額の計算や判定は持たず記録のみ）。集約ルート。
+/** 出張申請（行き先・期間・目的・概算費用の記録。金額の計算や判定は持たず記録のみ）。集約ルート。 */
 export class BusinessTrip implements Props {
-  // id は UUID。新規作成時に採番する。
+  /** id は UUID。新規作成時に採番する。 */
   readonly id!: Props["id"]
 
   readonly travelerId!: Props["travelerId"]
@@ -44,7 +44,7 @@ export class BusinessTrip implements Props {
     Object.freeze(this)
   }
 
-  // 新規出張申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。
+  /** 新規出張申請を組み立てる。id は crypto.randomUUID() で採番し、status は "requested" で作成する。 */
   static create(props: {
     travelerId: number
     destination: string
@@ -89,7 +89,7 @@ export class BusinessTrip implements Props {
     return this.status === "requested"
   }
 
-  // 申請内容を変更した新しい出張申請を返す。
+  /** 申請内容を変更した新しい出張申請を返す。 */
   withDetails(props: {
     destination: string
     startDate: string

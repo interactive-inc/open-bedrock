@@ -15,9 +15,9 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-// 入社/退職手続きの割り当て。OnboardingTask を内包する集約ルート。
+/** 入社/退職手続きの割り当て。OnboardingTask を内包する集約ルート。 */
 export class OnboardingAssignment implements Props {
-  // 永続化前は null、DB 採番後に確定する。
+  /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
   readonly employeeId!: Props["employeeId"]
@@ -40,8 +40,10 @@ export class OnboardingAssignment implements Props {
     Object.freeze(this)
   }
 
-  // テンプレートから割り当てを組み立てる。id は未採番、状態は in_progress。
-  // テンプレートのタスク定義を割り当てタスクへ展開して内包する。
+  /**
+   * テンプレートから割り当てを組み立てる。id は未採番、状態は in_progress。
+   * テンプレートのタスク定義を割り当てタスクへ展開して内包する。
+   */
   static create(props: {
     employeeId: number
     template: OnboardingTemplate
@@ -81,26 +83,26 @@ export class OnboardingAssignment implements Props {
     })
   }
 
-  // 指定タスクを完了済みにした割り当てを返す。
+  /** 指定タスクを完了済みにした割り当てを返す。 */
   completeTask(taskId: number, completedAt: string) {
     const tasks = this.tasks.map((task) => (task.id === taskId ? task.complete(completedAt) : task))
 
     return new OnboardingAssignment({ ...this.props, tasks }).withRecomputedStatus()
   }
 
-  // 指定タスクの完了を取り消した割り当てを返す。
+  /** 指定タスクの完了を取り消した割り当てを返す。 */
   uncompleteTask(taskId: number) {
     const tasks = this.tasks.map((task) => (task.id === taskId ? task.uncomplete() : task))
 
     return new OnboardingAssignment({ ...this.props, tasks }).withRecomputedStatus()
   }
 
-  // 割当日を変更した割り当てを返す。
+  /** 割当日を変更した割り当てを返す。 */
   withRescheduled(assignedAt: string) {
     return new OnboardingAssignment({ ...this.props, assignedAt })
   }
 
-  // 内包タスクの完了状況から割り当ての状態を再計算した割り当てを返す。
+  /** 内包タスクの完了状況から割り当ての状態を再計算した割り当てを返す。 */
   withRecomputedStatus() {
     const hasPending = this.tasks.some((task) => task.status !== "done")
 

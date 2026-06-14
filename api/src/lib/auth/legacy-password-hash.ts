@@ -17,8 +17,10 @@ export async function toLegacyPasswordHash(plainPassword: string): Promise<strin
   return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("")
 }
 
-// 保存値が旧フォーマット（PBKDF2 プレフィックスを持たない素の hex 文字列）かを判定する。
-// pbkdf2-wrapped-legacy: も PBKDF2 系なので旧形式とはみなさない。
+/**
+ * 保存値が旧フォーマット（PBKDF2 プレフィックスを持たない素の hex 文字列）かを判定する。
+ * pbkdf2-wrapped-legacy: も PBKDF2 系なので旧形式とはみなさない。
+ */
 export function isLegacyPasswordHash(storedHash: string): boolean {
   if (storedHash.startsWith("pbkdf2:")) return false
 
