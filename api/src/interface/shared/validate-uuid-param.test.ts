@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
+import { NotFoundError } from "@/interface/lib/errors"
 
 describe("validateUuidParam", () => {
   test("returns a valid UUID string as-is", () => {
@@ -43,7 +44,11 @@ describe("validateUuidParam", () => {
       validateUuidParam("bad", "item")
       expect.unreachable("should have thrown")
     } catch (error: unknown) {
-      expect((error as { status: number }).status).toBe(404)
+      expect(error).toBeInstanceOf(NotFoundError)
+
+      if (error instanceof NotFoundError) {
+        expect(error.status).toBe(404)
+      }
     }
   })
 })

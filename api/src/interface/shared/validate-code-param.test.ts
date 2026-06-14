@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { NotFoundError } from "@/interface/lib/errors"
 
 describe("validateCodeParam", () => {
   test("returns a valid code string as-is", () => {
@@ -33,7 +34,11 @@ describe("validateCodeParam", () => {
       validateCodeParam("", "employee")
       expect.unreachable("should have thrown")
     } catch (error: unknown) {
-      expect((error as { status: number }).status).toBe(404)
+      expect(error).toBeInstanceOf(NotFoundError)
+
+      if (error instanceof NotFoundError) {
+        expect(error.status).toBe(404)
+      }
     }
   })
 })

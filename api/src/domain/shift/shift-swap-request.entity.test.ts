@@ -12,15 +12,15 @@ describe("ShiftSwapRequest.create", () => {
 
     expect(swap).toBeInstanceOf(ShiftSwapRequest)
 
-    const request = swap as ShiftSwapRequest
-
-    expect(request.id).toBeNull()
-    expect(request.status).toBe("pending")
-    expect(request.approvedAt).toBeNull()
-    expect(request.requesterEmployeeId).toBe(1)
-    expect(request.targetEmployeeId).toBe(2)
-    expect(request.date).toBe("2026-06-20")
-    expect(request.note).toBe("Please swap shifts")
+    if (swap instanceof ShiftSwapRequest) {
+      expect(swap.id).toBeNull()
+      expect(swap.status).toBe("pending")
+      expect(swap.approvedAt).toBeNull()
+      expect(swap.requesterEmployeeId).toBe(1)
+      expect(swap.targetEmployeeId).toBe(2)
+      expect(swap.date).toBe("2026-06-20")
+      expect(swap.note).toBe("Please swap shifts")
+    }
   })
 
   test("returns self_reference reason when requester equals target", () => {
@@ -32,7 +32,10 @@ describe("ShiftSwapRequest.create", () => {
     })
 
     expect(swap).not.toBeInstanceOf(ShiftSwapRequest)
-    expect((swap as { reason: string }).reason).toBe("self_reference")
+
+    if (!(swap instanceof ShiftSwapRequest)) {
+      expect(swap.reason).toBe("self_reference")
+    }
   })
 })
 
@@ -43,14 +46,18 @@ describe("ShiftSwapRequest.withApproved", () => {
       targetEmployeeId: 2,
       date: "2026-06-20",
       note: null,
-    }) as ShiftSwapRequest
+    })
 
-    const approved = swap.withApproved("2026-06-18T10:00:00.000Z")
+    expect(swap).toBeInstanceOf(ShiftSwapRequest)
 
-    expect(approved).toBeInstanceOf(ShiftSwapRequest)
-    expect(approved.status).toBe("approved")
-    expect(approved.approvedAt).toBe("2026-06-18T10:00:00.000Z")
-    expect(approved.requesterEmployeeId).toBe(1)
-    expect(approved.targetEmployeeId).toBe(2)
+    if (swap instanceof ShiftSwapRequest) {
+      const approved = swap.withApproved("2026-06-18T10:00:00.000Z")
+
+      expect(approved).toBeInstanceOf(ShiftSwapRequest)
+      expect(approved.status).toBe("approved")
+      expect(approved.approvedAt).toBe("2026-06-18T10:00:00.000Z")
+      expect(approved.requesterEmployeeId).toBe(1)
+      expect(approved.targetEmployeeId).toBe(2)
+    }
   })
 })

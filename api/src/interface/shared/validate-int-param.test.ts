@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
+import { NotFoundError } from "@/interface/lib/errors"
 
 describe("validateIntParam", () => {
   test("returns a valid positive integer", () => {
@@ -47,7 +48,11 @@ describe("validateIntParam", () => {
       validateIntParam("bad", "item")
       expect.unreachable("should have thrown")
     } catch (error: unknown) {
-      expect((error as { status: number }).status).toBe(404)
+      expect(error).toBeInstanceOf(NotFoundError)
+
+      if (error instanceof NotFoundError) {
+        expect(error.status).toBe(404)
+      }
     }
   })
 })
