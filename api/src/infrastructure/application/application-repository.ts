@@ -1,5 +1,5 @@
-import { Application } from "@/domain/application/application"
-import { ApplicationApproval } from "@/domain/application/application-approval"
+import { Application } from "@/domain/application/application.entity"
+import { ApplicationApproval } from "@/domain/application/application-approval.entity"
 import type { Context } from "@/env"
 import { applicationApprovals, applications } from "@/schema"
 import { DEFAULT_LIST_LIMIT } from "@/interface/shared/to-bounded-int"

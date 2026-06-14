@@ -1,5 +1,5 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
-import type { ShiftAssignment } from "@/domain/shift/shift-assignment"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
+import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 

@@ -1,7 +1,7 @@
 import { CancelBusinessTrip } from "@/application/business-trip/cancel-business-trip"
 import { GetBusinessTrip } from "@/application/business-trip/get-business-trip"
 import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
-import type { BusinessTrip } from "@/domain/business-trip/business-trip"
+import type { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

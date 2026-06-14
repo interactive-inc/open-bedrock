@@ -1,5 +1,5 @@
-import { canManageCareerPostings } from "@/domain/career/can-manage-career-postings"
-import type { CareerPosting } from "@/domain/career/career-posting"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
+import type { CareerPosting } from "@/domain/career/career-posting.entity"
 import type { Context } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 

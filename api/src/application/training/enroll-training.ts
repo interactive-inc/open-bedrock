@@ -1,5 +1,5 @@
-import { canManageTraining } from "@/domain/training/can-manage-training"
-import { TrainingEnrollment } from "@/domain/training/training-enrollment"
+import { canManageTraining } from "@/lib/training/can-manage-training"
+import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"

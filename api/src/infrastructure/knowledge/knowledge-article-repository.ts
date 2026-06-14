@@ -1,4 +1,4 @@
-import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article"
+import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article.entity"
 import type { Context } from "@/env"
 import { knowledgeArticles } from "@/schema"
 import { eq } from "drizzle-orm"

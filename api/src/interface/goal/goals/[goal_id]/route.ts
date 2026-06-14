@@ -1,7 +1,7 @@
 import { DeleteGoal } from "@/application/goal/delete-goal"
 import { GetGoal } from "@/application/goal/get-goal"
 import { UpdateGoal } from "@/application/goal/update-goal"
-import type { Goal } from "@/domain/goal/goal"
+import type { Goal } from "@/domain/goal/goal.entity"
 import { factory } from "@/lib/factory"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

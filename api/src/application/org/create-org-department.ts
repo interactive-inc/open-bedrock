@@ -1,5 +1,5 @@
-import { canManageOrg } from "@/domain/org/can-manage-org"
-import { OrgDepartment } from "@/domain/org/org-department"
+import { canManageOrg } from "@/lib/org/can-manage-org"
+import { OrgDepartment } from "@/domain/org/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

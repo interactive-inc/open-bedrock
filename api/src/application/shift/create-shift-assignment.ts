@@ -1,5 +1,5 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
-import { ShiftAssignment } from "@/domain/shift/shift-assignment"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

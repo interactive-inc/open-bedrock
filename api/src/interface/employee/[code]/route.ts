@@ -1,7 +1,7 @@
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { GetEmployee } from "@/application/employee/get-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
-import type { Employee } from "@/domain/employee/employee"
+import type { Employee } from "@/domain/employee/employee.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

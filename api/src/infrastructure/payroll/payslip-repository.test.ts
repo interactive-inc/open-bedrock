@@ -1,4 +1,4 @@
-import { Payslip } from "@/domain/payroll/payslip"
+import { Payslip } from "@/domain/payroll/payslip.entity"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"

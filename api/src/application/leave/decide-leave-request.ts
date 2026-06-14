@@ -1,6 +1,6 @@
-import { canDecideLeave } from "@/domain/leave/can-decide-leave"
-import type { LeaveRequest } from "@/domain/leave/leave-request"
-import { toFiscalYear } from "@/domain/leave/to-fiscal-year"
+import { canDecideLeave } from "@/lib/leave/can-decide-leave"
+import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import type { Context } from "@/env"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 

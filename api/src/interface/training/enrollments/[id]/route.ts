@@ -1,7 +1,7 @@
 import { CancelTrainingEnrollment } from "@/application/training/cancel-training-enrollment"
 import { GetTrainingEnrollment } from "@/application/training/get-training-enrollment"
 import { RescheduleTrainingEnrollment } from "@/application/training/reschedule-training-enrollment"
-import type { TrainingEnrollment } from "@/domain/training/training-enrollment"
+import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

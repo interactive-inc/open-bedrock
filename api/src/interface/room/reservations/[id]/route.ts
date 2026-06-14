@@ -1,7 +1,7 @@
 import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
 import { GetRoomReservation } from "@/application/room/get-room-reservation"
 import { UpdateRoomReservation } from "@/application/room/update-room-reservation"
-import type { RoomReservation } from "@/domain/room/room-reservation"
+import type { RoomReservation } from "@/domain/room/room-reservation.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

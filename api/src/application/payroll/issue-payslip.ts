@@ -1,7 +1,6 @@
-import type { Forbidden } from "@/domain/payroll/payroll-access"
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
-import { Payslip } from "@/domain/payroll/payslip"
-import { toNetPay } from "@/domain/payroll/to-net-pay"
+import type { Forbidden } from "@/lib/payroll/payroll-access"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
+import { Payslip } from "@/domain/payroll/payslip.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
@@ -58,7 +57,7 @@ export class IssuePayslip {
       return { reason: "duplicate_period" }
     }
 
-    const netPay = toNetPay({
+    const netPay = Payslip.toNetPay({
       baseSalary: command.baseSalary,
       allowances: command.allowances,
       deductions: command.deductions,

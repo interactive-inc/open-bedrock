@@ -1,4 +1,4 @@
-import { CareerPosting } from "@/domain/career/career-posting"
+import { CareerPosting } from "@/domain/career/career-posting.entity"
 import type { Context } from "@/env"
 import { careerPostings } from "@/schema"
 import { eq } from "drizzle-orm"

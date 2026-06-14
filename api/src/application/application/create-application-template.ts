@@ -1,5 +1,5 @@
-import { ApplicationTemplate } from "@/domain/application/application-template"
-import { canManageApplicationTemplates } from "@/domain/application/can-manage-application-templates"
+import { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import type { Context } from "@/env"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

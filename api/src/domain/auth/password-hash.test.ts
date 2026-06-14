@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
-import { toPasswordHash } from "@/domain/auth/to-password-hash"
-import { verifyPassword } from "@/domain/auth/verify-password"
-import { isWrappedLegacyHash, wrapLegacyHash } from "@/domain/auth/wrap-legacy-hash"
+import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { toPasswordHash } from "@/lib/auth/to-password-hash"
+import { verifyPassword } from "@/lib/auth/verify-password"
+import { isWrappedLegacyHash, wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 
 describe("toPasswordHash (PBKDF2 new format)", () => {
   test("returns a string with the pbkdf2 prefix and 4 colon-separated parts", async () => {

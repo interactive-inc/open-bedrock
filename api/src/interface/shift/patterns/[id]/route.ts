@@ -1,7 +1,7 @@
 import { DeleteShiftPattern } from "@/application/shift/delete-shift-pattern"
 import { GetShiftPattern } from "@/application/shift/get-shift-pattern"
 import { UpdateShiftPattern } from "@/application/shift/update-shift-pattern"
-import type { ShiftPattern } from "@/domain/shift/shift-pattern"
+import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

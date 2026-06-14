@@ -1,5 +1,5 @@
-import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
-import { toCycleStatus } from "@/domain/review/to-cycle-status"
+import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
+import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -55,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     id: row.id,
     title: row.title,
     period: row.period,
-    status: toCycleStatus(row.status),
+    status: toReviewCycleStatus(row.status),
     due_date: row.dueDate,
   }))
 

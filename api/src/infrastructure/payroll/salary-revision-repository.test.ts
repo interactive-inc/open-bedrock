@@ -1,4 +1,4 @@
-import { SalaryRevision } from "@/domain/payroll/salary-revision"
+import { SalaryRevision } from "@/domain/payroll/salary-revision.entity"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

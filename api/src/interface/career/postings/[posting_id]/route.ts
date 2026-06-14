@@ -1,7 +1,7 @@
 import { DeleteCareerPosting } from "@/application/career/delete-career-posting"
 import { GetCareerPosting } from "@/application/career/get-career-posting"
 import { UpdateCareerPosting } from "@/application/career/update-career-posting"
-import type { CareerPosting } from "@/domain/career/career-posting"
+import type { CareerPosting } from "@/domain/career/career-posting.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { validateIntParam } from "@/interface/shared/validate-int-param"

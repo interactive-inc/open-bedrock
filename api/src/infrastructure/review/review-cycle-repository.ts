@@ -1,4 +1,4 @@
-import { ReviewCycle } from "@/domain/review/review-cycle"
+import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
 import { reviewCycles } from "@/schema"
 import { and, asc, eq, ne } from "drizzle-orm"

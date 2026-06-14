@@ -1,4 +1,4 @@
-import { canDecideExpense } from "@/domain/expense/can-decide-expense"
+import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,

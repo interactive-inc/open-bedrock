@@ -1,6 +1,6 @@
-import type { Goal } from "@/domain/goal/goal"
+import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
-import { hasFinalEvaluation } from "@/domain/goal/has-final-evaluation"
+import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 

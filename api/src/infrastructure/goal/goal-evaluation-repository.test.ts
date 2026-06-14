@@ -1,4 +1,4 @@
-import { GoalEvaluation } from "@/domain/goal/goal-evaluation"
+import { GoalEvaluation } from "@/domain/goal/goal-evaluation.entity"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"

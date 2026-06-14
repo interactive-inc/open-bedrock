@@ -1,6 +1,6 @@
 import { ListPendingRedemptions } from "@/application/thanks-points/list-pending-redemptions"
-import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
-import { canDecideRedemption } from "@/domain/thanks-points/can-decide-redemption"
+import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

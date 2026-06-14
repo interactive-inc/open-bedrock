@@ -1,5 +1,5 @@
-import { TrainingCourse } from "@/domain/training/training-course"
-import { TrainingEnrollment } from "@/domain/training/training-enrollment"
+import { TrainingCourse } from "@/domain/training/training-course.entity"
+import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"

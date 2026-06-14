@@ -1,7 +1,7 @@
 import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
 import { GetOrgDepartment } from "@/application/org/get-org-department"
 import { UpdateOrgDepartment } from "@/application/org/update-org-department"
-import type { OrgDepartment } from "@/domain/org/org-department"
+import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

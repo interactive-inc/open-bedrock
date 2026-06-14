@@ -1,7 +1,6 @@
-import type { Forbidden } from "@/domain/payroll/payroll-access"
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
-import { SalaryRevision } from "@/domain/payroll/salary-revision"
-import { toPreviousBaseSalary } from "@/domain/payroll/to-previous-base-salary"
+import type { Forbidden } from "@/lib/payroll/payroll-access"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
+import { SalaryRevision } from "@/domain/payroll/salary-revision.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
@@ -59,7 +58,7 @@ export class CreateSalaryRevision {
     const salaryRevision = SalaryRevision.create({
       employeeId: employee.id,
       effectiveDate: command.effectiveDate,
-      previousBaseSalary: toPreviousBaseSalary({ priorRevision }),
+      previousBaseSalary: SalaryRevision.previousBaseSalaryOf(priorRevision),
       newBaseSalary: command.newBaseSalary,
       reason: command.reason,
       createdAt: command.createdAt,

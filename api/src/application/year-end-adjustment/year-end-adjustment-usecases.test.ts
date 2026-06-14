@@ -4,7 +4,7 @@ import { CreateYearEndAdjustment } from "@/application/year-end-adjustment/creat
 import { GetYearEndAdjustment } from "@/application/year-end-adjustment/get-year-end-adjustment"
 import { ListMyYearEndAdjustments } from "@/application/year-end-adjustment/list-my-year-end-adjustments"
 import { UpdateYearEndAdjustment } from "@/application/year-end-adjustment/update-year-end-adjustment"
-import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
+import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

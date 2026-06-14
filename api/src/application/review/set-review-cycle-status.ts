@@ -1,5 +1,5 @@
-import type { ReviewCycle } from "@/domain/review/review-cycle"
-import { canAdministerCycle } from "@/domain/review/can-administer-cycle"
+import type { ReviewCycle } from "@/domain/review/review-cycle.entity"
+import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 

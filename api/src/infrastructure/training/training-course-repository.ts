@@ -1,4 +1,4 @@
-import { TrainingCourse } from "@/domain/training/training-course"
+import { TrainingCourse } from "@/domain/training/training-course.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

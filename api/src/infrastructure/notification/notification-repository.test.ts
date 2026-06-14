@@ -1,4 +1,4 @@
-import { Notification } from "@/domain/notification/notification"
+import { Notification } from "@/domain/notification/notification.entity"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

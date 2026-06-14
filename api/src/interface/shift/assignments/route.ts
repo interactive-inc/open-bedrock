@@ -1,4 +1,4 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
 import {

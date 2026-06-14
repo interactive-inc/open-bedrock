@@ -1,7 +1,7 @@
 import { GetSurveyResponse } from "@/application/survey/get-survey-response"
 import { UpdateSurveyResponse } from "@/application/survey/update-survey-response"
 import { WithdrawSurveyResponse } from "@/application/survey/withdraw-survey-response"
-import type { SurveyResponse } from "@/domain/survey/survey-response"
+import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import { factory } from "@/lib/factory"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

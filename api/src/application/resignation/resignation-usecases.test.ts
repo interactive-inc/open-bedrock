@@ -4,7 +4,7 @@ import { CreateResignation } from "@/application/resignation/create-resignation"
 import { GetResignation } from "@/application/resignation/get-resignation"
 import { ListMyResignations } from "@/application/resignation/list-my-resignations"
 import { UpdateResignation } from "@/application/resignation/update-resignation"
-import { Resignation } from "@/domain/resignation/resignation"
+import { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

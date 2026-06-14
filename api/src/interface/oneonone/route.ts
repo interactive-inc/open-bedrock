@@ -1,5 +1,5 @@
 import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
-import { canCreateOneOnOne } from "@/domain/oneonone/can-create-one-on-one"
+import { canCreateOneOnOne } from "@/lib/oneonone/can-create-one-on-one"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

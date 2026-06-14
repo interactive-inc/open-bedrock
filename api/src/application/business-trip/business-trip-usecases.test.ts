@@ -4,7 +4,7 @@ import { CreateBusinessTrip } from "@/application/business-trip/create-business-
 import { GetBusinessTrip } from "@/application/business-trip/get-business-trip"
 import { ListMyBusinessTrips } from "@/application/business-trip/list-my-business-trips"
 import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
-import { BusinessTrip } from "@/domain/business-trip/business-trip"
+import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

@@ -1,5 +1,5 @@
-import { EmployeeSkill } from "@/domain/skill/employee-skill"
-import type { Skill } from "@/domain/skill/skill"
+import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
+import type { Skill } from "@/domain/skill/skill.entity"
 import type { Context } from "@/env"
 import { EmployeeSkillRepository } from "@/infrastructure/skill/employee-skill-repository"
 import { SkillRepository } from "@/infrastructure/skill/skill-repository"

@@ -1,4 +1,4 @@
-import { ReviewCycle } from "@/domain/review/review-cycle"
+import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

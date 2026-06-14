@@ -1,4 +1,4 @@
-import { Goal } from "@/domain/goal/goal"
+import { Goal } from "@/domain/goal/goal.entity"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"

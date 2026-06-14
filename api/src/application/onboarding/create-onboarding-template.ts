@@ -1,5 +1,5 @@
-import { canManageOnboarding } from "@/domain/onboarding/can-manage-onboarding"
-import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template"
+import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

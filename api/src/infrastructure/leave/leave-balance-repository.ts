@@ -1,4 +1,4 @@
-import { LeaveBalance } from "@/domain/leave/leave-balance"
+import { LeaveBalance } from "@/domain/leave/leave-balance.entity"
 import type { Context } from "@/env"
 import { leaveBalances } from "@/schema"
 import { and, eq, gte, sql } from "drizzle-orm"

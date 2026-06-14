@@ -1,5 +1,5 @@
-import { canManageShift } from "@/domain/shift/can-manage-shift"
-import { ShiftPattern } from "@/domain/shift/shift-pattern"
+import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"

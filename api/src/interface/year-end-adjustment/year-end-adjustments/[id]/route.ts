@@ -1,7 +1,7 @@
 import { CancelYearEndAdjustment } from "@/application/year-end-adjustment/cancel-year-end-adjustment"
 import { GetYearEndAdjustment } from "@/application/year-end-adjustment/get-year-end-adjustment"
 import { UpdateYearEndAdjustment } from "@/application/year-end-adjustment/update-year-end-adjustment"
-import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
+import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

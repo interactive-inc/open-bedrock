@@ -1,5 +1,5 @@
-import type { Goal } from "@/domain/goal/goal"
-import { GoalEvaluation, goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation"
+import type { Goal } from "@/domain/goal/goal.entity"
+import { GoalEvaluation, goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { goalEvaluations } from "@/schema"

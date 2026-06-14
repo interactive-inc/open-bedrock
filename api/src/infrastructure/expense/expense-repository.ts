@@ -1,5 +1,5 @@
-import { Expense } from "@/domain/expense/expense"
-import { ExpenseApproval } from "@/domain/expense/expense-approval"
+import { Expense } from "@/domain/expense/expense.entity"
+import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"
 import { expenseApprovals, expenses } from "@/schema"
 import { and, eq } from "drizzle-orm"

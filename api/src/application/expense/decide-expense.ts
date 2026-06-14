@@ -1,5 +1,5 @@
-import { canDecideExpense } from "@/domain/expense/can-decide-expense"
-import { ExpenseApproval } from "@/domain/expense/expense-approval"
+import { canDecideExpense } from "@/lib/expense/can-decide-expense"
+import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 

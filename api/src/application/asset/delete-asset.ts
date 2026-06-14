@@ -1,4 +1,4 @@
-import { canManageAssets } from "@/domain/asset/can-manage-assets"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 

@@ -2,8 +2,8 @@
 // ユーザーの平文パスワード不要で実行できる hash-of-hash 方式。
 // 次回ログイン時に authenticate-employee が純正 PBKDF2 へ昇格する。
 
-import { isLegacyPasswordHash } from "@/domain/auth/legacy-password-hash"
-import { wrapLegacyHash } from "@/domain/auth/wrap-legacy-hash"
+import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 

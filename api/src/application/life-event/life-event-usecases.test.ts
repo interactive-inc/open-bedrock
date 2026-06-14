@@ -4,7 +4,7 @@ import { CreateLifeEvent } from "@/application/life-event/create-life-event"
 import { GetLifeEvent } from "@/application/life-event/get-life-event"
 import { ListMyLifeEvents } from "@/application/life-event/list-my-life-events"
 import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
-import { LifeEvent } from "@/domain/life-event/life-event"
+import { LifeEvent } from "@/domain/life-event/life-event.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

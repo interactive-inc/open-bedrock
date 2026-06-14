@@ -1,6 +1,6 @@
 import { CancelSalaryRevision } from "@/application/payroll/cancel-salary-revision"
 import { CorrectSalaryRevision } from "@/application/payroll/correct-salary-revision"
-import { SalaryRevision } from "@/domain/payroll/salary-revision"
+import { SalaryRevision } from "@/domain/payroll/salary-revision.entity"
 import {
   ConflictError,
   ForbiddenError,

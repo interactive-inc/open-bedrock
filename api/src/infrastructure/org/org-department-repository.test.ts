@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { OrgDepartment } from "@/domain/org/org-department"
+import { OrgDepartment } from "@/domain/org/org-department.entity"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 

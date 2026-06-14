@@ -1,5 +1,5 @@
-import { canSubmitForm } from "@/domain/review/can-submit-form"
-import type { ReviewForm } from "@/domain/review/review-form"
+import { canSubmitForm } from "@/lib/review/can-submit-form"
+import type { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"

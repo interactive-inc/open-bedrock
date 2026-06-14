@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { CorrectSalaryRevision } from "@/application/payroll/correct-salary-revision"
-import { SalaryRevision } from "@/domain/payroll/salary-revision"
+import { SalaryRevision } from "@/domain/payroll/salary-revision.entity"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"

@@ -1,4 +1,4 @@
-import { LeaveRequest } from "@/domain/leave/leave-request"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"

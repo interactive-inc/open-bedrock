@@ -1,6 +1,6 @@
 import { DeleteApplicationTemplate } from "@/application/application/delete-application-template"
 import { UpdateApplicationTemplate } from "@/application/application/update-application-template"
-import type { ApplicationTemplate } from "@/domain/application/application-template"
+import type { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { factory } from "@/lib/factory"
 import { applicationTemplates } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"

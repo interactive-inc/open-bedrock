@@ -1,5 +1,5 @@
-import { canCompleteTask } from "@/domain/onboarding/can-complete-task"
-import type { OnboardingTask } from "@/domain/onboarding/onboarding-task"
+import { canCompleteTask } from "@/lib/onboarding/can-complete-task"
+import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 

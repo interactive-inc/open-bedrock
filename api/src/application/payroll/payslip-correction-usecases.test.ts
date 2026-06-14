@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CancelPayslip } from "@/application/payroll/cancel-payslip"
 import { CorrectPayslip } from "@/application/payroll/correct-payslip"
-import { Payslip } from "@/domain/payroll/payslip"
+import { Payslip } from "@/domain/payroll/payslip.entity"
 import type { Context } from "@/env"
 import { PayslipRepository } from "@/infrastructure/payroll/payslip-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"

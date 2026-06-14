@@ -1,4 +1,4 @@
-import type { OrgDepartment } from "@/domain/org/org-department"
+import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 

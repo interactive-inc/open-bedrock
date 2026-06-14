@@ -1,7 +1,6 @@
-import type { Forbidden } from "@/domain/payroll/payroll-access"
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
-import type { SalaryRevision } from "@/domain/payroll/salary-revision"
-import { toPreviousBaseSalary } from "@/domain/payroll/to-previous-base-salary"
+import type { Forbidden } from "@/lib/payroll/payroll-access"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
+import { SalaryRevision } from "@/domain/payroll/salary-revision.entity"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/infrastructure/payroll/salary-revision-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
@@ -92,6 +91,6 @@ export class CorrectSalaryRevision {
       return priorRevision
     }
 
-    return withDetails.withPreviousBaseSalary(toPreviousBaseSalary({ priorRevision }))
+    return withDetails.withPreviousBaseSalary(SalaryRevision.previousBaseSalaryOf(priorRevision))
   }
 }

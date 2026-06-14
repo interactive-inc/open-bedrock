@@ -1,4 +1,4 @@
-import type { TokenPayload } from "@/domain/auth/token-payload"
+import type { TokenPayload } from "@/lib/auth/token-payload"
 import { SignJWT } from "jose"
 
 // options.expirationTime に jose の相対指定（"8h" など）か絶対 epoch 秒を渡せる。

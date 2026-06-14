@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { notificationKindSchema } from "@/domain/notification/notification"
+import { notificationKindSchema } from "@/domain/notification/notification.entity"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedNotifications } from "@/infrastructure/seed/seed-notifications"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"

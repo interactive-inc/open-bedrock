@@ -1,4 +1,4 @@
-import { canDecideApplication } from "@/domain/application/can-decide-application"
+import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,

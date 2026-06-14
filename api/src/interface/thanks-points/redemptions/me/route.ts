@@ -1,5 +1,5 @@
 import { ListMyRedemptions } from "@/application/thanks-points/list-my-redemptions"
-import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption"
+import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

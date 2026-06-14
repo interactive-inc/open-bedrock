@@ -1,4 +1,4 @@
-import type { OneOnOne } from "@/domain/oneonone/one-on-one"
+import type { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
 

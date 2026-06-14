@@ -1,7 +1,7 @@
 import { CancelPayslip } from "@/application/payroll/cancel-payslip"
 import { CorrectPayslip } from "@/application/payroll/correct-payslip"
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
-import { Payslip } from "@/domain/payroll/payslip"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
+import { Payslip } from "@/domain/payroll/payslip.entity"
 import {
   ConflictError,
   ForbiddenError,

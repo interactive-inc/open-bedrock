@@ -1,4 +1,4 @@
-import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
+import type { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { YearEndAdjustmentRepository } from "@/infrastructure/year-end-adjustment/year-end-adjustment-repository"

@@ -1,4 +1,4 @@
-import { Asset } from "@/domain/asset/asset"
+import { Asset } from "@/domain/asset/asset.entity"
 import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"

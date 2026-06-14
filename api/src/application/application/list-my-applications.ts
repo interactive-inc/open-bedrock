@@ -1,4 +1,4 @@
-import type { Application } from "@/domain/application/application"
+import type { Application } from "@/domain/application/application.entity"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 

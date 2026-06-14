@@ -1,4 +1,4 @@
-import type { Notification } from "@/domain/notification/notification"
+import type { Notification } from "@/domain/notification/notification.entity"
 import type { Context } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 

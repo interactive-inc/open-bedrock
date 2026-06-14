@@ -1,5 +1,5 @@
 import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-request"
-import { canApproveShiftSwap } from "@/domain/shift/can-approve-shift-swap"
+import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

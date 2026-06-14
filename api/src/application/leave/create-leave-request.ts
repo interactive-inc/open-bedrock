@@ -1,5 +1,4 @@
-import { LeaveRequest } from "@/domain/leave/leave-request"
-import { toLeaveDays } from "@/domain/leave/to-leave-days"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
@@ -27,7 +26,7 @@ export class CreateLeaveRequest {
   ): Promise<LeaveRequest | InvalidLeavePeriod | OverlappingLeaveRequest | Error> {
     const repository = new LeaveRequestRepository(this.c)
 
-    const days = toLeaveDays(command.startDate, command.endDate)
+    const days = LeaveRequest.daysBetween(command.startDate, command.endDate)
 
     if (days instanceof Error) {
       return { failure: "invalid_leave_period" }

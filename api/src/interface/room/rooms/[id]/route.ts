@@ -1,7 +1,7 @@
 import { DeleteRoom } from "@/application/room/delete-room"
 import { GetRoom } from "@/application/room/get-room"
 import { UpdateRoom } from "@/application/room/update-room"
-import { Room } from "@/domain/room/room"
+import { Room } from "@/domain/room/room.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {

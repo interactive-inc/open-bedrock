@@ -1,4 +1,4 @@
-import { periodOf } from "@/domain/thanks-points/period-of"
+import { periodOf } from "@/lib/thanks-points/period-of"
 import type { Context } from "@/env"
 import { ThanksPointBudgetRepository } from "@/infrastructure/thanks-points/thanks-point-budget-repository"
 

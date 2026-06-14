@@ -1,4 +1,4 @@
-import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article"
+import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article.entity"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/infrastructure/knowledge/knowledge-article-repository"
 

@@ -1,4 +1,4 @@
-import { canViewOthers } from "@/domain/goal/goal-access"
+import { canViewOthers } from "@/lib/goal/goal-access"
 import { factory } from "@/lib/factory"
 import { goals } from "@/schema"
 import {

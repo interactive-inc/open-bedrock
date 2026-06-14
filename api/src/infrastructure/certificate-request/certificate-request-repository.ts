@@ -1,4 +1,4 @@
-import { CertificateRequest } from "@/domain/certificate-request/certificate-request"
+import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { certificateRequests } from "@/schema"
 import { and, desc, eq } from "drizzle-orm"

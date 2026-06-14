@@ -1,7 +1,7 @@
 import { CancelLeaveRequest } from "@/application/leave/cancel-leave-request"
 import { GetLeaveRequest } from "@/application/leave/get-leave-request"
 import { UpdateLeaveRequest } from "@/application/leave/update-leave-request"
-import { LeaveRequest } from "@/domain/leave/leave-request"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import {
   BadRequestError,
   ConflictError,

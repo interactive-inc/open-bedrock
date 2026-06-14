@@ -1,4 +1,4 @@
-import type { ApplicationNotFound } from "@/domain/application/application-not-found"
+import type { ApplicationNotFound } from "@/lib/application/application-not-found"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 

@@ -1,4 +1,4 @@
-import { notificationKindSchema } from "@/domain/notification/notification"
+import { notificationKindSchema } from "@/domain/notification/notification.entity"
 import { factory } from "@/lib/factory"
 import { toNotificationSearchQuery } from "@/interface/notification/me/to-notification-search-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

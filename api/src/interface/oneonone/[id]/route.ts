@@ -1,7 +1,7 @@
 import { DeleteOneOnOne } from "@/application/oneonone/delete-one-on-one"
 import { GetOneOnOne } from "@/application/oneonone/get-one-on-one"
 import { UpdateOneOnOne } from "@/application/oneonone/update-one-on-one"
-import type { OneOnOne } from "@/domain/oneonone/one-on-one"
+import type { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { factory } from "@/lib/factory"
 import {

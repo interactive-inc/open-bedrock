@@ -1,4 +1,4 @@
-import { canManageBatch } from "@/domain/batch/can-manage-batch"
+import { canManageBatch } from "@/lib/batch/can-manage-batch"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,

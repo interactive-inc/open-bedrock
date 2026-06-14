@@ -1,4 +1,4 @@
-import { canManagePayroll } from "@/domain/payroll/payroll-access"
+import { canManagePayroll } from "@/lib/payroll/payroll-access"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import {

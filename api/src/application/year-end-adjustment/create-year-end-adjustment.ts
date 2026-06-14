@@ -1,4 +1,4 @@
-import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment"
+import { YearEndAdjustment } from "@/domain/year-end-adjustment/year-end-adjustment.entity"
 import type { Context } from "@/env"
 import { YearEndAdjustmentRepository } from "@/infrastructure/year-end-adjustment/year-end-adjustment-repository"
 

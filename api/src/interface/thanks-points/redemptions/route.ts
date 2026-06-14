@@ -1,5 +1,5 @@
 import { RequestRedemption } from "@/application/thanks-points/request-redemption"
-import { toPositiveInt } from "@/domain/thanks-points/to-positive-int"
+import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import {
   BadRequestError,
   ConflictError,

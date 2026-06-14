@@ -1,4 +1,4 @@
-import { canViewDashboard } from "@/domain/dashboard/can-view-dashboard"
+import { canViewDashboard } from "@/lib/dashboard/can-view-dashboard"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"

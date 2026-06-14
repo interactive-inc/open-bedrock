@@ -1,4 +1,4 @@
-import type { CertificateRequest } from "@/domain/certificate-request/certificate-request"
+import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 

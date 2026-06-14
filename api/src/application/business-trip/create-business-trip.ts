@@ -1,4 +1,4 @@
-import { BusinessTrip } from "@/domain/business-trip/business-trip"
+import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
 

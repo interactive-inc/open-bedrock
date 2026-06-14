@@ -1,4 +1,4 @@
-import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request"
+import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 

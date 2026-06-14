@@ -1,5 +1,5 @@
 import { SendNotification } from "@/application/notification/send-notification"
-import { notificationKindSchema } from "@/domain/notification/notification"
+import { notificationKindSchema } from "@/domain/notification/notification.entity"
 import {
   ForbiddenError,
   InternalError,

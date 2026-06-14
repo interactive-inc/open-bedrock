@@ -1,4 +1,4 @@
-import { canDeleteEmployee } from "@/domain/employee/can-delete-employee"
+import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 

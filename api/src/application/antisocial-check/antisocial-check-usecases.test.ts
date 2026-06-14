@@ -4,7 +4,7 @@ import { CreateAntisocialCheck } from "@/application/antisocial-check/create-ant
 import { GetAntisocialCheck } from "@/application/antisocial-check/get-antisocial-check"
 import { ListMyAntisocialChecks } from "@/application/antisocial-check/list-my-antisocial-checks"
 import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-antisocial-check"
-import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check"
+import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
