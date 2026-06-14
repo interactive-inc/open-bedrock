@@ -26,11 +26,11 @@ export const metadata: Metadata = {
   description: "社内事務手続きのためのセルフホスト基盤",
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+type Props = {
   children: React.ReactNode
-}>) {
+}
+
+export default function RootLayout(props: Props) {
   return (
     <html
       lang="en"
@@ -45,7 +45,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        {props.children}
 
         <Toaster />
       </body>
