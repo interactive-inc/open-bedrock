@@ -365,7 +365,7 @@ describe("DELETE /surveys/:survey_id", () => {
 
     expect(summaryBefore.status).toBe(200)
 
-    const bodyBefore = (await summaryBefore.json()) as { response_count: number }
+    const bodyBefore = z.object({ response_count: z.number() }).parse(await summaryBefore.json())
 
     expect(bodyBefore.response_count).toBe(3)
 
