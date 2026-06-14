@@ -24,7 +24,6 @@ bun run dev
 - `app/(auth)/` … ログイン画面
 - `components/` … 画面横断の共有コンポーネント
 - `components/ui/` … shadcn 生成物（直接編集しない）
-- `components/ui.custom/` … shadcn をラップした独自コンポーネント
 - `lib/api/` … API クライアント関数（1 関数 1 ファイル）
 - `lib/<domain>/` … 権限判定などのドメインロジック
 
