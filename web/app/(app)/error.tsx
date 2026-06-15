@@ -1,15 +1,24 @@
 "use client"
 
 import Link from "next/link"
+import { LoginGate } from "@/components/login-gate"
 import { Button } from "@/components/ui/button"
+import { isAuthErrorDigest } from "@/lib/api/auth-error"
 
 type Props = {
   error: Error & { digest?: string }
   reset: () => void
 }
 
-// 保護領域のエラーバウンダリ。AppShell 内で未ハンドル例外時に回復導線を出す。
+/**
+ * 保護領域のエラーバウンダリ。`AuthError` ならログインフォームに差し替え、
+ * それ以外は汎用の回復導線を出す。
+ */
 export default function AppError(props: Props) {
+  if (isAuthErrorDigest(props.error.digest)) {
+    return <LoginGate />
+  }
+
   return (
     <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-6 text-center">
       <div className="flex flex-col gap-2">
@@ -27,8 +36,8 @@ export default function AppError(props: Props) {
       <div className="flex gap-3">
         <Button onClick={props.reset}>再試行</Button>
 
-        <Button variant="outline" render={<Link href="/dashboard" />}>
-          ダッシュボードへ戻る
+        <Button variant="outline" render={<Link href="/" />}>
+          ホームへ戻る
         </Button>
       </div>
     </div>

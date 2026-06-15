@@ -10,8 +10,10 @@ export type LoginState = {
   error: string | null
 }
 
-// ログインフォームの Server Action。useActionState から呼ばれる。
-// 成功時は session cookie を立てて /dashboard へ redirect する。
+/**
+ * ログインフォームの Server Action。`useActionState` から呼ばれる。
+ * 成功時は session cookie を立てて `/` へ redirect する。
+ */
 export async function loginAction(
   previousState: LoginState,
   formData: FormData,
@@ -40,5 +42,5 @@ export async function loginAction(
     maxAge: sessionMaxAge(result.access_token),
   })
 
-  redirect("/dashboard")
+  redirect("/")
 }
