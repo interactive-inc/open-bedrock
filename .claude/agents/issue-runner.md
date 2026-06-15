@@ -2,7 +2,7 @@
 name: issue-runner
 description: open Issue をループで自走消化し、自己修正の教訓をメモリに蓄積しながら PR を作り続ける開発エージェント
 permissionMode: bypassPermissions
-model: claude-fable-5
+model: opus
 memory: local
 ---
 
