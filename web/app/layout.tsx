@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Noto_Sans, Playfair_Display } from "next/font/google"
 import "./globals.css"
-import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import { cn } from "@/lib/utils"
+import { getTheme } from "@/lib/theme/get-theme"
 
 const playfairDisplayHeading = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" })
 
@@ -20,8 +21,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "open-karte",
-    template: "%s | open-karte",
+    default: "KARTE",
+    template: "%s | KARTE",
   },
   description: "社内事務手続きのためのセルフホスト基盤",
 }
@@ -30,14 +31,17 @@ type Props = {
   children: React.ReactNode
 }
 
-export default function RootLayout(props: Props) {
+export default async function RootLayout(props: Props) {
+  const theme = await getTheme()
+
   return (
     <html
-      lang="en"
+      lang="ja"
       className={cn(
         "h-full",
         "antialiased",
         "font-sans",
+        theme === "dark" ? "dark" : "",
         geistSans.variable,
         geistMono.variable,
         notoSans.variable,
