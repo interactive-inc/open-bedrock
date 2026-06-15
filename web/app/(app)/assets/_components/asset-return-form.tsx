@@ -1,5 +1,6 @@
 "use client"
 
+import { FieldError } from "@/components/ui/field"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { returnAssetAction } from "@/app/(app)/assets/actions"
@@ -47,7 +48,7 @@ export function AssetReturnForm(props: Props) {
         {isPending ? "返却中..." : "返却"}
       </Button>
 
-      {state.error !== null ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
     </form>
   )
 }

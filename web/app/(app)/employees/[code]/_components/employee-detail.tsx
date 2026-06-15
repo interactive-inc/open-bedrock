@@ -1,5 +1,7 @@
+import { FetchError } from "@/components/fetch-error"
 import { notFound } from "next/navigation"
 import { EmployeeStatusBadge } from "@/app/(app)/employees/_components/employee-status-badge"
+import { DetailField } from "@/components/detail-field"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
 
@@ -13,7 +15,7 @@ export async function EmployeeDetail(props: Props) {
   const employee = await getEmployeeByCode(props.code)
 
   if (employee instanceof Error) {
-    return <p className="text-sm text-destructive">従業員情報の取得に失敗しました</p>
+    return <FetchError message="従業員情報の取得に失敗しました" />
   }
 
   if (employee === null) {
@@ -32,33 +34,17 @@ export async function EmployeeDetail(props: Props) {
 
       <CardContent>
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <DetailRow label="コード" value={employee.code} />
+          <DetailField label="コード">{employee.code}</DetailField>
 
-          <DetailRow label="部署" value={employee.deptName ?? "-"} />
+          <DetailField label="部署">{employee.deptName ?? "-"}</DetailField>
 
-          <DetailRow label="役職" value={employee.position ?? "-"} />
+          <DetailField label="役職">{employee.position ?? "-"}</DetailField>
 
-          <DetailRow label="メール" value={employee.email} />
+          <DetailField label="メール">{employee.email}</DetailField>
 
-          <DetailRow label="ロール" value={employee.role} />
+          <DetailField label="ロール">{employee.role}</DetailField>
         </dl>
       </CardContent>
     </Card>
-  )
-}
-
-type DetailRowProps = {
-  label: string
-  value: string
-}
-
-// 詳細の 1 項目（ラベル + 値）を縦並びで表示する。
-function DetailRow(props: DetailRowProps) {
-  return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-sm text-muted-foreground">{props.label}</dt>
-
-      <dd className="text-sm">{props.value}</dd>
-    </div>
   )
 }

@@ -21,41 +21,43 @@ export function EmployeeTable(props: Props) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>コード</TableHead>
-          <TableHead>氏名</TableHead>
-          <TableHead>部署</TableHead>
-          <TableHead>役職</TableHead>
-          <TableHead>メール</TableHead>
-          <TableHead>在籍状況</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.employees.map((employee) => (
-          <TableRow key={employee.code} className="relative cursor-pointer hover:bg-muted">
-            <TableCell className="font-medium">
-              <Link href={`/employees/${employee.code}`} className="after:absolute after:inset-0">
-                {employee.code}
-              </Link>
-            </TableCell>
-
-            <TableCell>{employee.name}</TableCell>
-
-            <TableCell>{employee.deptName ?? "-"}</TableCell>
-
-            <TableCell>{employee.position ?? "-"}</TableCell>
-
-            <TableCell className="text-muted-foreground">{employee.email}</TableCell>
-
-            <TableCell>
-              <EmployeeStatusBadge status={employee.status} />
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>コード</TableHead>
+            <TableHead>氏名</TableHead>
+            <TableHead>部署</TableHead>
+            <TableHead>役職</TableHead>
+            <TableHead>メール</TableHead>
+            <TableHead>在籍状況</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.employees.map((employee) => (
+            <TableRow key={employee.code} className="relative cursor-pointer hover:bg-muted">
+              <TableCell className="font-medium">
+                <Link href={`/employees/${employee.code}`} className="after:absolute after:inset-0">
+                  {employee.code}
+                </Link>
+              </TableCell>
+
+              <TableCell>{employee.name}</TableCell>
+
+              <TableCell>{employee.deptName ?? "-"}</TableCell>
+
+              <TableCell>{employee.position ?? "-"}</TableCell>
+
+              <TableCell className="text-muted-foreground">{employee.email}</TableCell>
+
+              <TableCell>
+                <EmployeeStatusBadge status={employee.status} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

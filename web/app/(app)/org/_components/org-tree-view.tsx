@@ -1,5 +1,7 @@
+import { FetchError } from "@/components/fetch-error"
 import { getOrgTree } from "@/lib/api/get-org-tree"
 import { OrgTreeNodeItem } from "@/app/(app)/org/_components/org-tree-node-item"
+import { EmptyState } from "@/components/empty-state"
 import { Card } from "@/components/ui/card"
 
 // /org/tree を認証付きで取得し、ルート部署から再帰的にツリー描画する非同期 RSC。
@@ -7,11 +9,11 @@ export async function OrgTreeView() {
   const nodes = await getOrgTree()
 
   if (nodes instanceof Error) {
-    return <p className="text-sm text-destructive">組織ツリーの取得に失敗しました</p>
+    return <FetchError message="組織ツリーの取得に失敗しました" />
   }
 
   if (nodes.length === 0) {
-    return <p className="text-sm text-muted-foreground">部署がありません</p>
+    return <EmptyState title="部署がありません" />
   }
 
   return (

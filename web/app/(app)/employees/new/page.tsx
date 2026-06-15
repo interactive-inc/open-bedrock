@@ -1,6 +1,6 @@
-import Link from "next/link"
 import { EmployeeCreateForm } from "@/app/(app)/employees/_components/employee-create-form"
-import { Button } from "@/components/ui/button"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 
 export const metadata = { title: "従業員登録" }
@@ -9,13 +9,11 @@ export const metadata = { title: "従業員登録" }
 export default function EmployeeNewPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">従業員を登録</h1>
-
-        <Button variant="outline" render={<Link href="/employees" />}>
-          一覧へ戻る
-        </Button>
-      </div>
+      <PageHeader
+        title="従業員を登録"
+        description="新しい従業員を従業員台帳に登録します。"
+        actions={<BackButton href="/employees" label="一覧に戻る" />}
+      />
 
       <Card className="max-w-xl gap-0 p-0">
         <div className="p-6">

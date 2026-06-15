@@ -1,9 +1,10 @@
-import Link from "next/link"
 import { AssetLendForm } from "@/app/(app)/assets/_components/asset-lend-form"
 import { AssetReturnForm } from "@/app/(app)/assets/_components/asset-return-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
 import { AssetStatusBadge } from "@/components/asset-status-badge"
-import { Button } from "@/components/ui/button"
+import { BackButton } from "@/components/back-button"
+import { DetailField } from "@/components/detail-field"
+import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getAssetByCode } from "@/lib/api/get-asset-by-code"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -26,53 +27,25 @@ export default async function AssetDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold">{asset.name}</h1>
+      <PageHeader title={asset.name} actions={<BackButton href="/assets" label="一覧に戻る" />} />
 
-          <AssetStatusBadge status={asset.status} />
-        </div>
-
-        <Button variant="outline" render={<Link href="/assets" />}>
-          一覧へ戻る
-        </Button>
-      </div>
+      <AssetStatusBadge status={asset.status} />
 
       <Card className="p-0 gap-0">
         <dl className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">資産コード</dt>
+          <DetailField label="資産コード">{asset.code}</DetailField>
 
-            <dd className="text-sm font-medium">{asset.code}</dd>
-          </div>
+          <DetailField label="種別">
+            <AssetKindLabel kind={asset.kind} />
+          </DetailField>
 
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">種別</dt>
+          <DetailField label="シリアル">{asset.serial ?? "-"}</DetailField>
 
-            <dd className="text-sm font-medium">
-              <AssetKindLabel kind={asset.kind} />
-            </dd>
-          </div>
+          <DetailField label="購入日">{asset.purchased_on ?? "-"}</DetailField>
 
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">シリアル</dt>
-
-            <dd className="text-sm font-medium">{asset.serial ?? "-"}</dd>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">購入日</dt>
-
-            <dd className="text-sm font-medium">{asset.purchased_on ?? "-"}</dd>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">保有者</dt>
-
-            <dd className="text-sm font-medium">
-              {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
-            </dd>
-          </div>
+          <DetailField label="保有者">
+            {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
+          </DetailField>
         </dl>
       </Card>
 

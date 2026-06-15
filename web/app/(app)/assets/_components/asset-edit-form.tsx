@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
 type Props = {
@@ -111,9 +111,7 @@ export function AssetEditForm(props: Props) {
               />
             </Field>
 
-            {state.error !== null ? (
-              <p className="text-sm text-destructive">{state.error}</p>
-            ) : null}
+            {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
             <Button type="submit" disabled={isPending}>
               {isPending ? "更新中..." : "変更を保存"}

@@ -1,4 +1,6 @@
 import { BatchJobTable } from "@/app/(app)/batch/_components/batch-job-table"
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { getBatchJobList } from "@/lib/api/get-batch-job-list"
 
 // バッチジョブ状況一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
@@ -8,14 +10,12 @@ export async function BatchJobList() {
 
   if (jobs instanceof Error) {
     return (
-      <p className="text-sm text-destructive">
-        バッチジョブ一覧の取得に失敗しました（権限が必要な場合があります）
-      </p>
+      <FetchError message="バッチジョブ一覧の取得に失敗しました（権限が必要な場合があります）" />
     )
   }
 
   if (jobs.length === 0) {
-    return <p className="text-sm text-muted-foreground">バッチジョブがありません</p>
+    return <EmptyState title="バッチジョブがありません" />
   }
 
   return <BatchJobTable jobs={jobs} />

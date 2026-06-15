@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getOrgDepartmentMembers } from "@/lib/api/get-org-department-members"
 import { Badge } from "@/components/ui/badge"
@@ -19,7 +20,7 @@ export async function OrgMembersTable(props: Props) {
   const members = await getOrgDepartmentMembers(props.code)
 
   if (members instanceof Error) {
-    return <p className="text-sm text-destructive">メンバーの取得に失敗しました</p>
+    return <FetchError message="メンバーの取得に失敗しました" />
   }
 
   if (members.length === 0) {
@@ -27,42 +28,44 @@ export async function OrgMembersTable(props: Props) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>社員コード</TableHead>
-          <TableHead>氏名</TableHead>
-          <TableHead>役職</TableHead>
-          <TableHead>区分</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {members.map((member) => (
-          <TableRow key={member.employee_code}>
-            <TableCell>
-              <Link
-                href={`/org/reporting-line/${member.employee_code}`}
-                className="font-medium hover:underline"
-              >
-                {member.employee_code}
-              </Link>
-            </TableCell>
-
-            <TableCell>{member.employee_name}</TableCell>
-
-            <TableCell>{member.position ?? "-"}</TableCell>
-
-            <TableCell>
-              {member.is_manager ? (
-                <Badge>マネージャー</Badge>
-              ) : (
-                <Badge variant="secondary">メンバー</Badge>
-              )}
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>社員コード</TableHead>
+            <TableHead>氏名</TableHead>
+            <TableHead>役職</TableHead>
+            <TableHead>区分</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {members.map((member) => (
+            <TableRow key={member.employee_code}>
+              <TableCell>
+                <Link
+                  href={`/org/reporting-line/${member.employee_code}`}
+                  className="font-medium hover:underline"
+                >
+                  {member.employee_code}
+                </Link>
+              </TableCell>
+
+              <TableCell>{member.employee_name}</TableCell>
+
+              <TableCell>{member.position ?? "-"}</TableCell>
+
+              <TableCell>
+                {member.is_manager ? (
+                  <Badge>マネージャー</Badge>
+                ) : (
+                  <Badge variant="secondary">メンバー</Badge>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

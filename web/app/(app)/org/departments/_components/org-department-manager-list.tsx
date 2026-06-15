@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -40,47 +40,49 @@ export function OrgDepartmentManagerList(props: Props) {
     <div className="flex flex-col gap-6">
       <CreateDepartmentForm />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>コード</TableHead>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>コード</TableHead>
 
-            <TableHead>マスタ ID</TableHead>
+              <TableHead>マスタ ID</TableHead>
 
-            <TableHead>親</TableHead>
+              <TableHead>親</TableHead>
 
-            <TableHead>責任者</TableHead>
+              <TableHead>責任者</TableHead>
 
-            <TableHead>表示順</TableHead>
+              <TableHead>表示順</TableHead>
 
-            <TableHead className="text-right">操作</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {props.departments.map((department) => (
-            <TableRow key={department.code}>
-              <TableCell className="font-medium">{department.code}</TableCell>
-
-              <TableCell>{department.department_id}</TableCell>
-
-              <TableCell>{department.parent_code ?? "-"}</TableCell>
-
-              <TableCell>{department.manager_employee_code ?? "-"}</TableCell>
-
-              <TableCell>{department.order}</TableCell>
-
-              <TableCell>
-                <div className="flex justify-end gap-2">
-                  <UpdateDepartmentDialog department={department} />
-
-                  <DeleteDepartmentButton code={department.code} />
-                </div>
-              </TableCell>
+              <TableHead className="text-right">操作</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+
+          <TableBody>
+            {props.departments.map((department) => (
+              <TableRow key={department.code}>
+                <TableCell className="font-medium">{department.code}</TableCell>
+
+                <TableCell>{department.department_id}</TableCell>
+
+                <TableCell>{department.parent_code ?? "-"}</TableCell>
+
+                <TableCell>{department.manager_employee_code ?? "-"}</TableCell>
+
+                <TableCell>{department.order}</TableCell>
+
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    <UpdateDepartmentDialog department={department} />
+
+                    <DeleteDepartmentButton code={department.code} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }
@@ -141,7 +143,7 @@ function CreateDepartmentForm() {
         </Field>
       </FieldGroup>
 
-      {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
       <Button type="submit" disabled={pending}>
         部署を作成
@@ -225,7 +227,7 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

@@ -2,8 +2,9 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { SkillSearchForm } from "@/app/(app)/skills/_components/skill-search-form"
 import { SkillTable } from "@/app/(app)/skills/_components/skill-table"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "スキル" }
 
@@ -22,29 +23,20 @@ export default async function SkillsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">スキル一覧</h1>
-
-        <Button render={<Link href="/skills/me" />}>自分のスキル</Button>
-      </div>
+      <PageHeader
+        title="スキル一覧"
+        description="スキルをキーワード・カテゴリで検索します。"
+        actions={<Button render={<Link href="/skills/me" />}>自分のスキル</Button>}
+      />
 
       <SkillSearchForm q={q} category={category} />
 
-      <Suspense key={`${q}:${category}`} fallback={<SkillTableSkeleton />}>
+      <Suspense
+        key={`${q}:${category}`}
+        fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}
+      >
         <SkillTable q={q} category={category} />
       </Suspense>
-    </div>
-  )
-}
-
-function SkillTableSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
     </div>
   )
 }

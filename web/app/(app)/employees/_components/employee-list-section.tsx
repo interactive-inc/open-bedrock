@@ -1,4 +1,5 @@
 import { EmployeeTable } from "@/app/(app)/employees/_components/employee-table"
+import { FetchError } from "@/components/fetch-error"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import type { EmployeeSearchFilter } from "@/lib/api/types/employee-search-filter"
 
@@ -11,7 +12,7 @@ export async function EmployeeListSection(props: Props) {
   const employees = await getEmployeeList(props.filter)
 
   if (employees instanceof Error) {
-    return <p className="text-sm text-destructive">従業員一覧の取得に失敗しました</p>
+    return <FetchError message="従業員一覧の取得に失敗しました" />
   }
 
   return (

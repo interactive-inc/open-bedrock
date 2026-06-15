@@ -1,7 +1,8 @@
 import { Suspense } from "react"
-import Link from "next/link"
 import { OrgReportingLineView } from "@/app/(app)/org/reporting-line/[code]/_components/org-reporting-line-view"
-import { Skeleton } from "@/components/ui/skeleton"
+import { BackButton } from "@/components/back-button"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 
 export const metadata = { title: "レポートライン" }
 
@@ -16,29 +17,14 @@ export default async function OrgReportingLinePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Link href="/org" className="text-sm text-muted-foreground hover:underline">
-          組織図に戻る
-        </Link>
+      <PageHeader
+        title={`レポートライン: ${params.code}`}
+        actions={<BackButton href="/org" label="組織図に戻る" />}
+      />
 
-        <h1 className="text-2xl font-semibold">レポートライン: {params.code}</h1>
-      </div>
-
-      <Suspense fallback={<OrgReportingLineSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-14 w-full" />}>
         <OrgReportingLineView code={params.code} />
       </Suspense>
-    </div>
-  )
-}
-
-function OrgReportingLineSkeleton() {
-  const placeholders = [0, 1, 2]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-14 w-full" />
-      ))}
     </div>
   )
 }

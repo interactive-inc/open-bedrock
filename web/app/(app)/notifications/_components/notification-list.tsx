@@ -8,6 +8,7 @@ import {
   markAllNotificationsReadAction,
   markNotificationReadAction,
 } from "@/app/(app)/notifications/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -53,7 +54,7 @@ export function NotificationList(props: Props) {
   const [, markAllDispatch, isMarkingAll] = useActionState(markAllReduce, initialState)
 
   if (props.notifications.length === 0) {
-    return <p className="text-sm text-muted-foreground">通知はありません</p>
+    return <EmptyState title="通知はありません" />
   }
 
   return (

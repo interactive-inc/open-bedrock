@@ -4,6 +4,8 @@ import { AttendanceClockForm } from "@/app/(app)/attendance/_components/attendan
 import { AttendanceFilterForm } from "@/app/(app)/attendance/_components/attendance-filter-form"
 import { AttendanceSummaryCard } from "@/app/(app)/attendance/_components/attendance-summary-card"
 import { MyAttendanceList } from "@/app/(app)/attendance/_components/my-attendance-list"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -26,13 +28,15 @@ export default async function AttendancePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">勤怠</h1>
-
-        <Button variant="outline" render={<Link href="/attendance/all" />}>
-          勤怠一覧（管理者）
-        </Button>
-      </div>
+      <PageHeader
+        title="勤怠"
+        description="出勤・退勤の打刻と、自分の勤怠記録を確認します。"
+        actions={
+          <Button variant="outline" render={<Link href="/attendance/all" />}>
+            勤怠一覧（管理者）
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <AttendanceClockForm mode="clock-in" />
@@ -53,22 +57,10 @@ export default async function AttendancePage(props: Props) {
 
         <AttendanceFilterForm withEmployeeId={false} employeeId={null} from={from} to={to} />
 
-        <Suspense key={`${from ?? ""}:${to ?? ""}`} fallback={<AttendanceListSkeleton />}>
+        <Suspense key={`${from ?? ""}:${to ?? ""}`} fallback={<ListSkeleton rows={5} />}>
           <MyAttendanceList from={from} to={to} />
         </Suspense>
       </section>
-    </div>
-  )
-}
-
-function AttendanceListSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
     </div>
   )
 }

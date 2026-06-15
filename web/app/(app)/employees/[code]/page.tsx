@@ -1,6 +1,7 @@
-import Link from "next/link"
 import { Suspense } from "react"
 import { EmployeeDetail } from "@/app/(app)/employees/[code]/_components/employee-detail"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "従業員詳細" }
@@ -15,9 +16,10 @@ export default async function EmployeeDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/employees" className="text-sm text-muted-foreground hover:text-foreground">
-        ← 従業員一覧へ戻る
-      </Link>
+      <PageHeader
+        title="従業員詳細"
+        actions={<BackButton href="/employees" label="一覧に戻る" />}
+      />
 
       <Suspense fallback={<EmployeeDetailSkeleton />}>
         <EmployeeDetail code={params.code} />

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { BatchJobList } from "@/app/(app)/batch/_components/batch-job-list"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "バッチ" }
@@ -17,29 +18,14 @@ export default async function BatchPage() {
   }
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">バッチジョブ状況</h1>
+      <PageHeader
+        title="バッチジョブ状況"
+        description="バックグラウンドで実行されるジョブの最新の実行状況を確認できます。"
+      />
 
-        <p className="text-sm text-muted-foreground">
-          バックグラウンドで実行されるジョブの最新の実行状況を確認できます。
-        </p>
-      </div>
-
-      <Suspense fallback={<BatchJobListSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={5} />}>
         <BatchJobList />
       </Suspense>
-    </div>
-  )
-}
-
-function BatchJobListSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
     </div>
   )
 }

@@ -30,41 +30,43 @@ type Props = {
 // status はバッジ、勤務時間は分を Hh Mm へ整形して表示する。
 export function AttendanceRecordTable(props: Props) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>勤務日</TableHead>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>勤務日</TableHead>
 
-          {props.withEmployeeId ? <TableHead>従業員 ID</TableHead> : null}
+            {props.withEmployeeId ? <TableHead>従業員 ID</TableHead> : null}
 
-          <TableHead>出勤</TableHead>
-          <TableHead>退勤</TableHead>
-          <TableHead className="text-right">勤務</TableHead>
-          <TableHead>ステータス</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.records.map((record) => (
-          <TableRow key={record.id}>
-            <TableCell className="font-medium">{record.work_date}</TableCell>
-
-            {props.withEmployeeId ? <TableCell>{record.employee_id}</TableCell> : null}
-
-            <TableCell>{record.clock_in_at ?? "-"}</TableCell>
-
-            <TableCell>{record.clock_out_at ?? "-"}</TableCell>
-
-            <TableCell className="text-right">{toDurationLabel(record.work_minutes)}</TableCell>
-
-            <TableCell>
-              <Badge variant={record.status === "closed" ? "secondary" : "outline"}>
-                {record.status}
-              </Badge>
-            </TableCell>
+            <TableHead>出勤</TableHead>
+            <TableHead>退勤</TableHead>
+            <TableHead className="text-right">勤務</TableHead>
+            <TableHead>ステータス</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.records.map((record) => (
+            <TableRow key={record.id}>
+              <TableCell className="font-medium">{record.work_date}</TableCell>
+
+              {props.withEmployeeId ? <TableCell>{record.employee_id}</TableCell> : null}
+
+              <TableCell>{record.clock_in_at ?? "-"}</TableCell>
+
+              <TableCell>{record.clock_out_at ?? "-"}</TableCell>
+
+              <TableCell className="text-right">{toDurationLabel(record.work_minutes)}</TableCell>
+
+              <TableCell>
+                <Badge variant={record.status === "closed" ? "secondary" : "outline"}>
+                  {record.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

@@ -4,6 +4,7 @@ import { useActionState } from "react"
 import { decideApplicationAction } from "@/app/(app)/applications/inbox/actions"
 import type { DecisionState } from "@/app/(app)/applications/inbox/actions"
 import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 
 type Props = {
@@ -53,7 +54,7 @@ export function InboxDecisionForm(props: Props) {
         </Button>
       </div>
 
-      {state.error !== null ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
     </form>
   )
 }

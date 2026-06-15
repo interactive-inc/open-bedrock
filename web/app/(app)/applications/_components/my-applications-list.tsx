@@ -8,6 +8,7 @@ import {
 } from "@/app/(app)/applications/actions"
 import type { ApplicationActionState } from "@/app/(app)/applications/actions"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
@@ -36,50 +37,52 @@ type Props = {
 // 自分の申請一覧。承認待ちの申請には変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
 export function MyApplicationsList(props: Props) {
   if (props.applications.length === 0) {
-    return <p className="text-sm text-muted-foreground">提出済みの申請はまだありません</p>
+    return <EmptyState title="提出済みの申請はまだありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>申請 ID</TableHead>
-          <TableHead>ステータス</TableHead>
-          <TableHead>現在のステップ</TableHead>
-          <TableHead>申請日</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.applications.map((application) => (
-          <TableRow key={application.id}>
-            <TableCell>
-              <Link
-                href={`/applications/${application.id}`}
-                className="font-medium underline-offset-4 hover:underline"
-              >
-                {application.id}
-              </Link>
-            </TableCell>
-
-            <TableCell>
-              <ApplicationStatusBadge status={application.status} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">
-              {application.current_step ?? "-"}
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{application.created_at}</TableCell>
-
-            <TableCell>
-              <ApplicationRowActions application={application} />
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>申請 ID</TableHead>
+            <TableHead>ステータス</TableHead>
+            <TableHead>現在のステップ</TableHead>
+            <TableHead>申請日</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.applications.map((application) => (
+            <TableRow key={application.id}>
+              <TableCell>
+                <Link
+                  href={`/applications/${application.id}`}
+                  className="font-medium underline-offset-4 hover:underline"
+                >
+                  {application.id}
+                </Link>
+              </TableCell>
+
+              <TableCell>
+                <ApplicationStatusBadge status={application.status} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {application.current_step ?? "-"}
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{application.created_at}</TableCell>
+
+              <TableCell>
+                <ApplicationRowActions application={application} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -152,7 +155,7 @@ function UpdateApplicationDialog(props: {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

@@ -1,5 +1,6 @@
 "use client"
 
+import { FieldError } from "@/components/ui/field"
 import { useActionState } from "react"
 import { removeSkillAction } from "@/app/(app)/skills/me/actions"
 import { Button } from "@/components/ui/button"
@@ -23,7 +24,7 @@ export function RemoveSkillButton(props: Props) {
         削除
       </Button>
 
-      {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
     </form>
   )
 }

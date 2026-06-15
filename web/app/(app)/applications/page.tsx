@@ -1,8 +1,10 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
 import { MyApplicationsList } from "@/app/(app)/applications/_components/my-applications-list"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { listMyApplications } from "@/lib/api/list-my-applications"
 
 export const metadata = { title: "申請" }
@@ -11,19 +13,21 @@ export const metadata = { title: "申請" }
 export default function MyApplicationsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">申請</h1>
+      <PageHeader
+        title="申請"
+        description="自分の申請の状況を確認します。"
+        actions={
+          <>
+            <Button variant="outline" render={<Link href="/applications/inbox" />}>
+              承認 inbox
+            </Button>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" render={<Link href="/applications/inbox" />}>
-            承認 inbox
-          </Button>
+            <Button render={<Link href="/applications/templates" />}>新規申請</Button>
+          </>
+        }
+      />
 
-          <Button render={<Link href="/applications/templates" />}>新規申請</Button>
-        </div>
-      </div>
-
-      <Suspense fallback={<MyApplicationsSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={5} />}>
         <MyApplicationsTable />
       </Suspense>
     </div>
@@ -35,20 +39,8 @@ async function MyApplicationsTable() {
   const applications = await listMyApplications()
 
   if (applications instanceof Error) {
-    return <p className="text-sm text-destructive">申請一覧の取得に失敗しました</p>
+    return <FetchError message="申請一覧の取得に失敗しました" />
   }
 
   return <MyApplicationsList applications={applications} />
-}
-
-function MyApplicationsSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
-    </div>
-  )
 }

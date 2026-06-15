@@ -1,4 +1,5 @@
 import { toDurationLabel } from "@/app/(app)/attendance/_lib/to-duration-label"
+import { FetchError } from "@/components/fetch-error"
 import { Card } from "@/components/ui/card"
 import { getMyAttendanceSummary } from "@/lib/api/get-my-attendance-summary"
 
@@ -13,7 +14,7 @@ export async function AttendanceSummaryCard(props: Props) {
   const summary = await getMyAttendanceSummary({ month: props.month })
 
   if (summary instanceof Error) {
-    return <p className="text-sm text-destructive">月次サマリの取得に失敗しました</p>
+    return <FetchError message="月次サマリの取得に失敗しました" />
   }
 
   const stats = [

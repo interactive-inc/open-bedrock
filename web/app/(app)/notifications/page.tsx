@@ -1,8 +1,10 @@
+import { FetchError } from "@/components/fetch-error"
 import { Suspense } from "react"
 import { NotificationCreateForm } from "@/app/(app)/notifications/_components/notification-create-form"
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
@@ -18,11 +20,9 @@ export default async function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">通知</h1>
-      </div>
+      <PageHeader title="通知" description="自分宛ての通知を確認します。" />
 
-      <Suspense fallback={<NotificationsSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
         <MyNotifications />
       </Suspense>
 
@@ -46,20 +46,8 @@ async function MyNotifications() {
   const notifications = await getMyNotifications()
 
   if (notifications instanceof Error) {
-    return <p className="text-sm text-destructive">通知一覧の取得に失敗しました</p>
+    return <FetchError message="通知一覧の取得に失敗しました" />
   }
 
   return <NotificationList notifications={notifications} />
-}
-
-function NotificationsSkeleton() {
-  const placeholders = [0, 1, 2]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-20 w-full" />
-      ))}
-    </div>
-  )
 }
