@@ -4,15 +4,18 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ApplicationTemplateFormState } from "@/app/(app)/applications/templates/actions"
 import { createApplicationTemplateAction } from "@/app/(app)/applications/templates/actions"
+import { FormBuilder } from "@/components/form-builder"
 import { Button } from "@/components/ui/button"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ApplicationTemplateFormState = { ok: false, error: null }
 
-// 申請テンプレート作成フォーム（管理権限向け）。code/name/category/説明/スキーマ/承認ロールを native form で送る。
-// 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 申請テンプレ作成フォーム。Google フォーム風に入力項目を可変に追加できる FormBuilder を組み込む。
+ * 出力は schema_json として保存され、申請提出時はその schema を元に動的フォームが描画される。
+ */
 export function CreateTemplateForm() {
   const action = useActionState(
     async (previousState: ApplicationTemplateFormState, formData: FormData) => {
@@ -42,6 +45,8 @@ export function CreateTemplateForm() {
           <FieldLabel htmlFor="template-code">コード</FieldLabel>
 
           <Input id="template-code" name="code" placeholder="paid_leave" required />
+
+          <FieldDescription>英数字とアンダースコアのみ。後から変更不可。</FieldDescription>
         </Field>
 
         <Field>
@@ -69,14 +74,11 @@ export function CreateTemplateForm() {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="template-schema">スキーマ（JSON）</FieldLabel>
+          <FieldLabel htmlFor="template-form-builder">入力項目</FieldLabel>
 
-          <Textarea
-            id="template-schema"
-            name="schema_json"
-            placeholder='{ "type": "object" }'
-            className="font-mono"
-          />
+          <FormBuilder name="schema_json" />
+
+          <FieldDescription>申請者が入力する項目を設計します。</FieldDescription>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

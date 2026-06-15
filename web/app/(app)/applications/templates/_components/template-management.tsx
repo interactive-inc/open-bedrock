@@ -5,6 +5,7 @@ import {
   deleteApplicationTemplateAction,
   updateApplicationTemplateAction,
 } from "@/app/(app)/applications/templates/actions"
+import { FormBuilder } from "@/components/form-builder"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,11 +15,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { toFormSchema } from "@/lib/application/form-schema"
 
-// 変更 Dialog と削除に必要な最小のテンプレート形。詳細取得（id なし）にも一覧取得にも適合する。
 type ManagedTemplate = {
   code: string
   name: string
@@ -32,7 +32,9 @@ type Props = {
   template: ManagedTemplate
 }
 
-// テンプレートの管理操作（変更 Dialog と削除）。管理権限にのみ表示する。
+/**
+ * テンプレートの管理操作（変更 Dialog と削除）。管理権限にのみ表示する。
+ */
 export function TemplateManagement(props: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -43,7 +45,6 @@ export function TemplateManagement(props: Props) {
   )
 }
 
-// テンプレート変更フォームを Dialog で開く。名称・カテゴリ・説明・スキーマ・承認ロールを編集する。
 function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
   const [open, setOpen] = useState(false)
 
@@ -52,11 +53,13 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
     error: null,
   })
 
+  const initialSchema = toFormSchema(props.template.schema_json)
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>テンプレートを変更</DialogTitle>
 
@@ -100,18 +103,13 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="update_schema">スキーマ（JSON）</FieldLabel>
+              <FieldLabel htmlFor="update_form_builder">入力項目</FieldLabel>
 
-              <Textarea
-                id="update_schema"
-                name="schema_json"
-                className="font-mono"
-                defaultValue={JSON.stringify(props.template.schema_json, null, 2)}
-              />
+              <FormBuilder name="schema_json" initialSchema={initialSchema} />
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存
@@ -122,7 +120,6 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
   )
 }
 
-// テンプレートを削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeleteTemplateButton(props: { code: string }) {
   const [state, formAction, pending] = useActionState(deleteApplicationTemplateAction, {
     ok: false,
@@ -137,7 +134,7 @@ function DeleteTemplateButton(props: { code: string }) {
         削除
       </Button>
 
-      {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
     </form>
   )
 }
