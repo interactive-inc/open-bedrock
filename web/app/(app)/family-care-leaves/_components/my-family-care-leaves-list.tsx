@@ -6,6 +6,7 @@ import {
   updateFamilyCareLeaveAction,
 } from "@/app/(app)/family-care-leaves/actions"
 import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leaves/actions"
+import { EmptyState } from "@/components/empty-state"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
@@ -46,46 +47,48 @@ type Props = {
 // 自分の休業申出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyFamilyCareLeavesList(props: Props) {
   if (props.familyCareLeaves.length === 0) {
-    return <p className="text-sm text-muted-foreground">休業申出はありません</p>
+    return <EmptyState title="休業申出はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>種別</TableHead>
-          <TableHead>開始</TableHead>
-          <TableHead>終了予定</TableHead>
-          <TableHead>備考</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.familyCareLeaves.map((familyCareLeave) => (
-          <TableRow key={familyCareLeave.id}>
-            <TableCell className="font-medium">{familyCareLeave.leave_kind}</TableCell>
-
-            <TableCell>{familyCareLeave.start_date}</TableCell>
-
-            <TableCell>{familyCareLeave.end_date}</TableCell>
-
-            <TableCell>{familyCareLeave.note ?? "-"}</TableCell>
-
-            <TableCell>{familyCareLeave.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateFamilyCareLeaveDialog familyCareLeave={familyCareLeave} />
-
-                <CancelFamilyCareLeaveButton familyCareLeaveId={familyCareLeave.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>種別</TableHead>
+            <TableHead>開始</TableHead>
+            <TableHead>終了予定</TableHead>
+            <TableHead>備考</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.familyCareLeaves.map((familyCareLeave) => (
+            <TableRow key={familyCareLeave.id}>
+              <TableCell className="font-medium">{familyCareLeave.leave_kind}</TableCell>
+
+              <TableCell>{familyCareLeave.start_date}</TableCell>
+
+              <TableCell>{familyCareLeave.end_date}</TableCell>
+
+              <TableCell>{familyCareLeave.note ?? "-"}</TableCell>
+
+              <TableCell>{familyCareLeave.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateFamilyCareLeaveDialog familyCareLeave={familyCareLeave} />
+
+                  <CancelFamilyCareLeaveButton familyCareLeaveId={familyCareLeave.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -172,7 +175,7 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

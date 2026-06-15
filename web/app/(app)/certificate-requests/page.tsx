@@ -1,37 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { CertificateRequestCreateForm } from "@/app/(app)/certificate-requests/_components/certificate-request-create-form"
 import { MyCertificateRequestsSection } from "@/app/(app)/certificate-requests/_components/my-certificate-requests-section"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "証明書発行依頼" }
 
-// 証明書発行依頼画面。依頼フォームと非同期の自分の依頼一覧を Suspense 境界で描画する RSC。
+/**
+ * 証明書発行依頼の自分の依頼一覧画面。新規依頼は /new に分離。
+ */
 export default function CertificateRequestsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">証明書発行依頼</h1>
+      <PageHeader
+        title="証明書発行依頼"
+        description="在職証明など各種証明書の発行を依頼し、進捗を確認します。"
+        actions={
+          <Button render={<Link href="/certificate-requests/new" />}>
+            <Plus />
+            新規依頼
+          </Button>
+        }
+      />
 
-      <CertificateRequestCreateForm />
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">自分の依頼</h2>
-
-        <Suspense fallback={<CertificateRequestsSkeleton />}>
-          <MyCertificateRequestsSection />
-        </Suspense>
-      </section>
-    </div>
-  )
-}
-
-function CertificateRequestsSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
+        <MyCertificateRequestsSection />
+      </Suspense>
     </div>
   )
 }

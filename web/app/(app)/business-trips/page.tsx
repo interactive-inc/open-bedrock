@@ -1,37 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { BusinessTripCreateForm } from "@/app/(app)/business-trips/_components/business-trip-create-form"
 import { MyBusinessTripsSection } from "@/app/(app)/business-trips/_components/my-business-trips-section"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "出張申請" }
 
-// 出張申請画面。申請フォームと非同期の自分の申請一覧を Suspense 境界で描画する RSC。
+/**
+ * 出張申請の自分の申請一覧画面。新規申請は /new に分離。
+ */
 export default function BusinessTripsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">出張申請</h1>
+      <PageHeader
+        title="出張申請"
+        description="出張の申請と、申請状況を確認します。"
+        actions={
+          <Button render={<Link href="/business-trips/new" />}>
+            <Plus />
+            新規申請
+          </Button>
+        }
+      />
 
-      <BusinessTripCreateForm />
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">自分の申請</h2>
-
-        <Suspense fallback={<BusinessTripsSkeleton />}>
-          <MyBusinessTripsSection />
-        </Suspense>
-      </section>
-    </div>
-  )
-}
-
-function BusinessTripsSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
+        <MyBusinessTripsSection />
+      </Suspense>
     </div>
   )
 }
