@@ -84,11 +84,6 @@ import * as thanksRedemptionRejectRoute from "@/interface/thanks-points/redempti
 import * as orgDepartmentMembersRoute from "@/interface/org/departments/[code]/members/route"
 import * as orgReportingLineRoute from "@/interface/org/reporting-line/[employee_code]/route"
 import * as orgTreeRoute from "@/interface/org/tree/route"
-import * as payrollPayslipCreateRoute from "@/interface/payroll/payslips/route"
-import * as payrollPayslipDetailRoute from "@/interface/payroll/payslips/[id]/route"
-import * as payrollPayslipMeRoute from "@/interface/payroll/payslips/me/route"
-import * as payrollSalaryRevisionByEmployeeRoute from "@/interface/payroll/salary-revisions/[employee_code]/route"
-import * as payrollSalaryRevisionCreateRoute from "@/interface/payroll/salary-revisions/route"
 import * as reviewCycleCloseRoute from "@/interface/review/cycles/[cycle_id]/close/route"
 import * as reviewCycleCreateRoute from "@/interface/review/cycles-create/route"
 import * as reviewCycleListRoute from "@/interface/review/cycles/route"
@@ -155,9 +150,6 @@ import * as familyCareLeaveMineRoute from "@/interface/family-care-leave/family-
 import * as certificateRequestCreateRoute from "@/interface/certificate-request/certificate-requests/route"
 import * as certificateRequestDetailRoute from "@/interface/certificate-request/certificate-requests/[id]/route"
 import * as certificateRequestMineRoute from "@/interface/certificate-request/certificate-requests/me/route"
-import * as yearEndAdjustmentCreateRoute from "@/interface/year-end-adjustment/year-end-adjustments/route"
-import * as yearEndAdjustmentDetailRoute from "@/interface/year-end-adjustment/year-end-adjustments/[id]/route"
-import * as yearEndAdjustmentMineRoute from "@/interface/year-end-adjustment/year-end-adjustments/me/route"
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
@@ -167,7 +159,6 @@ import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
 import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
 import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
 import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates/[code]/route"
-import * as payrollSalaryRevisionDetailRoute from "@/interface/payroll/salary-revisions/[id]/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
@@ -296,11 +287,6 @@ export const app = factory
   .post("/expenses/:id/approve", ...expenseApproveRoute.POST)
   .post("/expenses/:id/reject", ...expenseRejectRoute.POST)
   .post("/expenses", ...expenseCreateRoute.POST)
-  .get("/payslips/me", ...payrollPayslipMeRoute.GET)
-  .get("/payslips/:id", ...payrollPayslipDetailRoute.GET)
-  .post("/payslips", ...payrollPayslipCreateRoute.POST)
-  .get("/salary-revisions/:employee_code", ...payrollSalaryRevisionByEmployeeRoute.GET)
-  .post("/salary-revisions", ...payrollSalaryRevisionCreateRoute.POST)
   .get("/training/courses/:code", ...trainingCourseDetailRoute.GET)
   .get("/training/courses", ...trainingCourseListRoute.GET)
   .post("/training/courses", ...trainingCourseCreateRoute.POST)
@@ -419,11 +405,6 @@ export const app = factory
   .get("/certificate-requests/:id", ...certificateRequestDetailRoute.GET)
   .put("/certificate-requests/:id", ...certificateRequestDetailRoute.PUT)
   .delete("/certificate-requests/:id", ...certificateRequestDetailRoute.DELETE)
-  .post("/year-end-adjustments", ...yearEndAdjustmentCreateRoute.POST)
-  .get("/year-end-adjustments/me", ...yearEndAdjustmentMineRoute.GET)
-  .get("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.GET)
-  .put("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.PUT)
-  .delete("/year-end-adjustments/:id", ...yearEndAdjustmentDetailRoute.DELETE)
   .post("/antisocial-checks", ...antisocialCheckCreateRoute.POST)
   .get("/antisocial-checks/me", ...antisocialCheckMineRoute.GET)
   .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)
@@ -444,10 +425,6 @@ export const app = factory
   .get("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.GET)
   .put("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.PUT)
   .delete("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.DELETE)
-  .put("/payslips/:id", ...payrollPayslipDetailRoute.PUT)
-  .delete("/payslips/:id", ...payrollPayslipDetailRoute.DELETE)
-  .put("/salary-revisions/:id", ...payrollSalaryRevisionDetailRoute.PUT)
-  .delete("/salary-revisions/:id", ...payrollSalaryRevisionDetailRoute.DELETE)
   .put("/review-cycles/:cycle_id", ...reviewCycleEditRoute.PUT)
   .delete("/review-cycles/:cycle_id", ...reviewCycleEditRoute.DELETE)
 
