@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { EmployeeCombobox } from "@/components/ui.custom/employee-combobox"
+import { EmployeeCombobox } from "@/components/ui/employee-combobox"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
 
 const initialState: ThanksActionState = { ok: false, error: null }

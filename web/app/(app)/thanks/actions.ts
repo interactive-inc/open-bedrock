@@ -48,6 +48,7 @@ export async function sendThanksAction(
   }
 
   revalidatePath("/thanks")
+  revalidatePath("/thanks/rewards")
 
   return { ok: true, error: null }
 }
@@ -72,6 +73,7 @@ export async function requestRedemptionAction(
   }
 
   revalidatePath("/thanks")
+  revalidatePath("/thanks/rewards")
 
   return { ok: true, error: null }
 }
@@ -113,6 +115,7 @@ export async function createRewardAction(
   }
 
   revalidatePath("/thanks")
+  revalidatePath("/thanks/rewards")
 
   return { ok: true, error: null }
 }

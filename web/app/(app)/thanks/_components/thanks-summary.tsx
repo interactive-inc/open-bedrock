@@ -1,6 +1,6 @@
 import { getThanksBalance } from "@/lib/api/get-thanks-balance"
 import { getThanksBudget } from "@/lib/api/get-thanks-budget"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 
 // 当月の贈与原資の残量と受領残高をサーバ側 fetch して並べる非同期 RSC。
 export async function ThanksSummary() {
@@ -16,24 +16,32 @@ export async function ThanksSummary() {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <Card className="gap-2 p-4">
-        <p className="text-sm text-muted-foreground">今月の贈与原資（残量 / 付与）</p>
+      <Card size="sm">
+        <CardHeader>
+          <CardDescription>今月の贈与原資（残量 / 付与）</CardDescription>
+        </CardHeader>
 
-        <p className="text-2xl font-semibold">
-          {remainingBudget ?? "-"}
-          <span className="ml-1 text-base font-normal text-muted-foreground">
-            / {grantedPoints ?? "-"} pt
-          </span>
-        </p>
+        <CardContent>
+          <p className="text-2xl font-semibold">
+            {remainingBudget ?? "-"}
+            <span className="ml-1 text-base font-normal text-muted-foreground">
+              / {grantedPoints ?? "-"} pt
+            </span>
+          </p>
+        </CardContent>
       </Card>
 
-      <Card className="gap-2 p-4">
-        <p className="text-sm text-muted-foreground">受領残高（交換可能）</p>
+      <Card size="sm">
+        <CardHeader>
+          <CardDescription>受領残高（交換可能）</CardDescription>
+        </CardHeader>
 
-        <p className="text-2xl font-semibold">
-          {balancePoints ?? "-"}
-          <span className="ml-1 text-base font-normal text-muted-foreground">pt</span>
-        </p>
+        <CardContent>
+          <p className="text-2xl font-semibold">
+            {balancePoints ?? "-"}
+            <span className="ml-1 text-base font-normal text-muted-foreground">pt</span>
+          </p>
+        </CardContent>
       </Card>
     </div>
   )
