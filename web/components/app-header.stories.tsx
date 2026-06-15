@@ -26,6 +26,8 @@ export const Default: Story = {
       position: "Senior Engineer",
     },
     onLogout: fn(),
+    unreadNotificationCount: 3,
+    theme: "light",
   },
 }
 
@@ -41,5 +43,7 @@ export const NoDepartment: Story = {
       position: null,
     },
     onLogout: fn(),
+    unreadNotificationCount: 0,
+    theme: "dark",
   },
 }

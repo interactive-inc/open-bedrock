@@ -15,25 +15,28 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { Theme } from "@/lib/theme/get-theme"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
   onLogout: () => void
   unreadNotificationCount: number
+  theme: Theme
 }
 
-// サイドバー開閉状態を持つアプリ全体シェル。md 以上は固定表示、sm 以下は offcanvas トグル。
-// onLogout は layout (RSC) から渡された Server Action。
+/**
+ * サイドバー開閉状態を持つアプリ全体シェル。サイドバーは背景色を本文と揃えて境界線を消す。
+ */
 export function AppShell(props: Props) {
   const deptLabel = props.currentUser.dept_name ?? "所属未設定"
 
   return (
     <SidebarProvider>
-      <Sidebar collapsible="offcanvas">
+      <Sidebar collapsible="offcanvas" className="border-none">
         <SidebarHeader>
           <div className="flex flex-col gap-0.5 px-2 py-1">
-            <span className="text-sm font-semibold">open-karte</span>
+            <span className="text-base font-semibold tracking-wider">KARTE</span>
 
             <span className="text-xs text-muted-foreground">{deptLabel}</span>
           </div>
@@ -65,7 +68,12 @@ export function AppShell(props: Props) {
       </Sidebar>
 
       <SidebarInset>
-        <AppHeader currentUser={props.currentUser} onLogout={props.onLogout} />
+        <AppHeader
+          currentUser={props.currentUser}
+          onLogout={props.onLogout}
+          unreadNotificationCount={props.unreadNotificationCount}
+          theme={props.theme}
+        />
 
         <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{props.children}</main>
       </SidebarInset>
