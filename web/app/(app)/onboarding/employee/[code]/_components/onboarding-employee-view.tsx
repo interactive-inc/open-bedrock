@@ -1,6 +1,8 @@
-import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
 import { AssignmentActions } from "@/app/(app)/onboarding/_components/assignment-actions"
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
+import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
 import {
   Card,
   CardContent,
@@ -28,15 +30,11 @@ export async function OnboardingEmployeeView(props: Props) {
   const assignments = await getOnboardingEmployee(props.code)
 
   if (assignments instanceof Error) {
-    return (
-      <p className="text-sm text-destructive">
-        割当の取得に失敗しました（権限がない可能性があります）
-      </p>
-    )
+    return <FetchError message="割当の取得に失敗しました（権限がない可能性があります）" />
   }
 
   if (assignments.length === 0) {
-    return <p className="text-sm text-muted-foreground">割当がありません</p>
+    return <EmptyState title="割当がありません" />
   }
 
   return (
@@ -63,36 +61,38 @@ export async function OnboardingEmployeeView(props: Props) {
           </CardHeader>
 
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>タスク</TableHead>
-                  <TableHead>状態</TableHead>
-                  <TableHead className="text-right">完了日時</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {assignment.tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="text-muted-foreground">{task.order}</TableCell>
-
-                    <TableCell className="font-medium">{task.title}</TableCell>
-
-                    <TableCell>
-                      <Badge variant={task.status === "done" ? "secondary" : "outline"}>
-                        {task.status === "done" ? "完了" : "未完了"}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="text-right text-xs text-muted-foreground">
-                      {task.completed_at ?? "—"}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">#</TableHead>
+                    <TableHead>タスク</TableHead>
+                    <TableHead>状態</TableHead>
+                    <TableHead className="text-right">完了日時</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {assignment.tasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="text-muted-foreground">{task.order}</TableCell>
+
+                      <TableCell className="font-medium">{task.title}</TableCell>
+
+                      <TableCell>
+                        <Badge variant={task.status === "done" ? "secondary" : "outline"}>
+                          {task.status === "done" ? "完了" : "未完了"}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {task.completed_at ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
 
           <CardFooter>

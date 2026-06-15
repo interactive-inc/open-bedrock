@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { getCareerSheet } from "@/lib/api/get-career-sheet"
 import { CareerSheetForm } from "@/app/(app)/career/_components/career-sheet-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +16,7 @@ export async function CareerSheetSection() {
         </CardHeader>
 
         <CardContent>
-          <p className="text-sm text-destructive">キャリアシートの取得に失敗しました</p>
+          <FetchError message="キャリアシートの取得に失敗しました" />
         </CardContent>
       </Card>
     )

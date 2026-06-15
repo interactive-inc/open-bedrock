@@ -1,7 +1,8 @@
 import { Suspense } from "react"
-import Link from "next/link"
 import { OnboardingEmployeeView } from "@/app/(app)/onboarding/employee/[code]/_components/onboarding-employee-view"
-import { Skeleton } from "@/components/ui/skeleton"
+import { BackButton } from "@/components/back-button"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 
 export const metadata = { title: "オンボーディング" }
 
@@ -16,29 +17,14 @@ export default async function OnboardingEmployeePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <Link href="/onboarding" className="text-sm text-muted-foreground hover:underline">
-          オンボーディングに戻る
-        </Link>
+      <PageHeader
+        title={`社員別: ${params.code}`}
+        actions={<BackButton href="/onboarding" label="オンボーディングに戻る" />}
+      />
 
-        <h1 className="text-2xl font-semibold">社員別: {params.code}</h1>
-      </div>
-
-      <Suspense fallback={<OnboardingEmployeeSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={2} rowClassName="h-48 w-full" />}>
         <OnboardingEmployeeView code={params.code} />
       </Suspense>
-    </div>
-  )
-}
-
-function OnboardingEmployeeSkeleton() {
-  const placeholders = [0, 1]
-
-  return (
-    <div className="flex flex-col gap-4">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-48 w-full" />
-      ))}
     </div>
   )
 }

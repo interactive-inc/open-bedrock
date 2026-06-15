@@ -1,4 +1,6 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getKnowledgeList } from "@/lib/api/get-knowledge-list"
@@ -17,11 +19,11 @@ export async function KnowledgeResultList(props: Props) {
   })
 
   if (articles instanceof Error) {
-    return <p className="text-sm text-destructive">ナレッジの取得に失敗しました</p>
+    return <FetchError message="ナレッジの取得に失敗しました" />
   }
 
   if (articles.length === 0) {
-    return <p className="text-sm text-muted-foreground">該当する記事がありません</p>
+    return <EmptyState title="該当する記事がありません" />
   }
 
   return (

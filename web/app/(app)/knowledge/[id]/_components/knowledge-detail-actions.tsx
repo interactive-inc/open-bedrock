@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { KnowledgeDetailResponse } from "@/lib/api/types/knowledge-types"
@@ -98,7 +98,7 @@ function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存
@@ -124,7 +124,7 @@ function DeleteKnowledgeButton(props: { articleId: number }) {
         削除
       </Button>
 
-      {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
     </form>
   )
 }

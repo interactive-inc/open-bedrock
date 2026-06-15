@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { getOnboardingTemplates } from "@/lib/api/get-onboarding-templates"
 import { AssignForm } from "@/app/(app)/onboarding/_components/assign-form"
 
@@ -7,7 +8,7 @@ export async function AssignFormSection() {
   const templates = await getOnboardingTemplates(null)
 
   if (templates instanceof Error) {
-    return <p className="text-sm text-destructive">テンプレートの取得に失敗しました</p>
+    return <FetchError message="テンプレートの取得に失敗しました" />
   }
 
   return <AssignForm templates={templates} />

@@ -54,6 +54,8 @@ export async function assignOnboardingAction(
 
   revalidatePath("/onboarding")
 
+  revalidatePath("/onboarding/assignments/new")
+
   return { ok: true, message: `${assignment.employee_name} に割り当てました` }
 }
 
@@ -293,6 +295,8 @@ export async function createOnboardingTemplateAction(
 
   revalidatePath("/onboarding")
 
+  revalidatePath("/onboarding/templates")
+
   return { ok: true, message: `${created.name} を作成しました` }
 }
 
@@ -326,6 +330,8 @@ export async function updateOnboardingTemplateAction(
 
   revalidatePath("/onboarding")
 
+  revalidatePath("/onboarding/templates")
+
   return { ok: true, message: `${updated.name} を変更しました` }
 }
 
@@ -354,6 +360,8 @@ export async function deleteOnboardingTemplateAction(
   }
 
   revalidatePath("/onboarding")
+
+  revalidatePath("/onboarding/templates")
 
   return { ok: true, message: "テンプレートを削除しました" }
 }
