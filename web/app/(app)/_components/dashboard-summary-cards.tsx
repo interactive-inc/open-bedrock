@@ -1,12 +1,13 @@
+import { FetchError } from "@/components/fetch-error"
 import { getDashboard } from "@/lib/api/get-dashboard"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 
 // /dashboard を認証付きで取得して 4 つのサマリカードを描画する非同期 RSC。
 export async function DashboardSummaryCards() {
   const summary = await getDashboard()
 
   if (summary instanceof Error) {
-    return <p className="text-sm text-destructive">サマリの取得に失敗しました</p>
+    return <FetchError message="サマリの取得に失敗しました" />
   }
 
   const cards = [
@@ -21,7 +22,7 @@ export async function DashboardSummaryCards() {
       {cards.map((card) => (
         <Card key={card.label}>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">{card.label}</CardTitle>
+            <CardDescription>{card.label}</CardDescription>
           </CardHeader>
 
           <CardContent>
