@@ -6,6 +6,7 @@ import {
   withdrawCareerApplicationAction,
 } from "@/app/(app)/career/actions"
 import type { CareerApplicationActionState } from "@/app/(app)/career/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
@@ -41,58 +42,60 @@ const statusLabels: Record<CareerApplication["status"], string> = {
 // 自分の公募応募一覧。選考中の応募だけ変更（Dialog）と取り下げを許可する表示コンポーネント。
 export function MyApplicationsList(props: Props) {
   if (props.applications.length === 0) {
-    return <p className="text-sm text-muted-foreground">応募はありません</p>
+    return <EmptyState title="応募はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>公募 ID</TableHead>
-          <TableHead>メッセージ</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>公募 ID</TableHead>
+            <TableHead>メッセージ</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <TableBody>
-        {props.applications.map((application) => {
-          // 永続化済みの応募のみ id を持つ。未採番(null)は操作対象にならないため表示しない。
-          const applicationId = application.id
+        <TableBody>
+          {props.applications.map((application) => {
+            // 永続化済みの応募のみ id を持つ。未採番(null)は操作対象にならないため表示しない。
+            const applicationId = application.id
 
-          if (applicationId === null) {
-            return null
-          }
+            if (applicationId === null) {
+              return null
+            }
 
-          return (
-            <TableRow key={applicationId}>
-              <TableCell className="font-medium">{application.posting_id}</TableCell>
+            return (
+              <TableRow key={applicationId}>
+                <TableCell className="font-medium">{application.posting_id}</TableCell>
 
-              <TableCell>{application.message ?? "-"}</TableCell>
+                <TableCell>{application.message ?? "-"}</TableCell>
 
-              <TableCell>
-                <Badge variant="secondary">{statusLabels[application.status]}</Badge>
-              </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{statusLabels[application.status]}</Badge>
+                </TableCell>
 
-              <TableCell>
-                <div className="flex justify-end gap-2">
-                  {application.status === "applied" ? (
-                    <UpdateApplicationDialog
-                      applicationId={applicationId}
-                      application={application}
-                    />
-                  ) : null}
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    {application.status === "applied" ? (
+                      <UpdateApplicationDialog
+                        applicationId={applicationId}
+                        application={application}
+                      />
+                    ) : null}
 
-                  {application.status === "applied" ? (
-                    <WithdrawApplicationButton applicationId={applicationId} />
-                  ) : null}
-                </div>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+                    {application.status === "applied" ? (
+                      <WithdrawApplicationButton applicationId={applicationId} />
+                    ) : null}
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -145,7 +148,7 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

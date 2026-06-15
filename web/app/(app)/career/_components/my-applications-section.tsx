@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { listMyCareerApplications } from "@/lib/api/list-my-career-applications"
 import { MyApplicationsList } from "@/app/(app)/career/_components/my-applications-list"
 
@@ -6,7 +7,7 @@ export async function MyApplicationsSection() {
   const applications = await listMyCareerApplications()
 
   if (applications instanceof Error) {
-    return <p className="text-sm text-destructive">応募一覧の取得に失敗しました</p>
+    return <FetchError message="応募一覧の取得に失敗しました" />
   }
 
   return <MyApplicationsList applications={applications} />

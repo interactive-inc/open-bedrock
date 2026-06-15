@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import { MyTasksList } from "@/app/(app)/onboarding/_components/my-tasks-list"
+import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -9,7 +10,10 @@ export const metadata = { title: "自分のオンボーディング" }
 export default function OnboardingMePage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">自分のオンボーディングタスク</h1>
+      <PageHeader
+        title="自分のオンボーディングタスク"
+        description="自分に割り当てられた未完了タスクを確認します。"
+      />
 
       <Card>
         <CardHeader>

@@ -1,7 +1,7 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getKnowledgeDetail } from "@/lib/api/get-knowledge-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -44,29 +44,21 @@ export default async function KnowledgeDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary">{article.category}</Badge>
+      <PageHeader
+        title={article.title}
+        description={article.category}
+        actions={<BackButton href="/knowledge" label="一覧に戻る" />}
+      />
 
-            <h1 className="text-2xl font-semibold">{article.title}</h1>
-          </div>
-
-          {tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Badge key={tag} variant="outline">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          ) : null}
+      {tags.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <Badge key={tag} variant="outline">
+              {tag}
+            </Badge>
+          ))}
         </div>
-
-        <Button variant="outline" render={<Link href="/knowledge" />}>
-          一覧へ戻る
-        </Button>
-      </div>
+      ) : null}
 
       <Card className="p-0 gap-0">
         <article className="whitespace-pre-wrap p-6 text-sm leading-relaxed">

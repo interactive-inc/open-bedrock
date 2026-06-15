@@ -1,7 +1,11 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
 import { KnowledgeResultList } from "@/app/(app)/knowledge/_components/knowledge-result-list"
 import { KnowledgeSearchForm } from "@/app/(app)/knowledge/_components/knowledge-search-form"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "ナレッジ" }
 
@@ -20,25 +24,25 @@ export default async function KnowledgePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">ナレッジ検索</h1>
+      <PageHeader
+        title="ナレッジ検索"
+        description="社内ナレッジを検索します。"
+        actions={
+          <Button render={<Link href="/knowledge/new" />}>
+            <Plus />
+            新規記事
+          </Button>
+        }
+      />
 
       <KnowledgeSearchForm q={q} category={category} />
 
-      <Suspense key={`${q}:${category}`} fallback={<KnowledgeListSkeleton />}>
+      <Suspense
+        key={`${q}:${category}`}
+        fallback={<ListSkeleton rows={5} rowClassName="h-20 w-full" />}
+      >
         <KnowledgeResultList q={q} category={category} />
       </Suspense>
-    </div>
-  )
-}
-
-function KnowledgeListSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-3">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-20 w-full" />
-      ))}
     </div>
   )
 }
