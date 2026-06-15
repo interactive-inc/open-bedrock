@@ -7,6 +7,7 @@ import {
   type SubmitSurveyResponseState,
 } from "@/app/(app)/surveys/actions"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -36,7 +37,7 @@ export function SurveyAnswerForm(props: Props) {
   const isPending = actionState[2]
 
   if (props.questions.length === 0) {
-    return <p className="text-sm text-muted-foreground">このアンケートには設問がありません</p>
+    return <EmptyState title="このアンケートには設問がありません" />
   }
 
   return (

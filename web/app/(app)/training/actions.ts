@@ -37,6 +37,7 @@ export async function createTrainingEnrollmentAction(
   }
 
   revalidatePath("/training")
+  revalidatePath("/training/me")
 
   return { ok: true, error: null }
 }
@@ -67,6 +68,7 @@ export async function completeTrainingEnrollmentAction(
   }
 
   revalidatePath("/training")
+  revalidatePath("/training/me")
 
   return { ok: true, error: null }
 }
@@ -169,6 +171,7 @@ export async function cancelTrainingEnrollmentAction(
   }
 
   revalidatePath("/training")
+  revalidatePath("/training/me")
 
   return { ok: true, error: null }
 }
@@ -240,6 +243,8 @@ export async function updateTrainingCourseAction(
   }
 
   revalidatePath("/training")
+  revalidatePath(`/training/${code}`)
+  revalidatePath(`/training/${code}/edit`)
 
   return { ok: true, error: null }
 }
@@ -270,6 +275,8 @@ export async function archiveTrainingCourseAction(
   }
 
   revalidatePath("/training")
+  revalidatePath(`/training/${code}`)
+  revalidatePath(`/training/${code}/edit`)
 
   return { ok: true, error: null }
 }

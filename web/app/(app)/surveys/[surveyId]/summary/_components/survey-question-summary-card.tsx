@@ -1,4 +1,5 @@
 import type { SurveyQuestionSummary } from "@/lib/api/types/survey-types"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -19,7 +20,7 @@ export function SurveyQuestionSummaryCard(props: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2">
           <span>{props.question.title}</span>
 
           <Badge variant="outline">{props.question.type}</Badge>
@@ -45,7 +46,7 @@ type DistributionListProps = {
 // 選択肢別の件数を横棒で表示する。
 function DistributionList(props: DistributionListProps) {
   if (props.entries.length === 0) {
-    return <p className="text-sm text-muted-foreground">回答がありません</p>
+    return <EmptyState title="回答がありません" />
   }
 
   return (
@@ -77,7 +78,7 @@ type TextAnswerListProps = {
 // 自由記述の回答を一覧表示する。
 function TextAnswerList(props: TextAnswerListProps) {
   if (props.answers.length === 0) {
-    return <p className="text-sm text-muted-foreground">回答がありません</p>
+    return <EmptyState title="回答がありません" />
   }
 
   return (

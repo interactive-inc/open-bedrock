@@ -1,8 +1,9 @@
 import Link from "next/link"
 import { Suspense } from "react"
 import { SurveyListTable } from "@/app/(app)/surveys/_components/survey-list-table"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "サーベイ" }
 
@@ -11,29 +12,19 @@ export const metadata = { title: "サーベイ" }
 export default function SurveysPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">サーベイ</h1>
+      <PageHeader
+        title="サーベイ"
+        description="配信中のアンケートに回答します。"
+        actions={
+          <Button variant="outline" render={<Link href="/surveys/manage" />}>
+            管理
+          </Button>
+        }
+      />
 
-        <Button variant="outline" render={<Link href="/surveys/manage" />}>
-          管理
-        </Button>
-      </div>
-
-      <Suspense fallback={<SurveyListSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-14 w-full" />}>
         <SurveyListTable />
       </Suspense>
-    </div>
-  )
-}
-
-function SurveyListSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-3">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-14 w-full" />
-      ))}
     </div>
   )
 }

@@ -1,8 +1,11 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summary/_components/survey-question-summary-card"
-import { getSurveySummary } from "@/lib/api/get-survey-summary"
+import { EmptyState } from "@/components/empty-state"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { getSurveySummary } from "@/lib/api/get-survey-summary"
 
 export const metadata = { title: "サーベイ集計" }
 
@@ -25,29 +28,27 @@ export default async function SurveySummaryPage(props: Props) {
   const summary = await getSurveySummary(surveyId)
 
   if (summary instanceof Error) {
-    return <p className="text-sm text-destructive">集計の取得に失敗しました</p>
+    return <FetchError message="集計の取得に失敗しました" />
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{summary.title}</h1>
-
-          <p className="text-sm text-muted-foreground">回答 {summary.response_count} 件</p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          render={<Link href={`/surveys/${summary.survey_id}`} />}
-        >
-          回答する
-        </Button>
-      </div>
+      <PageHeader
+        title={summary.title}
+        description={`回答 ${summary.response_count} 件`}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href={`/surveys/${summary.survey_id}`} />}
+          >
+            回答する
+          </Button>
+        }
+      />
 
       {summary.questions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">集計対象の設問がありません</p>
+        <EmptyState title="集計対象の設問がありません" />
       ) : (
         <div className="flex flex-col gap-4">
           {summary.questions.map((question) => (

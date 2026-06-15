@@ -56,6 +56,7 @@ export async function createReviewCycleAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }
@@ -84,6 +85,7 @@ export async function openReviewCycleAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }
@@ -112,6 +114,7 @@ export async function closeReviewCycleAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }
@@ -165,6 +168,7 @@ export async function updateReviewCycleAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }
@@ -193,6 +197,7 @@ export async function deleteReviewCycleAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }
@@ -233,6 +238,7 @@ export async function submitReviewFormAction(
   }
 
   revalidatePath("/review")
+  revalidatePath("/review/manage")
 
   return { ok: true, error: null }
 }

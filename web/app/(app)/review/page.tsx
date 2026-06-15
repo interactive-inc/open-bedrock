@@ -1,10 +1,12 @@
+import { FetchError } from "@/components/fetch-error"
+import { Settings } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
 import { MyReviewForms } from "@/app/(app)/review/_components/my-review-forms"
-import { ReviewCycleCreateForm } from "@/app/(app)/review/_components/review-cycle-create-form"
 import { ReviewCycleList } from "@/app/(app)/review/_components/review-cycle-list"
-import { ReviewResultsSearchForm } from "@/app/(app)/review/_components/review-results-search-form"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getMyReviewForms } from "@/lib/api/get-my-review-forms"
 import { getReviewCycles } from "@/lib/api/get-review-cycles"
@@ -12,8 +14,10 @@ import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
 export const metadata = { title: "評価" }
 
-// 評価サイクル画面。サイクル一覧と自分の評価フォームを RSC で取得して表示する。
-// 特権ロールにはサイクル作成・結果検索フォームを併設する。
+/**
+ * 評価のメイン画面。「評価サイクル」と「自分の評価フォーム」というオブジェクトだけを並べ、
+ * サイクル作成・結果検索などの管理機能は /review/manage に分離する。
+ */
 export default async function ReviewPage() {
   const currentUser = await getMe()
 
@@ -21,14 +25,23 @@ export default async function ReviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">評価</h1>
-      </div>
+      <PageHeader
+        title="評価"
+        description="評価サイクルと自分の評価フォームを確認します。"
+        actions={
+          canAdminister ? (
+            <Button variant="outline" render={<Link href="/review/manage" />}>
+              <Settings />
+              管理
+            </Button>
+          ) : null
+        }
+      />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">評価サイクル</h2>
 
-        <Suspense fallback={<ReviewSkeleton />}>
+        <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
           <ReviewCycles canAdminister={canAdminister} />
         </Suspense>
       </section>
@@ -36,34 +49,10 @@ export default async function ReviewPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">自分の評価フォーム</h2>
 
-        <Suspense fallback={<ReviewSkeleton />}>
+        <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
           <MyForms />
         </Suspense>
       </section>
-
-      {canAdminister ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>評価サイクルを作成</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <ReviewCycleCreateForm />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canAdminister ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>評価結果を検索</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <ReviewResultsSearchForm />
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   )
 }
@@ -77,7 +66,7 @@ async function ReviewCycles(props: ReviewCyclesProps) {
   const cycles = await getReviewCycles()
 
   if (cycles instanceof Error) {
-    return <p className="text-sm text-destructive">評価サイクル一覧の取得に失敗しました</p>
+    return <FetchError message="評価サイクル一覧の取得に失敗しました" />
   }
 
   return <ReviewCycleList cycles={cycles} canAdminister={props.canAdminister} />
@@ -88,20 +77,8 @@ async function MyForms() {
   const forms = await getMyReviewForms()
 
   if (forms instanceof Error) {
-    return <p className="text-sm text-destructive">評価フォームの取得に失敗しました</p>
+    return <FetchError message="評価フォームの取得に失敗しました" />
   }
 
   return <MyReviewForms forms={forms} />
-}
-
-function ReviewSkeleton() {
-  const placeholders = [0, 1, 2]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-20 w-full" />
-      ))}
-    </div>
-  )
 }
