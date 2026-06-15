@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { ReviewFormState } from "@/app/(app)/review/actions"
 import { submitReviewFormAction } from "@/app/(app)/review/actions"
 import { toReviewerTypeLabel } from "@/app/(app)/review/_lib/to-reviewer-type-label"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -44,7 +45,7 @@ export function MyReviewForms(props: Props) {
   const isSubmitting = submitAction[2]
 
   if (props.forms.length === 0) {
-    return <p className="text-sm text-muted-foreground">割り当てられた評価フォームはありません</p>
+    return <EmptyState title="割り当てられた評価フォームはありません" />
   }
 
   return (

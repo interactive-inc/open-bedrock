@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/_components/survey-answer-form"
+import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/_lib/survey-question-schema"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 import { getSurvey } from "@/lib/api/get-survey"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
-import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/_lib/survey-question-schema"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
-import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "サーベイ回答" }
 
@@ -47,17 +48,18 @@ export default async function SurveyAnswerPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">{survey.title}</h1>
-
-        <Button
-          variant="outline"
-          size="sm"
-          render={<Link href={`/surveys/${survey.id}/summary`} />}
-        >
-          集計を見る
-        </Button>
-      </div>
+      <PageHeader
+        title={survey.title}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href={`/surveys/${survey.id}/summary`} />}
+          >
+            集計を見る
+          </Button>
+        }
+      />
 
       <SurveyAnswerForm surveyId={survey.id} questions={questions} />
     </div>

@@ -1,13 +1,14 @@
+import { FetchError } from "@/components/fetch-error"
+import { Plus } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { SurveyCreateForm } from "@/app/(app)/surveys/manage/_components/survey-create-form"
 import { SurveyDeleteButton } from "@/app/(app)/surveys/manage/_components/survey-delete-button"
-import { SurveyEditForm } from "@/app/(app)/surveys/manage/_components/survey-edit-form"
+import { EmptyState } from "@/components/empty-state"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -22,104 +23,104 @@ import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 export const metadata = { title: "サーベイ管理" }
 
-// サーベイ管理画面（/surveys/manage）。管理者がアンケートを作成・編集・削除する。
-// 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
-// 非特権ロールは notFound で弾く（defense-in-depth）。
+/**
+ * サーベイ管理（特権ロールのみ）。アンケート一覧の確認・編集・削除に集中させ、
+ * 新規作成は /surveys/manage/new に分離する。
+ */
 export default async function SurveyManagePage() {
   const me = await getMe()
 
   if (me instanceof Error || !canManageSurveys(me.role)) {
     notFound()
   }
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">サーベイ管理</h1>
+      <PageHeader
+        title="サーベイ管理"
+        description="実施中のアンケートを確認・編集・削除します。"
+        actions={
+          <>
+            <Button variant="outline" render={<Link href="/surveys" />}>
+              サーベイ一覧へ
+            </Button>
 
-        <Button variant="outline" render={<Link href="/surveys" />}>
-          サーベイ一覧へ
-        </Button>
-      </div>
+            <Button render={<Link href="/surveys/manage/new" />}>
+              <Plus />
+              新規アンケート
+            </Button>
+          </>
+        }
+      />
 
-      <Card className="max-w-xl gap-0 p-0">
-        <div className="p-6">
-          <SurveyCreateForm />
-        </div>
-      </Card>
-
-      <Suspense fallback={<SurveysSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={4} />}>
         <SurveysTable />
       </Suspense>
     </div>
   )
 }
 
-// 実施中アンケートを取得して管理テーブルを描画する非同期 RSC。
 async function SurveysTable() {
   const surveys = await getSurveyList()
 
   if (surveys instanceof Error) {
-    return <p className="text-sm text-destructive">アンケートの取得に失敗しました</p>
+    return <FetchError message="アンケートの取得に失敗しました" />
   }
 
   if (surveys.length === 0) {
-    return <p className="text-sm text-muted-foreground">実施中のアンケートはありません</p>
+    return (
+      <EmptyState
+        title="実施中のアンケートはありません"
+        description="右上の「新規アンケート」から最初のアンケートを作成できます。"
+      />
+    )
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-16">ID</TableHead>
-          <TableHead>タイトル</TableHead>
-          <TableHead className="w-24">状態</TableHead>
-          <TableHead className="w-24">設問数</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {surveys.map((survey) => (
-          <TableRow key={survey.id}>
-            <TableCell className="text-muted-foreground">{survey.id}</TableCell>
-
-            <TableCell className="font-medium">{survey.title}</TableCell>
-
-            <TableCell>
-              <Badge variant={survey.status === "open" ? "default" : "secondary"}>
-                {survey.status === "open" ? "実施中" : "終了"}
-              </Badge>
-            </TableCell>
-
-            <TableCell>{survey.questions_json.length}</TableCell>
-
-            <TableCell>
-              <div className="flex items-center justify-end gap-2">
-                <SurveyEditForm
-                  id={survey.id}
-                  title={survey.title}
-                  status={survey.status === "closed" ? "closed" : "open"}
-                  questionsJsonText={JSON.stringify(survey.questions_json, null, 2)}
-                />
-
-                <SurveyDeleteButton id={survey.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">ID</TableHead>
+            <TableHead>タイトル</TableHead>
+            <TableHead className="w-24">状態</TableHead>
+            <TableHead className="w-24">設問数</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
+        </TableHeader>
 
-function SurveysSkeleton() {
-  const placeholders = [0, 1, 2, 3]
+        <TableBody>
+          {surveys.map((survey) => (
+            <TableRow key={survey.id}>
+              <TableCell className="text-muted-foreground">{survey.id}</TableCell>
 
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
+              <TableCell className="font-medium">{survey.title}</TableCell>
+
+              <TableCell>
+                <Badge variant={survey.status === "open" ? "default" : "secondary"}>
+                  {survey.status === "open" ? "実施中" : "終了"}
+                </Badge>
+              </TableCell>
+
+              <TableCell>{survey.questions_json.length}</TableCell>
+
+              <TableCell>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    render={<Link href={`/surveys/${survey.id}/edit`} />}
+                  >
+                    編集
+                  </Button>
+
+                  <SurveyDeleteButton id={survey.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

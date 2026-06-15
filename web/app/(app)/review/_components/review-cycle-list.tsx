@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -99,7 +100,7 @@ export function ReviewCycleList(props: Props) {
   const isDeleting = deleteAction[2]
 
   if (props.cycles.length === 0) {
-    return <p className="text-sm text-muted-foreground">評価サイクルはありません</p>
+    return <EmptyState title="評価サイクルはありません" />
   }
 
   return (

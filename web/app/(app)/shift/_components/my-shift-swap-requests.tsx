@@ -3,6 +3,7 @@
 import { useActionState } from "react"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/shift/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,49 +25,51 @@ const initialState: ShiftFormState = { ok: false, error: null }
 // 自分が出したシフト交代申請の一覧。保留中の申請には取り下げボタンを出す。
 export function MyShiftSwapRequests(props: Props) {
   if (props.swapRequests.length === 0) {
-    return <p className="text-sm text-muted-foreground">交代申請はありません</p>
+    return <EmptyState title="交代申請はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>対象日</TableHead>
-          <TableHead>交代相手 ID</TableHead>
-          <TableHead>備考</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.swapRequests.map((swapRequest) => (
-          <TableRow key={swapRequest.id}>
-            <TableCell className="font-medium">{swapRequest.date}</TableCell>
-
-            <TableCell className="tabular-nums">{swapRequest.target_employee_id}</TableCell>
-
-            <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>
-
-            <TableCell>
-              {swapRequest.status === "approved" ? (
-                <Badge>承認済み</Badge>
-              ) : (
-                <Badge variant="outline">保留中</Badge>
-              )}
-            </TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {swapRequest.status === "pending" ? (
-                  <CancelSwapRequestButton swapRequestId={swapRequest.id} />
-                ) : null}
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>対象日</TableHead>
+            <TableHead>交代相手 ID</TableHead>
+            <TableHead>備考</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.swapRequests.map((swapRequest) => (
+            <TableRow key={swapRequest.id}>
+              <TableCell className="font-medium">{swapRequest.date}</TableCell>
+
+              <TableCell className="tabular-nums">{swapRequest.target_employee_id}</TableCell>
+
+              <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>
+
+              <TableCell>
+                {swapRequest.status === "approved" ? (
+                  <Badge>承認済み</Badge>
+                ) : (
+                  <Badge variant="outline">保留中</Badge>
+                )}
+              </TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {swapRequest.status === "pending" ? (
+                    <CancelSwapRequestButton swapRequestId={swapRequest.id} />
+                  ) : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

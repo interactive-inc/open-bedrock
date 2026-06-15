@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/surveys/actions"
 import type { MyResponseActionState } from "@/app/(app)/surveys/actions"
 import type { SurveyResponseItem } from "@/lib/api/types/survey-types"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -40,49 +41,51 @@ type AnswerEntry = {
 // 自分のアンケート回答一覧。各行に変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
 export function MyResponsesList(props: Props) {
   if (props.responses.length === 0) {
-    return <p className="text-sm text-muted-foreground">提出済みの回答はありません</p>
+    return <EmptyState title="提出済みの回答はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-16">ID</TableHead>
-          <TableHead className="w-24">アンケート</TableHead>
-          <TableHead>提出日時</TableHead>
-          <TableHead className="w-48 text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">ID</TableHead>
+            <TableHead className="w-24">アンケート</TableHead>
+            <TableHead>提出日時</TableHead>
+            <TableHead className="w-48 text-right">操作</TableHead>
+          </TableRow>
+        </TableHeader>
 
-      <TableBody>
-        {props.responses.map((response) => {
-          // id は永続化前のみ null。一覧に並ぶのは採番済みのため、null 行は描画しない。
-          if (response.id === null) {
-            return null
-          }
+        <TableBody>
+          {props.responses.map((response) => {
+            // id は永続化前のみ null。一覧に並ぶのは採番済みのため、null 行は描画しない。
+            if (response.id === null) {
+              return null
+            }
 
-          const responseId = response.id
+            const responseId = response.id
 
-          return (
-            <TableRow key={responseId}>
-              <TableCell className="text-muted-foreground">{responseId}</TableCell>
+            return (
+              <TableRow key={responseId}>
+                <TableCell className="text-muted-foreground">{responseId}</TableCell>
 
-              <TableCell className="font-medium">{response.survey_id}</TableCell>
+                <TableCell className="font-medium">{response.survey_id}</TableCell>
 
-              <TableCell>{response.submitted_at}</TableCell>
+                <TableCell>{response.submitted_at}</TableCell>
 
-              <TableCell>
-                <div className="flex justify-end gap-2">
-                  <UpdateResponseDialog responseId={responseId} response={response} />
+                <TableCell>
+                  <div className="flex justify-end gap-2">
+                    <UpdateResponseDialog responseId={responseId} response={response} />
 
-                  <WithdrawResponseButton responseId={responseId} />
-                </div>
-              </TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+                    <WithdrawResponseButton responseId={responseId} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -138,7 +141,7 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
             ))}
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

@@ -8,6 +8,7 @@ import {
   publishShiftAssignmentAction,
   updateShiftAssignmentAction,
 } from "@/app/(app)/shift/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -62,62 +63,64 @@ export function ShiftAssignmentList(props: Props) {
   const isPublishing = publishAction[2]
 
   if (props.assignments.length === 0) {
-    return <p className="text-sm text-muted-foreground">シフト割当はありません</p>
+    return <EmptyState title="シフト割当はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>日付</TableHead>
-          <TableHead>社員 ID</TableHead>
-          <TableHead>パターン ID</TableHead>
-          <TableHead>備考</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.assignments.map((assignment) => (
-          <TableRow key={assignment.id}>
-            <TableCell className="font-medium">{assignment.date}</TableCell>
-
-            <TableCell className="tabular-nums">{assignment.employee_id}</TableCell>
-
-            <TableCell className="tabular-nums">{assignment.pattern_id}</TableCell>
-
-            <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
-
-            <TableCell>
-              {assignment.published_at !== null ? (
-                <Badge>公開済み</Badge>
-              ) : (
-                <Badge variant="outline">未公開</Badge>
-              )}
-            </TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {props.canManage && assignment.published_at === null ? (
-                  <form action={publishDispatch}>
-                    <input type="hidden" name="assignment_id" value={assignment.id ?? ""} />
-
-                    <Button type="submit" variant="secondary" size="sm" disabled={isPublishing}>
-                      公開する
-                    </Button>
-                  </form>
-                ) : null}
-
-                {props.canManage ? <UpdateAssignmentDialog assignment={assignment} /> : null}
-
-                {props.canManage ? <DeleteAssignmentButton assignmentId={assignment.id} /> : null}
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>日付</TableHead>
+            <TableHead>社員 ID</TableHead>
+            <TableHead>パターン ID</TableHead>
+            <TableHead>備考</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.assignments.map((assignment) => (
+            <TableRow key={assignment.id}>
+              <TableCell className="font-medium">{assignment.date}</TableCell>
+
+              <TableCell className="tabular-nums">{assignment.employee_id}</TableCell>
+
+              <TableCell className="tabular-nums">{assignment.pattern_id}</TableCell>
+
+              <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
+
+              <TableCell>
+                {assignment.published_at !== null ? (
+                  <Badge>公開済み</Badge>
+                ) : (
+                  <Badge variant="outline">未公開</Badge>
+                )}
+              </TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {props.canManage && assignment.published_at === null ? (
+                    <form action={publishDispatch}>
+                      <input type="hidden" name="assignment_id" value={assignment.id ?? ""} />
+
+                      <Button type="submit" variant="secondary" size="sm" disabled={isPublishing}>
+                        公開する
+                      </Button>
+                    </form>
+                  ) : null}
+
+                  {props.canManage ? <UpdateAssignmentDialog assignment={assignment} /> : null}
+
+                  {props.canManage ? <DeleteAssignmentButton assignmentId={assignment.id} /> : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -166,7 +169,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

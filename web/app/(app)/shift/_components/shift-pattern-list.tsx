@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { deleteShiftPatternAction, updateShiftPatternAction } from "@/app/(app)/shift/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,46 +35,48 @@ const initialState: ShiftFormState = { ok: false, error: null }
 // シフトパターン一覧。特権ロールには各行に変更（Dialog）と削除ボタンを出す。
 export function ShiftPatternList(props: Props) {
   if (props.patterns.length === 0) {
-    return <p className="text-sm text-muted-foreground">シフトパターンはまだありません</p>
+    return <EmptyState title="シフトパターンはまだありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>コード</TableHead>
-          <TableHead>名前</TableHead>
-          <TableHead>開始</TableHead>
-          <TableHead>終了</TableHead>
-          <TableHead>休憩（分）</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.patterns.map((pattern) => (
-          <TableRow key={pattern.id}>
-            <TableCell className="font-medium">{pattern.code}</TableCell>
-
-            <TableCell>{pattern.name}</TableCell>
-
-            <TableCell className="tabular-nums">{pattern.start_time}</TableCell>
-
-            <TableCell className="tabular-nums">{pattern.end_time}</TableCell>
-
-            <TableCell className="tabular-nums">{pattern.break_minutes ?? "-"}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {props.canManage ? <UpdatePatternDialog pattern={pattern} /> : null}
-
-                {props.canManage ? <DeletePatternButton patternId={pattern.id} /> : null}
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>コード</TableHead>
+            <TableHead>名前</TableHead>
+            <TableHead>開始</TableHead>
+            <TableHead>終了</TableHead>
+            <TableHead>休憩（分）</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.patterns.map((pattern) => (
+            <TableRow key={pattern.id}>
+              <TableCell className="font-medium">{pattern.code}</TableCell>
+
+              <TableCell>{pattern.name}</TableCell>
+
+              <TableCell className="tabular-nums">{pattern.start_time}</TableCell>
+
+              <TableCell className="tabular-nums">{pattern.end_time}</TableCell>
+
+              <TableCell className="tabular-nums">{pattern.break_minutes ?? "-"}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {props.canManage ? <UpdatePatternDialog pattern={pattern} /> : null}
+
+                  {props.canManage ? <DeletePatternButton patternId={pattern.id} /> : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -144,7 +147,7 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

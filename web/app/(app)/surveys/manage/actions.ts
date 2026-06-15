@@ -88,6 +88,7 @@ export async function createSurveyAction(
     return { ok: false, error: created.message }
   }
 
+  revalidatePath("/surveys")
   revalidatePath("/surveys/manage")
 
   return { ok: true, error: null }
@@ -141,7 +142,11 @@ export async function updateSurveyAction(
     return { ok: false, error: updated.message }
   }
 
+  revalidatePath("/surveys")
   revalidatePath("/surveys/manage")
+  revalidatePath(`/surveys/${surveyId}`)
+  revalidatePath(`/surveys/${surveyId}/edit`)
+  revalidatePath(`/surveys/${surveyId}/summary`)
 
   return { ok: true, error: null }
 }
@@ -170,6 +175,7 @@ export async function deleteSurveyAction(
     return { ok: false, error: deleted.message }
   }
 
+  revalidatePath("/surveys")
   revalidatePath("/surveys/manage")
 
   // 削除後は一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。

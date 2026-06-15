@@ -56,6 +56,8 @@ export async function createShiftSwapRequestAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -112,6 +114,8 @@ export async function createShiftAssignmentAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -140,6 +144,8 @@ export async function publishShiftAssignmentAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -210,6 +216,8 @@ export async function createShiftPatternAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -248,6 +256,8 @@ export async function updateShiftAssignmentAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -276,6 +286,8 @@ export async function deleteShiftAssignmentAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -310,6 +322,8 @@ export async function updateShiftPatternAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -338,6 +352,8 @@ export async function deleteShiftPatternAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
@@ -360,6 +376,8 @@ export async function cancelShiftSwapRequestAction(
   }
 
   revalidatePath("/shift")
+  revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
 
   return { ok: true, error: null }
 }
