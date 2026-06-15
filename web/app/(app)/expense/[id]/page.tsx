@@ -1,12 +1,15 @@
-import Link from "next/link"
 import { Suspense } from "react"
+import { ExpenseDecisionForm } from "@/app/(app)/expense/_components/expense-decision-form"
+import { BackButton } from "@/components/back-button"
+import { DetailField } from "@/components/detail-field"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
+import { FetchError } from "@/components/fetch-error"
+import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
-import { ExpenseDecisionForm } from "@/app/(app)/expense/_components/expense-decision-form"
 
 export const metadata = { title: "経費詳細" }
 
@@ -22,9 +25,10 @@ export default async function ExpenseDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/expense" className="text-sm text-muted-foreground hover:text-foreground">
-        ← 経費一覧へ戻る
-      </Link>
+      <PageHeader
+        title="経費詳細"
+        actions={<BackButton href="/expense" label="経費一覧に戻る" />}
+      />
 
       <Suspense fallback={<ExpenseDetailSkeleton />}>
         <ExpenseDetailView id={params.id} />
@@ -42,7 +46,7 @@ async function ExpenseDetailView(props: ViewProps) {
   const expenseId = Number(props.id)
 
   if (!Number.isInteger(expenseId) || expenseId <= 0) {
-    return <p className="text-sm text-destructive">経費 ID が不正です</p>
+    return <FetchError message="経費 ID が不正です" />
   }
 
   const expense = await getExpenseDetail(expenseId)
@@ -66,37 +70,19 @@ async function ExpenseDetailView(props: ViewProps) {
 
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm text-muted-foreground">申請者</dt>
+            <DetailField label="申請者">{expense.applicant_name}</DetailField>
 
-              <dd className="text-sm font-medium">{expense.applicant_name}</dd>
-            </div>
+            <DetailField label="金額">
+              <span className="tabular-nums">{amountFormatter.format(expense.amount)} 円</span>
+            </DetailField>
 
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm text-muted-foreground">金額</dt>
+            <DetailField label="利用日">{expense.spent_at}</DetailField>
 
-              <dd className="text-sm font-medium tabular-nums">
-                {amountFormatter.format(expense.amount)} 円
-              </dd>
-            </div>
+            <DetailField label="申請日">{expense.created_at}</DetailField>
 
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm text-muted-foreground">利用日</dt>
-
-              <dd className="text-sm font-medium">{expense.spent_at}</dd>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm text-muted-foreground">申請日</dt>
-
-              <dd className="text-sm font-medium">{expense.created_at}</dd>
-            </div>
-
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <dt className="text-sm text-muted-foreground">メモ</dt>
-
-              <dd className="text-sm whitespace-pre-wrap">{expense.note ?? "-"}</dd>
-            </div>
+            <DetailField label="メモ" span="full">
+              <span className="whitespace-pre-wrap">{expense.note ?? "-"}</span>
+            </DetailField>
           </dl>
         </CardContent>
       </Card>

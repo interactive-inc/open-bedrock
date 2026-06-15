@@ -6,6 +6,7 @@ import {
   updateRentalReservationAction,
 } from "@/app/(app)/rentals/actions"
 import type { RentalReservationActionState } from "@/app/(app)/rentals/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,46 +35,48 @@ type Props = {
 // 自分のレンタル予約一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyReservationsList(props: Props) {
   if (props.reservations.length === 0) {
-    return <p className="text-sm text-muted-foreground">予約はありません</p>
+    return <EmptyState title="予約はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>品名</TableHead>
-          <TableHead>開始日</TableHead>
-          <TableHead>終了日</TableHead>
-          <TableHead>用途</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.reservations.map((reservation) => (
-          <TableRow key={reservation.id}>
-            <TableCell className="font-medium">{reservation.item_name}</TableCell>
-
-            <TableCell>{reservation.start_date}</TableCell>
-
-            <TableCell>{reservation.end_date}</TableCell>
-
-            <TableCell>{reservation.purpose ?? "-"}</TableCell>
-
-            <TableCell>{reservation.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateReservationDialog reservation={reservation} />
-
-                <CancelReservationButton reservationId={reservation.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>品名</TableHead>
+            <TableHead>開始日</TableHead>
+            <TableHead>終了日</TableHead>
+            <TableHead>用途</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.reservations.map((reservation) => (
+            <TableRow key={reservation.id}>
+              <TableCell className="font-medium">{reservation.item_name}</TableCell>
+
+              <TableCell>{reservation.start_date}</TableCell>
+
+              <TableCell>{reservation.end_date}</TableCell>
+
+              <TableCell>{reservation.purpose ?? "-"}</TableCell>
+
+              <TableCell>{reservation.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateReservationDialog reservation={reservation} />
+
+                  <CancelReservationButton reservationId={reservation.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -157,7 +160,7 @@ function UpdateReservationDialog(props: { reservation: RentalReservationResponse
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

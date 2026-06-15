@@ -1,10 +1,13 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
 import { LeaveInboxDecisionForm } from "@/app/(app)/leave/inbox/_components/leave-inbox-decision-form"
+import { EmptyState } from "@/components/empty-state"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -21,15 +24,17 @@ export const metadata = { title: "承認待ちの休暇" }
 export default function LeaveInboxPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">休暇 承認 inbox</h1>
+      <PageHeader
+        title="休暇の承認 inbox"
+        description="承認待ちの休暇申請を確認します。"
+        actions={
+          <Button variant="outline" render={<Link href="/leave" />}>
+            休暇へ戻る
+          </Button>
+        }
+      />
 
-        <Button variant="outline" render={<Link href="/leave" />}>
-          休暇へ戻る
-        </Button>
-      </div>
-
-      <Suspense fallback={<LeaveInboxSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
         <LeaveInboxTable />
       </Suspense>
     </div>
@@ -42,68 +47,56 @@ async function LeaveInboxTable() {
   const leaveRequests = await getLeaveInbox()
 
   if (leaveRequests instanceof Error) {
-    return (
-      <p className="text-sm text-destructive">inbox の取得に失敗しました (承認権限が必要です)</p>
-    )
+    return <FetchError message="inbox の取得に失敗しました (承認権限が必要です)" />
   }
 
   if (leaveRequests.length === 0) {
-    return <p className="text-sm text-muted-foreground">承認待ちの休暇申請はありません</p>
+    return <EmptyState title="承認待ちの休暇申請はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>申請者</TableHead>
-          <TableHead>種別</TableHead>
-          <TableHead>期間</TableHead>
-          <TableHead>日数</TableHead>
-          <TableHead>理由</TableHead>
-          <TableHead>ステータス</TableHead>
-          <TableHead>操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {leaveRequests.map((leaveRequest) => (
-          <TableRow key={leaveRequest.id}>
-            <TableCell className="font-medium">{leaveRequest.applicant_name}</TableCell>
-
-            <TableCell className="text-muted-foreground">
-              <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">
-              {leaveRequest.start_date} 〜 {leaveRequest.end_date}
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.reason ?? "-"}</TableCell>
-
-            <TableCell>
-              <LeaveStatusBadge status={leaveRequest.status} />
-            </TableCell>
-
-            <TableCell>
-              <LeaveInboxDecisionForm leaveRequestId={leaveRequest.id} />
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>申請者</TableHead>
+            <TableHead>種別</TableHead>
+            <TableHead>期間</TableHead>
+            <TableHead>日数</TableHead>
+            <TableHead>理由</TableHead>
+            <TableHead>ステータス</TableHead>
+            <TableHead>操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
+        </TableHeader>
 
-function LeaveInboxSkeleton() {
-  const placeholders = [0, 1, 2, 3]
+        <TableBody>
+          {leaveRequests.map((leaveRequest) => (
+            <TableRow key={leaveRequest.id}>
+              <TableCell className="font-medium">{leaveRequest.applicant_name}</TableCell>
 
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-16 w-full" />
-      ))}
+              <TableCell className="text-muted-foreground">
+                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {leaveRequest.start_date} 〜 {leaveRequest.end_date}
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.reason ?? "-"}</TableCell>
+
+              <TableCell>
+                <LeaveStatusBadge status={leaveRequest.status} />
+              </TableCell>
+
+              <TableCell>
+                <LeaveInboxDecisionForm leaveRequestId={leaveRequest.id} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import {
@@ -15,46 +17,48 @@ export async function MyLeaveRequestsTable() {
   const leaveRequests = await getMyLeaveRequests(null)
 
   if (leaveRequests instanceof Error) {
-    return <p className="text-sm text-destructive">休暇申請一覧の取得に失敗しました</p>
+    return <FetchError message="休暇申請一覧の取得に失敗しました" />
   }
 
   if (leaveRequests.length === 0) {
-    return <p className="text-sm text-muted-foreground">提出済みの休暇申請はまだありません</p>
+    return <EmptyState title="提出済みの休暇申請はまだありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>種別</TableHead>
-          <TableHead>期間</TableHead>
-          <TableHead>日数</TableHead>
-          <TableHead>ステータス</TableHead>
-          <TableHead>申請日</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {leaveRequests.map((leaveRequest) => (
-          <TableRow key={leaveRequest.id}>
-            <TableCell className="font-medium">
-              <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">
-              {leaveRequest.start_date} 〜 {leaveRequest.end_date}
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
-
-            <TableCell>
-              <LeaveStatusBadge status={leaveRequest.status} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>種別</TableHead>
+            <TableHead>期間</TableHead>
+            <TableHead>日数</TableHead>
+            <TableHead>ステータス</TableHead>
+            <TableHead>申請日</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {leaveRequests.map((leaveRequest) => (
+            <TableRow key={leaveRequest.id}>
+              <TableCell className="font-medium">
+                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {leaveRequest.start_date} 〜 {leaveRequest.end_date}
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+
+              <TableCell>
+                <LeaveStatusBadge status={leaveRequest.status} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

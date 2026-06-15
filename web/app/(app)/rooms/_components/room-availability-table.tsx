@@ -16,36 +16,42 @@ type Props = {
 // 各会議室の空き状況テーブル。空きは緑バッジ、重複ありは衝突予約の用途を表示する。
 export function RoomAvailabilityTable(props: Props) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>会議室</TableHead>
-          <TableHead>定員</TableHead>
-          <TableHead>空き状況</TableHead>
-          <TableHead>重複している予約</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.availabilities.map((availability) => (
-          <TableRow key={availability.room.id}>
-            <TableCell className="font-medium">{availability.room.name}</TableCell>
-
-            <TableCell className="text-muted-foreground">{availability.room.capacity} 名</TableCell>
-
-            <TableCell>
-              {availability.available ? (
-                <Badge variant="secondary">空き</Badge>
-              ) : (
-                <Badge variant="destructive">予約あり</Badge>
-              )}
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{toConflictLabel(availability)}</TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>会議室</TableHead>
+            <TableHead>定員</TableHead>
+            <TableHead>空き状況</TableHead>
+            <TableHead>重複している予約</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.availabilities.map((availability) => (
+            <TableRow key={availability.room.id}>
+              <TableCell className="font-medium">{availability.room.name}</TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {availability.room.capacity} 名
+              </TableCell>
+
+              <TableCell>
+                {availability.available ? (
+                  <Badge variant="secondary">空き</Badge>
+                ) : (
+                  <Badge variant="destructive">予約あり</Badge>
+                )}
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {toConflictLabel(availability)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 

@@ -1,37 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
 import { MyReservationsSection } from "@/app/(app)/rentals/_components/my-reservations-section"
-import { RentalReservationCreateForm } from "@/app/(app)/rentals/_components/rental-reservation-create-form"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "レンタル" }
 
-// レンタル画面。申請フォームと、本人のレンタル予約一覧を Suspense 境界で描画する RSC。
+/**
+ * 自分のレンタル予約一覧。新規予約は /rentals/new に分離。
+ */
 export default function RentalsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">レンタル</h1>
+      <PageHeader
+        title="レンタル"
+        description="自分の貸出予約を確認します。"
+        actions={
+          <Button render={<Link href="/rentals/new" />}>
+            <Plus />
+            新規予約
+          </Button>
+        }
+      />
 
-      <RentalReservationCreateForm />
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">自分の予約</h2>
-
-        <Suspense fallback={<RentalsSkeleton />}>
-          <MyReservationsSection />
-        </Suspense>
-      </section>
-    </div>
-  )
-}
-
-function RentalsSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
+        <MyReservationsSection />
+      </Suspense>
     </div>
   )
 }

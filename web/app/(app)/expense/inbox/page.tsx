@@ -1,8 +1,11 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
+import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -22,15 +25,17 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 export default function ExpenseInboxPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">経費の承認 inbox</h1>
+      <PageHeader
+        title="経費の承認 inbox"
+        description="承認待ちの経費申請を確認します。"
+        actions={
+          <Button variant="outline" render={<Link href="/expense" />}>
+            自分の経費へ
+          </Button>
+        }
+      />
 
-        <Button variant="outline" render={<Link href="/expense" />}>
-          自分の経費へ
-        </Button>
-      </div>
-
-      <Suspense fallback={<ExpenseInboxSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={5} />}>
         <ExpenseInboxTable />
       </Suspense>
     </div>
@@ -42,67 +47,57 @@ async function ExpenseInboxTable() {
   const expenses = await getExpenseInbox()
 
   if (expenses instanceof Error) {
-    return (
-      <p className="text-sm text-destructive">
-        承認 inbox の取得に失敗しました（権限がない可能性があります）
-      </p>
-    )
+    return <FetchError message="承認 inbox の取得に失敗しました（権限がない可能性があります）" />
   }
 
   if (expenses.length === 0) {
-    return <p className="text-sm text-muted-foreground">承認待ちの経費はありません</p>
+    return <EmptyState title="承認待ちの経費はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>申請者</TableHead>
-          <TableHead>カテゴリ</TableHead>
-          <TableHead>金額</TableHead>
-          <TableHead>利用日</TableHead>
-          <TableHead>ステータス</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {expenses.map((expense) => (
-          <TableRow key={expense.id}>
-            <TableCell className="font-medium">{expense.applicant_name}</TableCell>
-
-            <TableCell>{toExpenseCategoryLabel(expense.category)}</TableCell>
-
-            <TableCell className="tabular-nums">
-              {amountFormatter.format(expense.amount)} 円
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
-
-            <TableCell>
-              <ExpenseStatusBadge status={expense.status} />
-            </TableCell>
-
-            <TableCell className="text-right">
-              <Button size="sm" variant="outline" render={<Link href={`/expense/${expense.id}`} />}>
-                審査する
-              </Button>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>申請者</TableHead>
+            <TableHead>カテゴリ</TableHead>
+            <TableHead>金額</TableHead>
+            <TableHead>利用日</TableHead>
+            <TableHead>ステータス</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
+        </TableHeader>
 
-function ExpenseInboxSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
+        <TableBody>
+          {expenses.map((expense) => (
+            <TableRow key={expense.id}>
+              <TableCell className="font-medium">{expense.applicant_name}</TableCell>
 
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
+              <TableCell>{toExpenseCategoryLabel(expense.category)}</TableCell>
+
+              <TableCell className="tabular-nums">
+                {amountFormatter.format(expense.amount)} 円
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
+
+              <TableCell>
+                <ExpenseStatusBadge status={expense.status} />
+              </TableCell>
+
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  render={<Link href={`/expense/${expense.id}`} />}
+                >
+                  審査する
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

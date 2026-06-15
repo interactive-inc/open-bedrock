@@ -1,5 +1,7 @@
-import { Card } from "@/components/ui/card"
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
+import { Card } from "@/components/ui/card"
 import { getLeaveBalanceMe } from "@/lib/api/get-leave-balance-me"
 
 // /leave/balance/me を認証付きで取得し、休暇種別ごとの残日数カードを描画する非同期 RSC。
@@ -7,11 +9,11 @@ export async function LeaveBalanceCards() {
   const balances = await getLeaveBalanceMe()
 
   if (balances instanceof Error) {
-    return <p className="text-sm text-destructive">残日数の取得に失敗しました</p>
+    return <FetchError message="残日数の取得に失敗しました" />
   }
 
   if (balances.length === 0) {
-    return <p className="text-sm text-muted-foreground">付与された休暇はまだありません</p>
+    return <EmptyState title="付与された休暇はまだありません" />
   }
 
   return (

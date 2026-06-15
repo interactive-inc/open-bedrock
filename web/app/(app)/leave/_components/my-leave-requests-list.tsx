@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,57 +34,59 @@ type Props = {
 // 自分の休暇申請一覧。pending の行にのみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
 export function MyLeaveRequestsList(props: Props) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>種別</TableHead>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>種別</TableHead>
 
-          <TableHead>期間</TableHead>
+            <TableHead>期間</TableHead>
 
-          <TableHead>日数</TableHead>
+            <TableHead>日数</TableHead>
 
-          <TableHead>ステータス</TableHead>
+            <TableHead>ステータス</TableHead>
 
-          <TableHead>申請日</TableHead>
+            <TableHead>申請日</TableHead>
 
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.leaveRequests.map((leaveRequest) => (
-          <TableRow key={leaveRequest.id}>
-            <TableCell className="font-medium">
-              <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">
-              {leaveRequest.start_date} 〜 {leaveRequest.end_date}
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
-
-            <TableCell>
-              <LeaveStatusBadge status={leaveRequest.status} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {leaveRequest.status === "pending" ? (
-                  <UpdateLeaveRequestDialog leaveRequest={leaveRequest} />
-                ) : null}
-
-                {leaveRequest.status === "pending" ? (
-                  <CancelLeaveRequestButton leaveRequestId={leaveRequest.id} />
-                ) : null}
-              </div>
-            </TableCell>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.leaveRequests.map((leaveRequest) => (
+            <TableRow key={leaveRequest.id}>
+              <TableCell className="font-medium">
+                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {leaveRequest.start_date} 〜 {leaveRequest.end_date}
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+
+              <TableCell>
+                <LeaveStatusBadge status={leaveRequest.status} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {leaveRequest.status === "pending" ? (
+                    <UpdateLeaveRequestDialog leaveRequest={leaveRequest} />
+                  ) : null}
+
+                  {leaveRequest.status === "pending" ? (
+                    <CancelLeaveRequestButton leaveRequestId={leaveRequest.id} />
+                  ) : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -173,7 +175,7 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

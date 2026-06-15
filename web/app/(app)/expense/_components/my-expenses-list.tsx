@@ -5,6 +5,7 @@ import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { deleteExpenseAction, updateExpenseAction } from "@/app/(app)/expense/actions"
 import type { ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
+import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -38,60 +39,62 @@ type Props = {
 // 自分の経費一覧。pending の行のみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
 export function MyExpensesList(props: Props) {
   if (props.expenses.length === 0) {
-    return <p className="text-sm text-muted-foreground">申請済みの経費はまだありません</p>
+    return <EmptyState title="申請済みの経費はまだありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>カテゴリ</TableHead>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>カテゴリ</TableHead>
 
-          <TableHead>金額</TableHead>
+            <TableHead>金額</TableHead>
 
-          <TableHead>利用日</TableHead>
+            <TableHead>利用日</TableHead>
 
-          <TableHead>ステータス</TableHead>
+            <TableHead>ステータス</TableHead>
 
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.expenses.map((expense) => (
-          <TableRow key={expense.id}>
-            <TableCell>
-              <Link
-                href={`/expense/${expense.id}`}
-                className="font-medium underline-offset-4 hover:underline"
-              >
-                {toExpenseCategoryLabel(expense.category)}
-              </Link>
-            </TableCell>
-
-            <TableCell className="tabular-nums">
-              {amountFormatter.format(expense.amount)} 円
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
-
-            <TableCell>
-              <ExpenseStatusBadge status={expense.status} />
-            </TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                {expense.status === "pending" ? <UpdateExpenseDialog expense={expense} /> : null}
-
-                {expense.status === "pending" ? (
-                  <DeleteExpenseButton expenseId={expense.id} />
-                ) : null}
-              </div>
-            </TableCell>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.expenses.map((expense) => (
+            <TableRow key={expense.id}>
+              <TableCell>
+                <Link
+                  href={`/expense/${expense.id}`}
+                  className="font-medium underline-offset-4 hover:underline"
+                >
+                  {toExpenseCategoryLabel(expense.category)}
+                </Link>
+              </TableCell>
+
+              <TableCell className="tabular-nums">
+                {amountFormatter.format(expense.amount)} 円
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
+
+              <TableCell>
+                <ExpenseStatusBadge status={expense.status} />
+              </TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  {expense.status === "pending" ? <UpdateExpenseDialog expense={expense} /> : null}
+
+                  {expense.status === "pending" ? (
+                    <DeleteExpenseButton expenseId={expense.id} />
+                  ) : null}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -191,7 +194,7 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存
