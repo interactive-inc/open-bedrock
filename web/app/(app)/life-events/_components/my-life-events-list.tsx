@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react"
 import { cancelLifeEventAction, updateLifeEventAction } from "@/app/(app)/life-events/actions"
 import type { LifeEventActionState } from "@/app/(app)/life-events/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -31,43 +32,45 @@ type Props = {
 // 自分のライフイベント届出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyLifeEventsList(props: Props) {
   if (props.lifeEvents.length === 0) {
-    return <p className="text-sm text-muted-foreground">ライフイベント届出はありません</p>
+    return <EmptyState title="ライフイベント届出はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>種別</TableHead>
-          <TableHead>発生日</TableHead>
-          <TableHead>詳細</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.lifeEvents.map((lifeEvent) => (
-          <TableRow key={lifeEvent.id}>
-            <TableCell className="font-medium">{lifeEvent.event_type}</TableCell>
-
-            <TableCell>{lifeEvent.event_date}</TableCell>
-
-            <TableCell>{lifeEvent.detail ?? "-"}</TableCell>
-
-            <TableCell>{lifeEvent.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateLifeEventDialog lifeEvent={lifeEvent} />
-
-                <CancelLifeEventButton lifeEventId={lifeEvent.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>種別</TableHead>
+            <TableHead>発生日</TableHead>
+            <TableHead>詳細</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.lifeEvents.map((lifeEvent) => (
+            <TableRow key={lifeEvent.id}>
+              <TableCell className="font-medium">{lifeEvent.event_type}</TableCell>
+
+              <TableCell>{lifeEvent.event_date}</TableCell>
+
+              <TableCell>{lifeEvent.detail ?? "-"}</TableCell>
+
+              <TableCell>{lifeEvent.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateLifeEventDialog lifeEvent={lifeEvent} />
+
+                  <CancelLifeEventButton lifeEventId={lifeEvent.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -136,7 +139,7 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

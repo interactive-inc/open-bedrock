@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -23,7 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -42,43 +43,45 @@ type Props = {
 // 自分の退職申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyResignationsList(props: Props) {
   if (props.resignations.length === 0) {
-    return <p className="text-sm text-muted-foreground">退職申請はありません</p>
+    return <EmptyState title="退職申請はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>退職希望日</TableHead>
-          <TableHead>最終出社日</TableHead>
-          <TableHead>理由</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.resignations.map((resignation) => (
-          <TableRow key={resignation.id}>
-            <TableCell className="font-medium">{resignation.resignation_date}</TableCell>
-
-            <TableCell>{resignation.last_working_date ?? "-"}</TableCell>
-
-            <TableCell>{resignation.reason ?? "-"}</TableCell>
-
-            <TableCell>{resignation.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateResignationDialog resignation={resignation} />
-
-                <CancelResignationButton resignationId={resignation.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>退職希望日</TableHead>
+            <TableHead>最終出社日</TableHead>
+            <TableHead>理由</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.resignations.map((resignation) => (
+            <TableRow key={resignation.id}>
+              <TableCell className="font-medium">{resignation.resignation_date}</TableCell>
+
+              <TableCell>{resignation.last_working_date ?? "-"}</TableCell>
+
+              <TableCell>{resignation.reason ?? "-"}</TableCell>
+
+              <TableCell>{resignation.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateResignationDialog resignation={resignation} />
+
+                  <CancelResignationButton resignationId={resignation.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -152,7 +155,7 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

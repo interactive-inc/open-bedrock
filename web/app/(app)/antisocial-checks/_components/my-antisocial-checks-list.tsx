@@ -6,6 +6,7 @@ import {
   updateAntisocialCheckAction,
 } from "@/app/(app)/antisocial-checks/actions"
 import type { AntisocialCheckActionState } from "@/app/(app)/antisocial-checks/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,46 +35,48 @@ type Props = {
 // 自分の反社チェック申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyAntisocialChecksList(props: Props) {
   if (props.antisocialChecks.length === 0) {
-    return <p className="text-sm text-muted-foreground">反社チェック申請はありません</p>
+    return <EmptyState title="反社チェック申請はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>取引先名</TableHead>
-          <TableHead>所在地</TableHead>
-          <TableHead>代表者名</TableHead>
-          <TableHead>判定結果</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.antisocialChecks.map((antisocialCheck) => (
-          <TableRow key={antisocialCheck.id}>
-            <TableCell className="font-medium">{antisocialCheck.partner_name}</TableCell>
-
-            <TableCell>{antisocialCheck.partner_address ?? "-"}</TableCell>
-
-            <TableCell>{antisocialCheck.representative_name ?? "-"}</TableCell>
-
-            <TableCell>{antisocialCheck.result ?? "-"}</TableCell>
-
-            <TableCell>{antisocialCheck.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateAntisocialCheckDialog antisocialCheck={antisocialCheck} />
-
-                <CancelAntisocialCheckButton antisocialCheckId={antisocialCheck.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>取引先名</TableHead>
+            <TableHead>所在地</TableHead>
+            <TableHead>代表者名</TableHead>
+            <TableHead>判定結果</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.antisocialChecks.map((antisocialCheck) => (
+            <TableRow key={antisocialCheck.id}>
+              <TableCell className="font-medium">{antisocialCheck.partner_name}</TableCell>
+
+              <TableCell>{antisocialCheck.partner_address ?? "-"}</TableCell>
+
+              <TableCell>{antisocialCheck.representative_name ?? "-"}</TableCell>
+
+              <TableCell>{antisocialCheck.result ?? "-"}</TableCell>
+
+              <TableCell>{antisocialCheck.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateAntisocialCheckDialog antisocialCheck={antisocialCheck} />
+
+                  <CancelAntisocialCheckButton antisocialCheckId={antisocialCheck.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -155,7 +158,7 @@ function UpdateAntisocialCheckDialog(props: { antisocialCheck: AntisocialCheckRe
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

@@ -1,37 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { LifeEventCreateForm } from "@/app/(app)/life-events/_components/life-event-create-form"
 import { MyLifeEventsSection } from "@/app/(app)/life-events/_components/my-life-events-section"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "ライフイベント届出" }
 
-// ライフイベント届出画面。届出フォームと非同期の自分の届出一覧を Suspense 境界で描画する RSC。
+/**
+ * ライフイベント届出の自分の届出一覧画面。新規届出は /new に分離。
+ */
 export default function LifeEventsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">ライフイベント届出</h1>
+      <PageHeader
+        title="ライフイベント届出"
+        description="結婚・出産などのライフイベントを届け出ます。"
+        actions={
+          <Button render={<Link href="/life-events/new" />}>
+            <Plus />
+            新規届出
+          </Button>
+        }
+      />
 
-      <LifeEventCreateForm />
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">自分の届出</h2>
-
-        <Suspense fallback={<LifeEventsSkeleton />}>
-          <MyLifeEventsSection />
-        </Suspense>
-      </section>
-    </div>
-  )
-}
-
-function LifeEventsSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
+        <MyLifeEventsSection />
+      </Suspense>
     </div>
   )
 }

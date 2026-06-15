@@ -6,6 +6,7 @@ import {
   updateBusinessTripAction,
 } from "@/app/(app)/business-trips/actions"
 import type { BusinessTripActionState } from "@/app/(app)/business-trips/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,49 +35,51 @@ type Props = {
 // 自分の出張申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyBusinessTripsList(props: Props) {
   if (props.businessTrips.length === 0) {
-    return <p className="text-sm text-muted-foreground">出張申請はありません</p>
+    return <EmptyState title="出張申請はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>行き先</TableHead>
-          <TableHead>開始</TableHead>
-          <TableHead>終了</TableHead>
-          <TableHead>目的</TableHead>
-          <TableHead>概算費用</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.businessTrips.map((businessTrip) => (
-          <TableRow key={businessTrip.id}>
-            <TableCell className="font-medium">{businessTrip.destination}</TableCell>
-
-            <TableCell>{businessTrip.start_date}</TableCell>
-
-            <TableCell>{businessTrip.end_date}</TableCell>
-
-            <TableCell>{businessTrip.purpose}</TableCell>
-
-            <TableCell>{businessTrip.estimated_cost ?? "-"}</TableCell>
-
-            <TableCell>{businessTrip.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateBusinessTripDialog businessTrip={businessTrip} />
-
-                <CancelBusinessTripButton businessTripId={businessTrip.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>行き先</TableHead>
+            <TableHead>開始</TableHead>
+            <TableHead>終了</TableHead>
+            <TableHead>目的</TableHead>
+            <TableHead>概算費用</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.businessTrips.map((businessTrip) => (
+            <TableRow key={businessTrip.id}>
+              <TableCell className="font-medium">{businessTrip.destination}</TableCell>
+
+              <TableCell>{businessTrip.start_date}</TableCell>
+
+              <TableCell>{businessTrip.end_date}</TableCell>
+
+              <TableCell>{businessTrip.purpose}</TableCell>
+
+              <TableCell>{businessTrip.estimated_cost ?? "-"}</TableCell>
+
+              <TableCell>{businessTrip.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateBusinessTripDialog businessTrip={businessTrip} />
+
+                  <CancelBusinessTripButton businessTripId={businessTrip.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -168,7 +171,7 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存

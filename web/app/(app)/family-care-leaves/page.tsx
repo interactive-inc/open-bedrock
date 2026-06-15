@@ -1,37 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { FamilyCareLeaveCreateForm } from "@/app/(app)/family-care-leaves/_components/family-care-leave-create-form"
 import { MyFamilyCareLeavesSection } from "@/app/(app)/family-care-leaves/_components/my-family-care-leaves-section"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "産休・育休・介護休業の申出" }
 
-// 休業申出画面。申出フォームと非同期の自分の申出一覧を Suspense 境界で描画する RSC。
+/**
+ * 産休・育休・介護休業の自分の申出一覧画面。新規申出は /new に分離。
+ */
 export default function FamilyCareLeavesPage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">産休・育休・介護休業の申出</h1>
+      <PageHeader
+        title="産休・育休・介護休業の申出"
+        description="休業の申出と、申出状況を確認します。"
+        actions={
+          <Button render={<Link href="/family-care-leaves/new" />}>
+            <Plus />
+            新規申出
+          </Button>
+        }
+      />
 
-      <FamilyCareLeaveCreateForm />
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">自分の申出</h2>
-
-        <Suspense fallback={<FamilyCareLeavesSkeleton />}>
-          <MyFamilyCareLeavesSection />
-        </Suspense>
-      </section>
-    </div>
-  )
-}
-
-function FamilyCareLeavesSkeleton() {
-  const placeholders = [0, 1, 2, 3]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
+        <MyFamilyCareLeavesSection />
+      </Suspense>
     </div>
   )
 }

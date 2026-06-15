@@ -6,6 +6,7 @@ import {
   updateCertificateRequestAction,
 } from "@/app/(app)/certificate-requests/actions"
 import type { CertificateRequestActionState } from "@/app/(app)/certificate-requests/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -34,46 +35,48 @@ type Props = {
 // 自分の証明書発行依頼一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
 export function MyCertificateRequestsList(props: Props) {
   if (props.certificateRequests.length === 0) {
-    return <p className="text-sm text-muted-foreground">証明書発行依頼はありません</p>
+    return <EmptyState title="証明書発行依頼はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>種別</TableHead>
-          <TableHead>提出先</TableHead>
-          <TableHead>希望日</TableHead>
-          <TableHead>備考</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.certificateRequests.map((certificateRequest) => (
-          <TableRow key={certificateRequest.id}>
-            <TableCell className="font-medium">{certificateRequest.certificate_type}</TableCell>
-
-            <TableCell>{certificateRequest.submit_to ?? "-"}</TableCell>
-
-            <TableCell>{certificateRequest.needed_by ?? "-"}</TableCell>
-
-            <TableCell>{certificateRequest.note ?? "-"}</TableCell>
-
-            <TableCell>{certificateRequest.status}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateCertificateRequestDialog certificateRequest={certificateRequest} />
-
-                <CancelCertificateRequestButton certificateRequestId={certificateRequest.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>種別</TableHead>
+            <TableHead>提出先</TableHead>
+            <TableHead>希望日</TableHead>
+            <TableHead>備考</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.certificateRequests.map((certificateRequest) => (
+            <TableRow key={certificateRequest.id}>
+              <TableCell className="font-medium">{certificateRequest.certificate_type}</TableCell>
+
+              <TableCell>{certificateRequest.submit_to ?? "-"}</TableCell>
+
+              <TableCell>{certificateRequest.needed_by ?? "-"}</TableCell>
+
+              <TableCell>{certificateRequest.note ?? "-"}</TableCell>
+
+              <TableCell>{certificateRequest.status}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateCertificateRequestDialog certificateRequest={certificateRequest} />
+
+                  <CancelCertificateRequestButton certificateRequestId={certificateRequest.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -156,7 +159,7 @@ function UpdateCertificateRequestDialog(props: { certificateRequest: Certificate
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存
