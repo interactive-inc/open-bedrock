@@ -3,17 +3,22 @@
 import { useActionState } from "react"
 import { submitApplicationAction } from "@/app/(app)/applications/templates/[code]/actions"
 import type { SubmitState } from "@/app/(app)/applications/templates/[code]/actions"
+import { DynamicFormFields } from "@/components/dynamic-form-fields"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Textarea } from "@/components/ui/textarea"
+import { FieldError } from "@/components/ui/field"
+import type { FormSchema } from "@/lib/application/form-schema"
 
 type Props = {
   templateCode: string
+  schema: FormSchema
 }
 
 const initialState: SubmitState = { ok: false, error: null }
 
-// 申請提出フォーム。payload は JSON テキストで受け、useActionState で Server Action を呼ぶ。
+/**
+ * 申請提出フォーム。テンプレの schema を読んで入力項目を動的に描画し、
+ * 入力結果を payload JSON として Server Action に送る。
+ */
 export function SubmitApplicationForm(props: Props) {
   const action = useActionState(submitApplicationAction, initialState)
 
@@ -27,28 +32,12 @@ export function SubmitApplicationForm(props: Props) {
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="template_code" value={props.templateCode} />
 
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="payload">申請内容 (JSON)</FieldLabel>
+      <DynamicFormFields schema={props.schema} name="payload" />
 
-          <Textarea
-            id="payload"
-            name="payload"
-            rows={10}
-            placeholder='{ "reason": "..." }'
-            aria-invalid={state.error !== null}
-          />
-
-          <FieldDescription>
-            テンプレートのスキーマに沿った内容を JSON で入力してください
-          </FieldDescription>
-
-          {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
-        </Field>
-      </FieldGroup>
+      {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || props.schema.fields.length === 0}>
           {isPending ? "提出中..." : "提出する"}
         </Button>
       </div>

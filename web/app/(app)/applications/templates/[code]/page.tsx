@@ -1,13 +1,14 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SubmitApplicationForm } from "@/app/(app)/applications/templates/[code]/_components/submit-application-form"
 import { TemplateManagement } from "@/app/(app)/applications/templates/_components/template-management"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getApplicationTemplate } from "@/lib/api/get-application-template"
 import { getMe } from "@/lib/api/get-me"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
+import { toFormSchema } from "@/lib/application/form-schema"
 
 export const metadata = { title: "申請テンプレート詳細" }
 
@@ -15,7 +16,9 @@ type Props = {
   params: Promise<{ code: string }>
 }
 
-// 申請テンプレ詳細 + 提出フォーム画面。RSC でテンプレを取得し、フォームへ渡す。
+/**
+ * 申請テンプレ詳細 + 提出フォーム画面。RSC でテンプレを取得し、保存済みスキーマを動的フォームへ渡す。
+ */
 export default async function ApplicationTemplateDetailPage(props: Props) {
   const params = await props.params
 
@@ -30,35 +33,31 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
   const canManage =
     currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
 
+  const schema = toFormSchema(template.schema_json)
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{template.name}</h1>
+      <PageHeader
+        title={template.name}
+        description={template.description ?? undefined}
+        actions={<BackButton href="/applications/templates" label="テンプレ一覧へ" />}
+      />
 
-          <Badge variant="secondary" className="w-fit">
-            {template.category}
-          </Badge>
-        </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary">{template.category}</Badge>
 
-        <Button variant="outline" render={<Link href="/applications/templates" />}>
-          テンプレ一覧へ
-        </Button>
+        {canManage ? <TemplateManagement template={template} /> : null}
       </div>
 
-      {canManage ? <TemplateManagement template={template} /> : null}
+      <Card>
+        <CardHeader>
+          <CardDescription>この依頼を提出する</CardDescription>
+        </CardHeader>
 
-      <Card className="p-0 gap-0">
-        <div className="flex flex-col gap-2 p-4">
-          <span className="text-sm font-medium">説明</span>
-
-          <span className="text-sm text-muted-foreground">
-            {template.description ?? "説明なし"}
-          </span>
-        </div>
+        <CardContent>
+          <SubmitApplicationForm templateCode={template.code} schema={schema} />
+        </CardContent>
       </Card>
-
-      <SubmitApplicationForm templateCode={template.code} />
     </div>
   )
 }
