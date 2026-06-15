@@ -7,6 +7,7 @@ import type { ExpenseSubmitFormState } from "@/app/(app)/expense/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ExpenseSubmitFormState = { ok: false, error: null }
@@ -43,18 +44,18 @@ export function ExpenseCreateForm() {
         <Field>
           <FieldLabel htmlFor="expense-category">カテゴリ</FieldLabel>
 
-          <select
+          <NativeSelect
             id="expense-category"
             name="category"
             defaultValue="transport"
-            className="h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+            className="w-full"
           >
-            <option value="transport">交通費</option>
-            <option value="supplies">備品</option>
-            <option value="entertainment">交際費</option>
-            <option value="books">書籍</option>
-            <option value="other">その他</option>
-          </select>
+            <NativeSelectOption value="transport">交通費</NativeSelectOption>
+            <NativeSelectOption value="supplies">備品</NativeSelectOption>
+            <NativeSelectOption value="entertainment">交際費</NativeSelectOption>
+            <NativeSelectOption value="books">書籍</NativeSelectOption>
+            <NativeSelectOption value="other">その他</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         <Field>

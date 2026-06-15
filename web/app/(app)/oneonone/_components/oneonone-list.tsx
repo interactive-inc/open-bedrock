@@ -1,4 +1,6 @@
+import { FetchError } from "@/components/fetch-error"
 import { getOneOnOneList } from "@/lib/api/get-oneonone-list"
+import { EmptyState } from "@/components/empty-state"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // 1on1 履歴をサーバ側 fetch してカード描画する非同期 RSC。
@@ -7,11 +9,11 @@ export async function OneOnOneList() {
   const oneOnOnes = await getOneOnOneList()
 
   if (oneOnOnes instanceof Error) {
-    return <p className="text-sm text-destructive">1on1 の取得に失敗しました</p>
+    return <FetchError message="1on1 の取得に失敗しました" />
   }
 
   if (oneOnOnes.length === 0) {
-    return <p className="text-sm text-muted-foreground">1on1 の記録がありません</p>
+    return <EmptyState title="1on1 の記録がありません" />
   }
 
   return (
@@ -19,7 +21,7 @@ export async function OneOnOneList() {
       {oneOnOnes.map((oneOnOne) => (
         <Card key={oneOnOne.id}>
           <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            <CardTitle className="flex flex-wrap items-center gap-2">
               <span>{oneOnOne.member_name}</span>
               <span className="text-sm font-normal text-muted-foreground">
                 上長: {oneOnOne.manager_name}

@@ -1,5 +1,6 @@
 "use client"
 
+import { FieldError } from "@/components/ui/field"
 import { useActionState } from "react"
 import { decideLeaveRequestAction } from "@/app/(app)/leave/inbox/actions"
 import type { LeaveDecisionState } from "@/app/(app)/leave/inbox/actions"
@@ -53,7 +54,7 @@ export function LeaveInboxDecisionForm(props: Props) {
         </Button>
       </div>
 
-      {state.error !== null ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
     </form>
   )
 }

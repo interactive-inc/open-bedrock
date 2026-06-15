@@ -1,5 +1,7 @@
 import { RoomAvailabilityTable } from "@/app/(app)/rooms/_components/room-availability-table"
 import { RoomReservationCreateForm } from "@/app/(app)/rooms/_components/room-reservation-create-form"
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { getRoomAvailability } from "@/lib/api/get-room-availability"
 import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
 
@@ -21,11 +23,11 @@ export async function RoomAvailabilitySection(props: Props) {
   const availabilities = await getRoomAvailability(props.search)
 
   if (availabilities instanceof Error) {
-    return <p className="text-sm text-destructive">空き状況の取得に失敗しました</p>
+    return <FetchError message="空き状況の取得に失敗しました" />
   }
 
   if (availabilities.length === 0) {
-    return <p className="text-sm text-muted-foreground">条件に合う会議室がありません</p>
+    return <EmptyState title="条件に合う会議室がありません" />
   }
 
   return (

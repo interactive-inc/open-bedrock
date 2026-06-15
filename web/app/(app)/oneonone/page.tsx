@@ -1,34 +1,33 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { OneOnOneCreateForm } from "@/app/(app)/oneonone/_components/oneonone-create-form"
 import { OneOnOneList } from "@/app/(app)/oneonone/_components/oneonone-list"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "1on1" }
 
-// 1on1 画面。記録作成フォームと履歴一覧を並べる RSC。
-// 一覧は本人参加分を取得するため動的レンダリングになる。
+/**
+ * 1on1 履歴一覧。記録の作成は /oneonone/new に分離。
+ */
 export default function OneOnOnePage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">1on1</h1>
+      <PageHeader
+        title="1on1"
+        description="自分の参加した 1on1 の履歴を確認します。"
+        actions={
+          <Button render={<Link href="/oneonone/new" />}>
+            <Plus />
+            記録を追加
+          </Button>
+        }
+      />
 
-      <OneOnOneCreateForm />
-
-      <Suspense fallback={<OneOnOneListSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-32 w-full" />}>
         <OneOnOneList />
       </Suspense>
-    </div>
-  )
-}
-
-function OneOnOneListSkeleton() {
-  const placeholders = [0, 1, 2]
-
-  return (
-    <div className="flex flex-col gap-4">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-32 w-full" />
-      ))}
     </div>
   )
 }

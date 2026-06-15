@@ -1,8 +1,11 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { GoalEvaluationForm } from "@/app/(app)/goals/[id]/_components/goal-evaluation-form"
-import { getGoal } from "@/lib/api/get-goal"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { getGoal } from "@/lib/api/get-goal"
 
 export const metadata = { title: "目標詳細" }
 
@@ -18,7 +21,7 @@ export default async function GoalDetailPage(props: Props) {
   const goalId = Number(params.id)
 
   if (!Number.isInteger(goalId)) {
-    return <p className="text-sm text-destructive">目標 ID が不正です</p>
+    return <FetchError message="目標 ID が不正です" />
   }
 
   const goal = await getGoal(goalId)
@@ -26,7 +29,7 @@ export default async function GoalDetailPage(props: Props) {
   if (goal instanceof Error) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-destructive">目標の取得に失敗しました</p>
+        <FetchError message="目標の取得に失敗しました" />
 
         <Link href="/goals" className="text-sm text-primary underline-offset-4 hover:underline">
           一覧へ戻る
@@ -37,17 +40,11 @@ export default async function GoalDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Link href="/goals" className="text-sm text-primary underline-offset-4 hover:underline">
-          一覧へ戻る
-        </Link>
-
-        <h1 className="text-2xl font-semibold">{goal.title}</h1>
-      </div>
+      <PageHeader title={goal.title} actions={<BackButton href="/goals" label="一覧に戻る" />} />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm text-muted-foreground">概要</CardTitle>
+          <CardDescription>概要</CardDescription>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-3 text-sm">

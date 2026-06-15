@@ -1,5 +1,7 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getGoalList } from "@/lib/api/get-goal-list"
+import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -26,51 +28,53 @@ export async function GoalList(props: Props) {
   })
 
   if (goals instanceof Error) {
-    return <p className="text-sm text-destructive">目標の取得に失敗しました</p>
+    return <FetchError message="目標の取得に失敗しました" />
   }
 
   if (goals.length === 0) {
-    return <p className="text-sm text-muted-foreground">目標がありません</p>
+    return <EmptyState title="目標がありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>期間</TableHead>
-          <TableHead>タイトル</TableHead>
-          <TableHead>KPI</TableHead>
-          <TableHead className="text-right">ウェイト</TableHead>
-          <TableHead>ステータス</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {goals.map((goal) => (
-          <TableRow key={goal.id}>
-            <TableCell>{goal.period}</TableCell>
-
-            <TableCell>
-              <Link
-                href={`/goals/${goal.id}`}
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {goal.title}
-              </Link>
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">{goal.kpi ?? "-"}</TableCell>
-
-            <TableCell className="text-right">{goal.weight}</TableCell>
-
-            <TableCell>
-              <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
-                {goal.status}
-              </Badge>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>期間</TableHead>
+            <TableHead>タイトル</TableHead>
+            <TableHead>KPI</TableHead>
+            <TableHead className="text-right">ウェイト</TableHead>
+            <TableHead>ステータス</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {goals.map((goal) => (
+            <TableRow key={goal.id}>
+              <TableCell>{goal.period}</TableCell>
+
+              <TableCell>
+                <Link
+                  href={`/goals/${goal.id}`}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {goal.title}
+                </Link>
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">{goal.kpi ?? "-"}</TableCell>
+
+              <TableCell className="text-right">{goal.weight}</TableCell>
+
+              <TableCell>
+                <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
+                  {goal.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

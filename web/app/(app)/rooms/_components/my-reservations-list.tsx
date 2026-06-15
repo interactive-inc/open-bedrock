@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react"
 import { cancelRoomReservationAction, updateRoomReservationAction } from "@/app/(app)/rooms/actions"
 import type { RoomReservationActionState } from "@/app/(app)/rooms/actions"
+import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -31,43 +32,45 @@ type Props = {
 // 自分の会議室予約一覧。各行に変更（Dialog フォーム）とキャンセルボタンを置く表示コンポーネント。
 export function MyReservationsList(props: Props) {
   if (props.reservations.length === 0) {
-    return <p className="text-sm text-muted-foreground">予約はありません</p>
+    return <EmptyState title="予約はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>会議室 ID</TableHead>
-          <TableHead>開始</TableHead>
-          <TableHead>終了</TableHead>
-          <TableHead>用途</TableHead>
-          <TableHead className="text-right">操作</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {props.reservations.map((reservation) => (
-          <TableRow key={reservation.id}>
-            <TableCell className="font-medium">{reservation.room_id}</TableCell>
-
-            <TableCell>{reservation.start_at}</TableCell>
-
-            <TableCell>{reservation.end_at}</TableCell>
-
-            <TableCell>{reservation.purpose ?? "-"}</TableCell>
-
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <UpdateReservationDialog reservation={reservation} />
-
-                <CancelReservationButton reservationId={reservation.id} />
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>会議室 ID</TableHead>
+            <TableHead>開始</TableHead>
+            <TableHead>終了</TableHead>
+            <TableHead>用途</TableHead>
+            <TableHead className="text-right">操作</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {props.reservations.map((reservation) => (
+            <TableRow key={reservation.id}>
+              <TableCell className="font-medium">{reservation.room_id}</TableCell>
+
+              <TableCell>{reservation.start_at}</TableCell>
+
+              <TableCell>{reservation.end_at}</TableCell>
+
+              <TableCell>{reservation.purpose ?? "-"}</TableCell>
+
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <UpdateReservationDialog reservation={reservation} />
+
+                  <CancelReservationButton reservationId={reservation.id} />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
@@ -141,7 +144,7 @@ function UpdateReservationDialog(props: { reservation: RoomReservationResponse }
             </Field>
           </FieldGroup>
 
-          {state.error === null ? null : <p className="text-sm text-destructive">{state.error}</p>}
+          {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
             変更を保存
