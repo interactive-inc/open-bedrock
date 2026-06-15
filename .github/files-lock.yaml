@@ -48,6 +48,9 @@ RyukyuInteractive/inta#open-karte:
   - .claude/rules/ts.react.md
   - .claude/rules/ts.react.shadcn.md
   - .claude/skills/docs/SKILL.md
+  - .claude/skills/docs/commands/drift.md
+  - .claude/skills/docs/commands/links.md
+  - .claude/skills/docs/commands/next.md
   - .claude/skills/docs/references/api-schema.md
   - .claude/skills/docs/references/architecture.md
   - .claude/skills/docs/references/backlogs.md
@@ -62,6 +65,8 @@ RyukyuInteractive/inta#open-karte:
   - .claude/skills/docs/references/integrations.md
   - .claude/skills/docs/references/manual.md
   - .claude/skills/docs/references/milestones.md
+  - .claude/skills/docs/references/page-capabilities.md
+  - .claude/skills/docs/references/pages.md
   - .claude/skills/docs/references/roles-and-permissions.md
   - .claude/skills/docs/references/signals.md
   - .claude/skills/docs/references/sitemap.md

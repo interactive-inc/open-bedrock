@@ -30,13 +30,18 @@ stories/
 
 slug 規則（英字ハイフン）で揃えたい場合は frontmatter `slug` を立て、ファイル名は英字に揃える。プロジェクトでどちらかに統一する。
 
+機能固有のストーリーは `features/NNN_{機能名}/stories/{story}.md` に置く運用もある（features ディレクトリ化パターン、[features.md](features.md) 参照）。横断ストーリーだけ `stories/` 直下、機能専属は features 配下、と棲み分ける。frontmatter `feature: F{NNN}` で機能と紐付ける。
+
 ## フォーマット
 
 ```md
 ---
-name: { 業務名 }
-slug: { english-with-hyphens }
-roles: [{ ロール名 }, { ロール名 }]
+name: {業務名}
+slug: {english-with-hyphens}
+roles: [{ロール名}, {ロール名}]
+feature: F{NNN}
+actor: {主役の role_key}
+status: {implemented / partial / mock / planned}
 ---
 
 # {業務名}
