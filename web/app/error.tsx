@@ -1,15 +1,23 @@
 "use client"
 
-import Link from "next/link"
+import { LoginGate } from "@/components/login-gate"
 import { Button } from "@/components/ui/button"
+import { isAuthErrorDigest } from "@/lib/api/auth-error"
 
 type Props = {
   error: Error & { digest?: string }
   reset: () => void
 }
 
-// ルートセグメントのエラーバウンダリ。未ハンドル例外時に汎用 500 でなく回復導線を出す。
+/**
+ * ルートセグメントのエラーバウンダリ。`AuthError` ならログインフォームに差し替え、
+ * それ以外は汎用の回復導線を出す。
+ */
 export default function RootError(props: Props) {
+  if (isAuthErrorDigest(props.error.digest)) {
+    return <LoginGate />
+  }
+
   return (
     <main className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-6 p-8 text-center">
       <div className="flex flex-col gap-2">
@@ -26,10 +34,6 @@ export default function RootError(props: Props) {
 
       <div className="flex gap-3">
         <Button onClick={props.reset}>再試行</Button>
-
-        <Button variant="outline" render={<Link href="/" />}>
-          ホームへ戻る
-        </Button>
       </div>
     </main>
   )
