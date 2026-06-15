@@ -1,14 +1,17 @@
 import { Suspense } from "react"
-import { DashboardSummaryCards } from "@/app/(app)/dashboard/_components/dashboard-summary-cards"
+import { DashboardSummaryCards } from "@/app/(app)/_components/dashboard-summary-cards"
+import { PageHeader } from "@/components/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export const metadata = { title: "ダッシュボード" }
+export const metadata = { title: "ホーム" }
 
-// Dashboard 画面。非同期サマリは Suspense 境界で Skeleton をフォールバックにする。
-export default function DashboardPage() {
+/**
+ * ルート `/` のホーム画面。主要オブジェクトの件数サマリを並べる。
+ */
+export default function HomePage() {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">ダッシュボード</h1>
+      <PageHeader title="ホーム" description="主要な人数・申請・サーベイの状況を一望する。" />
 
       <Suspense fallback={<DashboardSummarySkeleton />}>
         <DashboardSummaryCards />
