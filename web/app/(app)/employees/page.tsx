@@ -1,7 +1,8 @@
 import { Suspense } from "react"
 import { EmployeeListSection } from "@/app/(app)/employees/_components/employee-list-section"
 import { EmployeeSearchForm } from "@/app/(app)/employees/_components/employee-search-form"
-import { Skeleton } from "@/components/ui/skeleton"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import type {
   EmployeeSearchFilter,
   EmployeeStatusFilter,
@@ -24,11 +25,11 @@ export default async function EmployeesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">従業員</h1>
+      <PageHeader title="従業員" description="従業員台帳の検索と閲覧をします。" />
 
       <EmployeeSearchForm filter={filter} />
 
-      <Suspense key={suspenseKey} fallback={<EmployeeTableSkeleton />}>
+      <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
         <EmployeeListSection filter={filter} />
       </Suspense>
     </div>
@@ -74,16 +75,4 @@ function toStatus(value: string | Array<string> | undefined): EmployeeStatusFilt
   }
 
   return null
-}
-
-function EmployeeTableSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
-    </div>
-  )
 }

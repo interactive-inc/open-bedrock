@@ -2,9 +2,10 @@ import { Suspense } from "react"
 import Link from "next/link"
 import { MySkillList } from "@/app/(app)/skills/me/_components/my-skill-list"
 import { SkillUpdateForm } from "@/app/(app)/skills/me/_components/skill-update-form"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "自分のスキル" }
 
@@ -12,13 +13,15 @@ export const metadata = { title: "自分のスキル" }
 export default function MySkillsPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">自分のスキル</h1>
-
-        <Button variant="outline" render={<Link href="/skills" />}>
-          スキル一覧
-        </Button>
-      </div>
+      <PageHeader
+        title="自分のスキル"
+        description="登録済みスキルを確認し、新しいスキルを登録します。"
+        actions={
+          <Button variant="outline" render={<Link href="/skills" />}>
+            スキル一覧
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -28,7 +31,7 @@ export default function MySkillsPage() {
         </CardHeader>
 
         <CardContent>
-          <Suspense fallback={<MySkillListSkeleton />}>
+          <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-10 w-full" />}>
             <MySkillList />
           </Suspense>
         </CardContent>
@@ -47,18 +50,6 @@ export default function MySkillsPage() {
           <SkillUpdateForm />
         </CardContent>
       </Card>
-    </div>
-  )
-}
-
-function MySkillListSkeleton() {
-  const placeholders = [0, 1, 2]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
     </div>
   )
 }

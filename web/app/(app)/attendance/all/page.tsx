@@ -2,8 +2,9 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { AttendanceAdminList } from "@/app/(app)/attendance/_components/attendance-admin-list"
 import { AttendanceFilterForm } from "@/app/(app)/attendance/_components/attendance-filter-form"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "勤怠（全体）" }
 
@@ -24,34 +25,24 @@ export default async function AttendanceAllPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">勤怠一覧（管理者）</h1>
-
-        <Button variant="outline" render={<Link href="/attendance" />}>
-          自分の勤怠へ
-        </Button>
-      </div>
+      <PageHeader
+        title="勤怠一覧（管理者）"
+        description="従業員・期間で絞り込み、全体の勤怠記録を確認します。"
+        actions={
+          <Button variant="outline" render={<Link href="/attendance" />}>
+            自分の勤怠へ
+          </Button>
+        }
+      />
 
       <AttendanceFilterForm withEmployeeId={true} employeeId={employeeId} from={from} to={to} />
 
       <Suspense
         key={`${employeeId ?? ""}:${from ?? ""}:${to ?? ""}`}
-        fallback={<AttendanceListSkeleton />}
+        fallback={<ListSkeleton rows={5} />}
       >
         <AttendanceAdminList employeeId={employeeId} from={from} to={to} />
       </Suspense>
-    </div>
-  )
-}
-
-function AttendanceListSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
-
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
     </div>
   )
 }

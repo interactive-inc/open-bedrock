@@ -1,5 +1,7 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getOrgReportingLine } from "@/lib/api/get-org-reporting-line"
+import { EmptyState } from "@/components/empty-state"
 import { Card } from "@/components/ui/card"
 
 type Props = {
@@ -11,11 +13,11 @@ export async function OrgReportingLineView(props: Props) {
   const nodes = await getOrgReportingLine(props.code)
 
   if (nodes instanceof Error) {
-    return <p className="text-sm text-destructive">レポートラインの取得に失敗しました</p>
+    return <FetchError message="レポートラインの取得に失敗しました" />
   }
 
   if (nodes.length === 0) {
-    return <p className="text-sm text-muted-foreground">レポートラインがありません</p>
+    return <EmptyState title="レポートラインがありません" />
   }
 
   return (

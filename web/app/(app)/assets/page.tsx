@@ -1,10 +1,13 @@
+import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
 import { AssetFilterForm } from "@/app/(app)/assets/_components/asset-filter-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
 import { AssetStatusBadge } from "@/components/asset-status-badge"
+import { EmptyState } from "@/components/empty-state"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -43,21 +46,23 @@ export default async function AssetsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">備品</h1>
+      <PageHeader
+        title="備品"
+        description="種別・状態で絞り込み、備品の一覧を確認します。"
+        actions={
+          <>
+            <Button variant="outline" render={<Link href="/assets/lent/me" />}>
+              自分の貸与品
+            </Button>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" render={<Link href="/assets/lent/me" />}>
-            自分の貸与品
-          </Button>
-
-          <Button render={<Link href="/assets/new" />}>物品を登録</Button>
-        </div>
-      </div>
+            <Button render={<Link href="/assets/new" />}>物品を登録</Button>
+          </>
+        }
+      />
 
       <AssetFilterForm kind={kind} status={status} />
 
-      <Suspense fallback={<AssetsSkeleton />}>
+      <Suspense fallback={<ListSkeleton rows={5} />}>
         <AssetsTable kind={kind} status={status} />
       </Suspense>
     </div>
@@ -74,65 +79,55 @@ async function AssetsTable(props: TableProps) {
   const assets = await getAssetList({ kind: props.kind, status: props.status })
 
   if (assets instanceof Error) {
-    return <p className="text-sm text-destructive">物品一覧の取得に失敗しました</p>
+    return <FetchError message="物品一覧の取得に失敗しました" />
   }
 
   if (assets.length === 0) {
-    return <p className="text-sm text-muted-foreground">該当する物品はありません</p>
+    return <EmptyState title="該当する物品はありません" />
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>コード</TableHead>
-          <TableHead>名称</TableHead>
-          <TableHead>種別</TableHead>
-          <TableHead>状態</TableHead>
-          <TableHead>保有者</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {assets.map((asset) => (
-          <TableRow key={asset.code}>
-            <TableCell>
-              <Link
-                href={`/assets/${asset.code}`}
-                className="font-medium underline-offset-4 hover:underline"
-              >
-                {asset.code}
-              </Link>
-            </TableCell>
-
-            <TableCell>{asset.name}</TableCell>
-
-            <TableCell className="text-muted-foreground">
-              <AssetKindLabel kind={asset.kind} />
-            </TableCell>
-
-            <TableCell>
-              <AssetStatusBadge status={asset.status} />
-            </TableCell>
-
-            <TableCell className="text-muted-foreground">
-              {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>コード</TableHead>
+            <TableHead>名称</TableHead>
+            <TableHead>種別</TableHead>
+            <TableHead>状態</TableHead>
+            <TableHead>保有者</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
+        </TableHeader>
 
-function AssetsSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4]
+        <TableBody>
+          {assets.map((asset) => (
+            <TableRow key={asset.code}>
+              <TableCell>
+                <Link
+                  href={`/assets/${asset.code}`}
+                  className="font-medium underline-offset-4 hover:underline"
+                >
+                  {asset.code}
+                </Link>
+              </TableCell>
 
-  return (
-    <div className="flex flex-col gap-2">
-      {placeholders.map((index) => (
-        <Skeleton key={index} className="h-12 w-full" />
-      ))}
+              <TableCell>{asset.name}</TableCell>
+
+              <TableCell className="text-muted-foreground">
+                <AssetKindLabel kind={asset.kind} />
+              </TableCell>
+
+              <TableCell>
+                <AssetStatusBadge status={asset.status} />
+              </TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   )
 }

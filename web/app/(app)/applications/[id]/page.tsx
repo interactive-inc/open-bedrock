@@ -1,7 +1,8 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
-import { Button } from "@/components/ui/button"
+import { BackButton } from "@/components/back-button"
+import { DetailField } from "@/components/detail-field"
+import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -41,43 +42,22 @@ export default async function ApplicationDetailPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold">{application.template_name}</h1>
+      <PageHeader
+        title={application.template_name}
+        actions={<BackButton href="/applications" label="一覧に戻る" />}
+      />
 
-          <ApplicationStatusBadge status={application.status} />
-        </div>
-
-        <Button variant="outline" render={<Link href="/applications" />}>
-          一覧へ戻る
-        </Button>
-      </div>
+      <ApplicationStatusBadge status={application.status} />
 
       <Card className="p-0 gap-0">
         <dl className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">申請者</dt>
+          <DetailField label="申請者">{application.applicant_name}</DetailField>
 
-            <dd className="text-sm font-medium">{application.applicant_name}</dd>
-          </div>
+          <DetailField label="テンプレートコード">{application.template_code}</DetailField>
 
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">テンプレートコード</dt>
+          <DetailField label="現在のステップ">{application.current_step ?? "-"}</DetailField>
 
-            <dd className="text-sm font-medium">{application.template_code}</dd>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">現在のステップ</dt>
-
-            <dd className="text-sm font-medium">{application.current_step ?? "-"}</dd>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <dt className="text-sm text-muted-foreground">申請日</dt>
-
-            <dd className="text-sm font-medium">{application.created_at}</dd>
-          </div>
+          <DetailField label="申請日">{application.created_at}</DetailField>
         </dl>
       </Card>
 

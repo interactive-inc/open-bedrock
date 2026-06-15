@@ -1,4 +1,6 @@
 import { AttendanceRecordTable } from "@/app/(app)/attendance/_components/attendance-record-table"
+import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { getAttendanceList } from "@/lib/api/get-attendance-list"
 
 type Props = {
@@ -19,15 +21,11 @@ export async function AttendanceAdminList(props: Props) {
   })
 
   if (records instanceof Error) {
-    return (
-      <p className="text-sm text-destructive">
-        勤怠一覧の取得に失敗しました（権限が必要な場合があります）
-      </p>
-    )
+    return <FetchError message="勤怠一覧の取得に失敗しました（権限が必要な場合があります）" />
   }
 
   if (records.length === 0) {
-    return <p className="text-sm text-muted-foreground">勤怠がありません</p>
+    return <EmptyState title="勤怠がありません" />
   }
 
   return <AttendanceRecordTable records={records} withEmployeeId={true} />
