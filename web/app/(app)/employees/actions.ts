@@ -8,6 +8,12 @@ import { getMe } from "@/lib/api/get-me"
 import { updateEmployee } from "@/lib/api/update-employee"
 import type { EmployeeRole, EmployeeStatus } from "@/lib/api/types/employee-types"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import {
+  FORM_CONSTRAINTS,
+  isValidEmail,
+  toOptionalText,
+  toRequiredText,
+} from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type EmployeeCreateFormState = {
@@ -59,15 +65,6 @@ function toStatus(value: FormDataEntryValue | null): EmployeeStatus | null {
   return null
 }
 
-// FormData の文字列を非空の文字列へ。未入力や空文字は null。
-function toText(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
-  }
-
-  return value.trim()
-}
-
 // 従業員登録の Server Action。code/name/email/password/role/status 必須、部署・役職は任意。
 export async function createEmployeeAction(
   previousState: EmployeeCreateFormState,
@@ -79,24 +76,75 @@ export async function createEmployeeAction(
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
-  const code = toText(formData.get("code"))
+  const code = toRequiredText(formData.get("code"), {
+    label: "コード",
+    max: FORM_CONSTRAINTS.employee.codeMax,
+  })
 
-  const name = toText(formData.get("name"))
+  if (code instanceof Error) {
+    return { ok: false, error: code.message }
+  }
 
-  const email = toText(formData.get("email"))
+  const name = toRequiredText(formData.get("name"), {
+    label: "氏名",
+    max: FORM_CONSTRAINTS.employee.nameMax,
+  })
 
-  const password = toText(formData.get("password"))
+  if (name instanceof Error) {
+    return { ok: false, error: name.message }
+  }
+
+  const email = toRequiredText(formData.get("email"), {
+    label: "メール",
+    max: FORM_CONSTRAINTS.employee.emailMax,
+  })
+
+  if (email instanceof Error) {
+    return { ok: false, error: email.message }
+  }
+
+  if (isValidEmail(email) === false) {
+    return { ok: false, error: "メールはメールアドレス形式で入力してください" }
+  }
+
+  const password = toRequiredText(formData.get("password"), {
+    label: "初期パスワード",
+    min: FORM_CONSTRAINTS.employee.passwordMin,
+    max: FORM_CONSTRAINTS.employee.passwordMax,
+  })
+
+  if (password instanceof Error) {
+    return { ok: false, error: password.message }
+  }
 
   const role = toRole(formData.get("role"))
 
   const status = toStatus(formData.get("status"))
 
-  if (code === null || name === null || email === null || password === null || role === null) {
-    return { ok: false, error: "コード・氏名・メール・初期パスワード・ロールを入力してください" }
+  if (role === null) {
+    return { ok: false, error: "ロールを入力してください" }
   }
 
   if (status === null) {
     return { ok: false, error: "在籍状況を選択してください" }
+  }
+
+  const deptName = toOptionalText(formData.get("dept_name"), {
+    label: "部署名",
+    max: FORM_CONSTRAINTS.employee.deptNameMax,
+  })
+
+  if (deptName instanceof Error) {
+    return { ok: false, error: deptName.message }
+  }
+
+  const position = toOptionalText(formData.get("position"), {
+    label: "役職",
+    max: FORM_CONSTRAINTS.employee.positionMax,
+  })
+
+  if (position instanceof Error) {
+    return { ok: false, error: position.message }
   }
 
   const created = await createEmployee({
@@ -106,8 +154,8 @@ export async function createEmployeeAction(
     password: password,
     role: role,
     dept_id: toPositiveIntId(formData.get("dept_id")),
-    dept_name: toText(formData.get("dept_name")),
-    position: toText(formData.get("position")),
+    dept_name: deptName,
+    position: position,
     status: status,
   })
 
@@ -131,26 +179,65 @@ export async function updateEmployeeAction(
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
-  const code = toText(formData.get("code"))
+  const code = toRequiredText(formData.get("code"), {
+    label: "従業員コード",
+    max: FORM_CONSTRAINTS.employee.codeMax,
+  })
 
-  if (code === null) {
-    return { ok: false, error: "従業員を特定できませんでした" }
+  if (code instanceof Error) {
+    return { ok: false, error: code.message }
   }
 
-  const name = toText(formData.get("name"))
+  const name = toRequiredText(formData.get("name"), {
+    label: "氏名",
+    max: FORM_CONSTRAINTS.employee.nameMax,
+  })
 
-  const email = toText(formData.get("email"))
+  if (name instanceof Error) {
+    return { ok: false, error: name.message }
+  }
+
+  const email = toRequiredText(formData.get("email"), {
+    label: "メール",
+    max: FORM_CONSTRAINTS.employee.emailMax,
+  })
+
+  if (email instanceof Error) {
+    return { ok: false, error: email.message }
+  }
+
+  if (isValidEmail(email) === false) {
+    return { ok: false, error: "メールはメールアドレス形式で入力してください" }
+  }
 
   const role = toRole(formData.get("role"))
 
   const status = toStatus(formData.get("status"))
 
-  if (name === null || email === null || role === null) {
-    return { ok: false, error: "氏名・メール・ロールを入力してください" }
+  if (role === null) {
+    return { ok: false, error: "ロールを入力してください" }
   }
 
   if (status === null) {
     return { ok: false, error: "在籍状況を選択してください" }
+  }
+
+  const deptName = toOptionalText(formData.get("dept_name"), {
+    label: "部署名",
+    max: FORM_CONSTRAINTS.employee.deptNameMax,
+  })
+
+  if (deptName instanceof Error) {
+    return { ok: false, error: deptName.message }
+  }
+
+  const position = toOptionalText(formData.get("position"), {
+    label: "役職",
+    max: FORM_CONSTRAINTS.employee.positionMax,
+  })
+
+  if (position instanceof Error) {
+    return { ok: false, error: position.message }
   }
 
   const updated = await updateEmployee(code, {
@@ -158,8 +245,8 @@ export async function updateEmployeeAction(
     email: email,
     role: role,
     dept_id: toPositiveIntId(formData.get("dept_id")),
-    dept_name: toText(formData.get("dept_name")),
-    position: toText(formData.get("position")),
+    dept_name: deptName,
+    position: position,
     status: status,
   })
 
@@ -185,10 +272,13 @@ export async function deleteEmployeeAction(
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
-  const code = toText(formData.get("code"))
+  const code = toRequiredText(formData.get("code"), {
+    label: "従業員コード",
+    max: FORM_CONSTRAINTS.employee.codeMax,
+  })
 
-  if (code === null) {
-    return { ok: false, error: "従業員を特定できませんでした" }
+  if (code instanceof Error) {
+    return { ok: false, error: code.message }
   }
 
   const deleted = await deleteEmployee(code)

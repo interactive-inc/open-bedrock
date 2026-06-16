@@ -1,4 +1,4 @@
-import { definePreview } from "@storybook/nextjs"
+import { definePreview } from "@storybook/react-vite"
 import "@/app/globals.css"
 
 export default definePreview({})

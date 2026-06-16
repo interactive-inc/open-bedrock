@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { EmployeeStatusBadge } from "@/app/(app)/employees/_components/employee-status-badge"
 
 const meta = {

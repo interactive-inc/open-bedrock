@@ -7,6 +7,7 @@ import type { LifeEventActionState } from "@/app/(app)/life-events/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: LifeEventActionState = { ok: false, error: null }
 
@@ -45,7 +46,12 @@ export function LifeEventCreateForm() {
         <Field>
           <FieldLabel htmlFor="event-type">種別</FieldLabel>
 
-          <Input id="event-type" name="event_type" required />
+          <Input
+            id="event-type"
+            name="event_type"
+            maxLength={FORM_CONSTRAINTS.lifeEvent.eventTypeMax}
+            required
+          />
         </Field>
 
         <Field>
@@ -57,7 +63,12 @@ export function LifeEventCreateForm() {
         <Field>
           <FieldLabel htmlFor="event-detail">詳細</FieldLabel>
 
-          <Input id="event-detail" name="detail" placeholder="任意" />
+          <Input
+            id="event-detail"
+            name="detail"
+            maxLength={FORM_CONSTRAINTS.lifeEvent.detailMax}
+            placeholder="任意"
+          />
         </Field>
       </FieldGroup>
 

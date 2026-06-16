@@ -39,6 +39,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { FamilyCareLeaveResponse } from "@/lib/api/types/family-care-leave-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   familyCareLeaves: ReadonlyArray<FamilyCareLeaveResponse>
@@ -171,7 +172,12 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
             <Field>
               <FieldLabel htmlFor="update_note">備考</FieldLabel>
 
-              <Input id="update_note" name="note" defaultValue={props.familyCareLeave.note ?? ""} />
+              <Input
+                id="update_note"
+                name="note"
+                maxLength={FORM_CONSTRAINTS.familyCareLeave.noteMax}
+                defaultValue={props.familyCareLeave.note ?? ""}
+              />
             </Field>
           </FieldGroup>
 

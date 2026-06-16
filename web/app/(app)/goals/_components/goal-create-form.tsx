@@ -7,6 +7,7 @@ import type { GoalActionState } from "@/app/(app)/goals/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   defaultPeriod: string | null
@@ -55,6 +56,7 @@ export function GoalCreateForm(props: Props) {
               name="period"
               placeholder="2026-H1"
               defaultValue={props.defaultPeriod ?? ""}
+              maxLength={FORM_CONSTRAINTS.goal.periodMax}
               required
             />
           </Field>
@@ -62,13 +64,23 @@ export function GoalCreateForm(props: Props) {
           <Field>
             <FieldLabel htmlFor="create-title">タイトル</FieldLabel>
 
-            <Input id="create-title" name="title" required />
+            <Input
+              id="create-title"
+              name="title"
+              maxLength={FORM_CONSTRAINTS.goal.titleMax}
+              required
+            />
           </Field>
 
           <Field>
             <FieldLabel htmlFor="create-kpi">KPI</FieldLabel>
 
-            <Input id="create-kpi" name="kpi" placeholder="任意" />
+            <Input
+              id="create-kpi"
+              name="kpi"
+              maxLength={FORM_CONSTRAINTS.goal.kpiMax}
+              placeholder="任意"
+            />
           </Field>
 
           <Field>
@@ -79,6 +91,9 @@ export function GoalCreateForm(props: Props) {
               name="weight"
               type="number"
               inputMode="numeric"
+              min={FORM_CONSTRAINTS.goal.weightMin}
+              max={FORM_CONSTRAINTS.goal.weightMax}
+              step={1}
               defaultValue="10"
             />
           </Field>

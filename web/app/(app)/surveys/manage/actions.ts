@@ -10,6 +10,7 @@ import { updateSurvey } from "@/lib/api/update-survey"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
+import { FORM_CONSTRAINTS, toRequiredText } from "@/lib/form/constraints"
 
 // アンケート作成・編集フォームの useActionState 結果。
 export type SurveyFormState = {
@@ -19,13 +20,15 @@ export type SurveyFormState = {
 
 const statusSchema = z.enum(["open", "closed"])
 
-const questionsJsonSchema = z.array(
-  z.object({
-    id: z.string(),
-    type: z.enum(["scale", "choice", "text"]),
-    text: z.string(),
-  }),
-)
+const questionsJsonSchema = z
+  .array(
+    z.object({
+      id: z.string(),
+      type: z.enum(["scale", "choice", "text"]),
+      text: z.string(),
+    }),
+  )
+  .max(FORM_CONSTRAINTS.survey.questionsMax)
 
 // FormData の questions テキストを設問配列へ検証付きで変換する。空なら空配列、不正なら Error。
 function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<SurveyQuestion> | Error {
@@ -58,12 +61,13 @@ export async function createSurveyAction(
     return { ok: false, error: "権限がありません" }
   }
 
-  const titleValue = formData.get("title")
+  const title = toRequiredText(formData.get("title"), {
+    label: "タイトル",
+    max: FORM_CONSTRAINTS.survey.titleMax,
+  })
 
-  const title = typeof titleValue === "string" ? titleValue : ""
-
-  if (title.trim() === "") {
-    return { ok: false, error: "タイトルを入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
   const status = statusSchema.safeParse(formData.get("status"))
@@ -112,12 +116,13 @@ export async function updateSurveyAction(
     return { ok: false, error: "アンケートが不正です" }
   }
 
-  const titleValue = formData.get("title")
+  const title = toRequiredText(formData.get("title"), {
+    label: "タイトル",
+    max: FORM_CONSTRAINTS.survey.titleMax,
+  })
 
-  const title = typeof titleValue === "string" ? titleValue : ""
-
-  if (title.trim() === "") {
-    return { ok: false, error: "タイトルを入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
   const status = statusSchema.safeParse(formData.get("status"))

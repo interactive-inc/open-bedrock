@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { OrgTreeNodeItem } from "@/app/(app)/org/_components/org-tree-node-item"
 
 const meta = {

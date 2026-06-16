@@ -7,6 +7,7 @@ import { createCareerPostingAction } from "@/app/(app)/career/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: CareerPostingFormState = { ok: false, error: null }
 
@@ -40,7 +41,13 @@ export function CreatePostingForm() {
         <Field>
           <FieldLabel htmlFor="posting-title">公募名</FieldLabel>
 
-          <Input id="posting-title" name="title" placeholder="Backend Engineer" required />
+          <Input
+            id="posting-title"
+            name="title"
+            placeholder="Backend Engineer"
+            maxLength={FORM_CONSTRAINTS.career.postingTitleMax}
+            required
+          />
         </Field>
 
         <Field>
@@ -52,13 +59,23 @@ export function CreatePostingForm() {
         <Field>
           <FieldLabel htmlFor="posting-dept-name">部署名</FieldLabel>
 
-          <Input id="posting-dept-name" name="dept_name" placeholder="Engineering" />
+          <Input
+            id="posting-dept-name"
+            name="dept_name"
+            placeholder="Engineering"
+            maxLength={FORM_CONSTRAINTS.career.deptNameMax}
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="posting-skills">必要スキル</FieldLabel>
 
-          <Input id="posting-skills" name="required_skills" placeholder="typescript,go" />
+          <Input
+            id="posting-skills"
+            name="required_skills"
+            placeholder="typescript,go"
+            maxLength={FORM_CONSTRAINTS.career.requiredSkillsMax}
+          />
         </Field>
 
         <Field>

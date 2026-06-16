@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   surveyId: number
@@ -52,13 +53,21 @@ export function SurveyAnswerForm(props: Props) {
                 <FieldLabel htmlFor={`answer:${question.id}`}>{question.text}</FieldLabel>
 
                 {question.type === "text" ? (
-                  <Textarea id={`answer:${question.id}`} name={`answer:${question.id}`} rows={3} />
+                  <Textarea
+                    id={`answer:${question.id}`}
+                    name={`answer:${question.id}`}
+                    rows={3}
+                    maxLength={FORM_CONSTRAINTS.survey.answersJsonMax}
+                  />
                 ) : (
                   <Input
                     id={`answer:${question.id}`}
                     name={`answer:${question.id}`}
                     type={question.type === "scale" ? "number" : "text"}
                     inputMode={question.type === "scale" ? "numeric" : "text"}
+                    maxLength={
+                      question.type === "scale" ? undefined : FORM_CONSTRAINTS.survey.answersJsonMax
+                    }
                   />
                 )}
               </Field>

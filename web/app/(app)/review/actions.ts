@@ -8,6 +8,13 @@ import { getMe } from "@/lib/api/get-me"
 import { openReviewCycle } from "@/lib/api/open-review-cycle"
 import { submitReviewForm } from "@/lib/api/submit-review-form"
 import { updateReviewCycle } from "@/lib/api/update-review-cycle"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalIntInRange,
+  toOptionalIsoDate,
+  toOptionalText,
+  toRequiredText,
+} from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
@@ -28,26 +35,29 @@ export async function createReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const titleValue = formData.get("title")
+  const title = toRequiredText(formData.get("title"), {
+    label: "タイトル",
+    max: FORM_CONSTRAINTS.review.titleMax,
+  })
 
-  const title = typeof titleValue === "string" ? titleValue.trim() : ""
-
-  if (title === "") {
-    return { ok: false, error: "タイトルを入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
-  const periodValue = formData.get("period")
+  const period = toRequiredText(formData.get("period"), {
+    label: "対象期間",
+    max: FORM_CONSTRAINTS.review.periodMax,
+  })
 
-  const period = typeof periodValue === "string" ? periodValue.trim() : ""
-
-  if (period === "") {
-    return { ok: false, error: "対象期間を入力してください" }
+  if (period instanceof Error) {
+    return { ok: false, error: period.message }
   }
 
-  const dueDateValue = formData.get("due_date")
+  const dueDate = toOptionalIsoDate(formData.get("due_date"), "締切日")
 
-  const dueDate =
-    typeof dueDateValue === "string" && dueDateValue.trim() !== "" ? dueDateValue.trim() : null
+  if (dueDate instanceof Error) {
+    return { ok: false, error: dueDate.message }
+  }
 
   const created = await createReviewCycle({ title: title, period: period, dueDate: dueDate })
 
@@ -136,26 +146,29 @@ export async function updateReviewCycleAction(
     return { ok: false, error: "サイクル ID が不正です" }
   }
 
-  const titleValue = formData.get("title")
+  const title = toRequiredText(formData.get("title"), {
+    label: "タイトル",
+    max: FORM_CONSTRAINTS.review.titleMax,
+  })
 
-  const title = typeof titleValue === "string" ? titleValue.trim() : ""
-
-  if (title === "") {
-    return { ok: false, error: "タイトルを入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
-  const periodValue = formData.get("period")
+  const period = toRequiredText(formData.get("period"), {
+    label: "対象期間",
+    max: FORM_CONSTRAINTS.review.periodMax,
+  })
 
-  const period = typeof periodValue === "string" ? periodValue.trim() : ""
-
-  if (period === "") {
-    return { ok: false, error: "対象期間を入力してください" }
+  if (period instanceof Error) {
+    return { ok: false, error: period.message }
   }
 
-  const dueDateValue = formData.get("due_date")
+  const dueDate = toOptionalIsoDate(formData.get("due_date"), "締切日")
 
-  const dueDate =
-    typeof dueDateValue === "string" && dueDateValue.trim() !== "" ? dueDateValue.trim() : null
+  if (dueDate instanceof Error) {
+    return { ok: false, error: dueDate.message }
+  }
 
   const updated = await updateReviewCycle(cycleId, {
     title: title,
@@ -213,20 +226,24 @@ export async function submitReviewFormAction(
     return { ok: false, error: "フォーム ID が不正です" }
   }
 
-  const scoreValue = formData.get("score")
+  const score = toOptionalIntInRange(formData.get("score"), {
+    label: "スコア",
+    min: FORM_CONSTRAINTS.review.scoreMin,
+    max: FORM_CONSTRAINTS.review.scoreMax,
+  })
 
-  const scoreText = typeof scoreValue === "string" ? scoreValue.trim() : ""
-
-  const score = scoreText === "" ? null : Number(scoreText)
-
-  if (score !== null && Number.isFinite(score) === false) {
-    return { ok: false, error: "スコアは数値で入力してください" }
+  if (score instanceof Error) {
+    return { ok: false, error: score.message }
   }
 
-  const commentValue = formData.get("comment")
+  const comment = toOptionalText(formData.get("comment"), {
+    label: "コメント",
+    max: FORM_CONSTRAINTS.review.commentMax,
+  })
 
-  const comment =
-    typeof commentValue === "string" && commentValue.trim() !== "" ? commentValue.trim() : null
+  if (comment instanceof Error) {
+    return { ok: false, error: comment.message }
+  }
 
   const submitted = await submitReviewForm({
     formId: formId,

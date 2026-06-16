@@ -9,6 +9,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   id: number
@@ -49,7 +50,13 @@ export function SurveyEditForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="edit-survey-title">タイトル</FieldLabel>
 
-          <Input id="edit-survey-title" name="title" defaultValue={props.title} required />
+          <Input
+            id="edit-survey-title"
+            name="title"
+            defaultValue={props.title}
+            maxLength={FORM_CONSTRAINTS.survey.titleMax}
+            required
+          />
         </Field>
 
         <Field>

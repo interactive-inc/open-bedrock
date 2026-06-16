@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache"
 import { cancelBusinessTrip } from "@/lib/api/cancel-business-trip"
 import { createBusinessTrip } from "@/lib/api/create-business-trip"
 import { updateBusinessTrip } from "@/lib/api/update-business-trip"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalIntInRange,
+  toRequiredIsoDate,
+  toRequiredText,
+} from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type BusinessTripActionState = {
@@ -94,54 +100,55 @@ type TripFields = {
 
 // FormData から出張申請の共通フィールドを取り出して検証する。不正時は Error。
 function toTripFields(formData: FormData): TripFields | Error {
-  const destination = formData.get("destination")
+  const destination = toRequiredText(formData.get("destination"), {
+    label: "行き先",
+    max: FORM_CONSTRAINTS.businessTrip.destinationMax,
+  })
 
-  const startDate = formData.get("start_date")
-
-  const endDate = formData.get("end_date")
-
-  const purpose = formData.get("purpose")
-
-  if (typeof destination !== "string" || destination.trim() === "") {
-    return new Error("行き先を入力してください")
+  if (destination instanceof Error) {
+    return destination
   }
 
-  if (typeof startDate !== "string" || startDate === "") {
-    return new Error("開始日を入力してください")
+  const startDate = toRequiredIsoDate(formData.get("start_date"), "開始日")
+
+  if (startDate instanceof Error) {
+    return startDate
   }
 
-  if (typeof endDate !== "string" || endDate === "") {
-    return new Error("終了日を入力してください")
+  const endDate = toRequiredIsoDate(formData.get("end_date"), "終了日")
+
+  if (endDate instanceof Error) {
+    return endDate
   }
 
   if (endDate < startDate) {
     return new Error("終了日は開始日以降にしてください")
   }
 
-  if (typeof purpose !== "string" || purpose.trim() === "") {
-    return new Error("目的を入力してください")
+  const purpose = toRequiredText(formData.get("purpose"), {
+    label: "目的",
+    max: FORM_CONSTRAINTS.businessTrip.purposeMax,
+  })
+
+  if (purpose instanceof Error) {
+    return purpose
+  }
+
+  const estimatedCost = toOptionalIntInRange(formData.get("estimated_cost"), {
+    label: "概算費用",
+    min: FORM_CONSTRAINTS.businessTrip.estimatedCostMin,
+    max: Number.MAX_SAFE_INTEGER,
+  })
+
+  if (estimatedCost instanceof Error) {
+    return estimatedCost
   }
 
   return {
-    destination: destination.trim(),
+    destination,
     start_date: startDate,
     end_date: endDate,
-    purpose: purpose.trim(),
-    estimated_cost: toEstimatedCost(formData.get("estimated_cost")),
+    purpose,
+    estimated_cost: estimatedCost,
   }
-}
-
-// estimated_cost の FormData 値を数値へ。未入力や不正値は null。
-function toEstimatedCost(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
-  }
-
-  const parsed = Number(value)
-
-  if (Number.isInteger(parsed) === false || parsed < 0) {
-    return null
-  }
-
-  return parsed
 }

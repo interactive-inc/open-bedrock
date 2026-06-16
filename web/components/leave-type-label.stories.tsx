@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 
 const meta = {

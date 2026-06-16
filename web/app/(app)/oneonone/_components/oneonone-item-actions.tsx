@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   oneOnOne: OneOnOne
@@ -81,6 +82,7 @@ function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
                 name="topics"
                 defaultValue={props.oneOnOne.topics ?? ""}
                 rows={3}
+                maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
               />
             </Field>
 
@@ -92,6 +94,7 @@ function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
                 name="manager_note"
                 defaultValue={props.oneOnOne.manager_note ?? ""}
                 rows={3}
+                maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
               />
             </Field>
 
@@ -103,6 +106,7 @@ function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
                 name="next_action"
                 defaultValue={props.oneOnOne.next_action ?? ""}
                 rows={2}
+                maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
               />
             </Field>
           </FieldGroup>

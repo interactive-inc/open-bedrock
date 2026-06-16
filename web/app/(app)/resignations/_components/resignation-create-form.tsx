@@ -7,6 +7,7 @@ import type { ResignationActionState } from "@/app/(app)/resignations/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: ResignationActionState = { ok: false, error: null }
 
@@ -59,7 +60,12 @@ export function ResignationCreateForm() {
         <Field>
           <FieldLabel htmlFor="resignation-reason">理由</FieldLabel>
 
-          <Input id="resignation-reason" name="reason" placeholder="任意" />
+          <Input
+            id="resignation-reason"
+            name="reason"
+            maxLength={FORM_CONSTRAINTS.resignation.reasonMax}
+            placeholder="任意"
+          />
         </Field>
       </FieldGroup>
 
