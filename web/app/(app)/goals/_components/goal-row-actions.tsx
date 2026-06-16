@@ -27,6 +27,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { GoalResponse } from "@/lib/api/types/goal-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   goal: GoalResponse
@@ -94,19 +95,34 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
             <Field>
               <FieldLabel htmlFor="update_period">期間</FieldLabel>
 
-              <Input id="update_period" name="period" defaultValue={props.goal.period} />
+              <Input
+                id="update_period"
+                name="period"
+                defaultValue={props.goal.period}
+                maxLength={FORM_CONSTRAINTS.goal.periodMax}
+              />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="update_title">タイトル</FieldLabel>
 
-              <Input id="update_title" name="title" defaultValue={props.goal.title} />
+              <Input
+                id="update_title"
+                name="title"
+                defaultValue={props.goal.title}
+                maxLength={FORM_CONSTRAINTS.goal.titleMax}
+              />
             </Field>
 
             <Field>
               <FieldLabel htmlFor="update_kpi">KPI</FieldLabel>
 
-              <Input id="update_kpi" name="kpi" defaultValue={props.goal.kpi ?? ""} />
+              <Input
+                id="update_kpi"
+                name="kpi"
+                defaultValue={props.goal.kpi ?? ""}
+                maxLength={FORM_CONSTRAINTS.goal.kpiMax}
+              />
             </Field>
 
             <Field>
@@ -117,6 +133,9 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
                 name="weight"
                 type="number"
                 defaultValue={props.goal.weight}
+                min={FORM_CONSTRAINTS.goal.weightMin}
+                max={FORM_CONSTRAINTS.goal.weightMax}
+                step={1}
               />
             </Field>
           </FieldGroup>

@@ -13,6 +13,7 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   forms: Array<ReviewFormResponse>
@@ -86,6 +87,9 @@ export function MyReviewForms(props: Props) {
                     id={`review-form-score-${form.id}`}
                     name="score"
                     type="number"
+                    min={FORM_CONSTRAINTS.review.scoreMin}
+                    max={FORM_CONSTRAINTS.review.scoreMax}
+                    step={1}
                     placeholder="80"
                   />
                 </Field>
@@ -96,6 +100,7 @@ export function MyReviewForms(props: Props) {
                   <Textarea
                     id={`review-form-comment-${form.id}`}
                     name="comment"
+                    maxLength={FORM_CONSTRAINTS.review.commentMax}
                     placeholder="評価コメントを入力"
                   />
                 </Field>

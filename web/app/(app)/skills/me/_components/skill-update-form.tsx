@@ -8,10 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: SkillUpdateState = { ok: false, error: null }
 
-const levelOptions = [1, 2, 3, 4, 5]
+const levelOptions = Array.from(
+  { length: FORM_CONSTRAINTS.skill.levelMax - FORM_CONSTRAINTS.skill.levelMin + 1 },
+  (_, index) => FORM_CONSTRAINTS.skill.levelMin + index,
+)
 
 // 本人のスキル登録/更新フォーム。useActionState で updateSkillAction を呼ぶ。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
@@ -45,7 +49,13 @@ export function SkillUpdateForm() {
         <Field>
           <FieldLabel htmlFor="skill_code">スキルコード</FieldLabel>
 
-          <Input id="skill_code" name="skill_code" required placeholder="例: TYPESCRIPT" />
+          <Input
+            id="skill_code"
+            name="skill_code"
+            required
+            maxLength={FORM_CONSTRAINTS.skill.codeMax}
+            placeholder="例: TYPESCRIPT"
+          />
 
           <FieldDescription>
             スキル一覧のコードを指定します。同じコードは上書きされます。
@@ -73,19 +83,32 @@ export function SkillUpdateForm() {
             ))}
           </select>
 
-          <FieldDescription>1〜5 の習熟度を選びます。</FieldDescription>
+          <FieldDescription>1〜10 の習熟度を選びます。</FieldDescription>
         </Field>
 
         <Field>
           <FieldLabel htmlFor="years">経験年数（任意）</FieldLabel>
 
-          <Input id="years" name="years" type="number" min={0} step={1} placeholder="例: 3" />
+          <Input
+            id="years"
+            name="years"
+            type="number"
+            min={FORM_CONSTRAINTS.skill.yearsMin}
+            step={1}
+            placeholder="例: 3"
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="note">メモ（任意）</FieldLabel>
 
-          <Textarea id="note" name="note" rows={3} placeholder="補足や具体的な経験など" />
+          <Textarea
+            id="note"
+            name="note"
+            rows={3}
+            maxLength={FORM_CONSTRAINTS.skill.noteMax}
+            placeholder="補足や具体的な経験など"
+          />
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

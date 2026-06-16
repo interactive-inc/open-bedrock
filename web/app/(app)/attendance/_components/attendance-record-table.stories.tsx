@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AttendanceRecordTable } from "@/app/(app)/attendance/_components/attendance-record-table"
 
 const meta = {

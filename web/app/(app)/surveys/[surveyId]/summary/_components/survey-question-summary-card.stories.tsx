@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summary/_components/survey-question-summary-card"
 
 const meta = {

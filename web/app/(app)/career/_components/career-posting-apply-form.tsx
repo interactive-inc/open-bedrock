@@ -7,6 +7,7 @@ import type { CareerApplyFormState } from "@/app/(app)/career/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   postingId: number
@@ -54,6 +55,7 @@ export function CareerPostingApplyForm(props: Props) {
             id={`message-${props.postingId}`}
             name="message"
             rows={3}
+            maxLength={FORM_CONSTRAINTS.career.applicationMessageMax}
             placeholder="志望理由や活かせる経験など"
           />
         </Field>

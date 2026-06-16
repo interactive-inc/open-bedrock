@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache"
 import { createOneOnOne } from "@/lib/api/create-oneonone"
 import { deleteOneOnOne } from "@/lib/api/delete-oneonone"
 import { updateOneOnOne } from "@/lib/api/update-oneonone"
+import {
+  FORM_CONSTRAINTS,
+  isValidEmail,
+  toOptionalText,
+  toRequiredText,
+} from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type OneOnOneActionState = {
@@ -17,17 +23,36 @@ export async function createOneOnOneAction(
   previousState: OneOnOneActionState,
   formData: FormData,
 ): Promise<OneOnOneActionState> {
-  const memberEmail = formData.get("member_email")
+  const memberEmail = toRequiredText(formData.get("member_email"), {
+    label: "メンバーのメールアドレス",
+    max: FORM_CONSTRAINTS.oneOnOne.memberEmailMax,
+  })
 
-  if (typeof memberEmail !== "string" || memberEmail === "") {
-    return { ok: false, error: "メンバーのメールアドレスを入力してください" }
+  if (memberEmail instanceof Error) {
+    return { ok: false, error: memberEmail.message }
   }
 
-  const topics = toOptionalText(formData.get("topics"))
+  if (isValidEmail(memberEmail) === false) {
+    return { ok: false, error: "メンバーのメールアドレスはメールアドレス形式で入力してください" }
+  }
 
-  const managerNote = toOptionalText(formData.get("manager_note"))
+  const topics = toOneOnOneText(formData.get("topics"), "トピック")
 
-  const nextAction = toOptionalText(formData.get("next_action"))
+  if (topics instanceof Error) {
+    return { ok: false, error: topics.message }
+  }
+
+  const managerNote = toOneOnOneText(formData.get("manager_note"), "上長メモ")
+
+  if (managerNote instanceof Error) {
+    return { ok: false, error: managerNote.message }
+  }
+
+  const nextAction = toOneOnOneText(formData.get("next_action"), "ネクストアクション")
+
+  if (nextAction instanceof Error) {
+    return { ok: false, error: nextAction.message }
+  }
 
   const created = await createOneOnOne({
     member_email: memberEmail,
@@ -57,10 +82,28 @@ export async function updateOneOnOneAction(
     return { ok: false, error: "1on1 を特定できませんでした" }
   }
 
+  const topics = toOneOnOneText(formData.get("topics"), "トピック")
+
+  if (topics instanceof Error) {
+    return { ok: false, error: topics.message }
+  }
+
+  const managerNote = toOneOnOneText(formData.get("manager_note"), "上長メモ")
+
+  if (managerNote instanceof Error) {
+    return { ok: false, error: managerNote.message }
+  }
+
+  const nextAction = toOneOnOneText(formData.get("next_action"), "ネクストアクション")
+
+  if (nextAction instanceof Error) {
+    return { ok: false, error: nextAction.message }
+  }
+
   const updated = await updateOneOnOne(oneOnOneId, {
-    topics: toOptionalText(formData.get("topics")),
-    manager_note: toOptionalText(formData.get("manager_note")),
-    next_action: toOptionalText(formData.get("next_action")),
+    topics,
+    manager_note: managerNote,
+    next_action: nextAction,
   })
 
   if (updated instanceof Error) {
@@ -96,12 +139,9 @@ export async function deleteOneOnOneAction(
 }
 
 // 任意テキスト欄の FormData 値を string | null へ。未入力や空白のみは null。
-function toOptionalText(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const trimmed = value.trim()
-
-  return trimmed === "" ? null : trimmed
+function toOneOnOneText(value: FormDataEntryValue | null, label: string): string | Error | null {
+  return toOptionalText(value, {
+    label,
+    max: FORM_CONSTRAINTS.oneOnOne.textMax,
+  })
 }

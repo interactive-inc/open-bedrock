@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { submitSurveyResponse } from "@/lib/api/submit-survey-response"
 import { updateSurveyResponse } from "@/lib/api/update-survey-response"
 import { withdrawSurveyResponse } from "@/lib/api/withdraw-survey-response"
+import { fitsJsonStringifiedLength, FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 // useActionState のタプル要素となるアクション結果。
@@ -29,9 +30,20 @@ export async function submitSurveyResponseAction(
 
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("answer:")) {
+      if (typeof value !== "string") {
+        return { status: "error", message: "回答は文字列で入力してください" }
+      }
+
       const questionId = key.slice("answer:".length)
 
       answersJson[questionId] = value
+    }
+  }
+
+  if (fitsJsonStringifiedLength(answersJson, FORM_CONSTRAINTS.survey.answersJsonMax) === false) {
+    return {
+      status: "error",
+      message: `回答全体は${FORM_CONSTRAINTS.survey.answersJsonMax}文字以内で入力してください`,
     }
   }
 
@@ -73,9 +85,20 @@ export async function updateSurveyResponseAction(
 
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("answer:")) {
+      if (typeof value !== "string") {
+        return { ok: false, error: "回答は文字列で入力してください" }
+      }
+
       const questionId = key.slice("answer:".length)
 
       answersJson[questionId] = value
+    }
+  }
+
+  if (fitsJsonStringifiedLength(answersJson, FORM_CONSTRAINTS.survey.answersJsonMax) === false) {
+    return {
+      ok: false,
+      error: `回答全体は${FORM_CONSTRAINTS.survey.answersJsonMax}文字以内で入力してください`,
     }
   }
 

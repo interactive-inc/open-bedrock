@@ -3,6 +3,13 @@
 import { revalidatePath } from "next/cache"
 import { deleteMySkill } from "@/lib/api/delete-my-skill"
 import { putMySkill } from "@/lib/api/put-my-skill"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalIntInRange,
+  toOptionalText,
+  toRequiredIntInRange,
+  toRequiredText,
+} from "@/lib/form/constraints"
 
 export type SkillUpdateState = {
   ok: boolean
@@ -15,35 +22,43 @@ export async function updateSkillAction(
   previousState: SkillUpdateState,
   formData: FormData,
 ): Promise<SkillUpdateState> {
-  const skillCode = formData.get("skill_code")
+  const skillCode = toRequiredText(formData.get("skill_code"), {
+    label: "スキルコード",
+    max: FORM_CONSTRAINTS.skill.codeMax,
+  })
 
-  const levelInput = formData.get("level")
-
-  const yearsInput = formData.get("years")
-
-  const noteInput = formData.get("note")
-
-  if (typeof skillCode !== "string" || skillCode === "") {
-    return { ok: false, error: "スキルコードを入力してください" }
+  if (skillCode instanceof Error) {
+    return { ok: false, error: skillCode.message }
   }
 
-  if (typeof levelInput !== "string" || levelInput === "") {
-    return { ok: false, error: "レベルを選択してください" }
+  const level = toRequiredIntInRange(formData.get("level"), {
+    label: "レベル",
+    min: FORM_CONSTRAINTS.skill.levelMin,
+    max: FORM_CONSTRAINTS.skill.levelMax,
+  })
+
+  if (level instanceof Error) {
+    return { ok: false, error: level.message }
   }
 
-  const level = Number(levelInput)
+  const years = toOptionalIntInRange(formData.get("years"), {
+    label: "経験年数",
+    min: FORM_CONSTRAINTS.skill.yearsMin,
+    max: Number.MAX_SAFE_INTEGER,
+  })
 
-  if (!Number.isFinite(level)) {
-    return { ok: false, error: "レベルが不正です" }
+  if (years instanceof Error) {
+    return { ok: false, error: years.message }
   }
 
-  const years = typeof yearsInput === "string" && yearsInput !== "" ? Number(yearsInput) : null
+  const note = toOptionalText(formData.get("note"), {
+    label: "メモ",
+    max: FORM_CONSTRAINTS.skill.noteMax,
+  })
 
-  if (years !== null && !Number.isFinite(years)) {
-    return { ok: false, error: "経験年数が不正です" }
+  if (note instanceof Error) {
+    return { ok: false, error: note.message }
   }
-
-  const note = typeof noteInput === "string" && noteInput !== "" ? noteInput : null
 
   const result = await putMySkill({
     skill_code: skillCode,

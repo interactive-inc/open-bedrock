@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache"
 import { cancelLifeEvent } from "@/lib/api/cancel-life-event"
 import { createLifeEvent } from "@/lib/api/create-life-event"
 import { updateLifeEvent } from "@/lib/api/update-life-event"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalText,
+  toRequiredIsoDate,
+  toRequiredText,
+} from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type LifeEventActionState = {
@@ -92,32 +98,33 @@ type EventFields = {
 
 // FormData からライフイベント届出の共通フィールドを取り出して検証する。不正時は Error。
 function toEventFields(formData: FormData): EventFields | Error {
-  const eventType = formData.get("event_type")
+  const eventType = toRequiredText(formData.get("event_type"), {
+    label: "種別",
+    max: FORM_CONSTRAINTS.lifeEvent.eventTypeMax,
+  })
 
-  const eventDate = formData.get("event_date")
-
-  const detail = formData.get("detail")
-
-  if (typeof eventType !== "string" || eventType.trim() === "") {
-    return new Error("種別を入力してください")
+  if (eventType instanceof Error) {
+    return eventType
   }
 
-  if (typeof eventDate !== "string" || eventDate === "") {
-    return new Error("発生日を入力してください")
+  const eventDate = toRequiredIsoDate(formData.get("event_date"), "発生日")
+
+  if (eventDate instanceof Error) {
+    return eventDate
+  }
+
+  const detail = toOptionalText(formData.get("detail"), {
+    label: "詳細",
+    max: FORM_CONSTRAINTS.lifeEvent.detailMax,
+  })
+
+  if (detail instanceof Error) {
+    return detail
   }
 
   return {
-    event_type: eventType.trim(),
+    event_type: eventType,
     event_date: eventDate,
-    detail: toDetail(detail),
+    detail: detail,
   }
-}
-
-// detail の FormData 値を文字列へ。未入力は null。
-function toDetail(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
-  }
-
-  return value.trim()
 }

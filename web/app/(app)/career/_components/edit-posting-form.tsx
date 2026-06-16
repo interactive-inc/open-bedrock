@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { CareerPosting } from "@/lib/api/types/career-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   posting: CareerPosting
@@ -55,7 +56,13 @@ export function EditPostingForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="edit-posting-title">公募名</FieldLabel>
 
-          <Input id="edit-posting-title" name="title" defaultValue={props.posting.title} required />
+          <Input
+            id="edit-posting-title"
+            name="title"
+            defaultValue={props.posting.title}
+            maxLength={FORM_CONSTRAINTS.career.postingTitleMax}
+            required
+          />
         </Field>
 
         <Field>
@@ -76,6 +83,7 @@ export function EditPostingForm(props: Props) {
             id="edit-posting-dept-name"
             name="dept_name"
             defaultValue={props.posting.dept_name ?? ""}
+            maxLength={FORM_CONSTRAINTS.career.deptNameMax}
           />
         </Field>
 
@@ -86,6 +94,7 @@ export function EditPostingForm(props: Props) {
             id="edit-posting-skills"
             name="required_skills"
             defaultValue={props.posting.required_skills ?? ""}
+            maxLength={FORM_CONSTRAINTS.career.requiredSkillsMax}
           />
         </Field>
 

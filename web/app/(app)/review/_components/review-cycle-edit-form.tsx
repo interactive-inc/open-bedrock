@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { ReviewCycleResponse } from "@/lib/api/types/review-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   cycle: ReviewCycleResponse
@@ -48,6 +49,7 @@ export function ReviewCycleEditForm(props: Props) {
             id={`review-cycle-title-${props.cycle.id}`}
             name="title"
             defaultValue={props.cycle.title}
+            maxLength={FORM_CONSTRAINTS.review.titleMax}
             required
           />
         </Field>
@@ -59,6 +61,7 @@ export function ReviewCycleEditForm(props: Props) {
             id={`review-cycle-period-${props.cycle.id}`}
             name="period"
             defaultValue={props.cycle.period}
+            maxLength={FORM_CONSTRAINTS.review.periodMax}
             required
           />
         </Field>

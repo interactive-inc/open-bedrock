@@ -10,6 +10,7 @@ import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
+import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type CareerSheetFormState = {
@@ -33,14 +34,23 @@ export async function updateCareerSheetAction(
   previousState: CareerSheetFormState,
   formData: FormData,
 ): Promise<CareerSheetFormState> {
-  const goalsValue = formData.get("goals_text")
+  const goalsText = toOptionalText(formData.get("goals_text"), {
+    label: "キャリア目標",
+    max: FORM_CONSTRAINTS.career.sheetTextMax,
+  })
 
-  const strengthsValue = formData.get("strengths_text")
+  if (goalsText instanceof Error) {
+    return { ok: false, error: goalsText.message }
+  }
 
-  const goalsText = typeof goalsValue === "string" && goalsValue !== "" ? goalsValue : null
+  const strengthsText = toOptionalText(formData.get("strengths_text"), {
+    label: "強み・得意領域",
+    max: FORM_CONSTRAINTS.career.sheetTextMax,
+  })
 
-  const strengthsText =
-    typeof strengthsValue === "string" && strengthsValue !== "" ? strengthsValue : null
+  if (strengthsText instanceof Error) {
+    return { ok: false, error: strengthsText.message }
+  }
 
   const updated = await updateCareerSheet({
     goals_text: goalsText,
@@ -67,9 +77,14 @@ export async function applyCareerPostingAction(
     return { ok: false, error: "公募が不正です" }
   }
 
-  const messageValue = formData.get("message")
+  const message = toOptionalText(formData.get("message"), {
+    label: "応募メッセージ",
+    max: FORM_CONSTRAINTS.career.applicationMessageMax,
+  })
 
-  const message = typeof messageValue === "string" && messageValue !== "" ? messageValue : null
+  if (message instanceof Error) {
+    return { ok: false, error: message.message }
+  }
 
   const created = await applyCareerPosting(postingId, { message })
 
@@ -96,9 +111,14 @@ export async function updateCareerApplicationAction(
     return { ok: false, error: "応募を特定できませんでした" }
   }
 
-  const messageValue = formData.get("message")
+  const message = toOptionalText(formData.get("message"), {
+    label: "応募メッセージ",
+    max: FORM_CONSTRAINTS.career.applicationMessageMax,
+  })
 
-  const message = typeof messageValue === "string" && messageValue !== "" ? messageValue : null
+  if (message instanceof Error) {
+    return { ok: false, error: message.message }
+  }
 
   const updated = await updateCareerApplication(applicationId, { message })
 
@@ -151,10 +171,13 @@ export async function createCareerPostingAction(
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 
-  const title = toText(formData.get("title"))
+  const title = toRequiredText(formData.get("title"), {
+    label: "公募名",
+    max: FORM_CONSTRAINTS.career.postingTitleMax,
+  })
 
-  if (title === null) {
-    return { ok: false, error: "公募名を入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
   const deptId = toOptionalId(formData.get("dept_id"))
@@ -163,11 +186,29 @@ export async function createCareerPostingAction(
     return { ok: false, error: "部署IDは整数で入力してください" }
   }
 
+  const deptName = toOptionalText(formData.get("dept_name"), {
+    label: "部署名",
+    max: FORM_CONSTRAINTS.career.deptNameMax,
+  })
+
+  if (deptName instanceof Error) {
+    return { ok: false, error: deptName.message }
+  }
+
+  const requiredSkills = toOptionalText(formData.get("required_skills"), {
+    label: "必要スキル",
+    max: FORM_CONSTRAINTS.career.requiredSkillsMax,
+  })
+
+  if (requiredSkills instanceof Error) {
+    return { ok: false, error: requiredSkills.message }
+  }
+
   const created = await createCareerPosting({
     title: title,
     dept_id: deptId,
-    dept_name: toText(formData.get("dept_name")),
-    required_skills: toText(formData.get("required_skills")),
+    dept_name: deptName,
+    required_skills: requiredSkills,
     status: toPostingStatus(formData.get("status")),
   })
 
@@ -198,10 +239,13 @@ export async function updateCareerPostingAction(
     return { ok: false, error: "公募を特定できませんでした" }
   }
 
-  const title = toText(formData.get("title"))
+  const title = toRequiredText(formData.get("title"), {
+    label: "公募名",
+    max: FORM_CONSTRAINTS.career.postingTitleMax,
+  })
 
-  if (title === null) {
-    return { ok: false, error: "公募名を入力してください" }
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
   }
 
   const deptId = toOptionalId(formData.get("dept_id"))
@@ -210,11 +254,29 @@ export async function updateCareerPostingAction(
     return { ok: false, error: "部署IDは整数で入力してください" }
   }
 
+  const deptName = toOptionalText(formData.get("dept_name"), {
+    label: "部署名",
+    max: FORM_CONSTRAINTS.career.deptNameMax,
+  })
+
+  if (deptName instanceof Error) {
+    return { ok: false, error: deptName.message }
+  }
+
+  const requiredSkills = toOptionalText(formData.get("required_skills"), {
+    label: "必要スキル",
+    max: FORM_CONSTRAINTS.career.requiredSkillsMax,
+  })
+
+  if (requiredSkills instanceof Error) {
+    return { ok: false, error: requiredSkills.message }
+  }
+
   const updated = await updateCareerPosting(postingId, {
     title: title,
     dept_id: deptId,
-    dept_name: toText(formData.get("dept_name")),
-    required_skills: toText(formData.get("required_skills")),
+    dept_name: deptName,
+    required_skills: requiredSkills,
     status: toPostingStatus(formData.get("status")),
   })
 

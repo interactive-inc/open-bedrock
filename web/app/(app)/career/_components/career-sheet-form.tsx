@@ -8,6 +8,7 @@ import type { CareerSheet } from "@/lib/api/types/career-types"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   sheet: CareerSheet
@@ -52,6 +53,7 @@ export function CareerSheetForm(props: Props) {
             id="goals_text"
             name="goals_text"
             rows={4}
+            maxLength={FORM_CONSTRAINTS.career.sheetTextMax}
             defaultValue={props.sheet.goals_text ?? ""}
             placeholder="今後めざしたい役割やキャリアの方向性"
           />
@@ -66,6 +68,7 @@ export function CareerSheetForm(props: Props) {
             id="strengths_text"
             name="strengths_text"
             rows={4}
+            maxLength={FORM_CONSTRAINTS.career.sheetTextMax}
             defaultValue={props.sheet.strengths_text ?? ""}
             placeholder="活かせるスキルや経験"
           />

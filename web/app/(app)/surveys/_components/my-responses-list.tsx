@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   responses: ReadonlyArray<SurveyResponseItem>
@@ -136,6 +137,7 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
                   id={`answer:${entry.questionId}`}
                   name={`answer:${entry.questionId}`}
                   defaultValue={entry.value}
+                  maxLength={FORM_CONSTRAINTS.survey.answersJsonMax}
                 />
               </Field>
             ))}

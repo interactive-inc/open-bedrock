@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { RoomAvailabilitySearchForm } from "@/app/(app)/rooms/_components/room-availability-search-form"
 
 const meta = {

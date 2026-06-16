@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   // 編集対象の従業員。hidden の code と各入力の初期値に使う。
@@ -82,7 +83,13 @@ export function EmployeeEditForm(props: Props) {
             <Field>
               <FieldLabel htmlFor="edit-employee-name">氏名</FieldLabel>
 
-              <Input id="edit-employee-name" name="name" defaultValue={props.name} required />
+              <Input
+                id="edit-employee-name"
+                name="name"
+                defaultValue={props.name}
+                maxLength={FORM_CONSTRAINTS.employee.nameMax}
+                required
+              />
             </Field>
 
             <Field>
@@ -93,6 +100,7 @@ export function EmployeeEditForm(props: Props) {
                 name="email"
                 type="email"
                 defaultValue={props.email}
+                maxLength={FORM_CONSTRAINTS.employee.emailMax}
                 required
               />
             </Field>
@@ -110,6 +118,7 @@ export function EmployeeEditForm(props: Props) {
                 id="edit-employee-dept-name"
                 name="dept_name"
                 defaultValue={props.deptName ?? ""}
+                maxLength={FORM_CONSTRAINTS.employee.deptNameMax}
               />
             </Field>
 
@@ -120,6 +129,7 @@ export function EmployeeEditForm(props: Props) {
                 id="edit-employee-position"
                 name="position"
                 defaultValue={props.position ?? ""}
+                maxLength={FORM_CONSTRAINTS.employee.positionMax}
               />
             </Field>
 

@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { BusinessTripResponse } from "@/lib/api/types/business-trip-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   businessTrips: ReadonlyArray<BusinessTripResponse>
@@ -127,6 +128,7 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
                 id="update_destination"
                 name="destination"
                 defaultValue={props.businessTrip.destination}
+                maxLength={FORM_CONSTRAINTS.businessTrip.destinationMax}
               />
             </Field>
 
@@ -155,7 +157,12 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
             <Field>
               <FieldLabel htmlFor="update_purpose">目的</FieldLabel>
 
-              <Input id="update_purpose" name="purpose" defaultValue={props.businessTrip.purpose} />
+              <Input
+                id="update_purpose"
+                name="purpose"
+                defaultValue={props.businessTrip.purpose}
+                maxLength={FORM_CONSTRAINTS.businessTrip.purposeMax}
+              />
             </Field>
 
             <Field>
@@ -165,7 +172,8 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
                 id="update_estimated_cost"
                 name="estimated_cost"
                 type="number"
-                min="0"
+                min={FORM_CONSTRAINTS.businessTrip.estimatedCostMin}
+                step={1}
                 defaultValue={props.businessTrip.estimated_cost ?? ""}
               />
             </Field>

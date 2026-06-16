@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ResignationResponse } from "@/lib/api/types/resignation-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   resignations: ReadonlyArray<ResignationResponse>
@@ -151,6 +152,7 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
                 id="update_reason"
                 name="reason"
                 defaultValue={props.resignation.reason ?? ""}
+                maxLength={FORM_CONSTRAINTS.resignation.reasonMax}
               />
             </Field>
           </FieldGroup>

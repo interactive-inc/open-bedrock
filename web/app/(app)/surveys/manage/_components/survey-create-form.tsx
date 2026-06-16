@@ -9,6 +9,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: SurveyFormState = { ok: false, error: null }
 
@@ -44,7 +45,13 @@ export function SurveyCreateForm() {
         <Field>
           <FieldLabel htmlFor="survey-title">タイトル</FieldLabel>
 
-          <Input id="survey-title" name="title" placeholder="従業員満足度サーベイ" required />
+          <Input
+            id="survey-title"
+            name="title"
+            placeholder="従業員満足度サーベイ"
+            maxLength={FORM_CONSTRAINTS.survey.titleMax}
+            required
+          />
         </Field>
 
         <Field>

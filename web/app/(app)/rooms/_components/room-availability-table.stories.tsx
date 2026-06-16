@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { RoomAvailabilityTable } from "@/app/(app)/rooms/_components/room-availability-table"
 
 const meta = {

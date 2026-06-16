@@ -7,6 +7,7 @@ import { createReviewCycleAction } from "@/app/(app)/review/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: ReviewFormState = { ok: false, error: null }
 
@@ -38,13 +39,25 @@ export function ReviewCycleCreateForm() {
         <Field>
           <FieldLabel htmlFor="review-cycle-title">タイトル</FieldLabel>
 
-          <Input id="review-cycle-title" name="title" placeholder="2026 上期評価" required />
+          <Input
+            id="review-cycle-title"
+            name="title"
+            placeholder="2026 上期評価"
+            maxLength={FORM_CONSTRAINTS.review.titleMax}
+            required
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="review-cycle-period">対象期間</FieldLabel>
 
-          <Input id="review-cycle-period" name="period" placeholder="2026-H1" required />
+          <Input
+            id="review-cycle-period"
+            name="period"
+            placeholder="2026-H1"
+            maxLength={FORM_CONSTRAINTS.review.periodMax}
+            required
+          />
         </Field>
 
         <Field>

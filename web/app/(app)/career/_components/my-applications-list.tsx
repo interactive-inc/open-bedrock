@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { CareerApplication } from "@/lib/api/types/career-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   applications: ReadonlyArray<CareerApplication>
@@ -143,6 +144,7 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
                 id="update_application_message"
                 name="message"
                 rows={3}
+                maxLength={FORM_CONSTRAINTS.career.applicationMessageMax}
                 defaultValue={props.application.message ?? ""}
               />
             </Field>

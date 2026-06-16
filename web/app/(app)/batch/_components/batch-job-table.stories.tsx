@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { BatchJobTable } from "@/app/(app)/batch/_components/batch-job-table"
 
 const meta = {

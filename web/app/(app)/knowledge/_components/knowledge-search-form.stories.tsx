@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { KnowledgeSearchForm } from "@/app/(app)/knowledge/_components/knowledge-search-form"
 
 const meta = {

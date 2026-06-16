@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { LifeEventResponse } from "@/lib/api/types/life-event-types"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   lifeEvents: ReadonlyArray<LifeEventResponse>
@@ -118,6 +119,7 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
                 id="update_event_type"
                 name="event_type"
                 defaultValue={props.lifeEvent.event_type}
+                maxLength={FORM_CONSTRAINTS.lifeEvent.eventTypeMax}
               />
             </Field>
 
@@ -135,7 +137,12 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
             <Field>
               <FieldLabel htmlFor="update_detail">詳細</FieldLabel>
 
-              <Input id="update_detail" name="detail" defaultValue={props.lifeEvent.detail ?? ""} />
+              <Input
+                id="update_detail"
+                name="detail"
+                defaultValue={props.lifeEvent.detail ?? ""}
+                maxLength={FORM_CONSTRAINTS.lifeEvent.detailMax}
+              />
             </Field>
           </FieldGroup>
 
