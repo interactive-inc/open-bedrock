@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { MyShiftAssignments } from "@/app/(app)/shift/_components/my-shift-assignments"
 
 const meta = {

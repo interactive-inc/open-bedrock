@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   goalId: number
@@ -74,6 +75,9 @@ export function GoalEvaluationForm(props: Props) {
               name="score"
               type="number"
               inputMode="numeric"
+              min={FORM_CONSTRAINTS.goal.scoreMin}
+              max={FORM_CONSTRAINTS.goal.scoreMax}
+              step={1}
               placeholder="任意"
             />
           </Field>
@@ -82,7 +86,12 @@ export function GoalEvaluationForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="evaluation-comment">コメント</FieldLabel>
 
-          <Textarea id="evaluation-comment" name="comment" placeholder="任意" />
+          <Textarea
+            id="evaluation-comment"
+            name="comment"
+            maxLength={FORM_CONSTRAINTS.goal.commentMax}
+            placeholder="任意"
+          />
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

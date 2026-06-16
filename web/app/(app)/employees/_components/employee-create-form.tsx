@@ -7,6 +7,7 @@ import type { EmployeeCreateFormState } from "@/app/(app)/employees/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: EmployeeCreateFormState = { ok: false, error: null }
 
@@ -45,13 +46,25 @@ export function EmployeeCreateForm() {
         <Field>
           <FieldLabel htmlFor="employee-code">従業員コード</FieldLabel>
 
-          <Input id="employee-code" name="code" placeholder="E100" required />
+          <Input
+            id="employee-code"
+            name="code"
+            placeholder="E100"
+            maxLength={FORM_CONSTRAINTS.employee.codeMax}
+            required
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="employee-name">氏名</FieldLabel>
 
-          <Input id="employee-name" name="name" placeholder="Sam Rivers" required />
+          <Input
+            id="employee-name"
+            name="name"
+            placeholder="Sam Rivers"
+            maxLength={FORM_CONSTRAINTS.employee.nameMax}
+            required
+          />
         </Field>
 
         <Field>
@@ -62,6 +75,7 @@ export function EmployeeCreateForm() {
             name="email"
             type="email"
             placeholder="you@example.com"
+            maxLength={FORM_CONSTRAINTS.employee.emailMax}
             required
           />
         </Field>
@@ -69,7 +83,14 @@ export function EmployeeCreateForm() {
         <Field>
           <FieldLabel htmlFor="employee-password">初期パスワード</FieldLabel>
 
-          <Input id="employee-password" name="password" type="password" required />
+          <Input
+            id="employee-password"
+            name="password"
+            type="password"
+            minLength={FORM_CONSTRAINTS.employee.passwordMin}
+            maxLength={FORM_CONSTRAINTS.employee.passwordMax}
+            required
+          />
         </Field>
 
         <Field>
@@ -87,13 +108,23 @@ export function EmployeeCreateForm() {
         <Field>
           <FieldLabel htmlFor="employee-dept-name">部署名（任意）</FieldLabel>
 
-          <Input id="employee-dept-name" name="dept_name" placeholder="Engineering" />
+          <Input
+            id="employee-dept-name"
+            name="dept_name"
+            placeholder="Engineering"
+            maxLength={FORM_CONSTRAINTS.employee.deptNameMax}
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="employee-position">役職（任意）</FieldLabel>
 
-          <Input id="employee-position" name="position" placeholder="Engineer" />
+          <Input
+            id="employee-position"
+            name="position"
+            placeholder="Engineer"
+            maxLength={FORM_CONSTRAINTS.employee.positionMax}
+          />
         </Field>
 
         <Field>

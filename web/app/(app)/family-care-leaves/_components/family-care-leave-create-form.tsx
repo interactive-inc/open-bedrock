@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: FamilyCareLeaveActionState = { ok: false, error: null }
 
@@ -72,7 +73,12 @@ export function FamilyCareLeaveCreateForm() {
         <Field>
           <FieldLabel htmlFor="leave-note">備考</FieldLabel>
 
-          <Input id="leave-note" name="note" placeholder="任意" />
+          <Input
+            id="leave-note"
+            name="note"
+            maxLength={FORM_CONSTRAINTS.familyCareLeave.noteMax}
+            placeholder="任意"
+          />
         </Field>
       </FieldGroup>
 

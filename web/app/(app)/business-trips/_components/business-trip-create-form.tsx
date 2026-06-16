@@ -7,6 +7,7 @@ import type { BusinessTripActionState } from "@/app/(app)/business-trips/actions
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: BusinessTripActionState = { ok: false, error: null }
 
@@ -45,7 +46,12 @@ export function BusinessTripCreateForm() {
         <Field>
           <FieldLabel htmlFor="trip-destination">行き先</FieldLabel>
 
-          <Input id="trip-destination" name="destination" required />
+          <Input
+            id="trip-destination"
+            name="destination"
+            maxLength={FORM_CONSTRAINTS.businessTrip.destinationMax}
+            required
+          />
         </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -65,13 +71,25 @@ export function BusinessTripCreateForm() {
         <Field>
           <FieldLabel htmlFor="trip-purpose">目的</FieldLabel>
 
-          <Input id="trip-purpose" name="purpose" required />
+          <Input
+            id="trip-purpose"
+            name="purpose"
+            maxLength={FORM_CONSTRAINTS.businessTrip.purposeMax}
+            required
+          />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="trip-cost">概算費用</FieldLabel>
 
-          <Input id="trip-cost" name="estimated_cost" type="number" min="0" placeholder="任意" />
+          <Input
+            id="trip-cost"
+            name="estimated_cost"
+            type="number"
+            min={FORM_CONSTRAINTS.businessTrip.estimatedCostMin}
+            step={1}
+            placeholder="任意"
+          />
         </Field>
       </FieldGroup>
 

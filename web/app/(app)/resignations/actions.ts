@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache"
 import { cancelResignation } from "@/lib/api/cancel-resignation"
 import { createResignation } from "@/lib/api/create-resignation"
 import { updateResignation } from "@/lib/api/update-resignation"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalIsoDate,
+  toOptionalText,
+  toRequiredIsoDate,
+} from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ResignationActionState = {
@@ -92,34 +98,34 @@ type ResignationFields = {
 
 // FormData から退職申請の共通フィールドを取り出して検証する。不正時は Error。
 function toResignationFields(formData: FormData): ResignationFields | Error {
-  const resignationDate = formData.get("resignation_date")
+  const resignationDate = toRequiredIsoDate(formData.get("resignation_date"), "退職希望日")
 
-  const lastWorkingDate = formData.get("last_working_date")
-
-  const reason = formData.get("reason")
-
-  if (typeof resignationDate !== "string" || resignationDate === "") {
-    return new Error("退職希望日を入力してください")
+  if (resignationDate instanceof Error) {
+    return resignationDate
   }
 
-  const last = toOptionalText(lastWorkingDate)
+  const last = toOptionalIsoDate(formData.get("last_working_date"), "最終出社日")
+
+  if (last instanceof Error) {
+    return last
+  }
 
   if (last !== null && last > resignationDate) {
     return new Error("最終出社日は退職希望日以前にしてください")
   }
 
+  const reason = toOptionalText(formData.get("reason"), {
+    label: "理由",
+    max: FORM_CONSTRAINTS.resignation.reasonMax,
+  })
+
+  if (reason instanceof Error) {
+    return reason
+  }
+
   return {
     resignation_date: resignationDate,
     last_working_date: last,
-    reason: toOptionalText(reason),
+    reason: reason,
   }
-}
-
-// 任意テキストの FormData 値を取り出す。未入力や空文字は null。
-function toOptionalText(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
-  }
-
-  return value.trim()
 }

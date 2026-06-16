@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/nextjs"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { EmployeeTable } from "@/app/(app)/employees/_components/employee-table"
 
 const meta = {

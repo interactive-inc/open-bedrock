@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: OneOnOneActionState = { ok: false, error: null }
 
@@ -51,6 +52,7 @@ export function OneOnOneCreateForm() {
             name="member_email"
             type="email"
             placeholder="you@example.com"
+            maxLength={FORM_CONSTRAINTS.oneOnOne.memberEmailMax}
             required
           />
 
@@ -62,7 +64,13 @@ export function OneOnOneCreateForm() {
         <Field>
           <FieldLabel htmlFor="create-topics">トピック</FieldLabel>
 
-          <Textarea id="create-topics" name="topics" placeholder="話したテーマ（任意）" rows={3} />
+          <Textarea
+            id="create-topics"
+            name="topics"
+            placeholder="話したテーマ（任意）"
+            rows={3}
+            maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
+          />
         </Field>
 
         <Field>
@@ -73,6 +81,7 @@ export function OneOnOneCreateForm() {
             name="manager_note"
             placeholder="所感・気づき（任意）"
             rows={3}
+            maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
           />
         </Field>
 
@@ -84,6 +93,7 @@ export function OneOnOneCreateForm() {
             name="next_action"
             placeholder="次回までの行動（任意）"
             rows={2}
+            maxLength={FORM_CONSTRAINTS.oneOnOne.textMax}
           />
         </Field>
 

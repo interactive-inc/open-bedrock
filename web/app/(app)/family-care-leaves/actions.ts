@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache"
 import { cancelFamilyCareLeave } from "@/lib/api/cancel-family-care-leave"
 import { createFamilyCareLeave } from "@/lib/api/create-family-care-leave"
 import { updateFamilyCareLeave } from "@/lib/api/update-family-care-leave"
+import {
+  FORM_CONSTRAINTS,
+  toOptionalText,
+  toRequiredIsoDate,
+  toRequiredText,
+} from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type FamilyCareLeaveActionState = {
@@ -93,41 +99,44 @@ type LeaveFields = {
 
 // FormData から休業申出の共通フィールドを取り出して検証する。不正時は Error。
 function toLeaveFields(formData: FormData): LeaveFields | Error {
-  const leaveKind = formData.get("leave_kind")
+  const leaveKind = toRequiredText(formData.get("leave_kind"), {
+    label: "種別",
+    max: FORM_CONSTRAINTS.familyCareLeave.leaveKindMax,
+  })
 
-  const startDate = formData.get("start_date")
-
-  const endDate = formData.get("end_date")
-
-  if (typeof leaveKind !== "string" || leaveKind.trim() === "") {
-    return new Error("種別を選んでください")
+  if (leaveKind instanceof Error) {
+    return leaveKind
   }
 
-  if (typeof startDate !== "string" || startDate === "") {
-    return new Error("開始日を入力してください")
+  const startDate = toRequiredIsoDate(formData.get("start_date"), "開始日")
+
+  if (startDate instanceof Error) {
+    return startDate
   }
 
-  if (typeof endDate !== "string" || endDate === "") {
-    return new Error("終了予定日を入力してください")
+  const endDate = toRequiredIsoDate(formData.get("end_date"), "終了予定日")
+
+  if (endDate instanceof Error) {
+    return endDate
   }
 
   if (endDate < startDate) {
     return new Error("終了予定日は開始日以降にしてください")
   }
 
+  const note = toOptionalText(formData.get("note"), {
+    label: "備考",
+    max: FORM_CONSTRAINTS.familyCareLeave.noteMax,
+  })
+
+  if (note instanceof Error) {
+    return note
+  }
+
   return {
-    leave_kind: leaveKind.trim(),
+    leave_kind: leaveKind,
     start_date: startDate,
     end_date: endDate,
-    note: toNote(formData.get("note")),
+    note: note,
   }
-}
-
-// note の FormData 値を取り出す。未入力は null。
-function toNote(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
-  }
-
-  return value.trim()
 }
