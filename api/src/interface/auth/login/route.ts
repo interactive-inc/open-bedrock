@@ -6,7 +6,6 @@ import {
   checkAccountRateLimit,
   checkRateLimit,
   clearAccountFailures,
-  clearFailures,
   recordAccountFailure,
   recordFailure,
 } from "@/interface/shared/login-rate-limit"
@@ -70,9 +69,10 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError("invalid email or password")
     }
 
-    // 認証成功: IP・アカウント両方のカウンタをリセットする
+    // 認証成功: アカウントカウンタのみリセットする。
+    // IP カウンタは TTL で自然消滅させる（共有 IP 環境で攻撃者のカウンタまで
+    // リセットされるのを防ぐ）。
     if (kv !== undefined) {
-      await clearFailures(kv, ip)
       await clearAccountFailures(kv, email)
     }
 

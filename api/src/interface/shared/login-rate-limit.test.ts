@@ -3,7 +3,6 @@ import {
   checkAccountRateLimit,
   checkRateLimit,
   clearAccountFailures,
-  clearFailures,
   recordAccountFailure,
   recordFailure,
 } from "@/interface/shared/login-rate-limit"
@@ -74,18 +73,17 @@ describe("login-rate-limit", () => {
       expect(blocked).toBe(true)
     })
 
-    test("clears counter on successful login", async () => {
+    test("does not reset IP counter on successful login", async () => {
       const kv = createFakeKV()
 
       for (let i = 0; i < 5; i++) {
         await recordFailure(kv, "192.0.2.1")
       }
 
-      await clearFailures(kv, "192.0.2.1")
-
+      // IP カウンタはログイン成功ではリセットされない（TTL で自然消滅する）
       const blocked = await checkRateLimit(kv, "192.0.2.1")
 
-      expect(blocked).toBe(false)
+      expect(blocked).toBe(true)
     })
 
     test("isolates counters between different IPs", async () => {
@@ -212,10 +210,10 @@ describe("login-rate-limit", () => {
       await recordFailure(kv, "192.0.2.1")
     })
 
-    test("clearFailures does not throw when KV delete fails", async () => {
+    test("clearAccountFailures does not throw when KV delete fails", async () => {
       const kv = createBrokenKV()
 
-      await clearFailures(kv, "192.0.2.1")
+      await clearAccountFailures(kv, "user@example.com")
     })
   })
 })
