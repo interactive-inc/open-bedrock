@@ -1,10 +1,12 @@
+import type { LeaveType } from "@/lib/schemas"
+import { leaveTypeSchema } from "@/lib/schemas"
 import type { LeaveRequestRow } from "@/schema"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
   employeeId: z.number(),
-  leaveType: z.enum(["annual", "special"]),
+  leaveType: leaveTypeSchema,
   startDate: z.string(),
   endDate: z.string(),
   days: z.number(),
@@ -55,7 +57,7 @@ export class LeaveRequest implements Props {
   /** 新規作成する休暇申請を組み立てる。id は未採番、初期状態は pending。 */
   static create(props: {
     employeeId: number
-    leaveType: "annual" | "special"
+    leaveType: LeaveType
     startDate: string
     endDate: string
     days: number
@@ -130,7 +132,7 @@ export class LeaveRequest implements Props {
 
   /** 申請内容（種別・期間・日数・理由）を差し替えた新しい申請を返す。 */
   withRevised(props: {
-    leaveType: "annual" | "special"
+    leaveType: LeaveType
     startDate: string
     endDate: string
     days: number

@@ -1,10 +1,11 @@
+import { expenseCategorySchema } from "@/lib/schemas"
 import type { ExpenseRow } from "@/schema"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number().nullable(),
   employeeId: z.number(),
-  category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
+  category: expenseCategorySchema,
   amount: z.number(),
   spentAt: z.string(),
   note: z.string().nullable(),

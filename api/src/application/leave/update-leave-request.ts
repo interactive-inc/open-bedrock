@@ -1,11 +1,12 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
+import type { LeaveType } from "@/lib/schemas"
 
 export type Command = {
   leaveRequestId: number
   employeeId: number
-  leaveType: "annual" | "special"
+  leaveType: LeaveType
   startDate: string
   endDate: string
   reason: string | null

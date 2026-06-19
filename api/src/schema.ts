@@ -1,3 +1,4 @@
+import type { ExpenseCategory, LeaveType } from "@/lib/schemas"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
@@ -238,7 +239,7 @@ export type ShiftSwapRequestRow = InferSelectModel<typeof shiftSwapRequests>
 export const leaveRequests = sqliteTable("leave_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
-  leaveType: text("leave_type").notNull().$type<"annual" | "special">(),
+  leaveType: text("leave_type").notNull().$type<LeaveType>(),
   startDate: text("start_date").notNull(),
   endDate: text("end_date").notNull(),
   days: integer("days").notNull(),
@@ -257,7 +258,7 @@ export const leaveBalances = sqliteTable(
   {
     employeeId: integer("employee_id").notNull(),
     fiscalYear: text("fiscal_year").notNull(),
-    leaveType: text("leave_type").notNull().$type<"annual" | "special">(),
+    leaveType: text("leave_type").notNull().$type<LeaveType>(),
     grantedDays: integer("granted_days").notNull(),
     usedDays: integer("used_days").notNull(),
     remainingDays: integer("remaining_days").notNull(),
@@ -469,9 +470,7 @@ export type CareerSheetRow = InferSelectModel<typeof careerSheets>
 export const expenses = sqliteTable("expenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
-  category: text("category")
-    .notNull()
-    .$type<"transport" | "supplies" | "entertainment" | "books" | "other">(),
+  category: text("category").notNull().$type<ExpenseCategory>(),
   amount: integer("amount").notNull(),
   spentAt: text("spent_at").notNull(),
   note: text("note"),
