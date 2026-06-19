@@ -1,3 +1,4 @@
+import { employeeStatusSchema } from "@/lib/schemas"
 import type { EmployeeRow } from "@/schema"
 import { z } from "zod"
 
@@ -11,7 +12,7 @@ const zProps = z.object({
   deptId: z.number().nullable(),
   deptName: z.string().nullable(),
   position: z.string().nullable(),
-  status: z.enum(["active", "leave", "retired"]),
+  status: employeeStatusSchema,
 })
 
 type Props = z.infer<typeof zProps>

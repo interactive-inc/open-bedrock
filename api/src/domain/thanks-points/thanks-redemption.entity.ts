@@ -1,3 +1,4 @@
+import { redemptionStatusSchema } from "@/lib/schemas"
 import type { ThanksRedemptionRow } from "@/schema"
 import { z } from "zod"
 
@@ -6,7 +7,7 @@ const zProps = z.object({
   employeeId: z.number(),
   rewardId: z.number(),
   pointCost: z.number(),
-  status: z.enum(["pending", "rejected", "fulfilled"]),
+  status: redemptionStatusSchema,
   createdAt: z.string(),
   decidedAt: z.string().nullable(),
   deciderId: z.number().nullable(),

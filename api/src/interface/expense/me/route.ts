@@ -5,6 +5,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { expenseStatusSchema } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { expenses } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -18,7 +19,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      status: z.enum(["pending", "approved", "rejected", "settled"]).optional(),
+      status: expenseStatusSchema.optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
