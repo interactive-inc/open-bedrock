@@ -1,89 +1,52 @@
-// leave ドメインの手書き型。api 側 zod スキーマと疎結合に保つため z.infer を import せず
-// レスポンス/リクエストの shape をここで独立に定義する。
+// leave ドメインの型。api/app の AppType から InferResponseType / InferRequestType で自動導出し、
+// API 側のフィールド変更がコンパイルエラーとして検知されるようにする。
+import type { InferRequestType, InferResponseType } from "hono/client"
+import type { ApiClient } from "api/app"
 
-export type LeaveType = "annual" | "special"
+// POST /leave/requests のレスポンス（作成された leave request エンティティ）。
+export type LeaveRequestCreated = InferResponseType<ApiClient["leave"]["requests"]["$post"], 201>
 
-export type LeaveStatus = "pending" | "approved" | "rejected"
+// 共通サブ型。レスポンス型から導出する。
+export type LeaveType = LeaveRequestCreated["leave_type"]
 
-// GET /leave/balance/me のレスポンス要素 (toLeaveBalanceResponse の出力)。
-export type LeaveBalanceResponse = {
-  fiscal_year: string
-  leave_type: LeaveType
-  granted_days: number
-  used_days: number
-  remaining_days: number
-}
+export type LeaveStatus = LeaveRequestCreated["status"]
 
-// GET /leave/requests/me のレスポンス要素 (toLeaveRequestMineResponse の出力)。
-export type LeaveRequestMineResponse = {
-  id: number
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  days: number
-  status: LeaveStatus
-  created_at: string
-}
+// GET /leave/balance/me のレスポンス要素。
+export type LeaveBalanceResponse = InferResponseType<
+  ApiClient["leave"]["balance"]["me"]["$get"],
+  200
+>[number]
 
-// GET /leave/requests/inbox のレスポンス要素 (承認者向け、申請者名付き)。
-export type LeaveRequestInboxResponse = {
-  id: number
-  applicant_name: string
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  days: number
-  reason: string | null
-  status: LeaveStatus
-  created_at: string
-}
+// GET /leave/requests/me のレスポンス要素。
+export type LeaveRequestMineResponse = InferResponseType<
+  ApiClient["leave"]["requests"]["me"]["$get"],
+  200
+>["data"][number]
+
+// GET /leave/requests/inbox のレスポンス要素（承認者向け、申請者名付き）。
+export type LeaveRequestInboxResponse = InferResponseType<
+  ApiClient["leave"]["requests"]["inbox"]["$get"],
+  200
+>["data"][number]
 
 // POST /leave/requests のリクエストボディ。
-export type LeaveRequestCreateRequest = {
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  reason: string | null
-}
-
-// POST /leave/requests のレスポンス (作成された leave request エンティティ)。
-export type LeaveRequestCreated = {
-  id: number
-  employee_id: number
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  days: number
-  reason: string | null
-  status: LeaveStatus
-  approver_id: number | null
-  decided_comment: string | null
-  created_at: string
-}
+export type LeaveRequestCreateRequest = InferRequestType<
+  ApiClient["leave"]["requests"]["$post"]
+>["json"]
 
 // POST /leave/requests/:id/approve | reject のレスポンス。
-export type LeaveDecisionResponse = {
-  status: LeaveStatus
-}
+export type LeaveDecisionResponse = InferResponseType<
+  ApiClient["leave"]["requests"][":id"]["approve"]["$post"],
+  200
+>
 
 // PUT /leave/requests/:id のリクエストボディ。
-export type LeaveRequestUpdateRequest = {
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  reason: string | null
-}
+export type LeaveRequestUpdateRequest = InferRequestType<
+  ApiClient["leave"]["requests"][":id"]["$put"]
+>["json"]
 
-// GET /leave/requests/:id と PUT /leave/requests/:id のレスポンス。api は snake_case で返す。
-// id は hc-client の materialize 上 number | null になるため合わせる。
-export type LeaveRequestDetailResponse = {
-  id: number | null
-  employee_id: number
-  leave_type: LeaveType
-  start_date: string
-  end_date: string
-  days: number
-  reason: string | null
-  status: LeaveStatus
-  created_at: string
-}
+// GET /leave/requests/:id と PUT /leave/requests/:id のレスポンス。
+export type LeaveRequestDetailResponse = InferResponseType<
+  ApiClient["leave"]["requests"][":id"]["$get"],
+  200
+>
