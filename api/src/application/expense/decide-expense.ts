@@ -20,6 +20,8 @@ export type ExpenseNotFound = { reason: "expense_not_found" }
 
 export type AlreadyDecided = { reason: "already_decided" }
 
+export type Forbidden = { reason: "forbidden" }
+
 /**
  * 経費のステータスを pending からの条件付き UPDATE で確定し、承認記録を同時に INSERT する。
  * D1 batch で status UPDATE と approval INSERT をアトミックに行うため、
@@ -31,9 +33,9 @@ export class DecideExpense {
 
   async run(
     command: Command,
-  ): Promise<ExpenseDecision | ExpenseNotFound | AlreadyDecided | { reason: "forbidden" } | Error> {
+  ): Promise<ExpenseDecision | ExpenseNotFound | AlreadyDecided | Forbidden | Error> {
     if (canDecideExpense(command.viewerRole) === false) {
-      return { reason: "forbidden" } as const
+      return { reason: "forbidden" }
     }
 
     const expenseRepository = new ExpenseRepository(this.c)
@@ -49,11 +51,11 @@ export class DecideExpense {
     }
 
     if (existing.employeeId === command.approverId) {
-      return { reason: "forbidden" } as const
+      return { reason: "forbidden" }
     }
 
     if (existing.status !== "pending") {
-      return { reason: "already_decided" } as const
+      return { reason: "already_decided" }
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -88,7 +90,7 @@ export class DecideExpense {
         return { reason: "expense_not_found" }
       }
 
-      return { reason: "already_decided" } as const
+      return { reason: "already_decided" }
     }
 
     return { status: decided.status }
