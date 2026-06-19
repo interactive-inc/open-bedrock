@@ -2,6 +2,18 @@ import { expenseCategorySchema, expenseStatusSchema } from "@/lib/schemas"
 import type { ExpenseRow } from "@/schema"
 import { z } from "zod"
 
+/** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
+export const expenseRowSchema = z.object({
+  id: z.number(),
+  employeeId: z.number(),
+  category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
+  amount: z.number(),
+  spentAt: z.string(),
+  note: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected", "settled"]),
+  createdAt: z.string(),
+})
+
 const zProps = z.object({
   id: z.number().nullable(),
   employeeId: z.number(),
