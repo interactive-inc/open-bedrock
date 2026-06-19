@@ -11,9 +11,9 @@ export type Command = {
   createdAt: string
 }
 
-export type InvalidLeavePeriod = { failure: "invalid_leave_period" }
+export type InvalidLeavePeriod = { reason: "invalid_leave_period" }
 
-export type OverlappingLeaveRequest = { failure: "overlapping_leave_request" }
+export type OverlappingLeaveRequest = { reason: "overlapping_leave_request" }
 
 /**
  * 休暇申請を pending で新規作成する。期間から日数を導出する。
@@ -29,7 +29,7 @@ export class CreateLeaveRequest {
     const days = LeaveRequest.daysBetween(command.startDate, command.endDate)
 
     if (days instanceof Error) {
-      return { failure: "invalid_leave_period" }
+      return { reason: "invalid_leave_period" }
     }
 
     // 同社員・同期間の未却下申請があれば、全承認時の残数二重減算を防ぐため拒否する。
@@ -44,7 +44,7 @@ export class CreateLeaveRequest {
     }
 
     if (overlapping.length > 0) {
-      return { failure: "overlapping_leave_request" }
+      return { reason: "overlapping_leave_request" }
     }
 
     const leaveRequest = LeaveRequest.create({
@@ -61,7 +61,7 @@ export class CreateLeaveRequest {
 
     // 条件付き INSERT が 0 行だった場合は並行リクエストによる重複
     if (created === null) {
-      return { failure: "overlapping_leave_request" }
+      return { reason: "overlapping_leave_request" }
     }
 
     return created

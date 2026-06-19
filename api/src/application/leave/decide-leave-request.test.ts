@@ -59,11 +59,11 @@ describe("DecideLeaveRequest", () => {
       throw result
     }
 
-    if (!("failure" in result)) {
+    if (result instanceof LeaveRequest) {
       throw new Error("expected a failure result")
     }
 
-    expect(result.failure).toBe("forbidden")
+    expect(result.reason).toBe("forbidden")
   })
 
   test("allows manager to reject a leave request", async () => {
@@ -85,8 +85,8 @@ describe("DecideLeaveRequest", () => {
       throw result
     }
 
-    if ("failure" in result) {
-      throw new Error(`unexpected failure: ${result.failure}`)
+    if (!(result instanceof LeaveRequest)) {
+      throw new Error(`unexpected failure: ${result.reason}`)
     }
 
     expect(result.status).toBe("rejected")
@@ -122,11 +122,11 @@ describe("DecideLeaveRequest", () => {
       throw result
     }
 
-    if (!("failure" in result)) {
+    if (result instanceof LeaveRequest) {
       throw new Error("expected a failure result")
     }
 
-    expect(result.failure).toBe("self_approval")
+    expect(result.reason).toBe("self_approval")
   })
 
   test("allows hr role to decide", async () => {
@@ -148,8 +148,8 @@ describe("DecideLeaveRequest", () => {
       throw result
     }
 
-    if ("failure" in result) {
-      throw new Error(`unexpected failure: ${result.failure}`)
+    if (!(result instanceof LeaveRequest)) {
+      throw new Error(`unexpected failure: ${result.reason}`)
     }
 
     expect(result.status).toBe("rejected")
