@@ -40,7 +40,27 @@ export const employeeRoleSchema = z.enum(["member", "manager", "hr", "admin"])
 
 export type EmployeeRole = z.infer<typeof employeeRoleSchema>
 
-/** 経費カテゴリ。経費申請で選択可能な分類。 */
+/** 従業員ステータス */
+export const employeeStatusSchema = z.enum(["active", "leave", "retired"])
+
+export type EmployeeStatus = z.infer<typeof employeeStatusSchema>
+
+/** 休暇種別 */
+export const leaveTypeSchema = z.enum(["annual", "special"])
+
+export type LeaveType = z.infer<typeof leaveTypeSchema>
+
+/** 休暇申請ステータス */
+export const leaveStatusSchema = z.enum(["pending", "approved", "rejected"])
+
+export type LeaveStatus = z.infer<typeof leaveStatusSchema>
+
+/** バッチジョブステータス */
+export const batchJobStatusSchema = z.enum(["running", "completed", "failed"])
+
+export type BatchJobStatus = z.infer<typeof batchJobStatusSchema>
+
+/** 経費カテゴリ */
 export const expenseCategorySchema = z.enum([
   "transport",
   "supplies",
@@ -51,7 +71,17 @@ export const expenseCategorySchema = z.enum([
 
 export type ExpenseCategory = z.infer<typeof expenseCategorySchema>
 
-/** 休暇種別。休暇申請で選択可能な種別。 */
-export const leaveTypeSchema = z.enum(["annual", "special"])
+/** 経費申請ステータス */
+export const expenseStatusSchema = z.enum(["pending", "approved", "rejected", "settled"])
 
-export type LeaveType = z.infer<typeof leaveTypeSchema>
+export type ExpenseStatus = z.infer<typeof expenseStatusSchema>
+
+/** 経費承認アクション */
+export const expenseApprovalActionSchema = z.enum(["approve", "reject"])
+
+export type ExpenseApprovalAction = z.infer<typeof expenseApprovalActionSchema>
+
+/** サンクスポイント交換ステータス */
+export const redemptionStatusSchema = z.enum(["pending", "rejected", "fulfilled"])
+
+export type RedemptionStatus = z.infer<typeof redemptionStatusSchema>

@@ -1,3 +1,4 @@
+import { expenseApprovalActionSchema } from "@/lib/schemas"
 import type { ExpenseApprovalRow } from "@/schema"
 import { z } from "zod"
 
@@ -5,7 +6,7 @@ const zProps = z.object({
   id: z.number().nullable(),
   expenseId: z.number(),
   approverId: z.number(),
-  action: z.enum(["approve", "reject"]),
+  action: expenseApprovalActionSchema,
   comment: z.string().nullable(),
   createdAt: z.string(),
 })

@@ -1,4 +1,4 @@
-import { expenseCategorySchema } from "@/lib/schemas"
+import { expenseCategorySchema, expenseStatusSchema } from "@/lib/schemas"
 import type { ExpenseRow } from "@/schema"
 import { z } from "zod"
 
@@ -9,7 +9,7 @@ const zProps = z.object({
   amount: z.number(),
   spentAt: z.string(),
   note: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected", "settled"]),
+  status: expenseStatusSchema,
   createdAt: z.string(),
 })
 
