@@ -10,7 +10,8 @@
 //   キー: login:fail:ip:{ip} / login:fail:account:{email}
 //   値:   失敗タイムスタンプ（Unix 秒）の配列（JSON）
 //   ウィンドウ内のタイムスタンプ数が LIMIT を超えたら 429。
-//   成功時はキーごと削除してカウンタをリセットする。
+//   成功時はアカウントカウンタのみリセットする。IP カウンタは TTL で自然消滅させ、
+//   共有 IP 環境で正規ユーザの成功が攻撃者のカウンタまでリセットするのを防ぐ。
 //
 // アトミック性について:
 //   KV は "last write wins" のため、高頻度リクエストでタイムスタンプが
@@ -99,11 +100,6 @@ export async function recordFailure(kv: KVNamespace, ip: string): Promise<void> 
 // アカウントカウンタに失敗を記録する。
 export async function recordAccountFailure(kv: KVNamespace, email: string): Promise<void> {
   return recordByKey(kv, accountKey(email))
-}
-
-// IP カウンタをリセットする（ログイン成功時）。
-export async function clearFailures(kv: KVNamespace, ip: string): Promise<void> {
-  return clearByKey(kv, ipKey(ip))
 }
 
 // アカウントカウンタをリセットする（ログイン成功時）。
