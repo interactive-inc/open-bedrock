@@ -12,7 +12,7 @@ import {
 } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-import { isoDate } from "@/lib/schemas"
+import { isoDate, leaveTypeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -84,7 +84,7 @@ export const PUT = factory.createHandlers(
     "json",
     z
       .object({
-        leave_type: z.enum(["annual", "special"]),
+        leave_type: leaveTypeSchema,
         start_date: isoDate,
         end_date: isoDate,
         reason: z.string().max(3_000).nullable().optional(),

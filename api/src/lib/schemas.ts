@@ -39,3 +39,19 @@ export const codeSchema = z.string().min(1).max(200)
 export const employeeRoleSchema = z.enum(["member", "manager", "hr", "admin"])
 
 export type EmployeeRole = z.infer<typeof employeeRoleSchema>
+
+/** 経費カテゴリ。経費申請で選択可能な分類。 */
+export const expenseCategorySchema = z.enum([
+  "transport",
+  "supplies",
+  "entertainment",
+  "books",
+  "other",
+])
+
+export type ExpenseCategory = z.infer<typeof expenseCategorySchema>
+
+/** 休暇種別。休暇申請で選択可能な種別。 */
+export const leaveTypeSchema = z.enum(["annual", "special"])
+
+export type LeaveType = z.infer<typeof leaveTypeSchema>

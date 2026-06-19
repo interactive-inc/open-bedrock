@@ -1,8 +1,10 @@
+import type { ExpenseCategory } from "@/lib/schemas"
+
 export type ExpenseDetailView = {
   id: number
   employeeId: number
   applicantName: string
-  category: "transport" | "supplies" | "entertainment" | "books" | "other"
+  category: ExpenseCategory
   amount: number
   spentAt: string
   note: string | null
