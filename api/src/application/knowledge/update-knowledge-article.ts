@@ -52,7 +52,7 @@ export class UpdateKnowledgeArticle {
     }
 
     if (result === null) {
-      return { reason: "article_not_found" as const }
+      return { reason: "article_not_found" }
     }
 
     return result

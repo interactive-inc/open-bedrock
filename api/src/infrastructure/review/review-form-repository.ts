@@ -82,7 +82,7 @@ export class ReviewFormRepository {
         return null
       }
 
-      return { reason: "cycle_not_open" as const }
+      return { reason: "cycle_not_open" }
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update review_form")
     }

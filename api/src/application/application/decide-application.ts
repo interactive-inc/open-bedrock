@@ -20,6 +20,8 @@ export type ApplicationDecision = {
 
 export type AlreadyDecided = { reason: "already_decided" }
 
+export type Forbidden = { reason: "forbidden" }
+
 /**
  * 申請のステータスを pending からの条件付き UPDATE で確定し、承認記録を同時に INSERT する。
  * D1 batch で status UPDATE と approval INSERT をアトミックに行うため、
@@ -31,9 +33,7 @@ export class DecideApplication {
 
   async run(
     command: Command,
-  ): Promise<
-    ApplicationDecision | ApplicationNotFound | AlreadyDecided | { reason: "forbidden" } | Error
-  > {
+  ): Promise<ApplicationDecision | ApplicationNotFound | AlreadyDecided | Forbidden | Error> {
     const applicationRepository = new ApplicationRepository(this.c)
 
     const existing = await applicationRepository.findById(command.applicationId)
@@ -57,21 +57,21 @@ export class DecideApplication {
     // approverRoles が指定されていれば、そのロールのみ承認可能
     if (template.approverRoles.length > 0) {
       if (!template.approverRoles.includes(command.viewerRole)) {
-        return { reason: "forbidden" } as const
+        return { reason: "forbidden" }
       }
     } else {
       // approverRoles が空なら従来の canDecideApplication チェック
       if (canDecideApplication(command.viewerRole) === false) {
-        return { reason: "forbidden" } as const
+        return { reason: "forbidden" }
       }
     }
 
     if (existing.applicantId === command.approverId) {
-      return { reason: "forbidden" } as const
+      return { reason: "forbidden" }
     }
 
     if (existing.status !== "pending") {
-      return { reason: "already_decided" } as const
+      return { reason: "already_decided" }
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -106,7 +106,7 @@ export class DecideApplication {
         return { reason: "application_not_found" }
       }
 
-      return { reason: "already_decided" } as const
+      return { reason: "already_decided" }
     }
 
     return { status: decided.status }

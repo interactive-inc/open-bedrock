@@ -1,7 +1,3 @@
-import type { ExpenseCategory, LeaveType } from "@/lib/schemas"
-import { sql } from "drizzle-orm"
-import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 import type {
   BatchJobStatus,
   EmployeeStatus,
@@ -12,6 +8,9 @@ import type {
   LeaveType,
   RedemptionStatus,
 } from "@/lib/schemas"
+import { sql } from "drizzle-orm"
+import type { InferSelectModel } from "drizzle-orm"
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 // このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
 // api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
