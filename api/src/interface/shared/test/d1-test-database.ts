@@ -30,7 +30,7 @@ export function createD1TestDatabase(schema: string): D1Database {
     },
   }
 
-  return database as unknown as D1Database
+  return castToD1Database(database)
 }
 
 function toPreparedStatement(
@@ -43,7 +43,7 @@ function toPreparedStatement(
   const statement = {
     bind: (...next: Array<unknown>) => toPreparedStatement(sqlite, query, next),
     first: async (column?: string) => {
-      const row = sqlite.query(query).get(...bindings()) as Record<string, unknown> | null
+      const row = sqlite.query<Record<string, unknown>>(query).get(...bindings())
 
       if (row === null) {
         return null
@@ -55,7 +55,7 @@ function toPreparedStatement(
       const result = sqlite.query(query).run(...bindings())
       return {
         results: [],
-        success: true as const,
+        success: true,
         meta: {
           duration: 0,
           size_after: 0,
@@ -71,13 +71,13 @@ function toPreparedStatement(
     raw: async () => sqlite.query(query).values(...bindings()),
   }
 
-  return statement as unknown as D1PreparedStatement
+  return castToD1PreparedStatement(statement)
 }
 
 function toResult(rows: Array<unknown>) {
   return {
     results: rows,
-    success: true as const,
+    success: true,
     meta: {
       duration: 0,
       size_after: 0,
@@ -105,4 +105,18 @@ function toSqliteBinding(value: unknown): SqliteBinding {
   }
 
   return JSON.stringify(value)
+}
+
+/**
+ * D1Database は abstract class のため構造的代入ができず、テストモックの境界で型アサーションが必要
+ */
+function castToD1Database(mock: Record<string, unknown>): D1Database {
+  return mock as unknown as D1Database
+}
+
+/**
+ * D1PreparedStatement は abstract class のため構造的代入ができず、テストモックの境界で型アサーションが必要
+ */
+function castToD1PreparedStatement(mock: Record<string, unknown>): D1PreparedStatement {
+  return mock as unknown as D1PreparedStatement
 }
