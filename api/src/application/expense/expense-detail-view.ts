@@ -1,4 +1,4 @@
-import type { ExpenseCategory } from "@/lib/schemas"
+import type { ExpenseCategory, ExpenseStatus } from "@/lib/schemas"
 
 export type ExpenseDetailView = {
   id: number
@@ -8,6 +8,6 @@ export type ExpenseDetailView = {
   amount: number
   spentAt: string
   note: string | null
-  status: "pending" | "approved" | "rejected" | "settled"
+  status: ExpenseStatus
   createdAt: string
 }

@@ -1,9 +1,10 @@
+import { batchJobStatusSchema } from "@/lib/schemas"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.number(),
   name: z.string(),
-  status: z.enum(["running", "completed", "failed"]),
+  status: batchJobStatusSchema,
   startedAt: z.string().nullable(),
   finishedAt: z.string().nullable(),
   message: z.string().nullable(),
