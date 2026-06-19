@@ -3,6 +3,21 @@ import type { LeaveType } from "@/lib/schemas"
 import type { LeaveRequestRow } from "@/schema"
 import { z } from "zod"
 
+/** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
+export const leaveRequestRowSchema = z.object({
+  id: z.number(),
+  employeeId: z.number(),
+  leaveType: z.enum(["annual", "special"]),
+  startDate: z.string(),
+  endDate: z.string(),
+  days: z.number(),
+  reason: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
+  approverId: z.number().nullable(),
+  decidedComment: z.string().nullable(),
+  createdAt: z.string(),
+})
+
 const zProps = z.object({
   id: z.number().nullable(),
   employeeId: z.number(),
