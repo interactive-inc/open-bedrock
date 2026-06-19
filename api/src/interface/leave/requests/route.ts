@@ -1,4 +1,5 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import {
   BadRequestError,
   ConflictError,
@@ -50,28 +51,28 @@ export const POST = factory.createHandlers(
       throw new InternalError("failed to create leave request")
     }
 
-    if ("failure" in created) {
-      if (created.failure === "overlapping_leave_request") {
-        throw new ConflictError("an overlapping leave request already exists")
+    if (created instanceof LeaveRequest) {
+      const responseBody = {
+        id: created.id,
+        employee_id: created.employeeId,
+        leave_type: created.leaveType,
+        start_date: created.startDate,
+        end_date: created.endDate,
+        days: created.days,
+        reason: created.reason,
+        status: created.status,
+        approver_id: created.approverId,
+        decided_comment: created.decidedComment,
+        created_at: created.createdAt,
       }
 
-      throw new BadRequestError("invalid leave period")
+      return c.json(responseBody, 201)
     }
 
-    const responseBody = {
-      id: created.id,
-      employee_id: created.employeeId,
-      leave_type: created.leaveType,
-      start_date: created.startDate,
-      end_date: created.endDate,
-      days: created.days,
-      reason: created.reason,
-      status: created.status,
-      approver_id: created.approverId,
-      decided_comment: created.decidedComment,
-      created_at: created.createdAt,
+    if (created.reason === "overlapping_leave_request") {
+      throw new ConflictError("an overlapping leave request already exists")
     }
 
-    return c.json(responseBody, 201)
+    throw new BadRequestError("invalid leave period")
   },
 )
