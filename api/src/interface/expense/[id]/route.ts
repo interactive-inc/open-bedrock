@@ -3,7 +3,7 @@ import { UpdateExpense } from "@/application/expense/update-expense"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import type { Expense } from "@/domain/expense/expense.entity"
 import { factory } from "@/lib/factory"
-import { isoDate } from "@/lib/schemas"
+import { expenseCategorySchema, isoDate } from "@/lib/schemas"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
@@ -82,7 +82,7 @@ export const PUT = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
+      category: expenseCategorySchema,
       amount: z.number().positive().int().safe(),
       spent_at: isoDate,
       note: z.string().max(3_000).nullable().optional(),

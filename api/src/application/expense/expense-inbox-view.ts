@@ -1,7 +1,9 @@
+import type { ExpenseCategory } from "@/lib/schemas"
+
 export type ExpenseInboxView = {
   id: number
   applicantName: string
-  category: "transport" | "supplies" | "entertainment" | "books" | "other"
+  category: ExpenseCategory
   amount: number
   spentAt: string
   status: "pending" | "approved" | "rejected" | "settled"

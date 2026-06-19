@@ -1,11 +1,12 @@
 import type { Expense } from "@/domain/expense/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import type { ExpenseCategory } from "@/lib/schemas"
 
 export type Command = {
   expenseId: number
   employeeId: number
-  category: "transport" | "supplies" | "entertainment" | "books" | "other"
+  category: ExpenseCategory
   amount: number
   spentAt: string
   note: string | null

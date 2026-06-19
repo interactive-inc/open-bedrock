@@ -1,10 +1,11 @@
+import { leaveTypeSchema } from "@/lib/schemas"
 import type { LeaveBalanceRow } from "@/schema"
 import { z } from "zod"
 
 const zProps = z.object({
   employeeId: z.number(),
   fiscalYear: z.string(),
-  leaveType: z.enum(["annual", "special"]),
+  leaveType: leaveTypeSchema,
   grantedDays: z.number(),
   usedDays: z.number(),
   remainingDays: z.number(),
