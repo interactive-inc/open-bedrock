@@ -46,10 +46,12 @@ describe("MigrateLegacyHashes", () => {
 
     const row = await db.prepare("SELECT password_hash FROM employees WHERE id = 1").first()
 
-    const updatedHash = (row as Record<string, unknown>)?.password_hash
+    if (row === null) {
+      throw new Error("employee row not found")
+    }
 
-    expect(typeof updatedHash).toBe("string")
-    expect(String(updatedHash).startsWith("pbkdf2-wrapped-legacy:")).toBe(true)
+    expect(typeof row.password_hash).toBe("string")
+    expect(String(row.password_hash).startsWith("pbkdf2-wrapped-legacy:")).toBe(true)
   })
 
   test("skips employees with pbkdf2 format hash", async () => {
