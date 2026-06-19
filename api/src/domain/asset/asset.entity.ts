@@ -1,6 +1,17 @@
 import type { AssetRow } from "@/schema"
 import { z } from "zod"
 
+/** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
+export const assetRowSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  kind: z.string(),
+  serial: z.string().nullable(),
+  purchasedOn: z.string().nullable(),
+  status: z.string(),
+  holderEmployeeId: z.number().nullable(),
+})
+
 const zProps = z.object({
   code: z.string(),
   name: z.string(),

@@ -1,5 +1,6 @@
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { LeaveRequest, leaveRequestRowSchema } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
+import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
 import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 
@@ -222,10 +223,14 @@ export class LeaveRequestRepository {
         batchError = error instanceof Error ? error : new Error("failed to approve leave_request")
       }
 
-      const decidedRow = firstResultRow(decideResult)
+      const decidedRow = parseD1Row(decideResult, leaveRequestRowSchema)
+
+      if (decidedRow instanceof Error) {
+        return decidedRow
+      }
 
       if (decidedRow !== undefined) {
-        return LeaveRequest.fromRow(decidedRow as Parameters<typeof LeaveRequest.fromRow>[0])
+        return LeaveRequest.fromRow(decidedRow)
       }
 
       const current = await this.findById(props.leaveRequestId)
@@ -341,10 +346,6 @@ export class LeaveRequestRepository {
       return error instanceof Error ? error : new Error("failed to delete leave_request")
     }
   }
-}
-
-function firstResultRow(result: D1Result<unknown> | undefined): unknown {
-  return result?.results?.at(0)
 }
 
 function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
