@@ -1,6 +1,7 @@
-import { Expense } from "@/domain/expense/expense.entity"
+import { Expense, expenseRowSchema } from "@/domain/expense/expense.entity"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"
+import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
 import { expenseApprovals, expenses } from "@/schema"
 import { and, eq } from "drizzle-orm"
 
@@ -168,7 +169,11 @@ export class ExpenseRepository {
       ])
 
       const decideResult = results.at(0)
-      const row = decideResult?.results?.at(0) as Parameters<typeof Expense.fromRow>[0] | undefined
+      const row = parseD1Row(decideResult, expenseRowSchema)
+
+      if (row instanceof Error) {
+        return row
+      }
 
       if (row === undefined) {
         return null

@@ -1,6 +1,7 @@
-import { Asset } from "@/domain/asset/asset.entity"
+import { Asset, assetRowSchema } from "@/domain/asset/asset.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { assets } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -122,13 +123,17 @@ export class AssetRepository {
         return error instanceof Error ? error : new Error("failed to lend asset")
       }
 
-      const updatedRow = firstResultRow(updateResult)
+      const updatedRow = parseD1Row(updateResult, assetRowSchema)
+
+      if (updatedRow instanceof Error) {
+        return updatedRow
+      }
 
       if (updatedRow === undefined) {
         return null
       }
 
-      return Asset.fromRow(updatedRow as Parameters<typeof Asset.fromRow>[0])
+      return Asset.fromRow(updatedRow)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to lend asset")
     }
@@ -181,13 +186,17 @@ export class AssetRepository {
         return error instanceof Error ? error : new Error("failed to return asset")
       }
 
-      const updatedRow = firstResultRow(updateResult)
+      const updatedRow = parseD1Row(updateResult, assetRowSchema)
+
+      if (updatedRow instanceof Error) {
+        return updatedRow
+      }
 
       if (updatedRow === undefined) {
         return null
       }
 
-      return Asset.fromRow(updatedRow as Parameters<typeof Asset.fromRow>[0])
+      return Asset.fromRow(updatedRow)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to return asset")
     }
@@ -226,10 +235,6 @@ export class AssetRepository {
       return error instanceof Error ? error : new Error("failed to delete asset")
     }
   }
-}
-
-function firstResultRow(result: D1Result<unknown> | undefined): unknown {
-  return result?.results?.at(0)
 }
 
 function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
