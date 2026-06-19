@@ -2,6 +2,16 @@ import type { ExpenseCategory, LeaveType } from "@/lib/schemas"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type {
+  BatchJobStatus,
+  EmployeeStatus,
+  ExpenseApprovalAction,
+  ExpenseCategory,
+  ExpenseStatus,
+  LeaveStatus,
+  LeaveType,
+  RedemptionStatus,
+} from "@/lib/schemas"
 
 // このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
 // api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
@@ -21,7 +31,7 @@ export const employees = sqliteTable("employees", {
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
   position: text("position"),
-  status: text("status").notNull().$type<"active" | "leave" | "retired">(),
+  status: text("status").notNull().$type<EmployeeStatus>(),
 })
 
 export type EmployeeRow = InferSelectModel<typeof employees>
@@ -244,7 +254,7 @@ export const leaveRequests = sqliteTable("leave_requests", {
   endDate: text("end_date").notNull(),
   days: integer("days").notNull(),
   reason: text("reason"),
-  status: text("status").notNull().$type<"pending" | "approved" | "rejected">(),
+  status: text("status").notNull().$type<LeaveStatus>(),
   approverId: integer("approver_id"),
   decidedComment: text("decided_comment"),
   createdAt: text("created_at").notNull(),
@@ -418,7 +428,7 @@ export type AttendanceRecordRow = InferSelectModel<typeof attendanceRecords>
 export const batchJobs = sqliteTable("batch_jobs", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
-  status: text("status").notNull().$type<"running" | "completed" | "failed">(),
+  status: text("status").notNull().$type<BatchJobStatus>(),
   startedAt: text("started_at"),
   finishedAt: text("finished_at"),
   message: text("message"),
@@ -474,7 +484,7 @@ export const expenses = sqliteTable("expenses", {
   amount: integer("amount").notNull(),
   spentAt: text("spent_at").notNull(),
   note: text("note"),
-  status: text("status").notNull().$type<"pending" | "approved" | "rejected" | "settled">(),
+  status: text("status").notNull().$type<ExpenseStatus>(),
   createdAt: text("created_at").notNull(),
 })
 
@@ -485,7 +495,7 @@ export const expenseApprovals = sqliteTable("expense_approvals", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   expenseId: integer("expense_id").notNull(),
   approverId: integer("approver_id").notNull(),
-  action: text("action").notNull().$type<"approve" | "reject">(),
+  action: text("action").notNull().$type<ExpenseApprovalAction>(),
   comment: text("comment"),
   createdAt: text("created_at").notNull(),
 })
@@ -612,7 +622,7 @@ export const thanksRedemptions = sqliteTable(
     employeeId: integer("employee_id").notNull(),
     rewardId: integer("reward_id").notNull(),
     pointCost: integer("point_cost").notNull(),
-    status: text("status").notNull().$type<"pending" | "rejected" | "fulfilled">(),
+    status: text("status").notNull().$type<RedemptionStatus>(),
     createdAt: text("created_at").notNull(),
     decidedAt: text("decided_at"),
     deciderId: integer("decider_id"),

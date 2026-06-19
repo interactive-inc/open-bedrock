@@ -1,5 +1,5 @@
+import { leaveStatusSchema, leaveTypeSchema } from "@/lib/schemas"
 import type { LeaveType } from "@/lib/schemas"
-import { leaveTypeSchema } from "@/lib/schemas"
 import type { LeaveRequestRow } from "@/schema"
 import { z } from "zod"
 
@@ -11,7 +11,7 @@ const zProps = z.object({
   endDate: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: leaveStatusSchema,
   approverId: z.number().nullable(),
   decidedComment: z.string().nullable(),
   createdAt: z.string(),
