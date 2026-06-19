@@ -1,4 +1,5 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
+import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import {
   ConflictError,
@@ -49,48 +50,48 @@ export const POST = factory.createHandlers(
       throw new InternalError("failed to approve leave request")
     }
 
-    if ("failure" in updated) {
-      if (updated.failure === "forbidden") {
-        throw new ForbiddenError()
+    if (updated instanceof LeaveRequest) {
+      const responseBody = {
+        id: updated.id,
+        employee_id: updated.employeeId,
+        leave_type: updated.leaveType,
+        start_date: updated.startDate,
+        end_date: updated.endDate,
+        days: updated.days,
+        reason: updated.reason,
+        status: updated.status,
+        approver_id: updated.approverId,
+        decided_comment: updated.decidedComment,
+        created_at: updated.createdAt,
       }
 
-      if (updated.failure === "self_approval") {
-        throw new ForbiddenError()
-      }
-
-      if (updated.failure === "already_decided") {
-        throw new ConflictError("leave request already decided")
-      }
-
-      if (updated.failure === "balance_not_found") {
-        throw new ConflictError("leave balance record not found")
-      }
-
-      if (updated.failure === "insufficient_balance") {
-        throw new ConflictError("insufficient leave balance")
-      }
-
-      if (updated.failure === "invalid_start_date") {
-        throw new InternalError("invalid leave request start date")
-      }
-
-      throw new NotFoundError("leave request not found")
+      return c.json(responseBody, 200)
     }
 
-    const responseBody = {
-      id: updated.id,
-      employee_id: updated.employeeId,
-      leave_type: updated.leaveType,
-      start_date: updated.startDate,
-      end_date: updated.endDate,
-      days: updated.days,
-      reason: updated.reason,
-      status: updated.status,
-      approver_id: updated.approverId,
-      decided_comment: updated.decidedComment,
-      created_at: updated.createdAt,
+    if (updated.reason === "forbidden") {
+      throw new ForbiddenError()
     }
 
-    return c.json(responseBody, 200)
+    if (updated.reason === "self_approval") {
+      throw new ForbiddenError()
+    }
+
+    if (updated.reason === "already_decided") {
+      throw new ConflictError("leave request already decided")
+    }
+
+    if (updated.reason === "balance_not_found") {
+      throw new ConflictError("leave balance record not found")
+    }
+
+    if (updated.reason === "insufficient_balance") {
+      throw new ConflictError("insufficient leave balance")
+    }
+
+    if (updated.reason === "invalid_start_date") {
+      throw new InternalError("invalid leave request start date")
+    }
+
+    throw new NotFoundError("leave request not found")
   },
 )

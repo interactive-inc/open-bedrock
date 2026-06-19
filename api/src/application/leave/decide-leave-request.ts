@@ -12,19 +12,19 @@ export type Command = {
   comment: string | null
 }
 
-export type LeaveRequestNotFound = { failure: "leave_request_not_found" }
+export type LeaveRequestNotFound = { reason: "leave_request_not_found" }
 
-export type AlreadyDecided = { failure: "already_decided" }
+export type AlreadyDecided = { reason: "already_decided" }
 
-export type BalanceNotFound = { failure: "balance_not_found" }
+export type BalanceNotFound = { reason: "balance_not_found" }
 
-export type InsufficientBalance = { failure: "insufficient_balance" }
+export type InsufficientBalance = { reason: "insufficient_balance" }
 
-export type SelfApproval = { failure: "self_approval" }
+export type SelfApproval = { reason: "self_approval" }
 
-export type Forbidden = { failure: "forbidden" }
+export type Forbidden = { reason: "forbidden" }
 
-export type InvalidStartDate = { failure: "invalid_start_date" }
+export type InvalidStartDate = { reason: "invalid_start_date" }
 
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
@@ -47,7 +47,7 @@ export class DecideLeaveRequest {
     | Error
   > {
     if (!canDecideLeave(command.viewerRole)) {
-      return { failure: "forbidden" }
+      return { reason: "forbidden" }
     }
 
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
@@ -59,17 +59,17 @@ export class DecideLeaveRequest {
     }
 
     if (existing === null) {
-      return { failure: "leave_request_not_found" }
+      return { reason: "leave_request_not_found" }
     }
 
     if (existing.employeeId === command.approverId) {
-      return { failure: "self_approval" }
+      return { reason: "self_approval" }
     }
 
     const fiscalYear = toFiscalYear(existing.startDate)
 
     if (fiscalYear === null) {
-      return { failure: "invalid_start_date" }
+      return { reason: "invalid_start_date" }
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -87,15 +87,15 @@ export class DecideLeaveRequest {
       }
 
       if (approved === "already_decided") {
-        return { failure: "already_decided" }
+        return { reason: "already_decided" }
       }
 
       if (approved === "balance_not_found") {
-        return { failure: "balance_not_found" }
+        return { reason: "balance_not_found" }
       }
 
       if (approved === "insufficient_balance") {
-        return { failure: "insufficient_balance" }
+        return { reason: "insufficient_balance" }
       }
 
       return approved
@@ -113,7 +113,7 @@ export class DecideLeaveRequest {
     }
 
     if (decided === null) {
-      return { failure: "already_decided" }
+      return { reason: "already_decided" }
     }
 
     return decided
