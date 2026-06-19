@@ -1,0 +1,473 @@
+import { describe, expect, test } from "bun:test"
+import { Goal } from "@/domain/goal/goal.entity"
+import { GoalEvaluation } from "@/domain/goal/goal-evaluation.entity"
+import { CreateGoal } from "@/application/goal/create-goal"
+import { GetGoal } from "@/application/goal/get-goal"
+import { UpdateGoal } from "@/application/goal/update-goal"
+import { DeleteGoal } from "@/application/goal/delete-goal"
+import { ListMyGoals } from "@/application/goal/list-my-goals"
+import { CreateGoalEvaluation } from "@/application/goal/create-goal-evaluation"
+import { createTestContext } from "@/interface/shared/test/create-test-context"
+import type { Context } from "@/env"
+
+async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
+  const result = await new CreateGoal(context).run({
+    employeeId: employeeId,
+    period: "2026-H1",
+    title: "Improve test coverage",
+    kpi: null,
+    weight: 50,
+  })
+
+  if (result instanceof Error) {
+    throw new Error("seed goal failed")
+  }
+
+  return result
+}
+
+async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
+  if (goal.id === null) {
+    throw new Error("goal id is null")
+  }
+
+  const result = await new CreateGoalEvaluation(context).run({
+    goalId: goal.id,
+    kind: "final",
+    score: 5,
+    comment: "Good work",
+    evaluatorId: 999,
+    viewerRole: "admin",
+    createdAt: "2026-01-01T00:00:00.000Z",
+  })
+
+  if (result instanceof Error || "reason" in result) {
+    throw new Error("finalize goal failed")
+  }
+}
+
+describe("CreateGoal", () => {
+  test("creates a goal", async () => {
+    const { context } = createTestContext()
+
+    const result = await new CreateGoal(context).run({
+      employeeId: 1,
+      period: "2026-H1",
+      title: "Learn TypeScript",
+      kpi: null,
+      weight: 30,
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+
+    if (result instanceof Error) {
+      throw new Error("create failed")
+    }
+
+    expect(result.title).toBe("Learn TypeScript")
+    expect(result.status).toBe("draft")
+  })
+
+  test("creates a goal with KPI", async () => {
+    const { context } = createTestContext()
+
+    const result = await new CreateGoal(context).run({
+      employeeId: 1,
+      period: "2026-H1",
+      title: "Reduce bug count",
+      kpi: "50% fewer critical bugs",
+      weight: 40,
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+
+    if (result instanceof Error) {
+      throw new Error("create failed")
+    }
+
+    expect(result.kpi).toBe("50% fewer critical bugs")
+  })
+})
+
+describe("GetGoal", () => {
+  test("returns the goal for the owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new GetGoal(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 1,
+      viewerRole: "member",
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+  })
+
+  test("returns the goal for a manager viewing another's goal", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new GetGoal(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 2,
+      viewerRole: "manager",
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+  })
+
+  test("rejects non-owner member with not_viewable", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new GetGoal(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 2,
+      viewerRole: "member",
+    })
+
+    expect(result).toEqual({ reason: "not_viewable" })
+  })
+
+  test("rejects unknown id with goal_not_found", async () => {
+    const { context } = createTestContext()
+
+    const result = await new GetGoal(context).run({
+      goalId: 9999,
+      viewerEmployeeId: 1,
+      viewerRole: "admin",
+    })
+
+    expect(result).toEqual({ reason: "goal_not_found" })
+  })
+})
+
+describe("UpdateGoal", () => {
+  test("updates for the owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new UpdateGoal(context).run({
+      goalId: goal.id,
+      employeeId: 1,
+      period: "2026-H2",
+      title: "Updated title",
+      kpi: "New KPI",
+      weight: 60,
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("update failed")
+    }
+
+    expect(result.title).toBe("Updated title")
+    expect(result.weight).toBe(60)
+  })
+
+  test("rejects non-owner with not_owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new UpdateGoal(context).run({
+      goalId: goal.id,
+      employeeId: 2,
+      period: "2026-H1",
+      title: "Hijacked",
+      kpi: null,
+      weight: 50,
+    })
+
+    expect(result).toEqual({ reason: "not_owner" })
+  })
+
+  test("rejects unknown id with goal_not_found", async () => {
+    const { context } = createTestContext()
+
+    const result = await new UpdateGoal(context).run({
+      goalId: 9999,
+      employeeId: 1,
+      period: "2026-H1",
+      title: "Missing",
+      kpi: null,
+      weight: 50,
+    })
+
+    expect(result).toEqual({ reason: "goal_not_found" })
+  })
+
+  test("rejects finalized goal with goal_finalized", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    await finalizeGoal(context, goal)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new UpdateGoal(context).run({
+      goalId: goal.id,
+      employeeId: 1,
+      period: "2026-H1",
+      title: "Too late",
+      kpi: null,
+      weight: 50,
+    })
+
+    expect(result).toEqual({ reason: "goal_finalized" })
+  })
+})
+
+describe("DeleteGoal", () => {
+  test("deletes for the owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new DeleteGoal(context).run({
+      goalId: goal.id,
+      employeeId: 1,
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+  })
+
+  test("rejects non-owner with not_owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new DeleteGoal(context).run({
+      goalId: goal.id,
+      employeeId: 2,
+    })
+
+    expect(result).toEqual({ reason: "not_owner" })
+  })
+
+  test("rejects unknown id with goal_not_found", async () => {
+    const { context } = createTestContext()
+
+    const result = await new DeleteGoal(context).run({
+      goalId: 9999,
+      employeeId: 1,
+    })
+
+    expect(result).toEqual({ reason: "goal_not_found" })
+  })
+
+  test("rejects finalized goal with goal_finalized", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    await finalizeGoal(context, goal)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new DeleteGoal(context).run({
+      goalId: goal.id,
+      employeeId: 1,
+    })
+
+    expect(result).toEqual({ reason: "goal_finalized" })
+  })
+})
+
+describe("ListMyGoals", () => {
+  test("returns goals for the employee", async () => {
+    const { context } = createTestContext()
+
+    await seedGoal(context, 1)
+    await seedGoal(context, 1)
+
+    const result = await new ListMyGoals(context).run({ employeeId: 1 })
+
+    if (result instanceof Error) {
+      throw new Error("list failed")
+    }
+
+    expect(result.length).toBe(2)
+  })
+
+  test("returns empty list when no goals exist", async () => {
+    const { context } = createTestContext()
+
+    const result = await new ListMyGoals(context).run({ employeeId: 1 })
+
+    if (result instanceof Error) {
+      throw new Error("list failed")
+    }
+
+    expect(result.length).toBe(0)
+  })
+})
+
+describe("CreateGoalEvaluation", () => {
+  test("creates a self evaluation for the owner", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "self",
+      score: 4,
+      comment: "I did well",
+      evaluatorId: 1,
+      viewerRole: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toBeInstanceOf(GoalEvaluation)
+
+    if (result instanceof Error || "reason" in result) {
+      throw new Error("create evaluation failed")
+    }
+
+    expect(result.kind).toBe("self")
+    expect(result.score).toBe(4)
+  })
+
+  test("rejects self evaluation by non-owner with forbidden", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "self",
+      score: 3,
+      comment: null,
+      evaluatorId: 2,
+      viewerRole: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toEqual({ reason: "forbidden" })
+  })
+
+  test("creates a manager evaluation for a privileged role", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "manager",
+      score: 5,
+      comment: "Excellent",
+      evaluatorId: 2,
+      viewerRole: "manager",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toBeInstanceOf(GoalEvaluation)
+  })
+
+  test("rejects manager evaluation by member with forbidden", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "manager",
+      score: 3,
+      comment: null,
+      evaluatorId: 2,
+      viewerRole: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toEqual({ reason: "forbidden" })
+  })
+
+  test("rejects duplicate self evaluation with already_evaluated", async () => {
+    const { context } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "self",
+      score: 4,
+      comment: null,
+      evaluatorId: 1,
+      viewerRole: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "self",
+      score: 3,
+      comment: null,
+      evaluatorId: 1,
+      viewerRole: "member",
+      createdAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(result).toEqual({ reason: "already_evaluated" })
+  })
+
+  test("rejects evaluation on non-existent goal with goal_not_found", async () => {
+    const { context } = createTestContext()
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: 9999,
+      kind: "self",
+      score: 3,
+      comment: null,
+      evaluatorId: 1,
+      viewerRole: "member",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toEqual({ reason: "goal_not_found" })
+  })
+})
