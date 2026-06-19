@@ -74,11 +74,11 @@ export class SubmitReviewForm {
     }
 
     if (submitted === null) {
-      return { reason: "already_submitted" as const }
+      return { reason: "already_submitted" }
     }
 
     if ("reason" in submitted) {
-      return { reason: "cycle_not_open" as const }
+      return { reason: "cycle_not_open" }
     }
 
     return submitted

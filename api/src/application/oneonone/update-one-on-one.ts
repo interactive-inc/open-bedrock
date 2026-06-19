@@ -50,7 +50,7 @@ export class UpdateOneOnOne {
     }
 
     if (result === null) {
-      return { reason: "one_on_one_not_found" as const }
+      return { reason: "one_on_one_not_found" }
     }
 
     return result

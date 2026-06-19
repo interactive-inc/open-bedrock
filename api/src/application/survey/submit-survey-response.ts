@@ -1,10 +1,7 @@
 import type { SurveySubmissionView } from "@/application/survey/survey-submission-view"
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
-import {
-  type AlreadySubmittedError,
-  SurveyRepository,
-} from "@/infrastructure/survey/survey-repository"
+import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
   surveyId: number
