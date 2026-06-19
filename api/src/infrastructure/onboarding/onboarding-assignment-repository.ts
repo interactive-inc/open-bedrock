@@ -43,10 +43,14 @@ export class OnboardingAssignmentRepository {
           }),
         )
 
+        const first = taskStmts.at(0)
+
+        if (first === undefined) {
+          return new Error("unexpected empty task statements")
+        }
+
         try {
-          await this.c.var.database.batch(
-            taskStmts as [(typeof taskStmts)[number], ...(typeof taskStmts)[number][]],
-          )
+          await this.c.var.database.batch([first, ...taskStmts.slice(1)])
         } catch (err) {
           // 補償削除: tasks INSERT 失敗時に assignment を削除
           await this.c.var.database
