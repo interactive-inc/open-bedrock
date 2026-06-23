@@ -86,6 +86,7 @@ RyukyuInteractive/inta#open-karte:
   - .claude/skills/software-design/references/error-handling.md
   - .claude/skills/software-design/references/fluent-api.md
   - .claude/skills/software-design/references/fsm.md
+  - .claude/skills/software-design/references/page-routing.md
   - .claude/skills/software-design/references/phantom-type.md
   - .claude/skills/software-design/references/react.md
   - .claude/skills/software-design/references/reducer.md
