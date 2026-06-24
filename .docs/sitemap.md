@@ -1,125 +1,150 @@
 # サイトマップ
 
-web(Next.js)の画面一覧。動的セグメントは [param] で表す。機能の概要は [[features|機能一覧]]、導線は [[user-flows|ユーザーフロー]] を参照する。実装が正であり、ルートは web/app 配下を正とする。
+web のユーザー向け画面一覧。実装ルートは `web/app` 配下を正とし、動的セグメントは `[param]` で表す。機能の概要は [[features|機能一覧]]、主要導線は [[user-flows|ユーザーフロー]] を参照する。
 
 ## 認証
 
-- /login — ログイン
+- `/login` はメールアドレスとパスワードでサインインする画面。
 
-## ダッシュボード
+## ホーム
 
-- /dashboard — 集計の表示
+- `/` は主要な人数、申請、サーベイの状況を一覧する画面。
 
 ## 社員と組織
 
-- /employees — 社員の検索
-- /employees/new — 社員の登録
-- /employees/[code] — 社員の詳細と編集
-- /org — 組織ツリー
-- /org/departments/[code]/members — 部署メンバー
-- /org/reporting-line/[code] — レポートライン
+- `/employees` は従業員台帳を検索し、従業員一覧を確認する画面。
+- `/employees/new` は新しい従業員を従業員台帳に登録する画面。
+- `/employees/[code]` は従業員の基本情報、所属、状態を確認し編集する画面。
+- `/org` は部署ツリーを閲覧し、部署ノードを管理する画面。
+- `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
+- `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 
 ## 申請ワークフロー
 
-- /applications — 自分の申請一覧
-- /applications/inbox — 承認待ち一覧
-- /applications/[id] — 申請の詳細
-- /applications/templates — テンプレート一覧
-- /applications/templates/[code] — テンプレートの詳細
+- `/applications` は自分が提出した申請の状況を確認する画面。
+- `/applications/inbox` は自分宛ての承認待ち申請を確認し、承認または却下する画面。
+- `/applications/[id]` は申請内容と承認状況を確認する詳細画面。
+- `/applications/templates` は利用可能な申請テンプレートを確認し、新規申請を作成する画面。
+- `/applications/templates/new` は新しい申請テンプレートの名称、カテゴリ、入力項目を登録する画面。
+- `/applications/templates/[code]` は申請テンプレートの詳細を確認し、テンプレートから申請を始める画面。
 
 ## 勤怠と休暇
 
-- /attendance — 自分の勤怠
-- /attendance/all — 全社員の勤怠
-- /leave — 休暇の申請と残数
-- /leave/inbox — 休暇の承認待ち
+- `/attendance` は出勤、退勤の打刻と、自分の勤怠記録を確認する画面。
+- `/attendance/all` は管理者が従業員や期間で絞り込み、全体の勤怠記録を確認する画面。
+- `/leave` は休暇残日数と自分の休暇申請状況を確認する画面。
+- `/leave/new` は休暇種別、期間、理由を入力して休暇を申請する画面。
+- `/leave/inbox` は承認待ちの休暇申請を確認し、承認または却下する画面。
 
 ## 経費
 
-- /expense — 自分の経費
-- /expense/inbox — 経費の承認待ち
-- /expense/[id] — 経費の詳細
+- `/expense` は自分が申請した経費の一覧と状態を確認する画面。
+- `/expense/new` はカテゴリ、金額、利用日、メモを入力して経費を申請する画面。
+- `/expense/[id]` は経費申請の詳細を確認する画面。
+- `/expense/inbox` は承認待ちの経費申請を確認し、承認または却下する画面。
 
 ## ナレッジ
 
-- /knowledge — ナレッジの検索
-- /knowledge/[id] — ナレッジの詳細
+- `/knowledge` は社内ナレッジをキーワードやカテゴリで検索する画面。
+- `/knowledge/new` はナレッジ記事のタイトル、カテゴリ、本文を登録する画面。
+- `/knowledge/[id]` はナレッジ記事の本文とカテゴリを確認する画面。
 
 ## 会議室と備品
 
-- /rooms — 会議室の予約
-- /rooms/manage — 会議室の管理
-- /assets — 備品一覧
-- /assets/new — 備品の登録
-- /assets/[code] — 備品の詳細
-- /assets/lent/me — 自分の貸出
+- `/rooms` は会議室の空き状況を検索し、会議室を予約する画面。
+- `/rooms/me` は自分が予約した会議室の一覧を確認し、予約を取り消す画面。
+- `/rooms/manage` は登録済みの会議室を編集、削除する管理画面。
+- `/rooms/manage/new` は新しい会議室の名称、定員、所在地を登録する画面。
+- `/assets` は種別や状態で絞り込み、備品一覧を確認する画面。
+- `/assets/new` は新しい備品を備品マスタに登録する画面。
+- `/assets/[code]` は備品の属性と貸与、返却状況を確認する画面。
+- `/assets/lent/me` は自分が借りている備品を確認する画面。
 
 ## スキルと目標
 
-- /skills — スキル一覧
-- /skills/me — 自分のスキル
-- /goals — 目標一覧
-- /goals/[id] — 目標の詳細
+- `/skills` はスキルをキーワードやカテゴリで検索する画面。
+- `/skills/me` は自分の登録済みスキルを確認し、新しいスキルを登録する画面。
+- `/goals` は期間と従業員で絞り込み、目標を確認する画面。
+- `/goals/new` は期間と内容を入力して目標を登録する画面。
+- `/goals/[id]` は目標の内容、評価、状態を確認する詳細画面。
 
-## 1on1とアンケート
+## 1on1 とサーベイ
 
-- /oneonone — 1on1の記録
-- /surveys — アンケート一覧
-- /surveys/manage — アンケートの管理
-- /surveys/responses — 回答の確認
-- /surveys/[surveyId] — アンケートの回答
-- /surveys/[surveyId]/summary — 集計
+- `/oneonone` は自分が参加した 1on1 の履歴を確認する画面。
+- `/oneonone/new` は日時、相手、メモを入力して 1on1 を記録する画面。
+- `/surveys` は配信中のアンケートを確認し回答する画面。
+- `/surveys/responses` は自分が回答したアンケートを確認する画面。
+- `/surveys/[surveyId]` は指定したアンケートに回答する画面。
+- `/surveys/[surveyId]/summary` はアンケートの回答件数と設問別集計を確認する画面。
+- `/surveys/manage` は実施中のアンケートを確認、編集、削除する管理画面。
+- `/surveys/manage/new` は新しいアンケートのタイトルと設問を登録する画面。
+- `/surveys/[surveyId]/edit` はアンケートのタイトル、状態、設問を変更する画面。
 
 ## キャリア
 
-- /career — キャリアシートと社内公募
+- `/career` はキャリアシートの編集と自分の応募状況を確認する画面。
+- `/career/postings` は募集中の社内公募を閲覧し、応募先を探す画面。
+- `/career/postings/new` は管理者が新しい社内公募を登録する画面。
+- `/career/postings/[id]` は公募内容を確認し応募する詳細画面。
+- `/career/postings/[id]/edit` は管理者が公募内容と状態を変更する画面。
 
 ## オンボーディング
 
-- /onboarding — テンプレートの管理と割り当て
-- /onboarding/me — 自分のタスク
-- /onboarding/employee/[code] — 社員ごとの進行
-
-## 給与
-
-- /payroll — 自分の給与明細
-- /payroll/[id] — 給与明細の詳細
-- /payroll/admin — 給与の発行管理
-- /payroll/salary-revisions — 給与改定
+- `/onboarding` はオンボーディングのテンプレート管理と社員への割り当てを行う画面。
+- `/onboarding/me` は自分に割り当てられた未完了タスクを確認する画面。
+- `/onboarding/employee/[code]` は社員ごとのオンボーディング進行状況を確認する画面。
+- `/onboarding/templates` は入社、退社のオンボーディングテンプレートを管理する画面。
+- `/onboarding/templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
+- `/onboarding/assignments/new` は社員コードとテンプレートを指定して割り当てを作成する画面。
 
 ## 評価
 
-- /review — 評価サイクルとフォーム
-- /review/results — 評価結果
+- `/review` は評価サイクルと自分の評価フォームを確認する画面。
+- `/review/manage` は評価サイクルの作成と評価結果の横断検索を行う管理画面。
+- `/review/results` は評価結果を検索し確認する管理画面。
 
 ## シフト
 
-- /shift — シフトの作成と交代申請
+- `/shift` は自分のシフトと交代申請を管理する画面。
+- `/shift/manage` は全員のシフト割当を確認し、新しい割当を作成する管理画面。
+- `/shift/patterns` はシフトの定型パターンを一覧する画面。
 
 ## 研修
 
-- /training — 研修コース一覧
-- /training/[code] — 研修コースの詳細
+- `/training` は研修コースの一覧から受講を申し込む画面。
+- `/training/new` は研修コースの基本情報を登録する管理画面。
+- `/training/me` は自分の受講中、受講済みコースを確認する画面。
+- `/training/[code]` は研修コースの詳細を確認し、受講登録や完了操作を行う画面。
+- `/training/[code]/edit` は研修コースの内容を変更する管理画面。
 
 ## 通知
 
-- /notifications — 通知と未読数
+- `/notifications` は自分宛ての通知を確認し、既読にする画面。
 
 ## 感謝
 
-- /thanks — 感謝の送付と報酬交換
+- `/thanks` はサンクスポイントの残量と、社内の感謝を見渡す画面。
+- `/thanks/send` は送り先と感謝メッセージを入力し、任意でポイントを添えて送る画面。
+- `/thanks/rewards` は受領残高で交換できる景品を確認し、交換を申請する画面。
+- `/thanks/rewards/manage` は管理者が新しい景品を登録する画面。
 
-## 労務・ライフイベント手続き
+## 労務とライフイベント手続き
 
-- /business-trips — 出張
-- /rentals — 貸与品のレンタル
-- /resignations — 退職
-- /life-events — ライフイベント
-- /family-care-leaves — 産休、育休、介護休業
-- /certificate-requests — 証明書発行依頼
-- /year-end-adjustments — 年末調整
-- /antisocial-checks — 反社チェック
+- `/business-trips` は出張申請と申請状況を確認する画面。
+- `/business-trips/new` は出張先、期間、目的を記入して出張を申請する画面。
+- `/rentals` は自分の貸出予約を確認する画面。
+- `/rentals/new` は備品と利用期間を指定してレンタルを予約する画面。
+- `/resignations` は退職申請と申請状況を確認する画面。
+- `/resignations/new` は退職予定日と理由を記入して退職を申請する画面。
+- `/life-events` は結婚、出産などのライフイベント届出を確認する画面。
+- `/life-events/new` はイベント種別と発生日を記入してライフイベントを届け出る画面。
+- `/family-care-leaves` は産休、育休、介護休業の申出状況を確認する画面。
+- `/family-care-leaves/new` は休業の種別と期間を記入して申し出る画面。
+- `/certificate-requests` は在職証明など各種証明書の発行依頼と進捗を確認する画面。
+- `/certificate-requests/new` は証明書の種類と用途を記入して発行を依頼する画面。
+- `/antisocial-checks` は反社チェック申請と申請状況を確認する画面。
+- `/antisocial-checks/new` は対象者と確認内容を記入して反社チェックを申請する画面。
 
 ## システム
 
-- /batch — バッチの状況
+- `/batch` はバックグラウンドで実行されるバッチジョブの最新状況を確認する画面。
