@@ -1,5 +1,7 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
@@ -14,43 +16,37 @@ export type Command = {
   }
 }
 
-export type UpdateForbidden = { reason: "forbidden" }
-
-export type UpdateAssetNotFound = { reason: "asset_not_found" }
-
-export type UpdateAssetFailure = UpdateForbidden | UpdateAssetNotFound
-
 /**
  * 権限と存在を確認し、資産の名称・種別・シリアル・購入日を更新する。
  */
 export class UpdateAsset {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Asset | UpdateAssetFailure | Error> {
+  async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
     if (canManageAssets(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
     const asset = await assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
-      return asset
+      return new UnexpectedError("failed to find asset", { cause: asset })
     }
 
     if (asset === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     const updated = await assetRepository.updateDetails(asset.withDetails(command.details))
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update asset", { cause: updated })
     }
 
     if (updated === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     return updated

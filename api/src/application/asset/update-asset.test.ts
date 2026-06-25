@@ -3,6 +3,8 @@ import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
@@ -75,7 +77,7 @@ describe("UpdateAsset", () => {
       details: { name: "Renamed", kind: "pc", serial: null, purchasedOn: null },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
@@ -87,7 +89,7 @@ describe("UpdateAsset", () => {
       details: { name: "Ghost", kind: "pc", serial: null, purchasedOn: null },
     })
 
-    expect(result).toEqual({ reason: "asset_not_found" })
+    expectApplicationError(result, NotFoundError, "asset_not_found")
   })
 })
 
@@ -115,7 +117,7 @@ describe("DeleteAsset", () => {
 
     const result = await new DeleteAsset(context).run({ viewerRole: "admin", code: "A1004" })
 
-    expect(result).toEqual({ reason: "asset_in_use" })
+    expectApplicationError(result, ConflictError, "asset_in_use")
   })
 
   test("rejects a non privileged role with forbidden", async () => {
@@ -125,7 +127,7 @@ describe("DeleteAsset", () => {
 
     const result = await new DeleteAsset(context).run({ viewerRole: "member", code: "A1005" })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
@@ -133,6 +135,6 @@ describe("DeleteAsset", () => {
 
     const result = await new DeleteAsset(context).run({ viewerRole: "admin", code: "A9999" })
 
-    expect(result).toEqual({ reason: "asset_not_found" })
+    expectApplicationError(result, NotFoundError, "asset_not_found")
   })
 })
