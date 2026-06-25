@@ -37,7 +37,7 @@ const app = factory
 
 const resignationResponseSchema = z.object({
   id: z.string(),
-  employee_id: z.string(),
+  employee_id: z.number(),
   resignation_date: z.string(),
   last_working_date: z.string().nullable(),
   reason: z.string().nullable(),
@@ -157,7 +157,7 @@ describe("POST /resignations", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.employee_id).toBe("5")
+      expect(parsed.data.employee_id).toBe(5)
       expect(parsed.data.last_working_date).toBe("2026-12-20")
     }
   })
@@ -253,7 +253,7 @@ describe("GET /resignations/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe("4")
+      expect(parsed.data.data[0].employee_id).toBe(4)
     }
   })
 

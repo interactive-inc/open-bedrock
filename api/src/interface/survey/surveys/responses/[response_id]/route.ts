@@ -18,7 +18,7 @@ function toResponseBody(response: SurveyResponse): AppSurveyResponse {
   return zAppSurveyResponse.parse({
     id: response.id,
     survey_id: response.surveyId,
-    respondent_id: String(response.respondentId),
+    respondent_id: response.respondentId,
     answers_json: response.answersJson,
     submitted_at: response.submittedAt,
   })

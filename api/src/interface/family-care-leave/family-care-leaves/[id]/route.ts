@@ -17,7 +17,7 @@ import { z } from "zod"
 function toResponseBody(familyCareLeave: FamilyCareLeave) {
   return zAppFamilyCareLeave.parse({
     id: familyCareLeave.id,
-    employee_id: String(familyCareLeave.employeeId),
+    employee_id: familyCareLeave.employeeId,
     leave_kind: familyCareLeave.leaveKind,
     start_date: familyCareLeave.startDate,
     end_date: familyCareLeave.endDate,

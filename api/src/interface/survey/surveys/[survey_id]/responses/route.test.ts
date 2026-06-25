@@ -12,7 +12,7 @@ import { z } from "zod"
 const surveySubmissionResponseSchema = z.object({
   id: z.number(),
   survey_id: z.number(),
-  respondent_id: z.string(),
+  respondent_id: z.number(),
   answers_json: z.unknown(),
   submitted_at: z.string(),
 })
@@ -114,7 +114,7 @@ describe("POST /surveys/:survey_id/responses", () => {
 
     if (parsed.success) {
       expect(parsed.data.survey_id).toBe(2)
-      expect(parsed.data.respondent_id).toBe("13")
+      expect(parsed.data.respondent_id).toBe(13)
       expect(parsed.data.submitted_at).toBe("2026-01-01T00:00:00.000Z")
     }
   })

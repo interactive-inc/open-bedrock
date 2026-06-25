@@ -58,7 +58,7 @@ export const POST = factory.createHandlers(
 
     const responseBody = zAppResignation.parse({
       id: result.id,
-      employee_id: String(result.employeeId),
+      employee_id: result.employeeId,
       resignation_date: result.resignationDate,
       last_working_date: result.lastWorkingDate,
       reason: result.reason,

@@ -18,7 +18,7 @@ import { z } from "zod"
 const surveyResponseSchema = z.object({
   id: z.number(),
   survey_id: z.number(),
-  respondent_id: z.string(),
+  respondent_id: z.number(),
   answers_json: z.unknown(),
   submitted_at: z.string(),
 })
@@ -153,7 +153,7 @@ describe("GET /surveys/responses/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].respondent_id).toBe("5")
+      expect(parsed.data.data[0].respondent_id).toBe(5)
     }
   })
 

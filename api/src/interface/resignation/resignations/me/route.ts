@@ -54,7 +54,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const responseBody = zAppResignationList.parse({
     data: resignationRows.map((resignation) => ({
       id: resignation.id,
-      employee_id: String(resignation.employeeId),
+      employee_id: resignation.employeeId,
       resignation_date: resignation.resignationDate,
       last_working_date: resignation.lastWorkingDate,
       reason: resignation.reason,
