@@ -41,7 +41,7 @@ export const POST = factory.createHandlers(
     const responseBody = zAppCareerApplication.parse({
       id: view.id,
       posting_id: view.postingId,
-      applicant_id: String(view.applicantId),
+      applicant_id: view.applicantId,
       message: view.message,
       status: view.status,
     })

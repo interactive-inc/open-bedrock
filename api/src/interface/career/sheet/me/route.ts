@@ -26,7 +26,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (row === undefined) {
     const emptyBody = zAppCareerSheet.parse({
-      employee_id: String(session.employeeId),
+      employee_id: session.employeeId,
       goals_text: null,
       strengths_text: null,
       updated_at: null,
@@ -36,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const responseBody = zAppCareerSheet.parse({
-    employee_id: String(row.employeeId),
+    employee_id: row.employeeId,
     goals_text: row.goalsText,
     strengths_text: row.strengthsText,
     updated_at: row.updatedAt,

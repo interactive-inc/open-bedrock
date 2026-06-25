@@ -55,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     data: applications.map((application) => ({
       id: application.id,
       posting_id: application.postingId,
-      applicant_id: String(application.applicantId),
+      applicant_id: application.applicantId,
       message: application.message,
       status: application.status,
     })),
