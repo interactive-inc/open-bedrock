@@ -1,5 +1,6 @@
 import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
@@ -168,7 +169,9 @@ export class DeleteEmployee {
 
       return null
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to delete related employee records")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete related employee records", { cause: error })
+        : new UnexpectedError("failed to delete related employee records")
     }
   }
 }

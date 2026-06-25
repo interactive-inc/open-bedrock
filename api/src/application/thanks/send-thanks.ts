@@ -1,5 +1,6 @@
 import { Notification } from "@/domain/notification/notification.entity"
 import { Thanks } from "@/domain/thanks/thanks.entity"
+import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { periodOf } from "@/lib/thanks-points/period-of"
 import { toNonNegativePoints } from "@/lib/thanks-points/to-non-negative-points"
 import type { Context } from "@/env"
@@ -186,7 +187,7 @@ export class SendThanks {
     senderEmployeeId: number
     points: number
     period: string
-  }): Promise<Thanks | null | Error> {
+  }): Promise<Thanks | null | ApplicationError> {
     try {
       const db = this.c.env.DB
 
@@ -240,11 +241,13 @@ export class SendThanks {
 
       return this.parseThanksRow(insertResult)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to send thanks")
+      return error instanceof Error
+        ? new UnexpectedError("failed to send thanks", { cause: error })
+        : new UnexpectedError("failed to send thanks")
     }
   }
 
-  private parseThanksRow(result: D1Result): Thanks | Error {
+  private parseThanksRow(result: D1Result): Thanks | ApplicationError {
     const row = result.results[0] as
       | {
           id: number
@@ -257,7 +260,7 @@ export class SendThanks {
       | undefined
 
     if (row === undefined) {
-      return new Error("failed to insert thanks")
+      return new UnexpectedError("failed to insert thanks")
     }
 
     return Thanks.fromRow({

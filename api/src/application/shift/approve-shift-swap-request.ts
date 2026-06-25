@@ -1,4 +1,5 @@
 import { Notification } from "@/domain/notification/notification.entity"
+import { UnexpectedError } from "@/lib/errors"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
@@ -123,7 +124,9 @@ export class ApproveShiftSwapRequest {
       if (isAbortedByGuard(error)) {
         return { reason: "not_pending" }
       }
-      return error instanceof Error ? error : new Error("failed to swap shift assignments")
+      return error instanceof Error
+        ? new UnexpectedError("failed to swap shift assignments", { cause: error })
+        : new UnexpectedError("failed to swap shift assignments")
     }
 
     // 通知はベストエフォート。交換は完了済みなので、通知が失敗してもログのみ残して結果を返す。

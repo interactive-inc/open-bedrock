@@ -1,6 +1,7 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
 export type Command = {
@@ -73,6 +74,6 @@ export class ReturnAsset {
       return { reason: "asset_not_lent" }
     }
 
-    return new Error("failed to return asset")
+    return new UnexpectedError("failed to return asset")
   }
 }

@@ -1,4 +1,5 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
+import { UnexpectedError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
@@ -74,7 +75,9 @@ export class DeleteSurvey {
         return { reason: "not_found" }
       }
 
-      return error instanceof Error ? error : new Error("failed to delete survey")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete survey", { cause: error })
+        : new UnexpectedError("failed to delete survey")
     }
 
     return { reason: "deleted" }

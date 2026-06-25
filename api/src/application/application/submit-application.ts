@@ -1,5 +1,6 @@
 import { Application } from "@/domain/application/application.entity"
 import type { TemplateNotFound } from "@/lib/application/template-not-found"
+import { UnexpectedError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
@@ -47,7 +48,7 @@ export class SubmitApplication {
     }
 
     if (template.id === null) {
-      return new Error("template id is not assigned")
+      return new UnexpectedError("template id is not assigned")
     }
 
     const created = await applicationRepository.create(
