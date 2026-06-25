@@ -360,14 +360,18 @@ export type AppEmployeeList = z.infer<typeof zAppEmployeeList>
 
 // ===== expense =====
 /** 経費 1 件のレスポンス（申請・更新の戻り）。 */
+const expenseCategory = z.enum(["transport", "supplies", "entertainment", "books", "other"])
+
+const expenseStatus = z.enum(["pending", "approved", "rejected", "settled"])
+
 export const zAppExpense = z.object({
   id: z.number(),
   employee_id: z.number(),
-  category: z.string(),
+  category: expenseCategory,
   amount: z.number(),
   spent_at: z.string(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: expenseStatus,
   created_at: z.string(),
 })
 
@@ -378,11 +382,11 @@ export const zAppExpenseDetail = z.object({
   id: z.number(),
   employee_id: z.number(),
   applicant_name: z.string(),
-  category: z.string(),
+  category: expenseCategory,
   amount: z.number(),
   spent_at: z.string(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: expenseStatus,
   created_at: z.string(),
 })
 
@@ -391,10 +395,10 @@ export type AppExpenseDetail = z.infer<typeof zAppExpenseDetail>
 /** 本人の経費一覧の 1 件。 */
 export const zAppExpenseMineItem = z.object({
   id: z.number(),
-  category: z.string(),
+  category: expenseCategory,
   amount: z.number(),
   spent_at: z.string(),
-  status: z.string(),
+  status: expenseStatus,
   created_at: z.string(),
 })
 
@@ -412,10 +416,10 @@ export type AppExpenseMineList = z.infer<typeof zAppExpenseMineList>
 export const zAppExpenseInboxItem = z.object({
   id: z.number(),
   applicant_name: z.string(),
-  category: z.string(),
+  category: expenseCategory,
   amount: z.number(),
   spent_at: z.string(),
-  status: z.string(),
+  status: expenseStatus,
   created_at: z.string(),
 })
 
@@ -431,7 +435,7 @@ export type AppExpenseInboxList = z.infer<typeof zAppExpenseInboxList>
 
 /** 経費の承認・却下結果（status のみ）。 */
 export const zAppExpenseDecision = z.object({
-  status: z.string(),
+  status: expenseStatus,
 })
 
 export type AppExpenseDecision = z.infer<typeof zAppExpenseDecision>
@@ -654,7 +658,14 @@ export const zAppNotification = z.object({
   recipient_employee_id: z.number(),
   source_domain: z.string(),
   source_id: z.number().nullable(),
-  kind: z.string(),
+  kind: z.enum([
+    "task",
+    "approval_request",
+    "approval_result",
+    "reminder",
+    "announcement",
+    "thanks",
+  ]),
   title: z.string(),
   body: z.string().nullable(),
   is_read: z.boolean(),
