@@ -258,12 +258,12 @@ export type AppBusinessTripList = z.infer<typeof zAppBusinessTripList>
 
 // ===== career =====
 export const zAppCareerPosting = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   title: z.string(),
   dept_id: z.number().nullable(),
   dept_name: z.string().nullable(),
   required_skills: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["open", "closed"]),
 })
 
 export type AppCareerPosting = z.infer<typeof zAppCareerPosting>
@@ -276,11 +276,11 @@ export const zAppCareerPostingList = z.object({
 export type AppCareerPostingList = z.infer<typeof zAppCareerPostingList>
 
 export const zAppCareerApplication = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   posting_id: z.number(),
-  applicant_id: z.string(),
+  applicant_id: z.number(),
   message: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["applied", "accepted", "rejected"]),
 })
 
 export type AppCareerApplication = z.infer<typeof zAppCareerApplication>
@@ -293,7 +293,7 @@ export const zAppCareerApplicationList = z.object({
 export type AppCareerApplicationList = z.infer<typeof zAppCareerApplicationList>
 
 export const zAppCareerSheet = z.object({
-  employee_id: z.string(),
+  employee_id: z.number(),
   goals_text: z.string().nullable(),
   strengths_text: z.string().nullable(),
   updated_at: z.string().nullable(),
