@@ -41,7 +41,7 @@ export const POST = factory.createHandlers(
     const responseBody = zAppSurveyResponse.parse({
       id: submission.id,
       survey_id: submission.surveyId,
-      respondent_id: String(submission.respondentId),
+      respondent_id: submission.respondentId,
       answers_json: submission.answersJson,
       submitted_at: submission.submittedAt,
     })

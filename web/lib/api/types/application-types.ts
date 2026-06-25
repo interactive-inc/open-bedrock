@@ -39,7 +39,7 @@ export type ApplicationListItem = {
   status: ApplicationStatus
   current_step: string | null
   created_at: string
-  payload: unknown
+  payload?: unknown
 }
 
 // GET /applications/inbox の各要素（承認待ち一覧）。

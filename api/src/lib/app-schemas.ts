@@ -55,7 +55,7 @@ export const zAppApplication = z.object({
   template_code: z.string(),
   template_name: z.string(),
   applicant_name: z.string(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
@@ -67,7 +67,7 @@ export type AppApplication = z.infer<typeof zAppApplication>
 export const zAppApplicationListItem = z.object({
   id: z.number(),
   template_name: z.string(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   current_step: z.string().nullable(),
   created_at: z.string(),
 })
@@ -88,7 +88,7 @@ export const zAppApplicationInboxItem = z.object({
   template_name: z.string(),
   applicant_name: z.string(),
   current_step: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
 
@@ -104,9 +104,9 @@ export type AppApplicationInboxList = z.infer<typeof zAppApplicationInboxList>
 
 /** 本人の申請一覧（GET /applications/me）の 1 件。template_id と payload を含む。 */
 export const zAppApplicationMineItem = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   template_id: z.number(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
@@ -124,8 +124,8 @@ export type AppApplicationMineList = z.infer<typeof zAppApplicationMineList>
 
 /** 申請内容更新（PUT /applications/:id）のレスポンス。 */
 export const zAppApplicationUpdated = z.object({
-  id: z.number(),
-  status: z.string(),
+  id: z.number().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
   payload: z.unknown(),
 })
 
@@ -133,7 +133,7 @@ export type AppApplicationUpdated = z.infer<typeof zAppApplicationUpdated>
 
 /** 承認・却下（POST /applications/:id/approve, /reject）のレスポンス。 */
 export const zAppApplicationDecision = z.object({
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
 })
 
 export type AppApplicationDecision = z.infer<typeof zAppApplicationDecision>
@@ -152,7 +152,7 @@ export type AppApplicationTemplate = z.infer<typeof zAppApplicationTemplate>
 
 /** 申請テンプレート作成・更新（POST /templates, PUT /templates/:code）のレスポンス。id を含む。 */
 export const zAppApplicationTemplateDetail = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   code: z.string(),
   name: z.string(),
   category: z.string(),
@@ -443,12 +443,12 @@ export type AppExpenseDecision = z.infer<typeof zAppExpenseDecision>
 // ===== family-care-leave =====
 export const zAppFamilyCareLeave = z.object({
   id: z.string(),
-  employee_id: z.string(),
+  employee_id: z.number(),
   leave_kind: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   note: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["requested"]),
   created_at: z.string(),
 })
 export type AppFamilyCareLeave = z.infer<typeof zAppFamilyCareLeave>
@@ -544,12 +544,12 @@ export type AppKnowledgeWritten = z.infer<typeof zAppKnowledgeWritten>
 export const zAppLeaveRequest = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.string(),
+  leave_type: z.enum(["annual", "special"]),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   approver_id: z.number().nullable(),
   decided_comment: z.string().nullable(),
   created_at: z.string(),
@@ -561,12 +561,12 @@ export type AppLeaveRequest = z.infer<typeof zAppLeaveRequest>
 export const zAppLeaveRequestDetail = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.string(),
+  leave_type: z.enum(["annual", "special"]),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
 
@@ -575,11 +575,11 @@ export type AppLeaveRequestDetail = z.infer<typeof zAppLeaveRequestDetail>
 /** 本人の休暇申請一覧 1 件（GET /requests/me）。 */
 export const zAppLeaveRequestSummary = z.object({
   id: z.number(),
-  leave_type: z.string(),
+  leave_type: z.enum(["annual", "special"]),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
 
@@ -597,12 +597,12 @@ export type AppLeaveRequestSummaryList = z.infer<typeof zAppLeaveRequestSummaryL
 export const zAppLeaveRequestInbox = z.object({
   id: z.number(),
   applicant_name: z.string(),
-  leave_type: z.string(),
+  leave_type: z.enum(["annual", "special"]),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.string(),
+  status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
 
@@ -619,7 +619,7 @@ export type AppLeaveRequestInboxList = z.infer<typeof zAppLeaveRequestInboxList>
 /** 本人の休暇残数 1 件（GET /balance/me）。 */
 export const zAppLeaveBalance = z.object({
   fiscal_year: z.string(),
-  leave_type: z.string(),
+  leave_type: z.enum(["annual", "special"]),
   granted_days: z.number(),
   used_days: z.number(),
   remaining_days: z.number(),
@@ -827,27 +827,21 @@ export const zAppOrgReportingLineList = z.array(zAppOrgReportingLineNode)
 export type AppOrgReportingLineList = z.infer<typeof zAppOrgReportingLineList>
 
 /** 組織ツリーノード 1 件のレスポンス（children で再帰）。 */
-export const zAppOrgTreeNode: z.ZodType<{
+export type AppOrgTreeNode = {
   code: string
   name: string
   manager_employee_code: string | null
   member_count: number
-  children: ReadonlyArray<{
-    code: string
-    name: string
-    manager_employee_code: string | null
-    member_count: number
-    children: ReadonlyArray<unknown>
-  }>
-}> = z.object({
+  children: ReadonlyArray<AppOrgTreeNode>
+}
+
+export const zAppOrgTreeNode: z.ZodType<AppOrgTreeNode> = z.object({
   code: z.string(),
   name: z.string(),
   manager_employee_code: z.string().nullable(),
   member_count: z.number(),
   children: z.array(z.lazy(() => zAppOrgTreeNode)),
 })
-
-export type AppOrgTreeNode = z.infer<typeof zAppOrgTreeNode>
 
 /** 組織ツリーのレスポンス（ルートノードの配列直接）。 */
 export const zAppOrgTreeList = z.array(zAppOrgTreeNode)
@@ -878,7 +872,7 @@ export type AppRentalReservationList = z.infer<typeof zAppRentalReservationList>
 // ===== resignation =====
 export const zAppResignation = z.object({
   id: z.string(),
-  employee_id: z.string(),
+  employee_id: z.number(),
   resignation_date: z.string(),
   last_working_date: z.string().nullable(),
   reason: z.string().nullable(),
@@ -1157,7 +1151,7 @@ export type AppEmployeeSkillList = z.infer<typeof zAppEmployeeSkillList>
 export const zAppSurvey = z.object({
   id: z.number(),
   title: z.string(),
-  status: z.string(),
+  status: z.enum(["open", "closed"]),
   questions_json: z.array(z.unknown()),
 })
 
@@ -1171,9 +1165,9 @@ export const zAppSurveyList = z.object({
 export type AppSurveyList = z.infer<typeof zAppSurveyList>
 
 export const zAppSurveyResponse = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   survey_id: z.number(),
-  respondent_id: z.string(),
+  respondent_id: z.number(),
   answers_json: z.unknown(),
   submitted_at: z.string(),
 })
@@ -1190,7 +1184,7 @@ export type AppSurveyResponseList = z.infer<typeof zAppSurveyResponseList>
 export const zAppSurveySummaryQuestion = z.object({
   id: z.string(),
   title: z.string(),
-  type: z.string(),
+  type: z.enum(["scale", "choice", "text"]),
   distribution: z.record(z.string(), z.number()),
   answers: z.array(z.string()),
 })
@@ -1209,13 +1203,13 @@ export type AppSurveySummary = z.infer<typeof zAppSurveySummary>
 
 // ===== thanks =====
 export const zAppThanks = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   sender_employee_id: z.number(),
   sender_name: z.string(),
   recipient_employee_id: z.number(),
   recipient_name: z.string(),
   message: z.string(),
-  points: z.number().nullable(),
+  points: z.number(),
   created_at: z.string(),
 })
 export type AppThanks = z.infer<typeof zAppThanks>
@@ -1249,11 +1243,11 @@ export type AppThanksRewardList = z.infer<typeof zAppThanksRewardList>
 
 /** Thanks ポイントの交換申請 1 件のレスポンス。 */
 export const zAppThanksRedemption = z.object({
-  id: z.number(),
+  id: z.number().nullable(),
   employee_id: z.number(),
   reward_id: z.number(),
   point_cost: z.number(),
-  status: z.string(),
+  status: z.enum(["pending", "rejected", "fulfilled"]),
   created_at: z.string(),
   decided_at: z.string().nullable(),
   decider_id: z.number().nullable(),
@@ -1272,7 +1266,7 @@ export type AppThanksRedemptionList = z.infer<typeof zAppThanksRedemptionList>
 /** 交換申請の承認・却下の決定結果。stock_warning は承認時のみ含まれる。 */
 export const zAppThanksRedemptionDecision = z.object({
   id: z.number(),
-  status: z.string(),
+  status: z.enum(["pending", "rejected", "fulfilled"]),
   stock_warning: z.boolean().optional(),
 })
 

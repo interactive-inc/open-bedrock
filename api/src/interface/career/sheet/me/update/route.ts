@@ -39,7 +39,7 @@ export const PUT = factory.createHandlers(
     }
 
     const responseBody = zAppCareerSheet.parse({
-      employee_id: String(updated.employeeId),
+      employee_id: updated.employeeId,
       goals_text: updated.goalsText,
       strengths_text: updated.strengthsText,
       updated_at: updated.updatedAt,

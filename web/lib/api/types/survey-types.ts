@@ -41,7 +41,7 @@ export type SurveyResponseItem = {
   id: number | null
   survey_id: number
   respondent_id: number
-  answers_json: unknown
+  answers_json?: unknown
   submitted_at: string
 }
 

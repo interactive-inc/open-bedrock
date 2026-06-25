@@ -17,7 +17,7 @@ import { z } from "zod"
 function toResponseBody(resignation: Resignation) {
   return zAppResignation.parse({
     id: resignation.id,
-    employee_id: String(resignation.employeeId),
+    employee_id: resignation.employeeId,
     resignation_date: resignation.resignationDate,
     last_working_date: resignation.lastWorkingDate,
     reason: resignation.reason,

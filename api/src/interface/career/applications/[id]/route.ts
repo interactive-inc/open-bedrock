@@ -18,7 +18,7 @@ function toResponseBody(application: CareerApplication) {
   return zAppCareerApplication.parse({
     id: application.id,
     posting_id: application.postingId,
-    applicant_id: String(application.applicantId),
+    applicant_id: application.applicantId,
     message: application.message,
     status: application.status,
   })

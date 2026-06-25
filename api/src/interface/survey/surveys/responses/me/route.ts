@@ -54,7 +54,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const data = responses.map((response) => ({
     id: response.id,
     survey_id: response.surveyId,
-    respondent_id: String(response.respondentId),
+    respondent_id: response.respondentId,
     answers_json: response.answersJson,
     submitted_at: response.submittedAt,
   }))

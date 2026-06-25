@@ -9,7 +9,7 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { z } from "zod"
 
 const careerSheetResponseSchema = z.object({
-  employee_id: z.string(),
+  employee_id: z.number(),
   goals_text: z.string().nullable(),
   strengths_text: z.string().nullable(),
   updated_at: z.string().nullable(),
@@ -93,7 +93,7 @@ describe("PUT /career/sheet/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe("1")
+      expect(parsed.data.employee_id).toBe(1)
       expect(parsed.data.goals_text).toBe("Aim to become a PdM")
       expect(parsed.data.strengths_text).toBe("Requirements definition")
       expect(parsed.data.updated_at).toBe(nowValue)

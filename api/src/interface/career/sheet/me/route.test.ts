@@ -9,7 +9,7 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { z } from "zod"
 
 const careerSheetResponseSchema = z.object({
-  employee_id: z.string(),
+  employee_id: z.number(),
   goals_text: z.string().nullable(),
   strengths_text: z.string().nullable(),
   updated_at: z.string().nullable(),
@@ -86,7 +86,7 @@ describe("GET /career/sheet/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe("5")
+      expect(parsed.data.employee_id).toBe(5)
       expect(parsed.data.goals_text?.length).toBeGreaterThan(0)
       expect(parsed.data.strengths_text?.length).toBeGreaterThan(0)
     }
@@ -102,7 +102,7 @@ describe("GET /career/sheet/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe("1")
+      expect(parsed.data.employee_id).toBe(1)
       expect(parsed.data.goals_text).toBe(null)
       expect(parsed.data.strengths_text).toBe(null)
       expect(parsed.data.updated_at).toBe(null)

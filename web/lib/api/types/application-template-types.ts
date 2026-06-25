@@ -9,7 +9,7 @@ export type ApplicationTemplateResponse = {
   name: string
   category: string
   description: string | null
-  schema_json: unknown
+  schema_json?: unknown
   approver_roles: ReadonlyArray<string>
 }
 
