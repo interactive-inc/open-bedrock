@@ -1,6 +1,8 @@
 import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import type { Context } from "@/env"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   employeeId: number
@@ -8,44 +10,27 @@ export type Command = {
   note?: string | null
 }
 
-export type NotClockedIn = { reason: "not_clocked_in" }
-
-export type AttendanceNotFound = { reason: "attendance_not_found" }
-
-export type ClockInAtMissing = { reason: "clock_in_at_missing" }
-
-export type AlreadyClockedOut = { reason: "already_clocked_out" }
-
 /**
  * 退勤を打刻する。出勤中の記録に労働時間を確定する。
  */
 export class ClockOut {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | AttendanceRecord
-    | NotClockedIn
-    | AttendanceNotFound
-    | ClockInAtMissing
-    | AlreadyClockedOut
-    | Error
-  > {
+  async run(command: Command): Promise<AttendanceRecord | ApplicationError> {
     const recordRepository = new AttendanceRecordRepository(this.c)
 
     const open = await recordRepository.findOpenByEmployeeId(command.employeeId)
 
     if (open instanceof Error) {
-      return open
+      return new UnexpectedError("failed to find attendance record", { cause: open })
     }
 
     if (open === null) {
-      return { reason: "not_clocked_in" }
+      return new ConflictError("not clocked in", "not_clocked_in")
     }
 
     if (open.clockInAt === null) {
-      return { reason: "clock_in_at_missing" }
+      return new ConflictError("clock-in time is missing", "clock_in_at_missing")
     }
 
     const workMinutes = AttendanceRecord.toWorkMinutes({
@@ -54,7 +39,7 @@ export class ClockOut {
     })
 
     if (workMinutes instanceof Error) {
-      return workMinutes
+      return new UnexpectedError("failed to calculate work minutes", { cause: workMinutes })
     }
 
     const record = await recordRepository.update(
@@ -66,11 +51,11 @@ export class ClockOut {
     )
 
     if (record instanceof Error) {
-      return record
+      return new UnexpectedError("failed to update attendance record", { cause: record })
     }
 
     if (record === null) {
-      return { reason: "already_clocked_out" }
+      return new ConflictError("already clocked out", "already_clocked_out")
     }
 
     return record

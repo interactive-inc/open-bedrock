@@ -1,5 +1,7 @@
 import { ListMyCertificateRequests } from "@/application/certificate-request/list-my-certificate-requests"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
+import { zAppCertificateRequestList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -7,7 +9,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { certificateRequests } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (certificateRequestRows instanceof Error) {
-    throw new InternalError("failed to load certificate requests")
+  if (certificateRequestRows instanceof ApplicationError) {
+    throw toHttpException(certificateRequestRows)
   }
 
   const totalRows = await c.var.database
@@ -48,16 +51,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(certificateRequests)
     .where(eq(certificateRequests.requesterId, viewer.employeeId))
 
-  const responseBody = certificateRequestRows.map((certificateRequest) => ({
-    id: certificateRequest.id,
-    requester_id: certificateRequest.requesterId,
-    certificate_type: certificateRequest.certificateType,
-    submit_to: certificateRequest.submitTo,
-    needed_by: certificateRequest.neededBy,
-    note: certificateRequest.note,
-    status: certificateRequest.status,
-    created_at: certificateRequest.createdAt,
-  }))
+  const responseBody = zAppCertificateRequestList.parse({
+    data: certificateRequestRows.map((certificateRequest) => ({
+      id: certificateRequest.id,
+      requester_id: certificateRequest.requesterId,
+      certificate_type: certificateRequest.certificateType,
+      submit_to: certificateRequest.submitTo,
+      needed_by: certificateRequest.neededBy,
+      note: certificateRequest.note,
+      status: certificateRequest.status,
+      created_at: certificateRequest.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

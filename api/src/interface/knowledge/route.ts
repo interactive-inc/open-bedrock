@@ -3,7 +3,10 @@ import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
 import { knowledgeArticles } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppKnowledgeList, zAppKnowledgeWritten } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -71,16 +74,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     c.var.database.select({ total: count() }).from(knowledgeArticles).where(where),
   ])
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    category: row.category,
-    title: row.title,
-    snippet: row.bodyMd.replace(/\s+/g, " ").trim().slice(0, 200),
-    author_id: row.authorId,
-    created_at: row.createdAt,
-  }))
+  const responseBody = zAppKnowledgeList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      category: row.category,
+      title: row.title,
+      snippet: row.bodyMd.replace(/\s+/g, " ").trim().slice(0, 200),
+      author_id: row.authorId,
+      created_at: row.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /knowledge — ナレッジ記事を新規作成（作成者は本人）
@@ -113,17 +119,17 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (article instanceof Error) {
-      throw new InternalError("failed to create knowledge")
+    if (article instanceof ApplicationError) {
+      throw toHttpException(article)
     }
 
-    const responseBody = {
+    const responseBody = zAppKnowledgeWritten.parse({
       id: article.id,
       title: article.title,
       category: article.category,
       tags: article.tags,
       body_md: article.bodyMd,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

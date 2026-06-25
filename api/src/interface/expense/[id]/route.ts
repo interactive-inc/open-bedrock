@@ -3,18 +3,15 @@ import { UpdateExpense } from "@/application/expense/update-expense"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import type { Expense } from "@/domain/expense/expense.entity"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppExpense, zAppExpenseDetail } from "@/lib/app-schemas"
 import { expenseCategorySchema, isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { eq } from "drizzle-orm"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -61,7 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const body = {
+  const responseBody = zAppExpenseDetail.parse({
     id: row.expense.id,
     employee_id: row.expense.employeeId,
     applicant_name: row.applicantName ?? "",
@@ -71,9 +68,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     note: row.expense.note,
     status: row.expense.status,
     created_at: row.expense.createdAt,
-  }
+  })
 
-  return c.json(body, 200)
+  return c.json(responseBody, 200)
 })
 
 // PUT /expenses/:id — 経費申請の内容を変更（本人のみ・pending のみ）
@@ -108,23 +105,13 @@ export const PUT = factory.createHandlers(
       note: json.note ?? null,
     })
 
-    if (expense instanceof Error) {
-      throw new InternalError("failed to update expense")
+    if (expense instanceof ApplicationError) {
+      throw toHttpException(expense)
     }
 
-    if ("reason" in expense) {
-      if (expense.reason === "expense_not_found") {
-        throw new NotFoundError("expense not found")
-      }
+    const responseBody = zAppExpense.parse(toResponseBody(expense))
 
-      if (expense.reason === "not_owner") {
-        throw new ForbiddenError("not the owner")
-      }
-
-      throw new ConflictError("the expense is not editable")
-    }
-
-    return c.json(toResponseBody(expense), 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -143,20 +130,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete expense")
-  }
-
-  if (result.reason === "expense_not_found") {
-    throw new NotFoundError("expense not found")
-  }
-
-  if (result.reason === "not_owner") {
-    throw new ForbiddenError("not the owner")
-  }
-
-  if (result.reason === "not_deletable") {
-    throw new ConflictError("the expense is not deletable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

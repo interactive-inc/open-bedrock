@@ -2,12 +2,10 @@ import { CreateResignation } from "@/application/resignation/create-resignation"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError, ValidationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppResignation } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -41,7 +39,9 @@ export const POST = factory.createHandlers(
     const today = (c.env.NOW ?? new Date().toISOString()).slice(0, 10)
 
     if (json.resignation_date < today) {
-      throw new BadRequestError("resignation_date must be today or in the future")
+      throw toHttpException(
+        new ValidationError("resignation_date must be today or in the future", "start_in_past"),
+      )
     }
 
     const result = await new CreateResignation(c).run({
@@ -52,23 +52,19 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to create resignation")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
-    if ("kind" in result) {
-      throw new ConflictError("a pending resignation already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppResignation.parse({
       id: result.id,
-      employee_id: result.employeeId,
+      employee_id: String(result.employeeId),
       resignation_date: result.resignationDate,
       last_working_date: result.lastWorkingDate,
       reason: result.reason,
       status: result.status,
       created_at: result.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

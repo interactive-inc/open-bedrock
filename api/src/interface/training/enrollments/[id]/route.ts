@@ -5,20 +5,17 @@ import type { TrainingEnrollment } from "@/domain/training/training-enrollment.e
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
+import { zAppTrainingEnrollment } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // 受講登録をレスポンス用の snake_case に整形する。
 function toResponseBody(enrollment: TrainingEnrollment) {
-  return {
+  return zAppTrainingEnrollment.parse({
     id: enrollment.id,
     course_id: enrollment.courseId,
     employee_id: enrollment.employeeId,
@@ -26,7 +23,7 @@ function toResponseBody(enrollment: TrainingEnrollment) {
     completed_at: enrollment.completedAt,
     score: enrollment.score,
     due_date: enrollment.dueDate,
-  }
+  })
 }
 
 // GET /training/enrollments/:id — 受講登録の詳細（本人または管理権限）
@@ -45,16 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: session.role,
   })
 
-  if (enrollment instanceof Error) {
-    throw new InternalError("failed to load enrollment")
-  }
-
-  if ("reason" in enrollment) {
-    if (enrollment.reason === "enrollment_not_found") {
-      throw new NotFoundError("enrollment not found")
-    }
-
-    throw new ForbiddenError()
+  if (enrollment instanceof ApplicationError) {
+    throw toHttpException(enrollment)
   }
 
   return c.json(toResponseBody(enrollment), 200)
@@ -82,20 +71,8 @@ export const PUT = factory.createHandlers(
       dueDate: body.due_date ?? null,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update enrollment")
-    }
-
-    if ("reason" in updated) {
-      if (updated.reason === "enrollment_not_found") {
-        throw new NotFoundError("enrollment not found")
-      }
-
-      if (updated.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      throw new ConflictError("already completed")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -118,20 +95,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: session.role,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel enrollment")
-  }
-
-  if (result.reason === "enrollment_not_found") {
-    throw new NotFoundError("enrollment not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "enrollment_not_cancelable") {
-    throw new ConflictError("enrollment is completed or failed and cannot be cancelled")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

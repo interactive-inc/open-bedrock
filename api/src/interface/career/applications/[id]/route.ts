@@ -4,14 +4,10 @@ import { WithdrawCareerApplication } from "@/application/career/withdraw-career-
 import type { CareerApplication } from "@/domain/career/career-application.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerApplication } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -19,13 +15,13 @@ const applicationIdSchema = z.coerce.number().int().positive()
 
 // 応募をレスポンス用の snake_case に整形する。
 function toResponseBody(application: CareerApplication) {
-  return {
+  return zAppCareerApplication.parse({
     id: application.id,
     posting_id: application.postingId,
-    applicant_id: application.applicantId,
+    applicant_id: String(application.applicantId),
     message: application.message,
     status: application.status,
-  }
+  })
 }
 
 // GET /career/applications/:id — 応募の詳細（本人のみ）
@@ -47,16 +43,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     applicantId: viewer.employeeId,
   })
 
-  if (application instanceof Error) {
-    throw new InternalError("failed to load application")
-  }
-
-  if ("reason" in application) {
-    if (application.reason === "application_not_found") {
-      throw new NotFoundError("application not found")
-    }
-
-    throw new ForbiddenError("not the applicant")
+  if (application instanceof ApplicationError) {
+    throw toHttpException(application)
   }
 
   return c.json(toResponseBody(application), 200)
@@ -92,20 +80,8 @@ export const PUT = factory.createHandlers(
       message: json.message ?? null,
     })
 
-    if (application instanceof Error) {
-      throw new InternalError("failed to update application")
-    }
-
-    if ("reason" in application) {
-      if (application.reason === "application_not_found") {
-        throw new NotFoundError("application not found")
-      }
-
-      if (application.reason === "not_applicant") {
-        throw new ForbiddenError("not the applicant")
-      }
-
-      throw new ConflictError("the application is already decided")
+    if (application instanceof ApplicationError) {
+      throw toHttpException(application)
     }
 
     return c.json(toResponseBody(application), 200)
@@ -131,20 +107,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     applicantId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to withdraw application")
-  }
-
-  if (result.reason === "application_not_found") {
-    throw new NotFoundError("application not found")
-  }
-
-  if (result.reason === "not_applicant") {
-    throw new ForbiddenError("not the applicant")
-  }
-
-  if (result.reason === "application_decided") {
-    throw new ConflictError("the application is already decided")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

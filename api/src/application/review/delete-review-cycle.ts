@@ -1,18 +1,13 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
   viewerRole: string
   cycleId: number
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type CycleNotFound = { reason: "cycle_not_found" }
-
-export type NotDeletable = { reason: "not_deletable" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -23,9 +18,9 @@ export type Deleted = { reason: "deleted" }
 export class DeleteReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<Deleted | Forbidden | CycleNotFound | NotDeletable | Error> {
+  async run(input: Input): Promise<Deleted | ApplicationError> {
     if (canAdministerCycle(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
     const repository = new ReviewCycleRepository(this.c)
@@ -33,15 +28,15 @@ export class DeleteReviewCycle {
     const reviewCycle = await repository.findById(input.cycleId)
 
     if (reviewCycle instanceof Error) {
-      return reviewCycle
+      return new UnexpectedError("failed to find review cycle", { cause: reviewCycle })
     }
 
     if (reviewCycle === null) {
-      return { reason: "cycle_not_found" }
+      return new NotFoundError("review cycle not found", "cycle_not_found")
     }
 
     if (!reviewCycle.isDeletable) {
-      return { reason: "not_deletable" }
+      return new ConflictError("review cycle is not deletable", "not_deletable")
     }
 
     const db = this.c.env.DB
@@ -56,8 +51,9 @@ export class DeleteReviewCycle {
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return { reason: "not_deletable" }
+        return new ConflictError("review cycle is not deletable", "not_deletable")
       }
+
       return error instanceof Error
         ? new UnexpectedError("failed to delete review cycle", { cause: error })
         : new UnexpectedError("failed to delete review cycle")

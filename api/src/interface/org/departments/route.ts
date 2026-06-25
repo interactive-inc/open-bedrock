@@ -4,13 +4,10 @@ import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOrgDepartment, zAppOrgDepartmentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -36,8 +33,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const departments = await new ListOrgDepartments(c).run()
 
-  if (departments instanceof Error) {
-    throw new InternalError("failed to load departments")
+  if (departments instanceof ApplicationError) {
+    throw toHttpException(departments)
   }
 
   if (departments.length > MAX_ORG_NODES) {
@@ -46,7 +43,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const bounded = departments.slice(0, MAX_ORG_NODES)
 
-  return c.json(bounded.map(toResponseBody), 200)
+  const responseBody = zAppOrgDepartmentList.parse(bounded.map(toResponseBody))
+
+  return c.json(responseBody, 200)
 })
 
 // POST /org/departments — 部署ノードを作成（権限が必要）
@@ -82,22 +81,12 @@ export const POST = factory.createHandlers(
       },
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create department")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
+    const responseBody = zAppOrgDepartment.parse(toResponseBody(created))
 
-      if (created.reason === "parent_not_found") {
-        throw new NotFoundError("parent department not found")
-      }
-
-      throw new ConflictError("department code already exists")
-    }
-
-    return c.json(toResponseBody(created), 201)
+    return c.json(responseBody, 201)
   },
 )

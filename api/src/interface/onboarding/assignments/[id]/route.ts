@@ -3,13 +3,10 @@ import { GetOnboardingAssignment } from "@/application/onboarding/get-onboarding
 import { UpdateOnboardingAssignment } from "@/application/onboarding/update-onboarding-assignment"
 import type { Employee } from "@/domain/employee/employee.entity"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOnboardingAssignment } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -18,7 +15,7 @@ import { z } from "zod"
 
 // 割り当てをレスポンス用の snake_case に整形する。
 function toResponseBody(assignment: OnboardingAssignment, employee: Employee) {
-  return {
+  return zAppOnboardingAssignment.parse({
     id: assignment.id,
     employee_code: employee.code,
     employee_name: employee.name,
@@ -34,7 +31,7 @@ function toResponseBody(assignment: OnboardingAssignment, employee: Employee) {
       status: task.status,
       completed_at: task.completedAt,
     })),
-  }
+  })
 }
 
 // GET /onboarding/assignments/:id — 割り当ての詳細（本人か特権ロール）
@@ -53,16 +50,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: session.role,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to load assignment")
-  }
-
-  if ("reason" in result) {
-    if (result.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    throw new NotFoundError("assignment not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.json(toResponseBody(result.assignment, result.employee), 200)
@@ -89,20 +78,8 @@ export const PUT = factory.createHandlers(
       assignedAt: json.assigned_at,
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to update assignment")
-    }
-
-    if ("reason" in result) {
-      if (result.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (result.reason === "not_modifiable") {
-        throw new ConflictError("assignment is already completed")
-      }
-
-      throw new NotFoundError("assignment not found")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
     return c.json(toResponseBody(result.assignment, result.employee), 200)
@@ -124,20 +101,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: session.role,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel assignment")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("assignment is already completed")
-  }
-
-  if (result.reason === "assignment_not_found") {
-    throw new NotFoundError("assignment not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

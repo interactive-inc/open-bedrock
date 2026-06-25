@@ -3,6 +3,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
+import { zAppOrgDepartmentMemberList } from "@/lib/app-schemas"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -42,13 +43,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     console.warn(`[org] department ${code} members exceeded ${MAX_ORG_NODES}; response truncated`)
   }
 
-  const body = rows.slice(0, MAX_ORG_NODES).map((row) => ({
-    employee_code: row.membership.employeeCode,
-    employee_name: row.employeeName ?? "",
-    position: row.position ?? null,
-    manager_employee_code: row.membership.managerEmployeeCode,
-    is_manager: row.membership.employeeCode === department.managerEmployeeCode,
-  }))
+  const responseBody = zAppOrgDepartmentMemberList.parse(
+    rows.slice(0, MAX_ORG_NODES).map((row) => ({
+      employee_code: row.membership.employeeCode,
+      employee_name: row.employeeName ?? "",
+      position: row.position ?? null,
+      manager_employee_code: row.membership.managerEmployeeCode,
+      is_manager: row.membership.employeeCode === department.managerEmployeeCode,
+    })),
+  )
 
-  return c.json(body, 200)
+  return c.json(responseBody, 200)
 })

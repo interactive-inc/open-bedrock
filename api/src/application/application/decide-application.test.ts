@@ -3,7 +3,9 @@ import { ApplicationTemplate } from "@/domain/application/application-template.e
 import { DecideApplication } from "@/application/application/decide-application"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { ForbiddenError } from "@/lib/errors"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { describe, expect, test } from "bun:test"
 
 async function seedTemplate(
@@ -75,10 +77,6 @@ describe("DecideApplication", () => {
       throw result
     }
 
-    if ("reason" in result) {
-      throw new Error(`unexpected reason: ${result.reason}`)
-    }
-
     expect(result.status).toBe("approved")
   })
 
@@ -101,15 +99,7 @@ describe("DecideApplication", () => {
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("falls back to canDecideApplication when approverRoles is empty", async () => {
@@ -136,10 +126,6 @@ describe("DecideApplication", () => {
       throw managerResult
     }
 
-    if ("reason" in managerResult) {
-      throw new Error(`unexpected reason: ${managerResult.reason}`)
-    }
-
     expect(managerResult.status).toBe("approved")
   })
 
@@ -162,15 +148,7 @@ describe("DecideApplication", () => {
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns forbidden for self-approval", async () => {
@@ -192,14 +170,6 @@ describe("DecideApplication", () => {
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })

@@ -1,6 +1,8 @@
 import { canSubmitForm } from "@/lib/review/can-submit-form"
 import type { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
@@ -13,33 +15,23 @@ export type Input = {
   submittedAt: string
 }
 
-export type FormNotFound = { reason: "form_not_found" }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type AlreadySubmitted = { reason: "already_submitted" }
-
-export type CycleNotOpen = { reason: "cycle_not_open" }
-
-export type SubmitReviewFormFailure = FormNotFound | Forbidden | AlreadySubmitted | CycleNotOpen
-
 /**
  * 割り当てられた評価者が、open のサイクルに属する自分のフォームを提出する。
  */
 export class SubmitReviewForm {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ReviewForm | SubmitReviewFormFailure | Error> {
+  async run(input: Input): Promise<ReviewForm | ApplicationError> {
     const formRepository = new ReviewFormRepository(this.c)
 
     const form = await formRepository.findById(input.formId)
 
     if (form instanceof Error) {
-      return form
+      return new UnexpectedError("failed to find review form", { cause: form })
     }
 
     if (form === null) {
-      return { reason: "form_not_found" }
+      return new NotFoundError("review form not found", "form_not_found")
     }
 
     const isReviewer = canSubmitForm({
@@ -48,21 +40,21 @@ export class SubmitReviewForm {
     })
 
     if (isReviewer === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot submit this review form", "forbidden")
     }
 
     if (form.status === "submitted") {
-      return { reason: "already_submitted" }
+      return new ConflictError("review form is already submitted", "already_submitted")
     }
 
     const cycle = await new ReviewCycleRepository(this.c).findById(form.cycleId)
 
     if (cycle instanceof Error) {
-      return cycle
+      return new UnexpectedError("failed to find review cycle", { cause: cycle })
     }
 
     if (cycle === null || cycle.status !== "open") {
-      return { reason: "cycle_not_open" }
+      return new ConflictError("review cycle is not open", "cycle_not_open")
     }
 
     const submitted = await formRepository.update(
@@ -70,15 +62,15 @@ export class SubmitReviewForm {
     )
 
     if (submitted instanceof Error) {
-      return submitted
+      return new UnexpectedError("failed to update review form", { cause: submitted })
     }
 
     if (submitted === null) {
-      return { reason: "already_submitted" }
+      return new ConflictError("review form is already submitted", "already_submitted")
     }
 
     if ("reason" in submitted) {
-      return { reason: "cycle_not_open" }
+      return new ConflictError("review cycle is not open", "cycle_not_open")
     }
 
     return submitted

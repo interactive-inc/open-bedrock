@@ -1,4 +1,6 @@
 import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
 
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMyRentalReservations {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<RentalReservation> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<RentalReservation> | ApplicationError> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
-    return await reservationRepository.findByRequesterId({
+    const reservations = await reservationRepository.findByRequesterId({
       requesterId: command.requesterId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (reservations instanceof Error) {
+      return new UnexpectedError("failed to find reservations", { cause: reservations })
+    }
+
+    return reservations
   }
 }

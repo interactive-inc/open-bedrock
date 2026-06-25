@@ -1,5 +1,8 @@
 import { MarkNotificationRead } from "@/application/notification/mark-notification-read"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppNotification } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -19,16 +22,11 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     viewerEmployeeId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to mark notification read")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
-  if ("reason" in result) {
-    // 他人の通知も 404 にして、連番 ID による存在推測（列挙）を防ぐ。
-    throw new NotFoundError("notification not found")
-  }
-
-  const responseBody = {
+  const responseBody = zAppNotification.parse({
     id: result.id,
     recipient_employee_id: result.recipientEmployeeId,
     source_domain: result.sourceDomain,
@@ -38,7 +36,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     body: result.body,
     is_read: result.isRead,
     created_at: result.createdAt,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

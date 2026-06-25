@@ -6,6 +6,8 @@ import { ListMyResignations } from "@/application/resignation/list-my-resignatio
 import { UpdateResignation } from "@/application/resignation/update-resignation"
 import { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
+import { ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedResignation(context: Context, employeeId: number): Promise<string> {
@@ -72,7 +74,7 @@ describe("GetResignation", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns resignation_not_found for an unknown id", async () => {
@@ -83,7 +85,7 @@ describe("GetResignation", () => {
       employeeId: 5,
     })
 
-    expect(result).toEqual({ reason: "resignation_not_found" })
+    expectApplicationError(result, NotFoundError, "resignation_not_found")
   })
 })
 
@@ -95,7 +97,11 @@ describe("ListMyResignations", () => {
 
     await seedResignation(context, 6)
 
-    const result = await new ListMyResignations(context).run({ employeeId: 5 })
+    const result = await new ListMyResignations(context).run({
+      employeeId: 5,
+      limit: 20,
+      offset: 0,
+    })
 
     if (result instanceof Error) {
       throw new Error("list failed")
@@ -143,7 +149,7 @@ describe("UpdateResignation", () => {
       reason: null,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 })
 
@@ -171,6 +177,6 @@ describe("CancelResignation", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 })

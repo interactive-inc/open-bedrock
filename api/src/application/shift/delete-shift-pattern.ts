@@ -1,4 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
@@ -6,12 +8,6 @@ export type Input = {
   viewerRole: string
   patternId: number
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type PatternNotFound = { reason: "pattern_not_found" }
-
-export type PatternInUse = { reason: "pattern_in_use" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -22,9 +18,9 @@ export type Deleted = { reason: "deleted" }
 export class DeleteShiftPattern {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<Deleted | Forbidden | PatternNotFound | PatternInUse | Error> {
+  async run(input: Input): Promise<Deleted | ApplicationError> {
     if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const patternRepository = new ShiftPatternRepository(this.c)
@@ -32,22 +28,22 @@ export class DeleteShiftPattern {
     const current = await patternRepository.findById(input.patternId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find shift pattern", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "pattern_not_found" }
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
     const deleted = await patternRepository.delete(input.patternId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete shift pattern", { cause: deleted })
     }
 
     // 0 行削除 — 存在確認後に割当が挿入された（競合）か、まだ割当が参照中。
     if (deleted === null) {
-      return { reason: "pattern_in_use" }
+      return new ConflictError("shift pattern is in use", "pattern_in_use")
     }
 
     return { reason: "deleted" }

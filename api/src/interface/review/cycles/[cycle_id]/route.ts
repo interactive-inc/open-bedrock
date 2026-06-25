@@ -1,16 +1,12 @@
 import { DeleteReviewCycle } from "@/application/review/delete-review-cycle"
 import { UpdateReviewCycle } from "@/application/review/update-review-cycle"
-import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { ApplicationError } from "@/lib/errors"
+import { zAppReviewCycle } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -45,33 +41,17 @@ export const PUT = factory.createHandlers(
       dueDate: json.dueDate ?? null,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update review cycle")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if (updated instanceof ReviewCycle === false) {
-      if (updated.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (updated.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      if (updated.reason === "not_editable") {
-        throw new ConflictError("not editable")
-      }
-
-      throw new NotFoundError("review cycle not found")
-    }
-
-    const responseBody = {
+    const responseBody = zAppReviewCycle.parse({
       id: updated.id,
       title: updated.title,
       period: updated.period,
       status: updated.status,
       due_date: updated.dueDate,
-    }
+    })
 
     return c.json(responseBody, 200)
   },
@@ -92,20 +72,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     cycleId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete review cycle")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "not_deletable") {
-    throw new ConflictError("not deletable")
-  }
-
-  if (result.reason === "cycle_not_found") {
-    throw new NotFoundError("review cycle not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

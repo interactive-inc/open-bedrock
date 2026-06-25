@@ -1,6 +1,8 @@
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
@@ -14,33 +16,27 @@ export type Command = {
   approverRoles: ReadonlyArray<string>
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type TemplateCodeConflict = { reason: "template_code_conflict" }
-
 /**
  * 管理権限を持つ者が新しい申請テンプレートを作成する。
  */
 export class CreateApplicationTemplate {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<ApplicationTemplate | Forbidden | TemplateCodeConflict | Error> {
+  async run(command: Command): Promise<ApplicationTemplate | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
     if (canManageApplicationTemplates(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 
     const existing = await templateRepository.findByCode(command.code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find application template", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "template_code_conflict" }
+      return new ConflictError("template code already exists", "template_code_conflict")
     }
 
     const template = ApplicationTemplate.create({
@@ -56,7 +52,11 @@ export class CreateApplicationTemplate {
 
     // code の重複は事前チェック済みだが、レース時に DB 制約で捕捉される。
     if (result instanceof UniqueConstraintError) {
-      return { reason: "template_code_conflict" }
+      return new ConflictError("template code already exists", "template_code_conflict")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create application template", { cause: result })
     }
 
     return result

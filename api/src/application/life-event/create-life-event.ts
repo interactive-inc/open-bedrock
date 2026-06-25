@@ -1,4 +1,6 @@
 import { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
 
@@ -16,7 +18,7 @@ export type Command = {
 export class CreateLifeEvent {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<LifeEvent | Error> {
+  async run(command: Command): Promise<LifeEvent | ApplicationError> {
     const lifeEventRepository = new LifeEventRepository(this.c)
 
     const lifeEvent = LifeEvent.create({
@@ -27,6 +29,12 @@ export class CreateLifeEvent {
       createdAt: command.createdAt,
     })
 
-    return await lifeEventRepository.create(lifeEvent)
+    const created = await lifeEventRepository.create(lifeEvent)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create life event", { cause: created })
+    }
+
+    return created
   }
 }

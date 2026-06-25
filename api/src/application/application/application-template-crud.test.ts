@@ -2,8 +2,10 @@ import { CreateApplicationTemplate } from "@/application/application/create-appl
 import { DeleteApplicationTemplate } from "@/application/application/delete-application-template"
 import { UpdateApplicationTemplate } from "@/application/application/update-application-template"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
@@ -64,11 +66,7 @@ describe("CreateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("a duplicate code conflicts", async () => {
@@ -86,11 +84,7 @@ describe("CreateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("template_code_conflict")
+    expectApplicationError(result, ConflictError, "template_code_conflict")
   })
 })
 
@@ -132,11 +126,7 @@ describe("UpdateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown code is not found", async () => {
@@ -152,11 +142,7 @@ describe("UpdateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("template_not_found")
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 })
 
@@ -194,11 +180,7 @@ describe("DeleteApplicationTemplate", () => {
       code: "expense",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown code is not found", async () => {
@@ -209,11 +191,7 @@ describe("DeleteApplicationTemplate", () => {
       code: "missing",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_not_found")
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 
   test("returns template_in_use when pending applications exist", async () => {
@@ -227,10 +205,6 @@ describe("DeleteApplicationTemplate", () => {
       code: "expense",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_in_use")
+    expectApplicationError(result, ConflictError, "template_in_use")
   })
 })

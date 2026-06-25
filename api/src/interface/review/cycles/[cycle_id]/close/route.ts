@@ -1,13 +1,10 @@
 import { SetReviewCycleStatus } from "@/application/review/set-review-cycle-status"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppReviewCycle } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // POST /review-cycles/:cycle_id/close — 管理者が評価サイクルを closed にする
@@ -26,29 +23,17 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     status: "closed",
   })
 
-  if (updated instanceof Error) {
-    throw new InternalError("failed to update review cycle")
+  if (updated instanceof ApplicationError) {
+    throw toHttpException(updated)
   }
 
-  if ("reason" in updated) {
-    if (updated.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    if (updated.reason === "invalid_transition") {
-      throw new ConflictError("review cycle cannot be closed from current status")
-    }
-
-    throw new NotFoundError("review cycle not found")
-  }
-
-  const responseBody = {
+  const responseBody = zAppReviewCycle.parse({
     id: updated.id,
     title: updated.title,
     period: updated.period,
     status: updated.status,
     due_date: updated.dueDate,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

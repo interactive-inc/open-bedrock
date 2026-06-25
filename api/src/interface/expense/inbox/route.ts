@@ -1,5 +1,6 @@
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { factory } from "@/lib/factory"
+import { zAppExpenseInboxList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -49,15 +50,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending")),
   ])
 
-  const body = rows.map((row) => ({
-    id: row.expense.id,
-    applicant_name: row.applicantName ?? "",
-    category: row.expense.category,
-    amount: row.expense.amount,
-    spent_at: row.expense.spentAt,
-    status: row.expense.status,
-    created_at: row.expense.createdAt,
-  }))
+  const responseBody = zAppExpenseInboxList.parse({
+    data: rows.map((row) => ({
+      id: row.expense.id,
+      applicant_name: row.applicantName ?? "",
+      category: row.expense.category,
+      amount: row.expense.amount,
+      spent_at: row.expense.spentAt,
+      status: row.expense.status,
+      created_at: row.expense.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

@@ -1,5 +1,8 @@
 import { ListMyGoals } from "@/application/goal/list-my-goals"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppGoalList } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -7,7 +10,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { goals } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (goalRows instanceof Error) {
-    throw new InternalError("failed to load goals")
+  if (goalRows instanceof ApplicationError) {
+    throw toHttpException(goalRows)
   }
 
   const totalRows = await c.var.database
@@ -48,15 +51,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(goals)
     .where(eq(goals.employeeId, viewer.employeeId))
 
-  const responseBody = goalRows.map((goal) => ({
-    id: goal.id,
-    employee_id: goal.employeeId,
-    period: goal.period,
-    title: goal.title,
-    kpi: goal.kpi,
-    weight: goal.weight,
-    status: goal.status,
-  }))
+  const responseBody = zAppGoalList.parse({
+    data: goalRows.map((goal) => ({
+      id: goal.id,
+      employee_id: goal.employeeId,
+      period: goal.period,
+      title: goal.title,
+      kpi: goal.kpi,
+      weight: goal.weight,
+      status: goal.status,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

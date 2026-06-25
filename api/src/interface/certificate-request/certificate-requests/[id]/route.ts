@@ -2,23 +2,21 @@ import { CancelCertificateRequest } from "@/application/certificate-request/canc
 import { GetCertificateRequest } from "@/application/certificate-request/get-certificate-request"
 import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
 import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
+import { zAppCertificateRequest } from "@/lib/app-schemas"
+import type { AppCertificateRequest } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 証明書発行依頼をレスポンス用の snake_case に整形する。
-function toResponseBody(certificateRequest: CertificateRequest) {
-  return {
+// 証明書発行依頼をレスポンス用の snake_case に整形し、スキーマで検証する。
+function toResponseBody(certificateRequest: CertificateRequest): AppCertificateRequest {
+  return zAppCertificateRequest.parse({
     id: certificateRequest.id,
     requester_id: certificateRequest.requesterId,
     certificate_type: certificateRequest.certificateType,
@@ -27,7 +25,7 @@ function toResponseBody(certificateRequest: CertificateRequest) {
     note: certificateRequest.note,
     status: certificateRequest.status,
     created_at: certificateRequest.createdAt,
-  }
+  })
 }
 
 // GET /certificate-requests/:id — 証明書発行依頼の詳細（本人のみ）
@@ -43,16 +41,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (certificateRequest instanceof Error) {
-    throw new InternalError("failed to load certificate request")
-  }
-
-  if ("reason" in certificateRequest) {
-    if (certificateRequest.reason === "certificate_request_not_found") {
-      throw new NotFoundError("certificate request not found")
-    }
-
-    throw new ForbiddenError("not the requester")
+  if (certificateRequest instanceof ApplicationError) {
+    throw toHttpException(certificateRequest)
   }
 
   return c.json(toResponseBody(certificateRequest), 200)
@@ -88,20 +78,8 @@ export const PUT = factory.createHandlers(
       note: json.note ?? null,
     })
 
-    if (certificateRequest instanceof Error) {
-      throw new InternalError("failed to update certificate request")
-    }
-
-    if ("reason" in certificateRequest) {
-      if (certificateRequest.reason === "certificate_request_not_found") {
-        throw new NotFoundError("certificate request not found")
-      }
-
-      if (certificateRequest.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      throw new ForbiddenError("not the requester")
+    if (certificateRequest instanceof ApplicationError) {
+      throw toHttpException(certificateRequest)
     }
 
     return c.json(toResponseBody(certificateRequest), 200)
@@ -121,20 +99,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel certificate request")
-  }
-
-  if (result.reason === "certificate_request_not_found") {
-    throw new NotFoundError("certificate request not found")
-  }
-
-  if (result.reason === "not_requester") {
-    throw new ForbiddenError("not the requester")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

@@ -1,5 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { codeSchema } from "@/lib/schemas"
+import { zAppShiftAssignmentList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -75,7 +76,7 @@ export const GET = factory.createHandlers(
       const department = departments.at(0)
 
       if (department === undefined) {
-        return c.json({ data: [], total: 0 }, 200)
+        return c.json(zAppShiftAssignmentList.parse({ data: [], total: 0 }), 200)
       }
 
       conditions.push(eq(employees.deptId, department.departmentId))
@@ -96,15 +97,18 @@ export const GET = factory.createHandlers(
       .leftJoin(employees, eq(employees.id, shiftAssignments.employeeId))
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      id: row.assignment.id,
-      employee_id: row.assignment.employeeId,
-      pattern_id: row.assignment.patternId,
-      date: row.assignment.date,
-      note: row.assignment.note,
-      published_at: row.assignment.publishedAt,
-    }))
+    const responseBody = zAppShiftAssignmentList.parse({
+      data: rows.map((row) => ({
+        id: row.assignment.id,
+        employee_id: row.assignment.employeeId,
+        pattern_id: row.assignment.patternId,
+        date: row.assignment.date,
+        note: row.assignment.note,
+        published_at: row.assignment.publishedAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

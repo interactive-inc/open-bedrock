@@ -2,6 +2,14 @@ import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import type { Context } from "@/env"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
 export type Command = {
@@ -12,20 +20,6 @@ export type Command = {
   comment: string | null
 }
 
-export type LeaveRequestNotFound = { reason: "leave_request_not_found" }
-
-export type AlreadyDecided = { reason: "already_decided" }
-
-export type BalanceNotFound = { reason: "balance_not_found" }
-
-export type InsufficientBalance = { reason: "insufficient_balance" }
-
-export type SelfApproval = { reason: "self_approval" }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type InvalidStartDate = { reason: "invalid_start_date" }
-
 /**
  * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
  * 会計年度は申請の startDate から導出する（サーバ時刻に依存しない）。
@@ -33,21 +27,9 @@ export type InvalidStartDate = { reason: "invalid_start_date" }
 export class DecideLeaveRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | LeaveRequest
-    | LeaveRequestNotFound
-    | AlreadyDecided
-    | BalanceNotFound
-    | InsufficientBalance
-    | SelfApproval
-    | Forbidden
-    | InvalidStartDate
-    | Error
-  > {
-    if (!canDecideLeave(command.viewerRole)) {
-      return { reason: "forbidden" }
+  async run(command: Command): Promise<LeaveRequest | ApplicationError> {
+    if (canDecideLeave(command.viewerRole) === false) {
+      return new ForbiddenError("cannot decide leave requests", "forbidden")
     }
 
     const leaveRequestRepository = new LeaveRequestRepository(this.c)
@@ -55,21 +37,21 @@ export class DecideLeaveRequest {
     const existing = await leaveRequestRepository.findById(command.leaveRequestId)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find leave request", { cause: existing })
     }
 
     if (existing === null) {
-      return { reason: "leave_request_not_found" }
+      return new NotFoundError("leave request not found", "leave_request_not_found")
     }
 
     if (existing.employeeId === command.approverId) {
-      return { reason: "self_approval" }
+      return new ForbiddenError("cannot decide own leave request", "self_approval")
     }
 
     const fiscalYear = toFiscalYear(existing.startDate)
 
     if (fiscalYear === null) {
-      return { reason: "invalid_start_date" }
+      return new ValidationError("invalid leave request start date", "invalid_start_date")
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -83,19 +65,19 @@ export class DecideLeaveRequest {
       })
 
       if (approved instanceof Error) {
-        return approved
+        return new UnexpectedError("failed to approve leave request", { cause: approved })
       }
 
       if (approved === "already_decided") {
-        return { reason: "already_decided" }
+        return new ConflictError("the leave request is already decided", "already_decided")
       }
 
       if (approved === "balance_not_found") {
-        return { reason: "balance_not_found" }
+        return new ConflictError("leave balance record not found", "balance_not_found")
       }
 
       if (approved === "insufficient_balance") {
-        return { reason: "insufficient_balance" }
+        return new ConflictError("insufficient leave balance", "insufficient_balance")
       }
 
       return approved
@@ -109,11 +91,11 @@ export class DecideLeaveRequest {
     })
 
     if (decided instanceof Error) {
-      return decided
+      return new UnexpectedError("failed to decide leave request", { cause: decided })
     }
 
     if (decided === null) {
-      return { reason: "already_decided" }
+      return new ConflictError("the leave request is already decided", "already_decided")
     }
 
     return decided

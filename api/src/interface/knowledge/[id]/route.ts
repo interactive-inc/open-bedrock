@@ -4,12 +4,10 @@ import { factory } from "@/lib/factory"
 import { knowledgeArticles } from "@/schema"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppKnowledge, zAppKnowledgeWritten } from "@/lib/app-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -33,7 +31,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("knowledge not found")
   }
 
-  const responseBody = {
+  const responseBody = zAppKnowledge.parse({
     id: row.id,
     title: row.title,
     category: row.category,
@@ -41,7 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     body_md: row.bodyMd,
     author_id: row.authorId,
     created_at: row.createdAt,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -78,25 +76,17 @@ export const PUT = factory.createHandlers(
       bodyMd: json.body_md,
     })
 
-    if (article instanceof Error) {
-      throw new InternalError("failed to update knowledge")
+    if (article instanceof ApplicationError) {
+      throw toHttpException(article)
     }
 
-    if ("reason" in article) {
-      if (article.reason === "article_not_found") {
-        throw new NotFoundError("knowledge not found")
-      }
-
-      throw new ForbiddenError("not the author")
-    }
-
-    const responseBody = {
+    const responseBody = zAppKnowledgeWritten.parse({
       id: article.id,
       title: article.title,
       category: article.category,
       tags: article.tags,
       body_md: article.bodyMd,
-    }
+    })
 
     return c.json(responseBody, 200)
   },
@@ -117,16 +107,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     authorId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete knowledge")
-  }
-
-  if (result.reason === "article_not_found") {
-    throw new NotFoundError("knowledge not found")
-  }
-
-  if (result.reason === "not_author") {
-    throw new ForbiddenError("not the author")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

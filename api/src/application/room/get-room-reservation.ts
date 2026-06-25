@@ -1,3 +1,5 @@
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { RoomReservation } from "@/domain/room/room-reservation.entity"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
@@ -7,33 +9,27 @@ export type Command = {
   reserverId: number
 }
 
-export type ReservationNotFound = { reason: "reservation_not_found" }
-
-export type NotReserver = { reason: "not_reserver" }
-
 /**
  * 会議室予約を1件取得する。本人以外の閲覧を拒否する。
  */
 export class GetRoomReservation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<RoomReservation | ReservationNotFound | NotReserver | Error> {
+  async run(command: Command): Promise<RoomReservation | ApplicationError> {
     const reservationRepository = new RoomReservationRepository(this.c)
 
     const reservation = await reservationRepository.findById(command.reservationId)
 
     if (reservation instanceof Error) {
-      return reservation
+      return new UnexpectedError("failed to find reservation", { cause: reservation })
     }
 
     if (reservation === null) {
-      return { reason: "reservation_not_found" }
+      return new NotFoundError("reservation not found", "reservation_not_found")
     }
 
     if (reservation.reserverId !== command.reserverId) {
-      return { reason: "not_reserver" }
+      return new ForbiddenError("not the reserver", "not_reserver")
     }
 
     return reservation

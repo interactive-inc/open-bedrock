@@ -1,25 +1,12 @@
 import { DeleteNotification } from "@/application/notification/delete-notification"
 import { GetNotification } from "@/application/notification/get-notification"
-import type { Notification } from "@/domain/notification/notification.entity"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppNotification } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-
-// 通知をレスポンス用の snake_case に整形する。
-function toResponseBody(notification: Notification) {
-  return {
-    id: notification.id,
-    recipient_employee_id: notification.recipientEmployeeId,
-    source_domain: notification.sourceDomain,
-    source_id: notification.sourceId,
-    kind: notification.kind,
-    title: notification.title,
-    body: notification.body,
-    is_read: notification.isRead,
-    created_at: notification.createdAt,
-  }
-}
 
 // GET /notifications/:id — 本人宛ての通知1件を取得する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -36,16 +23,23 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     viewerEmployeeId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to load notification")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
-  if ("reason" in result) {
-    // 他人の通知も 404 にして、連番 ID による存在推測（列挙）を防ぐ。
-    throw new NotFoundError("notification not found")
-  }
+  const responseBody = zAppNotification.parse({
+    id: result.id,
+    recipient_employee_id: result.recipientEmployeeId,
+    source_domain: result.sourceDomain,
+    source_id: result.sourceId,
+    kind: result.kind,
+    title: result.title,
+    body: result.body,
+    is_read: result.isRead,
+    created_at: result.createdAt,
+  })
 
-  return c.json(toResponseBody(result), 200)
+  return c.json(responseBody, 200)
 })
 
 // DELETE /notifications/:id — 本人宛ての通知を削除する
@@ -63,12 +57,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     viewerEmployeeId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete notification")
-  }
-
-  if (result.reason === "not_found") {
-    throw new NotFoundError("notification not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

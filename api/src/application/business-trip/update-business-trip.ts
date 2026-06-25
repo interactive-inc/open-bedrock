@@ -1,6 +1,14 @@
 import type { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   businessTripId: string
@@ -12,16 +20,6 @@ export type Command = {
   estimatedCost: number | null
 }
 
-export type BusinessTripNotFound = { reason: "business_trip_not_found" }
-
-export type NotTraveler = { reason: "not_traveler" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
-export type OverlappingTrip = { reason: "overlapping_trip" }
-
-export type InvalidDateRange = { reason: "invalid_date_range" }
-
 /**
  * 出張申請の行き先・期間・目的・概算費用を変更する。本人以外と、承認済み申請の変更を拒否する。
  * 変更後の期間が他の出張申請と重複する場合も拒否する。
@@ -29,35 +27,25 @@ export type InvalidDateRange = { reason: "invalid_date_range" }
 export class UpdateBusinessTrip {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | BusinessTrip
-    | BusinessTripNotFound
-    | NotTraveler
-    | NotModifiable
-    | OverlappingTrip
-    | InvalidDateRange
-    | Error
-  > {
+  async run(command: Command): Promise<BusinessTrip | ApplicationError> {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
     const current = await businessTripRepository.findById(command.businessTripId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find business trip", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "business_trip_not_found" }
+      return new NotFoundError("business trip not found", "business_trip_not_found")
     }
 
     if (current.travelerId !== command.travelerId) {
-      return { reason: "not_traveler" }
+      return new ForbiddenError("not the traveler", "not_traveler")
     }
 
     if (!current.isModifiable) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
     }
 
     const overlapping = await businessTripRepository.findOverlapping({
@@ -68,11 +56,11 @@ export class UpdateBusinessTrip {
     })
 
     if (overlapping instanceof Error) {
-      return overlapping
+      return new UnexpectedError("failed to find business trips", { cause: overlapping })
     }
 
     if (overlapping.length > 0) {
-      return { reason: "overlapping_trip" }
+      return new ConflictError("overlapping business trip already exists", "overlapping_trip")
     }
 
     const updated = current.withDetails({
@@ -84,17 +72,17 @@ export class UpdateBusinessTrip {
     })
 
     if ("reason" in updated) {
-      return updated
+      return new ValidationError("invalid date range", "invalid_date_range")
     }
 
     const result = await businessTripRepository.update(updated)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to update business trip", { cause: result })
     }
 
     if (result === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
     }
 
     return result

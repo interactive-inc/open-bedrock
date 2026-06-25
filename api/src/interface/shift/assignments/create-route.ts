@@ -1,14 +1,11 @@
 import { CreateShiftAssignment } from "@/application/shift/create-shift-assignment"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftAssignment } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -42,34 +39,18 @@ export const POST = factory.createHandlers(
       note: request.note ?? null,
     })
 
-    if (assignment instanceof Error) {
-      throw new InternalError("failed to create assignment")
+    if (assignment instanceof ApplicationError) {
+      throw toHttpException(assignment)
     }
 
-    if ("reason" in assignment) {
-      if (assignment.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (assignment.reason === "employee_not_found") {
-        throw new NotFoundError("employee not found")
-      }
-
-      if (assignment.reason === "pattern_not_found") {
-        throw new NotFoundError("pattern not found")
-      }
-
-      throw new ConflictError("shift assignment already exists for this employee and date")
-    }
-
-    const responseBody = {
+    const responseBody = zAppShiftAssignment.parse({
       id: assignment.id,
       employee_id: assignment.employeeId,
       pattern_id: assignment.patternId,
       date: assignment.date,
       note: assignment.note,
       published_at: assignment.publishedAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -1,6 +1,8 @@
 import { KnowledgeArticle } from "@/domain/knowledge/knowledge-article.entity"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/infrastructure/knowledge/knowledge-article-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   title: string
@@ -17,7 +19,7 @@ export type Command = {
 export class CreateKnowledgeArticle {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<KnowledgeArticle | Error> {
+  async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
     const articleRepository = new KnowledgeArticleRepository(this.c)
 
     const article = KnowledgeArticle.create({
@@ -29,6 +31,12 @@ export class CreateKnowledgeArticle {
       createdAt: command.createdAt,
     })
 
-    return await articleRepository.create(article)
+    const created = await articleRepository.create(article)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create knowledge article", { cause: created })
+    }
+
+    return created
   }
 }

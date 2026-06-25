@@ -1,6 +1,6 @@
 import { Application } from "@/domain/application/application.entity"
-import type { TemplateNotFound } from "@/lib/application/template-not-found"
-import { UnexpectedError } from "@/lib/errors"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
@@ -30,7 +30,7 @@ export type SubmittedApplication = {
 export class SubmitApplication {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<SubmittedApplication | TemplateNotFound | Error> {
+  async run(command: Command): Promise<SubmittedApplication | ApplicationError> {
     const applicationRepository = new ApplicationRepository(this.c)
 
     const templateRepository = new ApplicationTemplateRepository(this.c)
@@ -40,11 +40,11 @@ export class SubmitApplication {
     const template = await templateRepository.findByCode(command.templateCode)
 
     if (template instanceof Error) {
-      return template
+      return new UnexpectedError("failed to find application template", { cause: template })
     }
 
     if (template === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     if (template.id === null) {
@@ -62,13 +62,13 @@ export class SubmitApplication {
     )
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to create application", { cause: created })
     }
 
     const applicant = await employeeRepository.findById(created.applicantId)
 
     if (applicant instanceof Error) {
-      return applicant
+      return new UnexpectedError("failed to find applicant", { cause: applicant })
     }
 
     return {

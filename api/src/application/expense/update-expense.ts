@@ -1,6 +1,8 @@
 import type { Expense } from "@/domain/expense/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { ExpenseCategory } from "@/lib/schemas"
 
 export type Command = {
@@ -12,37 +14,31 @@ export type Command = {
   note: string | null
 }
 
-export type ExpenseNotFound = { reason: "expense_not_found" }
-
-export type NotOwner = { reason: "not_owner" }
-
-export type NotEditable = { reason: "not_editable" }
-
 /**
  * 本人の経費申請の内容を変更する。本人以外と、承認・却下・精算済みの変更を拒否する。
  */
 export class UpdateExpense {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Expense | ExpenseNotFound | NotOwner | NotEditable | Error> {
+  async run(command: Command): Promise<Expense | ApplicationError> {
     const repository = new ExpenseRepository(this.c)
 
     const current = await repository.findById(command.expenseId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find expense", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "expense_not_found" }
+      return new NotFoundError("expense not found", "expense_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_owner" }
+      return new ForbiddenError("not the owner of expense", "not_owner")
     }
 
     if (current.status !== "pending") {
-      return { reason: "not_editable" }
+      return new ConflictError("expense is not editable", "not_editable")
     }
 
     const updated = current.withDetails({
@@ -55,7 +51,7 @@ export class UpdateExpense {
     const saved = await repository.update(updated)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update expense", { cause: saved })
     }
 
     if (saved === null) {
@@ -63,15 +59,15 @@ export class UpdateExpense {
       const reloaded = await repository.findById(command.expenseId)
 
       if (reloaded instanceof Error) {
-        return reloaded
+        return new UnexpectedError("failed to find expense", { cause: reloaded })
       }
 
       if (reloaded === null) {
-        return { reason: "expense_not_found" }
+        return new NotFoundError("expense not found", "expense_not_found")
       }
 
       // Row exists but status is no longer pending (concurrent approval/rejection)
-      return { reason: "not_editable" }
+      return new ConflictError("expense is not editable", "not_editable")
     }
 
     return saved

@@ -1,6 +1,8 @@
 import type { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   resignationId: string
@@ -10,39 +12,31 @@ export type Command = {
   reason: string | null
 }
 
-export type ResignationNotFound = { reason: "resignation_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
 /**
  * 退職申請の退職希望日・最終出社日・理由を変更する。本人以外と、承認済み申請の変更を拒否する。
  */
 export class UpdateResignation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Resignation | ResignationNotFound | NotApplicant | NotModifiable | Error> {
+  async run(command: Command): Promise<Resignation | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)
 
     const current = await resignationRepository.findById(command.resignationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find resignation", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "resignation_not_found" }
+      return new NotFoundError("resignation not found", "resignation_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (!current.isModifiable) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
     }
 
     const updated = current.withDetails({
@@ -54,11 +48,11 @@ export class UpdateResignation {
     const saved = await resignationRepository.update(updated)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update resignation", { cause: saved })
     }
 
     if (saved === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
     }
 
     return saved

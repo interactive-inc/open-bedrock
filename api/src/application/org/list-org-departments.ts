@@ -1,3 +1,5 @@
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
@@ -8,9 +10,15 @@ import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-rep
 export class ListOrgDepartments {
   constructor(private readonly c: Context) {}
 
-  async run(): Promise<ReadonlyArray<OrgDepartment> | Error> {
+  async run(): Promise<ReadonlyArray<OrgDepartment> | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    return await departmentRepository.findAll()
+    const departments = await departmentRepository.findAll()
+
+    if (departments instanceof Error) {
+      return new UnexpectedError("failed to find departments", { cause: departments })
+    }
+
+    return departments
   }
 }

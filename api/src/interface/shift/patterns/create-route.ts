@@ -1,12 +1,10 @@
 import { CreateShiftPattern } from "@/application/shift/create-shift-pattern"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftPattern } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -48,26 +46,18 @@ export const POST = factory.createHandlers(
       },
     })
 
-    if (pattern instanceof Error) {
-      throw new InternalError("failed to create pattern")
+    if (pattern instanceof ApplicationError) {
+      throw toHttpException(pattern)
     }
 
-    if ("reason" in pattern) {
-      if (pattern.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      throw new ConflictError("pattern code already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppShiftPattern.parse({
       id: pattern.id,
       code: pattern.code,
       name: pattern.name,
       start_time: pattern.startTime,
       end_time: pattern.endTime,
       break_minutes: pattern.breakMinutes,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -4,6 +4,7 @@ import { toMonthRange } from "@/interface/attendance/to-month-range"
 import { attendanceSummaryQuerySchema } from "@/interface/attendance/me/summary/attendance-summary-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
+import { zAppAttendanceSummary } from "@/lib/app-schemas"
 import { attendanceRecords } from "@/schema"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
@@ -46,12 +47,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     records,
   })
 
-  const responseBody = {
+  const responseBody = zAppAttendanceSummary.parse({
     employee_id: summary.employeeId,
     month: summary.month,
     work_days: summary.workDays,
     total_work_minutes: summary.totalWorkMinutes,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

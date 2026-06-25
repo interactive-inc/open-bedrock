@@ -2,6 +2,7 @@ import { factory } from "@/lib/factory"
 import { roomAvailabilityQuerySchema } from "@/interface/room/availability/room-availability-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppRoomAvailabilityList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -56,7 +57,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(gte(rooms.capacity, query.capacity))
 
   if (pagedRooms.length === 0) {
-    return c.json({ data: [], total: totalRows.at(0)?.total ?? 0 }, 200)
+    const emptyBody = zAppRoomAvailabilityList.parse({
+      data: [],
+      total: totalRows.at(0)?.total ?? 0,
+    })
+
+    return c.json(emptyBody, 200)
   }
 
   const roomIds = pagedRooms.map((r) => r.id)
@@ -101,11 +107,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   }
 
-  const responseBody = [...grouped.values()].map(({ room, conflicts }) => ({
-    room,
-    available: conflicts.length === 0,
-    conflicts,
-  }))
+  const responseBody = zAppRoomAvailabilityList.parse({
+    data: [...grouped.values()].map(({ room, conflicts }) => ({
+      room,
+      available: conflicts.length === 0,
+      conflicts,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

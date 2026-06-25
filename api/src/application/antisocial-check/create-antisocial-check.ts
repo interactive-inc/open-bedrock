@@ -1,6 +1,8 @@
 import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   requesterId: number
@@ -16,7 +18,7 @@ export type Command = {
 export class CreateAntisocialCheck {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<AntisocialCheck | Error> {
+  async run(command: Command): Promise<AntisocialCheck | ApplicationError> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
 
     const antisocialCheck = AntisocialCheck.create({
@@ -27,6 +29,12 @@ export class CreateAntisocialCheck {
       createdAt: command.createdAt,
     })
 
-    return await antisocialCheckRepository.create(antisocialCheck)
+    const created = await antisocialCheckRepository.create(antisocialCheck)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create antisocial check", { cause: created })
+    }
+
+    return created
   }
 }

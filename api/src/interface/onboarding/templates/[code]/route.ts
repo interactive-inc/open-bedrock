@@ -2,28 +2,25 @@ import { DeleteOnboardingTemplate } from "@/application/onboarding/delete-onboar
 import { GetOnboardingTemplate } from "@/application/onboarding/get-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/application/onboarding/update-onboarding-template"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppOnboardingTemplate } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // オンボーディングテンプレートをレスポンス用の snake_case に整形する。
 function toResponseBody(template: OnboardingTemplate) {
-  return {
+  return zAppOnboardingTemplate.parse({
     id: template.id,
     code: template.code,
     name: template.name,
     kind: template.kind,
     description: template.description,
-  }
+  })
 }
 
 // GET /onboarding/templates/:code — テンプレート詳細（管理権限のみ）
@@ -39,16 +36,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 
-  if (template instanceof Error) {
-    throw new InternalError("failed to load onboarding template")
-  }
-
-  if ("reason" in template) {
-    if (template.reason === "template_not_found") {
-      throw new NotFoundError("template not found")
-    }
-
-    throw new ForbiddenError()
+  if (template instanceof ApplicationError) {
+    throw toHttpException(template)
   }
 
   return c.json(toResponseBody(template), 200)
@@ -82,16 +71,8 @@ export const PUT = factory.createHandlers(
       description: json.description ?? null,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update onboarding template")
-    }
-
-    if ("reason" in updated) {
-      if (updated.reason === "template_not_found") {
-        throw new NotFoundError("template not found")
-      }
-
-      throw new ForbiddenError()
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -111,20 +92,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete onboarding template")
-  }
-
-  if (result.reason === "template_not_found") {
-    throw new NotFoundError("template not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "template_in_use") {
-    throw new ConflictError("template is in use by active onboarding assignments")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

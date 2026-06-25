@@ -1,5 +1,7 @@
 import type { Application } from "@/domain/application/application.entity"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 
 export type Command = {
@@ -14,7 +16,7 @@ export type Command = {
 export class ListMyApplications {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<Application> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<Application> | ApplicationError> {
     const applicationRepository = new ApplicationRepository(this.c)
 
     const opts =
@@ -22,6 +24,12 @@ export class ListMyApplications {
         ? { limit: command.limit, offset: command.offset }
         : undefined
 
-    return await applicationRepository.findByApplicantId(command.applicantId, opts)
+    const applications = await applicationRepository.findByApplicantId(command.applicantId, opts)
+
+    if (applications instanceof Error) {
+      return new UnexpectedError("failed to find applications", { cause: applications })
+    }
+
+    return applications
   }
 }

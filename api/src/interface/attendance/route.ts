@@ -8,10 +8,13 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
+import { zAppAttendanceRecordList } from "@/lib/app-schemas"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /attendance — 勤怠検索（他人の閲覧は権限ロールのみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -41,8 +44,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: session.role,
   })
 
-  if ("reason" in query) {
-    throw new ForbiddenError()
+  if (query instanceof ApplicationError) {
+    throw toHttpException(query)
   }
 
   const conditions: Array<SQL> = []
@@ -86,15 +89,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     c.var.database.select({ total: count() }).from(attendanceRecords).where(where),
   ])
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    employee_id: row.employeeId,
-    work_date: row.workDate,
-    clock_in_at: row.clockInAt,
-    clock_out_at: row.clockOutAt,
-    work_minutes: row.workMinutes,
-    status: row.status,
-  }))
+  const responseBody = zAppAttendanceRecordList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      employee_id: row.employeeId,
+      work_date: row.workDate,
+      clock_in_at: row.clockInAt,
+      clock_out_at: row.clockOutAt,
+      work_minutes: row.workMinutes,
+      status: row.status,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

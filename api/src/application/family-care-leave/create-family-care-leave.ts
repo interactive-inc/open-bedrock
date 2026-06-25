@@ -1,4 +1,6 @@
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 
@@ -11,19 +13,13 @@ export type Command = {
   createdAt: string
 }
 
-export type InvalidDateRange = { reason: "invalid_date_range" }
-
-export type OverlappingLeave = { reason: "overlapping_leave" }
-
 /**
  * 休業申出を作成する。status は "requested" で登録する。
  */
 export class CreateFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<FamilyCareLeave | InvalidDateRange | OverlappingLeave | Error> {
+  async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const familyCareLeave = FamilyCareLeave.create({
@@ -36,18 +32,18 @@ export class CreateFamilyCareLeave {
     })
 
     if ("reason" in familyCareLeave) {
-      return familyCareLeave
+      return new ValidationError("invalid date range", "invalid_date_range")
     }
 
     const created = await familyCareLeaveRepository.create(familyCareLeave)
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to create family care leave", { cause: created })
     }
 
     // 条件付き INSERT が 0 行だった場合は並行リクエストによる期間重複。
     if (created === null) {
-      return { reason: "overlapping_leave" }
+      return new ConflictError("overlapping family care leave", "overlapping_leave")
     }
 
     return created

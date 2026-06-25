@@ -7,6 +7,8 @@ import { UpdateCareerPosting } from "@/application/career/update-career-posting"
 import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 import type { Context } from "@/env"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedPosting(context: Context): Promise<number> {
@@ -19,7 +21,7 @@ async function seedPosting(context: Context): Promise<number> {
     status: "open",
   })
 
-  if (created instanceof Error || "reason" in created || created.id === null) {
+  if (created instanceof ApplicationError || created.id === null) {
     throw new Error("seed failed")
   }
 
@@ -41,7 +43,7 @@ describe("CreateCareerPosting", () => {
 
     expect(created).toBeInstanceOf(CareerPosting)
 
-    if (created instanceof Error || "reason" in created) {
+    if (created instanceof ApplicationError) {
       throw new Error("create failed")
     }
 
@@ -63,13 +65,7 @@ describe("CreateCareerPosting", () => {
 
     expect(created instanceof CareerPosting).toBe(false)
 
-    if (created instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    if ("reason" in created) {
-      expect(created.reason).toBe("forbidden")
-    }
+    expectApplicationError(created, ForbiddenError, "forbidden")
   })
 })
 
@@ -95,11 +91,7 @@ describe("GetCareerPosting", () => {
       postingId: 9999,
     })
 
-    if (result instanceof Error || result instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(result.reason).toBe("posting_not_found")
+    expectApplicationError(result, NotFoundError, "posting_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -112,11 +104,7 @@ describe("GetCareerPosting", () => {
       postingId: postingId,
     })
 
-    if (result instanceof Error || result instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -138,7 +126,7 @@ describe("UpdateCareerPosting", () => {
 
     expect(updated).toBeInstanceOf(CareerPosting)
 
-    if (updated instanceof Error || "reason" in updated) {
+    if (updated instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -159,11 +147,7 @@ describe("UpdateCareerPosting", () => {
       status: "open",
     })
 
-    if (updated instanceof Error || updated instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(updated.reason).toBe("posting_not_found")
+    expectApplicationError(updated, NotFoundError, "posting_not_found")
   })
 })
 
@@ -178,7 +162,7 @@ describe("DeleteCareerPosting", () => {
       postingId: postingId,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       throw new Error("delete failed")
     }
 
@@ -189,11 +173,7 @@ describe("DeleteCareerPosting", () => {
       postingId: postingId,
     })
 
-    if (afterDelete instanceof Error || afterDelete instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(afterDelete.reason).toBe("posting_not_found")
+    expectApplicationError(afterDelete, NotFoundError, "posting_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -206,11 +186,7 @@ describe("DeleteCareerPosting", () => {
       postingId: postingId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns has_applied_applications when the posting has applied applications", async () => {
@@ -225,7 +201,7 @@ describe("DeleteCareerPosting", () => {
       message: null,
     })
 
-    if (applied instanceof Error || "reason" in applied) {
+    if (applied instanceof ApplicationError) {
       throw new Error("apply failed")
     }
 
@@ -234,11 +210,7 @@ describe("DeleteCareerPosting", () => {
       postingId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    expect(result.reason).toBe("has_applied_applications")
+    expectApplicationError(result, ConflictError, "has_applied_applications")
   })
 
   test("deletes rejected applications atomically when deleting a posting", async () => {
@@ -260,7 +232,7 @@ describe("DeleteCareerPosting", () => {
       postingId,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       throw new Error("unexpected error")
     }
 

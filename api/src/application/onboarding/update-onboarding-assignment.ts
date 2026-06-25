@@ -1,5 +1,7 @@
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -10,12 +12,6 @@ export type Command = {
   viewerRole: string
   assignedAt: string
 }
-
-export type AssignmentNotFound = { reason: "assignment_not_found" }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type UpdateOnboardingAssignmentResult = {
   assignment: OnboardingAssignment
@@ -28,35 +24,31 @@ export type UpdateOnboardingAssignmentResult = {
 export class UpdateOnboardingAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    UpdateOnboardingAssignmentResult | AssignmentNotFound | Forbidden | NotModifiable | Error
-  > {
+  async run(command: Command): Promise<UpdateOnboardingAssignmentResult | ApplicationError> {
     if (canManageOnboarding(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
     const current = await assignmentRepository.findById(command.assignmentId)
 
-    if (current === null) {
-      return { reason: "assignment_not_found" }
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find assignment", { cause: current })
     }
 
-    if (current instanceof Error) {
-      return current
+    if (current === null) {
+      return new NotFoundError("assignment not found", "assignment_not_found")
     }
 
     if (current.status === "completed") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("assignment is not modifiable", "not_modifiable")
     }
 
     const updated = await assignmentRepository.update(current.withRescheduled(command.assignedAt))
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -64,11 +56,11 @@ export class UpdateOnboardingAssignment {
     const employee = await employeeRepository.findById(updated.employeeId)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "assignment_not_found" }
+      return new NotFoundError("assignment not found", "assignment_not_found")
     }
 
     return { assignment: updated, employee }

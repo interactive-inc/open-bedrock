@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { PublishShiftAssignment } from "@/application/shift/publish-shift-assignment"
 import { UpdateShiftAssignment } from "@/application/shift/update-shift-assignment"
+import { ConflictError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
@@ -46,7 +48,7 @@ describe("PublishShiftAssignment", () => {
       publishedAt: "2026-06-02T00:00:00.000Z",
     })
 
-    expect(second).toEqual({ reason: "already_published" })
+    expectApplicationError(second, ConflictError, "already_published")
   })
 })
 
@@ -74,6 +76,6 @@ describe("UpdateShiftAssignment", () => {
       note: "changed",
     })
 
-    expect(result).toEqual({ reason: "already_published" })
+    expectApplicationError(result, ConflictError, "already_published")
   })
 })

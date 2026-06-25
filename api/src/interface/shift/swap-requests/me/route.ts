@@ -1,4 +1,7 @@
 import { ListMyShiftSwapRequests } from "@/application/shift/list-my-shift-swap-requests"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftSwapRequestList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -7,7 +10,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { shiftSwapRequests } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (swapRequests instanceof Error) {
-    throw new InternalError("failed to load swap requests")
+  if (swapRequests instanceof ApplicationError) {
+    throw toHttpException(swapRequests)
   }
 
   const totalRows = await c.var.database
@@ -48,15 +51,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(shiftSwapRequests)
     .where(eq(shiftSwapRequests.requesterEmployeeId, session.employeeId))
 
-  const responseBody = swapRequests.map((swapRequest) => ({
-    id: swapRequest.id,
-    requester_employee_id: swapRequest.requesterEmployeeId,
-    target_employee_id: swapRequest.targetEmployeeId,
-    date: swapRequest.date,
-    note: swapRequest.note,
-    status: swapRequest.status,
-    approved_at: swapRequest.approvedAt,
-  }))
+  const responseBody = zAppShiftSwapRequestList.parse({
+    data: swapRequests.map((swapRequest) => ({
+      id: swapRequest.id,
+      requester_employee_id: swapRequest.requesterEmployeeId,
+      target_employee_id: swapRequest.targetEmployeeId,
+      date: swapRequest.date,
+      note: swapRequest.note,
+      status: swapRequest.status,
+      approved_at: swapRequest.approvedAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

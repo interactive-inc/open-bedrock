@@ -37,7 +37,7 @@ const app = factory
 
 const familyCareLeaveResponseSchema = z.object({
   id: z.string(),
-  employee_id: z.number(),
+  employee_id: z.string(),
   leave_kind: z.string(),
   start_date: z.string(),
   end_date: z.string(),
@@ -151,7 +151,7 @@ describe("POST /family-care-leaves", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.employee_id).toBe(4)
+      expect(parsed.data.employee_id).toBe("4")
       expect(parsed.data.note).toBe("育児休業を申し出ます")
     }
   })
@@ -228,7 +228,7 @@ describe("GET /family-care-leaves/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(4)
+      expect(parsed.data.data[0].employee_id).toBe("4")
     }
   })
 

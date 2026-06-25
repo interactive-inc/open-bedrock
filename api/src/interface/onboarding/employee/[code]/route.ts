@@ -1,5 +1,6 @@
 import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOnboardingAssignmentList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -98,5 +99,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       })),
   }))
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppOnboardingAssignmentList.parse({
+    data: body,
+    total: totalRows.at(0)?.total ?? 0,
+  })
+
+  return c.json(responseBody, 200)
 })

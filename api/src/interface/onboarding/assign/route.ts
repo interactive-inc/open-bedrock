@@ -1,11 +1,8 @@
 import { AssignOnboarding } from "@/application/onboarding/assign-onboarding"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOnboardingAssignment } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -37,21 +34,11 @@ export const POST = factory.createHandlers(
       assignedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to assign onboarding")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
-    if ("reason" in result) {
-      if (result.reason === "forbidden") {
-        throw new ForbiddenError("not authorized")
-      }
-      if (result.reason === "already_assigned") {
-        throw new ConflictError("template already assigned to this employee")
-      }
-      throw new NotFoundError(result.reason)
-    }
-
-    const responseBody = {
+    const responseBody = zAppOnboardingAssignment.parse({
       id: result.assignment.id,
       employee_code: result.employee.code,
       employee_name: result.employee.name,
@@ -68,7 +55,7 @@ export const POST = factory.createHandlers(
         status: task.status,
         completed_at: task.completedAt,
       })),
-    }
+    })
 
     return c.json(responseBody, 201)
   },

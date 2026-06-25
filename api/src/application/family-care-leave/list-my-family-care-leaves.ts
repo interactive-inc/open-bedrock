@@ -1,4 +1,6 @@
 import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMyFamilyCareLeaves {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<FamilyCareLeave> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<FamilyCareLeave> | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
-    return await familyCareLeaveRepository.findByEmployeeId({
+    const familyCareLeaves = await familyCareLeaveRepository.findByEmployeeId({
       employeeId: command.employeeId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (familyCareLeaves instanceof Error) {
+      return new UnexpectedError("failed to find family care leaves", { cause: familyCareLeaves })
+    }
+
+    return familyCareLeaves
   }
 }

@@ -10,6 +10,7 @@ import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, count, eq, like, or } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplicationInboxList } from "@/lib/app-schemas"
 
 // GET /applications/inbox — 承認待ちの申請一覧。
 // テンプレートの approverRoles に自分のロールが含まれるか、approverRoles が空で
@@ -74,14 +75,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .innerJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
     .where(pendingWithRole)
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    template_name: row.templateName ?? "",
-    applicant_name: row.applicantName ?? "",
-    current_step: row.currentStep,
-    status: row.status,
-    created_at: row.createdAt,
-  }))
+  const responseBody = zAppApplicationInboxList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      template_name: row.templateName ?? "",
+      applicant_name: row.applicantName ?? "",
+      current_step: row.currentStep,
+      status: row.status,
+      created_at: row.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

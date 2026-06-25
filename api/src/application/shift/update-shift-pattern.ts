@@ -1,4 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import type { Context } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
@@ -13,23 +15,15 @@ export type Input = {
   breakMinutes: number
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type PatternNotFound = { reason: "pattern_not_found" }
-
-export type CodeConflict = { reason: "code_conflict" }
-
 /**
  * 権限・コード重複を確認し、シフトパターンの内容を変更する。
  */
 export class UpdateShiftPattern {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<ShiftPattern | Forbidden | PatternNotFound | CodeConflict | Error> {
+  async run(input: Input): Promise<ShiftPattern | ApplicationError> {
     if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const patternRepository = new ShiftPatternRepository(this.c)
@@ -37,20 +31,16 @@ export class UpdateShiftPattern {
     const current = await patternRepository.findById(input.patternId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find shift pattern", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "pattern_not_found" }
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
     const conflict = await this.findCodeConflict(input.code, input.patternId)
 
-    if (conflict instanceof Error) {
-      return conflict
-    }
-
-    if (conflict.reason === "code_conflict") {
+    if (conflict instanceof ApplicationError) {
       return conflict
     }
 
@@ -65,33 +55,33 @@ export class UpdateShiftPattern {
     )
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update shift pattern", { cause: saved })
     }
 
     if (saved === null) {
-      return { reason: "pattern_not_found" }
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
     return saved
   }
 
-  // 変更後コードが自分以外のパターンと重複しないか確認する。
+  // 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。
   private async findCodeConflict(
     code: string,
     patternId: number,
-  ): Promise<CodeConflict | { reason: "ok" } | Error> {
+  ): Promise<null | ApplicationError> {
     const patternRepository = new ShiftPatternRepository(this.c)
 
     const existing = await patternRepository.findByCode(code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find shift pattern", { cause: existing })
     }
 
     if (existing !== null && existing.id !== patternId) {
-      return { reason: "code_conflict" }
+      return new ConflictError("shift pattern code already exists", "code_conflict")
     }
 
-    return { reason: "ok" }
+    return null
   }
 }

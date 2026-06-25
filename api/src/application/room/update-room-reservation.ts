@@ -1,3 +1,12 @@
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  UnprocessableError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { RoomReservation } from "@/domain/room/room-reservation.entity"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
@@ -10,40 +19,21 @@ export type Command = {
   purpose: string | null
 }
 
-export type ReservationNotFound = { reason: "reservation_not_found" }
-
-export type NotReserver = { reason: "not_reserver" }
-
-export type RoomAlreadyReserved = { reason: "room_already_reserved" }
-
-export type InvalidTimeRange = { reason: "invalid_time_range" }
-
-export type StartInPast = { reason: "start_in_past" }
-
 /**
  * 会議室予約の時刻と用途を変更する。本人以外の変更と、変更後の時間帯の重複を拒否する。
  */
 export class UpdateRoomReservation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | RoomReservation
-    | ReservationNotFound
-    | NotReserver
-    | RoomAlreadyReserved
-    | InvalidTimeRange
-    | StartInPast
-    | Error
-  > {
+  async run(command: Command): Promise<RoomReservation | ApplicationError> {
     if (command.startAt >= command.endAt) {
-      return { reason: "invalid_time_range" }
+      return new ValidationError("invalid time range", "invalid_time_range")
     }
 
     const now = this.c.env.NOW ?? new Date().toISOString()
+
     if (command.startAt < now) {
-      return { reason: "start_in_past" }
+      return new UnprocessableError("start_at must be in the future", "start_in_past")
     }
 
     const reservationRepository = new RoomReservationRepository(this.c)
@@ -51,15 +41,15 @@ export class UpdateRoomReservation {
     const current = await reservationRepository.findById(command.reservationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find reservation", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "reservation_not_found" }
+      return new NotFoundError("reservation not found", "reservation_not_found")
     }
 
     if (current.reserverId !== command.reserverId) {
-      return { reason: "not_reserver" }
+      return new ForbiddenError("not the reserver", "not_reserver")
     }
 
     const rescheduled = current.withRescheduled({
@@ -68,7 +58,7 @@ export class UpdateRoomReservation {
     })
 
     if ("reason" in rescheduled) {
-      return rescheduled
+      return new ValidationError("invalid time range", "invalid_time_range")
     }
 
     const updated = rescheduled.withPurpose(command.purpose)
@@ -76,19 +66,22 @@ export class UpdateRoomReservation {
     const result = await reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to update reservation", { cause: result })
     }
 
     // null は「重複予約」か「並行削除」のどちらか — findById で区別する
     if (result === null) {
       const stillExists = await reservationRepository.findById(command.reservationId)
+
       if (stillExists instanceof Error) {
-        return stillExists
+        return new UnexpectedError("failed to find reservation", { cause: stillExists })
       }
+
       if (stillExists === null) {
-        return { reason: "reservation_not_found" }
+        return new NotFoundError("reservation not found", "reservation_not_found")
       }
-      return { reason: "room_already_reserved" }
+
+      return new ConflictError("the room is already reserved", "room_already_reserved")
     }
 
     return result

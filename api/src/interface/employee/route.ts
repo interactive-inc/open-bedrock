@@ -8,13 +8,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
@@ -93,16 +90,19 @@ export const GET = factory.createHandlers(
       .from(employees)
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      code: row.code,
-      name: row.name,
-      dept_name: row.deptName,
-      position: row.position,
-      email: row.email,
-      status: row.status,
-    }))
+    const responseBody = zAppEmployeeList.parse({
+      data: rows.map((row) => ({
+        code: row.code,
+        name: row.name,
+        dept_name: row.deptName,
+        position: row.position,
+        email: row.email,
+        status: row.status,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -147,31 +147,11 @@ export const POST = factory.createHandlers(
       },
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create employee")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (created.reason === "role_escalation_forbidden") {
-        throw new ForbiddenError("only admin can assign non-member roles")
-      }
-
-      if (created.reason === "weak_password") {
-        throw new BadRequestError("password must be at least 8 characters")
-      }
-
-      if (created.reason === "email_conflict") {
-        throw new ConflictError("email already exists")
-      }
-
-      throw new ConflictError("employee code already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppEmployee.parse({
       code: created.code,
       name: created.name,
       dept_name: created.deptName,
@@ -179,7 +159,7 @@ export const POST = factory.createHandlers(
       email: created.email,
       status: created.status,
       role: created.role,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

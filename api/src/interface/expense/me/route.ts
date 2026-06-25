@@ -1,4 +1,5 @@
 import { factory } from "@/lib/factory"
+import { zAppExpenseMineList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -67,15 +68,18 @@ export const GET = factory.createHandlers(
         .where(and(...conditions)),
     ])
 
-    const body = rows.map((row) => ({
-      id: row.id,
-      category: row.category,
-      amount: row.amount,
-      spent_at: row.spentAt,
-      status: row.status,
-      created_at: row.createdAt,
-    }))
+    const responseBody = zAppExpenseMineList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        category: row.category,
+        amount: row.amount,
+        spent_at: row.spentAt,
+        status: row.status,
+        created_at: row.createdAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

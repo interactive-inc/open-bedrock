@@ -7,6 +7,8 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { employees } from "@/schema"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
@@ -99,9 +101,7 @@ describe("CreateOnboardingTemplate", () => {
 
     expect(created instanceof OnboardingTemplate).toBe(false)
 
-    if (created instanceof OnboardingTemplate === false && created instanceof Error === false) {
-      expect(created.reason).toBe("forbidden")
-    }
+    expectApplicationError(created, ForbiddenError, "forbidden")
   })
 
   test("a duplicate code conflicts", async () => {
@@ -119,9 +119,7 @@ describe("CreateOnboardingTemplate", () => {
 
     expect(created instanceof OnboardingTemplate).toBe(false)
 
-    if (created instanceof OnboardingTemplate === false && created instanceof Error === false) {
-      expect(created.reason).toBe("template_code_conflict")
-    }
+    expectApplicationError(created, ConflictError, "template_code_conflict")
   })
 })
 
@@ -147,13 +145,7 @@ describe("GetOnboardingTemplate", () => {
       code: "unknown",
     })
 
-    expect(found instanceof OnboardingTemplate === false && found instanceof Error === false).toBe(
-      true,
-    )
-
-    if (found instanceof OnboardingTemplate === false && found instanceof Error === false) {
-      expect(found.reason).toBe("template_not_found")
-    }
+    expectApplicationError(found, NotFoundError, "template_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -166,9 +158,7 @@ describe("GetOnboardingTemplate", () => {
       code: "join-default",
     })
 
-    if (found instanceof OnboardingTemplate === false && found instanceof Error === false) {
-      expect(found.reason).toBe("forbidden")
-    }
+    expectApplicationError(found, ForbiddenError, "forbidden")
   })
 })
 
@@ -206,9 +196,7 @@ describe("UpdateOnboardingTemplate", () => {
       description: null,
     })
 
-    if (updated instanceof OnboardingTemplate === false && updated instanceof Error === false) {
-      expect(updated.reason).toBe("template_not_found")
-    }
+    expectApplicationError(updated, NotFoundError, "template_not_found")
   })
 })
 
@@ -244,9 +232,7 @@ describe("DeleteOnboardingTemplate", () => {
       code: "unknown",
     })
 
-    if (result instanceof Error === false) {
-      expect(result.reason).toBe("template_not_found")
-    }
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -259,9 +245,7 @@ describe("DeleteOnboardingTemplate", () => {
       code: "join-default",
     })
 
-    if (result instanceof Error === false) {
-      expect(result.reason).toBe("forbidden")
-    }
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns template_in_use when in_progress assignments exist", async () => {
@@ -275,10 +259,6 @@ describe("DeleteOnboardingTemplate", () => {
       code: "join-default",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_in_use")
+    expectApplicationError(result, ConflictError, "template_in_use")
   })
 })

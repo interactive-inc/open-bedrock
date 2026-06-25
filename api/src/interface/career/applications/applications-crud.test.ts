@@ -12,7 +12,7 @@ import { z } from "zod"
 const careerApplicationResponseSchema = z.object({
   id: z.number(),
   posting_id: z.number(),
-  applicant_id: z.number(),
+  applicant_id: z.string(),
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
 })
@@ -113,7 +113,7 @@ describe("GET /career/applications/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].applicant_id).toBe(6)
+      expect(parsed.data.data[0].applicant_id).toBe("6")
     }
   })
 

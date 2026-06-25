@@ -2,6 +2,8 @@ import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import type { Survey } from "@/domain/survey/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   viewerRole: string
@@ -11,23 +13,15 @@ export type Command = {
   questionsJson: ReadonlyArray<unknown>
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type SurveyNotFound = { reason: "survey_not_found" }
-
-export type QuestionsImmutable = { reason: "questions_immutable" }
-
-export type UpdateFailure = Forbidden | SurveyNotFound | QuestionsImmutable
-
 /**
  * 管理権限を持つ者がアンケートの内容を変更する。
  */
 export class UpdateSurvey {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Survey | UpdateFailure | Error> {
+  async run(command: Command): Promise<Survey | ApplicationError> {
     if (canManageSurveys(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
     const surveyRepository = new SurveyRepository(this.c)
@@ -35,11 +29,11 @@ export class UpdateSurvey {
     const current = await surveyRepository.findById(command.surveyId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find survey", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "survey_not_found" }
+      return new NotFoundError("survey not found", "survey_not_found")
     }
 
     const updated = current.withDetails({
@@ -54,8 +48,12 @@ export class UpdateSurvey {
     if (questionsChanged) {
       const result = await surveyRepository.updateIfNoResponses(updated)
 
+      if (result instanceof Error) {
+        return new UnexpectedError("failed to update survey", { cause: result })
+      }
+
       if (result === null) {
-        return { reason: "questions_immutable" }
+        return new ConflictError("survey questions are not modifiable", "questions_immutable")
       }
 
       return result
@@ -63,8 +61,12 @@ export class UpdateSurvey {
 
     const result = await surveyRepository.update(updated)
 
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to update survey", { cause: result })
+    }
+
     if (result === null) {
-      return { reason: "survey_not_found" }
+      return new NotFoundError("survey not found", "survey_not_found")
     }
 
     return result

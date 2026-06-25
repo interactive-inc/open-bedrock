@@ -5,6 +5,14 @@ import { GetOrgDepartment } from "@/application/org/get-org-department"
 import { UpdateOrgDepartment } from "@/application/org/update-org-department"
 import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
 import { ListOrgDepartments } from "@/application/org/list-org-departments"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import type { Context } from "@/env"
 
@@ -20,7 +28,7 @@ async function seedDepartment(context: Context, code: string): Promise<OrgDepart
     },
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof ApplicationError) {
     throw new Error("seed failed")
   }
 
@@ -44,7 +52,7 @@ describe("CreateOrgDepartment", () => {
 
     expect(result).toBeInstanceOf(OrgDepartment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("create failed")
     }
 
@@ -65,7 +73,7 @@ describe("CreateOrgDepartment", () => {
       },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects duplicate code with department_code_conflict", async () => {
@@ -84,7 +92,7 @@ describe("CreateOrgDepartment", () => {
       },
     })
 
-    expect(result).toEqual({ reason: "department_code_conflict" })
+    expectApplicationError(result, ConflictError, "department_code_conflict")
   })
 
   test("creates a child department with a parent", async () => {
@@ -123,7 +131,7 @@ describe("GetOrgDepartment", () => {
 
     const result = await new GetOrgDepartment(context).run({ code: "NOPE" })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 
@@ -143,7 +151,7 @@ describe("UpdateOrgDepartment", () => {
 
     expect(result).toBeInstanceOf(OrgDepartment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -164,7 +172,7 @@ describe("UpdateOrgDepartment", () => {
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects self-reference with invalid_parent", async () => {
@@ -180,7 +188,7 @@ describe("UpdateOrgDepartment", () => {
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "invalid_parent" })
+    expectApplicationError(result, ValidationError, "invalid_parent")
   })
 
   test("rejects unknown code with department_not_found", async () => {
@@ -194,7 +202,7 @@ describe("UpdateOrgDepartment", () => {
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 
@@ -222,7 +230,7 @@ describe("DeleteOrgDepartment", () => {
       code: "DEV",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown code with department_not_found", async () => {
@@ -233,7 +241,7 @@ describe("DeleteOrgDepartment", () => {
       code: "NOPE",
     })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 

@@ -1,4 +1,6 @@
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
 export type Command = {
@@ -6,15 +8,7 @@ export type Command = {
   employeeId: number
 }
 
-export type LeaveRequestNotFound = { reason: "leave_request_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
 export type Cancelled = { reason: "cancelled" }
-
-type Result = Cancelled | LeaveRequestNotFound | NotApplicant | NotModifiable
 
 /**
  * 休暇申請を取り下げる。本人以外と、決定済み申請の取り下げを拒否する。
@@ -22,35 +16,35 @@ type Result = Cancelled | LeaveRequestNotFound | NotApplicant | NotModifiable
 export class CancelLeaveRequest {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Result | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const repository = new LeaveRequestRepository(this.c)
 
     const current = await repository.findById(command.leaveRequestId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find leave request", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "leave_request_not_found" }
+      return new NotFoundError("leave request not found", "leave_request_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (current.isModifiable === false) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("the leave request is already decided", "not_modifiable")
     }
 
     const deleted = await repository.delete(command.leaveRequestId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete leave request", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("the leave request is already decided", "not_modifiable")
     }
 
     return { reason: "cancelled" }

@@ -1,7 +1,9 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
 import { Thanks } from "@/domain/thanks/thanks.entity"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { NotFoundError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(
@@ -47,7 +49,7 @@ describe("SendThanks", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "self_thanks" })
+    expectApplicationError(result, ValidationError, "self_thanks")
   })
 
   test("sends thanks to another employee successfully", async () => {
@@ -80,6 +82,6 @@ describe("SendThanks", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "recipient_not_found" })
+    expectApplicationError(result, NotFoundError, "recipient_not_found")
   })
 })

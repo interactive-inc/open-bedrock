@@ -1,17 +1,14 @@
 import { DeleteShiftAssignment } from "@/application/shift/delete-shift-assignment"
 import { GetShiftAssignment } from "@/application/shift/get-shift-assignment"
 import { UpdateShiftAssignment } from "@/application/shift/update-shift-assignment"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftAssignment } from "@/lib/app-schemas"
 import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -19,14 +16,14 @@ import { z } from "zod"
 
 // 割当をレスポンス用の snake_case に整形する。
 function toResponseBody(assignment: ShiftAssignment) {
-  return {
+  return zAppShiftAssignment.parse({
     id: assignment.id,
     employee_id: assignment.employeeId,
     pattern_id: assignment.patternId,
     date: assignment.date,
     note: assignment.note,
     published_at: assignment.publishedAt,
-  }
+  })
 }
 
 // GET /shift/assignments/:id — シフト割当の詳細（特権ロール）
@@ -44,16 +41,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     assignmentId,
   })
 
-  if (assignment instanceof Error) {
-    throw new InternalError("failed to load assignment")
-  }
-
-  if ("reason" in assignment) {
-    if (assignment.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    throw new NotFoundError("assignment not found")
+  if (assignment instanceof ApplicationError) {
+    throw toHttpException(assignment)
   }
 
   return c.json(toResponseBody(assignment), 200)
@@ -89,24 +78,8 @@ export const PUT = factory.createHandlers(
       note: json.note ?? null,
     })
 
-    if (assignment instanceof Error) {
-      throw new InternalError("failed to update assignment")
-    }
-
-    if ("reason" in assignment) {
-      if (assignment.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (assignment.reason === "already_published") {
-        throw new ConflictError("shift assignment is already published")
-      }
-
-      if (assignment.reason === "pattern_not_found") {
-        throw new NotFoundError("pattern not found")
-      }
-
-      throw new NotFoundError("assignment not found")
+    if (assignment instanceof ApplicationError) {
+      throw toHttpException(assignment)
     }
 
     return c.json(toResponseBody(assignment), 200)
@@ -128,20 +101,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     assignmentId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete assignment")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "already_published") {
-    throw new ConflictError("shift assignment is already published")
-  }
-
-  if (result.reason === "assignment_not_found") {
-    throw new NotFoundError("assignment not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

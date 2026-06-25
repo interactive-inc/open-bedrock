@@ -68,7 +68,7 @@ function tokenFor(employeeId: number, role: string): Promise<string> {
 async function request(
   path: string,
   token: string | null,
-  init?: { method: string; body: unknown },
+  init?: { method: string; body?: unknown },
 ): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),

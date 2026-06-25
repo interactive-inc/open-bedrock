@@ -1,5 +1,8 @@
 import { ViewMyBudget } from "@/application/thanks-points/view-my-budget"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksBudget } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
@@ -16,17 +19,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     now: c.env.NOW ?? new Date().toISOString(),
   })
 
-  if (budget instanceof Error) {
-    throw new InternalError("failed to load budget")
+  if (budget instanceof ApplicationError) {
+    throw toHttpException(budget)
   }
 
-  return c.json(
-    {
-      period: budget.period,
-      granted_points: budget.grantedPoints,
-      consumed_points: budget.consumedPoints,
-      remaining_points: budget.remainingPoints,
-    },
-    200,
-  )
+  const responseBody = zAppThanksBudget.parse({
+    period: budget.period,
+    granted_points: budget.grantedPoints,
+    consumed_points: budget.consumedPoints,
+    remaining_points: budget.remainingPoints,
+  })
+
+  return c.json(responseBody, 200)
 })

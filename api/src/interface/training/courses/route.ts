@@ -8,6 +8,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { trainingCourses } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppTrainingCourseList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -68,17 +69,20 @@ export const GET = factory.createHandlers(
       .from(trainingCourses)
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      id: row.id,
-      code: row.code,
-      title: row.title,
-      description: row.description,
-      duration_minutes: row.durationMinutes,
-      category: row.category,
-      is_required: row.isRequired,
-      status: row.status,
-    }))
+    const responseBody = zAppTrainingCourseList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        code: row.code,
+        title: row.title,
+        description: row.description,
+        duration_minutes: row.durationMinutes,
+        category: row.category,
+        is_required: row.isRequired,
+        status: row.status,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

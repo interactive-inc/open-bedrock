@@ -11,6 +11,8 @@ import { Survey } from "@/domain/survey/survey.entity"
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 // --- seed helpers ---
@@ -106,11 +108,7 @@ describe("CreateSurvey", () => {
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -168,11 +166,7 @@ describe("DeleteSurvey", () => {
       surveyId: surveyId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_deletable")
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 
   test("returns survey_not_found for a missing survey", async () => {
@@ -183,11 +177,7 @@ describe("DeleteSurvey", () => {
       surveyId: 9999,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns forbidden for member role", async () => {
@@ -198,11 +188,7 @@ describe("DeleteSurvey", () => {
       surveyId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("removes the survey and its responses from the database", async () => {
@@ -337,11 +323,7 @@ describe("UpdateSurvey", () => {
       questionsJson: [{ q: "Changed question" }],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected questions_immutable")
-    }
-
-    expect(result.reason).toBe("questions_immutable")
+    expectApplicationError(result, ConflictError, "questions_immutable")
   })
 
   test("returns survey_not_found for a missing survey", async () => {
@@ -355,11 +337,7 @@ describe("UpdateSurvey", () => {
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected survey_not_found")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns forbidden for member role", async () => {
@@ -373,11 +351,7 @@ describe("UpdateSurvey", () => {
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -414,15 +388,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns survey_not_open for a closed survey", async () => {
@@ -437,15 +403,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 
   test("returns already_submitted for a duplicate response", async () => {
@@ -462,15 +420,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("already_submitted")
+    expectApplicationError(result, ConflictError, "already_submitted")
   })
 })
 
@@ -505,11 +455,7 @@ describe("GetSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected response_not_found")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -523,11 +469,7 @@ describe("GetSurveyResponse", () => {
       respondentId: 99,
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected not_respondent")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 })
 
@@ -606,11 +548,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected response_not_found")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -626,11 +564,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected not_respondent")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 
   test("returns survey_not_open when survey is closed", async () => {
@@ -650,11 +584,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected survey_not_open")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })
 
@@ -687,11 +617,7 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -705,11 +631,7 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 99,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 
   test("returns survey_not_open when survey is closed", async () => {
@@ -727,10 +649,6 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })

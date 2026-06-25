@@ -10,6 +10,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { count, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplicationTemplateList } from "@/lib/app-schemas"
 import { z } from "zod"
 
 // GET /templates — 申請テンプレート一覧（カテゴリで絞り込み可）
@@ -66,13 +67,16 @@ export const GET = factory.createHandlers(
           : eq(applicationTemplates.category, query.category),
       )
 
-    const responseBody = rows.map((row) => ({
-      code: row.code,
-      name: row.name,
-      category: row.category,
-      description: row.description,
-    }))
+    const responseBody = zAppApplicationTemplateList.parse({
+      data: rows.map((row) => ({
+        code: row.code,
+        name: row.name,
+        category: row.category,
+        description: row.description,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

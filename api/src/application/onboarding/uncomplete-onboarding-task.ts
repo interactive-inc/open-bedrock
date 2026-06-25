@@ -1,4 +1,6 @@
 import { canCompleteTask } from "@/lib/onboarding/can-complete-task"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
@@ -9,27 +11,23 @@ export type Command = {
   viewerRole: string
 }
 
-export type TaskNotFound = { reason: "task_not_found" }
-
-export type Forbidden = { reason: "forbidden" }
-
 /**
  * タスクの完了を取り消し、割り当ての完了状態を再計算する。本人か特権ロールのみ許可。
  */
 export class UncompleteOnboardingTask {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<OnboardingTask | TaskNotFound | Forbidden | Error> {
+  async run(command: Command): Promise<OnboardingTask | ApplicationError> {
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
     const assignment = await assignmentRepository.findByTaskId(command.taskId)
 
     if (assignment instanceof Error) {
-      return assignment
+      return new UnexpectedError("failed to find assignment", { cause: assignment })
     }
 
     if (assignment === null) {
-      return { reason: "task_not_found" }
+      return new NotFoundError("task not found", "task_not_found")
     }
 
     const allowed = canCompleteTask({
@@ -39,19 +37,19 @@ export class UncompleteOnboardingTask {
     })
 
     if (allowed === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot uncomplete task", "forbidden")
     }
 
     const updated = await assignmentRepository.update(assignment.uncompleteTask(command.taskId))
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
     const reverted = updated.tasks.find((task) => task.id === command.taskId)
 
     if (reverted === undefined) {
-      return { reason: "task_not_found" }
+      return new NotFoundError("task not found", "task_not_found")
     }
 
     return reverted

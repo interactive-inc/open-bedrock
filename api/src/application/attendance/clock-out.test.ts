@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test"
 import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import { ClockIn } from "@/application/attendance/clock-in"
 import { ClockOut } from "@/application/attendance/clock-out"
+import { ApplicationError, ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedOpenRecord(context: Context, employeeId: number): Promise<AttendanceRecord> {
@@ -12,7 +14,7 @@ async function seedOpenRecord(context: Context, employeeId: number): Promise<Att
     note: null,
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof ApplicationError) {
     throw new Error("seed failed")
   }
 
@@ -32,7 +34,7 @@ describe("ClockOut", () => {
 
     expect(result).toBeInstanceOf(AttendanceRecord)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("expected attendance record")
     }
 
@@ -49,7 +51,7 @@ describe("ClockOut", () => {
       now: "2026-03-15T18:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "not_clocked_in" })
+    expectApplicationError(result, ConflictError, "not_clocked_in")
   })
 
   test("rejects double clock out with already_clocked_out", async () => {
@@ -62,7 +64,7 @@ describe("ClockOut", () => {
       now: "2026-03-15T18:00:00.000Z",
     })
 
-    if (first instanceof Error || "reason" in first) {
+    if (first instanceof ApplicationError) {
       throw new Error("setup failed")
     }
 
@@ -71,7 +73,7 @@ describe("ClockOut", () => {
       now: "2026-03-15T19:00:00.000Z",
     })
 
-    expect(second).toEqual({ reason: "not_clocked_in" })
+    expectApplicationError(second, ConflictError, "not_clocked_in")
   })
 
   test("updates note on clock out", async () => {
@@ -85,7 +87,7 @@ describe("ClockOut", () => {
       note: "left early",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("expected attendance record")
     }
 

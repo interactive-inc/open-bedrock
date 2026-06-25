@@ -7,8 +7,15 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { z } from "zod"
 
 const jwtSecret = "application-crud-route-test-secret"
+
+const applicationUpdatedResponseSchema = z.object({
+  id: z.number(),
+  status: z.enum(["pending", "approved", "rejected"]),
+  payload: z.object({ reason: z.string() }),
+})
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -93,10 +100,14 @@ describe("PUT /applications/:id", () => {
 
     expect(response.status).toBe(200)
 
-    const json = await response.json()
+    const parsed = applicationUpdatedResponseSchema.safeParse(await response.json())
 
-    expect(json.id).toBe(1)
-    expect(json.payload.reason).toBe("updated")
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.payload.reason).toBe("updated")
+    }
   })
 
   test("returns 403 when not the applicant", async () => {

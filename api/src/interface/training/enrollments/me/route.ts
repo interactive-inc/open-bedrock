@@ -7,6 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { trainingEnrollments } from "@/schema"
 import { asc, count, eq } from "drizzle-orm"
 
@@ -45,15 +46,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(trainingEnrollments)
     .where(eq(trainingEnrollments.employeeId, session.employeeId))
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    course_id: row.courseId,
-    employee_id: row.employeeId,
-    status: row.status,
-    completed_at: row.completedAt,
-    score: row.score,
-    due_date: row.dueDate,
-  }))
+  const responseBody = zAppTrainingEnrollmentList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      course_id: row.courseId,
+      employee_id: row.employeeId,
+      status: row.status,
+      completed_at: row.completedAt,
+      score: row.score,
+      due_date: row.dueDate,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

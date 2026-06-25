@@ -7,6 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOnboardingTaskList } from "@/lib/app-schemas"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -55,5 +56,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     completed_at: row.task.completedAt,
   }))
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppOnboardingTaskList.parse({
+    data: body,
+    total: totalRows.at(0)?.total ?? 0,
+  })
+
+  return c.json(responseBody, 200)
 })

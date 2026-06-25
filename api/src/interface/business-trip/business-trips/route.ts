@@ -1,13 +1,11 @@
 import { CreateBusinessTrip } from "@/application/business-trip/create-business-trip"
+import { ApplicationError } from "@/lib/errors"
+import { zAppBusinessTrip } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -47,19 +45,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (businessTrip instanceof Error) {
-      throw new InternalError("failed to create business trip")
+    if (businessTrip instanceof ApplicationError) {
+      throw toHttpException(businessTrip)
     }
 
-    if ("reason" in businessTrip) {
-      if (businessTrip.reason === "invalid_date_range") {
-        throw new BadRequestError("invalid date range")
-      }
-
-      throw new ConflictError("overlapping business trip already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppBusinessTrip.parse({
       id: businessTrip.id,
       traveler_id: businessTrip.travelerId,
       destination: businessTrip.destination,
@@ -69,7 +59,7 @@ export const POST = factory.createHandlers(
       estimated_cost: businessTrip.estimatedCost,
       status: businessTrip.status,
       created_at: businessTrip.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

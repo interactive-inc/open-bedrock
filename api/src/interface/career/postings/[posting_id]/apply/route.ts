@@ -3,12 +3,10 @@ import { factory } from "@/lib/factory"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ConflictError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerApplication } from "@/lib/app-schemas"
 import { z } from "zod"
 
 export const POST = factory.createHandlers(
@@ -36,25 +34,17 @@ export const POST = factory.createHandlers(
       message: json.message ?? null,
     })
 
-    if (view instanceof Error) {
-      throw new InternalError("failed to create application")
+    if (view instanceof ApplicationError) {
+      throw toHttpException(view)
     }
 
-    if ("reason" in view) {
-      if (view.reason === "already_applied") {
-        throw new ConflictError("already applied")
-      }
-
-      throw new NotFoundError("posting not found")
-    }
-
-    const responseBody = {
+    const responseBody = zAppCareerApplication.parse({
       id: view.id,
       posting_id: view.postingId,
-      applicant_id: view.applicantId,
+      applicant_id: String(view.applicantId),
       message: view.message,
       status: view.status,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

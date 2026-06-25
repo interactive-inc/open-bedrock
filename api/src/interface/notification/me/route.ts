@@ -1,5 +1,6 @@
 import { notificationKindSchema } from "@/domain/notification/notification.entity"
 import { factory } from "@/lib/factory"
+import { zAppNotificationList } from "@/lib/app-schemas"
 import { toNotificationSearchQuery } from "@/interface/notification/me/to-notification-search-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { notifications } from "@/schema"
@@ -40,7 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(notifications)
     .where(and(...conditions))
 
-  const responseBody = rows.flatMap((row) => {
+  const data = rows.flatMap((row) => {
     const kind = notificationKindSchema.safeParse(row.kind)
 
     if (!kind.success) {
@@ -62,5 +63,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     ]
   })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppNotificationList.parse({ data, total: totalRows.at(0)?.total ?? 0 })
+
+  return c.json(responseBody, 200)
 })

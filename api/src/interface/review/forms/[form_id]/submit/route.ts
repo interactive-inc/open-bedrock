@@ -1,13 +1,10 @@
 import { SubmitReviewForm } from "@/application/review/submit-review-form"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppReviewForm } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -59,27 +56,11 @@ export const POST = factory.createHandlers(
       submittedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (submitted instanceof Error) {
-      throw new InternalError("failed to submit review form")
+    if (submitted instanceof ApplicationError) {
+      throw toHttpException(submitted)
     }
 
-    if ("reason" in submitted) {
-      if (submitted.reason === "form_not_found") {
-        throw new NotFoundError("review form not found")
-      }
-
-      if (submitted.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (submitted.reason === "cycle_not_open") {
-        throw new ConflictError("review cycle is not open")
-      }
-
-      throw new ConflictError("review form cannot be submitted")
-    }
-
-    const responseBody = {
+    const responseBody = zAppReviewForm.parse({
       id: submitted.id,
       cycle_id: submitted.cycleId,
       subject_employee_id: submitted.subjectEmployeeId,
@@ -90,7 +71,7 @@ export const POST = factory.createHandlers(
       comment: submitted.comment,
       status: submitted.status,
       submitted_at: submitted.submittedAt,
-    }
+    })
 
     return c.json(responseBody, 200)
   },

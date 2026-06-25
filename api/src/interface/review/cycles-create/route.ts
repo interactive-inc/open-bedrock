@@ -1,8 +1,11 @@
 import { CreateReviewCycle } from "@/application/review/create-review-cycle"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { ApplicationError } from "@/lib/errors"
+import { zAppReviewCycle } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -33,21 +36,17 @@ export const POST = factory.createHandlers(
       dueDate: json.dueDate ?? null,
     })
 
-    if (cycle instanceof Error) {
-      throw new InternalError("failed to create review cycle")
+    if (cycle instanceof ApplicationError) {
+      throw toHttpException(cycle)
     }
 
-    if ("reason" in cycle) {
-      throw new ForbiddenError()
-    }
-
-    const responseBody = {
+    const responseBody = zAppReviewCycle.parse({
       id: cycle.id,
       title: cycle.title,
       period: cycle.period,
       status: cycle.status,
       due_date: cycle.dueDate,
-    }
+    })
 
     return c.json(responseBody, 201)
   },
