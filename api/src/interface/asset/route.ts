@@ -1,4 +1,5 @@
 import { factory } from "@/lib/factory"
+import { zAppAssetList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -75,16 +76,19 @@ export const GET = factory.createHandlers(
       .from(assets)
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      code: row.code,
-      name: row.name,
-      kind: row.kind,
-      serial: row.serial,
-      purchased_on: row.purchasedOn,
-      status: row.status,
-      holder_employee_id: row.holderEmployeeId,
-    }))
+    const responseBody = zAppAssetList.parse({
+      data: rows.map((row) => ({
+        code: row.code,
+        name: row.name,
+        kind: row.kind,
+        serial: row.serial,
+        purchased_on: row.purchasedOn,
+        status: row.status,
+        holder_employee_id: row.holderEmployeeId,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

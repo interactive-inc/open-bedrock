@@ -1,5 +1,6 @@
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
@@ -8,15 +9,7 @@ export type Command = {
   code: string
 }
 
-export type DeleteForbidden = { reason: "forbidden" }
-
-export type DeleteAssetNotFound = { reason: "asset_not_found" }
-
-export type DeleteAssetInUse = { reason: "asset_in_use" }
-
 export type Deleted = { reason: "deleted" }
-
-export type DeleteAssetFailure = DeleteForbidden | DeleteAssetNotFound | DeleteAssetInUse
 
 /**
  * 権限・存在・貸出状態を確認し、資産と貸出記録の削除を 1 回の D1 batch で
@@ -25,31 +18,31 @@ export type DeleteAssetFailure = DeleteForbidden | DeleteAssetNotFound | DeleteA
 export class DeleteAsset {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | DeleteAssetFailure | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
     if (canManageAssets(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
     const asset = await assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
-      return asset
+      return new UnexpectedError("failed to find asset", { cause: asset })
     }
 
     if (asset === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     if (asset.status === "lent") {
-      return { reason: "asset_in_use" }
+      return new ConflictError("asset is currently lent", "asset_in_use")
     }
 
     const outcome = await assetRepository.deleteIfNotLent(command.code)
 
     if (outcome instanceof Error) {
-      return outcome
+      return new UnexpectedError("failed to delete asset", { cause: outcome })
     }
 
     if (outcome === "deleted") {
@@ -60,15 +53,15 @@ export class DeleteAsset {
     const current = await assetRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find asset", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     if (current.status === "lent") {
-      return { reason: "asset_in_use" }
+      return new ConflictError("asset is currently lent", "asset_in_use")
     }
 
     return new UnexpectedError("failed to delete asset")

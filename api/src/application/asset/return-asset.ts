@@ -1,7 +1,8 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
 export type Command = {
@@ -10,14 +11,6 @@ export type Command = {
   now: string
 }
 
-export type ReturnForbidden = { reason: "forbidden" }
-
-export type ReturnAssetNotFound = { reason: "asset_not_found" }
-
-export type ReturnAssetNotLent = { reason: "asset_not_lent" }
-
-export type ReturnAssetFailure = ReturnForbidden | ReturnAssetNotFound | ReturnAssetNotLent
-
 /**
  * 権限・貸出状態を確認し、資産の在庫戻しと貸出記録のクローズを
  * 1 回の D1 batch でアトミックに行う。並行リクエストとの競合は条件付き write で防ぐ。
@@ -25,25 +18,25 @@ export type ReturnAssetFailure = ReturnForbidden | ReturnAssetNotFound | ReturnA
 export class ReturnAsset {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Asset | ReturnAssetFailure | Error> {
+  async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
     if (canManageAssets(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
     const asset = await assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
-      return asset
+      return new UnexpectedError("failed to find asset", { cause: asset })
     }
 
     if (asset === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     if (asset.status !== "lent") {
-      return { reason: "asset_not_lent" }
+      return new ConflictError("asset is not lent", "asset_not_lent")
     }
 
     const returned = await assetRepository.returnFromLent({
@@ -52,7 +45,7 @@ export class ReturnAsset {
     })
 
     if (returned instanceof Error) {
-      return returned
+      return new UnexpectedError("failed to return asset", { cause: returned })
     }
 
     if (returned !== null) {
@@ -63,15 +56,15 @@ export class ReturnAsset {
     const current = await assetRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find asset", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     if (current.status !== "lent") {
-      return { reason: "asset_not_lent" }
+      return new ConflictError("asset is not lent", "asset_not_lent")
     }
 
     return new UnexpectedError("failed to return asset")

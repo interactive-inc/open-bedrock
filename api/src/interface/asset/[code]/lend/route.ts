@@ -2,13 +2,10 @@ import { LendAsset } from "@/application/asset/lend-asset"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAsset } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -38,27 +35,11 @@ export const POST = factory.createHandlers(
       now: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to lend asset")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (updated.reason === "asset_not_found") {
-        throw new NotFoundError("asset not found")
-      }
-
-      if (updated.reason === "employee_not_found") {
-        throw new NotFoundError("employee not found")
-      }
-
-      throw new ConflictError("asset is not in stock")
-    }
-
-    const responseBody = {
+    const responseBody = zAppAsset.parse({
       code: updated.code,
       name: updated.name,
       kind: updated.kind,
@@ -66,7 +47,7 @@ export const POST = factory.createHandlers(
       purchased_on: updated.purchasedOn,
       status: updated.status,
       holder_employee_id: updated.holderEmployeeId,
-    }
+    })
 
     return c.json(responseBody, 200)
   },

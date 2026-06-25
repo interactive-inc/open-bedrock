@@ -3,12 +3,10 @@ import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAsset } from "@/lib/app-schemas"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -45,19 +43,11 @@ export const POST = factory.createHandlers(
       },
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create asset")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      throw new ConflictError("asset code already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppAsset.parse({
       code: created.code,
       name: created.name,
       kind: created.kind,
@@ -65,7 +55,7 @@ export const POST = factory.createHandlers(
       purchased_on: created.purchasedOn,
       status: created.status,
       holder_employee_id: created.holderEmployeeId,
-    }
+    })
 
     return c.json(responseBody, 201)
   },
