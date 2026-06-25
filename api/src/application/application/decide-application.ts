@@ -4,6 +4,7 @@ import type { ApplicationNotFound } from "@/lib/application/application-not-foun
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { UnexpectedError } from "@/lib/errors"
 
 export type Command = {
   viewerRole: string
@@ -52,7 +53,7 @@ export class DecideApplication {
 
     if (template instanceof Error) return template
 
-    if (template === null) return new Error("template not found")
+    if (template === null) return new UnexpectedError("template not found")
 
     // approverRoles が指定されていれば、そのロールのみ承認可能
     if (template.approverRoles.length > 0) {

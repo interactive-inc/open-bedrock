@@ -1,4 +1,5 @@
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import { UnexpectedError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
@@ -70,6 +71,6 @@ export class DeleteAsset {
       return { reason: "asset_in_use" }
     }
 
-    return new Error("failed to delete asset")
+    return new UnexpectedError("failed to delete asset")
   }
 }

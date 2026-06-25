@@ -1,4 +1,5 @@
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
 import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -64,7 +65,9 @@ export class DeleteGoal {
       if (isAbortedByGuard(error)) {
         return { reason: "goal_finalized" }
       }
-      return error instanceof Error ? error : new Error("failed to delete goal")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete goal", { cause: error })
+        : new UnexpectedError("failed to delete goal")
     }
 
     return { reason: "deleted" }

@@ -1,6 +1,7 @@
 import { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
 import type { Context } from "@/env"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { UnexpectedError } from "@/lib/errors"
 
 export type Command = {
   rewardId: number
@@ -32,7 +33,7 @@ export class UpdateReward {
     }
 
     if (existing.id === null) {
-      return new Error("persisted reward must have an id")
+      return new UnexpectedError("persisted reward must have an id")
     }
 
     // 名前・コスト・在庫の不変条件は create と同一なので create で検証し、id と作成日時は既存値を引き継ぐ。

@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { UnexpectedError } from "@/lib/errors"
 
 export type Command = {
   expenseId: number
@@ -60,7 +61,9 @@ export class DeleteExpense {
       if (isAbortedByGuard(error)) {
         return { reason: "not_deletable" }
       }
-      return error instanceof Error ? error : new Error("failed to delete expense")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete expense", { cause: error })
+        : new UnexpectedError("failed to delete expense")
     }
 
     return { reason: "deleted" }

@@ -1,5 +1,6 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
@@ -57,7 +58,9 @@ export class DeleteReviewCycle {
       if (isAbortedByGuard(error)) {
         return { reason: "not_deletable" }
       }
-      return error instanceof Error ? error : new Error("failed to delete review cycle")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete review cycle", { cause: error })
+        : new UnexpectedError("failed to delete review cycle")
     }
 
     return { reason: "deleted" }

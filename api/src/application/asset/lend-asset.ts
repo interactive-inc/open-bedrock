@@ -1,5 +1,6 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import { UnexpectedError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -94,6 +95,6 @@ export class LendAsset {
       return { reason: "asset_not_in_stock" }
     }
 
-    return new Error("failed to lend asset")
+    return new UnexpectedError("failed to lend asset")
   }
 }

@@ -1,5 +1,6 @@
 import { canManageRooms } from "@/lib/room/can-manage-rooms"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 
 export type Command = {
@@ -55,7 +56,9 @@ export class DeleteRoom {
 
       return { reason: "deleted" }
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to delete room")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete room", { cause: error })
+        : new UnexpectedError("failed to delete room")
     }
   }
 }

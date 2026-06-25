@@ -2,6 +2,7 @@ import type { SurveySubmissionView } from "@/application/survey/survey-submissio
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { UnexpectedError } from "@/lib/errors"
 
 export type Command = {
   surveyId: number
@@ -76,7 +77,7 @@ export class SubmitSurveyResponse {
     }
 
     if (created.id === null) {
-      return new Error("failed to submit survey response")
+      return new UnexpectedError("failed to submit survey response")
     }
 
     return {

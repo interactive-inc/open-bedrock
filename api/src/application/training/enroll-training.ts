@@ -1,4 +1,5 @@
 import { canManageTraining } from "@/lib/training/can-manage-training"
+import { UnexpectedError } from "@/lib/errors"
 import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -62,7 +63,7 @@ export class EnrollTraining {
     }
 
     if (course.id === null) {
-      return new Error("training course is not persisted")
+      return new UnexpectedError("training course is not persisted")
     }
 
     const enrollment = TrainingEnrollment.create({
