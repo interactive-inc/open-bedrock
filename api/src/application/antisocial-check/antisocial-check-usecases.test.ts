@@ -6,6 +6,8 @@ import { ListMyAntisocialChecks } from "@/application/antisocial-check/list-my-a
 import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-antisocial-check"
 import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
+import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedCheck(context: Context, requesterId: number): Promise<string> {
@@ -72,7 +74,7 @@ describe("GetAntisocialCheck", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("returns antisocial_check_not_found for an unknown id", async () => {
@@ -83,7 +85,7 @@ describe("GetAntisocialCheck", () => {
       requesterId: 5,
     })
 
-    expect(result).toEqual({ reason: "antisocial_check_not_found" })
+    expectApplicationError(result, NotFoundError, "antisocial_check_not_found")
   })
 })
 
@@ -128,7 +130,7 @@ describe("UpdateAntisocialCheck", () => {
 
     expect(result).toBeInstanceOf(AntisocialCheck)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -153,7 +155,7 @@ describe("UpdateAntisocialCheck", () => {
 
     expect(result).toBeInstanceOf(AntisocialCheck)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -176,7 +178,7 @@ describe("UpdateAntisocialCheck", () => {
       result: "clear",
     })
 
-    expect(result).toEqual({ reason: "result_forbidden" })
+    expectApplicationError(result, ForbiddenError, "result_forbidden")
   })
 
   test("rejects a non requester with not_requester", async () => {
@@ -194,7 +196,7 @@ describe("UpdateAntisocialCheck", () => {
       result: null,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })
 
@@ -222,6 +224,6 @@ describe("CancelAntisocialCheck", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })

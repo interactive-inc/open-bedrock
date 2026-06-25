@@ -12,6 +12,14 @@ import { UpdateRoomReservation } from "@/application/room/update-room-reservatio
 import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
 import { ListMyRoomReservations } from "@/application/room/list-my-room-reservations"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnprocessableError,
+  ValidationError,
+} from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedRoom(context: Context): Promise<Room> {
@@ -20,7 +28,7 @@ async function seedRoom(context: Context): Promise<Room> {
     room: { name: "Room A", capacity: 10, location: "3F" },
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed room failed")
   }
 
@@ -40,7 +48,7 @@ async function seedReservation(
     purpose: "Meeting",
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed reservation failed")
   }
 
@@ -58,7 +66,7 @@ describe("RegisterRoom", () => {
 
     expect(result).toBeInstanceOf(Room)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("register failed")
     }
 
@@ -74,7 +82,7 @@ describe("RegisterRoom", () => {
       room: { name: "Room A", capacity: 10, location: null },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -93,7 +101,7 @@ describe("GetRoom", () => {
 
     const result = await new GetRoom(context).run({ roomId: 9999 })
 
-    expect(result).toEqual({ reason: "room_not_found" })
+    expectApplicationError(result, NotFoundError, "room_not_found")
   })
 })
 
@@ -110,7 +118,7 @@ describe("UpdateRoom", () => {
 
     expect(result).toBeInstanceOf(Room)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -128,7 +136,7 @@ describe("UpdateRoom", () => {
       details: { name: "Hijacked", capacity: 1, location: null },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown id with room_not_found", async () => {
@@ -140,7 +148,7 @@ describe("UpdateRoom", () => {
       details: { name: "Missing", capacity: 1, location: null },
     })
 
-    expect(result).toEqual({ reason: "room_not_found" })
+    expectApplicationError(result, NotFoundError, "room_not_found")
   })
 })
 
@@ -166,7 +174,7 @@ describe("DeleteRoom", () => {
       roomId: room.id,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown id with room_not_found", async () => {
@@ -177,7 +185,7 @@ describe("DeleteRoom", () => {
       roomId: 9999,
     })
 
-    expect(result).toEqual({ reason: "room_not_found" })
+    expectApplicationError(result, NotFoundError, "room_not_found")
   })
 })
 
@@ -229,7 +237,7 @@ describe("CreateRoomReservation", () => {
 
     expect(result).toBeInstanceOf(RoomReservation)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("create failed")
     }
 
@@ -248,7 +256,7 @@ describe("CreateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "invalid_time_range" })
+    expectApplicationError(result, ValidationError, "invalid_time_range")
   })
 
   test("rejects start in past", async () => {
@@ -263,7 +271,7 @@ describe("CreateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "start_in_past" })
+    expectApplicationError(result, UnprocessableError, "start_in_past")
   })
 
   test("rejects unknown room with room_not_found", async () => {
@@ -277,7 +285,7 @@ describe("CreateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "room_not_found" })
+    expectApplicationError(result, NotFoundError, "room_not_found")
   })
 
   test("rejects overlapping reservation with room_already_reserved", async () => {
@@ -294,7 +302,7 @@ describe("CreateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "room_already_reserved" })
+    expectApplicationError(result, ConflictError, "room_already_reserved")
   })
 })
 
@@ -322,7 +330,7 @@ describe("GetRoomReservation", () => {
       reserverId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_reserver" })
+    expectApplicationError(result, ForbiddenError, "not_reserver")
   })
 
   test("rejects unknown id with reservation_not_found", async () => {
@@ -333,7 +341,7 @@ describe("GetRoomReservation", () => {
       reserverId: 1,
     })
 
-    expect(result).toEqual({ reason: "reservation_not_found" })
+    expectApplicationError(result, NotFoundError, "reservation_not_found")
   })
 })
 
@@ -353,7 +361,7 @@ describe("UpdateRoomReservation", () => {
 
     expect(result).toBeInstanceOf(RoomReservation)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -374,7 +382,7 @@ describe("UpdateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "not_reserver" })
+    expectApplicationError(result, ForbiddenError, "not_reserver")
   })
 
   test("rejects invalid time range", async () => {
@@ -388,7 +396,7 @@ describe("UpdateRoomReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "invalid_time_range" })
+    expectApplicationError(result, ValidationError, "invalid_time_range")
   })
 })
 
@@ -416,7 +424,7 @@ describe("CancelRoomReservation", () => {
       reserverId: 999,
     })
 
-    expect(result).toEqual({ reason: "reservation_not_found" })
+    expectApplicationError(result, NotFoundError, "reservation_not_found")
   })
 })
 

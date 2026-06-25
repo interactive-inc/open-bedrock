@@ -1,5 +1,7 @@
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -10,10 +12,6 @@ export type Command = {
   viewerEmployeeId: number
   viewerRole: string
 }
-
-export type AssignmentNotFound = { reason: "assignment_not_found" }
-
-export type Forbidden = { reason: "forbidden" }
 
 export type GetOnboardingAssignmentResult = {
   assignment: OnboardingAssignment
@@ -26,19 +24,17 @@ export type GetOnboardingAssignmentResult = {
 export class GetOnboardingAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<GetOnboardingAssignmentResult | AssignmentNotFound | Forbidden | Error> {
+  async run(command: Command): Promise<GetOnboardingAssignmentResult | ApplicationError> {
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
     const assignment = await assignmentRepository.findById(command.assignmentId)
 
-    if (assignment === null) {
-      return { reason: "assignment_not_found" }
+    if (assignment instanceof Error) {
+      return new UnexpectedError("failed to find assignment", { cause: assignment })
     }
 
-    if (assignment instanceof Error) {
-      return assignment
+    if (assignment === null) {
+      return new NotFoundError("assignment not found", "assignment_not_found")
     }
 
     const isOwner = assignment.employeeId === command.viewerEmployeeId
@@ -47,7 +43,7 @@ export class GetOnboardingAssignment {
       isOwner === false &&
       canViewEmployeeOnboarding({ viewerRole: command.viewerRole }) === false
     ) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot view assignment", "forbidden")
     }
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -55,11 +51,11 @@ export class GetOnboardingAssignment {
     const employee = await employeeRepository.findById(assignment.employeeId)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "assignment_not_found" }
+      return new NotFoundError("assignment not found", "assignment_not_found")
     }
 
     return { assignment, employee }

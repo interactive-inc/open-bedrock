@@ -1,4 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
@@ -15,19 +17,15 @@ export type Input = {
   }
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type CodeConflict = { reason: "code_conflict" }
-
 /**
  * 権限を確認し、コード重複がなければシフトパターンを作る。
  */
 export class CreateShiftPattern {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ShiftPattern | Forbidden | CodeConflict | Error> {
+  async run(input: Input): Promise<ShiftPattern | ApplicationError> {
     if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const patternRepository = new ShiftPatternRepository(this.c)
@@ -35,11 +33,11 @@ export class CreateShiftPattern {
     const existing = await patternRepository.findByCode(input.pattern.code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find shift pattern", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "code_conflict" }
+      return new ConflictError("shift pattern code already exists", "code_conflict")
     }
 
     const pattern = ShiftPattern.create({
@@ -53,7 +51,11 @@ export class CreateShiftPattern {
     const result = await patternRepository.create(pattern)
 
     if (result instanceof UniqueConstraintError) {
-      return { reason: "code_conflict" }
+      return new ConflictError("shift pattern code already exists", "code_conflict")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create shift pattern", { cause: result })
     }
 
     return result

@@ -1,15 +1,11 @@
 import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
 import { canCreateOneOnOne } from "@/lib/oneonone/can-create-one-on-one"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -66,17 +62,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       or(eq(oneOnOnes.memberId, session.employeeId), eq(oneOnOnes.managerId, session.employeeId)),
     )
 
-  const responseBody = rows.map((row) => ({
-    id: row.oneOnOne.id,
-    held_at: row.oneOnOne.heldAt,
-    member_name: row.memberName ?? "",
-    manager_name: row.managerName ?? "",
-    topics: row.oneOnOne.topics,
-    manager_note: session.employeeId === row.oneOnOne.managerId ? row.oneOnOne.managerNote : null,
-    next_action: row.oneOnOne.nextAction,
-  }))
+  const responseBody = zAppOneOnOneList.parse({
+    data: rows.map((row) => ({
+      id: row.oneOnOne.id,
+      held_at: row.oneOnOne.heldAt,
+      member_name: row.memberName ?? "",
+      manager_name: row.managerName ?? "",
+      topics: row.oneOnOne.topics,
+      manager_note: session.employeeId === row.oneOnOne.managerId ? row.oneOnOne.managerNote : null,
+      next_action: row.oneOnOne.nextAction,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /oneonone — マネージャーが 1on1 を記録する
@@ -113,18 +112,8 @@ export const POST = factory.createHandlers(
       nextAction: json.next_action ?? null,
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create one-on-one")
-    }
-
-    if ("reason" in created) {
-      if (created.reason === "self_reference") {
-        throw new BadRequestError("member and manager must be different")
-      }
-      if (created.reason === "duplicate") {
-        throw new ConflictError("one-on-one already exists")
-      }
-      throw new NotFoundError("member not found")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
     const nameRows = await c.var.database
@@ -137,7 +126,7 @@ export const POST = factory.createHandlers(
 
     const nameRow = nameRows.at(0)
 
-    const responseBody = {
+    const responseBody = zAppOneOnOne.parse({
       id: created.id,
       held_at: created.heldAt,
       member_name: nameRow?.memberName ?? "",
@@ -145,7 +134,7 @@ export const POST = factory.createHandlers(
       topics: created.topics,
       manager_note: created.managerNote,
       next_action: created.nextAction,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

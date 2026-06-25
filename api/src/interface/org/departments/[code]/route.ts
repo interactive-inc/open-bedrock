@@ -4,14 +4,11 @@ import { UpdateOrgDepartment } from "@/application/org/update-org-department"
 import type { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { zAppOrgDepartment } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -39,15 +36,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     code: validateCodeParam(c.req.param("code"), "department"),
   })
 
-  if (department instanceof Error) {
-    throw new InternalError("failed to load department")
+  if (department instanceof ApplicationError) {
+    throw toHttpException(department)
   }
 
-  if ("reason" in department) {
-    throw new NotFoundError("department not found")
-  }
+  const responseBody = zAppOrgDepartment.parse(toResponseBody(department))
 
-  return c.json(toResponseBody(department), 200)
+  return c.json(responseBody, 200)
 })
 
 // PUT /org/departments/:code — 親・責任者・表示順を変更（権限が必要）
@@ -78,31 +73,13 @@ export const PUT = factory.createHandlers(
       order: json.order,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update department")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
+    const responseBody = zAppOrgDepartment.parse(toResponseBody(updated))
 
-      if (updated.reason === "department_not_found") {
-        throw new NotFoundError("department not found")
-      }
-
-      if (updated.reason === "parent_not_found") {
-        throw new NotFoundError("parent department not found")
-      }
-
-      if (updated.reason === "circular_reference") {
-        throw new ConflictError("circular reference detected in department hierarchy")
-      }
-
-      throw new ConflictError("a department cannot be its own parent")
-    }
-
-    return c.json(toResponseBody(updated), 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -119,20 +96,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     code: validateCodeParam(c.req.param("code"), "department"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete department")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "department_not_found") {
-    throw new NotFoundError("department not found")
-  }
-
-  if (result.reason === "department_in_use") {
-    throw new ConflictError("department has children or members")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

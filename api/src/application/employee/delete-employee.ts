@@ -1,6 +1,7 @@
 import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
@@ -9,15 +10,7 @@ export type Command = {
   code: string
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type EmployeeNotFound = { reason: "employee_not_found" }
-
-export type SelfDelete = { reason: "self_delete" }
-
 export type Deleted = { reason: "deleted" }
-
-export type DeleteEmployeeFailure = Forbidden | EmployeeNotFound | SelfDelete
 
 /**
  * 権限と存在を確認し、従業員を台帳から削除する。自分自身の削除は拒否する。
@@ -26,25 +19,25 @@ export type DeleteEmployeeFailure = Forbidden | EmployeeNotFound | SelfDelete
 export class DeleteEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | DeleteEmployeeFailure | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     if (canDeleteEmployee(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot delete employees", "forbidden")
     }
 
     const employee = await employeeRepository.findByCode(command.code)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "employee_not_found" }
+      return new NotFoundError("employee not found", "employee_not_found")
     }
 
     if (employee.id === command.viewerEmployeeId) {
-      return { reason: "self_delete" }
+      return new ForbiddenError("cannot delete your own account", "self_delete")
     }
 
     const cascadeResult = await this.deleteRelatedRecords(employee.id, employee.code)
@@ -65,7 +58,7 @@ export class DeleteEmployee {
   private async deleteRelatedRecords(
     employeeId: number,
     employeeCode: string,
-  ): Promise<null | Error> {
+  ): Promise<null | UnexpectedError> {
     try {
       const db = this.c.env.DB
 

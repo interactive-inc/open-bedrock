@@ -1,6 +1,8 @@
 import type { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   employeeId: number
@@ -14,12 +16,18 @@ export type Command = {
 export class ListMyOneOnOnes {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<OneOnOne> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<OneOnOne> | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    return await oneOnOneRepository.findByParticipantId(command.employeeId, {
+    const oneOnOnes = await oneOnOneRepository.findByParticipantId(command.employeeId, {
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (oneOnOnes instanceof Error) {
+      return new UnexpectedError("failed to find one-on-ones", { cause: oneOnOnes })
+    }
+
+    return oneOnOnes
   }
 }

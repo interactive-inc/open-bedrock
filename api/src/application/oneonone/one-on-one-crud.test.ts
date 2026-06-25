@@ -5,6 +5,8 @@ import { GetOneOnOne } from "@/application/oneonone/get-one-on-one"
 import { UpdateOneOnOne } from "@/application/oneonone/update-one-on-one"
 import { DeleteOneOnOne } from "@/application/oneonone/delete-one-on-one"
 import { ListMyOneOnOnes } from "@/application/oneonone/list-my-one-on-ones"
+import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import type { Context } from "@/env"
@@ -50,7 +52,7 @@ async function seedOneOnOne(context: Context, db: D1Database): Promise<OneOnOne>
     nextAction: null,
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed failed")
   }
 
@@ -74,7 +76,7 @@ describe("CreateOneOnOne", () => {
 
     expect(result).toBeInstanceOf(OneOnOne)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("create failed")
     }
 
@@ -97,7 +99,7 @@ describe("CreateOneOnOne", () => {
       nextAction: null,
     })
 
-    expect(result).toEqual({ reason: "member_not_found" })
+    expectApplicationError(result, NotFoundError, "member_not_found")
   })
 
   test("rejects self reference with self_reference", async () => {
@@ -114,7 +116,7 @@ describe("CreateOneOnOne", () => {
       nextAction: null,
     })
 
-    expect(result).toEqual({ reason: "self_reference" })
+    expectApplicationError(result, ValidationError, "self_reference")
   })
 })
 
@@ -155,7 +157,7 @@ describe("GetOneOnOne", () => {
       viewerId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_participant" })
+    expectApplicationError(result, ForbiddenError, "not_participant")
   })
 
   test("rejects unknown id with one_on_one_not_found", async () => {
@@ -166,7 +168,7 @@ describe("GetOneOnOne", () => {
       viewerId: 1,
     })
 
-    expect(result).toEqual({ reason: "one_on_one_not_found" })
+    expectApplicationError(result, NotFoundError, "one_on_one_not_found")
   })
 })
 
@@ -186,7 +188,7 @@ describe("UpdateOneOnOne", () => {
 
     expect(result).toBeInstanceOf(OneOnOne)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -207,7 +209,7 @@ describe("UpdateOneOnOne", () => {
       nextAction: null,
     })
 
-    expect(result).toEqual({ reason: "not_manager" })
+    expectApplicationError(result, ForbiddenError, "not_manager")
   })
 })
 
@@ -235,7 +237,7 @@ describe("DeleteOneOnOne", () => {
       managerId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_manager" })
+    expectApplicationError(result, ForbiddenError, "not_manager")
   })
 
   test("rejects unknown id with one_on_one_not_found", async () => {
@@ -246,7 +248,7 @@ describe("DeleteOneOnOne", () => {
       managerId: 1,
     })
 
-    expect(result).toEqual({ reason: "one_on_one_not_found" })
+    expectApplicationError(result, NotFoundError, "one_on_one_not_found")
   })
 })
 

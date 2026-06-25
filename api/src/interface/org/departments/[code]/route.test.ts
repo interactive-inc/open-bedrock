@@ -177,7 +177,7 @@ describe("PUT /org/departments/:code", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 409 when a department is set as its own parent", async () => {
+  test("returns 400 when a department is set as its own parent", async () => {
     const response = await request({
       path: "/org/departments/D003",
       token: await adminToken(),
@@ -185,7 +185,7 @@ describe("PUT /org/departments/:code", () => {
       body: { parent_code: "D003", order: 1 },
     })
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(400)
   })
 
   test("returns 409 for an indirect circular reference (A→B→A)", async () => {

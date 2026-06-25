@@ -1,6 +1,8 @@
 import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   responseId: number
@@ -9,45 +11,37 @@ export type Command = {
   submittedAt: string
 }
 
-export type ResponseNotFound = { reason: "response_not_found" }
-
-export type NotRespondent = { reason: "not_respondent" }
-
-export type SurveyNotOpen = { reason: "survey_not_open" }
-
-export type UpdateSurveyResponseFailure = ResponseNotFound | NotRespondent | SurveyNotOpen
-
 /**
  * アンケート回答の内容を差し替える。本人以外と、公開を終えたアンケートへの変更を拒否する。
  */
 export class UpdateSurveyResponse {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<SurveyResponse | UpdateSurveyResponseFailure | Error> {
+  async run(command: Command): Promise<SurveyResponse | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)
 
     const current = await surveyRepository.findResponseById(command.responseId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find survey response", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "response_not_found" }
+      return new NotFoundError("survey response not found", "response_not_found")
     }
 
     if (current.respondentId !== command.respondentId) {
-      return { reason: "not_respondent" }
+      return new ForbiddenError("not the respondent", "not_respondent")
     }
 
     const survey = await surveyRepository.findById(current.surveyId)
 
     if (survey instanceof Error) {
-      return survey
+      return new UnexpectedError("failed to find survey", { cause: survey })
     }
 
     if (survey === null || survey.isOpen() === false) {
-      return { reason: "survey_not_open" }
+      return new ConflictError("survey is not open", "survey_not_open")
     }
 
     const updated = current.withAnswers({
@@ -57,12 +51,16 @@ export class UpdateSurveyResponse {
 
     const result = await surveyRepository.updateResponse(updated)
 
-    if (result === null) {
-      return { reason: "response_not_found" }
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to update survey response", { cause: result })
     }
 
-    if (!(result instanceof Error) && "reason" in result) {
-      return { reason: "survey_not_open" }
+    if (result === null) {
+      return new NotFoundError("survey response not found", "response_not_found")
+    }
+
+    if ("reason" in result) {
+      return new ConflictError("survey is not open", "survey_not_open")
     }
 
     return result

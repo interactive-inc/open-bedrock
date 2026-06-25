@@ -1,4 +1,6 @@
 import { canManageTraining } from "@/lib/training/can-manage-training"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/domain/training/training-course.entity"
 import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
@@ -14,31 +16,27 @@ export type Command = {
   isRequired: boolean
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type CourseCodeConflict = { reason: "course_code_conflict" }
-
 /**
  * 管理権限を持つ者が新しい研修コースを作成する。
  */
 export class CreateTrainingCourse {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<TrainingCourse | Forbidden | CourseCodeConflict | Error> {
+  async run(command: Command): Promise<TrainingCourse | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)
 
     if (canManageTraining(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage training", "forbidden")
     }
 
     const existing = await courseRepository.findByCode(command.code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find training course", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "course_code_conflict" }
+      return new ConflictError("course code already exists", "course_code_conflict")
     }
 
     const trainingCourse = TrainingCourse.create({
@@ -53,7 +51,11 @@ export class CreateTrainingCourse {
     const result = await courseRepository.create(trainingCourse)
 
     if (result instanceof UniqueConstraintError) {
-      return { reason: "course_code_conflict" }
+      return new ConflictError("course code already exists", "course_code_conflict")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create training course", { cause: result })
     }
 
     return result

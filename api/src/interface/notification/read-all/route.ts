@@ -1,5 +1,7 @@
 import { MarkAllNotificationsRead } from "@/application/notification/mark-all-notifications-read"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 
@@ -15,8 +17,8 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     recipientEmployeeId: session.employeeId,
   })
 
-  if (updated instanceof Error) {
-    throw new InternalError("failed to mark notifications read")
+  if (updated instanceof ApplicationError) {
+    throw toHttpException(updated)
   }
 
   const responseBody = { updated }

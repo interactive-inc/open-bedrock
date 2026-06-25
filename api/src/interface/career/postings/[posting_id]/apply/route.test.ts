@@ -12,7 +12,7 @@ import { z } from "zod"
 const careerApplicationResponseSchema = z.object({
   id: z.number(),
   posting_id: z.number(),
-  applicant_id: z.number(),
+  applicant_id: z.string(),
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
 })
@@ -108,7 +108,7 @@ describe("POST /career/postings/:posting_id/apply", () => {
 
     if (parsed.success) {
       expect(parsed.data.posting_id).toBe(1)
-      expect(parsed.data.applicant_id).toBe(2)
+      expect(parsed.data.applicant_id).toBe("2")
       expect(parsed.data.message).toBe("I would like to apply")
       expect(parsed.data.status).toBe("applied")
     }

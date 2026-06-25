@@ -3,6 +3,8 @@ import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
 import { SetMySkill } from "@/application/skill/set-my-skill"
 import { GetMySkill } from "@/application/skill/get-my-skill"
 import { RemoveMySkill } from "@/application/skill/remove-my-skill"
+import { ApplicationError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 
@@ -24,7 +26,7 @@ describe("SetMySkill", () => {
       note: null,
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("set failed")
     }
 
@@ -55,7 +57,7 @@ describe("SetMySkill", () => {
       note: "advanced",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -75,7 +77,7 @@ describe("SetMySkill", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "skill_not_found" })
+    expectApplicationError(result, NotFoundError, "skill_not_found")
   })
 })
 
@@ -98,7 +100,7 @@ describe("GetMySkill", () => {
       skillCode: "typescript",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("get failed")
     }
 
@@ -115,7 +117,7 @@ describe("GetMySkill", () => {
       skillCode: "unknown",
     })
 
-    expect(result).toEqual({ reason: "skill_not_registered" })
+    expectApplicationError(result, NotFoundError, "skill_not_registered")
   })
 })
 
@@ -149,6 +151,6 @@ describe("RemoveMySkill", () => {
       skillCode: "nonexistent",
     })
 
-    expect(result).toEqual({ reason: "skill_not_registered" })
+    expectApplicationError(result, NotFoundError, "skill_not_registered")
   })
 })

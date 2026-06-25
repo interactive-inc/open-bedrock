@@ -1,6 +1,7 @@
 import { canManageRooms } from "@/lib/room/can-manage-rooms"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 
 export type Command = {
@@ -8,13 +9,7 @@ export type Command = {
   roomId: number
 }
 
-export type DeleteForbidden = { reason: "forbidden" }
-
-export type DeleteRoomNotFound = { reason: "room_not_found" }
-
 export type Deleted = { reason: "deleted" }
-
-export type DeleteRoomFailure = DeleteForbidden | DeleteRoomNotFound
 
 /**
  * 権限と存在を確認し、紐づく予約と会議室マスタを D1 batch でアトミックに削除する。
@@ -23,21 +18,21 @@ export type DeleteRoomFailure = DeleteForbidden | DeleteRoomNotFound
 export class DeleteRoom {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | DeleteRoomFailure | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const roomRepository = new RoomRepository(this.c)
 
     if (canManageRooms(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 
     const room = await roomRepository.findById(command.roomId)
 
     if (room instanceof Error) {
-      return room
+      return new UnexpectedError("failed to find room", { cause: room })
     }
 
     if (room === null) {
-      return { reason: "room_not_found" }
+      return new NotFoundError("room not found", "room_not_found")
     }
 
     try {
@@ -51,7 +46,7 @@ export class DeleteRoom {
       const roomDeleteResult = results.at(1)
 
       if (roomDeleteResult === undefined || roomDeleteResult.results.length === 0) {
-        return { reason: "room_not_found" }
+        return new NotFoundError("room not found", "room_not_found")
       }
 
       return { reason: "deleted" }

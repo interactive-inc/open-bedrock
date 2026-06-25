@@ -1,20 +1,17 @@
 import { CancelShiftSwapRequest } from "@/application/shift/cancel-shift-swap-request"
 import { GetShiftSwapRequest } from "@/application/shift/get-shift-swap-request"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftSwapRequest } from "@/lib/app-schemas"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // 交代申請をレスポンス用の snake_case に整形する。
 function toResponseBody(swapRequest: ShiftSwapRequest) {
-  return {
+  return zAppShiftSwapRequest.parse({
     id: swapRequest.id,
     requester_employee_id: swapRequest.requesterEmployeeId,
     target_employee_id: swapRequest.targetEmployeeId,
@@ -22,7 +19,7 @@ function toResponseBody(swapRequest: ShiftSwapRequest) {
     note: swapRequest.note,
     status: swapRequest.status,
     approved_at: swapRequest.approvedAt,
-  }
+  })
 }
 
 // GET /shift/swap-requests/:id — 交代申請の詳細（申請者本人か承認権限者）
@@ -41,16 +38,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     swapRequestId,
   })
 
-  if (swapRequest instanceof Error) {
-    throw new InternalError("failed to load swap request")
-  }
-
-  if ("reason" in swapRequest) {
-    if (swapRequest.reason === "not_visible") {
-      throw new ForbiddenError("not allowed to view this swap request")
-    }
-
-    throw new NotFoundError("swap request not found")
+  if (swapRequest instanceof ApplicationError) {
+    throw toHttpException(swapRequest)
   }
 
   return c.json(toResponseBody(swapRequest), 200)
@@ -71,20 +60,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     swapRequestId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel swap request")
-  }
-
-  if (result.reason === "not_requester") {
-    throw new ForbiddenError("not the requester")
-  }
-
-  if (result.reason === "already_approved") {
-    throw new ConflictError("approved swap request cannot be cancelled")
-  }
-
-  if (result.reason === "swap_request_not_found") {
-    throw new NotFoundError("swap request not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

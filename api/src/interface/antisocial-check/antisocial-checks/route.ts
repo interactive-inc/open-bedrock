@@ -1,7 +1,10 @@
 import { CreateAntisocialCheck } from "@/application/antisocial-check/create-antisocial-check"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAntisocialCheck } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -32,11 +35,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (antisocialCheck instanceof Error) {
-      throw new InternalError("failed to create antisocial check")
+    if (antisocialCheck instanceof ApplicationError) {
+      throw toHttpException(antisocialCheck)
     }
 
-    const responseBody = {
+    const responseBody = zAppAntisocialCheck.parse({
       id: antisocialCheck.id,
       requester_id: antisocialCheck.requesterId,
       partner_name: antisocialCheck.partnerName,
@@ -45,7 +48,7 @@ export const POST = factory.createHandlers(
       result: antisocialCheck.result,
       status: antisocialCheck.status,
       created_at: antisocialCheck.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

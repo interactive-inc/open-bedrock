@@ -1,7 +1,10 @@
 import { ListPendingRedemptions } from "@/application/thanks-points/list-pending-redemptions"
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksRedemptionList } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -41,8 +44,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const redemptions = await new ListPendingRedemptions(c).run({ limit, offset })
 
-  if (redemptions instanceof Error) {
-    throw new InternalError("failed to load pending redemptions")
+  if (redemptions instanceof ApplicationError) {
+    throw toHttpException(redemptions)
   }
 
   const totalRows = await c.var.database
@@ -50,9 +53,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(thanksRedemptions)
     .where(eq(thanksRedemptions.status, "pending"))
 
-  const responseBody = redemptions.map(toRedemptionResponse)
+  const responseBody = zAppThanksRedemptionList.parse({
+    data: redemptions.map(toRedemptionResponse),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // 交換申請集約を snake_case のレスポンスへ写す。

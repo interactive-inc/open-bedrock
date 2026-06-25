@@ -1,4 +1,6 @@
 import type { CareerApplication } from "@/domain/career/career-application.entity"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 
@@ -8,46 +10,42 @@ export type Command = {
   message: string | null
 }
 
-export type ApplicationNotFound = { reason: "application_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type ApplicationDecided = { reason: "application_decided" }
-
 /**
  * 応募メッセージを変更する。本人以外と、合否確定済みの応募の変更を拒否する。
  */
 export class UpdateMyCareerApplication {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<CareerApplication | ApplicationNotFound | NotApplicant | ApplicationDecided | Error> {
+  async run(command: Command): Promise<CareerApplication | ApplicationError> {
     const applicationRepository = new CareerApplicationRepository(this.c)
 
     const current = await applicationRepository.findById(command.applicationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find career application", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "application_not_found" }
+      return new NotFoundError("career application not found", "application_not_found")
     }
 
     if (current.applicantId !== command.applicantId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (current.status !== "applied") {
-      return { reason: "application_decided" }
+      return new ConflictError("career application is already decided", "application_decided")
     }
 
     const updated = await applicationRepository.update(current.withMessage(command.message))
 
+    if (updated instanceof Error) {
+      return new UnexpectedError("failed to update career application", { cause: updated })
+    }
+
     // リポジトリ層の status guard で並行変更を検出した場合
-    if (!(updated instanceof Error) && "reason" in updated) {
-      return { reason: "application_decided" }
+    if ("reason" in updated) {
+      return new ConflictError("career application is already decided", "application_decided")
     }
 
     return updated

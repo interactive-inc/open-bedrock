@@ -1,5 +1,7 @@
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import type { CareerPosting } from "@/domain/career/career-posting.entity"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 
@@ -8,31 +10,27 @@ export type Command = {
   postingId: number
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type PostingNotFound = { reason: "posting_not_found" }
-
 /**
  * 社内公募を1件取得する。管理ロールのみ閲覧できる。
  */
 export class GetCareerPosting {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<CareerPosting | Forbidden | PostingNotFound | Error> {
+  async run(command: Command): Promise<CareerPosting | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)
 
     if (canManageCareerPostings(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
     const posting = await postingRepository.findById(command.postingId)
 
     if (posting instanceof Error) {
-      return posting
+      return new UnexpectedError("failed to find career posting", { cause: posting })
     }
 
     if (posting === null) {
-      return { reason: "posting_not_found" }
+      return new NotFoundError("career posting not found", "posting_not_found")
     }
 
     return posting

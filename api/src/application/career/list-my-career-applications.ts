@@ -1,4 +1,6 @@
 import type { CareerApplication } from "@/domain/career/career-application.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMyCareerApplications {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<CareerApplication> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<CareerApplication> | ApplicationError> {
     const applicationRepository = new CareerApplicationRepository(this.c)
 
-    return await applicationRepository.findByApplicantId({
+    const applications = await applicationRepository.findByApplicantId({
       applicantId: command.applicantId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (applications instanceof Error) {
+      return new UnexpectedError("failed to find career applications", { cause: applications })
+    }
+
+    return applications
   }
 }

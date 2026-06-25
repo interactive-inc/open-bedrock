@@ -1,13 +1,11 @@
 import { CreateRentalReservation } from "@/application/rental/create-rental-reservation"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { zAppRentalReservation } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -45,19 +43,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (reservation instanceof Error) {
-      throw new InternalError("failed to create reservation")
+    if (reservation instanceof ApplicationError) {
+      throw toHttpException(reservation)
     }
 
-    if ("reason" in reservation) {
-      if (reservation.reason === "overlapping_reservation") {
-        throw new ConflictError("an overlapping rental reservation already exists")
-      }
-
-      throw new BadRequestError("end_date must be on or after start_date")
-    }
-
-    const responseBody = {
+    const responseBody = zAppRentalReservation.parse({
       id: reservation.id,
       requester_id: reservation.requesterId,
       item_name: reservation.itemName,
@@ -66,7 +56,7 @@ export const POST = factory.createHandlers(
       purpose: reservation.purpose,
       status: reservation.status,
       created_at: reservation.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

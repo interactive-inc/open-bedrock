@@ -1,3 +1,5 @@
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { RoomReservation } from "@/domain/room/room-reservation.entity"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
@@ -14,12 +16,18 @@ export type Command = {
 export class ListMyRoomReservations {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<RoomReservation> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<RoomReservation> | ApplicationError> {
     const reservationRepository = new RoomReservationRepository(this.c)
 
-    return await reservationRepository.findByReserverId(command.reserverId, {
+    const reservations = await reservationRepository.findByReserverId(command.reserverId, {
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (reservations instanceof Error) {
+      return new UnexpectedError("failed to find reservations", { cause: reservations })
+    }
+
+    return reservations
   }
 }

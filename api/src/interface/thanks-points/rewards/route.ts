@@ -3,12 +3,10 @@ import { ListRewards } from "@/application/thanks-points/list-rewards"
 import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
 import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
 import type { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksReward, zAppThanksRewardList } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -18,8 +16,8 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { thanksRewards } from "@/schema"
-import { zValidator } from "@hono/zod-validator"
 import { count, eq } from "drizzle-orm"
+import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // GET /thanks/rewards — 交換カタログ一覧。管理者は無効なものも見える。
@@ -44,26 +42,29 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
+  const isActiveOnly = canManageRewards(session.role) === false
+
   const rewards = await new ListRewards(c).run({
-    activeOnly: canManageRewards(session.role) === false,
+    activeOnly: isActiveOnly,
     limit,
     offset,
   })
 
-  if (rewards instanceof Error) {
-    throw new InternalError("failed to load rewards")
+  if (rewards instanceof ApplicationError) {
+    throw toHttpException(rewards)
   }
-
-  const isActiveOnly = canManageRewards(session.role) === false
 
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(thanksRewards)
     .where(isActiveOnly ? eq(thanksRewards.isActive, true) : undefined)
 
-  const responseBody = rewards.map(toRewardResponse)
+  const responseBody = zAppThanksRewardList.parse({
+    data: rewards.map(toRewardResponse),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /thanks/rewards — 交換カタログを登録する（管理者向け）
@@ -97,15 +98,13 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create reward")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      throw new BadRequestError("invalid reward")
-    }
+    const responseBody = zAppThanksReward.parse(toRewardResponse(created))
 
-    return c.json(toRewardResponse(created), 201)
+    return c.json(responseBody, 201)
   },
 )
 

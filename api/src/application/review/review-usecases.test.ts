@@ -7,7 +7,9 @@ import { UpdateReviewCycle } from "@/application/review/update-review-cycle"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 // --- seed helpers ---
@@ -113,11 +115,7 @@ describe("CreateReviewCycle", () => {
       dueDate: null,
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -151,11 +149,7 @@ describe("DeleteReviewCycle", () => {
       cycleId: cycleId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_deletable")
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 
   test("returns not_deletable for a closed cycle", async () => {
@@ -168,11 +162,7 @@ describe("DeleteReviewCycle", () => {
       cycleId: cycleId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_deletable")
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
@@ -183,11 +173,7 @@ describe("DeleteReviewCycle", () => {
       cycleId: 9999,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("cycle_not_found")
+    expectApplicationError(result, NotFoundError, "cycle_not_found")
   })
 
   test("returns forbidden for member role", async () => {
@@ -200,11 +186,7 @@ describe("DeleteReviewCycle", () => {
       cycleId: cycleId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   // D1 の json_extract('', '$') を使ったガード。
@@ -226,12 +208,8 @@ describe("DeleteReviewCycle", () => {
       cycleId: cycleId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
     // isDeletable チェックで弾かれる
-    expect(result.reason).toBe("not_deletable")
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 })
 
@@ -289,11 +267,7 @@ describe("SetReviewCycleStatus", () => {
       status: "closed",
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected invalid_transition")
-    }
-
-    expect(result.reason).toBe("invalid_transition")
+    expectApplicationError(result, ConflictError, "invalid_transition")
   })
 
   test("returns invalid_transition for closed to open", async () => {
@@ -307,11 +281,7 @@ describe("SetReviewCycleStatus", () => {
       status: "open",
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected invalid_transition")
-    }
-
-    expect(result.reason).toBe("invalid_transition")
+    expectApplicationError(result, ConflictError, "invalid_transition")
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
@@ -323,11 +293,7 @@ describe("SetReviewCycleStatus", () => {
       status: "open",
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected cycle_not_found")
-    }
-
-    expect(result.reason).toBe("cycle_not_found")
+    expectApplicationError(result, NotFoundError, "cycle_not_found")
   })
 
   test("returns forbidden for member role", async () => {
@@ -339,11 +305,7 @@ describe("SetReviewCycleStatus", () => {
       status: "open",
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -409,11 +371,7 @@ describe("UpdateReviewCycle", () => {
       dueDate: null,
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected not_modifiable")
-    }
-
-    expect(result.reason).toBe("not_modifiable")
+    expectApplicationError(result, ConflictError, "not_modifiable")
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
@@ -427,11 +385,7 @@ describe("UpdateReviewCycle", () => {
       dueDate: null,
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected cycle_not_found")
-    }
-
-    expect(result.reason).toBe("cycle_not_found")
+    expectApplicationError(result, NotFoundError, "cycle_not_found")
   })
 
   test("returns forbidden for member role", async () => {
@@ -445,11 +399,7 @@ describe("UpdateReviewCycle", () => {
       dueDate: null,
     })
 
-    if (result instanceof ReviewCycle || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -494,11 +444,7 @@ describe("SubmitReviewForm", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof ReviewForm || result instanceof Error) {
-      throw new Error("expected form_not_found")
-    }
-
-    expect(result.reason).toBe("form_not_found")
+    expectApplicationError(result, NotFoundError, "form_not_found")
   })
 
   test("returns forbidden when viewer is not the assigned reviewer", async () => {
@@ -516,11 +462,7 @@ describe("SubmitReviewForm", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof ReviewForm || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns already_submitted for an already submitted form", async () => {
@@ -538,11 +480,7 @@ describe("SubmitReviewForm", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof ReviewForm || result instanceof Error) {
-      throw new Error("expected already_submitted")
-    }
-
-    expect(result.reason).toBe("already_submitted")
+    expectApplicationError(result, ConflictError, "already_submitted")
   })
 
   test("returns cycle_not_open when cycle is draft", async () => {
@@ -560,11 +498,7 @@ describe("SubmitReviewForm", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof ReviewForm || result instanceof Error) {
-      throw new Error("expected cycle_not_open")
-    }
-
-    expect(result.reason).toBe("cycle_not_open")
+    expectApplicationError(result, ConflictError, "cycle_not_open")
   })
 
   test("returns cycle_not_open when cycle is closed", async () => {
@@ -582,10 +516,6 @@ describe("SubmitReviewForm", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof ReviewForm || result instanceof Error) {
-      throw new Error("expected cycle_not_open")
-    }
-
-    expect(result.reason).toBe("cycle_not_open")
+    expectApplicationError(result, ConflictError, "cycle_not_open")
   })
 })

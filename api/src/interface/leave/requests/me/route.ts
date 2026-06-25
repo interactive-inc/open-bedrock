@@ -6,6 +6,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zAppLeaveRequestSummaryList } from "@/lib/app-schemas"
 import { leaveRequests } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -65,16 +66,19 @@ export const GET = factory.createHandlers(
       .from(leaveRequests)
       .where(and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      id: row.id,
-      leave_type: row.leaveType,
-      start_date: row.startDate,
-      end_date: row.endDate,
-      days: row.days,
-      status: row.status,
-      created_at: row.createdAt,
-    }))
+    const responseBody = zAppLeaveRequestSummaryList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        leave_type: row.leaveType,
+        start_date: row.startDate,
+        end_date: row.endDate,
+        days: row.days,
+        status: row.status,
+        created_at: row.createdAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

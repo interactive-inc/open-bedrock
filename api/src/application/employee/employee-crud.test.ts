@@ -5,6 +5,14 @@ import { UpdateEmployee } from "@/application/employee/update-employee"
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 
@@ -53,7 +61,7 @@ describe("RegisterEmployee", () => {
 
     expect(result).toBeInstanceOf(Employee)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("register failed")
     }
 
@@ -69,7 +77,7 @@ describe("RegisterEmployee", () => {
       employee: newEmployeeInput,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects a duplicate code with employee_code_conflict", async () => {
@@ -82,7 +90,7 @@ describe("RegisterEmployee", () => {
       employee: newEmployeeInput,
     })
 
-    expect(result).toEqual({ reason: "employee_code_conflict" })
+    expectApplicationError(result, ConflictError, "employee_code_conflict")
   })
 
   test("rejects a password shorter than 8 characters with weak_password", async () => {
@@ -93,7 +101,7 @@ describe("RegisterEmployee", () => {
       employee: { ...newEmployeeInput, password: "short7!" },
     })
 
-    expect(result).toEqual({ reason: "weak_password" })
+    expectApplicationError(result, ValidationError, "weak_password")
   })
 })
 
@@ -113,7 +121,7 @@ describe("GetEmployee", () => {
 
     const result = await new GetEmployee(context).run({ code: "E999" })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 })
 
@@ -135,13 +143,14 @@ describe("UpdateEmployee", () => {
 
     const result = await new UpdateEmployee(context).run({
       viewerRole: "admin",
+      viewerEmployeeId: 0,
       code: "E902",
       profile: profileInput,
     })
 
     expect(result).toBeInstanceOf(Employee)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -157,11 +166,12 @@ describe("UpdateEmployee", () => {
 
     const result = await new UpdateEmployee(context).run({
       viewerRole: "member",
+      viewerEmployeeId: 0,
       code: "E903",
       profile: profileInput,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with employee_not_found", async () => {
@@ -169,11 +179,12 @@ describe("UpdateEmployee", () => {
 
     const result = await new UpdateEmployee(context).run({
       viewerRole: "admin",
+      viewerEmployeeId: 0,
       code: "E999",
       profile: profileInput,
     })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 })
 
@@ -207,7 +218,7 @@ describe("DeleteEmployee", () => {
       code: "E905",
     })
 
-    expect(result).toEqual({ reason: "self_delete" })
+    expectApplicationError(result, ForbiddenError, "self_delete")
   })
 
   test("rejects a non privileged role with forbidden", async () => {
@@ -221,7 +232,7 @@ describe("DeleteEmployee", () => {
       code: "E906",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects manager role with forbidden (delete is hr/admin only)", async () => {
@@ -235,7 +246,7 @@ describe("DeleteEmployee", () => {
       code: "E907",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with employee_not_found", async () => {
@@ -247,7 +258,7 @@ describe("DeleteEmployee", () => {
       code: "E999",
     })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 
   test("deletes related records across all dependent tables", async () => {

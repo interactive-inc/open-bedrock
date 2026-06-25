@@ -1,4 +1,6 @@
 import type { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
 
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMyLifeEvents {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<LifeEvent> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<LifeEvent> | ApplicationError> {
     const lifeEventRepository = new LifeEventRepository(this.c)
 
-    return await lifeEventRepository.findByEmployeeId({
+    const lifeEvents = await lifeEventRepository.findByEmployeeId({
       employeeId: command.employeeId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (lifeEvents instanceof Error) {
+      return new UnexpectedError("failed to find life events", { cause: lifeEvents })
+    }
+
+    return lifeEvents
   }
 }

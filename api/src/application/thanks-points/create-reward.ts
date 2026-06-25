@@ -1,4 +1,6 @@
 import { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
+import { UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
 
@@ -9,13 +11,13 @@ export type Command = {
   createdAt: string
 }
 
-export type InvalidReward = { reason: "invalid_reward" }
-
-// 交換カタログを1件登録する（管理者向け）。
+/**
+ * 交換カタログを1件登録する（管理者向け）。
+ */
 export class CreateReward {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ThanksReward | InvalidReward | Error> {
+  async run(command: Command): Promise<ThanksReward | ApplicationError> {
     const reward = ThanksReward.create({
       name: command.name,
       pointCost: command.pointCost,
@@ -24,11 +26,17 @@ export class CreateReward {
     })
 
     if (reward instanceof Error) {
-      return { reason: "invalid_reward" }
+      return new ValidationError("invalid reward", "invalid_reward")
     }
 
     const rewardRepository = new ThanksRewardRepository(this.c)
 
-    return rewardRepository.create(reward)
+    const created = await rewardRepository.create(reward)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create reward", { cause: created })
+    }
+
+    return created
   }
 }

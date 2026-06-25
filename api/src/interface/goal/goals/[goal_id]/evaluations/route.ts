@@ -1,15 +1,12 @@
 import { CreateGoalEvaluation } from "@/application/goal/create-goal-evaluation"
 import { factory } from "@/lib/factory"
 import { goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation.entity"
+import { ApplicationError } from "@/lib/errors"
+import { zAppGoalEvaluation } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { z } from "zod"
 
@@ -47,27 +44,11 @@ export const POST = factory.createHandlers(
       createdAt,
     })
 
-    if (evaluation instanceof Error) {
-      throw new InternalError("failed to create evaluation")
+    if (evaluation instanceof ApplicationError) {
+      throw toHttpException(evaluation)
     }
 
-    if ("reason" in evaluation) {
-      if (evaluation.reason === "goal_not_found") {
-        throw new NotFoundError("goal not found")
-      }
-
-      if (evaluation.reason === "already_evaluated") {
-        throw new ConflictError("already evaluated")
-      }
-
-      if (evaluation.reason === "goal_finalized") {
-        throw new ConflictError("goal is already finalized")
-      }
-
-      throw new ForbiddenError()
-    }
-
-    const responseBody = {
+    const responseBody = zAppGoalEvaluation.parse({
       id: evaluation.id,
       goal_id: evaluation.goalId,
       evaluator_id: evaluation.evaluatorId,
@@ -75,7 +56,7 @@ export const POST = factory.createHandlers(
       score: evaluation.score,
       comment: evaluation.comment,
       created_at: evaluation.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

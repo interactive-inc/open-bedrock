@@ -2,6 +2,8 @@ import { Expense } from "@/domain/expense/expense.entity"
 import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
@@ -44,7 +46,7 @@ describe("UpdateExpense", () => {
 
     expect(result).toBeInstanceOf(Expense)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -67,7 +69,7 @@ describe("UpdateExpense", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "not_owner" })
+    expectApplicationError(result, ForbiddenError, "not_owner")
   })
 
   test("rejects an unknown id with expense_not_found", async () => {
@@ -82,7 +84,7 @@ describe("UpdateExpense", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "expense_not_found" })
+    expectApplicationError(result, NotFoundError, "expense_not_found")
   })
 
   test("rejects a non pending expense with not_editable", async () => {
@@ -109,7 +111,7 @@ describe("UpdateExpense", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "not_editable" })
+    expectApplicationError(result, ConflictError, "not_editable")
   })
 })
 
@@ -143,7 +145,7 @@ describe("DeleteExpense", () => {
       employeeId: 9,
     })
 
-    expect(result).toEqual({ reason: "not_owner" })
+    expectApplicationError(result, ForbiddenError, "not_owner")
   })
 
   test("rejects an unknown id with expense_not_found", async () => {
@@ -154,7 +156,7 @@ describe("DeleteExpense", () => {
       employeeId: 5,
     })
 
-    expect(result).toEqual({ reason: "expense_not_found" })
+    expectApplicationError(result, NotFoundError, "expense_not_found")
   })
 
   test("rejects a non pending expense with not_deletable", async () => {
@@ -177,6 +179,6 @@ describe("DeleteExpense", () => {
       employeeId: 5,
     })
 
-    expect(result).toEqual({ reason: "not_deletable" })
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 })

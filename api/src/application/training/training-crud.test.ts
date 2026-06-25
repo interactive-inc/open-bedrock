@@ -12,6 +12,8 @@ import { CompleteTrainingEnrollment } from "@/application/training/complete-trai
 import { CancelTrainingEnrollment } from "@/application/training/cancel-training-enrollment"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
 async function seedCourse(context: Context, code: string): Promise<TrainingCourse> {
@@ -25,7 +27,7 @@ async function seedCourse(context: Context, code: string): Promise<TrainingCours
     isRequired: false,
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed course failed")
   }
 
@@ -63,7 +65,7 @@ async function seedEnrollment(
     dueDate: "2026-06-30",
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed enrollment failed")
   }
 
@@ -86,7 +88,7 @@ describe("CreateTrainingCourse", () => {
 
     expect(result).toBeInstanceOf(TrainingCourse)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("create failed")
     }
 
@@ -107,7 +109,7 @@ describe("CreateTrainingCourse", () => {
       isRequired: false,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects duplicate code with course_code_conflict", async () => {
@@ -125,7 +127,7 @@ describe("CreateTrainingCourse", () => {
       isRequired: false,
     })
 
-    expect(result).toEqual({ reason: "course_code_conflict" })
+    expectApplicationError(result, ConflictError, "course_code_conflict")
   })
 })
 
@@ -145,7 +147,7 @@ describe("GetTrainingCourse", () => {
 
     const result = await new GetTrainingCourse(context).run({ code: "NOPE" })
 
-    expect(result).toEqual({ reason: "course_not_found" })
+    expectApplicationError(result, NotFoundError, "course_not_found")
   })
 })
 
@@ -167,7 +169,7 @@ describe("UpdateTrainingCourse", () => {
 
     expect(result).toBeInstanceOf(TrainingCourse)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -190,7 +192,7 @@ describe("UpdateTrainingCourse", () => {
       isRequired: false,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects archived course with course_archived", async () => {
@@ -213,7 +215,7 @@ describe("UpdateTrainingCourse", () => {
       isRequired: false,
     })
 
-    expect(result).toEqual({ reason: "course_archived" })
+    expectApplicationError(result, ConflictError, "course_archived")
   })
 
   test("rejects unknown code with course_not_found", async () => {
@@ -229,7 +231,7 @@ describe("UpdateTrainingCourse", () => {
       isRequired: false,
     })
 
-    expect(result).toEqual({ reason: "course_not_found" })
+    expectApplicationError(result, NotFoundError, "course_not_found")
   })
 })
 
@@ -257,7 +259,7 @@ describe("ArchiveTrainingCourse", () => {
       code: "TS101",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown code with course_not_found", async () => {
@@ -268,7 +270,7 @@ describe("ArchiveTrainingCourse", () => {
       code: "NOPE",
     })
 
-    expect(result).toEqual({ reason: "course_not_found" })
+    expectApplicationError(result, NotFoundError, "course_not_found")
   })
 })
 
@@ -303,7 +305,7 @@ describe("EnrollTraining", () => {
 
     expect(result).toBeInstanceOf(TrainingEnrollment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("enroll failed")
     }
 
@@ -321,7 +323,7 @@ describe("EnrollTraining", () => {
       dueDate: null,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown course with course_not_found", async () => {
@@ -335,7 +337,7 @@ describe("EnrollTraining", () => {
       dueDate: null,
     })
 
-    expect(result).toEqual({ reason: "course_not_found" })
+    expectApplicationError(result, NotFoundError, "course_not_found")
   })
 })
 
@@ -388,7 +390,7 @@ describe("GetTrainingEnrollment", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown id with enrollment_not_found", async () => {
@@ -400,7 +402,7 @@ describe("GetTrainingEnrollment", () => {
       viewerRole: "admin",
     })
 
-    expect(result).toEqual({ reason: "enrollment_not_found" })
+    expectApplicationError(result, NotFoundError, "enrollment_not_found")
   })
 })
 
@@ -422,7 +424,7 @@ describe("RescheduleTrainingEnrollment", () => {
 
     expect(result).toBeInstanceOf(TrainingEnrollment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("reschedule failed")
     }
 
@@ -444,7 +446,7 @@ describe("RescheduleTrainingEnrollment", () => {
       dueDate: "2026-12-31",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -467,7 +469,7 @@ describe("CompleteTrainingEnrollment", () => {
 
     expect(result).toBeInstanceOf(TrainingEnrollment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("complete failed")
     }
 
@@ -491,7 +493,7 @@ describe("CompleteTrainingEnrollment", () => {
       completedAt: "2026-06-15T10:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects already completed enrollment", async () => {
@@ -518,7 +520,7 @@ describe("CompleteTrainingEnrollment", () => {
       completedAt: "2026-06-16T10:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "already_completed" })
+    expectApplicationError(result, ConflictError, "already_completed")
   })
 })
 
@@ -554,7 +556,7 @@ describe("CancelTrainingEnrollment", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown id with enrollment_not_found", async () => {
@@ -566,6 +568,6 @@ describe("CancelTrainingEnrollment", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "enrollment_not_found" })
+    expectApplicationError(result, NotFoundError, "enrollment_not_found")
   })
 })

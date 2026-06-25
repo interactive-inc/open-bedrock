@@ -1,15 +1,12 @@
-import type { ApplicationNotFound } from "@/lib/application/application-not-found"
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 
 export type Command = {
   applicationId: number
   applicantId: number
 }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotPending = { reason: "not_pending" }
 
 export type Withdrawn = { reason: "withdrawn" }
 
@@ -19,37 +16,35 @@ export type Withdrawn = { reason: "withdrawn" }
 export class WithdrawApplication {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Withdrawn | ApplicationNotFound | NotApplicant | NotPending | Error> {
+  async run(command: Command): Promise<Withdrawn | ApplicationError> {
     const applicationRepository = new ApplicationRepository(this.c)
 
     const current = await applicationRepository.findById(command.applicationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find application", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "application_not_found" }
+      return new NotFoundError("application not found", "application_not_found")
     }
 
     if (current.applicantId !== command.applicantId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (current.status !== "pending") {
-      return { reason: "not_pending" }
+      return new ConflictError("application is already decided", "not_pending")
     }
 
     const deleted = await applicationRepository.delete(command.applicationId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete application", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_pending" }
+      return new ConflictError("application is already decided", "not_pending")
     }
 
     return { reason: "withdrawn" }

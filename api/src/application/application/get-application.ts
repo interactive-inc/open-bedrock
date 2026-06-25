@@ -1,5 +1,6 @@
 import type { Application } from "@/domain/application/application.entity"
-import type { ApplicationNotFound } from "@/lib/application/application-not-found"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 
@@ -8,29 +9,27 @@ export type Command = {
   applicantId: number
 }
 
-export type NotApplicant = { reason: "not_applicant" }
-
 /**
  * 申請を 1 件取得する。本人以外の閲覧を拒否する。
  */
 export class GetApplication {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Application | ApplicationNotFound | NotApplicant | Error> {
+  async run(command: Command): Promise<Application | ApplicationError> {
     const applicationRepository = new ApplicationRepository(this.c)
 
     const application = await applicationRepository.findById(command.applicationId)
 
     if (application instanceof Error) {
-      return application
+      return new UnexpectedError("failed to find application", { cause: application })
     }
 
     if (application === null) {
-      return { reason: "application_not_found" }
+      return new NotFoundError("application not found", "application_not_found")
     }
 
     if (application.applicantId !== command.applicantId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     return application

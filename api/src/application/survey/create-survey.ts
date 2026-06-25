@@ -2,6 +2,8 @@ import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   viewerRole: string
@@ -10,17 +12,15 @@ export type Command = {
   questionsJson: ReadonlyArray<unknown>
 }
 
-export type Forbidden = { reason: "forbidden" }
-
 /**
  * 管理権限を持つ者が新しいアンケートを作成する。
  */
 export class CreateSurvey {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Survey | Forbidden | Error> {
+  async run(command: Command): Promise<Survey | ApplicationError> {
     if (canManageSurveys(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
     const surveyRepository = new SurveyRepository(this.c)
@@ -31,6 +31,12 @@ export class CreateSurvey {
       questionsJson: command.questionsJson,
     })
 
-    return surveyRepository.create(survey)
+    const created = await surveyRepository.create(survey)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create survey", { cause: created })
+    }
+
+    return created
   }
 }

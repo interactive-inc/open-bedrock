@@ -2,6 +2,7 @@ import { Survey } from "@/domain/survey/survey.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppSurveyList } from "@/lib/app-schemas"
 import { surveys } from "@/schema"
 import { count, eq } from "drizzle-orm"
 import {
@@ -43,11 +44,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(surveys)
     .where(eq(surveys.status, "open"))
 
-  const responseBody = rows.map((row) => {
+  const data = rows.map((row) => {
     const survey = Survey.fromRow(row)
+
     if (survey instanceof Error) {
       throw new InternalError("internal server error")
     }
+
     return {
       id: row.id,
       title: survey.title,
@@ -56,5 +59,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppSurveyList.parse({ data, total: totalRows.at(0)?.total ?? 0 })
+
+  return c.json(responseBody, 200)
 })

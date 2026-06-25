@@ -6,6 +6,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { zAppReviewFormList } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewForms } from "@/schema"
@@ -41,17 +42,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewForms)
     .where(eq(reviewForms.reviewerEmployeeId, session.employeeId))
 
-  const body = rows.map((row) => ({
-    id: row.id,
-    cycle_id: row.cycleId,
-    subject_employee_id: row.subjectEmployeeId,
-    reviewer_employee_id: row.reviewerEmployeeId,
-    reviewer_type: row.reviewerType,
-    answers: toAnswers(row.answers),
-    score: row.score,
-    status: row.status,
-    submitted_at: row.submittedAt,
-  }))
+  const responseBody = zAppReviewFormList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      cycle_id: row.cycleId,
+      subject_employee_id: row.subjectEmployeeId,
+      reviewer_employee_id: row.reviewerEmployeeId,
+      reviewer_type: row.reviewerType,
+      answers: toAnswers(row.answers),
+      score: row.score,
+      status: row.status,
+      submitted_at: row.submittedAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

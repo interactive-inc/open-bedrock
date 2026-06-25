@@ -1,16 +1,12 @@
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   businessTripId: string
   travelerId: number
 }
-
-export type BusinessTripNotFound = { reason: "business_trip_not_found" }
-
-export type NotTraveler = { reason: "not_traveler" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelBusinessTrip {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | BusinessTripNotFound | NotTraveler | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
     const current = await businessTripRepository.findById(command.businessTripId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find business trip", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "business_trip_not_found" }
+      return new NotFoundError("business trip not found", "business_trip_not_found")
     }
 
     if (current.travelerId !== command.travelerId) {
-      return { reason: "not_traveler" }
+      return new ForbiddenError("not the traveler", "not_traveler")
     }
 
     if (!current.isModifiable) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
     }
 
     const deleted = await businessTripRepository.delete(command.businessTripId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete business trip", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("business trip is not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

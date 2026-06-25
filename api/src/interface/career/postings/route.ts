@@ -1,6 +1,9 @@
 import { CreateCareerPosting } from "@/application/career/create-career-posting"
 import type { CareerPosting } from "@/domain/career/career-posting.entity"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerPosting, zAppCareerPostingList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -16,14 +19,14 @@ import { z } from "zod"
 
 // 公募をレスポンス用の snake_case に整形する。
 function toResponseBody(posting: CareerPosting) {
-  return {
+  return zAppCareerPosting.parse({
     id: posting.id,
     title: posting.title,
     dept_id: posting.deptId,
     dept_name: posting.deptName,
     required_skills: posting.requiredSkills,
     status: posting.status,
-  }
+  })
 }
 
 // GET /career/postings — 公開中の公募一覧
@@ -61,16 +64,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(careerPostings)
     .where(eq(careerPostings.status, "open"))
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    dept_id: row.deptId,
-    dept_name: row.deptName,
-    required_skills: row.requiredSkills,
-    status: row.status,
-  }))
+  const responseBody = zAppCareerPostingList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      dept_id: row.deptId,
+      dept_name: row.deptName,
+      required_skills: row.requiredSkills,
+      status: row.status,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /career/postings — 公募を新規作成（管理ロールのみ）
@@ -104,12 +110,8 @@ export const POST = factory.createHandlers(
       status: body.status ?? "open",
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create posting")
-    }
-
-    if ("reason" in created) {
-      throw new ForbiddenError()
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
     return c.json(toResponseBody(created), 201)

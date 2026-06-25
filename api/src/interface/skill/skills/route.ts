@@ -1,6 +1,7 @@
 import { factory } from "@/lib/factory"
 import { likeKeyword } from "@/interface/shared/like-keyword"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppSkillList } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { skills } from "@/schema"
 import { and, count, eq, or } from "drizzle-orm"
@@ -63,11 +64,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(skills)
     .where(conditions.length === 0 ? undefined : and(...conditions))
 
-  const responseBody = rows.map((row) => ({
-    code: row.code,
-    name: row.name,
-    category: row.category,
-  }))
+  const responseBody = zAppSkillList.parse({
+    data: rows.map((row) => ({
+      code: row.code,
+      name: row.name,
+      category: row.category,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

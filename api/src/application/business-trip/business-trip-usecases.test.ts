@@ -6,6 +6,8 @@ import { ListMyBusinessTrips } from "@/application/business-trip/list-my-busines
 import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
 import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
+import { ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedTrip(context: Context, travelerId: number): Promise<string> {
@@ -19,7 +21,7 @@ async function seedTrip(context: Context, travelerId: number): Promise<string> {
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
-  if (created instanceof Error || "reason" in created) {
+  if (created instanceof Error) {
     throw new Error("seed failed")
   }
 
@@ -42,7 +44,7 @@ describe("CreateBusinessTrip", () => {
 
     expect(created).toBeInstanceOf(BusinessTrip)
 
-    if (created instanceof Error || "reason" in created) {
+    if (created instanceof Error) {
       throw new Error("create failed")
     }
 
@@ -75,7 +77,7 @@ describe("GetBusinessTrip", () => {
       travelerId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_traveler" })
+    expectApplicationError(result, ForbiddenError, "not_traveler")
   })
 
   test("returns business_trip_not_found for an unknown id", async () => {
@@ -86,7 +88,7 @@ describe("GetBusinessTrip", () => {
       travelerId: 5,
     })
 
-    expect(result).toEqual({ reason: "business_trip_not_found" })
+    expectApplicationError(result, NotFoundError, "business_trip_not_found")
   })
 })
 
@@ -131,7 +133,7 @@ describe("UpdateBusinessTrip", () => {
 
     expect(result).toBeInstanceOf(BusinessTrip)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -154,7 +156,7 @@ describe("UpdateBusinessTrip", () => {
       estimatedCost: null,
     })
 
-    expect(result).toEqual({ reason: "not_traveler" })
+    expectApplicationError(result, ForbiddenError, "not_traveler")
   })
 })
 
@@ -182,6 +184,6 @@ describe("CancelBusinessTrip", () => {
       travelerId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_traveler" })
+    expectApplicationError(result, ForbiddenError, "not_traveler")
   })
 })

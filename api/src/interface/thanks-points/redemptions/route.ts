@@ -1,12 +1,9 @@
 import { RequestRedemption } from "@/application/thanks-points/request-redemption"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksRedemption } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -42,46 +39,21 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to request redemption")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
-    if ("reason" in result) {
-      if (result.reason === "reward_not_found") {
-        throw new NotFoundError("reward not found")
-      }
+    const responseBody = zAppThanksRedemption.parse({
+      id: result.id,
+      employee_id: result.employeeId,
+      reward_id: result.rewardId,
+      point_cost: result.pointCost,
+      status: result.status,
+      created_at: result.createdAt,
+      decided_at: result.decidedAt,
+      decider_id: result.deciderId,
+    })
 
-      if (result.reason === "insufficient_balance") {
-        throw new ConflictError("insufficient balance")
-      }
-
-      if (result.reason === "out_of_stock") {
-        throw new ConflictError("reward out of stock")
-      }
-
-      if (result.reason === "pending_exists") {
-        throw new ConflictError("pending redemption already exists")
-      }
-
-      if (result.reason === "reward_inactive") {
-        throw new ConflictError("reward is inactive")
-      }
-
-      throw new BadRequestError("reward is not available")
-    }
-
-    return c.json(
-      {
-        id: result.id,
-        employee_id: result.employeeId,
-        reward_id: result.rewardId,
-        point_cost: result.pointCost,
-        status: result.status,
-        created_at: result.createdAt,
-        decided_at: result.decidedAt,
-        decider_id: result.deciderId,
-      },
-      201,
-    )
+    return c.json(responseBody, 201)
   },
 )

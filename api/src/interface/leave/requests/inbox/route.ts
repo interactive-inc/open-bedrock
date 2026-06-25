@@ -8,6 +8,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees, leaveRequests } from "@/schema"
 import { count, desc, eq } from "drizzle-orm"
 
@@ -51,17 +52,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(leaveRequests)
     .where(eq(leaveRequests.status, "pending"))
 
-  const responseBody = rows.map((row) => ({
-    id: row.leaveRequest.id,
-    applicant_name: row.applicantName ?? "",
-    leave_type: row.leaveRequest.leaveType,
-    start_date: row.leaveRequest.startDate,
-    end_date: row.leaveRequest.endDate,
-    days: row.leaveRequest.days,
-    reason: row.leaveRequest.reason,
-    status: row.leaveRequest.status,
-    created_at: row.leaveRequest.createdAt,
-  }))
+  const responseBody = zAppLeaveRequestInboxList.parse({
+    data: rows.map((row) => ({
+      id: row.leaveRequest.id,
+      applicant_name: row.applicantName ?? "",
+      leave_type: row.leaveRequest.leaveType,
+      start_date: row.leaveRequest.startDate,
+      end_date: row.leaveRequest.endDate,
+      days: row.leaveRequest.days,
+      reason: row.leaveRequest.reason,
+      status: row.leaveRequest.status,
+      created_at: row.leaveRequest.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

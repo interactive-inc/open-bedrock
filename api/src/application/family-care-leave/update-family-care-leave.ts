@@ -1,4 +1,12 @@
 import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 
@@ -11,51 +19,31 @@ export type Command = {
   note: string | null
 }
 
-export type FamilyCareLeaveNotFound = { reason: "family_care_leave_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
-export type InvalidDateRange = { reason: "invalid_date_range" }
-
-export type OverlappingLeave = { reason: "overlapping_leave" }
-
 /**
  * 休業申出の種別・期間・備考を変更する。本人以外と、承認済み申出の変更を拒否する。
  */
 export class UpdateFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | FamilyCareLeave
-    | FamilyCareLeaveNotFound
-    | NotApplicant
-    | NotModifiable
-    | InvalidDateRange
-    | OverlappingLeave
-    | Error
-  > {
+  async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const current = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find family care leave", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "family_care_leave_not_found" }
+      return new NotFoundError("family care leave not found", "family_care_leave_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("family care leave not modifiable", "not_modifiable")
     }
 
     const updated = current.withDetails({
@@ -66,7 +54,7 @@ export class UpdateFamilyCareLeave {
     })
 
     if ("reason" in updated) {
-      return updated
+      return new ValidationError("invalid date range", "invalid_date_range")
     }
 
     // 自身を除く同一社員・重複期間の requested 申出があれば 0 行更新となり null を返す。
@@ -74,7 +62,7 @@ export class UpdateFamilyCareLeave {
     const saved = await familyCareLeaveRepository.updateIfNoOverlap(updated)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update family care leave", { cause: saved })
     }
 
     // 0 行更新の理由（消失 / status 変更 / 重複）を再取得して判別する。
@@ -82,18 +70,18 @@ export class UpdateFamilyCareLeave {
       const latest = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
 
       if (latest instanceof Error) {
-        return latest
+        return new UnexpectedError("failed to find family care leave", { cause: latest })
       }
 
       if (latest === null) {
-        return { reason: "family_care_leave_not_found" }
+        return new NotFoundError("family care leave not found", "family_care_leave_not_found")
       }
 
       if (latest.status !== "requested") {
-        return { reason: "not_modifiable" }
+        return new ConflictError("family care leave not modifiable", "not_modifiable")
       }
 
-      return { reason: "overlapping_leave" }
+      return new ConflictError("overlapping family care leave", "overlapping_leave")
     }
 
     return saved

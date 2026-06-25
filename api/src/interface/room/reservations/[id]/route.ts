@@ -1,33 +1,15 @@
 import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
 import { GetRoomReservation } from "@/application/room/get-room-reservation"
 import { UpdateRoomReservation } from "@/application/room/update-room-reservation"
-import type { RoomReservation } from "@/domain/room/room-reservation.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-  UnprocessableEntityError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppRoomReservation } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-
-// 予約をレスポンス用の snake_case に整形する。
-function toResponseBody(reservation: RoomReservation) {
-  return {
-    id: reservation.id,
-    room_id: reservation.roomId,
-    reserver_id: reservation.reserverId,
-    start_at: reservation.startAt,
-    end_at: reservation.endAt,
-    purpose: reservation.purpose,
-  }
-}
 
 // GET /rooms/reservations/:id — 予約の詳細（本人のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -42,19 +24,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     reserverId: viewer.employeeId,
   })
 
-  if (reservation instanceof Error) {
-    throw new InternalError("failed to load reservation")
+  if (reservation instanceof ApplicationError) {
+    throw toHttpException(reservation)
   }
 
-  if ("reason" in reservation) {
-    if (reservation.reason === "reservation_not_found") {
-      throw new NotFoundError("reservation not found")
-    }
+  const responseBody = zAppRoomReservation.parse({
+    id: reservation.id,
+    room_id: reservation.roomId,
+    reserver_id: reservation.reserverId,
+    start_at: reservation.startAt,
+    end_at: reservation.endAt,
+    purpose: reservation.purpose,
+  })
 
-    throw new ForbiddenError("not the reserver")
-  }
-
-  return c.json(toResponseBody(reservation), 200)
+  return c.json(responseBody, 200)
 })
 
 // PUT /rooms/reservations/:id — 予約の時刻と用途を変更（本人のみ）
@@ -90,31 +73,20 @@ export const PUT = factory.createHandlers(
       purpose: json.purpose ?? null,
     })
 
-    if (reservation instanceof Error) {
-      throw new InternalError("failed to update reservation")
+    if (reservation instanceof ApplicationError) {
+      throw toHttpException(reservation)
     }
 
-    if ("reason" in reservation) {
-      if (reservation.reason === "invalid_time_range") {
-        throw new BadRequestError("end_at must be after start_at")
-      }
+    const responseBody = zAppRoomReservation.parse({
+      id: reservation.id,
+      room_id: reservation.roomId,
+      reserver_id: reservation.reserverId,
+      start_at: reservation.startAt,
+      end_at: reservation.endAt,
+      purpose: reservation.purpose,
+    })
 
-      if (reservation.reason === "start_in_past") {
-        throw new UnprocessableEntityError("start_at must be in the future")
-      }
-
-      if (reservation.reason === "reservation_not_found") {
-        throw new NotFoundError("reservation not found")
-      }
-
-      if (reservation.reason === "not_reserver") {
-        throw new ForbiddenError("not the reserver")
-      }
-
-      throw new ConflictError("the room is already reserved")
-    }
-
-    return c.json(toResponseBody(reservation), 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -131,12 +103,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     reserverId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel reservation")
-  }
-
-  if (result.reason === "reservation_not_found") {
-    throw new NotFoundError("reservation not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

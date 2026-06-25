@@ -1,6 +1,9 @@
 import { ListMyOneOnOnes } from "@/application/oneonone/list-my-one-on-ones"
 import { factory } from "@/lib/factory"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppOneOnOneList } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -43,8 +46,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (oneOnOnesList instanceof Error) {
-    throw new InternalError("failed to load one-on-ones")
+  if (oneOnOnesList instanceof ApplicationError) {
+    throw toHttpException(oneOnOnesList)
   }
 
   const totalRows = await c.var.database
@@ -66,19 +69,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
           .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
           .where(inArray(oneOnOnes.id, ids))
 
-  const responseBody = oneOnOnesList.map((oneOnOne) => {
-    const nameRow = nameRows.find((row) => row.id === oneOnOne.id)
+  const responseBody = zAppOneOnOneList.parse({
+    data: oneOnOnesList.map((oneOnOne) => {
+      const nameRow = nameRows.find((row) => row.id === oneOnOne.id)
 
-    return {
-      id: oneOnOne.id,
-      held_at: oneOnOne.heldAt,
-      member_name: nameRow?.memberName ?? "",
-      manager_name: nameRow?.managerName ?? "",
-      topics: oneOnOne.topics,
-      manager_note: viewer.employeeId === oneOnOne.managerId ? oneOnOne.managerNote : null,
-      next_action: oneOnOne.nextAction,
-    }
+      return {
+        id: oneOnOne.id,
+        held_at: oneOnOne.heldAt,
+        member_name: nameRow?.memberName ?? "",
+        manager_name: nameRow?.managerName ?? "",
+        topics: oneOnOne.topics,
+        manager_note: viewer.employeeId === oneOnOne.managerId ? oneOnOne.managerNote : null,
+        next_action: oneOnOne.nextAction,
+      }
+    }),
+    total: totalRows.at(0)?.total ?? 0,
   })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

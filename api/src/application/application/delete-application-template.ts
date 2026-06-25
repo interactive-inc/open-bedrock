@@ -1,5 +1,7 @@
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
 export type Command = {
@@ -7,15 +9,7 @@ export type Command = {
   code: string
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type TemplateNotFound = { reason: "template_not_found" }
-
-export type TemplateInUse = { reason: "template_in_use" }
-
 export type Deleted = { reason: "deleted" }
-
-export type DeleteFailure = Forbidden | TemplateNotFound | TemplateInUse
 
 /**
  * 管理権限を持つ者が申請テンプレートを削除する。
@@ -25,21 +19,21 @@ export type DeleteFailure = Forbidden | TemplateNotFound | TemplateInUse
 export class DeleteApplicationTemplate {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | DeleteFailure | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
     if (canManageApplicationTemplates(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 
     const current = await templateRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find application template", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     // D1 batch で pending 申請チェックと削除をアトミックに実行。
@@ -47,11 +41,11 @@ export class DeleteApplicationTemplate {
     const deleted = await templateRepository.delete(command.code)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete application template", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "template_in_use" }
+      return new ConflictError("template is in use by pending applications", "template_in_use")
     }
 
     return { reason: "deleted" }

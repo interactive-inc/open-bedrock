@@ -1,7 +1,10 @@
 import { SetMySkill } from "@/application/skill/set-my-skill"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppEmployeeSkill } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -35,22 +38,18 @@ export const PUT = factory.createHandlers(
       note: json.note ?? null,
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to upsert skill")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
-    if ("reason" in result) {
-      throw new NotFoundError("skill not found")
-    }
-
-    const responseBody = {
+    const responseBody = zAppEmployeeSkill.parse({
       skill_code: result.employeeSkill.skillCode,
       skill_name: result.skill.name,
       skill_category: result.skill.category,
       level: result.employeeSkill.level,
       years: result.employeeSkill.years,
       note: result.employeeSkill.note,
-    }
+    })
 
     return c.json(responseBody, 200)
   },

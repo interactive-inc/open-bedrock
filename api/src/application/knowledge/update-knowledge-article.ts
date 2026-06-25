@@ -1,6 +1,8 @@
 import type { KnowledgeArticle } from "@/domain/knowledge/knowledge-article.entity"
 import type { Context } from "@/env"
 import { KnowledgeArticleRepository } from "@/infrastructure/knowledge/knowledge-article-repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   articleId: number
@@ -11,31 +13,27 @@ export type Command = {
   bodyMd: string
 }
 
-export type ArticleNotFound = { reason: "article_not_found" }
-
-export type NotAuthor = { reason: "not_author" }
-
 /**
  * ナレッジ記事の表題・カテゴリ・タグ・本文を更新する。作成者以外の更新を拒否する。
  */
 export class UpdateKnowledgeArticle {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<KnowledgeArticle | ArticleNotFound | NotAuthor | Error> {
+  async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
     const articleRepository = new KnowledgeArticleRepository(this.c)
 
     const current = await articleRepository.findById(command.articleId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find knowledge article", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "article_not_found" }
+      return new NotFoundError("knowledge article not found", "article_not_found")
     }
 
     if (current.authorId !== command.authorId) {
-      return { reason: "not_author" }
+      return new ForbiddenError("not the author", "not_author")
     }
 
     const updated = current.withContent({
@@ -48,11 +46,11 @@ export class UpdateKnowledgeArticle {
     const result = await articleRepository.update(updated)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to update knowledge article", { cause: result })
     }
 
     if (result === null) {
-      return { reason: "article_not_found" }
+      return new NotFoundError("knowledge article not found", "article_not_found")
     }
 
     return result

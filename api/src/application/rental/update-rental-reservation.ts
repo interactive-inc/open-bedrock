@@ -1,4 +1,12 @@
 import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+  UnexpectedError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
 
@@ -11,51 +19,31 @@ export type Command = {
   purpose: string | null
 }
 
-export type ReservationNotFound = { reason: "reservation_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
-export type InvalidDateRange = { reason: "invalid_date_range" }
-
-export type OverlappingReservation = { reason: "overlapping_reservation" }
-
 /**
  * レンタル予約の品名・期間・用途を変更する。本人以外の変更を拒否する。
  */
 export class UpdateRentalReservation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | RentalReservation
-    | ReservationNotFound
-    | NotRequester
-    | NotModifiable
-    | InvalidDateRange
-    | OverlappingReservation
-    | Error
-  > {
+  async run(command: Command): Promise<RentalReservation | ApplicationError> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
     const current = await reservationRepository.findById(command.reservationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find reservation", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "reservation_not_found" }
+      return new NotFoundError("reservation not found", "reservation_not_found")
     }
 
     if (current.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("reservation is not modifiable", "not_modifiable")
     }
 
     const detailed = current.withDetails({
@@ -65,7 +53,7 @@ export class UpdateRentalReservation {
     })
 
     if ("reason" in detailed) {
-      return detailed
+      return new ValidationError("invalid date range", "invalid_date_range")
     }
 
     const updated = detailed.withPurpose(command.purpose)
@@ -75,7 +63,7 @@ export class UpdateRentalReservation {
     const result = await reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to update reservation", { cause: result })
     }
 
     // 0 行更新の理由（消失 / status 変更 / 重複）を再取得して判別する。
@@ -83,18 +71,21 @@ export class UpdateRentalReservation {
       const latest = await reservationRepository.findById(command.reservationId)
 
       if (latest instanceof Error) {
-        return latest
+        return new UnexpectedError("failed to find reservation", { cause: latest })
       }
 
       if (latest === null) {
-        return { reason: "reservation_not_found" }
+        return new NotFoundError("reservation not found", "reservation_not_found")
       }
 
       if (latest.status !== "requested") {
-        return { reason: "not_modifiable" }
+        return new ConflictError("reservation is not modifiable", "not_modifiable")
       }
 
-      return { reason: "overlapping_reservation" }
+      return new ConflictError(
+        "an overlapping rental reservation already exists",
+        "overlapping_reservation",
+      )
     }
 
     return result

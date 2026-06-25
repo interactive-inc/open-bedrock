@@ -1,6 +1,8 @@
 import type { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   employeeId: number
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMyResignations {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<Resignation> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<Resignation> | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)
 
-    return await resignationRepository.findByEmployeeId({
+    const resignations = await resignationRepository.findByEmployeeId({
       employeeId: command.employeeId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (resignations instanceof Error) {
+      return new UnexpectedError("failed to find resignations", { cause: resignations })
+    }
+
+    return resignations
   }
 }

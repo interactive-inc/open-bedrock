@@ -2,24 +2,20 @@ import { CancelRentalReservation } from "@/application/rental/cancel-rental-rese
 import { GetRentalReservation } from "@/application/rental/get-rental-reservation"
 import { UpdateRentalReservation } from "@/application/rental/update-rental-reservation"
 import type { RentalReservation } from "@/domain/rental/rental-reservation.entity"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { zAppRentalReservation } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // 予約をレスポンス用の snake_case に整形する。
 function toResponseBody(reservation: RentalReservation) {
-  return {
+  return zAppRentalReservation.parse({
     id: reservation.id,
     requester_id: reservation.requesterId,
     item_name: reservation.itemName,
@@ -28,7 +24,7 @@ function toResponseBody(reservation: RentalReservation) {
     purpose: reservation.purpose,
     status: reservation.status,
     created_at: reservation.createdAt,
-  }
+  })
 }
 
 // GET /rentals/:id — 予約の詳細（本人のみ）
@@ -44,16 +40,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (reservation instanceof Error) {
-    throw new InternalError("failed to load reservation")
-  }
-
-  if ("reason" in reservation) {
-    if (reservation.reason === "reservation_not_found") {
-      throw new NotFoundError("reservation not found")
-    }
-
-    throw new ForbiddenError("not the requester")
+  if (reservation instanceof ApplicationError) {
+    throw toHttpException(reservation)
   }
 
   return c.json(toResponseBody(reservation), 200)
@@ -94,28 +82,8 @@ export const PUT = factory.createHandlers(
       purpose: json.purpose ?? null,
     })
 
-    if (reservation instanceof Error) {
-      throw new InternalError("failed to update reservation")
-    }
-
-    if ("reason" in reservation) {
-      if (reservation.reason === "reservation_not_found") {
-        throw new NotFoundError("reservation not found")
-      }
-
-      if (reservation.reason === "invalid_date_range") {
-        throw new BadRequestError("invalid date range")
-      }
-
-      if (reservation.reason === "overlapping_reservation") {
-        throw new ConflictError("an overlapping rental reservation already exists")
-      }
-
-      if (reservation.reason === "not_modifiable") {
-        throw new ConflictError("reservation is not modifiable")
-      }
-
-      throw new ForbiddenError("not the requester")
+    if (reservation instanceof ApplicationError) {
+      throw toHttpException(reservation)
     }
 
     return c.json(toResponseBody(reservation), 200)
@@ -135,20 +103,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel reservation")
-  }
-
-  if (result.reason === "reservation_not_found") {
-    throw new NotFoundError("reservation not found")
-  }
-
-  if (result.reason === "not_requester") {
-    throw new ForbiddenError("not the requester")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("reservation is not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

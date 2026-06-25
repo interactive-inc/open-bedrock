@@ -1,13 +1,10 @@
 import { PublishShiftAssignment } from "@/application/shift/publish-shift-assignment"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftAssignment } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 
 // POST /shift/assignments/:id/publish — 特権ロールが未公開の割当を公開する
@@ -26,30 +23,18 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     publishedAt: c.env.NOW ?? new Date().toISOString(),
   })
 
-  if (assignment instanceof Error) {
-    throw new InternalError("failed to publish assignment")
+  if (assignment instanceof ApplicationError) {
+    throw toHttpException(assignment)
   }
 
-  if ("reason" in assignment) {
-    if (assignment.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    if (assignment.reason === "already_published") {
-      throw new ConflictError("already published")
-    }
-
-    throw new NotFoundError("assignment not found")
-  }
-
-  const responseBody = {
+  const responseBody = zAppShiftAssignment.parse({
     id: assignment.id,
     employee_id: assignment.employeeId,
     pattern_id: assignment.patternId,
     date: assignment.date,
     note: assignment.note,
     published_at: assignment.publishedAt,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

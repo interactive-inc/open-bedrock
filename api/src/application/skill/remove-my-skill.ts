@@ -1,12 +1,12 @@
 import type { Context } from "@/env"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { EmployeeSkillRepository } from "@/infrastructure/skill/employee-skill-repository"
 
 export type Command = {
   employeeId: number
   skillCode: string
 }
-
-export type SkillNotRegistered = { reason: "skill_not_registered" }
 
 export type Removed = { reason: "removed" }
 
@@ -16,7 +16,7 @@ export type Removed = { reason: "removed" }
 export class RemoveMySkill {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Removed | SkillNotRegistered | Error> {
+  async run(command: Command): Promise<Removed | ApplicationError> {
     const employeeSkillRepository = new EmployeeSkillRepository(this.c)
 
     const current = await employeeSkillRepository.findByEmployeeAndCode({
@@ -25,11 +25,11 @@ export class RemoveMySkill {
     })
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find skill", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "skill_not_registered" }
+      return new NotFoundError("skill not registered", "skill_not_registered")
     }
 
     const deleted = await employeeSkillRepository.delete({
@@ -38,11 +38,11 @@ export class RemoveMySkill {
     })
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete skill", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "skill_not_registered" }
+      return new NotFoundError("skill not registered", "skill_not_registered")
     }
 
     return { reason: "removed" }

@@ -1,4 +1,6 @@
 import type { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
 
@@ -10,39 +12,31 @@ export type Command = {
   detail: string | null
 }
 
-export type LifeEventNotFound = { reason: "life_event_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
 /**
  * ライフイベント届出の種別・発生日・詳細を変更する。本人以外と、承認済み届出の変更を拒否する。
  */
 export class UpdateLifeEvent {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<LifeEvent | LifeEventNotFound | NotApplicant | NotModifiable | Error> {
+  async run(command: Command): Promise<LifeEvent | ApplicationError> {
     const lifeEventRepository = new LifeEventRepository(this.c)
 
     const current = await lifeEventRepository.findById(command.lifeEventId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find life event", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "life_event_not_found" }
+      return new NotFoundError("life event not found", "life_event_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (!current.isModifiable) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("life event is not modifiable", "not_modifiable")
     }
 
     const updated = current.withDetails({
@@ -54,11 +48,11 @@ export class UpdateLifeEvent {
     const saved = await lifeEventRepository.update(updated)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update life event", { cause: saved })
     }
 
     if (saved === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("life event is not modifiable", "not_modifiable")
     }
 
     return saved

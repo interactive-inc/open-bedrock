@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppResignationList } from "@/lib/app-schemas"
 import { resignations } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (resignationRows instanceof Error) {
-    throw new InternalError("failed to load resignations")
+  if (resignationRows instanceof ApplicationError) {
+    throw toHttpException(resignationRows)
   }
 
   const totalRows = await c.var.database
@@ -48,15 +51,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(resignations)
     .where(eq(resignations.employeeId, viewer.employeeId))
 
-  const responseBody = resignationRows.map((resignation) => ({
-    id: resignation.id,
-    employee_id: resignation.employeeId,
-    resignation_date: resignation.resignationDate,
-    last_working_date: resignation.lastWorkingDate,
-    reason: resignation.reason,
-    status: resignation.status,
-    created_at: resignation.createdAt,
-  }))
+  const responseBody = zAppResignationList.parse({
+    data: resignationRows.map((resignation) => ({
+      id: resignation.id,
+      employee_id: String(resignation.employeeId),
+      resignation_date: resignation.resignationDate,
+      last_working_date: resignation.lastWorkingDate,
+      reason: resignation.reason,
+      status: resignation.status,
+      created_at: resignation.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

@@ -1,5 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppShiftPatternList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -45,14 +46,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const totalRows = await c.var.database.select({ total: count() }).from(shiftPatterns)
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    code: row.code,
-    name: row.name,
-    start_time: row.startTime,
-    end_time: row.endTime,
-    break_minutes: row.breakMinutes,
-  }))
+  const responseBody = zAppShiftPatternList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      start_time: row.startTime,
+      end_time: row.endTime,
+      break_minutes: row.breakMinutes,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

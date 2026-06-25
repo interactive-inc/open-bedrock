@@ -7,6 +7,9 @@ import { UpdateGoal } from "@/application/goal/update-goal"
 import { DeleteGoal } from "@/application/goal/delete-goal"
 import { ListMyGoals } from "@/application/goal/list-my-goals"
 import { CreateGoalEvaluation } from "@/application/goal/create-goal-evaluation"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import type { Context } from "@/env"
 
@@ -41,7 +44,7 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof ApplicationError) {
     throw new Error("finalize goal failed")
   }
 }
@@ -138,7 +141,7 @@ describe("GetGoal", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "not_viewable" })
+    expectApplicationError(result, ForbiddenError, "not_viewable")
   })
 
   test("rejects unknown id with goal_not_found", async () => {
@@ -150,7 +153,7 @@ describe("GetGoal", () => {
       viewerRole: "admin",
     })
 
-    expect(result).toEqual({ reason: "goal_not_found" })
+    expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 })
 
@@ -174,7 +177,7 @@ describe("UpdateGoal", () => {
 
     expect(result).toBeInstanceOf(Goal)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -199,7 +202,7 @@ describe("UpdateGoal", () => {
       weight: 50,
     })
 
-    expect(result).toEqual({ reason: "not_owner" })
+    expectApplicationError(result, ForbiddenError, "not_owner")
   })
 
   test("rejects unknown id with goal_not_found", async () => {
@@ -214,7 +217,7 @@ describe("UpdateGoal", () => {
       weight: 50,
     })
 
-    expect(result).toEqual({ reason: "goal_not_found" })
+    expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
@@ -236,7 +239,7 @@ describe("UpdateGoal", () => {
       weight: 50,
     })
 
-    expect(result).toEqual({ reason: "goal_finalized" })
+    expectApplicationError(result, ConflictError, "goal_finalized")
   })
 })
 
@@ -270,7 +273,7 @@ describe("DeleteGoal", () => {
       employeeId: 2,
     })
 
-    expect(result).toEqual({ reason: "not_owner" })
+    expectApplicationError(result, ForbiddenError, "not_owner")
   })
 
   test("rejects unknown id with goal_not_found", async () => {
@@ -281,7 +284,7 @@ describe("DeleteGoal", () => {
       employeeId: 1,
     })
 
-    expect(result).toEqual({ reason: "goal_not_found" })
+    expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
@@ -299,7 +302,7 @@ describe("DeleteGoal", () => {
       employeeId: 1,
     })
 
-    expect(result).toEqual({ reason: "goal_finalized" })
+    expectApplicationError(result, ConflictError, "goal_finalized")
   })
 })
 
@@ -353,7 +356,7 @@ describe("CreateGoalEvaluation", () => {
 
     expect(result).toBeInstanceOf(GoalEvaluation)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("create evaluation failed")
     }
 
@@ -379,7 +382,7 @@ describe("CreateGoalEvaluation", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("creates a manager evaluation for a privileged role", async () => {
@@ -421,7 +424,7 @@ describe("CreateGoalEvaluation", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects duplicate self evaluation with already_evaluated", async () => {
@@ -452,7 +455,7 @@ describe("CreateGoalEvaluation", () => {
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "already_evaluated" })
+    expectApplicationError(result, ConflictError, "already_evaluated")
   })
 
   test("rejects evaluation on non-existent goal with goal_not_found", async () => {
@@ -468,6 +471,6 @@ describe("CreateGoalEvaluation", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "goal_not_found" })
+    expectApplicationError(result, NotFoundError, "goal_not_found")
   })
 })

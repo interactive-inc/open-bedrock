@@ -5,18 +5,12 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
+import { zAppOrgTreeList } from "@/lib/app-schemas"
+import type { AppOrgTreeNode } from "@/lib/app-schemas"
 import { departments, orgDepartments, orgMemberships } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
-type OrgTreeNode = {
-  code: string
-  name: string
-  manager_employee_code: string | null
-  member_count: number
-  children: ReadonlyArray<OrgTreeNode>
-}
-
-function toOrgTreeNode(node: DepartmentTreeNode): OrgTreeNode {
+function toOrgTreeNode(node: DepartmentTreeNode): AppOrgTreeNode {
   return {
     code: node.department.code,
     name: node.name,
@@ -76,7 +70,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     memberCountsByCode: countsByCode,
   })
 
-  const body = tree.map(toOrgTreeNode)
+  const responseBody = zAppOrgTreeList.parse(tree.map(toOrgTreeNode))
 
-  return c.json(body, 200)
+  return c.json(responseBody, 200)
 })

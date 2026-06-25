@@ -4,6 +4,8 @@ import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   viewerRole: string
@@ -20,16 +22,6 @@ export type Command = {
   }
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type RoleEscalationForbidden = { reason: "role_escalation_forbidden" }
-
-export type CodeConflict = { reason: "employee_code_conflict" }
-
-export type EmailConflict = { reason: "email_conflict" }
-
-export type WeakPassword = { reason: "weak_password" }
-
 // パスワード最低文字数。route 層の zod 検証と二重で防御する。
 const MIN_PASSWORD_LENGTH = 8
 
@@ -39,48 +31,39 @@ const MIN_PASSWORD_LENGTH = 8
 export class RegisterEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | Employee
-    | Forbidden
-    | RoleEscalationForbidden
-    | CodeConflict
-    | EmailConflict
-    | WeakPassword
-    | Error
-  > {
+  async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     if (canManageEmployees(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage employees", "forbidden")
     }
 
     // admin 以外は member ロールしか付与できない
     if (command.employee.role !== "member" && command.viewerRole !== "admin") {
-      return { reason: "role_escalation_forbidden" }
+      return new ForbiddenError(
+        "only admin can assign non-member roles",
+        "role_escalation_forbidden",
+      )
     }
 
     if (command.employee.password.length < MIN_PASSWORD_LENGTH) {
-      return { reason: "weak_password" }
+      return new ValidationError("password is too weak", "weak_password")
     }
 
     const existing = await employeeRepository.findByCode(command.employee.code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find employee", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "employee_code_conflict" }
+      return new ConflictError("employee code already exists", "employee_code_conflict")
     }
 
     return this.persist(command)
   }
 
-  private async persist(
-    command: Command,
-  ): Promise<Employee | CodeConflict | EmailConflict | Error> {
+  private async persist(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const passwordHash = await toPasswordHash(command.employee.password)
@@ -99,10 +82,16 @@ export class RegisterEmployee {
 
     if (result instanceof UniqueConstraintError) {
       const causeMsg = result.cause instanceof Error ? result.cause.message : ""
+
       if (/employees\.code/i.test(causeMsg)) {
-        return { reason: "employee_code_conflict" }
+        return new ConflictError("employee code already exists", "employee_code_conflict")
       }
-      return { reason: "email_conflict" }
+
+      return new ConflictError("email already exists", "email_conflict")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create employee", { cause: result })
     }
 
     return result

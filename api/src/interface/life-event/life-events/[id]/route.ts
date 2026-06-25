@@ -2,16 +2,13 @@ import { CancelLifeEvent } from "@/application/life-event/cancel-life-event"
 import { GetLifeEvent } from "@/application/life-event/get-life-event"
 import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
 import type { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { ApplicationError } from "@/lib/errors"
+import { zAppLifeEvent } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -42,19 +39,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (lifeEvent instanceof Error) {
-    throw new InternalError("failed to load life event")
+  if (lifeEvent instanceof ApplicationError) {
+    throw toHttpException(lifeEvent)
   }
 
-  if ("reason" in lifeEvent) {
-    if (lifeEvent.reason === "life_event_not_found") {
-      throw new NotFoundError("life event not found")
-    }
+  const responseBody = zAppLifeEvent.parse(toResponseBody(lifeEvent))
 
-    throw new ForbiddenError("not the applicant")
-  }
-
-  return c.json(toResponseBody(lifeEvent), 200)
+  return c.json(responseBody, 200)
 })
 
 // PUT /life-events/:id — ライフイベント届出の内容を変更（本人のみ）
@@ -85,23 +76,13 @@ export const PUT = factory.createHandlers(
       detail: json.detail ?? null,
     })
 
-    if (lifeEvent instanceof Error) {
-      throw new InternalError("failed to update life event")
+    if (lifeEvent instanceof ApplicationError) {
+      throw toHttpException(lifeEvent)
     }
 
-    if ("reason" in lifeEvent) {
-      if (lifeEvent.reason === "life_event_not_found") {
-        throw new NotFoundError("life event not found")
-      }
+    const responseBody = zAppLifeEvent.parse(toResponseBody(lifeEvent))
 
-      if (lifeEvent.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      throw new ForbiddenError("not the applicant")
-    }
-
-    return c.json(toResponseBody(lifeEvent), 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -118,20 +99,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel life event")
-  }
-
-  if (result.reason === "life_event_not_found") {
-    throw new NotFoundError("life event not found")
-  }
-
-  if (result.reason === "not_applicant") {
-    throw new ForbiddenError("not the applicant")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

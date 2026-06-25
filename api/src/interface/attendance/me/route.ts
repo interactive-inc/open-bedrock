@@ -7,6 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
+import { zAppAttendanceRecordList } from "@/lib/app-schemas"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
@@ -64,15 +65,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .where(and(...conditions)),
   ])
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    employee_id: row.employeeId,
-    work_date: row.workDate,
-    clock_in_at: row.clockInAt,
-    clock_out_at: row.clockOutAt,
-    work_minutes: row.workMinutes,
-    status: row.status,
-  }))
+  const responseBody = zAppAttendanceRecordList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      employee_id: row.employeeId,
+      work_date: row.workDate,
+      clock_in_at: row.clockInAt,
+      clock_out_at: row.clockOutAt,
+      work_minutes: row.workMinutes,
+      status: row.status,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

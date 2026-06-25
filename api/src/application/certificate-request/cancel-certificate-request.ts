@@ -1,3 +1,5 @@
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 
@@ -5,12 +7,6 @@ export type Command = {
   certificateRequestId: string
   requesterId: number
 }
-
-export type CertificateRequestNotFound = { reason: "certificate_request_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelCertificateRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | CertificateRequestNotFound | NotRequester | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
     const current = await certificateRequestRepository.findById(command.certificateRequestId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find certificate request", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "certificate_request_not_found" }
+      return new NotFoundError("certificate request not found", "certificate_request_not_found")
     }
 
     if (current.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
     }
 
     const deleted = await certificateRequestRepository.delete(command.certificateRequestId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete certificate request", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

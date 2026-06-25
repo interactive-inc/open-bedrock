@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAntisocialCheckList } from "@/lib/app-schemas"
 import { antisocialChecks } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (antisocialCheckRows instanceof Error) {
-    throw new InternalError("failed to load antisocial checks")
+  if (antisocialCheckRows instanceof ApplicationError) {
+    throw toHttpException(antisocialCheckRows)
   }
 
   const totalRows = await c.var.database
@@ -48,16 +51,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(antisocialChecks)
     .where(eq(antisocialChecks.requesterId, viewer.employeeId))
 
-  const responseBody = antisocialCheckRows.map((antisocialCheck) => ({
-    id: antisocialCheck.id,
-    requester_id: antisocialCheck.requesterId,
-    partner_name: antisocialCheck.partnerName,
-    partner_address: antisocialCheck.partnerAddress,
-    representative_name: antisocialCheck.representativeName,
-    result: antisocialCheck.result,
-    status: antisocialCheck.status,
-    created_at: antisocialCheck.createdAt,
-  }))
+  const responseBody = zAppAntisocialCheckList.parse({
+    data: antisocialCheckRows.map((antisocialCheck) => ({
+      id: antisocialCheck.id,
+      requester_id: antisocialCheck.requesterId,
+      partner_name: antisocialCheck.partnerName,
+      partner_address: antisocialCheck.partnerAddress,
+      representative_name: antisocialCheck.representativeName,
+      result: antisocialCheck.result,
+      status: antisocialCheck.status,
+      created_at: antisocialCheck.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

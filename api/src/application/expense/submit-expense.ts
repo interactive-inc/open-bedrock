@@ -1,6 +1,8 @@
 import { Expense } from "@/domain/expense/expense.entity"
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { ExpenseCategory } from "@/lib/schemas"
 
 export type Command = {
@@ -18,7 +20,7 @@ export type Command = {
 export class SubmitExpense {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Expense | Error> {
+  async run(command: Command): Promise<Expense | ApplicationError> {
     const repository = new ExpenseRepository(this.c)
 
     const expense = Expense.create({
@@ -30,6 +32,12 @@ export class SubmitExpense {
       createdAt: command.createdAt,
     })
 
-    return await repository.create(expense)
+    const created = await repository.create(expense)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create expense", { cause: created })
+    }
+
+    return created
   }
 }

@@ -1,4 +1,6 @@
 import type { Thanks } from "@/domain/thanks/thanks.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRepository } from "@/infrastructure/thanks/thanks-repository"
 
@@ -13,9 +15,18 @@ export type Command = {
 export class ListThanks {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<Thanks> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<Thanks> | ApplicationError> {
     const thanksRepository = new ThanksRepository(this.c)
 
-    return await thanksRepository.findMany({ limit: command.limit, offset: command.offset })
+    const thanksList = await thanksRepository.findMany({
+      limit: command.limit,
+      offset: command.offset,
+    })
+
+    if (thanksList instanceof Error) {
+      return new UnexpectedError("failed to find thanks", { cause: thanksList })
+    }
+
+    return thanksList
   }
 }

@@ -2,13 +2,10 @@ import { EnrollTraining } from "@/application/training/enroll-training"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppTrainingEnrollment } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -40,31 +37,11 @@ export const POST = factory.createHandlers(
       dueDate: body.due_date ?? null,
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create enrollment")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (created.reason === "employee_not_found") {
-        throw new NotFoundError("employee not found")
-      }
-
-      if (created.reason === "course_not_found") {
-        throw new NotFoundError("course not found")
-      }
-
-      if (created.reason === "course_archived") {
-        throw new ConflictError("course is archived")
-      }
-
-      throw new ConflictError("already enrolled")
-    }
-
-    const responseBody = {
+    const responseBody = zAppTrainingEnrollment.parse({
       id: created.id,
       course_id: created.courseId,
       employee_id: created.employeeId,
@@ -72,7 +49,7 @@ export const POST = factory.createHandlers(
       completed_at: created.completedAt,
       score: created.score,
       due_date: created.dueDate,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -1,7 +1,9 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
+import { ForbiddenError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
@@ -55,15 +57,7 @@ describe("DecideLeaveRequest", () => {
       comment: null,
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    if (result instanceof LeaveRequest) {
-      throw new Error("expected a failure result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("allows manager to reject a leave request", async () => {
@@ -86,7 +80,7 @@ describe("DecideLeaveRequest", () => {
     }
 
     if (!(result instanceof LeaveRequest)) {
-      throw new Error(`unexpected failure: ${result.reason}`)
+      throw new Error("unexpected failure")
     }
 
     expect(result.status).toBe("rejected")
@@ -118,15 +112,7 @@ describe("DecideLeaveRequest", () => {
       comment: null,
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    if (result instanceof LeaveRequest) {
-      throw new Error("expected a failure result")
-    }
-
-    expect(result.reason).toBe("self_approval")
+    expectApplicationError(result, ForbiddenError, "self_approval")
   })
 
   test("allows hr role to decide", async () => {
@@ -149,7 +135,7 @@ describe("DecideLeaveRequest", () => {
     }
 
     if (!(result instanceof LeaveRequest)) {
-      throw new Error(`unexpected failure: ${result.reason}`)
+      throw new Error("unexpected failure")
     }
 
     expect(result.status).toBe("rejected")

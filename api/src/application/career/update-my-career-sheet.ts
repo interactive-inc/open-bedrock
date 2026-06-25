@@ -1,4 +1,6 @@
 import { CareerSheet } from "@/domain/career/career-sheet.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerSheetRepository } from "@/infrastructure/career/career-sheet-repository"
 
@@ -15,7 +17,7 @@ export type Command = {
 export class UpdateMyCareerSheet {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<CareerSheet | Error> {
+  async run(command: Command): Promise<CareerSheet | ApplicationError> {
     const repository = new CareerSheetRepository(this.c)
 
     const updated = await repository.upsert(
@@ -28,7 +30,7 @@ export class UpdateMyCareerSheet {
     )
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update career sheet", { cause: updated })
     }
 
     return updated

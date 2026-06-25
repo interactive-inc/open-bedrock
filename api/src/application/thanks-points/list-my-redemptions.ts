@@ -1,8 +1,12 @@
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 
-// 自分の交換申請の一覧を新しい順で取得する。
+/**
+ * 自分の交換申請の一覧を新しい順で取得する。
+ */
 export class ListMyRedemptions {
   constructor(private readonly c: Context) {}
 
@@ -10,13 +14,19 @@ export class ListMyRedemptions {
     employeeId: number
     limit: number
     offset: number
-  }): Promise<ReadonlyArray<ThanksRedemption> | Error> {
+  }): Promise<ReadonlyArray<ThanksRedemption> | ApplicationError> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
-    return redemptionRepository.findByEmployee({
+    const redemptions = await redemptionRepository.findByEmployee({
       employeeId: props.employeeId,
       limit: props.limit,
       offset: props.offset,
     })
+
+    if (redemptions instanceof Error) {
+      return new UnexpectedError("failed to find redemptions", { cause: redemptions })
+    }
+
+    return redemptions
   }
 }

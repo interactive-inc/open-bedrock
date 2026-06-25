@@ -1,3 +1,5 @@
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
 
@@ -5,12 +7,6 @@ export type Command = {
   reservationId: string
   requesterId: number
 }
-
-export type ReservationNotFound = { reason: "reservation_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelRentalReservation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | ReservationNotFound | NotRequester | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const reservationRepository = new RentalReservationRepository(this.c)
 
     const current = await reservationRepository.findById(command.reservationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find reservation", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "reservation_not_found" }
+      return new NotFoundError("reservation not found", "reservation_not_found")
     }
 
     if (current.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("reservation is not modifiable", "not_modifiable")
     }
 
     const deleted = await reservationRepository.delete(command.reservationId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete reservation", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("reservation is not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

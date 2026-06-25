@@ -274,10 +274,10 @@ describe("DELETE /employees/:code", () => {
     expect(response.status).toBe(403)
   })
 
-  test("admin cannot delete their own account and gets 409", async () => {
+  test("admin cannot delete their own account and gets 403", async () => {
     const response = await request("/employees/E001", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing employee", async () => {

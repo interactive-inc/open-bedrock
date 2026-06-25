@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator"
 import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplicationList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -73,14 +74,17 @@ export const GET = factory.createHandlers(
       .from(applications)
       .where(and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      id: row.id,
-      template_name: row.templateName ?? "",
-      status: row.status,
-      current_step: row.currentStep,
-      created_at: row.createdAt,
-    }))
+    const responseBody = zAppApplicationList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        template_name: row.templateName ?? "",
+        status: row.status,
+        current_step: row.currentStep,
+        created_at: row.createdAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

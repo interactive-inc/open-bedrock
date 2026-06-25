@@ -6,6 +6,8 @@ import { ListMyFamilyCareLeaves } from "@/application/family-care-leave/list-my-
 import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-family-care-leave"
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedLeave(context: Context, employeeId: number): Promise<string> {
@@ -18,12 +20,8 @@ async function seedLeave(context: Context, employeeId: number): Promise<string> 
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
-  if (created instanceof Error) {
-    throw new Error("seed failed")
-  }
-
-  if ("reason" in created) {
-    throw new Error("seed failed: " + created.reason)
+  if (created instanceof ApplicationError) {
+    throw new Error("seed failed: " + created.code)
   }
 
   return created.id
@@ -44,12 +42,8 @@ describe("CreateFamilyCareLeave", () => {
 
     expect(created).toBeInstanceOf(FamilyCareLeave)
 
-    if (created instanceof Error) {
+    if (created instanceof ApplicationError) {
       throw new Error("create failed")
-    }
-
-    if ("reason" in created) {
-      throw new Error("unexpected reason")
     }
 
     expect(created.status).toBe("requested")
@@ -81,7 +75,7 @@ describe("GetFamilyCareLeave", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns family_care_leave_not_found for an unknown id", async () => {
@@ -92,7 +86,7 @@ describe("GetFamilyCareLeave", () => {
       employeeId: 5,
     })
 
-    expect(result).toEqual({ reason: "family_care_leave_not_found" })
+    expectApplicationError(result, NotFoundError, "family_care_leave_not_found")
   })
 })
 
@@ -110,7 +104,7 @@ describe("ListMyFamilyCareLeaves", () => {
       offset: 0,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       throw new Error("list failed")
     }
 
@@ -136,7 +130,7 @@ describe("UpdateFamilyCareLeave", () => {
 
     expect(result).toBeInstanceOf(FamilyCareLeave)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -158,7 +152,7 @@ describe("UpdateFamilyCareLeave", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("rejects an update that overlaps another own leave with overlapping_leave", async () => {
@@ -176,7 +170,7 @@ describe("UpdateFamilyCareLeave", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    if (other instanceof Error || "reason" in other) {
+    if (other instanceof ApplicationError) {
       throw new Error("seed second leave failed")
     }
 
@@ -190,7 +184,7 @@ describe("UpdateFamilyCareLeave", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "overlapping_leave" })
+    expectApplicationError(result, ConflictError, "overlapping_leave")
   })
 
   test("allows an update that only overlaps the leave itself (self-exclusion)", async () => {
@@ -210,7 +204,7 @@ describe("UpdateFamilyCareLeave", () => {
 
     expect(result).toBeInstanceOf(FamilyCareLeave)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -243,6 +237,6 @@ describe("CancelFamilyCareLeave", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 })

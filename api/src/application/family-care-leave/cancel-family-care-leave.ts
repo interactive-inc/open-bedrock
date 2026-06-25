@@ -1,3 +1,5 @@
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
 
@@ -5,12 +7,6 @@ export type Command = {
   familyCareLeaveId: string
   employeeId: number
 }
-
-export type FamilyCareLeaveNotFound = { reason: "family_care_leave_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | FamilyCareLeaveNotFound | NotApplicant | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
 
     const current = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find family care leave", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "family_care_leave_not_found" }
+      return new NotFoundError("family care leave not found", "family_care_leave_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("family care leave not modifiable", "not_modifiable")
     }
 
     const deleted = await familyCareLeaveRepository.delete(command.familyCareLeaveId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete family care leave", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("family care leave not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

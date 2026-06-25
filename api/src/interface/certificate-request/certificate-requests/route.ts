@@ -1,7 +1,10 @@
 import { CreateCertificateRequest } from "@/application/certificate-request/create-certificate-request"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
+import { zAppCertificateRequest } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -35,11 +38,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (certificateRequest instanceof Error) {
-      throw new InternalError("failed to create certificate request")
+    if (certificateRequest instanceof ApplicationError) {
+      throw toHttpException(certificateRequest)
     }
 
-    const responseBody = {
+    const responseBody = zAppCertificateRequest.parse({
       id: certificateRequest.id,
       requester_id: certificateRequest.requesterId,
       certificate_type: certificateRequest.certificateType,
@@ -48,7 +51,7 @@ export const POST = factory.createHandlers(
       note: certificateRequest.note,
       status: certificateRequest.status,
       created_at: certificateRequest.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

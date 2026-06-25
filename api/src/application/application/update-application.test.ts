@@ -3,8 +3,10 @@ import { GetApplication } from "@/application/application/get-application"
 import { ListMyApplications } from "@/application/application/list-my-applications"
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { describe, expect, test } from "bun:test"
 
 async function seedPending(
@@ -56,11 +58,7 @@ describe("GetApplication", () => {
       applicantId: 9,
     })
 
-    if (result instanceof Error || result instanceof Application) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("not_applicant")
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns application_not_found for an unknown id", async () => {
@@ -71,11 +69,7 @@ describe("GetApplication", () => {
       applicantId: 5,
     })
 
-    if (result instanceof Error || result instanceof Application) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("application_not_found")
+    expectApplicationError(result, NotFoundError, "application_not_found")
   })
 })
 
@@ -135,11 +129,7 @@ describe("UpdateApplication", () => {
       payload: {},
     })
 
-    if (result instanceof Error || result instanceof Application) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("not_applicant")
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns not_pending once the application is decided", async () => {
@@ -157,11 +147,7 @@ describe("UpdateApplication", () => {
       payload: {},
     })
 
-    if (result instanceof Error || result instanceof Application) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("not_pending")
+    expectApplicationError(result, ConflictError, "not_pending")
   })
 })
 
@@ -201,11 +187,7 @@ describe("WithdrawApplication", () => {
       applicantId: 9,
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("not_applicant")
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns not_pending once the application is decided", async () => {
@@ -222,10 +204,6 @@ describe("WithdrawApplication", () => {
       applicantId: 5,
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("not_pending")
+    expectApplicationError(result, ConflictError, "not_pending")
   })
 })

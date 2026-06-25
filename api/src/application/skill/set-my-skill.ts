@@ -1,6 +1,8 @@
 import { EmployeeSkill } from "@/domain/skill/employee-skill.entity"
 import type { Skill } from "@/domain/skill/skill.entity"
 import type { Context } from "@/env"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { EmployeeSkillRepository } from "@/infrastructure/skill/employee-skill-repository"
 import { SkillRepository } from "@/infrastructure/skill/skill-repository"
 
@@ -11,8 +13,6 @@ export type Command = {
   years: number | null
   note: string | null
 }
-
-export type SkillNotFound = { reason: "skill_not_found" }
 
 export type SetMySkillResult = {
   employeeSkill: EmployeeSkill
@@ -25,7 +25,7 @@ export type SetMySkillResult = {
 export class SetMySkill {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<SetMySkillResult | SkillNotFound | Error> {
+  async run(command: Command): Promise<SetMySkillResult | ApplicationError> {
     const skillRepository = new SkillRepository(this.c)
 
     const employeeSkillRepository = new EmployeeSkillRepository(this.c)
@@ -33,11 +33,11 @@ export class SetMySkill {
     const skill = await skillRepository.findByCode(command.skillCode)
 
     if (skill instanceof Error) {
-      return skill
+      return new UnexpectedError("failed to find skill", { cause: skill })
     }
 
     if (skill === null) {
-      return { reason: "skill_not_found" }
+      return new NotFoundError("skill not found", "skill_not_found")
     }
 
     const employeeSkill = EmployeeSkill.create({
@@ -51,7 +51,7 @@ export class SetMySkill {
     const saved = await employeeSkillRepository.save(employeeSkill)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to save skill", { cause: saved })
     }
 
     return { employeeSkill: saved, skill }

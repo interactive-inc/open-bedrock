@@ -1,15 +1,13 @@
 import type { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   oneOnOneId: string
   viewerId: number
 }
-
-export type OneOnOneNotFound = { reason: "one_on_one_not_found" }
-
-export type NotParticipant = { reason: "not_participant" }
 
 /**
  * 1on1 を1件取得する。参加者（メンバー or マネージャー）以外の閲覧を拒否する。
@@ -17,24 +15,24 @@ export type NotParticipant = { reason: "not_participant" }
 export class GetOneOnOne {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<OneOnOne | OneOnOneNotFound | NotParticipant | Error> {
+  async run(command: Command): Promise<OneOnOne | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
     const oneOnOne = await oneOnOneRepository.findById(command.oneOnOneId)
 
     if (oneOnOne instanceof Error) {
-      return oneOnOne
+      return new UnexpectedError("failed to find one-on-one", { cause: oneOnOne })
     }
 
     if (oneOnOne === null) {
-      return { reason: "one_on_one_not_found" }
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
     }
 
     const isParticipant =
       oneOnOne.memberId === command.viewerId || oneOnOne.managerId === command.viewerId
 
     if (isParticipant === false) {
-      return { reason: "not_participant" }
+      return new ForbiddenError("not a participant", "not_participant")
     }
 
     return oneOnOne

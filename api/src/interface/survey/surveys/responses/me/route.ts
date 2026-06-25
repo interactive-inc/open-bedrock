@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppSurveyResponseList } from "@/lib/app-schemas"
 import { surveyResponses } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (responses instanceof Error) {
-    throw new InternalError("failed to load survey responses")
+  if (responses instanceof ApplicationError) {
+    throw toHttpException(responses)
   }
 
   const totalRows = await c.var.database
@@ -48,13 +51,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(surveyResponses)
     .where(eq(surveyResponses.respondentId, viewer.employeeId))
 
-  const responseBody = responses.map((response) => ({
+  const data = responses.map((response) => ({
     id: response.id,
     survey_id: response.surveyId,
-    respondent_id: response.respondentId,
+    respondent_id: String(response.respondentId),
     answers_json: response.answersJson,
     submitted_at: response.submittedAt,
   }))
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppSurveyResponseList.parse({
+    data,
+    total: totalRows.at(0)?.total ?? 0,
+  })
+
+  return c.json(responseBody, 200)
 })

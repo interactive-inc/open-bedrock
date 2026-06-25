@@ -9,6 +9,8 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task.entity"
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { employees, onboardingTasks } from "@/schema"
 import { eq } from "drizzle-orm"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
@@ -86,7 +88,7 @@ describe("GetOnboardingAssignment", () => {
       viewerRole: "member",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("get failed")
     }
 
@@ -107,7 +109,7 @@ describe("GetOnboardingAssignment", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown assignment is not found", async () => {
@@ -119,7 +121,7 @@ describe("GetOnboardingAssignment", () => {
       viewerRole: "admin",
     })
 
-    expect(result).toEqual({ reason: "assignment_not_found" })
+    expectApplicationError(result, NotFoundError, "assignment_not_found")
   })
 })
 
@@ -137,7 +139,7 @@ describe("UpdateOnboardingAssignment", () => {
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -157,7 +159,7 @@ describe("UpdateOnboardingAssignment", () => {
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -217,7 +219,7 @@ describe("CancelOnboardingAssignment", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -256,7 +258,7 @@ describe("UncompleteOnboardingTask", () => {
       viewerRole: "member",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("uncomplete failed")
     }
 
@@ -291,7 +293,7 @@ describe("UncompleteOnboardingTask", () => {
       viewerRole: "member",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown task is not found", async () => {
@@ -303,7 +305,7 @@ describe("UncompleteOnboardingTask", () => {
       viewerRole: "admin",
     })
 
-    expect(result).toEqual({ reason: "task_not_found" })
+    expectApplicationError(result, NotFoundError, "task_not_found")
   })
 })
 
@@ -343,7 +345,7 @@ describe("AssignOnboarding duplicate check", () => {
       assignedAt: "2026-05-01T00:00:00.000Z",
     })
 
-    if (firstResult instanceof Error || "reason" in firstResult) {
+    if (firstResult instanceof ApplicationError) {
       throw new Error("first assignment failed")
     }
 
@@ -354,7 +356,7 @@ describe("AssignOnboarding duplicate check", () => {
       assignedAt: "2026-05-02T00:00:00.000Z",
     })
 
-    expect(secondResult).toEqual({ reason: "already_assigned" })
+    expectApplicationError(secondResult, ConflictError, "already_assigned")
   })
 
   test("allows assigning after the previous assignment is completed", async () => {
@@ -383,7 +385,6 @@ describe("AssignOnboarding duplicate check", () => {
       assignedAt: "2026-06-01T00:00:00.000Z",
     })
 
-    expect(secondResult instanceof Error).toBe(false)
-    expect("reason" in secondResult && secondResult.reason === "already_assigned").toBe(false)
+    expect(secondResult instanceof ApplicationError).toBe(false)
   })
 })

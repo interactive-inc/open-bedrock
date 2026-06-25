@@ -1,6 +1,8 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
+import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
@@ -10,17 +12,15 @@ export type Input = {
   dueDate: string | null
 }
 
-export type Forbidden = { reason: "forbidden" }
-
 /**
  * 管理権限のある本人が、新しい評価サイクルを draft 状態で作成する。
  */
 export class CreateReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ReviewCycle | Forbidden | Error> {
+  async run(input: Input): Promise<ReviewCycle | ApplicationError> {
     if (canAdministerCycle(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
     const reviewCycle = ReviewCycle.create({
@@ -29,6 +29,12 @@ export class CreateReviewCycle {
       dueDate: input.dueDate,
     })
 
-    return await new ReviewCycleRepository(this.c).create(reviewCycle)
+    const created = await new ReviewCycleRepository(this.c).create(reviewCycle)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create review cycle", { cause: created })
+    }
+
+    return created
   }
 }

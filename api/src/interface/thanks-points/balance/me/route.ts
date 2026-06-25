@@ -1,5 +1,8 @@
 import { ViewMyBalance } from "@/application/thanks-points/view-my-balance"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksBalance } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
@@ -13,9 +16,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const balance = await new ViewMyBalance(c).run({ employeeId: session.employeeId })
 
-  if (balance instanceof Error) {
-    throw new InternalError("failed to load balance")
+  if (balance instanceof ApplicationError) {
+    throw toHttpException(balance)
   }
 
-  return c.json({ balance_points: balance }, 200)
+  const responseBody = zAppThanksBalance.parse({ balance_points: balance })
+
+  return c.json(responseBody, 200)
 })

@@ -1,3 +1,5 @@
+import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -10,35 +12,27 @@ export type Input = {
   note: string | null
 }
 
-export type TargetNotFound = { reason: "target_not_found" }
-
-export type SelfReference = { reason: "self_reference" }
-
-export type AlreadyExists = { reason: "already_exists" }
-
 /**
  * 交代相手を確認して、本人からのシフト交代申請を作る。
  */
 export class CreateShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<ShiftSwapRequest | TargetNotFound | SelfReference | AlreadyExists | Error> {
+  async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const target = await employeeRepository.findByCode(input.targetEmployeeCode)
 
     if (target instanceof Error) {
-      return target
+      return new UnexpectedError("failed to find employee", { cause: target })
     }
 
     if (target === null) {
-      return { reason: "target_not_found" }
+      return new NotFoundError("target employee not found", "target_not_found")
     }
 
     if (target.id === input.requesterEmployeeId) {
-      return { reason: "self_reference" }
+      return new ValidationError("cannot swap with yourself", "self_reference")
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
@@ -50,11 +44,11 @@ export class CreateShiftSwapRequest {
     )
 
     if (pending instanceof Error) {
-      return pending
+      return new UnexpectedError("failed to find pending shift swap request", { cause: pending })
     }
 
     if (pending !== null) {
-      return { reason: "already_exists" }
+      return new ConflictError("pending shift swap request already exists", "already_exists")
     }
 
     const swapRequest = ShiftSwapRequest.create({
@@ -65,13 +59,18 @@ export class CreateShiftSwapRequest {
     })
 
     if ("reason" in swapRequest) {
-      return swapRequest
+      return new ValidationError("cannot swap with yourself", "self_reference")
     }
 
     const created = await swapRequestRepository.create(swapRequest)
 
-    if (created instanceof Error) return created
-    if (created === null) return { reason: "already_exists" }
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create shift swap request", { cause: created })
+    }
+
+    if (created === null) {
+      return new ConflictError("pending shift swap request already exists", "already_exists")
+    }
 
     return created
   }

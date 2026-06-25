@@ -1,4 +1,6 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -14,27 +16,15 @@ export type Input = {
   note: string | null
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type EmployeeNotFound = { reason: "employee_not_found" }
-
-export type PatternNotFound = { reason: "pattern_not_found" }
-
-export type DuplicateAssignment = { reason: "duplicate_assignment" }
-
 /**
  * 権限・社員・パターンを確認して下書きのシフト割当を作る。
  */
 export class CreateShiftAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<
-    ShiftAssignment | Forbidden | EmployeeNotFound | PatternNotFound | DuplicateAssignment | Error
-  > {
+  async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
     if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -42,11 +32,11 @@ export class CreateShiftAssignment {
     const employee = await employeeRepository.findByCode(input.employeeCode)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "employee_not_found" }
+      return new NotFoundError("employee not found", "employee_not_found")
     }
 
     const patternRepository = new ShiftPatternRepository(this.c)
@@ -54,11 +44,11 @@ export class CreateShiftAssignment {
     const pattern = await patternRepository.findByCode(input.patternCode)
 
     if (pattern instanceof Error) {
-      return pattern
+      return new UnexpectedError("failed to find shift pattern", { cause: pattern })
     }
 
     if (pattern === null) {
-      return { reason: "pattern_not_found" }
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
     const assignmentRepository = new ShiftAssignmentRepository(this.c)
@@ -66,11 +56,11 @@ export class CreateShiftAssignment {
     const existing = await assignmentRepository.findByEmployeeIdAndDate(employee.id, input.date)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find shift assignment", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "duplicate_assignment" }
+      return new ConflictError("shift assignment already exists", "duplicate_assignment")
     }
 
     const assignment = ShiftAssignment.create({
@@ -83,7 +73,11 @@ export class CreateShiftAssignment {
     const result = await assignmentRepository.create(assignment)
 
     if (result instanceof UniqueConstraintError) {
-      return { reason: "duplicate_assignment" }
+      return new ConflictError("shift assignment already exists", "duplicate_assignment")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create shift assignment", { cause: result })
     }
 
     return result

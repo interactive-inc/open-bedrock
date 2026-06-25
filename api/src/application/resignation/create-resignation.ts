@@ -1,6 +1,8 @@
 import { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   employeeId: number
@@ -10,8 +12,6 @@ export type Command = {
   createdAt: string
 }
 
-export type AlreadyRequested = { kind: "already_requested" }
-
 /**
  * 退職申請を作成する。status は "requested" で登録する。
  * 同一社員の PENDING（requested）申請が既に存在する場合は重複として拒否する。
@@ -19,17 +19,17 @@ export type AlreadyRequested = { kind: "already_requested" }
 export class CreateResignation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Resignation | AlreadyRequested | Error> {
+  async run(command: Command): Promise<Resignation | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)
 
     const existing = await resignationRepository.findPendingByEmployeeId(command.employeeId)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find resignation", { cause: existing })
     }
 
     if (existing !== null) {
-      return { kind: "already_requested" }
+      return new ConflictError("a pending resignation already exists", "already_requested")
     }
 
     const resignation = Resignation.create({
@@ -42,8 +42,13 @@ export class CreateResignation {
 
     const created = await resignationRepository.create(resignation)
 
-    if (created instanceof Error) return created
-    if ("kind" in created) return created
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create resignation", { cause: created })
+    }
+
+    if ("kind" in created) {
+      return new ConflictError("a pending resignation already exists", "already_requested")
+    }
 
     return created
   }

@@ -1,4 +1,5 @@
 import { factory } from "@/lib/factory"
+import { zAppShiftAssignmentList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -73,15 +74,18 @@ export const GET = factory.createHandlers(
       .from(shiftAssignments)
       .where(and(...conditions))
 
-    const responseBody = rows.map((row) => ({
-      id: row.id,
-      employee_id: row.employeeId,
-      pattern_id: row.patternId,
-      date: row.date,
-      note: row.note,
-      published_at: row.publishedAt,
-    }))
+    const responseBody = zAppShiftAssignmentList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        employee_id: row.employeeId,
+        pattern_id: row.patternId,
+        date: row.date,
+        note: row.note,
+        published_at: row.publishedAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )

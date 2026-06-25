@@ -4,6 +4,8 @@ import { CreateKnowledgeArticle } from "@/application/knowledge/create-knowledge
 import { UpdateKnowledgeArticle } from "@/application/knowledge/update-knowledge-article"
 import { DeleteKnowledgeArticle } from "@/application/knowledge/delete-knowledge-article"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
 async function seedArticle(context: Context, authorId: number): Promise<KnowledgeArticle> {
@@ -89,7 +91,7 @@ describe("UpdateKnowledgeArticle", () => {
 
     expect(result).toBeInstanceOf(KnowledgeArticle)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -115,7 +117,7 @@ describe("UpdateKnowledgeArticle", () => {
       bodyMd: "Hacked body.",
     })
 
-    expect(result).toEqual({ reason: "not_author" })
+    expectApplicationError(result, ForbiddenError, "not_author")
   })
 
   test("rejects unknown id with article_not_found", async () => {
@@ -130,7 +132,7 @@ describe("UpdateKnowledgeArticle", () => {
       bodyMd: "Ghost body.",
     })
 
-    expect(result).toEqual({ reason: "article_not_found" })
+    expectApplicationError(result, NotFoundError, "article_not_found")
   })
 })
 
@@ -166,7 +168,7 @@ describe("DeleteKnowledgeArticle", () => {
       authorId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_author" })
+    expectApplicationError(result, ForbiddenError, "not_author")
   })
 
   test("rejects unknown id with article_not_found", async () => {
@@ -177,6 +179,6 @@ describe("DeleteKnowledgeArticle", () => {
       authorId: 1,
     })
 
-    expect(result).toEqual({ reason: "article_not_found" })
+    expectApplicationError(result, NotFoundError, "article_not_found")
   })
 })

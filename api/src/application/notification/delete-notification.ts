@@ -1,12 +1,12 @@
 import type { Context } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   notificationId: number
   viewerEmployeeId: number
 }
-
-export type NotificationNotFound = { reason: "not_found" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -16,17 +16,17 @@ export type Deleted = { reason: "deleted" }
 export class DeleteNotification {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | NotificationNotFound | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const repository = new NotificationRepository(this.c)
 
     const deleted = await repository.delete(command.notificationId, command.viewerEmployeeId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete notification", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_found" }
+      return new NotFoundError("notification not found", "not_found")
     }
 
     return { reason: "deleted" }

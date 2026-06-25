@@ -5,6 +5,8 @@ import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"
 import { isWrappedLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
@@ -22,7 +24,7 @@ export type InvalidCredentials = { reason: "invalid_credentials" }
 export class AuthenticateEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<AccessTokenView | InvalidCredentials | Error> {
+  async run(command: Command): Promise<AccessTokenView | InvalidCredentials | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const tokenSigner = new JoseTokenSigner()
@@ -30,7 +32,7 @@ export class AuthenticateEmployee {
     const found = await employeeRepository.findByEmail(command.email)
 
     if (found instanceof Error) {
-      return found
+      return new UnexpectedError("failed to find employee", { cause: found })
     }
 
     if (found === null) {
@@ -66,7 +68,7 @@ export class AuthenticateEmployee {
     )
 
     if (accessToken instanceof Error) {
-      return accessToken
+      return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
     return { accessToken }

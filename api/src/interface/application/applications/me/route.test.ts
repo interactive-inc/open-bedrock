@@ -7,8 +7,23 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { z } from "zod"
 
 const jwtSecret = "application-me-route-test-secret"
+
+const applicationMineResponseSchema = z.object({
+  data: z.array(
+    z.object({
+      id: z.number(),
+      template_id: z.number(),
+      status: z.enum(["pending", "approved", "rejected"]),
+      current_step: z.string().nullable(),
+      payload: z.unknown(),
+      created_at: z.string(),
+    }),
+  ),
+  total: z.number(),
+})
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -84,13 +99,16 @@ describe("GET /applications/me", () => {
 
     expect(response.status).toBe(200)
 
-    const json = await response.json()
+    const parsed = applicationMineResponseSchema.safeParse(await response.json())
 
-    expect(Array.isArray(json.data)).toBe(true)
-    expect(json.data.length).toBe(2)
+    expect(parsed.success).toBe(true)
 
-    for (const application of json.data) {
-      expect([1, 5]).toContain(application.id)
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(2)
+
+      for (const application of parsed.data.data) {
+        expect([1, 5]).toContain(application.id)
+      }
     }
   })
 
@@ -99,9 +117,13 @@ describe("GET /applications/me", () => {
 
     expect(response.status).toBe(200)
 
-    const json = await response.json()
+    const parsed = applicationMineResponseSchema.safeParse(await response.json())
 
-    expect(json.data.length).toBe(0)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(0)
+    }
   })
 
   test("returns 401 without a bearer token", async () => {

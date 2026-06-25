@@ -1,5 +1,6 @@
 import { canViewOthers } from "@/lib/goal/goal-access"
 import { factory } from "@/lib/factory"
+import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/schema"
 import {
   DEFAULT_LIST_LIMIT,
@@ -71,15 +72,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(goals)
     .where(and(...conditions))
 
-  const responseBody = rows.map((row) => ({
-    id: row.id,
-    employee_id: row.employeeId,
-    period: row.period,
-    title: row.title,
-    kpi: row.kpi,
-    weight: row.weight,
-    status: row.status,
-  }))
+  const responseBody = zAppGoalList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      employee_id: row.employeeId,
+      period: row.period,
+      title: row.title,
+      kpi: row.kpi,
+      weight: row.weight,
+      status: row.status,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

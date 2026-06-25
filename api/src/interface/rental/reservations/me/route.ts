@@ -1,13 +1,16 @@
 import { ListMyRentalReservations } from "@/application/rental/list-my-rental-reservations"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
+import { zAppRentalReservationList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { rentalReservations } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (reservations instanceof Error) {
-    throw new InternalError("failed to load reservations")
+  if (reservations instanceof ApplicationError) {
+    throw toHttpException(reservations)
   }
 
   const totalRows = await c.var.database
@@ -48,16 +51,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(rentalReservations)
     .where(eq(rentalReservations.requesterId, viewer.employeeId))
 
-  const responseBody = reservations.map((reservation) => ({
-    id: reservation.id,
-    requester_id: reservation.requesterId,
-    item_name: reservation.itemName,
-    start_date: reservation.startDate,
-    end_date: reservation.endDate,
-    purpose: reservation.purpose,
-    status: reservation.status,
-    created_at: reservation.createdAt,
-  }))
+  const responseBody = zAppRentalReservationList.parse({
+    data: reservations.map((reservation) => ({
+      id: reservation.id,
+      requester_id: reservation.requesterId,
+      item_name: reservation.itemName,
+      start_date: reservation.startDate,
+      end_date: reservation.endDate,
+      purpose: reservation.purpose,
+      status: reservation.status,
+      created_at: reservation.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

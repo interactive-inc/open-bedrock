@@ -5,6 +5,8 @@ import { GetRentalReservation } from "@/application/rental/get-rental-reservatio
 import { UpdateRentalReservation } from "@/application/rental/update-rental-reservation"
 import { CancelRentalReservation } from "@/application/rental/cancel-rental-reservation"
 import { ListMyRentalReservations } from "@/application/rental/list-my-rental-reservations"
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import type { Context } from "@/env"
 
@@ -18,7 +20,7 @@ async function seedReservation(context: Context, requesterId: number): Promise<R
     createdAt: "2026-03-15T09:00:00.000Z",
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed failed")
   }
 
@@ -40,7 +42,7 @@ describe("CreateRentalReservation", () => {
 
     expect(result).toBeInstanceOf(RentalReservation)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("create failed")
     }
 
@@ -60,7 +62,7 @@ describe("CreateRentalReservation", () => {
       createdAt: "2026-03-15T09:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "invalid_date_range" })
+    expectApplicationError(result, ValidationError, "invalid_date_range")
   })
 
   test("rejects overlapping reservation for the same item", async () => {
@@ -77,7 +79,7 @@ describe("CreateRentalReservation", () => {
       createdAt: "2026-03-15T10:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "overlapping_reservation" })
+    expectApplicationError(result, ConflictError, "overlapping_reservation")
   })
 })
 
@@ -105,7 +107,7 @@ describe("GetRentalReservation", () => {
       requesterId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("rejects unknown id with reservation_not_found", async () => {
@@ -116,7 +118,7 @@ describe("GetRentalReservation", () => {
       requesterId: 1,
     })
 
-    expect(result).toEqual({ reason: "reservation_not_found" })
+    expectApplicationError(result, NotFoundError, "reservation_not_found")
   })
 })
 
@@ -137,7 +139,7 @@ describe("UpdateRentalReservation", () => {
 
     expect(result).toBeInstanceOf(RentalReservation)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("update failed")
     }
 
@@ -159,7 +161,7 @@ describe("UpdateRentalReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("rejects unknown id with reservation_not_found", async () => {
@@ -174,7 +176,7 @@ describe("UpdateRentalReservation", () => {
       purpose: null,
     })
 
-    expect(result).toEqual({ reason: "reservation_not_found" })
+    expectApplicationError(result, NotFoundError, "reservation_not_found")
   })
 })
 
@@ -202,7 +204,7 @@ describe("CancelRentalReservation", () => {
       requesterId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("rejects unknown id with reservation_not_found", async () => {
@@ -213,7 +215,7 @@ describe("CancelRentalReservation", () => {
       requesterId: 1,
     })
 
-    expect(result).toEqual({ reason: "reservation_not_found" })
+    expectApplicationError(result, NotFoundError, "reservation_not_found")
   })
 })
 

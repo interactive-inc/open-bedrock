@@ -1,16 +1,12 @@
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
   requesterId: number
 }
-
-export type AntisocialCheckNotFound = { reason: "antisocial_check_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelAntisocialCheck {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | AntisocialCheckNotFound | NotRequester | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
 
     const current = await antisocialCheckRepository.findById(command.antisocialCheckId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find antisocial check", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "antisocial_check_not_found" }
+      return new NotFoundError("antisocial check not found", "antisocial_check_not_found")
     }
 
     if (current.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("antisocial check is not modifiable", "not_modifiable")
     }
 
     const deleted = await antisocialCheckRepository.delete(command.antisocialCheckId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete antisocial check", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("antisocial check is not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

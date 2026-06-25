@@ -1,4 +1,6 @@
 import { ListMyLifeEvents } from "@/application/life-event/list-my-life-events"
+import { ApplicationError } from "@/lib/errors"
+import { zAppLifeEventList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -6,8 +8,9 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { lifeEvents } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (lifeEventRows instanceof Error) {
-    throw new InternalError("failed to load life events")
+  if (lifeEventRows instanceof ApplicationError) {
+    throw toHttpException(lifeEventRows)
   }
 
   const totalRows = await c.var.database
@@ -48,15 +51,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(lifeEvents)
     .where(eq(lifeEvents.employeeId, viewer.employeeId))
 
-  const responseBody = lifeEventRows.map((lifeEvent) => ({
-    id: lifeEvent.id,
-    employee_id: lifeEvent.employeeId,
-    event_type: lifeEvent.eventType,
-    event_date: lifeEvent.eventDate,
-    detail: lifeEvent.detail,
-    status: lifeEvent.status,
-    created_at: lifeEvent.createdAt,
-  }))
+  const responseBody = zAppLifeEventList.parse({
+    data: lifeEventRows.map((lifeEvent) => ({
+      id: lifeEvent.id,
+      employee_id: lifeEvent.employeeId,
+      event_type: lifeEvent.eventType,
+      event_date: lifeEvent.eventDate,
+      detail: lifeEvent.detail,
+      status: lifeEvent.status,
+      created_at: lifeEvent.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

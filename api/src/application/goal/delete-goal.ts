@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -9,12 +10,6 @@ export type Command = {
   employeeId: number
 }
 
-export type GoalNotFound = { reason: "goal_not_found" }
-
-export type NotOwner = { reason: "not_owner" }
-
-export type GoalFinalized = { reason: "goal_finalized" }
-
 export type Deleted = { reason: "deleted" }
 
 /**
@@ -23,21 +18,21 @@ export type Deleted = { reason: "deleted" }
 export class DeleteGoal {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | GoalNotFound | NotOwner | GoalFinalized | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const repository = new GoalRepository(this.c)
 
     const current = await repository.findById(command.goalId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find goal", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "goal_not_found" }
+      return new NotFoundError("goal not found", "goal_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_owner" }
+      return new ForbiddenError("not the goal owner", "not_owner")
     }
 
     const evalRepo = new GoalEvaluationRepository(this.c)
@@ -45,11 +40,11 @@ export class DeleteGoal {
     const evaluations = await evalRepo.findByGoalId(command.goalId)
 
     if (evaluations instanceof Error) {
-      return evaluations
+      return new UnexpectedError("failed to find goal evaluations", { cause: evaluations })
     }
 
     if (hasFinalEvaluation(evaluations)) {
-      return { reason: "goal_finalized" }
+      return new ConflictError("goal is already finalized", "goal_finalized")
     }
 
     // goal_evaluations と goals を D1 batch でアトミックに削除する。
@@ -63,11 +58,10 @@ export class DeleteGoal {
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return { reason: "goal_finalized" }
+        return new ConflictError("goal is already finalized", "goal_finalized")
       }
-      return error instanceof Error
-        ? new UnexpectedError("failed to delete goal", { cause: error })
-        : new UnexpectedError("failed to delete goal")
+
+      return new UnexpectedError("failed to delete goal", { cause: error })
     }
 
     return { reason: "deleted" }

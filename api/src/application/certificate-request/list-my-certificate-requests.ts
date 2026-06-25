@@ -1,4 +1,6 @@
 import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 
@@ -14,13 +16,21 @@ export type Command = {
 export class ListMyCertificateRequests {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<CertificateRequest> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<CertificateRequest> | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
-    return await certificateRequestRepository.findByRequesterId({
+    const certificateRequests = await certificateRequestRepository.findByRequesterId({
       requesterId: command.requesterId,
       limit: command.limit,
       offset: command.offset,
     })
+
+    if (certificateRequests instanceof Error) {
+      return new UnexpectedError("failed to find certificate requests", {
+        cause: certificateRequests,
+      })
+    }
+
+    return certificateRequests
   }
 }
