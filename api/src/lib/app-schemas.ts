@@ -56,7 +56,7 @@ export const zAppApplication = z.object({
   template_name: z.string(),
   applicant_name: z.string(),
   status: z.string(),
-  current_step: z.number(),
+  current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
 })
@@ -68,7 +68,7 @@ export const zAppApplicationListItem = z.object({
   id: z.number(),
   template_name: z.string(),
   status: z.string(),
-  current_step: z.number(),
+  current_step: z.string().nullable(),
   created_at: z.string(),
 })
 
@@ -87,7 +87,7 @@ export const zAppApplicationInboxItem = z.object({
   id: z.number(),
   template_name: z.string(),
   applicant_name: z.string(),
-  current_step: z.number(),
+  current_step: z.string().nullable(),
   status: z.string(),
   created_at: z.string(),
 })
@@ -107,7 +107,7 @@ export const zAppApplicationMineItem = z.object({
   id: z.number(),
   template_id: z.number(),
   status: z.string(),
-  current_step: z.number(),
+  current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
 })
