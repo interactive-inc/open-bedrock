@@ -53,9 +53,14 @@ export class DecideApplication {
       return new UnexpectedError("template not found")
     }
 
-    // approverRoles が指定されていれば、そのロールのみ承認可能
+    // approverRoles が指定されていれば、そのいずれかのロールを持つアカウントのみ承認可能。
+    // 複数ロールを持つアカウントは roleKeys のいずれかが一致すればよい。
     if (template.approverRoles.length > 0) {
-      if (template.approverRoles.includes(command.session.role) === false) {
+      const matches = command.session.roleKeys.some((roleKey) =>
+        template.approverRoles.includes(roleKey),
+      )
+
+      if (matches === false) {
         return new ForbiddenError("cannot decide application", "forbidden")
       }
     } else {

@@ -37,19 +37,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   })
 
   // approverRoles は JSON 配列文字列（例: '["manager","admin"]'）。
-  // viewer のロールがリストに含まれるテンプレートの申請だけを返す。
+  // viewer の保持ロール（複数）のいずれかがリストに含まれるテンプレートの申請を返す。
   // approverRoles が空（"[]"）の場合は canDecideApplication で許可されたロールだけ。
   // DecideApplication の approverRoles チェックと同じ二分岐に合わせる。
-  const rolePattern = `%"${session.role}"%`
+  const roleMatches = session.roleKeys.map((roleKey) =>
+    like(applicationTemplates.approverRoles, `%"${roleKey}"%`),
+  )
 
   const isPrivileged = canDecideApplication(session)
 
   const pendingWithRole = and(
     eq(applications.status, "pending"),
-    or(
-      isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined,
-      like(applicationTemplates.approverRoles, rolePattern),
-    ),
+    or(isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined, ...roleMatches),
   )
 
   // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
