@@ -162,6 +162,7 @@ import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates
 import * as iamRolesRoute from "@/interface/iam/roles/route"
 import * as iamPermissionsRoute from "@/interface/iam/permissions/route"
 import * as iamAccountsRoute from "@/interface/iam/accounts/route"
+import * as iamAccountRolesRoute from "@/interface/iam/accounts/[id]/roles/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
@@ -211,6 +212,7 @@ export const app = factory
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
   .get("/accounts", ...iamAccountsRoute.GET)
+  .post("/accounts/:id/roles", ...iamAccountRolesRoute.POST)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
