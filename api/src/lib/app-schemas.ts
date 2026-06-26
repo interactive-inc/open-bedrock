@@ -230,6 +230,8 @@ export const zAppAuthMe = z.object({
   role: z.string(),
   dept_name: z.string().nullable(),
   position: z.string().nullable(),
+  permissions: z.array(z.string()),
+  role_keys: z.array(z.string()),
 })
 
 export type AppAuthMe = z.infer<typeof zAppAuthMe>
