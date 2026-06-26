@@ -11,15 +11,15 @@ export class JoseTokenSigner {
       const encodedSecret = new TextEncoder().encode(jwtSecret)
 
       const claims = {
+        accountId: payload.accountId,
         employeeId: payload.employeeId,
-        email: payload.email,
-        role: payload.role,
+        tokenVersion: payload.tokenVersion,
       }
 
       return await new SignJWT(claims)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("8h")
+        .setExpirationTime("15m")
         .sign(encodedSecret)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("token signing failed")

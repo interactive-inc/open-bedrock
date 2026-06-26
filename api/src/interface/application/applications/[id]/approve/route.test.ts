@@ -8,6 +8,7 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
 const jwtSecret = "application-approve-route-test-secret"
@@ -76,6 +77,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   return db
 }

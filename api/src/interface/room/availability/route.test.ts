@@ -7,6 +7,7 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
 const roomAvailabilityResponseSchema = z.object({
@@ -40,6 +41,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   await seedD1(
     db,
@@ -188,6 +191,8 @@ describe("GET /rooms/availability", () => {
       },
     ])
 
+    await seedIamForEmployees(db)
+
     await seedD1(db, "rooms", [{ id: 10, name: "Room Alpha", capacity: 5, location: null }])
 
     await seedD1(db, "room_reservations", [
@@ -257,6 +262,8 @@ describe("GET /rooms/availability", () => {
         status: "active",
       },
     ])
+
+    await seedIamForEmployees(db)
 
     await seedD1(db, "rooms", [
       { id: 20, name: "Room Beta", capacity: 4, location: null },

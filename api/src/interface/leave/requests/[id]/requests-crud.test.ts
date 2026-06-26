@@ -10,6 +10,7 @@ import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import type { Bindings } from "@/env"
 import { factory } from "@/lib/factory"
 import { z } from "zod"
@@ -64,6 +65,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   await seedD1(
     db,

@@ -9,6 +9,7 @@ import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { factory } from "@/lib/factory"
 import * as createRoute from "@/interface/business-trip/business-trips/route"
 import * as detailRoute from "@/interface/business-trip/business-trips/[id]/route"
@@ -72,6 +73,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   await seedD1(
     db,

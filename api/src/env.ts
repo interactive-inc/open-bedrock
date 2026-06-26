@@ -1,4 +1,4 @@
-import type { TokenPayload } from "@/lib/auth/token-payload"
+import type { EmployeeStatus } from "@/lib/schemas"
 import type { schema } from "@/schema"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
@@ -19,8 +19,17 @@ export type Bindings = {
   API_RATE_LIMITER?: RateLimit
 }
 
-// 認証済みの本人（セッション）。
-export type SessionPayload = TokenPayload
+// 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
+// permissions/roleKeys が認可の正。role は移行互換用(Phase 7 で撤去予定、新規参照禁止)。
+export type SessionPayload = {
+  accountId: number
+  employeeId: number
+  employeeStatus: EmployeeStatus
+  permissions: ReadonlySet<string>
+  roleKeys: ReadonlyArray<string>
+  // 移行互換: 既存 can-* が単一 role を見るため、roleKeys の代表値を載せる。新規参照は禁止。
+  role: string
+}
 
 // リクエストスコープの変数。database に Drizzle、session に本人を載せる。
 export type Variables = {

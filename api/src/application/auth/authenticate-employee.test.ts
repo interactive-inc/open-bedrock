@@ -3,9 +3,10 @@ import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
 import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 
 const jwtSecret = "authenticate-employee-test-secret"
 
@@ -32,6 +33,8 @@ async function insertEmployee(
       status: overrides.status ?? "active",
     },
   ])
+
+  await seedIamForEmployees(db)
 }
 
 describe("AuthenticateEmployee", () => {
@@ -104,17 +107,17 @@ describe("AuthenticateEmployee", () => {
       throw new Error("expected access token")
     }
 
-    // 段階移行: ログイン後は新形式に書き換えられているはず。
-    const repository = new EmployeeRepository(context)
+    // 段階移行: ログイン後は identity の secret が新形式に書き換えられているはず。
+    const repository = new IdentityRepository(context)
 
-    const found = await repository.findByEmail("you+legacy@example.com")
+    const found = await repository.findPasswordIdentityByEmail("you+legacy@example.com")
 
-    if (found === null || found instanceof Error) {
-      throw new Error("employee should exist")
+    if (found === null || found instanceof Error || found.secret === null) {
+      throw new Error("identity should exist")
     }
 
-    expect(isLegacyPasswordHash(found.passwordHash)).toBe(false)
-    expect(found.passwordHash.startsWith("pbkdf2:")).toBe(true)
+    expect(isLegacyPasswordHash(found.secret)).toBe(false)
+    expect(found.secret.startsWith("pbkdf2:")).toBe(true)
   })
 
   test("authenticates against a wrapped-legacy hash and upgrades to pure PBKDF2", async () => {
@@ -139,17 +142,17 @@ describe("AuthenticateEmployee", () => {
       throw new Error("expected access token")
     }
 
-    // ログイン後は純正 PBKDF2 に昇格しているはず。
-    const repository = new EmployeeRepository(context)
+    // ログイン後は identity の secret が純正 PBKDF2 に昇格しているはず。
+    const repository = new IdentityRepository(context)
 
-    const found = await repository.findByEmail("you+wrapped@example.com")
+    const found = await repository.findPasswordIdentityByEmail("you+wrapped@example.com")
 
-    if (found === null || found instanceof Error) {
-      throw new Error("employee should exist")
+    if (found === null || found instanceof Error || found.secret === null) {
+      throw new Error("identity should exist")
     }
 
-    expect(found.passwordHash.startsWith("pbkdf2:")).toBe(true)
-    expect(found.passwordHash.startsWith("pbkdf2-wrapped-legacy:")).toBe(false)
+    expect(found.secret.startsWith("pbkdf2:")).toBe(true)
+    expect(found.secret.startsWith("pbkdf2-wrapped-legacy:")).toBe(false)
   })
 
   test("rejects a retired employee with the correct password as invalid_credentials (#775)", async () => {
@@ -212,15 +215,15 @@ describe("AuthenticateEmployee", () => {
       jwtSecret,
     })
 
-    const repository = new EmployeeRepository(context)
+    const repository = new IdentityRepository(context)
 
-    const found = await repository.findByEmail("you+modern@example.com")
+    const found = await repository.findPasswordIdentityByEmail("you+modern@example.com")
 
     if (found === null || found instanceof Error) {
-      throw new Error("employee should exist")
+      throw new Error("identity should exist")
     }
 
     // 既に新形式なので、ハッシュ値そのものが変化していないこと。
-    expect(found.passwordHash).toBe(hash)
+    expect(found.secret).toBe(hash)
   })
 })
