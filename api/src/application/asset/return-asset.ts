@@ -1,12 +1,12 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   now: string
 }
@@ -21,7 +21,7 @@ export class ReturnAsset {
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
-    if (canManageAssets(command.viewerRole) === false) {
+    if (canManageAssets(command.session) === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")
     }
 

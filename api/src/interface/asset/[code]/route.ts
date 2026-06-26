@@ -65,7 +65,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateAsset(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "asset"),
       details: {
         name: json.name,
@@ -102,7 +102,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteAsset(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "asset"),
   })
 

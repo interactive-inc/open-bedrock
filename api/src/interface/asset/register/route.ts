@@ -33,7 +33,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const created = await new RegisterAsset(c).run({
-      viewerRole: session.role,
+      session: session,
       asset: {
         code: json.code,
         name: json.name,
