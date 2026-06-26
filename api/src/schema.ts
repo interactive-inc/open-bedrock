@@ -1,9 +1,11 @@
 import type {
+  AccountStatus,
   BatchJobStatus,
   EmployeeStatus,
   ExpenseApprovalAction,
   ExpenseCategory,
   ExpenseStatus,
+  IdentityProvider,
   LeaveStatus,
   LeaveType,
   RedemptionStatus,
@@ -841,7 +843,144 @@ export const antisocialChecks = sqliteTable("antisocial_checks", {
 export type AntisocialCheckRow = InferSelectModel<typeof antisocialChecks>
 
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
+// IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
+export const accounts = sqliteTable(
+  "accounts",
+  {
+    id: integer("id").primaryKey(),
+    employeeId: integer("employee_id"),
+    status: text("status").notNull().$type<AccountStatus>(),
+    tokenVersion: integer("token_version").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uniq_accounts_employee")
+      .on(table.employeeId)
+      .where(sql`employee_id IS NOT NULL`),
+  ],
+)
+
+export type AccountRow = InferSelectModel<typeof accounts>
+
+// IAM: ログイン手段(多態)。password は secret に PBKDF2、OAuth は subject に sub。
+export const identities = sqliteTable(
+  "identities",
+  {
+    id: integer("id").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    provider: text("provider").notNull().$type<IdentityProvider>(),
+    subject: text("subject").notNull(),
+    secret: text("secret"),
+    email: text("email"),
+    emailVerified: integer("email_verified").notNull().default(0),
+    lastUsedAt: integer("last_used_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uniq_identities_provider_subject").on(table.provider, table.subject),
+    index("idx_identities_account").on(table.accountId),
+  ],
+)
+
+export type IdentityRow = InferSelectModel<typeof identities>
+
+// IAM: ロール。system role は is_system=1 で key 改名・削除不可。
+export const roles = sqliteTable("roles", {
+  id: integer("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isSystem: integer("is_system").notNull().default(0),
+  createdAt: integer("created_at").notNull(),
+})
+
+export type RoleRow = InferSelectModel<typeof roles>
+
+// IAM: 権限カタログ(UI 用の写し、正はコードの PERMISSION_KEYS)。
+export const permissions = sqliteTable("permissions", {
+  id: integer("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+})
+
+export type PermissionRow = InferSelectModel<typeof permissions>
+
+// IAM: ロールが持つ権限。
+export const rolePermissions = sqliteTable(
+  "role_permissions",
+  {
+    roleId: integer("role_id").notNull(),
+    permissionId: integer("permission_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.roleId, table.permissionId] })],
+)
+
+export type RolePermissionRow = InferSelectModel<typeof rolePermissions>
+
+// IAM: アカウントに割り当てたロール。複数可、実効権限は和集合。
+export const accountRoles = sqliteTable(
+  "account_roles",
+  {
+    accountId: integer("account_id").notNull(),
+    roleId: integer("role_id").notNull(),
+    grantedBy: integer("granted_by"),
+    grantedAt: integer("granted_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.accountId, table.roleId] })],
+)
+
+export type AccountRoleRow = InferSelectModel<typeof accountRoles>
+
+// IAM: refresh token。生は保存せず SHA-256 のみ。family_id で再利用検知。
+export const refreshTokens = sqliteTable(
+  "refresh_tokens",
+  {
+    id: integer("id").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    familyId: text("family_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    revokedAt: integer("revoked_at"),
+    userAgent: text("user_agent"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [index("idx_refresh_tokens_account").on(table.accountId)],
+)
+
+export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
+
+// IAM: 監査ログ(append-only)。UPDATE/DELETE はアプリ層で禁止。
+export const auditLogs = sqliteTable(
+  "audit_logs",
+  {
+    id: integer("id").primaryKey(),
+    actorAccountId: integer("actor_account_id"),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: integer("target_id"),
+    metadata: text("metadata"),
+    ip: text("ip"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    index("idx_audit_logs_actor").on(table.actorAccountId),
+    index("idx_audit_logs_action").on(table.action),
+  ],
+)
+
+export type AuditLogRow = InferSelectModel<typeof auditLogs>
+
 export const schema = {
+  accounts,
+  identities,
+  roles,
+  permissions,
+  rolePermissions,
+  accountRoles,
+  refreshTokens,
+  auditLogs,
   employees,
   departments,
   orgDepartments,
