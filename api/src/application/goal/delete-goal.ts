@@ -1,4 +1,5 @@
 import type { Context } from "@/env"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
@@ -66,12 +67,4 @@ export class DeleteGoal {
 
     return { reason: "deleted" }
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
-}
-
-function isAbortedByGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }

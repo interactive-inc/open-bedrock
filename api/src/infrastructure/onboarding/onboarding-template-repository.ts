@@ -2,6 +2,7 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
 import { asc, eq } from "drizzle-orm"
@@ -132,12 +133,4 @@ export class OnboardingTemplateRepository {
       return error instanceof Error ? error : new Error("failed to load onboarding_template_tasks")
     }
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
-}
-
-function isAbortedByGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }
