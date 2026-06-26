@@ -3,6 +3,7 @@ import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -92,6 +93,21 @@ export class RegisterEmployee {
 
     if (result instanceof Error) {
       return new UnexpectedError("failed to create employee", { cause: result })
+    }
+
+    // 認証情報(account / password identity / 初期ロール)を払い出す。認証は identities が正。
+    const provisioner = new AccountProvisioner(this.c)
+
+    const provisioned = await provisioner.provision({
+      employeeId: result.id,
+      email: command.employee.email,
+      passwordHash: passwordHash,
+      roleKey: command.employee.role,
+      now: Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW)),
+    })
+
+    if (provisioned instanceof Error) {
+      return new UnexpectedError("failed to provision account", { cause: provisioned })
     }
 
     return result
