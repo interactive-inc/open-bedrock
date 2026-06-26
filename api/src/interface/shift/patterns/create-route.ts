@@ -36,7 +36,7 @@ export const POST = factory.createHandlers(
     }
 
     const pattern = await new CreateShiftPattern(c).run({
-      viewerRole: session.role,
+      session: session,
       pattern: {
         code: request.code,
         name: request.name,

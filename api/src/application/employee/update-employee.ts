@@ -1,13 +1,13 @@
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   viewerEmployeeId: number
   code: string
   profile: {
@@ -30,7 +30,7 @@ export class UpdateEmployee {
   async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageEmployees(command.viewerRole) === false) {
+    if (canManageEmployees(command.session) === false) {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 
@@ -67,7 +67,7 @@ export class UpdateEmployee {
     }
 
     // ロール変更は admin のみ許可
-    if (command.profile.role !== employee.role && command.viewerRole !== "admin") {
+    if (command.profile.role !== employee.role && command.session.role !== "admin") {
       return new ForbiddenError(
         "only admin can assign non-member roles",
         "role_escalation_forbidden",

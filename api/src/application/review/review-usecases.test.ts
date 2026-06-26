@@ -11,6 +11,7 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 // --- seed helpers ---
 
@@ -74,7 +75,7 @@ describe("CreateReviewCycle", () => {
     const { context } = createTestContext()
 
     const created = await new CreateReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       title: "2026 H1 Review",
       period: "2026-H1",
       dueDate: "2026-06-30",
@@ -96,7 +97,7 @@ describe("CreateReviewCycle", () => {
     const { context } = createTestContext()
 
     const created = await new CreateReviewCycle(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       title: "HR Cycle",
       period: "2026-Q1",
       dueDate: null,
@@ -109,7 +110,7 @@ describe("CreateReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new CreateReviewCycle(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       title: "Cycle",
       period: "2026-H1",
       dueDate: null,
@@ -128,7 +129,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
     })
 
@@ -145,7 +146,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
     })
 
@@ -158,7 +159,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
     })
 
@@ -169,7 +170,7 @@ describe("DeleteReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: 9999,
     })
 
@@ -182,7 +183,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       cycleId: cycleId,
     })
 
@@ -204,7 +205,7 @@ describe("DeleteReviewCycle", () => {
     await db.prepare("UPDATE review_cycles SET status = 'open' WHERE id = ?1").bind(cycleId).run()
 
     const result = await new DeleteReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
     })
 
@@ -222,7 +223,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       status: "open",
     })
@@ -242,7 +243,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       status: "closed",
     })
@@ -262,7 +263,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       status: "closed",
     })
@@ -276,7 +277,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       status: "open",
     })
@@ -288,7 +289,7 @@ describe("SetReviewCycleStatus", () => {
     const { context } = createTestContext()
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: 9999,
       status: "open",
     })
@@ -300,7 +301,7 @@ describe("SetReviewCycleStatus", () => {
     const { context } = createTestContext()
 
     const result = await new SetReviewCycleStatus(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       cycleId: 1,
       status: "open",
     })
@@ -318,7 +319,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new UpdateReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       title: "Updated Title",
       period: "2026-H2",
@@ -342,7 +343,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new UpdateReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       title: "Open Updated",
       period: "2026-H1",
@@ -364,7 +365,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new UpdateReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: cycleId,
       title: "Should Fail",
       period: "2026-H1",
@@ -378,7 +379,7 @@ describe("UpdateReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateReviewCycle(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       cycleId: 9999,
       title: "Missing",
       period: "2026-H1",
@@ -392,7 +393,7 @@ describe("UpdateReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateReviewCycle(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       cycleId: 1,
       title: "Should Fail",
       period: "2026-H1",

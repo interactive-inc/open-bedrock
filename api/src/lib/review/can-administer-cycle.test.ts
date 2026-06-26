@@ -1,24 +1,25 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canAdministerCycle", () => {
   test("manager can administer", () => {
-    expect(canAdministerCycle("manager")).toBe(true)
+    expect(canAdministerCycle(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can administer", () => {
-    expect(canAdministerCycle("hr")).toBe(true)
+    expect(canAdministerCycle(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can administer", () => {
-    expect(canAdministerCycle("admin")).toBe(true)
+    expect(canAdministerCycle(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot administer", () => {
-    expect(canAdministerCycle("member")).toBe(false)
+    expect(canAdministerCycle(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot administer", () => {
-    expect(canAdministerCycle("unknown")).toBe(false)
+    expect(canAdministerCycle(makeTestSession("unknown"))).toBe(false)
   })
 })

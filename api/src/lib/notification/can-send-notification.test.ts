@@ -1,24 +1,25 @@
 import { canSendNotification } from "@/lib/notification/can-send-notification"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canSendNotification", () => {
   test("manager can send", () => {
-    expect(canSendNotification("manager")).toBe(true)
+    expect(canSendNotification(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can send", () => {
-    expect(canSendNotification("hr")).toBe(true)
+    expect(canSendNotification(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can send", () => {
-    expect(canSendNotification("admin")).toBe(true)
+    expect(canSendNotification(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot send", () => {
-    expect(canSendNotification("member")).toBe(false)
+    expect(canSendNotification(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot send", () => {
-    expect(canSendNotification("unknown")).toBe(false)
+    expect(canSendNotification(makeTestSession("unknown"))).toBe(false)
   })
 })

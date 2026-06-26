@@ -34,7 +34,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const swapRequest = await new GetShiftSwapRequest(c).run({
     viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
     swapRequestId,
   })
 

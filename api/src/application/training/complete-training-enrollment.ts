@@ -2,13 +2,13 @@ import { canCompleteEnrollment } from "@/lib/training/can-complete-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   score: number | null
   completedAt: string
 }
@@ -35,7 +35,7 @@ export class CompleteTrainingEnrollment {
     const canComplete = canCompleteEnrollment({
       enrollmentEmployeeId: enrollment.employeeId,
       viewerEmployeeId: command.viewerEmployeeId,
-      viewerRole: command.viewerRole,
+      session: command.session,
     })
 
     if (canComplete === false) {

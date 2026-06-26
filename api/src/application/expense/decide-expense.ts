@@ -1,12 +1,12 @@
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   expenseId: number
   approverId: number
   action: "approve" | "reject"
@@ -28,7 +28,7 @@ export class DecideExpense {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<ExpenseDecision | ApplicationError> {
-    if (canDecideExpense(command.viewerRole) === false) {
+    if (canDecideExpense(command.session) === false) {
       return new ForbiddenError("cannot decide expense", "forbidden")
     }
 

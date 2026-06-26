@@ -102,7 +102,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const created = await new CreateCareerPosting(c).run({
-      viewerRole: session.role,
+      session: session,
       title: body.title,
       deptId: body.dept_id ?? null,
       deptName: body.dept_name ?? null,

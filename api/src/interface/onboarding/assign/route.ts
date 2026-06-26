@@ -28,7 +28,7 @@ export const POST = factory.createHandlers(
     }
 
     const result = await new AssignOnboarding(c).run({
-      viewerRole: viewer.role,
+      session: viewer,
       employeeCode: json.employee_code,
       templateCode: json.template_code,
       assignedAt: c.env.NOW ?? new Date().toISOString(),

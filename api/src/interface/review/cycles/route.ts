@@ -20,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const isAdmin = canAdministerCycle(session.role)
+  const isAdmin = canAdministerCycle(session)
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),

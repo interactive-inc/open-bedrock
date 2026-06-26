@@ -4,6 +4,7 @@ import { DecideApplication } from "@/application/application/decide-application"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ForbiddenError } from "@/lib/errors"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { describe, expect, test } from "bun:test"
@@ -65,7 +66,7 @@ describe("DecideApplication", () => {
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 
     const result = await new DecideApplication(context).run({
-      viewerRole: "accountant",
+      session: makeTestSession("accountant"),
       applicationId: application.id ?? 0,
       approverId: 2,
       action: "approve",
@@ -91,7 +92,7 @@ describe("DecideApplication", () => {
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 
     const result = await new DecideApplication(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       applicationId: application.id ?? 0,
       approverId: 2,
       action: "approve",
@@ -114,7 +115,7 @@ describe("DecideApplication", () => {
 
     // manager is in canDecideApplication privileged roles
     const managerResult = await new DecideApplication(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       applicationId: application.id ?? 0,
       approverId: 2,
       action: "approve",
@@ -140,7 +141,7 @@ describe("DecideApplication", () => {
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 
     const result = await new DecideApplication(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       applicationId: application.id ?? 0,
       approverId: 2,
       action: "approve",
@@ -162,7 +163,7 @@ describe("DecideApplication", () => {
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 
     const result = await new DecideApplication(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       applicationId: application.id ?? 0,
       approverId: 5,
       action: "approve",

@@ -48,7 +48,7 @@ export const GET = factory.createHandlers(
 
     const requestsOthers = query.employee_id !== undefined || query.employee_code !== undefined
 
-    if (requestsOthers === true && canManageTraining(session.role) === false) {
+    if (requestsOthers === true && canManageTraining(session) === false) {
       throw new ForbiddenError()
     }
 

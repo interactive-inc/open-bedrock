@@ -93,7 +93,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateApplicationTemplate(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "application template"),
       name: body.name,
       category: body.category,
@@ -129,7 +129,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteApplicationTemplate(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "application template"),
   })
 

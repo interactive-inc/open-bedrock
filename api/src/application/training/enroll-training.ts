@@ -7,14 +7,14 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   courseCode: string
   enrolleeEmployeeCode: string | null
   dueDate: string | null
@@ -81,7 +81,7 @@ export class EnrollTraining {
       return command.viewerEmployeeId
     }
 
-    if (canManageTraining(command.viewerRole) === false) {
+    if (canManageTraining(command.session) === false) {
       return new ForbiddenError("cannot enroll others", "forbidden")
     }
 

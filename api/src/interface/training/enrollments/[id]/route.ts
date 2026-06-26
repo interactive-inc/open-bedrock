@@ -39,7 +39,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const enrollment = await new GetTrainingEnrollment(c).run({
     enrollmentId: enrollmentId,
     viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (enrollment instanceof ApplicationError) {
@@ -67,7 +67,7 @@ export const PUT = factory.createHandlers(
     const updated = await new RescheduleTrainingEnrollment(c).run({
       enrollmentId: enrollmentId,
       viewerEmployeeId: session.employeeId,
-      viewerRole: session.role,
+      session: session,
       dueDate: body.due_date ?? null,
     })
 
@@ -92,7 +92,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new CancelTrainingEnrollment(c).run({
     enrollmentId: enrollmentId,
     viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (result instanceof ApplicationError) {

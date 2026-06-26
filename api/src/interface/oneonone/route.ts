@@ -97,7 +97,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canCreateOneOnOne(session.role) === false) {
+    if (canCreateOneOnOne(session) === false) {
       throw new ForbiddenError()
     }
 

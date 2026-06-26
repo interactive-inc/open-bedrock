@@ -1,6 +1,7 @@
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
+import { hasPermission } from "@/lib/auth/has-permission"
+import type { SessionPayload } from "@/env"
 
 /** 研修コースの作成や他者への割り当てを行える権限を持つか。 */
-export function canManageTraining(viewerRole: string): boolean {
-  return privilegedRoles.includes(viewerRole)
+export function canManageTraining(session: SessionPayload): boolean {
+  return hasPermission(session, "training:manage")
 }

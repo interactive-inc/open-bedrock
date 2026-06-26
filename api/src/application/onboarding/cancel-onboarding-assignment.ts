@@ -1,12 +1,12 @@
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   assignmentId: number
-  viewerRole: string
+  session: SessionPayload
 }
 
 export type Cancelled = { reason: "cancelled" }
@@ -18,7 +18,7 @@ export class CancelOnboardingAssignment {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Cancelled | ApplicationError> {
-    if (canManageOnboarding(command.viewerRole) === false) {
+    if (canManageOnboarding(command.session) === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

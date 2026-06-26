@@ -1,6 +1,6 @@
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -8,7 +8,7 @@ import type { ApplicationError } from "@/lib/errors"
 export type Command = {
   antisocialCheckId: string
   requesterId: number
-  viewerRole: string
+  session: SessionPayload
   partnerName: string
   partnerAddress: string | null
   representativeName: string | null
@@ -46,7 +46,7 @@ export class UpdateAntisocialCheck {
     // result フィールドを変更しようとしている場合は管理者ロールが必要。
     const isResultChanged = command.result !== current.result
 
-    if (isResultChanged && !canManageAntisocialChecks(command.viewerRole)) {
+    if (isResultChanged && !canManageAntisocialChecks(command.session)) {
       return new ForbiddenError("only managers can set the result", "result_forbidden")
     }
 
@@ -54,7 +54,7 @@ export class UpdateAntisocialCheck {
       partnerName: command.partnerName,
       partnerAddress: command.partnerAddress,
       representativeName: command.representativeName,
-      result: canManageAntisocialChecks(command.viewerRole) ? command.result : current.result,
+      result: canManageAntisocialChecks(command.session) ? command.result : current.result,
     })
 
     const result = await antisocialCheckRepository.update(updated)

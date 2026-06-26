@@ -29,7 +29,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageSurveys(c.var.session.role) === false) {
+  if (canManageSurveys(c.var.session) === false) {
     throw new ForbiddenError()
   }
 

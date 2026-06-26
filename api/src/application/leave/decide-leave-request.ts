@@ -1,7 +1,7 @@
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import {
   ConflictError,
   ForbiddenError,
@@ -13,7 +13,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   leaveRequestId: number
   approverId: number
   action: "approve" | "reject"
@@ -28,7 +28,7 @@ export class DecideLeaveRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
-    if (canDecideLeave(command.viewerRole) === false) {
+    if (canDecideLeave(command.session) === false) {
       return new ForbiddenError("cannot decide leave requests", "forbidden")
     }
 

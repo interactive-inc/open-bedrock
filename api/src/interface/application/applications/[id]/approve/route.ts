@@ -29,7 +29,7 @@ export const POST = factory.createHandlers(
     }
 
     const updated = await new DecideApplication(c).run({
-      viewerRole: session.role,
+      session: session,
       applicationId: applicationId,
       approverId: session.employeeId,
       action: "approve",

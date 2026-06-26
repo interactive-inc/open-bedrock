@@ -18,8 +18,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const task = await new CompleteOnboardingTask(c).run({
     taskId,
-    viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
     completedAt: c.env.NOW ?? new Date().toISOString(),
   })
 

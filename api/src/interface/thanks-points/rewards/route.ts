@@ -42,7 +42,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const isActiveOnly = canManageRewards(session.role) === false
+  const isActiveOnly = canManageRewards(session) === false
 
   const rewards = await new ListRewards(c).run({
     activeOnly: isActiveOnly,
@@ -85,7 +85,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session.role) === false) {
+    if (canManageRewards(session) === false) {
       throw new ForbiddenError()
     }
 

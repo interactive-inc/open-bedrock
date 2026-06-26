@@ -2,13 +2,12 @@ import { canCompleteTask } from "@/lib/onboarding/can-complete-task"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   taskId: number
-  viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   completedAt: string
 }
 
@@ -33,8 +32,7 @@ export class CompleteOnboardingTask {
 
     const allowed = canCompleteTask({
       taskEmployeeId: assignment.employeeId,
-      viewerEmployeeId: command.viewerEmployeeId,
-      viewerRole: command.viewerRole,
+      session: command.session,
     })
 
     if (allowed === false) {

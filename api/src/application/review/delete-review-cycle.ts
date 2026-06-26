@@ -1,11 +1,11 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   cycleId: number
 }
 
@@ -19,7 +19,7 @@ export class DeleteReviewCycle {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<Deleted | ApplicationError> {
-    if (canAdministerCycle(input.viewerRole) === false) {
+    if (canAdministerCycle(input.session) === false) {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 

@@ -19,8 +19,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const task = await new UncompleteOnboardingTask(c).run({
     taskId,
-    viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (task instanceof ApplicationError) {

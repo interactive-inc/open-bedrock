@@ -38,7 +38,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageShift(session.role) === false) {
+    if (canManageShift(session) === false) {
       throw new ForbiddenError()
     }
 

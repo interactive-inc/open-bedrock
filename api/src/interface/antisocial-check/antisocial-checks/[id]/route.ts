@@ -70,7 +70,7 @@ export const PUT = factory.createHandlers(
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
       antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
       requesterId: viewer.employeeId,
-      viewerRole: viewer.role,
+      session: viewer,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,
       representativeName: json.representative_name ?? null,

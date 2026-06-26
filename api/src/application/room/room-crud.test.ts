@@ -12,6 +12,7 @@ import { UpdateRoomReservation } from "@/application/room/update-room-reservatio
 import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
 import { ListMyRoomReservations } from "@/application/room/list-my-room-reservations"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import {
   ConflictError,
   ForbiddenError,
@@ -24,7 +25,7 @@ import type { Context } from "@/env"
 
 async function seedRoom(context: Context): Promise<Room> {
   const result = await new RegisterRoom(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     room: { name: "Room A", capacity: 10, location: "3F" },
   })
 
@@ -60,7 +61,7 @@ describe("RegisterRoom", () => {
     const { context } = createTestContext()
 
     const result = await new RegisterRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       room: { name: "Room A", capacity: 10, location: "3F" },
     })
 
@@ -78,7 +79,7 @@ describe("RegisterRoom", () => {
     const { context } = createTestContext()
 
     const result = await new RegisterRoom(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       room: { name: "Room A", capacity: 10, location: null },
     })
 
@@ -111,7 +112,7 @@ describe("UpdateRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new UpdateRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       roomId: room.id,
       details: { name: "Updated Room", capacity: 20, location: "5F" },
     })
@@ -131,7 +132,7 @@ describe("UpdateRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new UpdateRoom(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       roomId: room.id,
       details: { name: "Hijacked", capacity: 1, location: null },
     })
@@ -143,7 +144,7 @@ describe("UpdateRoom", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       roomId: 9999,
       details: { name: "Missing", capacity: 1, location: null },
     })
@@ -158,7 +159,7 @@ describe("DeleteRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new DeleteRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       roomId: room.id,
     })
 
@@ -170,7 +171,7 @@ describe("DeleteRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new DeleteRoom(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       roomId: room.id,
     })
 
@@ -181,7 +182,7 @@ describe("DeleteRoom", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       roomId: 9999,
     })
 
@@ -196,7 +197,7 @@ describe("ListRooms", () => {
     await seedRoom(context)
 
     await new RegisterRoom(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       room: { name: "Room B", capacity: 5, location: null },
     })
 

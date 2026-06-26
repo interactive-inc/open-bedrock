@@ -2,11 +2,11 @@ import { canManageRooms } from "@/lib/room/can-manage-rooms"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/domain/room/room.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   roomId: number
   details: {
     name: string
@@ -24,7 +24,7 @@ export class UpdateRoom {
   async run(command: Command): Promise<Room | ApplicationError> {
     const roomRepository = new RoomRepository(this.c)
 
-    if (canManageRooms(command.viewerRole) === false) {
+    if (canManageRooms(command.session) === false) {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 

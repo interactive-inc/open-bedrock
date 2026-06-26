@@ -34,7 +34,7 @@ export const POST = factory.createHandlers(
     }
 
     const result = await new SendNotification(c).run({
-      viewerRole: session.role,
+      session: session,
       recipientEmployeeCode: body.recipient_employee_code,
       kind: body.kind,
       title: body.title,

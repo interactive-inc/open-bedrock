@@ -54,7 +54,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isOwner = row.expense.employeeId === session.employeeId
 
-  if (isOwner === false && canDecideExpense(session.role) === false) {
+  if (isOwner === false && canDecideExpense(session) === false) {
     throw new ForbiddenError()
   }
 

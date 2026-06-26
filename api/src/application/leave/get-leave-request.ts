@@ -1,6 +1,6 @@
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
@@ -8,7 +8,7 @@ import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-rep
 export type Command = {
   leaveRequestId: number
   employeeId: number
-  viewerRole?: string
+  session?: SessionPayload
 }
 
 /**
@@ -31,7 +31,7 @@ export class GetLeaveRequest {
     }
 
     const isApplicant = leaveRequest.employeeId === command.employeeId
-    const canDecide = command.viewerRole !== undefined && canDecideLeave(command.viewerRole)
+    const canDecide = command.session !== undefined && canDecideLeave(command.session)
 
     if (isApplicant === false && canDecide === false) {
       return new ForbiddenError("not the applicant", "not_applicant")

@@ -81,7 +81,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const created = await new RegisterRoom(c).run({
-      viewerRole: session.role,
+      session: session,
       room: { name: json.name, capacity: json.capacity, location: json.location ?? null },
     })
 

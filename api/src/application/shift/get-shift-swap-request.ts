@@ -2,12 +2,12 @@ import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   swapRequestId: number
 }
 
@@ -37,7 +37,7 @@ export class GetShiftSwapRequest {
     if (
       isRequester === false &&
       isTargetEmployee === false &&
-      canApproveShiftSwap(input.viewerRole) === false
+      canApproveShiftSwap(input.session) === false
     ) {
       return new ForbiddenError("cannot view this shift swap request", "not_visible")
     }

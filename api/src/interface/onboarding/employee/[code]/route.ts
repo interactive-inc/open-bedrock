@@ -21,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewEmployeeOnboarding({ viewerRole: session.role }) === false) {
+  if (canViewEmployeeOnboarding(session) === false) {
     throw new ForbiddenError()
   }
 

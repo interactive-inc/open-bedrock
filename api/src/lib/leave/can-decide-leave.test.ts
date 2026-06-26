@@ -1,24 +1,25 @@
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canDecideLeave", () => {
   test("manager can decide", () => {
-    expect(canDecideLeave("manager")).toBe(true)
+    expect(canDecideLeave(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can decide", () => {
-    expect(canDecideLeave("hr")).toBe(true)
+    expect(canDecideLeave(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can decide", () => {
-    expect(canDecideLeave("admin")).toBe(true)
+    expect(canDecideLeave(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot decide", () => {
-    expect(canDecideLeave("member")).toBe(false)
+    expect(canDecideLeave(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot decide", () => {
-    expect(canDecideLeave("unknown")).toBe(false)
+    expect(canDecideLeave(makeTestSession("unknown"))).toBe(false)
   })
 })

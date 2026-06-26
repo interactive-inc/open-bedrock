@@ -1,10 +1,15 @@
 import { canCompleteEnrollment } from "@/lib/training/can-complete-enrollment"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canCompleteEnrollment", () => {
   test("owner can complete", () => {
     expect(
-      canCompleteEnrollment({ enrollmentEmployeeId: 5, viewerEmployeeId: 5, viewerRole: "member" }),
+      canCompleteEnrollment({
+        enrollmentEmployeeId: 5,
+        viewerEmployeeId: 5,
+        session: makeTestSession("member"),
+      }),
     ).toBe(true)
   })
 
@@ -13,26 +18,38 @@ describe("canCompleteEnrollment", () => {
       canCompleteEnrollment({
         enrollmentEmployeeId: 5,
         viewerEmployeeId: 6,
-        viewerRole: "manager",
+        session: makeTestSession("manager"),
       }),
     ).toBe(true)
   })
 
   test("non-owner with hr role can complete", () => {
     expect(
-      canCompleteEnrollment({ enrollmentEmployeeId: 5, viewerEmployeeId: 6, viewerRole: "hr" }),
+      canCompleteEnrollment({
+        enrollmentEmployeeId: 5,
+        viewerEmployeeId: 6,
+        session: makeTestSession("hr"),
+      }),
     ).toBe(true)
   })
 
   test("non-owner with admin role can complete", () => {
     expect(
-      canCompleteEnrollment({ enrollmentEmployeeId: 5, viewerEmployeeId: 6, viewerRole: "admin" }),
+      canCompleteEnrollment({
+        enrollmentEmployeeId: 5,
+        viewerEmployeeId: 6,
+        session: makeTestSession("admin"),
+      }),
     ).toBe(true)
   })
 
   test("non-owner with member role cannot complete", () => {
     expect(
-      canCompleteEnrollment({ enrollmentEmployeeId: 5, viewerEmployeeId: 6, viewerRole: "member" }),
+      canCompleteEnrollment({
+        enrollmentEmployeeId: 5,
+        viewerEmployeeId: 6,
+        session: makeTestSession("member"),
+      }),
     ).toBe(false)
   })
 })

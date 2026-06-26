@@ -9,6 +9,7 @@ import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 async function seedCheck(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({
@@ -121,7 +122,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -146,7 +147,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -171,7 +172,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,
@@ -189,7 +190,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 6,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,

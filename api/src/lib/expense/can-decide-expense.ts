@@ -1,6 +1,7 @@
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
+import { hasPermission } from "@/lib/auth/has-permission"
+import type { SessionPayload } from "@/env"
 
-/** 経費の承認・却下が可能なロールかどうかを判定する純粋関数。 */
-export function canDecideExpense(viewerRole: string): boolean {
-  return privilegedRoles.includes(viewerRole)
+/** 経費の承認・却下が可能な権限を持つか判定する純粋関数。 */
+export function canDecideExpense(session: SessionPayload): boolean {
+  return hasPermission(session, "expense:approve")
 }

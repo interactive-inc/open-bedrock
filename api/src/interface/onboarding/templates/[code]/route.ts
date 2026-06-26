@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const template = await new GetOnboardingTemplate(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 
@@ -64,7 +64,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateOnboardingTemplate(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "onboarding template"),
       name: json.name,
       kind: json.kind,
@@ -88,7 +88,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteOnboardingTemplate(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })
 

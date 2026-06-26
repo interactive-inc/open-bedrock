@@ -24,7 +24,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session.role) === false) {
+  if (canDecideRedemption(session) === false) {
     throw new ForbiddenError()
   }
 

@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const assignment = await new PublishShiftAssignment(c).run({
-    viewerRole: session.role,
+    session: session,
     assignmentId,
     publishedAt: c.env.NOW ?? new Date().toISOString(),
   })

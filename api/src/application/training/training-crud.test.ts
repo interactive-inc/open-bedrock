@@ -11,6 +11,7 @@ import { RescheduleTrainingEnrollment } from "@/application/training/reschedule-
 import { CompleteTrainingEnrollment } from "@/application/training/complete-training-enrollment"
 import { CancelTrainingEnrollment } from "@/application/training/cancel-training-enrollment"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
@@ -18,7 +19,7 @@ import type { Context } from "@/env"
 
 async function seedCourse(context: Context, code: string): Promise<TrainingCourse> {
   const result = await new CreateTrainingCourse(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     code: code,
     title: "Test Course",
     category: "engineering",
@@ -59,7 +60,7 @@ async function seedEnrollment(
 
   const result = await new EnrollTraining(context).run({
     viewerEmployeeId: employeeId,
-    viewerRole: "member",
+    session: makeTestSession("member"),
     courseCode: courseCode,
     enrolleeEmployeeCode: null,
     dueDate: "2026-06-30",
@@ -77,7 +78,7 @@ describe("CreateTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new CreateTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
       title: "TypeScript Basics",
       category: "engineering",
@@ -100,7 +101,7 @@ describe("CreateTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new CreateTrainingCourse(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "TS101",
       title: "TypeScript Basics",
       category: "engineering",
@@ -118,7 +119,7 @@ describe("CreateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new CreateTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
       title: "Another Course",
       category: "other",
@@ -158,7 +159,7 @@ describe("UpdateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new UpdateTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
       title: "Updated Title",
       category: "management",
@@ -183,7 +184,7 @@ describe("UpdateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new UpdateTrainingCourse(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "TS101",
       title: "Hijacked",
       category: "other",
@@ -201,12 +202,12 @@ describe("UpdateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     await new ArchiveTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
     })
 
     const result = await new UpdateTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
       title: "Too late",
       category: "other",
@@ -222,7 +223,7 @@ describe("UpdateTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
       title: "Missing",
       category: "other",
@@ -242,7 +243,7 @@ describe("ArchiveTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new ArchiveTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "TS101",
     })
 
@@ -255,7 +256,7 @@ describe("ArchiveTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new ArchiveTrainingCourse(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "TS101",
     })
 
@@ -266,7 +267,7 @@ describe("ArchiveTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new ArchiveTrainingCourse(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
     })
 
@@ -297,7 +298,7 @@ describe("EnrollTraining", () => {
 
     const result = await new EnrollTraining(context).run({
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       courseCode: "TS101",
       enrolleeEmployeeCode: null,
       dueDate: "2026-06-30",
@@ -317,7 +318,7 @@ describe("EnrollTraining", () => {
 
     const result = await new EnrollTraining(context).run({
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       courseCode: "TS101",
       enrolleeEmployeeCode: "E002",
       dueDate: null,
@@ -331,7 +332,7 @@ describe("EnrollTraining", () => {
 
     const result = await new EnrollTraining(context).run({
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       courseCode: "NOPE",
       enrolleeEmployeeCode: null,
       dueDate: null,
@@ -353,7 +354,7 @@ describe("GetTrainingEnrollment", () => {
     const result = await new GetTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     expect(result).toBeInstanceOf(TrainingEnrollment)
@@ -370,7 +371,7 @@ describe("GetTrainingEnrollment", () => {
     const result = await new GetTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 999,
-      viewerRole: "manager",
+      session: makeTestSession("manager", 999),
     })
 
     expect(result).toBeInstanceOf(TrainingEnrollment)
@@ -387,7 +388,7 @@ describe("GetTrainingEnrollment", () => {
     const result = await new GetTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 999,
-      viewerRole: "member",
+      session: makeTestSession("member", 999),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -399,7 +400,7 @@ describe("GetTrainingEnrollment", () => {
     const result = await new GetTrainingEnrollment(context).run({
       enrollmentId: 9999,
       viewerEmployeeId: 1,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
     })
 
     expectApplicationError(result, NotFoundError, "enrollment_not_found")
@@ -418,7 +419,7 @@ describe("RescheduleTrainingEnrollment", () => {
     const result = await new RescheduleTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       dueDate: "2026-12-31",
     })
 
@@ -442,7 +443,7 @@ describe("RescheduleTrainingEnrollment", () => {
     const result = await new RescheduleTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 999,
-      viewerRole: "member",
+      session: makeTestSession("member", 999),
       dueDate: "2026-12-31",
     })
 
@@ -462,7 +463,7 @@ describe("CompleteTrainingEnrollment", () => {
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member", 1),
       score: 85,
       completedAt: "2026-06-15T10:00:00.000Z",
     })
@@ -488,7 +489,7 @@ describe("CompleteTrainingEnrollment", () => {
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 999,
-      viewerRole: "member",
+      session: makeTestSession("member", 999),
       score: null,
       completedAt: "2026-06-15T10:00:00.000Z",
     })
@@ -507,7 +508,7 @@ describe("CompleteTrainingEnrollment", () => {
     await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member", 1),
       score: 90,
       completedAt: "2026-06-15T10:00:00.000Z",
     })
@@ -515,7 +516,7 @@ describe("CompleteTrainingEnrollment", () => {
     const result = await new CompleteTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member", 1),
       score: 95,
       completedAt: "2026-06-16T10:00:00.000Z",
     })
@@ -536,7 +537,7 @@ describe("CancelTrainingEnrollment", () => {
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
@@ -553,7 +554,7 @@ describe("CancelTrainingEnrollment", () => {
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: enrollment.id,
       viewerEmployeeId: 999,
-      viewerRole: "member",
+      session: makeTestSession("member", 999),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -565,7 +566,7 @@ describe("CancelTrainingEnrollment", () => {
     const result = await new CancelTrainingEnrollment(context).run({
       enrollmentId: 9999,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     expectApplicationError(result, NotFoundError, "enrollment_not_found")

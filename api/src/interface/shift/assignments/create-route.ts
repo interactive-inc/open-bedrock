@@ -32,7 +32,7 @@ export const POST = factory.createHandlers(
     }
 
     const assignment = await new CreateShiftAssignment(c).run({
-      viewerRole: session.role,
+      session: session,
       employeeCode: request.employee_code,
       patternCode: request.pattern_code,
       date: request.date,

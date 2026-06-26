@@ -6,6 +6,7 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
@@ -41,7 +42,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "leave",
       name: "休暇申請",
       category: "attendance",
@@ -57,7 +58,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "leave",
       name: "休暇申請",
       category: "attendance",
@@ -75,7 +76,7 @@ describe("CreateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
       name: "別の経費申請",
       category: "expense",
@@ -95,7 +96,7 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
       name: "経費精算",
       category: "accounting",
@@ -117,7 +118,7 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "expense",
       name: "X",
       category: "expense",
@@ -133,7 +134,7 @@ describe("UpdateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "missing",
       name: "X",
       category: "general",
@@ -153,7 +154,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
     })
 
@@ -176,7 +177,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "expense",
     })
 
@@ -187,7 +188,7 @@ describe("DeleteApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "missing",
     })
 
@@ -201,7 +202,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedPendingApplication(db, 1)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
     })
 

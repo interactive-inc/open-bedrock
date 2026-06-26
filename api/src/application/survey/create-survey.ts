@@ -1,12 +1,12 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   title: string
   status: "open" | "closed"
   questionsJson: ReadonlyArray<unknown>
@@ -19,7 +19,7 @@ export class CreateSurvey {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Survey | ApplicationError> {
-    if (canManageSurveys(command.viewerRole) === false) {
+    if (canManageSurveys(command.session) === false) {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 

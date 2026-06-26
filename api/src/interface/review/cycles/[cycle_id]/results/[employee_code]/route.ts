@@ -22,7 +22,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) {
     throw new UnauthorizedError()
   }
-  if (canAdministerCycle(session.role) === false) {
+  if (canAdministerCycle(session) === false) {
     throw new ForbiddenError()
   }
 

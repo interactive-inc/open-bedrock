@@ -1,14 +1,14 @@
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   employee: {
     code: string
     name: string
@@ -34,12 +34,12 @@ export class RegisterEmployee {
   async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageEmployees(command.viewerRole) === false) {
+    if (canManageEmployees(command.session) === false) {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 
     // admin 以外は member ロールしか付与できない
-    if (command.employee.role !== "member" && command.viewerRole !== "admin") {
+    if (command.employee.role !== "member" && command.session.role !== "admin") {
       return new ForbiddenError(
         "only admin can assign non-member roles",
         "role_escalation_forbidden",

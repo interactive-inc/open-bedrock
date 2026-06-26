@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  if (row.status !== "open" && canManageSurveys(session.role) === false) {
+  if (row.status !== "open" && canManageSurveys(session) === false) {
     throw new NotFoundError("survey not found")
   }
 
@@ -85,7 +85,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateSurvey(c).run({
-      viewerRole: session.role,
+      session: session,
       surveyId: surveyId,
       title: body.title,
       status: body.status,
@@ -111,7 +111,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
   const result = await new DeleteSurvey(c).run({
-    viewerRole: session.role,
+    session: session,
     surveyId: surveyId,
   })
 

@@ -12,7 +12,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageBatch(session.role) === false) {
+  if (canManageBatch(session) === false) {
     throw new ForbiddenError()
   }
 

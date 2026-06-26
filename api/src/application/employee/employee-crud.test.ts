@@ -14,6 +14,7 @@ import {
 } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(context: Context, code: string): Promise<number> {
@@ -55,7 +56,7 @@ describe("RegisterEmployee", () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: newEmployeeInput,
     })
 
@@ -73,7 +74,7 @@ describe("RegisterEmployee", () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       employee: newEmployeeInput,
     })
 
@@ -86,7 +87,7 @@ describe("RegisterEmployee", () => {
     await seedEmployee(context, "E900")
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: newEmployeeInput,
     })
 
@@ -97,7 +98,7 @@ describe("RegisterEmployee", () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: { ...newEmployeeInput, password: "short7!" },
     })
 
@@ -142,7 +143,7 @@ describe("UpdateEmployee", () => {
     await seedEmployee(context, "E902")
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: 0,
       code: "E902",
       profile: profileInput,
@@ -165,7 +166,7 @@ describe("UpdateEmployee", () => {
     await seedEmployee(context, "E903")
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       viewerEmployeeId: 0,
       code: "E903",
       profile: profileInput,
@@ -178,7 +179,7 @@ describe("UpdateEmployee", () => {
     const context = createTestContext().context
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: 0,
       code: "E999",
       profile: profileInput,
@@ -195,7 +196,7 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E904")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E904",
     })
@@ -213,7 +214,7 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E905")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id,
       code: "E905",
     })
@@ -227,7 +228,7 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E906")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       viewerEmployeeId: id + 1,
       code: "E906",
     })
@@ -241,7 +242,7 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E907")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       viewerEmployeeId: id + 1,
       code: "E907",
     })
@@ -253,7 +254,7 @@ describe("DeleteEmployee", () => {
     const context = createTestContext().context
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: 1,
       code: "E999",
     })
@@ -361,7 +362,7 @@ describe("DeleteEmployee", () => {
 
     // 従業員を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E910",
     })
@@ -521,7 +522,7 @@ describe("DeleteEmployee", () => {
 
     // 社員 A を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: idB,
       code: "EA01",
     })
@@ -599,7 +600,7 @@ describe("DeleteEmployee", () => {
       .run()
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E911",
     })
@@ -642,7 +643,7 @@ describe("DeleteEmployee", () => {
 
     // 社員 A を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: idB,
       code: "EA02",
     })

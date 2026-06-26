@@ -10,10 +10,11 @@ import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 async function seedPosting(context: Context): Promise<number> {
   const created = await new CreateCareerPosting(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     title: "Platform Engineer",
     deptId: 3,
     deptName: "Engineering",
@@ -33,7 +34,7 @@ describe("CreateCareerPosting", () => {
     const { context } = createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       title: "Data Analyst",
       deptId: null,
       deptName: null,
@@ -55,7 +56,7 @@ describe("CreateCareerPosting", () => {
     const { context } = createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       title: "X",
       deptId: null,
       deptName: null,
@@ -76,7 +77,7 @@ describe("GetCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
@@ -87,7 +88,7 @@ describe("GetCareerPosting", () => {
     const { context } = createTestContext()
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: 9999,
     })
 
@@ -100,7 +101,7 @@ describe("GetCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       postingId: postingId,
     })
 
@@ -115,7 +116,7 @@ describe("UpdateCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const updated = await new UpdateCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
       title: "Senior Platform Engineer",
       deptId: 3,
@@ -138,7 +139,7 @@ describe("UpdateCareerPosting", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: 9999,
       title: "X",
       deptId: null,
@@ -158,7 +159,7 @@ describe("DeleteCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
@@ -169,7 +170,7 @@ describe("DeleteCareerPosting", () => {
     expect(result.reason).toBe("deleted")
 
     const afterDelete = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
@@ -182,7 +183,7 @@ describe("DeleteCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       postingId: postingId,
     })
 
@@ -206,7 +207,7 @@ describe("DeleteCareerPosting", () => {
     }
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId,
     })
 
@@ -228,7 +229,7 @@ describe("DeleteCareerPosting", () => {
 
     // Now delete the posting — should succeed (no applied applications)
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId,
     })
 

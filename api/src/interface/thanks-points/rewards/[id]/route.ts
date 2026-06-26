@@ -30,7 +30,7 @@ export const PATCH = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session.role) === false) {
+    if (canManageRewards(session) === false) {
       throw new ForbiddenError()
     }
 

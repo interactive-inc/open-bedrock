@@ -1,9 +1,10 @@
-const privilegedRoles: ReadonlyArray<string> = ["hr", "admin"]
+import { hasPermission } from "@/lib/auth/has-permission"
+import type { SessionPayload } from "@/env"
 
 /**
- * 従業員台帳からの削除を行えるロールかを判定する純粋関数。
- * 削除は不可逆かつ 43 件のカスケード DELETE を伴うため、hr/admin に限定する。
+ * 従業員台帳からの削除を行える権限を持つか判定する純粋関数。
+ * 削除は不可逆かつ 43 件のカスケード DELETE を伴うため、employee:delete 権限に限定する。
  */
-export function canDeleteEmployee(viewerRole: string): boolean {
-  return privilegedRoles.includes(viewerRole)
+export function canDeleteEmployee(session: SessionPayload): boolean {
+  return hasPermission(session, "employee:delete")
 }

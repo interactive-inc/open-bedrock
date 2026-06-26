@@ -2,11 +2,11 @@ import { canManageTraining } from "@/lib/training/can-manage-training"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingCourse } from "@/domain/training/training-course.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   title: string
   category: string
@@ -24,7 +24,7 @@ export class UpdateTrainingCourse {
   async run(command: Command): Promise<TrainingCourse | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)
 
-    if (canManageTraining(command.viewerRole) === false) {
+    if (canManageTraining(command.session) === false) {
       return new ForbiddenError("cannot manage training", "forbidden")
     }
 

@@ -36,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const pattern = await new GetShiftPattern(c).run({
-    viewerRole: session.role,
+    session: session,
     patternId,
   })
 
@@ -76,7 +76,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const pattern = await new UpdateShiftPattern(c).run({
-      viewerRole: session.role,
+      session: session,
       patternId,
       code: json.code,
       name: json.name,
@@ -104,7 +104,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteShiftPattern(c).run({
-    viewerRole: session.role,
+    session: session,
     patternId,
   })
 

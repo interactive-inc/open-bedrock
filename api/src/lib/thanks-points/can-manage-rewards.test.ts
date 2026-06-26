@@ -1,24 +1,25 @@
 import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageRewards", () => {
   test("hr can manage", () => {
-    expect(canManageRewards("hr")).toBe(true)
+    expect(canManageRewards(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can manage", () => {
-    expect(canManageRewards("admin")).toBe(true)
+    expect(canManageRewards(makeTestSession("admin"))).toBe(true)
   })
 
   test("manager cannot manage", () => {
-    expect(canManageRewards("manager")).toBe(false)
+    expect(canManageRewards(makeTestSession("manager"))).toBe(false)
   })
 
   test("member cannot manage", () => {
-    expect(canManageRewards("member")).toBe(false)
+    expect(canManageRewards(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot manage", () => {
-    expect(canManageRewards("viewer")).toBe(false)
+    expect(canManageRewards(makeTestSession("viewer"))).toBe(false)
   })
 })
