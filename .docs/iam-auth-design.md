@@ -62,7 +62,12 @@ Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改
 - Phase 5: ロール管理 API（GET/POST /roles）、権限カタログ API（GET /permissions）、アカウント一覧 API（GET /accounts）、アカウントへのロール割当 API（POST /accounts/:id/roles、escalation guard・自己付与禁止・tokenVersion 失効）、/me の permissions/role_keys 返却、Web 管理画面（/admin/roles・/admin/accounts）、cli（karte roles・karte accounts）
 - Phase 6: 権限ベースのサイドバー出し分け（filterByPermission）
 
-Phase 7（employees から email/password_hash/role の物理 drop）は破壊的なオプションクリーンアップとして保留。旧 3 列は現在使われておらず（認証は identities、認可は account_roles 経由）、後方互換として残置している。撤去時は register-employee の identity 化、employee API レスポンスの role を accounts 由来へ、レガシーハッシュ移行バッチの廃止が必要。
+- Phase 7: employees から email/password_hash/role を物理 drop（0006 migration）して純台帳化。完了。
+  認証は identities、認可は account_roles、メールは identities.subject が正。employee API の email/role は
+  IdentityRepository/AccountRepository で解決。register-employee は identity 払い出し、update-employee は
+  台帳更新に縮小（ロール変更は Grant/Revoke AccountRole へ委譲）。dev seed は seeds/iam.sql で IAM を投入。
+
+全8フェーズ完了。api 2016 pass / cli 118 pass / web 改修由来型エラー 0、migrate（drop 含む）→ seed クリーン通過。
 
 ## 既知リスク
 
