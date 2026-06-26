@@ -1371,3 +1371,22 @@ export const zAppPermissionList = z.object({
 })
 
 export type AppPermissionList = z.infer<typeof zAppPermissionList>
+
+/** アカウント 1 件のレスポンス(管理一覧)。 */
+export const zAppAccount = z.object({
+  id: z.number(),
+  employee_id: z.number().nullable(),
+  employee_name: z.string().nullable(),
+  status: z.string(),
+  role_keys: z.array(z.string()),
+})
+
+export type AppAccount = z.infer<typeof zAppAccount>
+
+/** アカウント一覧のレスポンス。 */
+export const zAppAccountList = z.object({
+  data: z.array(zAppAccount),
+  total: z.number(),
+})
+
+export type AppAccountList = z.infer<typeof zAppAccountList>
