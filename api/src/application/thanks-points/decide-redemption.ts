@@ -12,6 +12,8 @@ export type Command = {
   decidedAt: string
 }
 
+export type OutOfStock = { reason: "out_of_stock" }
+
 // 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
 // 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
 // これはエラーではなく「在庫警告つきの成功」なので ApplicationError には含めない。
@@ -21,7 +23,7 @@ export type FulfilledWithStockError = {
   stockError: Error
 }
 
-export type DecideResult = ThanksRedemption | FulfilledWithStockError | ApplicationError
+export type DecideResult = ThanksRedemption | OutOfStock | FulfilledWithStockError | ApplicationError
 
 /**
  * 交換申請を承認（確定）または却下する。
@@ -78,11 +80,11 @@ export class DecideRedemption {
     return updated
   }
 
-  // 承認＝確定。残高チェックを畳み込んだ条件付き UPDATE で確定し、確定後に在庫を原子的に減らす。
-  // 0 行更新は「残高不足 or 既に決裁済み」。findById で pending を確認してから区別する。
+  // 承認＝確定。残高チェックと在庫減算を同一 batch に畳み込んだ条件付き UPDATE で確定する。
+  // 0 行更新は「残高不足 or 在庫切れ or 既に決裁済み」。findById で pending を確認してから区別する。
   private async approve(
     command: Command,
-  ): Promise<ThanksRedemption | FulfilledWithStockError | ApplicationError> {
+  ): Promise<ThanksRedemption | OutOfStock | FulfilledWithStockError | ApplicationError> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
     const before = await redemptionRepository.findById(command.redemptionId)
@@ -106,6 +108,7 @@ export class DecideRedemption {
     const updated = await redemptionRepository.approveFromPending({
       redemptionId: command.redemptionId,
       employeeId: before.employeeId,
+      rewardId: before.rewardId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,
     })
@@ -118,17 +121,14 @@ export class DecideRedemption {
       return await this.classifyZeroUpdate(command.redemptionId)
     }
 
-    const stock = await new ThanksRewardRepository(this.c).decrementStock(updated.rewardId)
-
-    if (stock instanceof Error) {
-      return { reason: "fulfilled_with_stock_error", redemption: updated, stockError: stock }
-    }
-
     return updated
   }
 
-  // 承認 UPDATE が 0 行のとき、pending のまま残っていれば残高不足、消えていれば既に決裁済みと判定する。
-  private async classifyZeroUpdate(redemptionId: number): Promise<ApplicationError> {
+  // 承認 UPDATE が 0 行のとき、在庫切れか残高不足か既に決裁済みかを判定する。
+  // pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
+  private async classifyZeroUpdate(
+    redemptionId: number,
+  ): Promise<OutOfStock | ApplicationError> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
     const after = await redemptionRepository.findById(redemptionId)
@@ -141,8 +141,20 @@ export class DecideRedemption {
       return new ConflictError("redemption already decided", "already_decided")
     }
 
-    return after.status === "pending"
-      ? new ConflictError("insufficient balance", "insufficient_balance")
-      : new ConflictError("redemption already decided", "already_decided")
+    if (after.status !== "pending") {
+      return new ConflictError("redemption already decided", "already_decided")
+    }
+
+    const reward = await new ThanksRewardRepository(this.c).findById(after.rewardId)
+
+    if (reward instanceof Error) {
+      return new UnexpectedError("failed to find reward", { cause: reward })
+    }
+
+    if (reward !== null && reward.stock !== null && reward.stock <= 0) {
+      return { reason: "out_of_stock" }
+    }
+
+    return new ConflictError("insufficient balance", "insufficient_balance")
   }
 }
