@@ -30,7 +30,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     code: row.code,
     name: row.name,
     email: row.email,
-    role: row.role,
+    role: session.role,
     dept_name: row.deptName,
     position: row.position,
     permissions: [...session.permissions],
