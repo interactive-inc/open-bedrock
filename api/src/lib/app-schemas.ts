@@ -1332,3 +1332,40 @@ export const zAppTrainingEnrollmentList = z.object({
 })
 
 export type AppTrainingEnrollmentList = z.infer<typeof zAppTrainingEnrollmentList>
+
+// ===== iam =====
+/** ロール 1 件のレスポンス。 */
+export const zAppRole = z.object({
+  id: z.number(),
+  key: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  is_system: z.boolean(),
+})
+
+export type AppRole = z.infer<typeof zAppRole>
+
+/** ロール一覧のレスポンス。 */
+export const zAppRoleList = z.object({
+  data: z.array(zAppRole),
+  total: z.number(),
+})
+
+export type AppRoleList = z.infer<typeof zAppRoleList>
+
+/** 権限カタログ 1 件のレスポンス。 */
+export const zAppPermission = z.object({
+  key: z.string(),
+  description: z.string(),
+  category: z.string(),
+})
+
+export type AppPermission = z.infer<typeof zAppPermission>
+
+/** 権限カタログ一覧のレスポンス。 */
+export const zAppPermissionList = z.object({
+  data: z.array(zAppPermission),
+  total: z.number(),
+})
+
+export type AppPermissionList = z.infer<typeof zAppPermissionList>
