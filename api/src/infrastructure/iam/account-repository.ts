@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { accountRoles, accounts, employees, roles } from "@/schema"
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 
 // IAM のアカウント管理(一覧・取得・状態遷移・ロール割当)を扱う。
 // verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
@@ -60,6 +60,80 @@ export class AccountRepository {
       }))
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to list accounts")
+    }
+  }
+
+  /**
+   * アカウントの存在確認。不在は null。
+   */
+  async existsById(accountId: number): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(accounts)
+        .where(eq(accounts.id, accountId))
+        .limit(1)
+
+      return rows.length > 0
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find account")
+    }
+  }
+
+  /**
+   * アカウントにロールを付与する。冪等(既存なら無視)。
+   */
+  async grantRole(props: {
+    accountId: number
+    roleId: number
+    grantedBy: number
+    now: number
+  }): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .insert(accountRoles)
+        .values({
+          accountId: props.accountId,
+          roleId: props.roleId,
+          grantedBy: props.grantedBy,
+          grantedAt: props.now,
+        })
+        .onConflictDoNothing()
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to grant role")
+    }
+  }
+
+  /**
+   * アカウントからロールを剥奪する。
+   */
+  async revokeRole(accountId: number, roleId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .delete(accountRoles)
+        .where(and(eq(accountRoles.accountId, accountId), eq(accountRoles.roleId, roleId)))
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to revoke role")
+    }
+  }
+
+  /**
+   * tokenVersion を 1 増やし、updatedAt を更新する。発行済みトークンを即時失効させる。
+   */
+  async bumpTokenVersion(accountId: number, now: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .update(accounts)
+        .set({ tokenVersion: sql`${accounts.tokenVersion} + 1`, updatedAt: now })
+        .where(eq(accounts.id, accountId))
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to bump token version")
     }
   }
 }
