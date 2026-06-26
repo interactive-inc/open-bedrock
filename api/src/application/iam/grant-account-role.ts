@@ -1,5 +1,5 @@
 import { canAssignRoles } from "@/lib/iam/can-assign-roles"
-import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
