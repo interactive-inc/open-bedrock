@@ -29,7 +29,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new LendAsset(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "asset"),
       employeeCode: json.employee_code,
       now: c.env.NOW ?? new Date().toISOString(),

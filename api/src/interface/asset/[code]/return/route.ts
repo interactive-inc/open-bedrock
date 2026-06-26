@@ -16,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const updated = await new ReturnAsset(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "asset"),
     now: c.env.NOW ?? new Date().toISOString(),
   })

@@ -1,11 +1,11 @@
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
 }
 
@@ -21,7 +21,7 @@ export class DeleteAsset {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
-    if (canManageAssets(command.viewerRole) === false) {
+    if (canManageAssets(command.session) === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
