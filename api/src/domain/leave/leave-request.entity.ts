@@ -127,19 +127,6 @@ export class LeaveRequest implements Props {
     })
   }
 
-  decide(props: {
-    status: "approved" | "rejected"
-    approverId: number
-    decidedComment: string | null
-  }) {
-    return new LeaveRequest({
-      ...this.props,
-      status: props.status,
-      approverId: props.approverId,
-      decidedComment: props.decidedComment,
-    })
-  }
-
   /** pending の申請のみ変更・取り下げできる。決定済みは不可。 */
   get isModifiable(): boolean {
     return this.status === "pending"
