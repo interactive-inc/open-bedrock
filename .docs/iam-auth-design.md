@@ -52,6 +52,18 @@ OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true
 
 権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / 付与できるロールは付与者の部分集合 / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(15分 + refresh ローテ + tokenVersion)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
 
+## 実装状況
+
+Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改修由来型エラー 0）。
+
+- Phase 0〜2: permission カタログ・8テーブル・マスタシード・backfill 完了
+- Phase 3: 認証を identities/accounts ベースへカットオーバー（JWT に権限を載せず DB 解決、tokenVersion 失効）
+- Phase 4/4.5: 全 can-* を permission ベースへ、承認の動的ロールを roleKeys 複数対応へ
+- Phase 5: ロール管理 API（GET/POST /roles）、権限カタログ API（GET /permissions）、アカウント一覧 API（GET /accounts）、アカウントへのロール割当 API（POST /accounts/:id/roles、escalation guard・自己付与禁止・tokenVersion 失効）、/me の permissions/role_keys 返却、Web 管理画面（/admin/roles・/admin/accounts）、cli（karte roles・karte accounts）
+- Phase 6: 権限ベースのサイドバー出し分け（filterByPermission）
+
+Phase 7（employees から email/password_hash/role の物理 drop）は破壊的なオプションクリーンアップとして保留。旧 3 列は現在使われておらず（認証は identities、認可は account_roles 経由）、後方互換として残置している。撤去時は register-employee の identity 化、employee API レスポンスの role を accounts 由来へ、レガシーハッシュ移行バッチの廃止が必要。
+
 ## 既知リスク
 
 D1 に FK 無し(孤児行はアプリ層 + index + 監査)、permission 二重定義の同期ズレ(起動時 subset チェック)、二重正期間(Phase2-6)の整合、approver_roles の未知キー突合、admin 全許可固定の硬直、毎リクエスト join のレイテンシ、OR 結合は deny を表現できない、access token 15分化はクライアント自動更新が前提。
