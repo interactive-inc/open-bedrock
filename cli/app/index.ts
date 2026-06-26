@@ -66,6 +66,8 @@ import onboardingAssignHandler from "@/app/onboarding/assign/[employee_code]/rou
 import onboardingCompleteHandler from "@/app/onboarding/complete/[task_id]/route"
 import onboardingHandler from "@/app/onboarding/route"
 import onboardingMeHandler from "@/app/onboarding/me/route"
+import rolesHandler from "@/app/roles/route"
+import accountsHandler from "@/app/accounts/route"
 import onboardingShowHandler from "@/app/onboarding/show/[employee_code]/route"
 import onboardingTemplatesHandler from "@/app/onboarding/templates/route"
 import oneononeCreateHandler from "@/app/1on1/create/route"
@@ -421,6 +423,8 @@ routes.post("/onboarding", ...onboardingHandler)
 routes.post("/onboarding/templates", ...onboardingTemplatesHandler)
 routes.post("/onboarding/assign/:employee_code?", ...onboardingAssignHandler)
 routes.post("/onboarding/me", ...onboardingMeHandler)
+routes.post("/roles", ...rolesHandler)
+routes.post("/accounts", ...accountsHandler)
 routes.post("/onboarding/complete/:task_id?", ...onboardingCompleteHandler)
 routes.post("/onboarding/show/:employee_code?", ...onboardingShowHandler)
 
