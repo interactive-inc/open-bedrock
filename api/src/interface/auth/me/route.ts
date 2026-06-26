@@ -33,6 +33,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     role: row.role,
     dept_name: row.deptName,
     position: row.position,
+    permissions: [...session.permissions],
+    role_keys: [...session.roleKeys],
   })
 
   return c.json(responseBody, 200)
