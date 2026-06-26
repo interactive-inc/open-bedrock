@@ -47,23 +47,50 @@ import {
 
 type Props = {
   unreadNotificationCount: number
+  // 本人が持つ permission キー。これに含まれる requiredPermission の項目だけ表示する。
+  permissions: ReadonlyArray<string>
 }
 
 type SubItem = {
   label: string
   href: string
+  requiredPermission?: string
 }
 
 type NavItem = {
   label: string
   href: string
   icon: LucideIcon
+  requiredPermission?: string
   children?: ReadonlyArray<SubItem>
 }
 
 type NavGroup = {
   heading: string
   items: ReadonlyArray<NavItem>
+}
+
+// permission を持つ項目だけに絞り込む。requiredPermission 未指定は全員に表示。
+// children が全て除外された親、items が空になった group は畳む。
+function filterByPermission(
+  groups: ReadonlyArray<NavGroup>,
+  permissions: ReadonlySet<string>,
+): ReadonlyArray<NavGroup> {
+  const allowed = (required: string | undefined): boolean =>
+    required === undefined || permissions.has(required)
+
+  const filteredGroups = groups.map((group) => {
+    const items = group.items
+      .filter((item) => allowed(item.requiredPermission))
+      .map((item) => ({
+        ...item,
+        children: item.children?.filter((child) => allowed(child.requiredPermission)),
+      }))
+
+    return { ...group, items: items }
+  })
+
+  return filteredGroups.filter((group) => group.items.length > 0)
 }
 
 const navGroups: ReadonlyArray<NavGroup> = [
@@ -74,9 +101,24 @@ const navGroups: ReadonlyArray<NavGroup> = [
   {
     heading: "受信箱",
     items: [
-      { label: "申請の承認", href: "/applications/inbox", icon: Inbox },
-      { label: "経費の承認", href: "/expense/inbox", icon: Inbox },
-      { label: "休暇の承認", href: "/leave/inbox", icon: Inbox },
+      {
+        label: "申請の承認",
+        href: "/applications/inbox",
+        icon: Inbox,
+        requiredPermission: "application:approve",
+      },
+      {
+        label: "経費の承認",
+        href: "/expense/inbox",
+        icon: Inbox,
+        requiredPermission: "expense:approve",
+      },
+      {
+        label: "休暇の承認",
+        href: "/leave/inbox",
+        icon: Inbox,
+        requiredPermission: "leave:approve",
+      },
     ],
   },
   {
@@ -372,14 +414,16 @@ function matchesQuery(item: NavItem, query: string): boolean {
   return false
 }
 
-function filterGroups(query: string): ReadonlyArray<NavGroup> {
+function filterGroups(query: string, permissions: ReadonlyArray<string>): ReadonlyArray<NavGroup> {
+  const allowedGroups = filterByPermission(navGroups, new Set(permissions))
+
   const trimmed = query.trim().toLowerCase()
 
-  if (trimmed === "") return navGroups
+  if (trimmed === "") return allowedGroups
 
   const filtered: NavGroup[] = []
 
-  for (const group of navGroups) {
+  for (const group of allowedGroups) {
     const items = group.items.filter((item) => matchesQuery(item, trimmed))
 
     if (items.length > 0) {
@@ -415,7 +459,7 @@ export function SidebarNav(props: Props) {
 
   const [filterQuery, setFilterQuery] = useState("")
 
-  const visibleGroups = filterGroups(filterQuery)
+  const visibleGroups = filterGroups(filterQuery, props.permissions)
 
   return (
     <>
