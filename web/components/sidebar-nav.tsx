@@ -26,6 +26,7 @@ import {
   TimerReset,
   Users,
   Workflow,
+  UserCog,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -398,7 +399,21 @@ const navGroups: ReadonlyArray<NavGroup> = [
   },
   {
     heading: "システム",
-    items: [{ label: "バッチ", href: "/batch", icon: Workflow }],
+    items: [
+      { label: "バッチ", href: "/batch", icon: Workflow, requiredPermission: "batch:view" },
+      {
+        label: "ロール管理",
+        href: "/admin/roles",
+        icon: ShieldCheck,
+        requiredPermission: "iam:manage_roles",
+      },
+      {
+        label: "アカウント管理",
+        href: "/admin/accounts",
+        icon: UserCog,
+        requiredPermission: "account:manage",
+      },
+    ],
   },
 ]
 
