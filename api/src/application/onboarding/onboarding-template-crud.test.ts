@@ -9,6 +9,7 @@ import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onbo
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { employees } from "@/schema"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
@@ -73,7 +74,7 @@ describe("CreateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "engineer-join",
       name: "Engineer Onboarding",
       kind: "join",
@@ -92,7 +93,7 @@ describe("CreateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "engineer-join",
       name: "Engineer Onboarding",
       kind: "join",
@@ -110,7 +111,7 @@ describe("CreateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
       name: "別の名称",
       kind: "join",
@@ -130,7 +131,7 @@ describe("GetOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       code: "join-default",
     })
 
@@ -141,7 +142,7 @@ describe("GetOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
     })
 
@@ -154,7 +155,7 @@ describe("GetOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "join-default",
     })
 
@@ -169,7 +170,7 @@ describe("UpdateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
       name: "更新後の名称",
       kind: "leave",
@@ -189,7 +190,7 @@ describe("UpdateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
       name: "x",
       kind: "join",
@@ -207,7 +208,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
     })
 
@@ -228,7 +229,7 @@ describe("DeleteOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
     })
 
@@ -241,7 +242,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "join-default",
     })
 
@@ -255,7 +256,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedInProgressAssignment(context, "join-default")
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
     })
 

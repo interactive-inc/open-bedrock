@@ -66,7 +66,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateOrgDepartment(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "department"),
       parentCode: json.parent_code ?? null,
       managerEmployeeCode: json.manager_employee_code ?? null,
@@ -92,7 +92,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteOrgDepartment(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "department"),
   })
 

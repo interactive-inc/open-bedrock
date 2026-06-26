@@ -2,11 +2,11 @@ import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   assignmentId: number
 }
 
@@ -17,7 +17,7 @@ export class GetShiftAssignment {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
-    if (canManageShift(input.viewerRole) === false) {
+    if (canManageShift(input.session) === false) {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 

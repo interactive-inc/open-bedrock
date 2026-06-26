@@ -30,7 +30,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const survey = await new CreateSurvey(c).run({
-      viewerRole: session.role,
+      session: session,
       title: body.title,
       status: body.status,
       questionsJson: body.questions_json,

@@ -79,7 +79,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateTrainingCourse(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "training course"),
       title: body.title,
       category: body.category,
@@ -105,7 +105,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new ArchiveTrainingCourse(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "training course"),
   })
 

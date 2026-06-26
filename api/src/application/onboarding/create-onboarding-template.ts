@@ -2,12 +2,12 @@ import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   name: string
   kind: "join" | "leave"
@@ -23,7 +23,7 @@ export class CreateOnboardingTemplate {
   async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
 
-    if (canManageOnboarding(command.viewerRole) === false) {
+    if (canManageOnboarding(command.session) === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

@@ -1,13 +1,13 @@
 import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   applicationId: number
   approverId: number
   action: "approve" | "reject"
@@ -55,12 +55,12 @@ export class DecideApplication {
 
     // approverRoles が指定されていれば、そのロールのみ承認可能
     if (template.approverRoles.length > 0) {
-      if (template.approverRoles.includes(command.viewerRole) === false) {
+      if (template.approverRoles.includes(command.session.role) === false) {
         return new ForbiddenError("cannot decide application", "forbidden")
       }
     } else {
       // approverRoles が空なら従来の canDecideApplication チェック
-      if (canDecideApplication(command.viewerRole) === false) {
+      if (canDecideApplication(command.session) === false) {
         return new ForbiddenError("cannot decide application", "forbidden")
       }
     }

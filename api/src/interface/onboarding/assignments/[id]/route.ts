@@ -47,7 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new GetOnboardingAssignment(c).run({
     assignmentId,
     viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (result instanceof ApplicationError) {
@@ -74,7 +74,7 @@ export const PUT = factory.createHandlers(
 
     const result = await new UpdateOnboardingAssignment(c).run({
       assignmentId,
-      viewerRole: session.role,
+      session: session,
       assignedAt: json.assigned_at,
     })
 
@@ -98,7 +98,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new CancelOnboardingAssignment(c).run({
     assignmentId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (result instanceof ApplicationError) {

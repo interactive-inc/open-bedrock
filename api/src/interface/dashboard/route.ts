@@ -13,7 +13,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewDashboard(session.role) === false) {
+  if (canViewDashboard(session) === false) {
     throw new ForbiddenError()
   }
 

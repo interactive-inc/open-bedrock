@@ -2,12 +2,12 @@ import { canManageOrg } from "@/lib/org/can-manage-org"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/domain/org/org-department.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   department: {
     code: string
     departmentId: number
@@ -26,7 +26,7 @@ export class CreateOrgDepartment {
   async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.viewerRole) === false) {
+    if (canManageOrg(command.session) === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 

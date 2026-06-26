@@ -3,6 +3,7 @@ import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { ForbiddenError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
@@ -50,7 +51,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       leaveRequestId: request.id ?? 0,
       approverId: 2,
       action: "approve",
@@ -68,7 +69,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       leaveRequestId: request.id ?? 0,
       approverId: 2,
       action: "reject",
@@ -105,7 +106,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       leaveRequestId: request.id ?? 0,
       approverId: 5,
       action: "approve",
@@ -123,7 +124,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       leaveRequestId: request.id ?? 0,
       approverId: 2,
       action: "reject",

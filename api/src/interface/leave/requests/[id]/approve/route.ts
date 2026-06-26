@@ -26,7 +26,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canDecideLeave(session.role) === false) {
+    if (canDecideLeave(session) === false) {
       throw new ForbiddenError()
     }
 
@@ -35,7 +35,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new DecideLeaveRequest(c).run({
-      viewerRole: session.role,
+      session: session,
       leaveRequestId,
       approverId: session.employeeId,
       action: "approve",

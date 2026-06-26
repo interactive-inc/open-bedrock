@@ -32,7 +32,7 @@ export const POST = factory.createHandlers(
     }
 
     const created = await new CreateTrainingCourse(c).run({
-      viewerRole: session.role,
+      session: session,
       code: body.code,
       title: body.title,
       category: body.category,

@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const posting = await new GetCareerPosting(c).run({
-    viewerRole: session.role,
+    session: session,
     postingId: postingId,
   })
 
@@ -71,7 +71,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateCareerPosting(c).run({
-      viewerRole: session.role,
+      session: session,
       postingId: postingId,
       title: body.title,
       deptId: body.dept_id ?? null,
@@ -99,7 +99,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const result = await new DeleteCareerPosting(c).run({
-    viewerRole: session.role,
+    session: session,
     postingId: postingId,
   })
 

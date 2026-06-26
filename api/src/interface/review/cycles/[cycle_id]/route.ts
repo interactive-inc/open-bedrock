@@ -34,7 +34,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateReviewCycle(c).run({
-      viewerRole: session.role,
+      session: session,
       cycleId,
       title: json.title,
       period: json.period,
@@ -68,7 +68,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const result = await new DeleteReviewCycle(c).run({
-    viewerRole: session.role,
+    session: session,
     cycleId,
   })
 

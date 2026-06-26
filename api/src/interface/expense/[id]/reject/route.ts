@@ -28,14 +28,14 @@ export const POST = factory.createHandlers(
 
     const expenseId = validateIntParam(c.req.param("id"), "expense")
 
-    if (canDecideExpense(session.role) === false) {
+    if (canDecideExpense(session) === false) {
       throw new ForbiddenError()
     }
 
     const body = c.req.valid("json")
 
     const updated = await new DecideExpense(c).run({
-      viewerRole: session.role,
+      session: session,
       expenseId,
       approverId: session.employeeId,
       action: "reject",

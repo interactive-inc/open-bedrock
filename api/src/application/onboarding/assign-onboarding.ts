@@ -5,14 +5,14 @@ import type { ApplicationError } from "@/lib/errors"
 import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   employeeCode: string
   templateCode: string
   assignedAt: string
@@ -32,7 +32,7 @@ export class AssignOnboarding {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<AssignOnboardingResult | ApplicationError> {
-    if (canManageOnboarding(command.viewerRole) === false) {
+    if (canManageOnboarding(command.session) === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

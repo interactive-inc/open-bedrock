@@ -3,13 +3,13 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   approverId: number
   swapRequestId: number
   approvedAt: string
@@ -23,7 +23,7 @@ export class ApproveShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
-    if (canApproveShiftSwap(input.viewerRole) === false) {
+    if (canApproveShiftSwap(input.session) === false) {
       return new ForbiddenError("cannot approve shift swap", "forbidden")
     }
 

@@ -1,24 +1,25 @@
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageEmployees", () => {
   test("manager can manage", () => {
-    expect(canManageEmployees("manager")).toBe(true)
+    expect(canManageEmployees(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can manage", () => {
-    expect(canManageEmployees("hr")).toBe(true)
+    expect(canManageEmployees(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can manage", () => {
-    expect(canManageEmployees("admin")).toBe(true)
+    expect(canManageEmployees(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot manage", () => {
-    expect(canManageEmployees("member")).toBe(false)
+    expect(canManageEmployees(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot manage", () => {
-    expect(canManageEmployees("unknown")).toBe(false)
+    expect(canManageEmployees(makeTestSession("unknown"))).toBe(false)
   })
 })

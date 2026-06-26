@@ -1,24 +1,25 @@
 import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canViewEmployeeOnboarding", () => {
   test("manager can view", () => {
-    expect(canViewEmployeeOnboarding({ viewerRole: "manager" })).toBe(true)
+    expect(canViewEmployeeOnboarding(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can view", () => {
-    expect(canViewEmployeeOnboarding({ viewerRole: "hr" })).toBe(true)
+    expect(canViewEmployeeOnboarding(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can view", () => {
-    expect(canViewEmployeeOnboarding({ viewerRole: "admin" })).toBe(true)
+    expect(canViewEmployeeOnboarding(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot view", () => {
-    expect(canViewEmployeeOnboarding({ viewerRole: "member" })).toBe(false)
+    expect(canViewEmployeeOnboarding(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot view", () => {
-    expect(canViewEmployeeOnboarding({ viewerRole: "viewer" })).toBe(false)
+    expect(canViewEmployeeOnboarding(makeTestSession("viewer"))).toBe(false)
   })
 })

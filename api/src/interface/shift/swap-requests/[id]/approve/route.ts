@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const swapRequest = await new ApproveShiftSwapRequest(c).run({
-    viewerRole: session.role,
+    session: session,
     approverId: session.employeeId,
     swapRequestId,
     approvedAt: c.env.NOW ?? new Date().toISOString(),

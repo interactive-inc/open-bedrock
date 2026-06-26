@@ -30,7 +30,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const cycle = await new CreateReviewCycle(c).run({
-      viewerRole: session.role,
+      session: session,
       title: json.title,
       period: json.period,
       dueDate: json.dueDate ?? null,

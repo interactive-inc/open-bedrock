@@ -1,12 +1,12 @@
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
 }
 
@@ -22,7 +22,7 @@ export class DeleteOnboardingTemplate {
     const templateRepository = new OnboardingTemplateRepository(this.c)
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
-    if (canManageOnboarding(command.viewerRole) === false) {
+    if (canManageOnboarding(command.session) === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

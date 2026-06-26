@@ -1,24 +1,25 @@
 import { canDecideApplication } from "@/lib/application/can-decide-application"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canDecideApplication", () => {
   test("manager can decide", () => {
-    expect(canDecideApplication("manager")).toBe(true)
+    expect(canDecideApplication(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can decide", () => {
-    expect(canDecideApplication("hr")).toBe(true)
+    expect(canDecideApplication(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can decide", () => {
-    expect(canDecideApplication("admin")).toBe(true)
+    expect(canDecideApplication(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot decide", () => {
-    expect(canDecideApplication("member")).toBe(false)
+    expect(canDecideApplication(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot decide", () => {
-    expect(canDecideApplication("viewer")).toBe(false)
+    expect(canDecideApplication(makeTestSession("viewer"))).toBe(false)
   })
 })

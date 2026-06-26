@@ -14,6 +14,7 @@ import { expectApplicationError } from "@/interface/shared/test/expect-applicati
 import { employees, onboardingTasks } from "@/schema"
 import { eq } from "drizzle-orm"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 let nextEmployeeId = 1
@@ -85,7 +86,7 @@ describe("GetOnboardingAssignment", () => {
     const result = await new GetOnboardingAssignment(context).run({
       assignmentId,
       viewerEmployeeId: employeeId,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     if (result instanceof ApplicationError) {
@@ -106,7 +107,7 @@ describe("GetOnboardingAssignment", () => {
     const result = await new GetOnboardingAssignment(context).run({
       assignmentId,
       viewerEmployeeId: employeeId + 999,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -118,7 +119,7 @@ describe("GetOnboardingAssignment", () => {
     const result = await new GetOnboardingAssignment(context).run({
       assignmentId: 9999,
       viewerEmployeeId: 1,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
     })
 
     expectApplicationError(result, NotFoundError, "assignment_not_found")
@@ -135,7 +136,7 @@ describe("UpdateOnboardingAssignment", () => {
 
     const result = await new UpdateOnboardingAssignment(context).run({
       assignmentId,
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
 
@@ -155,7 +156,7 @@ describe("UpdateOnboardingAssignment", () => {
 
     const result = await new UpdateOnboardingAssignment(context).run({
       assignmentId,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
 
@@ -173,7 +174,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const result = await new CancelOnboardingAssignment(context).run({
       assignmentId,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
@@ -194,7 +195,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const result = await new CancelOnboardingAssignment(context).run({
       assignmentId,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
@@ -216,7 +217,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const result = await new CancelOnboardingAssignment(context).run({
       assignmentId,
-      viewerRole: "member",
+      session: makeTestSession("member"),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -247,15 +248,13 @@ describe("UncompleteOnboardingTask", () => {
 
     await new CompleteOnboardingTask(context).run({
       taskId,
-      viewerEmployeeId: employeeId,
-      viewerRole: "member",
+      session: makeTestSession("member", employeeId),
       completedAt: "2026-06-01T00:00:00.000Z",
     })
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId,
-      viewerEmployeeId: employeeId,
-      viewerRole: "member",
+      session: makeTestSession("member", employeeId),
     })
 
     if (result instanceof ApplicationError) {
@@ -289,8 +288,7 @@ describe("UncompleteOnboardingTask", () => {
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId,
-      viewerEmployeeId: employeeId + 999,
-      viewerRole: "member",
+      session: makeTestSession("member", employeeId + 999),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -301,8 +299,7 @@ describe("UncompleteOnboardingTask", () => {
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId: 9999,
-      viewerEmployeeId: 1,
-      viewerRole: "admin",
+      session: makeTestSession("admin", 1),
     })
 
     expectApplicationError(result, NotFoundError, "task_not_found")
@@ -339,7 +336,7 @@ describe("AssignOnboarding duplicate check", () => {
     await seedTemplate(context)
 
     const firstResult = await new AssignOnboarding(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       employeeCode: "E201",
       templateCode: template.code,
       assignedAt: "2026-05-01T00:00:00.000Z",
@@ -350,7 +347,7 @@ describe("AssignOnboarding duplicate check", () => {
     }
 
     const secondResult = await new AssignOnboarding(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       employeeCode: "E201",
       templateCode: template.code,
       assignedAt: "2026-05-02T00:00:00.000Z",
@@ -379,7 +376,7 @@ describe("AssignOnboarding duplicate check", () => {
     await repository.update(firstAssignment.updateStatus("completed"))
 
     const secondResult = await new AssignOnboarding(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       employeeCode: "E202",
       templateCode: template.code,
       assignedAt: "2026-06-01T00:00:00.000Z",

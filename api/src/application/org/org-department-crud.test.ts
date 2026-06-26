@@ -14,11 +14,12 @@ import {
 } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {
   const result = await new CreateOrgDepartment(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     department: {
       code: code,
       departmentId: 100,
@@ -40,7 +41,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -63,7 +64,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -82,7 +83,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -101,7 +102,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "CORP")
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -142,7 +143,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: "E001",
@@ -165,7 +166,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: null,
@@ -181,7 +182,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
       parentCode: "DEV",
       managerEmployeeCode: null,
@@ -195,7 +196,7 @@ describe("UpdateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
       parentCode: null,
       managerEmployeeCode: null,
@@ -213,7 +214,7 @@ describe("DeleteOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
     })
 
@@ -226,7 +227,7 @@ describe("DeleteOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "DEV",
     })
 
@@ -237,7 +238,7 @@ describe("DeleteOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
     })
 

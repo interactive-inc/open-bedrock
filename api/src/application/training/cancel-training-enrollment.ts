@@ -1,13 +1,13 @@
 import { canModifyEnrollment } from "@/lib/training/can-modify-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
 }
 
 export type Cancelled = { reason: "cancelled" }
@@ -34,7 +34,7 @@ export class CancelTrainingEnrollment {
     const canModify = canModifyEnrollment({
       enrollmentEmployeeId: enrollment.employeeId,
       viewerEmployeeId: command.viewerEmployeeId,
-      viewerRole: command.viewerRole,
+      session: command.session,
     })
 
     if (canModify === false) {

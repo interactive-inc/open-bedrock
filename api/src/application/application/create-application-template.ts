@@ -1,13 +1,13 @@
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   name: string
   category: string
@@ -25,7 +25,7 @@ export class CreateApplicationTemplate {
   async run(command: Command): Promise<ApplicationTemplate | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
-    if (canManageApplicationTemplates(command.viewerRole) === false) {
+    if (canManageApplicationTemplates(command.session) === false) {
       return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 

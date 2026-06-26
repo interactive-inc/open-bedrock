@@ -2,11 +2,11 @@ import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings
 import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   title: string
   deptId: number | null
   deptName: string | null
@@ -23,7 +23,7 @@ export class CreateCareerPosting {
   async run(command: Command): Promise<CareerPosting | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)
 
-    if (canManageCareerPostings(command.viewerRole) === false) {
+    if (canManageCareerPostings(command.session) === false) {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 

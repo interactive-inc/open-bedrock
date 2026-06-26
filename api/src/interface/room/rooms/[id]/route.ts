@@ -74,7 +74,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateRoom(c).run({
-      viewerRole: session.role,
+      session: session,
       roomId,
       details: { name: json.name, capacity: json.capacity, location: json.location ?? null },
     })
@@ -108,7 +108,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid room id")
   }
 
-  const result = await new DeleteRoom(c).run({ viewerRole: session.role, roomId })
+  const result = await new DeleteRoom(c).run({ session: session, roomId })
 
   if (result instanceof ApplicationError) {
     throw toHttpException(result)

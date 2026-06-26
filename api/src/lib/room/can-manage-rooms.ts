@@ -1,6 +1,7 @@
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
+import { hasPermission } from "@/lib/auth/has-permission"
+import type { SessionPayload } from "@/env"
 
-/** 会議室マスタの登録・更新・削除を行えるロールかを判定する純粋関数。 */
-export function canManageRooms(viewerRole: string): boolean {
-  return privilegedRoles.includes(viewerRole)
+/** 会議室マスタの登録・更新・削除を行える権限を持つか判定する純粋関数。 */
+export function canManageRooms(session: SessionPayload): boolean {
+  return hasPermission(session, "room:manage")
 }

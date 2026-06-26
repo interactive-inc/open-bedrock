@@ -1,11 +1,11 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   patternId: number
 }
 
@@ -19,7 +19,7 @@ export class DeleteShiftPattern {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<Deleted | ApplicationError> {
-    if (canManageShift(input.viewerRole) === false) {
+    if (canManageShift(input.session) === false) {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 

@@ -146,16 +146,16 @@ describe("GET /applications/inbox", () => {
   test("returns only templates matching the viewer role in approverRoles", async () => {
     const db = createD1TestDatabase(loadSchema())
 
-    // template 10: approverRoles に "accountant" を含む
+    // template 10: approverRoles に "hr" を含む
     await seedD1(db, "application_templates", [
       {
         id: 10,
-        code: "accounting_only",
-        name: "Accounting Template",
-        category: "accounting",
+        code: "hr_only",
+        name: "HR Template",
+        category: "hr",
         description: null,
         schema_json: "{}",
-        approver_roles: JSON.stringify(["accountant"]),
+        approver_roles: JSON.stringify(["hr"]),
       },
       {
         id: 11,
@@ -208,36 +208,36 @@ describe("GET /applications/inbox", () => {
         name: "Robin Uchida",
         email: "you+e099@example.com",
         password_hash: "hash",
-        role: "accountant",
+        role: "hr",
         dept_id: 6,
         dept_name: "Administration",
-        position: "Accountant",
+        position: "HR",
         status: "active",
       },
     ])
 
     await seedIamForEmployees(db)
 
-    const accountantToken = await tokenFor(99, "accountant")
+    const hrToken = await tokenFor(99, "hr")
 
-    const accountantResponse = await requestWithContext({
+    const hrResponse = await requestWithContext({
       db,
       jwtSecret,
       path: "/applications/inbox",
-      token: accountantToken,
+      token: hrToken,
     })
 
-    expect(accountantResponse.status).toBe(200)
+    expect(hrResponse.status).toBe(200)
 
-    const accountantParsed = z
+    const hrParsed = z
       .object({ data: z.array(applicationInboxResponseSchema), total: z.number() })
-      .safeParse(await accountantResponse.json())
+      .safeParse(await hrResponse.json())
 
-    expect(accountantParsed.success).toBe(true)
+    expect(hrParsed.success).toBe(true)
 
-    if (accountantParsed.success) {
-      expect(accountantParsed.data.data.length).toBe(1)
-      expect(accountantParsed.data.data[0].id).toBe(100)
+    if (hrParsed.success) {
+      expect(hrParsed.data.data.length).toBe(1)
+      expect(hrParsed.data.data[0].id).toBe(100)
     }
   })
 })

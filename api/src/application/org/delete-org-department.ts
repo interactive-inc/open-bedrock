@@ -1,11 +1,11 @@
 import { canManageOrg } from "@/lib/org/can-manage-org"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
 }
 
@@ -22,7 +22,7 @@ export class DeleteOrgDepartment {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.viewerRole) === false) {
+    if (canManageOrg(command.session) === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 

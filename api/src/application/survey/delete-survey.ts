@@ -1,11 +1,11 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   surveyId: number
 }
 
@@ -19,7 +19,7 @@ export class DeleteSurvey {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    if (canManageSurveys(command.viewerRole) === false) {
+    if (canManageSurveys(command.session) === false) {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 

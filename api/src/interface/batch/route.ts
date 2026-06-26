@@ -29,7 +29,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBatch(session.role) === false) {
+    if (canManageBatch(session) === false) {
       throw new ForbiddenError()
     }
 

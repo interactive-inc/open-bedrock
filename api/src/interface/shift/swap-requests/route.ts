@@ -28,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canApproveShiftSwap(session.role) === false) {
+  if (canApproveShiftSwap(session) === false) {
     throw new ForbiddenError()
   }
 

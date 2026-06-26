@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const updated = await new SetReviewCycleStatus(c).run({
-    viewerRole: session.role,
+    session: session,
     cycleId,
     status: "open",
   })

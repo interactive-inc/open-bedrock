@@ -8,11 +8,11 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/domain/org/org-department.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   parentCode: string | null
   managerEmployeeCode: string | null
@@ -29,7 +29,7 @@ export class UpdateOrgDepartment {
   async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.viewerRole) === false) {
+    if (canManageOrg(command.session) === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 

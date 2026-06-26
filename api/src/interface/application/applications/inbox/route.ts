@@ -42,7 +42,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   // DecideApplication の approverRoles チェックと同じ二分岐に合わせる。
   const rolePattern = `%"${session.role}"%`
 
-  const isPrivileged = canDecideApplication(session.role)
+  const isPrivileged = canDecideApplication(session)
 
   const pendingWithRole = and(
     eq(applications.status, "pending"),

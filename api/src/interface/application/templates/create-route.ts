@@ -34,7 +34,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const created = await new CreateApplicationTemplate(c).run({
-      viewerRole: session.role,
+      session: session,
       code: body.code,
       name: body.name,
       category: body.category,

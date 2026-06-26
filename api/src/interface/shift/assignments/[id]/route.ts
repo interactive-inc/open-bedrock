@@ -37,7 +37,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const assignment = await new GetShiftAssignment(c).run({
-    viewerRole: session.role,
+    session: session,
     assignmentId,
   })
 
@@ -71,7 +71,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const assignment = await new UpdateShiftAssignment(c).run({
-      viewerRole: session.role,
+      session: session,
       assignmentId,
       patternCode: json.pattern_code ?? null,
       date: json.date,
@@ -97,7 +97,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteShiftAssignment(c).run({
-    viewerRole: session.role,
+    session: session,
     assignmentId,
   })
 

@@ -50,7 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   // 申請者本人か承認権限を持つロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
   const isOwner = row.application.applicantId === session.employeeId
 
-  if (isOwner === false && canDecideApplication(session.role) === false) {
+  if (isOwner === false && canDecideApplication(session) === false) {
     throw new ForbiddenError()
   }
 

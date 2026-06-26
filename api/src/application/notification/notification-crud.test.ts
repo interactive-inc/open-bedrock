@@ -6,6 +6,7 @@ import { MarkNotificationRead } from "@/application/notification/mark-notificati
 import { MarkAllNotificationsRead } from "@/application/notification/mark-all-notifications-read"
 import { DeleteNotification } from "@/application/notification/delete-notification"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
@@ -37,7 +38,7 @@ async function createNotification(
   await seedEmployee(db, recipientCode, recipientId)
 
   const result = await new SendNotification(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     recipientEmployeeCode: recipientCode,
     kind: "announcement",
     title: "Test notification",
@@ -61,7 +62,7 @@ describe("SendNotification", () => {
     await seedEmployee(db, "E001", 1)
 
     const result = await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "Welcome",
@@ -87,7 +88,7 @@ describe("SendNotification", () => {
     await seedEmployee(db, "E001", 1)
 
     const result = await new SendNotification(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       recipientEmployeeCode: "E001",
       kind: "task",
       title: "New task",
@@ -104,7 +105,7 @@ describe("SendNotification", () => {
     const { context } = createTestContext()
 
     const result = await new SendNotification(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "Test",
@@ -121,7 +122,7 @@ describe("SendNotification", () => {
     const { context } = createTestContext()
 
     const result = await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "NOPE",
       kind: "announcement",
       title: "Test",
@@ -226,7 +227,7 @@ describe("MarkAllNotificationsRead", () => {
     await seedEmployee(db, "E001", 1)
 
     await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "First",
@@ -237,7 +238,7 @@ describe("MarkAllNotificationsRead", () => {
     })
 
     await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "reminder",
       title: "Second",

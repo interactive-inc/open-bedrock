@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(
     const completed = await new CompleteTrainingEnrollment(c).run({
       enrollmentId: enrollmentId,
       viewerEmployeeId: session.employeeId,
-      viewerRole: session.role,
+      session: session,
       score: body.score ?? null,
       completedAt: c.env.NOW ?? new Date().toISOString(),
     })

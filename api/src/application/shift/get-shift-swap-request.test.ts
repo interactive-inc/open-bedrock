@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { GetShiftSwapRequest } from "@/application/shift/get-shift-swap-request"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
@@ -41,7 +42,7 @@ describe("GetShiftSwapRequest", () => {
 
     const result = await new GetShiftSwapRequest(context).run({
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       swapRequestId: swapRequest.id,
     })
 
@@ -59,7 +60,7 @@ describe("GetShiftSwapRequest", () => {
 
     const result = await new GetShiftSwapRequest(context).run({
       viewerEmployeeId: 2,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       swapRequestId: swapRequest.id,
     })
 
@@ -77,7 +78,7 @@ describe("GetShiftSwapRequest", () => {
 
     const result = await new GetShiftSwapRequest(context).run({
       viewerEmployeeId: 99,
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       swapRequestId: swapRequest.id,
     })
 
@@ -95,7 +96,7 @@ describe("GetShiftSwapRequest", () => {
 
     const result = await new GetShiftSwapRequest(context).run({
       viewerEmployeeId: 99,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       swapRequestId: swapRequest.id,
     })
 
@@ -107,7 +108,7 @@ describe("GetShiftSwapRequest", () => {
 
     const result = await new GetShiftSwapRequest(context).run({
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      session: makeTestSession("member"),
       swapRequestId: 999999,
     })
 

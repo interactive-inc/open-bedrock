@@ -55,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const result = await new GetLeaveRequest(c).run({
     leaveRequestId,
     employeeId: viewer.employeeId,
-    viewerRole: viewer.role,
+    session: viewer,
   })
 
   if (result instanceof ApplicationError) {

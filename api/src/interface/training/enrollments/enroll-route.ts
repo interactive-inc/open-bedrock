@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(
 
     const created = await new EnrollTraining(c).run({
       viewerEmployeeId: session.employeeId,
-      viewerRole: session.role,
+      session: session,
       courseCode: body.course_code,
       enrolleeEmployeeCode: body.employee_code ?? null,
       dueDate: body.due_date ?? null,
