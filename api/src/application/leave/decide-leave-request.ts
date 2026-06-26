@@ -54,6 +54,19 @@ export class DecideLeaveRequest {
       return new ValidationError("invalid leave request start date", "invalid_start_date")
     }
 
+    const endFiscalYear = toFiscalYear(existing.endDate)
+
+    if (endFiscalYear === null) {
+      return new ValidationError("invalid leave request end date", "invalid_end_date")
+    }
+
+    if (fiscalYear !== endFiscalYear) {
+      return new ValidationError(
+        "leave request spans multiple fiscal years; please split into separate requests",
+        "cross_fiscal_year",
+      )
+    }
+
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
 
     if (command.action === "approve") {
