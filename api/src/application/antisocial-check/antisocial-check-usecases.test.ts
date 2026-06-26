@@ -6,7 +6,10 @@ import { ListMyAntisocialChecks } from "@/application/antisocial-check/list-my-a
 import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-antisocial-check"
 import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
+import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 async function seedCheck(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({
@@ -72,7 +75,7 @@ describe("GetAntisocialCheck", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("returns antisocial_check_not_found for an unknown id", async () => {
@@ -83,7 +86,7 @@ describe("GetAntisocialCheck", () => {
       requesterId: 5,
     })
 
-    expect(result).toEqual({ reason: "antisocial_check_not_found" })
+    expectApplicationError(result, NotFoundError, "antisocial_check_not_found")
   })
 })
 
@@ -119,7 +122,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -128,7 +131,7 @@ describe("UpdateAntisocialCheck", () => {
 
     expect(result).toBeInstanceOf(AntisocialCheck)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -144,7 +147,7 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -153,7 +156,7 @@ describe("UpdateAntisocialCheck", () => {
 
     expect(result).toBeInstanceOf(AntisocialCheck)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -169,14 +172,14 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 5,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,
       result: "clear",
     })
 
-    expect(result).toEqual({ reason: "result_forbidden" })
+    expectApplicationError(result, ForbiddenError, "result_forbidden")
   })
 
   test("rejects a non requester with not_requester", async () => {
@@ -187,14 +190,14 @@ describe("UpdateAntisocialCheck", () => {
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
       requesterId: 6,
-      viewerRole: "employee",
+      session: makeTestSession("employee"),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,
       result: null,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })
 
@@ -222,6 +225,6 @@ describe("CancelAntisocialCheck", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })

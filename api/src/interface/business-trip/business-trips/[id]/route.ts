@@ -2,24 +2,21 @@ import { CancelBusinessTrip } from "@/application/business-trip/cancel-business-
 import { GetBusinessTrip } from "@/application/business-trip/get-business-trip"
 import { UpdateBusinessTrip } from "@/application/business-trip/update-business-trip"
 import type { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
+import { ApplicationError } from "@/lib/errors"
+import { zAppBusinessTrip } from "@/lib/app-schemas"
+import type { AppBusinessTrip } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 出張申請をレスポンス用の snake_case に整形する。
-function toResponseBody(businessTrip: BusinessTrip) {
-  return {
+// 出張申請をレスポンス用の snake_case に整形し、スキーマで検証する。
+function toResponseBody(businessTrip: BusinessTrip): AppBusinessTrip {
+  return zAppBusinessTrip.parse({
     id: businessTrip.id,
     traveler_id: businessTrip.travelerId,
     destination: businessTrip.destination,
@@ -29,7 +26,7 @@ function toResponseBody(businessTrip: BusinessTrip) {
     estimated_cost: businessTrip.estimatedCost,
     status: businessTrip.status,
     created_at: businessTrip.createdAt,
-  }
+  })
 }
 
 // GET /business-trips/:id — 出張申請の詳細（本人のみ）
@@ -45,16 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     travelerId: viewer.employeeId,
   })
 
-  if (businessTrip instanceof Error) {
-    throw new InternalError("failed to load business trip")
-  }
-
-  if ("reason" in businessTrip) {
-    if (businessTrip.reason === "business_trip_not_found") {
-      throw new NotFoundError("business trip not found")
-    }
-
-    throw new ForbiddenError("not the traveler")
+  if (businessTrip instanceof ApplicationError) {
+    throw toHttpException(businessTrip)
   }
 
   return c.json(toResponseBody(businessTrip), 200)
@@ -97,28 +86,8 @@ export const PUT = factory.createHandlers(
       estimatedCost: json.estimated_cost ?? null,
     })
 
-    if (businessTrip instanceof Error) {
-      throw new InternalError("failed to update business trip")
-    }
-
-    if ("reason" in businessTrip) {
-      if (businessTrip.reason === "business_trip_not_found") {
-        throw new NotFoundError("business trip not found")
-      }
-
-      if (businessTrip.reason === "invalid_date_range") {
-        throw new BadRequestError("invalid date range")
-      }
-
-      if (businessTrip.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      if (businessTrip.reason === "overlapping_trip") {
-        throw new ConflictError("overlapping business trip already exists")
-      }
-
-      throw new ForbiddenError("not the traveler")
+    if (businessTrip instanceof ApplicationError) {
+      throw toHttpException(businessTrip)
     }
 
     return c.json(toResponseBody(businessTrip), 200)
@@ -138,20 +107,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     travelerId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel business trip")
-  }
-
-  if (result.reason === "business_trip_not_found") {
-    throw new NotFoundError("business trip not found")
-  }
-
-  if (result.reason === "not_traveler") {
-    throw new ForbiddenError("not the traveler")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

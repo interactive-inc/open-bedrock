@@ -1,34 +1,24 @@
 import { canManageTraining } from "@/lib/training/can-manage-training"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+} from "@/lib/errors"
 import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   courseCode: string
   enrolleeEmployeeCode: string | null
   dueDate: string | null
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type EmployeeNotFound = { reason: "employee_not_found" }
-
-export type CourseNotFound = { reason: "course_not_found" }
-
-export type CourseArchived = { reason: "course_archived" }
-
-export type AlreadyEnrolled = { reason: "already_enrolled" }
-
-export type EnrollFailure =
-  | Forbidden
-  | EmployeeNotFound
-  | CourseNotFound
-  | CourseArchived
-  | AlreadyEnrolled
 
 /**
  * 自分、または管理権限を持つ者が他者を、研修コースに登録する。
@@ -36,33 +26,29 @@ export type EnrollFailure =
 export class EnrollTraining {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<TrainingEnrollment | EnrollFailure | Error> {
+  async run(command: Command): Promise<TrainingEnrollment | ApplicationError> {
     const courseRepository = new TrainingCourseRepository(this.c)
 
     const enrollmentRepository = new TrainingEnrollmentRepository(this.c)
 
     const employeeId = await this.toEnrolleeId(command)
 
-    if (employeeId instanceof Error) {
-      return employeeId
-    }
-
-    if (typeof employeeId !== "number") {
+    if (employeeId instanceof ApplicationError) {
       return employeeId
     }
 
     const course = await courseRepository.findByCode(command.courseCode)
 
     if (course instanceof Error) {
-      return course
+      return new UnexpectedError("failed to find training course", { cause: course })
     }
 
     if (course === null) {
-      return { reason: "course_not_found" }
+      return new NotFoundError("course not found", "course_not_found")
     }
 
     if (course.id === null) {
-      return new Error("training course is not persisted")
+      return new UnexpectedError("training course is not persisted")
     }
 
     const enrollment = TrainingEnrollment.create({
@@ -76,25 +62,27 @@ export class EnrollTraining {
     const created = await enrollmentRepository.create(enrollment)
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to create training enrollment", { cause: created })
     }
 
     if ("reason" in created) {
-      return created
+      if (created.reason === "course_archived") {
+        return new ConflictError("course is archived", "course_archived")
+      }
+
+      return new ConflictError("already enrolled", "already_enrolled")
     }
 
     return created
   }
 
-  private async toEnrolleeId(
-    command: Command,
-  ): Promise<number | Forbidden | EmployeeNotFound | Error> {
+  private async toEnrolleeId(command: Command): Promise<number | ApplicationError> {
     if (command.enrolleeEmployeeCode === null) {
       return command.viewerEmployeeId
     }
 
-    if (canManageTraining(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageTraining(command.session) === false) {
+      return new ForbiddenError("cannot enroll others", "forbidden")
     }
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -102,11 +90,11 @@ export class EnrollTraining {
     const employee = await employeeRepository.findByCode(command.enrolleeEmployeeCode)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "employee_not_found" }
+      return new NotFoundError("employee not found", "employee_not_found")
     }
 
     return employee.id

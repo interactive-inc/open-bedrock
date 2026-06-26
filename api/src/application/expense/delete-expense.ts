@@ -1,16 +1,12 @@
 import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   expenseId: number
   employeeId: number
 }
-
-export type ExpenseNotFound = { reason: "expense_not_found" }
-
-export type NotOwner = { reason: "not_owner" }
-
-export type NotDeletable = { reason: "not_deletable" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -20,27 +16,25 @@ export type Deleted = { reason: "deleted" }
 export class DeleteExpense {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Deleted | ExpenseNotFound | NotOwner | NotDeletable | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const repository = new ExpenseRepository(this.c)
 
     const current = await repository.findById(command.expenseId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find expense", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "expense_not_found" }
+      return new NotFoundError("expense not found", "expense_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_owner" }
+      return new ForbiddenError("not the owner of expense", "not_owner")
     }
 
     if (current.status !== "pending") {
-      return { reason: "not_deletable" }
+      return new ConflictError("expense is not deletable", "not_deletable")
     }
 
     // expense_approvals と expenses を D1 batch でアトミックに削除する。
@@ -58,9 +52,12 @@ export class DeleteExpense {
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return { reason: "not_deletable" }
+        return new ConflictError("expense is not deletable", "not_deletable")
       }
-      return error instanceof Error ? error : new Error("failed to delete expense")
+
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete expense", { cause: error })
+        : new UnexpectedError("failed to delete expense")
     }
 
     return { reason: "deleted" }

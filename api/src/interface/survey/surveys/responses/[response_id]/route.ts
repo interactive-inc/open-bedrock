@@ -5,26 +5,23 @@ import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import { factory } from "@/lib/factory"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppSurveyResponse } from "@/lib/app-schemas"
+import type { AppSurveyResponse } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // 回答をレスポンス用の snake_case に整形する。
-function toResponseBody(response: SurveyResponse) {
-  return {
+function toResponseBody(response: SurveyResponse): AppSurveyResponse {
+  return zAppSurveyResponse.parse({
     id: response.id,
     survey_id: response.surveyId,
     respondent_id: response.respondentId,
     answers_json: response.answersJson,
     submitted_at: response.submittedAt,
-  }
+  })
 }
 
 // パスパラメータの回答 id を数値に変換する。不正なら null。
@@ -53,16 +50,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     respondentId: viewer.employeeId,
   })
 
-  if (response instanceof Error) {
-    throw new InternalError("failed to load survey response")
-  }
-
-  if ("reason" in response) {
-    if (response.reason === "response_not_found") {
-      throw new NotFoundError("survey response not found")
-    }
-
-    throw new ForbiddenError("not the respondent")
+  if (response instanceof ApplicationError) {
+    throw toHttpException(response)
   }
 
   return c.json(toResponseBody(response), 200)
@@ -94,20 +83,8 @@ export const PUT = factory.createHandlers(
       submittedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (response instanceof Error) {
-      throw new InternalError("failed to update survey response")
-    }
-
-    if ("reason" in response) {
-      if (response.reason === "response_not_found") {
-        throw new NotFoundError("survey response not found")
-      }
-
-      if (response.reason === "not_respondent") {
-        throw new ForbiddenError("not the respondent")
-      }
-
-      throw new ConflictError("the survey is no longer open")
+    if (response instanceof ApplicationError) {
+      throw toHttpException(response)
     }
 
     return c.json(toResponseBody(response), 200)
@@ -133,20 +110,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     respondentId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to withdraw survey response")
-  }
-
-  if (result.reason === "response_not_found") {
-    throw new NotFoundError("survey response not found")
-  }
-
-  if (result.reason === "not_respondent") {
-    throw new ForbiddenError("not the respondent")
-  }
-
-  if (result.reason === "survey_not_open") {
-    throw new ConflictError("the survey is no longer open")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

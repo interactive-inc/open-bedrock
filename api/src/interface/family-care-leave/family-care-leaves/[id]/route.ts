@@ -5,21 +5,17 @@ import type { FamilyCareLeave } from "@/domain/family-care-leave/family-care-lea
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppFamilyCareLeave } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 休業申出をレスポンス用の snake_case に整形する。
+// 休業申出をレスポンス用の snake_case に整形し、スキーマで検証する。
 function toResponseBody(familyCareLeave: FamilyCareLeave) {
-  return {
+  return zAppFamilyCareLeave.parse({
     id: familyCareLeave.id,
     employee_id: familyCareLeave.employeeId,
     leave_kind: familyCareLeave.leaveKind,
@@ -28,7 +24,7 @@ function toResponseBody(familyCareLeave: FamilyCareLeave) {
     note: familyCareLeave.note,
     status: familyCareLeave.status,
     created_at: familyCareLeave.createdAt,
-  }
+  })
 }
 
 // GET /family-care-leaves/:id — 休業申出の詳細（本人のみ）
@@ -44,16 +40,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (familyCareLeave instanceof Error) {
-    throw new InternalError("failed to load family care leave")
-  }
-
-  if ("reason" in familyCareLeave) {
-    if (familyCareLeave.reason === "family_care_leave_not_found") {
-      throw new NotFoundError("family care leave not found")
-    }
-
-    throw new ForbiddenError("not the applicant")
+  if (familyCareLeave instanceof ApplicationError) {
+    throw toHttpException(familyCareLeave)
   }
 
   return c.json(toResponseBody(familyCareLeave), 200)
@@ -94,28 +82,8 @@ export const PUT = factory.createHandlers(
       note: json.note ?? null,
     })
 
-    if (familyCareLeave instanceof Error) {
-      throw new InternalError("failed to update family care leave")
-    }
-
-    if ("reason" in familyCareLeave) {
-      if (familyCareLeave.reason === "family_care_leave_not_found") {
-        throw new NotFoundError("family care leave not found")
-      }
-
-      if (familyCareLeave.reason === "invalid_date_range") {
-        throw new BadRequestError("invalid date range")
-      }
-
-      if (familyCareLeave.reason === "overlapping_leave") {
-        throw new ConflictError("overlapping family care leave already exists")
-      }
-
-      if (familyCareLeave.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      throw new ForbiddenError("not the applicant")
+    if (familyCareLeave instanceof ApplicationError) {
+      throw toHttpException(familyCareLeave)
     }
 
     return c.json(toResponseBody(familyCareLeave), 200)
@@ -135,20 +103,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel family care leave")
-  }
-
-  if (result.reason === "family_care_leave_not_found") {
-    throw new NotFoundError("family care leave not found")
-  }
-
-  if (result.reason === "not_applicant") {
-    throw new ForbiddenError("not the applicant")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

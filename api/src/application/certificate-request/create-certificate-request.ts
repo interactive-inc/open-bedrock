@@ -1,4 +1,6 @@
 import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 
@@ -17,7 +19,7 @@ export type Command = {
 export class CreateCertificateRequest {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<CertificateRequest | Error> {
+  async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
     const certificateRequest = CertificateRequest.create({
@@ -29,6 +31,12 @@ export class CreateCertificateRequest {
       createdAt: command.createdAt,
     })
 
-    return await certificateRequestRepository.create(certificateRequest)
+    const created = await certificateRequestRepository.create(certificateRequest)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create certificate request", { cause: created })
+    }
+
+    return created
   }
 }

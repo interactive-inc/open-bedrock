@@ -1,14 +1,12 @@
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   oneOnOneId: string
   managerId: number
 }
-
-export type OneOnOneNotFound = { reason: "one_on_one_not_found" }
-
-export type NotManager = { reason: "not_manager" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -18,31 +16,31 @@ export type Deleted = { reason: "deleted" }
 export class DeleteOneOnOne {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | OneOnOneNotFound | NotManager | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
     const current = await oneOnOneRepository.findById(command.oneOnOneId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find one-on-one", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "one_on_one_not_found" }
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
     }
 
     if (current.managerId !== command.managerId) {
-      return { reason: "not_manager" }
+      return new ForbiddenError("not the recording manager", "not_manager")
     }
 
     const deleted = await oneOnOneRepository.delete(command.oneOnOneId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete one-on-one", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "one_on_one_not_found" }
+      return new NotFoundError("one-on-one not found", "one_on_one_not_found")
     }
 
     return { reason: "deleted" }

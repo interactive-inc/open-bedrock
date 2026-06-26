@@ -1,3 +1,5 @@
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
 
@@ -5,8 +7,6 @@ export type Command = {
   reservationId: string
   reserverId: number
 }
-
-export type ReservationNotFound = { reason: "reservation_not_found" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -16,7 +16,7 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelRoomReservation {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Cancelled | ReservationNotFound | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const reservationRepository = new RoomReservationRepository(this.c)
 
     const deleted = await reservationRepository.deleteByIdAndReserverId(
@@ -25,11 +25,11 @@ export class CancelRoomReservation {
     )
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete reservation", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "reservation_not_found" }
+      return new NotFoundError("reservation not found", "reservation_not_found")
     }
 
     return { reason: "cancelled" }

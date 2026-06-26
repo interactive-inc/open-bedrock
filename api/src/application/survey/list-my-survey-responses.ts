@@ -1,6 +1,8 @@
 import type { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   respondentId: number
@@ -14,13 +16,19 @@ export type Command = {
 export class ListMySurveyResponses {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<SurveyResponse> | Error> {
+  async run(command: Command): Promise<ReadonlyArray<SurveyResponse> | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)
 
-    return await surveyRepository.findResponsesByRespondentId(
+    const responses = await surveyRepository.findResponsesByRespondentId(
       command.respondentId,
       command.limit,
       command.offset,
     )
+
+    if (responses instanceof Error) {
+      return new UnexpectedError("failed to find survey responses", { cause: responses })
+    }
+
+    return responses
   }
 }

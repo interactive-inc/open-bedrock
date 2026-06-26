@@ -5,12 +5,21 @@ import { GetOrgDepartment } from "@/application/org/get-org-department"
 import { UpdateOrgDepartment } from "@/application/org/update-org-department"
 import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
 import { ListOrgDepartments } from "@/application/org/list-org-departments"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {
   const result = await new CreateOrgDepartment(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     department: {
       code: code,
       departmentId: 100,
@@ -20,7 +29,7 @@ async function seedDepartment(context: Context, code: string): Promise<OrgDepart
     },
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof ApplicationError) {
     throw new Error("seed failed")
   }
 
@@ -32,7 +41,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -44,7 +53,7 @@ describe("CreateOrgDepartment", () => {
 
     expect(result).toBeInstanceOf(OrgDepartment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("create failed")
     }
 
@@ -55,7 +64,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -65,7 +74,7 @@ describe("CreateOrgDepartment", () => {
       },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects duplicate code with department_code_conflict", async () => {
@@ -74,7 +83,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -84,7 +93,7 @@ describe("CreateOrgDepartment", () => {
       },
     })
 
-    expect(result).toEqual({ reason: "department_code_conflict" })
+    expectApplicationError(result, ConflictError, "department_code_conflict")
   })
 
   test("creates a child department with a parent", async () => {
@@ -93,7 +102,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "CORP")
 
     const result = await new CreateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -123,7 +132,7 @@ describe("GetOrgDepartment", () => {
 
     const result = await new GetOrgDepartment(context).run({ code: "NOPE" })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 
@@ -134,7 +143,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: "E001",
@@ -143,7 +152,7 @@ describe("UpdateOrgDepartment", () => {
 
     expect(result).toBeInstanceOf(OrgDepartment)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -157,14 +166,14 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: null,
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects self-reference with invalid_parent", async () => {
@@ -173,28 +182,28 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
       parentCode: "DEV",
       managerEmployeeCode: null,
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "invalid_parent" })
+    expectApplicationError(result, ValidationError, "invalid_parent")
   })
 
   test("rejects unknown code with department_not_found", async () => {
     const { context } = createTestContext()
 
     const result = await new UpdateOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
       parentCode: null,
       managerEmployeeCode: null,
       order: 1,
     })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 
@@ -205,7 +214,7 @@ describe("DeleteOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "DEV",
     })
 
@@ -218,22 +227,22 @@ describe("DeleteOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "DEV",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects unknown code with department_not_found", async () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOrgDepartment(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "NOPE",
     })
 
-    expect(result).toEqual({ reason: "department_not_found" })
+    expectApplicationError(result, NotFoundError, "department_not_found")
   })
 })
 

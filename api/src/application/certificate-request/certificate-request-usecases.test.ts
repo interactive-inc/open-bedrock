@@ -6,6 +6,8 @@ import { ListMyCertificateRequests } from "@/application/certificate-request/lis
 import { UpdateCertificateRequest } from "@/application/certificate-request/update-certificate-request"
 import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
+import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 
 async function seedRequest(context: Context, requesterId: number): Promise<string> {
@@ -73,7 +75,7 @@ describe("GetCertificateRequest", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 
   test("returns certificate_request_not_found for an unknown id", async () => {
@@ -84,7 +86,7 @@ describe("GetCertificateRequest", () => {
       requesterId: 5,
     })
 
-    expect(result).toEqual({ reason: "certificate_request_not_found" })
+    expectApplicationError(result, NotFoundError, "certificate_request_not_found")
   })
 })
 
@@ -128,7 +130,7 @@ describe("UpdateCertificateRequest", () => {
 
     expect(result).toBeInstanceOf(CertificateRequest)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -150,7 +152,7 @@ describe("UpdateCertificateRequest", () => {
       note: null,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })
 
@@ -178,6 +180,6 @@ describe("CancelCertificateRequest", () => {
       requesterId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_requester" })
+    expectApplicationError(result, ForbiddenError, "not_requester")
   })
 })

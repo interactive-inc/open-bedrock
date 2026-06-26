@@ -1,12 +1,10 @@
 import { CreateTrainingCourse } from "@/application/training/create-training-course"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppTrainingCourse } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -34,7 +32,7 @@ export const POST = factory.createHandlers(
     }
 
     const created = await new CreateTrainingCourse(c).run({
-      viewerRole: session.role,
+      session: session,
       code: body.code,
       title: body.title,
       category: body.category,
@@ -43,19 +41,11 @@ export const POST = factory.createHandlers(
       isRequired: body.is_required ?? false,
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create course")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      throw new ConflictError("course code already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppTrainingCourse.parse({
       id: created.id,
       code: created.code,
       title: created.title,
@@ -64,7 +54,7 @@ export const POST = factory.createHandlers(
       category: created.category,
       is_required: created.isRequired,
       status: created.status,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -14,6 +14,7 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
+import { zAppSurveySummary } from "@/lib/app-schemas"
 import { surveyResponses, surveys } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -28,7 +29,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageSurveys(c.var.session.role) === false) {
+  if (canManageSurveys(c.var.session) === false) {
     throw new ForbiddenError()
   }
 
@@ -106,13 +107,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
   }
 
-  const responseBody = {
+  const responseBody = zAppSurveySummary.parse({
     survey_id: surveyRow.id,
     title: surveyRow.title,
     response_count: responseCount,
     is_truncated: responseCount > MAX_SUMMARY_RESPONSES,
     questions,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

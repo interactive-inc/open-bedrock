@@ -10,6 +10,8 @@ import { UpdateReward } from "@/application/thanks-points/update-reward"
 import { ViewMyBalance } from "@/application/thanks-points/view-my-balance"
 import { ViewMyBudget } from "@/application/thanks-points/view-my-budget"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -83,11 +85,7 @@ describe("CreateReward", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksReward) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("invalid_reward")
+    expectApplicationError(result, ValidationError, "invalid_reward")
   })
 
   test("returns invalid_reward for zero point cost", async () => {
@@ -100,11 +98,7 @@ describe("CreateReward", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksReward) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("invalid_reward")
+    expectApplicationError(result, ValidationError, "invalid_reward")
   })
 })
 
@@ -144,11 +138,7 @@ describe("UpdateReward", () => {
       isActive: true,
     })
 
-    if (result instanceof Error || result instanceof ThanksReward) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("reward_not_found")
+    expectApplicationError(result, NotFoundError, "reward_not_found")
   })
 
   test("returns invalid_reward for invalid inputs", async () => {
@@ -164,11 +154,7 @@ describe("UpdateReward", () => {
       isActive: true,
     })
 
-    if (result instanceof Error || result instanceof ThanksReward) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("invalid_reward")
+    expectApplicationError(result, ValidationError, "invalid_reward")
   })
 })
 
@@ -244,11 +230,7 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("reward_not_found")
+    expectApplicationError(result, NotFoundError, "reward_not_found")
   })
 
   test("returns reward_inactive for inactive reward", async () => {
@@ -264,11 +246,7 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("reward_inactive")
+    expectApplicationError(result, ConflictError, "reward_inactive")
   })
 
   test("returns out_of_stock when stock is zero", async () => {
@@ -284,11 +262,7 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("out_of_stock")
+    expectApplicationError(result, ConflictError, "out_of_stock")
   })
 
   test("returns insufficient_balance when balance is short", async () => {
@@ -304,11 +278,7 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("insufficient_balance")
+    expectApplicationError(result, ConflictError, "insufficient_balance")
   })
 
   test("returns pending_exists when a pending redemption already exists", async () => {
@@ -332,11 +302,7 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-02T00:00:00.000Z",
     })
 
-    if (second instanceof Error || second instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(second.reason).toBe("pending_exists")
+    expectApplicationError(second, ConflictError, "pending_exists")
   })
 
   // #744: reward.isActive チェックが INSERT の WHERE に畳み込まれているかを検証する。
@@ -363,12 +329,8 @@ describe("RequestRedemption", () => {
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
     // app 層の事前チェックで reward_inactive になる（DB を直接更新したため app 層の findById が拾う）
-    expect(result.reason).toBe("reward_inactive")
+    expectApplicationError(result, ConflictError, "reward_inactive")
   })
 })
 
@@ -529,11 +491,7 @@ describe("DecideRedemption", () => {
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("self_approval_forbidden")
+    expectApplicationError(result, ForbiddenError, "self_approval_forbidden")
   })
 
   test("returns redemption_not_found for unknown id", async () => {
@@ -546,11 +504,7 @@ describe("DecideRedemption", () => {
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("redemption_not_found")
+    expectApplicationError(result, NotFoundError, "redemption_not_found")
   })
 
   test("returns already_decided for a fulfilled redemption", async () => {
@@ -586,11 +540,7 @@ describe("DecideRedemption", () => {
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
 
-    if (second instanceof Error || second instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(second.reason).toBe("already_decided")
+    expectApplicationError(second, ConflictError, "already_decided")
   })
 
   test("returns insufficient_balance when balance is consumed between request and approve", async () => {
@@ -631,11 +581,7 @@ describe("DecideRedemption", () => {
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error || result instanceof ThanksRedemption) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("insufficient_balance")
+    expectApplicationError(result, ConflictError, "insufficient_balance")
   })
 })
 

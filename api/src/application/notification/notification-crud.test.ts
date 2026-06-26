@@ -6,7 +6,10 @@ import { MarkNotificationRead } from "@/application/notification/mark-notificati
 import { MarkAllNotificationsRead } from "@/application/notification/mark-all-notifications-read"
 import { DeleteNotification } from "@/application/notification/delete-notification"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
 async function seedEmployee(db: D1Database, code: string, id: number) {
@@ -35,7 +38,7 @@ async function createNotification(
   await seedEmployee(db, recipientCode, recipientId)
 
   const result = await new SendNotification(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     recipientEmployeeCode: recipientCode,
     kind: "announcement",
     title: "Test notification",
@@ -45,7 +48,7 @@ async function createNotification(
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
-  if (result instanceof Error || "reason" in result) {
+  if (result instanceof Error) {
     throw new Error("seed notification failed")
   }
 
@@ -59,7 +62,7 @@ describe("SendNotification", () => {
     await seedEmployee(db, "E001", 1)
 
     const result = await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "Welcome",
@@ -71,7 +74,7 @@ describe("SendNotification", () => {
 
     expect(result).toBeInstanceOf(Notification)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("send failed")
     }
 
@@ -85,7 +88,7 @@ describe("SendNotification", () => {
     await seedEmployee(db, "E001", 1)
 
     const result = await new SendNotification(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       recipientEmployeeCode: "E001",
       kind: "task",
       title: "New task",
@@ -102,7 +105,7 @@ describe("SendNotification", () => {
     const { context } = createTestContext()
 
     const result = await new SendNotification(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "Test",
@@ -112,14 +115,14 @@ describe("SendNotification", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "notification_forbidden" })
+    expectApplicationError(result, ForbiddenError, "notification_forbidden")
   })
 
   test("rejects unknown recipient with recipient_not_found", async () => {
     const { context } = createTestContext()
 
     const result = await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "NOPE",
       kind: "announcement",
       title: "Test",
@@ -129,7 +132,7 @@ describe("SendNotification", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toEqual({ reason: "recipient_not_found" })
+    expectApplicationError(result, NotFoundError, "recipient_not_found")
   })
 })
 
@@ -163,7 +166,7 @@ describe("GetNotification", () => {
       viewerEmployeeId: 999,
     })
 
-    expect(result).toEqual({ reason: "notification_forbidden" })
+    expectApplicationError(result, NotFoundError, "notification_forbidden")
   })
 
   test("rejects unknown id with notification_not_found", async () => {
@@ -174,7 +177,7 @@ describe("GetNotification", () => {
       viewerEmployeeId: 1,
     })
 
-    expect(result).toEqual({ reason: "notification_not_found" })
+    expectApplicationError(result, NotFoundError, "notification_not_found")
   })
 })
 
@@ -194,7 +197,7 @@ describe("MarkNotificationRead", () => {
 
     expect(result).toBeInstanceOf(Notification)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof Error) {
       throw new Error("mark read failed")
     }
 
@@ -214,7 +217,7 @@ describe("MarkNotificationRead", () => {
       viewerEmployeeId: 999,
     })
 
-    expect(result).toEqual({ reason: "notification_forbidden" })
+    expectApplicationError(result, NotFoundError, "notification_forbidden")
   })
 })
 
@@ -224,7 +227,7 @@ describe("MarkAllNotificationsRead", () => {
     await seedEmployee(db, "E001", 1)
 
     await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "First",
@@ -235,7 +238,7 @@ describe("MarkAllNotificationsRead", () => {
     })
 
     await new SendNotification(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       recipientEmployeeCode: "E001",
       kind: "reminder",
       title: "Second",
@@ -301,6 +304,6 @@ describe("DeleteNotification", () => {
       viewerEmployeeId: 999,
     })
 
-    expect(result).toEqual({ reason: "not_found" })
+    expectApplicationError(result, NotFoundError, "not_found")
   })
 })

@@ -1,4 +1,5 @@
 import { factory } from "@/lib/factory"
+import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -24,7 +25,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("employee not found")
   }
 
-  const responseBody = {
+  const responseBody = zAppAuthMe.parse({
     id: row.id,
     code: row.code,
     name: row.name,
@@ -32,7 +33,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     role: row.role,
     dept_name: row.deptName,
     position: row.position,
-  }
+    permissions: [...session.permissions],
+    role_keys: [...session.roleKeys],
+  })
 
   return c.json(responseBody, 200)
 })

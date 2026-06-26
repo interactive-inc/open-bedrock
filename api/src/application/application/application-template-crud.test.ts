@@ -2,8 +2,11 @@ import { CreateApplicationTemplate } from "@/application/application/create-appl
 import { DeleteApplicationTemplate } from "@/application/application/delete-application-template"
 import { UpdateApplicationTemplate } from "@/application/application/update-application-template"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
@@ -39,7 +42,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "leave",
       name: "休暇申請",
       category: "attendance",
@@ -55,7 +58,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "leave",
       name: "休暇申請",
       category: "attendance",
@@ -64,11 +67,7 @@ describe("CreateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("a duplicate code conflicts", async () => {
@@ -77,7 +76,7 @@ describe("CreateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new CreateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
       name: "別の経費申請",
       category: "expense",
@@ -86,11 +85,7 @@ describe("CreateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("template_code_conflict")
+    expectApplicationError(result, ConflictError, "template_code_conflict")
   })
 })
 
@@ -101,7 +96,7 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
       name: "経費精算",
       category: "accounting",
@@ -123,7 +118,7 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "expense",
       name: "X",
       category: "expense",
@@ -132,18 +127,14 @@ describe("UpdateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown code is not found", async () => {
     const { context } = createTestContext()
 
     const result = await new UpdateApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "missing",
       name: "X",
       category: "general",
@@ -152,11 +143,7 @@ describe("UpdateApplicationTemplate", () => {
       approverRoles: [],
     })
 
-    if (result instanceof Error || result instanceof ApplicationTemplate) {
-      throw new Error("expected a reason result")
-    }
-
-    expect(result.reason).toBe("template_not_found")
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 })
 
@@ -167,7 +154,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
     })
 
@@ -190,30 +177,22 @@ describe("DeleteApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "expense",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("an unknown code is not found", async () => {
     const { context } = createTestContext()
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "missing",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_not_found")
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 
   test("returns template_in_use when pending applications exist", async () => {
@@ -223,14 +202,10 @@ describe("DeleteApplicationTemplate", () => {
     await seedPendingApplication(db, 1)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "expense",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_in_use")
+    expectApplicationError(result, ConflictError, "template_in_use")
   })
 })

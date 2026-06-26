@@ -1,28 +1,22 @@
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   employeeCode: string
   templateCode: string
   assignedAt: string
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type EmployeeNotFound = { reason: "employee_not_found" }
-
-export type TemplateNotFound = { reason: "template_not_found" }
-
-export type AlreadyAssigned = { reason: "already_assigned" }
 
 export type AssignOnboardingResult = {
   assignment: OnboardingAssignment
@@ -37,18 +31,9 @@ export type AssignOnboardingResult = {
 export class AssignOnboarding {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | AssignOnboardingResult
-    | Forbidden
-    | EmployeeNotFound
-    | TemplateNotFound
-    | AlreadyAssigned
-    | Error
-  > {
-    if (canManageOnboarding(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(command: Command): Promise<AssignOnboardingResult | ApplicationError> {
+    if (canManageOnboarding(command.session) === false) {
+      return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -60,21 +45,21 @@ export class AssignOnboarding {
     const employee = await employeeRepository.findByCode(command.employeeCode)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "employee_not_found" }
+      return new NotFoundError("employee not found", "employee_not_found")
     }
 
     const template = await templateRepository.findByCode(command.templateCode)
 
     if (template instanceof Error) {
-      return template
+      return new UnexpectedError("failed to find template", { cause: template })
     }
 
     if (template === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     const existing = await assignmentRepository.findActiveByEmployeeAndTemplate(
@@ -83,11 +68,11 @@ export class AssignOnboarding {
     )
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find assignment", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "already_assigned" }
+      return new ConflictError("template already assigned", "already_assigned")
     }
 
     const assignment = OnboardingAssignment.create({
@@ -101,11 +86,11 @@ export class AssignOnboarding {
     // TOCTOU: findActiveByEmployeeAndTemplate で未検出でも並行リクエストが
     // 先に INSERT した場合、UNIQUE 制約違反で UniqueConstraintError になる。
     if (created instanceof UniqueConstraintError) {
-      return { reason: "already_assigned" }
+      return new ConflictError("template already assigned", "already_assigned")
     }
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to create assignment", { cause: created })
     }
 
     return { assignment: created, employee, template, tasks: created.tasks }

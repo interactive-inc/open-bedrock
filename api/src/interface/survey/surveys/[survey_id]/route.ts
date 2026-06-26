@@ -6,13 +6,11 @@ import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
 import { factory } from "@/lib/factory"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppSurvey } from "@/lib/app-schemas"
+import type { AppSurvey } from "@/lib/app-schemas"
 import { surveys } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -37,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  if (row.status !== "open" && canManageSurveys(session.role) === false) {
+  if (row.status !== "open" && canManageSurveys(session) === false) {
     throw new NotFoundError("survey not found")
   }
 
@@ -51,17 +49,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 })
 
 // アンケートをレスポンス用の snake_case に整形する。永続化済みの前提で id は number に絞る。
-function toResponseBody(survey: Survey) {
+function toResponseBody(survey: Survey): AppSurvey {
   if (survey.id === null) {
     throw new InternalError("survey id is missing")
   }
 
-  return {
+  return zAppSurvey.parse({
     id: survey.id,
     title: survey.title,
     status: survey.status,
     questions_json: survey.questionsJson,
-  }
+  })
 }
 
 // PUT /surveys/:survey_id — アンケートの内容を変更（管理権限のみ）
@@ -87,27 +85,15 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateSurvey(c).run({
-      viewerRole: session.role,
+      session: session,
       surveyId: surveyId,
       title: body.title,
       status: body.status,
       questionsJson: body.questions_json,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update survey")
-    }
-
-    if (updated instanceof Survey === false) {
-      if (updated.reason === "survey_not_found") {
-        throw new NotFoundError("survey not found")
-      }
-
-      if (updated.reason === "questions_immutable") {
-        throw new ConflictError("questions not modifiable when responses exist")
-      }
-
-      throw new ForbiddenError()
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -125,28 +111,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const surveyId = validateIntParam(c.req.param("survey_id"), "survey")
 
   const result = await new DeleteSurvey(c).run({
-    viewerRole: session.role,
+    session: session,
     surveyId: surveyId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete survey")
-  }
-
-  if (result.reason === "survey_not_found") {
-    throw new NotFoundError("survey not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "not_deletable") {
-    throw new ConflictError("open survey cannot be deleted")
-  }
-
-  if (result.reason === "not_found") {
-    throw new ConflictError("survey was modified concurrently")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

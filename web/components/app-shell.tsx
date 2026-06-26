@@ -43,7 +43,10 @@ export function AppShell(props: Props) {
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarNav unreadNotificationCount={props.unreadNotificationCount} />
+          <SidebarNav
+            unreadNotificationCount={props.unreadNotificationCount}
+            permissions={props.currentUser.permissions}
+          />
         </SidebarContent>
 
         <SidebarFooter>

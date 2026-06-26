@@ -1,29 +1,17 @@
 import type { Asset } from "@/domain/asset/asset.entity"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
-import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   employeeCode: string
   now: string
 }
-
-export type LendForbidden = { reason: "forbidden" }
-
-export type LendAssetNotFound = { reason: "asset_not_found" }
-
-export type LendEmployeeNotFound = { reason: "employee_not_found" }
-
-export type LendAssetNotInStock = { reason: "asset_not_in_stock" }
-
-export type LendAssetFailure =
-  | LendForbidden
-  | LendAssetNotFound
-  | LendEmployeeNotFound
-  | LendAssetNotInStock
 
 /**
  * 権限・在庫・貸出先を確認し、貸出記録の追加と資産の貸出中への更新を
@@ -32,37 +20,37 @@ export type LendAssetFailure =
 export class LendAsset {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Asset | LendAssetFailure | Error> {
+  async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageAssets(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageAssets(command.session) === false) {
+      return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
     const asset = await assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
-      return asset
+      return new UnexpectedError("failed to find asset", { cause: asset })
     }
 
     if (asset === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     const employee = await employeeRepository.findByCode(command.employeeCode)
 
     if (employee instanceof Error) {
-      return employee
+      return new UnexpectedError("failed to find employee", { cause: employee })
     }
 
     if (employee === null) {
-      return { reason: "employee_not_found" }
+      return new NotFoundError("employee not found", "employee_not_found")
     }
 
     if (asset.status !== "in_stock") {
-      return { reason: "asset_not_in_stock" }
+      return new ConflictError("asset is not in stock", "asset_not_in_stock")
     }
 
     const lent = await assetRepository.lendFromStock({
@@ -72,7 +60,7 @@ export class LendAsset {
     })
 
     if (lent instanceof Error) {
-      return lent
+      return new UnexpectedError("failed to lend asset", { cause: lent })
     }
 
     if (lent !== null) {
@@ -83,17 +71,17 @@ export class LendAsset {
     const current = await assetRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find asset", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "asset_not_found" }
+      return new NotFoundError("asset not found", "asset_not_found")
     }
 
     if (current.status !== "in_stock") {
-      return { reason: "asset_not_in_stock" }
+      return new ConflictError("asset is not in stock", "asset_not_in_stock")
     }
 
-    return new Error("failed to lend asset")
+    return new UnexpectedError("failed to lend asset")
   }
 }

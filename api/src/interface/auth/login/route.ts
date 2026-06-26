@@ -1,7 +1,10 @@
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
+import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import {
   checkAccountRateLimit,
   checkRateLimit,
@@ -53,10 +56,10 @@ export const POST = factory.createHandlers(
       jwtSecret: c.env.JWT_SECRET,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       // 内部エラーは失敗としてカウントしない（攻撃者がエラーで消耗できないようにする意図はないため
       // シンプルに記録対象外とする）。
-      throw new InternalError("login failed")
+      throw toHttpException(result)
     }
 
     if ("reason" in result) {
@@ -76,9 +79,9 @@ export const POST = factory.createHandlers(
       await clearAccountFailures(kv, email)
     }
 
-    const responseBody = {
+    const responseBody = zAppAuthToken.parse({
       access_token: result.accessToken,
-    }
+    })
 
     return c.json(responseBody, 200)
   },

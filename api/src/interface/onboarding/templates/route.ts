@@ -1,13 +1,10 @@
 import { CreateOnboardingTemplate } from "@/application/onboarding/create-onboarding-template"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -85,7 +82,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     task_count: taskCountMap.get(template.code) ?? 0,
   }))
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  const responseBody = zAppOnboardingTemplateList.parse({
+    data: body,
+    total: totalRows.at(0)?.total ?? 0,
+  })
+
+  return c.json(responseBody, 200)
 })
 
 // POST /onboarding/templates — テンプレートを新規作成（管理権限のみ）
@@ -110,32 +112,24 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const created = await new CreateOnboardingTemplate(c).run({
-      viewerRole: session.role,
+      session: session,
       code: json.code,
       name: json.name,
       kind: json.kind,
       description: json.description ?? null,
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create onboarding template")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      if (created.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      throw new ConflictError("template code already exists")
-    }
-
-    const responseBody = {
+    const responseBody = zAppOnboardingTemplate.parse({
       id: created.id,
       code: created.code,
       name: created.name,
       kind: created.kind,
       description: created.description,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

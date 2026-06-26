@@ -1,24 +1,25 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageSurveys", () => {
   test("manager can manage", () => {
-    expect(canManageSurveys("manager")).toBe(true)
+    expect(canManageSurveys(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can manage", () => {
-    expect(canManageSurveys("hr")).toBe(true)
+    expect(canManageSurveys(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can manage", () => {
-    expect(canManageSurveys("admin")).toBe(true)
+    expect(canManageSurveys(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot manage", () => {
-    expect(canManageSurveys("member")).toBe(false)
+    expect(canManageSurveys(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot manage", () => {
-    expect(canManageSurveys("viewer")).toBe(false)
+    expect(canManageSurveys(makeTestSession("viewer"))).toBe(false)
   })
 })

@@ -2,6 +2,8 @@ import type { SurveySubmissionView } from "@/application/survey/survey-submissio
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   surveyId: number
@@ -10,35 +12,27 @@ export type Command = {
   submittedAt: string
 }
 
-export type SurveyNotFound = { reason: "survey_not_found" }
-
-export type SurveyNotOpen = { reason: "survey_not_open" }
-
-export type AlreadySubmitted = { reason: "already_submitted" }
-
-export type SubmitSurveyResponseFailure = SurveyNotFound | SurveyNotOpen | AlreadySubmitted
-
 /**
  * アンケート回答を提出する。未公開・重複提出は判別可能な失敗で返す。
  */
 export class SubmitSurveyResponse {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<SurveySubmissionView | SubmitSurveyResponseFailure | Error> {
+  async run(command: Command): Promise<SurveySubmissionView | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)
 
     const survey = await surveyRepository.findById(command.surveyId)
 
     if (survey instanceof Error) {
-      return survey
+      return new UnexpectedError("failed to find survey", { cause: survey })
     }
 
     if (survey === null) {
-      return { reason: "survey_not_found" }
+      return new NotFoundError("survey not found", "survey_not_found")
     }
 
     if (survey.status !== "open") {
-      return { reason: "survey_not_open" }
+      return new ConflictError("survey is not open", "survey_not_open")
     }
 
     const existing = await surveyRepository.findResponseBySurveyIdAndRespondentId(
@@ -47,11 +41,11 @@ export class SubmitSurveyResponse {
     )
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find survey response", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "already_submitted" }
+      return new ConflictError("survey response already submitted", "already_submitted")
     }
 
     const surveyResponse = SurveyResponse.create({
@@ -64,19 +58,19 @@ export class SubmitSurveyResponse {
     const created = await surveyRepository.createResponse(surveyResponse)
 
     if (created instanceof Error) {
-      return created
+      return new UnexpectedError("failed to create survey response", { cause: created })
     }
 
     if ("reason" in created) {
       if (created.reason === "survey_not_open") {
-        return { reason: "survey_not_open" }
+        return new ConflictError("survey is not open", "survey_not_open")
       }
 
-      return created
+      return new ConflictError("survey response already submitted", "already_submitted")
     }
 
     if (created.id === null) {
-      return new Error("failed to submit survey response")
+      return new UnexpectedError("failed to submit survey response")
     }
 
     return {

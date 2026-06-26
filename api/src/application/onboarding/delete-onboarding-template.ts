@@ -1,18 +1,14 @@
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
-import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type TemplateNotFound = { reason: "template_not_found" }
-
-export type TemplateInUse = { reason: "template_in_use" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -22,44 +18,42 @@ export type Deleted = { reason: "deleted" }
 export class DeleteOnboardingTemplate {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Deleted | Forbidden | TemplateNotFound | TemplateInUse | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
-    if (canManageOnboarding(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageOnboarding(command.session) === false) {
+      return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
     const current = await templateRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find template", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     const activeCount = await assignmentRepository.countActiveByTemplateCode(command.code)
 
     if (activeCount instanceof Error) {
-      return activeCount
+      return new UnexpectedError("failed to count assignments", { cause: activeCount })
     }
 
     if (activeCount > 0) {
-      return { reason: "template_in_use" }
+      return new ConflictError("template is in use", "template_in_use")
     }
 
     const deleted = await templateRepository.delete(command.code)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete template", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "template_in_use" }
+      return new ConflictError("template is in use", "template_in_use")
     }
 
     return { reason: "deleted" }

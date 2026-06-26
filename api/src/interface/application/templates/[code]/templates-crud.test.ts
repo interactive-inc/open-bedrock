@@ -6,6 +6,7 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
 const jwtSecret = "application-template-crud-route-test-secret"
@@ -54,6 +55,8 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
+  await seedIamForEmployees(db)
+
   return db
 }
 
@@ -68,7 +71,7 @@ function tokenFor(employeeId: number, role: string): Promise<string> {
 async function request(
   path: string,
   token: string | null,
-  init?: { method: string; body: unknown },
+  init?: { method: string; body?: unknown },
 ): Promise<Response> {
   return requestWithContext({
     db: await createTestDb(),

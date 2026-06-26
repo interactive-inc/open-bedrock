@@ -3,12 +3,10 @@ import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-import {
-  ConflictError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppSurveyResponse } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -36,29 +34,17 @@ export const POST = factory.createHandlers(
       submittedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (submission instanceof Error) {
-      throw new InternalError("failed to submit response")
+    if (submission instanceof ApplicationError) {
+      throw toHttpException(submission)
     }
 
-    if ("reason" in submission) {
-      if (submission.reason === "survey_not_found") {
-        throw new NotFoundError("survey not found")
-      }
-
-      if (submission.reason === "already_submitted") {
-        throw new ConflictError("already submitted")
-      }
-
-      throw new ConflictError("the survey is no longer open")
-    }
-
-    const responseBody = {
+    const responseBody = zAppSurveyResponse.parse({
       id: submission.id,
       survey_id: submission.surveyId,
       respondent_id: submission.respondentId,
       answers_json: submission.answersJson,
       submitted_at: submission.submittedAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

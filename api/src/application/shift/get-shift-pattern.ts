@@ -1,16 +1,14 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   patternId: number
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type PatternNotFound = { reason: "pattern_not_found" }
 
 /**
  * 権限を確認し、シフトパターンを1件取得する。
@@ -18,9 +16,9 @@ export type PatternNotFound = { reason: "pattern_not_found" }
 export class GetShiftPattern {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ShiftPattern | Forbidden | PatternNotFound | Error> {
-    if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(input: Input): Promise<ShiftPattern | ApplicationError> {
+    if (canManageShift(input.session) === false) {
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const patternRepository = new ShiftPatternRepository(this.c)
@@ -28,11 +26,11 @@ export class GetShiftPattern {
     const pattern = await patternRepository.findById(input.patternId)
 
     if (pattern instanceof Error) {
-      return pattern
+      return new UnexpectedError("failed to find shift pattern", { cause: pattern })
     }
 
     if (pattern === null) {
-      return { reason: "pattern_not_found" }
+      return new NotFoundError("shift pattern not found", "pattern_not_found")
     }
 
     return pattern

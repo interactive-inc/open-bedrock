@@ -1,10 +1,12 @@
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   expenseId: number
   approverId: number
   action: "approve" | "reject"
@@ -16,12 +18,6 @@ export type ExpenseDecision = {
   status: "pending" | "approved" | "rejected" | "settled"
 }
 
-export type ExpenseNotFound = { reason: "expense_not_found" }
-
-export type AlreadyDecided = { reason: "already_decided" }
-
-export type Forbidden = { reason: "forbidden" }
-
 /**
  * 経費のステータスを pending からの条件付き UPDATE で確定し、承認記録を同時に INSERT する。
  * D1 batch で status UPDATE と approval INSERT をアトミックに行うため、
@@ -31,11 +27,9 @@ export type Forbidden = { reason: "forbidden" }
 export class DecideExpense {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<ExpenseDecision | ExpenseNotFound | AlreadyDecided | Forbidden | Error> {
-    if (canDecideExpense(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(command: Command): Promise<ExpenseDecision | ApplicationError> {
+    if (canDecideExpense(command.session) === false) {
+      return new ForbiddenError("cannot decide expense", "forbidden")
     }
 
     const expenseRepository = new ExpenseRepository(this.c)
@@ -43,19 +37,19 @@ export class DecideExpense {
     const existing = await expenseRepository.findById(command.expenseId)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find expense", { cause: existing })
     }
 
     if (existing === null) {
-      return { reason: "expense_not_found" }
+      return new NotFoundError("expense not found", "expense_not_found")
     }
 
     if (existing.employeeId === command.approverId) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot decide own expense", "forbidden")
     }
 
     if (existing.status !== "pending") {
-      return { reason: "already_decided" }
+      return new ConflictError("expense already decided", "already_decided")
     }
 
     const nextStatus = command.action === "approve" ? "approved" : "rejected"
@@ -75,7 +69,7 @@ export class DecideExpense {
     })
 
     if (decided instanceof Error) {
-      return decided
+      return new UnexpectedError("failed to decide expense", { cause: decided })
     }
 
     if (decided === null) {
@@ -83,14 +77,14 @@ export class DecideExpense {
       const current = await expenseRepository.findById(command.expenseId)
 
       if (current instanceof Error) {
-        return current
+        return new UnexpectedError("failed to find expense", { cause: current })
       }
 
       if (current === null) {
-        return { reason: "expense_not_found" }
+        return new NotFoundError("expense not found", "expense_not_found")
       }
 
-      return { reason: "already_decided" }
+      return new ConflictError("expense already decided", "already_decided")
     }
 
     return { status: decided.status }

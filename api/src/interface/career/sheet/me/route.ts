@@ -3,7 +3,10 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { careerSheets } from "@/schema"
 import { eq } from "drizzle-orm"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerSheet } from "@/lib/app-schemas"
 
 // GET /career/sheet/me — 本人のキャリアシート（未登録なら空のシート）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -22,23 +25,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const row = rows.at(0)
 
   if (row === undefined) {
-    return c.json(
-      {
-        employee_id: session.employeeId,
-        goals_text: null,
-        strengths_text: null,
-        updated_at: null,
-      },
-      200,
-    )
+    const emptyBody = zAppCareerSheet.parse({
+      employee_id: session.employeeId,
+      goals_text: null,
+      strengths_text: null,
+      updated_at: null,
+    })
+
+    return c.json(emptyBody, 200)
   }
 
-  const responseBody = {
+  const responseBody = zAppCareerSheet.parse({
     employee_id: row.employeeId,
     goals_text: row.goalsText,
     strengths_text: row.strengthsText,
     updated_at: row.updatedAt,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -55,8 +57,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete career sheet")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

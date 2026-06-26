@@ -13,6 +13,7 @@ import { employees, trainingEnrollments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { z } from "zod"
 
 // GET /training/enrollments — 受講状況を一覧する（管理権限で他者の指定が可能）
@@ -47,7 +48,7 @@ export const GET = factory.createHandlers(
 
     const requestsOthers = query.employee_id !== undefined || query.employee_code !== undefined
 
-    if (requestsOthers === true && canManageTraining(session.role) === false) {
+    if (requestsOthers === true && canManageTraining(session) === false) {
       throw new ForbiddenError()
     }
 
@@ -74,17 +75,20 @@ export const GET = factory.createHandlers(
       .from(trainingEnrollments)
       .where(eq(trainingEnrollments.employeeId, targetEmployeeId))
 
-    const responseBody = rows.map((row) => ({
-      id: row.id,
-      course_id: row.courseId,
-      employee_id: row.employeeId,
-      status: row.status,
-      completed_at: row.completedAt,
-      score: row.score,
-      due_date: row.dueDate,
-    }))
+    const responseBody = zAppTrainingEnrollmentList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        course_id: row.courseId,
+        employee_id: row.employeeId,
+        status: row.status,
+        completed_at: row.completedAt,
+        score: row.score,
+        due_date: row.dueDate,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
 
-    return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+    return c.json(responseBody, 200)
   },
 )
 

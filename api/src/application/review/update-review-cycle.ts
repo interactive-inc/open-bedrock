@@ -1,23 +1,17 @@
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import type { ReviewCycle } from "@/domain/review/review-cycle.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   cycleId: number
   title: string
   period: string
   dueDate: string | null
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type CycleNotFound = { reason: "cycle_not_found" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
-export type NotEditable = { reason: "not_editable" }
 
 /**
  * 管理権限のある本人が、評価サイクルの題目・期間・締切を更新する。
@@ -25,11 +19,9 @@ export type NotEditable = { reason: "not_editable" }
 export class UpdateReviewCycle {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<ReviewCycle | Forbidden | CycleNotFound | NotModifiable | NotEditable | Error> {
-    if (canAdministerCycle(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(input: Input): Promise<ReviewCycle | ApplicationError> {
+    if (canAdministerCycle(input.session) === false) {
+      return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
     const repository = new ReviewCycleRepository(this.c)
@@ -37,15 +29,15 @@ export class UpdateReviewCycle {
     const reviewCycle = await repository.findById(input.cycleId)
 
     if (reviewCycle instanceof Error) {
-      return reviewCycle
+      return new UnexpectedError("failed to find review cycle", { cause: reviewCycle })
     }
 
     if (reviewCycle === null) {
-      return { reason: "cycle_not_found" }
+      return new NotFoundError("review cycle not found", "cycle_not_found")
     }
 
     if (reviewCycle.status === "closed") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("review cycle is not modifiable", "not_modifiable")
     }
 
     const updated = await repository.updateDetails(
@@ -57,11 +49,11 @@ export class UpdateReviewCycle {
     )
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update review cycle", { cause: updated })
     }
 
     if (updated === null) {
-      return { reason: "not_editable" }
+      return new ConflictError("review cycle is not editable", "not_editable")
     }
 
     return updated

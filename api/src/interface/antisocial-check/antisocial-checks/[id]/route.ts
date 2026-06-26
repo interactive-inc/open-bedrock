@@ -4,20 +4,17 @@ import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-ant
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAntisocialCheck } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 反社チェック申請をレスポンス用の snake_case に整形する。
+// 反社チェック申請をレスポンス用の snake_case に整形し、スキーマで検証する。
 function toResponseBody(antisocialCheck: AntisocialCheck) {
-  return {
+  return zAppAntisocialCheck.parse({
     id: antisocialCheck.id,
     requester_id: antisocialCheck.requesterId,
     partner_name: antisocialCheck.partnerName,
@@ -26,7 +23,7 @@ function toResponseBody(antisocialCheck: AntisocialCheck) {
     result: antisocialCheck.result,
     status: antisocialCheck.status,
     created_at: antisocialCheck.createdAt,
-  }
+  })
 }
 
 // GET /antisocial-checks/:id — 反社チェック申請の詳細（本人のみ）
@@ -42,16 +39,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (antisocialCheck instanceof Error) {
-    throw new InternalError("failed to load antisocial check")
-  }
-
-  if ("reason" in antisocialCheck) {
-    if (antisocialCheck.reason === "antisocial_check_not_found") {
-      throw new NotFoundError("antisocial check not found")
-    }
-
-    throw new ForbiddenError("not the requester")
+  if (antisocialCheck instanceof ApplicationError) {
+    throw toHttpException(antisocialCheck)
   }
 
   return c.json(toResponseBody(antisocialCheck), 200)
@@ -81,31 +70,15 @@ export const PUT = factory.createHandlers(
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
       antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
       requesterId: viewer.employeeId,
-      viewerRole: viewer.role,
+      session: viewer,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,
       representativeName: json.representative_name ?? null,
       result: json.result ?? null,
     })
 
-    if (antisocialCheck instanceof Error) {
-      throw new InternalError("failed to update antisocial check")
-    }
-
-    if ("reason" in antisocialCheck) {
-      if (antisocialCheck.reason === "antisocial_check_not_found") {
-        throw new NotFoundError("antisocial check not found")
-      }
-
-      if (antisocialCheck.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      if (antisocialCheck.reason === "result_forbidden") {
-        throw new ForbiddenError("only managers can set the result")
-      }
-
-      throw new ForbiddenError("not the requester")
+    if (antisocialCheck instanceof ApplicationError) {
+      throw toHttpException(antisocialCheck)
     }
 
     return c.json(toResponseBody(antisocialCheck), 200)
@@ -125,20 +98,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     requesterId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel antisocial check")
-  }
-
-  if (result.reason === "antisocial_check_not_found") {
-    throw new NotFoundError("antisocial check not found")
-  }
-
-  if (result.reason === "not_requester") {
-    throw new ForbiddenError("not the requester")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

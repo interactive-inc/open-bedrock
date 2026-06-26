@@ -159,6 +159,10 @@ import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
 import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
 import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
 import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates/[code]/route"
+import * as iamRolesRoute from "@/interface/iam/roles/route"
+import * as iamPermissionsRoute from "@/interface/iam/permissions/route"
+import * as iamAccountsRoute from "@/interface/iam/accounts/route"
+import * as iamAccountRolesRoute from "@/interface/iam/accounts/[id]/roles/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
@@ -204,6 +208,11 @@ export const app = factory
   .post("/auth/login", ...authLoginRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/employees", ...employeeListRoute.GET)
+  .get("/roles", ...iamRolesRoute.GET)
+  .post("/roles", ...iamRolesRoute.POST)
+  .get("/permissions", ...iamPermissionsRoute.GET)
+  .get("/accounts", ...iamAccountsRoute.GET)
+  .post("/accounts/:id/roles", ...iamAccountRolesRoute.POST)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)

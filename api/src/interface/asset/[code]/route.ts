@@ -5,13 +5,10 @@ import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { assets } from "@/schema"
 import { eq } from "drizzle-orm"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAsset } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -33,7 +30,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("asset not found")
   }
 
-  const responseBody = {
+  const responseBody = zAppAsset.parse({
     code: row.code,
     name: row.name,
     kind: row.kind,
@@ -41,7 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     purchased_on: row.purchasedOn,
     status: row.status,
     holder_employee_id: row.holderEmployeeId,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -68,7 +65,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateAsset(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "asset"),
       details: {
         name: json.name,
@@ -78,19 +75,11 @@ export const PUT = factory.createHandlers(
       },
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update asset")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "asset_not_found") {
-        throw new NotFoundError("asset not found")
-      }
-
-      throw new ForbiddenError()
-    }
-
-    const responseBody = {
+    const responseBody = zAppAsset.parse({
       code: updated.code,
       name: updated.name,
       kind: updated.kind,
@@ -98,7 +87,7 @@ export const PUT = factory.createHandlers(
       purchased_on: updated.purchasedOn,
       status: updated.status,
       holder_employee_id: updated.holderEmployeeId,
-    }
+    })
 
     return c.json(responseBody, 200)
   },
@@ -113,24 +102,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteAsset(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "asset"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete asset")
-  }
-
-  if (result.reason === "asset_not_found") {
-    throw new NotFoundError("asset not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "asset_in_use") {
-    throw new ConflictError("asset is currently lent")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

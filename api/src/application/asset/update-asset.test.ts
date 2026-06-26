@@ -3,6 +3,9 @@ import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
@@ -47,7 +50,7 @@ describe("UpdateAsset", () => {
     await seedInStock(context, "A1001")
 
     const result = await new UpdateAsset(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "A1001",
       details: { name: "Renamed", kind: "monitor", serial: "SN-2", purchasedOn: "2026-02-02" },
     })
@@ -70,24 +73,24 @@ describe("UpdateAsset", () => {
     await seedInStock(context, "A1002")
 
     const result = await new UpdateAsset(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "A1002",
       details: { name: "Renamed", kind: "pc", serial: null, purchasedOn: null },
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
     const { context } = createTestContext()
 
     const result = await new UpdateAsset(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "A9999",
       details: { name: "Ghost", kind: "pc", serial: null, purchasedOn: null },
     })
 
-    expect(result).toEqual({ reason: "asset_not_found" })
+    expectApplicationError(result, NotFoundError, "asset_not_found")
   })
 })
 
@@ -97,7 +100,10 @@ describe("DeleteAsset", () => {
 
     await seedInStock(context, "A1003")
 
-    const result = await new DeleteAsset(context).run({ viewerRole: "admin", code: "A1003" })
+    const result = await new DeleteAsset(context).run({
+      session: makeTestSession("admin"),
+      code: "A1003",
+    })
 
     expect(result).toEqual({ reason: "deleted" })
 
@@ -113,9 +119,12 @@ describe("DeleteAsset", () => {
 
     await seedLent(context, "A1004")
 
-    const result = await new DeleteAsset(context).run({ viewerRole: "admin", code: "A1004" })
+    const result = await new DeleteAsset(context).run({
+      session: makeTestSession("admin"),
+      code: "A1004",
+    })
 
-    expect(result).toEqual({ reason: "asset_in_use" })
+    expectApplicationError(result, ConflictError, "asset_in_use")
   })
 
   test("rejects a non privileged role with forbidden", async () => {
@@ -123,16 +132,22 @@ describe("DeleteAsset", () => {
 
     await seedInStock(context, "A1005")
 
-    const result = await new DeleteAsset(context).run({ viewerRole: "member", code: "A1005" })
+    const result = await new DeleteAsset(context).run({
+      session: makeTestSession("member"),
+      code: "A1005",
+    })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
     const { context } = createTestContext()
 
-    const result = await new DeleteAsset(context).run({ viewerRole: "admin", code: "A9999" })
+    const result = await new DeleteAsset(context).run({
+      session: makeTestSession("admin"),
+      code: "A9999",
+    })
 
-    expect(result).toEqual({ reason: "asset_not_found" })
+    expectApplicationError(result, NotFoundError, "asset_not_found")
   })
 })

@@ -1,17 +1,13 @@
 import { canManageShift } from "@/lib/shift/can-manage-shift"
-import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   assignmentId: number
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type AssignmentNotFound = { reason: "assignment_not_found" }
-
-export type AlreadyPublished = { reason: "already_published" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -21,11 +17,9 @@ export type Deleted = { reason: "deleted" }
 export class DeleteShiftAssignment {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<Deleted | Forbidden | AssignmentNotFound | AlreadyPublished | Error> {
-    if (canManageShift(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(input: Input): Promise<Deleted | ApplicationError> {
+    if (canManageShift(input.session) === false) {
+      return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
     const assignmentRepository = new ShiftAssignmentRepository(this.c)
@@ -33,25 +27,25 @@ export class DeleteShiftAssignment {
     const current = await assignmentRepository.findById(input.assignmentId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find shift assignment", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "assignment_not_found" }
+      return new NotFoundError("shift assignment not found", "assignment_not_found")
     }
 
     if (current.isModifiable === false) {
-      return { reason: "already_published" }
+      return new ConflictError("shift assignment is already published", "already_published")
     }
 
     const deleted = await assignmentRepository.delete(input.assignmentId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete shift assignment", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "already_published" }
+      return new ConflictError("shift assignment is already published", "already_published")
     }
 
     return { reason: "deleted" }

@@ -5,7 +5,16 @@ import { UpdateEmployee } from "@/application/employee/update-employee"
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(context: Context, code: string): Promise<number> {
@@ -47,13 +56,13 @@ describe("RegisterEmployee", () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: newEmployeeInput,
     })
 
     expect(result).toBeInstanceOf(Employee)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("register failed")
     }
 
@@ -65,11 +74,11 @@ describe("RegisterEmployee", () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       employee: newEmployeeInput,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects a duplicate code with employee_code_conflict", async () => {
@@ -78,22 +87,22 @@ describe("RegisterEmployee", () => {
     await seedEmployee(context, "E900")
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: newEmployeeInput,
     })
 
-    expect(result).toEqual({ reason: "employee_code_conflict" })
+    expectApplicationError(result, ConflictError, "employee_code_conflict")
   })
 
   test("rejects a password shorter than 8 characters with weak_password", async () => {
     const context = createTestContext().context
 
     const result = await new RegisterEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       employee: { ...newEmployeeInput, password: "short7!" },
     })
 
-    expect(result).toEqual({ reason: "weak_password" })
+    expectApplicationError(result, ValidationError, "weak_password")
   })
 })
 
@@ -113,7 +122,7 @@ describe("GetEmployee", () => {
 
     const result = await new GetEmployee(context).run({ code: "E999" })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 })
 
@@ -134,14 +143,15 @@ describe("UpdateEmployee", () => {
     await seedEmployee(context, "E902")
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
       code: "E902",
       profile: profileInput,
     })
 
     expect(result).toBeInstanceOf(Employee)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -156,24 +166,26 @@ describe("UpdateEmployee", () => {
     await seedEmployee(context, "E903")
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
+      viewerEmployeeId: 0,
       code: "E903",
       profile: profileInput,
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with employee_not_found", async () => {
     const context = createTestContext().context
 
     const result = await new UpdateEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
       code: "E999",
       profile: profileInput,
     })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 })
 
@@ -184,7 +196,7 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E904")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E904",
     })
@@ -202,12 +214,12 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E905")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id,
       code: "E905",
     })
 
-    expect(result).toEqual({ reason: "self_delete" })
+    expectApplicationError(result, ForbiddenError, "self_delete")
   })
 
   test("rejects a non privileged role with forbidden", async () => {
@@ -216,12 +228,12 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E906")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       viewerEmployeeId: id + 1,
       code: "E906",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects manager role with forbidden (delete is hr/admin only)", async () => {
@@ -230,24 +242,24 @@ describe("DeleteEmployee", () => {
     const id = await seedEmployee(context, "E907")
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       viewerEmployeeId: id + 1,
       code: "E907",
     })
 
-    expect(result).toEqual({ reason: "forbidden" })
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects an unknown code with employee_not_found", async () => {
     const context = createTestContext().context
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: 1,
       code: "E999",
     })
 
-    expect(result).toEqual({ reason: "employee_not_found" })
+    expectApplicationError(result, NotFoundError, "employee_not_found")
   })
 
   test("deletes related records across all dependent tables", async () => {
@@ -350,7 +362,7 @@ describe("DeleteEmployee", () => {
 
     // 従業員を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E910",
     })
@@ -510,7 +522,7 @@ describe("DeleteEmployee", () => {
 
     // 社員 A を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: idB,
       code: "EA01",
     })
@@ -588,7 +600,7 @@ describe("DeleteEmployee", () => {
       .run()
 
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: id + 1,
       code: "E911",
     })
@@ -631,7 +643,7 @@ describe("DeleteEmployee", () => {
 
     // 社員 A を削除
     const result = await new DeleteEmployee(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       viewerEmployeeId: idB,
       code: "EA02",
     })

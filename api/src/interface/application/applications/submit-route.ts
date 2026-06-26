@@ -3,7 +3,10 @@ import { factory } from "@/lib/factory"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplication } from "@/lib/app-schemas"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -33,15 +36,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to submit application")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if ("reason" in created) {
-      throw new NotFoundError("template not found")
-    }
-
-    const responseBody = {
+    const responseBody = zAppApplication.parse({
       id: created.id,
       template_code: created.templateCode,
       template_name: created.templateName,
@@ -50,7 +49,7 @@ export const POST = factory.createHandlers(
       current_step: created.currentStep,
       payload: created.payload,
       created_at: created.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

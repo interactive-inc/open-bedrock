@@ -8,6 +8,7 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
 const orgDepartmentResponseSchema = z.object({
@@ -67,6 +68,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   return db
 }
@@ -177,7 +180,7 @@ describe("PUT /org/departments/:code", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 409 when a department is set as its own parent", async () => {
+  test("returns 400 when a department is set as its own parent", async () => {
     const response = await request({
       path: "/org/departments/D003",
       token: await adminToken(),
@@ -185,7 +188,7 @@ describe("PUT /org/departments/:code", () => {
       body: { parent_code: "D003", order: 1 },
     })
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(400)
   })
 
   test("returns 409 for an indirect circular reference (A→B→A)", async () => {

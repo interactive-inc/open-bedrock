@@ -7,6 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppEmployeeSkillList } from "@/lib/app-schemas"
 import { employeeSkills, skills } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -45,14 +46,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(employeeSkills)
     .where(eq(employeeSkills.employeeId, session.employeeId))
 
-  const responseBody = rows.map((row) => ({
-    skill_code: row.employeeSkill.skillCode,
-    skill_name: row.skill?.name ?? "",
-    skill_category: row.skill?.category ?? "",
-    level: row.employeeSkill.level,
-    years: row.employeeSkill.years,
-    note: row.employeeSkill.note,
-  }))
+  const responseBody = zAppEmployeeSkillList.parse({
+    data: rows.map((row) => ({
+      skill_code: row.employeeSkill.skillCode,
+      skill_name: row.skill?.name ?? "",
+      skill_category: row.skill?.category ?? "",
+      level: row.employeeSkill.level,
+      years: row.employeeSkill.years,
+      note: row.employeeSkill.note,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

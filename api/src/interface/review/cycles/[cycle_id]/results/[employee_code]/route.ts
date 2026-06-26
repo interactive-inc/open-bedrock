@@ -4,6 +4,7 @@ import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/domain/review/review-form.entity"
 import { toReviewResultView } from "@/lib/review/to-review-result-view"
 import { factory } from "@/lib/factory"
+import { zAppReviewResult } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
@@ -21,7 +22,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) {
     throw new UnauthorizedError()
   }
-  if (canAdministerCycle(session.role) === false) {
+  if (canAdministerCycle(session) === false) {
     throw new ForbiddenError()
   }
 
@@ -62,7 +63,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (view instanceof Error) {
     throw new InternalError("internal server error")
   }
-  const body = {
+  const responseBody = zAppReviewResult.parse({
     cycle_id: view.cycleId,
     subject_employee_id: view.subjectEmployeeId,
     form_count: view.formCount,
@@ -79,6 +80,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       status: form.status,
       submitted_at: form.submittedAt,
     })),
-  }
-  return c.json(body, 200)
+  })
+  return c.json(responseBody, 200)
 })

@@ -1,13 +1,10 @@
 import { ReturnAsset } from "@/application/asset/return-asset"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppAsset } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 
 // POST /assets/:code/return — 貸出中の資産を在庫へ戻す（権限が必要）
@@ -19,28 +16,16 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const updated = await new ReturnAsset(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "asset"),
     now: c.env.NOW ?? new Date().toISOString(),
   })
 
-  if (updated instanceof Error) {
-    throw new InternalError("failed to return asset")
+  if (updated instanceof ApplicationError) {
+    throw toHttpException(updated)
   }
 
-  if ("reason" in updated) {
-    if (updated.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    if (updated.reason === "asset_not_found") {
-      throw new NotFoundError("asset not found")
-    }
-
-    throw new ConflictError("asset is not lent")
-  }
-
-  const responseBody = {
+  const responseBody = zAppAsset.parse({
     code: updated.code,
     name: updated.name,
     kind: updated.kind,
@@ -48,7 +33,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     purchased_on: updated.purchasedOn,
     status: updated.status,
     holder_employee_id: updated.holderEmployeeId,
-  }
+  })
 
   return c.json(responseBody, 200)
 })

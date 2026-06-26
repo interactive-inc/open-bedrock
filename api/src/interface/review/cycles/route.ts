@@ -7,6 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
+import { zAppReviewCycleList } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewCycles } from "@/schema"
@@ -19,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const isAdmin = canAdministerCycle(session.role)
+  const isAdmin = canAdministerCycle(session)
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
@@ -51,13 +52,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     ? await countQuery
     : await countQuery.where(eq(reviewCycles.status, "open"))
 
-  const body = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    period: row.period,
-    status: toReviewCycleStatus(row.status),
-    due_date: row.dueDate,
-  }))
+  const responseBody = zAppReviewCycleList.parse({
+    data: rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      period: row.period,
+      status: toReviewCycleStatus(row.status),
+      due_date: row.dueDate,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: body, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

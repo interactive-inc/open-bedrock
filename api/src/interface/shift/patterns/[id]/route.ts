@@ -1,16 +1,13 @@
 import { DeleteShiftPattern } from "@/application/shift/delete-shift-pattern"
 import { GetShiftPattern } from "@/application/shift/get-shift-pattern"
 import { UpdateShiftPattern } from "@/application/shift/update-shift-pattern"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftPattern } from "@/lib/app-schemas"
 import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -18,14 +15,14 @@ import { codeSchema } from "@/lib/schemas"
 
 // パターンをレスポンス用の snake_case に整形する。
 function toResponseBody(pattern: ShiftPattern) {
-  return {
+  return zAppShiftPattern.parse({
     id: pattern.id,
     code: pattern.code,
     name: pattern.name,
     start_time: pattern.startTime,
     end_time: pattern.endTime,
     break_minutes: pattern.breakMinutes,
-  }
+  })
 }
 
 // GET /shift/patterns/:id — シフトパターンの詳細（特権ロール）
@@ -39,20 +36,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const pattern = await new GetShiftPattern(c).run({
-    viewerRole: session.role,
+    session: session,
     patternId,
   })
 
-  if (pattern instanceof Error) {
-    throw new InternalError("failed to load pattern")
-  }
-
-  if ("reason" in pattern) {
-    if (pattern.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    throw new NotFoundError("pattern not found")
+  if (pattern instanceof ApplicationError) {
+    throw toHttpException(pattern)
   }
 
   return c.json(toResponseBody(pattern), 200)
@@ -87,7 +76,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const pattern = await new UpdateShiftPattern(c).run({
-      viewerRole: session.role,
+      session: session,
       patternId,
       code: json.code,
       name: json.name,
@@ -96,20 +85,8 @@ export const PUT = factory.createHandlers(
       breakMinutes: json.break_minutes,
     })
 
-    if (pattern instanceof Error) {
-      throw new InternalError("failed to update pattern")
-    }
-
-    if ("reason" in pattern) {
-      if (pattern.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-
-      if (pattern.reason === "code_conflict") {
-        throw new ConflictError("pattern code already exists")
-      }
-
-      throw new NotFoundError("pattern not found")
+    if (pattern instanceof ApplicationError) {
+      throw toHttpException(pattern)
     }
 
     return c.json(toResponseBody(pattern), 200)
@@ -127,24 +104,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteShiftPattern(c).run({
-    viewerRole: session.role,
+    session: session,
     patternId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete pattern")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "pattern_in_use") {
-    throw new ConflictError("pattern is in use by assignments")
-  }
-
-  if (result.reason === "pattern_not_found") {
-    throw new NotFoundError("pattern not found")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

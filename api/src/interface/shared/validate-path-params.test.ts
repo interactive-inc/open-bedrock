@@ -5,6 +5,7 @@ import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 
 // 共通バリデーションヘルパー（validateUuidParam / validateIntParam / validateCodeParam）が
 // 不正なパスパラメータで 404 を返すことを、代表ルート経由で検証する。
@@ -30,6 +31,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   return db
 }

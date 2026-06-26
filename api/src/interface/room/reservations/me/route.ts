@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppRoomReservationList } from "@/lib/app-schemas"
 import { roomReservations } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (reservations instanceof Error) {
-    throw new InternalError("failed to load reservations")
+  if (reservations instanceof ApplicationError) {
+    throw toHttpException(reservations)
   }
 
   const totalRows = await c.var.database
@@ -48,14 +51,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(roomReservations)
     .where(eq(roomReservations.reserverId, viewer.employeeId))
 
-  const responseBody = reservations.map((reservation) => ({
-    id: reservation.id,
-    room_id: reservation.roomId,
-    reserver_id: reservation.reserverId,
-    start_at: reservation.startAt,
-    end_at: reservation.endAt,
-    purpose: reservation.purpose,
-  }))
+  const responseBody = zAppRoomReservationList.parse({
+    data: reservations.map((reservation) => ({
+      id: reservation.id,
+      room_id: reservation.roomId,
+      reserver_id: reservation.reserverId,
+      start_at: reservation.startAt,
+      end_at: reservation.endAt,
+      purpose: reservation.purpose,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

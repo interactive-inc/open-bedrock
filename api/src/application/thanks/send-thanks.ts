@@ -1,5 +1,13 @@
 import { Notification } from "@/domain/notification/notification.entity"
 import { Thanks } from "@/domain/thanks/thanks.entity"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/lib/thanks-points/period-of"
 import { toNonNegativePoints } from "@/lib/thanks-points/to-non-negative-points"
 import type { Context } from "@/env"
@@ -15,22 +23,6 @@ export type Command = {
   createdAt: string
 }
 
-export type SenderNotFound = { reason: "sender_not_found" }
-
-export type RecipientNotFound = { reason: "recipient_not_found" }
-
-export type InvalidThanks = { reason: "invalid_thanks" }
-
-export type SenderInactive = { reason: "sender_inactive" }
-
-export type RecipientInactive = { reason: "recipient_inactive" }
-
-export type SelfThanks = { reason: "self_thanks" }
-
-export type InvalidPoints = { reason: "invalid_points" }
-
-export type InsufficientBudget = { reason: "insufficient_budget" }
-
 /**
  * 全従業員が他の従業員へ感謝を送る。感謝を保存し、受信者にだけ通知を作成する。
  * 既存 SendNotification の role gate は感謝に不適合なため NotificationRepository を直接使う。
@@ -38,20 +30,7 @@ export type InsufficientBudget = { reason: "insufficient_budget" }
 export class SendThanks {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | Thanks
-    | SenderNotFound
-    | SenderInactive
-    | RecipientNotFound
-    | RecipientInactive
-    | SelfThanks
-    | InvalidThanks
-    | InvalidPoints
-    | InsufficientBudget
-    | Error
-  > {
+  async run(command: Command): Promise<Thanks | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
     const notificationRepository = new NotificationRepository(this.c)
@@ -59,39 +38,40 @@ export class SendThanks {
     const sender = await employeeRepository.findById(command.senderEmployeeId)
 
     if (sender instanceof Error) {
-      return sender
+      return new UnexpectedError("failed to find sender", { cause: sender })
     }
 
+    // 送信者はセッションから解決済みのはずなので、不在は想定外の内部状態。
     if (sender === null) {
-      return { reason: "sender_not_found" }
+      return new UnexpectedError("sender not found")
     }
 
     if (sender.status === "retired") {
-      return { reason: "sender_inactive" }
+      return new ForbiddenError("sender is no longer active", "sender_inactive")
     }
 
     const recipient = await employeeRepository.findByCode(command.recipientEmployeeCode)
 
     if (recipient instanceof Error) {
-      return recipient
+      return new UnexpectedError("failed to find recipient", { cause: recipient })
     }
 
     if (recipient === null) {
-      return { reason: "recipient_not_found" }
+      return new NotFoundError("recipient not found", "recipient_not_found")
     }
 
     if (recipient.status === "retired") {
-      return { reason: "recipient_inactive" }
+      return new ConflictError("recipient is no longer active", "recipient_inactive")
     }
 
     if (sender.id === recipient.id) {
-      return { reason: "self_thanks" }
+      return new ValidationError("cannot send thanks to yourself", "self_thanks")
     }
 
     const points = toNonNegativePoints(command.points)
 
     if (points instanceof Error) {
-      return { reason: "invalid_points" }
+      return new ValidationError("invalid points", "invalid_points")
     }
 
     // メッセージ等の不変条件は原資の予約より前に検証し、不正入力で原資を消費しないようにする。
@@ -104,7 +84,7 @@ export class SendThanks {
     })
 
     if (thanks instanceof Error) {
-      return { reason: "invalid_thanks" }
+      return new ValidationError("invalid thanks", "invalid_thanks")
     }
 
     const period = periodOf(command.createdAt)
@@ -136,7 +116,7 @@ export class SendThanks {
     }
 
     if (created === null) {
-      return { reason: "insufficient_budget" }
+      return new ValidationError("insufficient thanks point budget", "insufficient_budget")
     }
 
     const notification = Notification.create({
@@ -165,7 +145,7 @@ export class SendThanks {
     senderEmployeeId: number
     period: string
     createdAt: string
-  }): Promise<null | Error> {
+  }): Promise<null | ApplicationError> {
     const budgetRepository = new ThanksPointBudgetRepository(this.c)
 
     const budget = await budgetRepository.findOrCreate({
@@ -174,7 +154,9 @@ export class SendThanks {
       createdAt: props.createdAt,
     })
 
-    return budget instanceof Error ? budget : null
+    return budget instanceof Error
+      ? new UnexpectedError("failed to ensure thanks point budget", { cause: budget })
+      : null
   }
 
   // ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
@@ -186,7 +168,7 @@ export class SendThanks {
     senderEmployeeId: number
     points: number
     period: string
-  }): Promise<Thanks | null | Error> {
+  }): Promise<Thanks | null | ApplicationError> {
     try {
       const db = this.c.env.DB
 
@@ -240,11 +222,13 @@ export class SendThanks {
 
       return this.parseThanksRow(insertResult)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to send thanks")
+      return error instanceof Error
+        ? new UnexpectedError("failed to send thanks", { cause: error })
+        : new UnexpectedError("failed to send thanks")
     }
   }
 
-  private parseThanksRow(result: D1Result): Thanks | Error {
+  private parseThanksRow(result: D1Result): Thanks | ApplicationError {
     const row = result.results[0] as
       | {
           id: number
@@ -257,7 +241,7 @@ export class SendThanks {
       | undefined
 
     if (row === undefined) {
-      return new Error("failed to insert thanks")
+      return new UnexpectedError("failed to insert thanks")
     }
 
     return Thanks.fromRow({

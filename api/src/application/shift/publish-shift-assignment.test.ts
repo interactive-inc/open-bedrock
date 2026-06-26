@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import { PublishShiftAssignment } from "@/application/shift/publish-shift-assignment"
 import { UpdateShiftAssignment } from "@/application/shift/update-shift-assignment"
+import { ConflictError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
@@ -33,7 +36,7 @@ describe("PublishShiftAssignment", () => {
     if (assignment.id === null) throw new Error("id should not be null")
 
     const first = await new PublishShiftAssignment(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       assignmentId: assignment.id,
       publishedAt: "2026-06-01T00:00:00.000Z",
     })
@@ -41,12 +44,12 @@ describe("PublishShiftAssignment", () => {
     expect(first).toBeInstanceOf(ShiftAssignment)
 
     const second = await new PublishShiftAssignment(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       assignmentId: assignment.id,
       publishedAt: "2026-06-02T00:00:00.000Z",
     })
 
-    expect(second).toEqual({ reason: "already_published" })
+    expectApplicationError(second, ConflictError, "already_published")
   })
 })
 
@@ -67,13 +70,13 @@ describe("UpdateShiftAssignment", () => {
     }
 
     const result = await new UpdateShiftAssignment(context).run({
-      viewerRole: "manager",
+      session: makeTestSession("manager"),
       assignmentId: assignment.id,
       patternCode: null,
       date: "2026-06-05",
       note: "changed",
     })
 
-    expect(result).toEqual({ reason: "already_published" })
+    expectApplicationError(result, ConflictError, "already_published")
   })
 })

@@ -1,16 +1,12 @@
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   resignationId: string
   employeeId: number
 }
-
-export type ResignationNotFound = { reason: "resignation_not_found" }
-
-export type NotApplicant = { reason: "not_applicant" }
-
-export type NotModifiable = { reason: "not_modifiable" }
 
 export type Cancelled = { reason: "cancelled" }
 
@@ -20,37 +16,35 @@ export type Cancelled = { reason: "cancelled" }
 export class CancelResignation {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Cancelled | ResignationNotFound | NotApplicant | NotModifiable | Error> {
+  async run(command: Command): Promise<Cancelled | ApplicationError> {
     const resignationRepository = new ResignationRepository(this.c)
 
     const current = await resignationRepository.findById(command.resignationId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find resignation", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "resignation_not_found" }
+      return new NotFoundError("resignation not found", "resignation_not_found")
     }
 
     if (current.employeeId !== command.employeeId) {
-      return { reason: "not_applicant" }
+      return new ForbiddenError("not the applicant", "not_applicant")
     }
 
     if (!current.isModifiable) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
     }
 
     const deleted = await resignationRepository.delete(command.resignationId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete resignation", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("resignation is not modifiable", "not_modifiable")
     }
 
     return { reason: "cancelled" }

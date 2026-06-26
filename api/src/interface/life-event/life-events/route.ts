@@ -1,8 +1,11 @@
 import { CreateLifeEvent } from "@/application/life-event/create-life-event"
+import { ApplicationError } from "@/lib/errors"
+import { zAppLifeEvent } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -33,11 +36,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (lifeEvent instanceof Error) {
-      throw new InternalError("failed to create life event")
+    if (lifeEvent instanceof ApplicationError) {
+      throw toHttpException(lifeEvent)
     }
 
-    const responseBody = {
+    const responseBody = zAppLifeEvent.parse({
       id: lifeEvent.id,
       employee_id: lifeEvent.employeeId,
       event_type: lifeEvent.eventType,
@@ -45,7 +48,7 @@ export const POST = factory.createHandlers(
       detail: lifeEvent.detail,
       status: lifeEvent.status,
       created_at: lifeEvent.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

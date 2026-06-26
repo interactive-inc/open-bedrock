@@ -1,11 +1,9 @@
 import { SendNotification } from "@/application/notification/send-notification"
 import { notificationKindSchema } from "@/domain/notification/notification.entity"
-import {
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppNotification } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -36,7 +34,7 @@ export const POST = factory.createHandlers(
     }
 
     const result = await new SendNotification(c).run({
-      viewerRole: session.role,
+      session: session,
       recipientEmployeeCode: body.recipient_employee_code,
       kind: body.kind,
       title: body.title,
@@ -46,19 +44,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to create notification")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
-    if ("reason" in result) {
-      if (result.reason === "recipient_not_found") {
-        throw new NotFoundError("recipient not found")
-      }
-
-      throw new ForbiddenError()
-    }
-
-    const responseBody = {
+    const responseBody = zAppNotification.parse({
       id: result.id,
       recipient_employee_id: result.recipientEmployeeId,
       source_domain: result.sourceDomain,
@@ -68,7 +58,7 @@ export const POST = factory.createHandlers(
       body: result.body,
       is_read: result.isRead,
       created_at: result.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppFamilyCareLeaveList } from "@/lib/app-schemas"
 import { familyCareLeaves } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (familyCareLeaveRows instanceof Error) {
-    throw new InternalError("failed to load family care leaves")
+  if (familyCareLeaveRows instanceof ApplicationError) {
+    throw toHttpException(familyCareLeaveRows)
   }
 
   const totalRows = await c.var.database
@@ -48,16 +51,19 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(familyCareLeaves)
     .where(eq(familyCareLeaves.employeeId, viewer.employeeId))
 
-  const responseBody = familyCareLeaveRows.map((familyCareLeave) => ({
-    id: familyCareLeave.id,
-    employee_id: familyCareLeave.employeeId,
-    leave_kind: familyCareLeave.leaveKind,
-    start_date: familyCareLeave.startDate,
-    end_date: familyCareLeave.endDate,
-    note: familyCareLeave.note,
-    status: familyCareLeave.status,
-    created_at: familyCareLeave.createdAt,
-  }))
+  const responseBody = zAppFamilyCareLeaveList.parse({
+    data: familyCareLeaveRows.map((familyCareLeave) => ({
+      id: familyCareLeave.id,
+      employee_id: familyCareLeave.employeeId,
+      leave_kind: familyCareLeave.leaveKind,
+      start_date: familyCareLeave.startDate,
+      end_date: familyCareLeave.endDate,
+      note: familyCareLeave.note,
+      status: familyCareLeave.status,
+      created_at: familyCareLeave.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

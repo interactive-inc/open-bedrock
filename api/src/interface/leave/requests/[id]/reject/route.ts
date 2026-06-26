@@ -1,13 +1,9 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { ApplicationError } from "@/lib/errors"
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppLeaveRequest } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -30,7 +26,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canDecideLeave(session.role) === false) {
+    if (canDecideLeave(session) === false) {
       throw new ForbiddenError()
     }
 
@@ -39,51 +35,31 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new DecideLeaveRequest(c).run({
-      viewerRole: session.role,
+      session: session,
       leaveRequestId,
       approverId: session.employeeId,
       action: "reject",
       comment: body.comment,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to reject leave request")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if (updated instanceof LeaveRequest) {
-      const responseBody = {
-        id: updated.id,
-        employee_id: updated.employeeId,
-        leave_type: updated.leaveType,
-        start_date: updated.startDate,
-        end_date: updated.endDate,
-        days: updated.days,
-        reason: updated.reason,
-        status: updated.status,
-        approver_id: updated.approverId,
-        decided_comment: updated.decidedComment,
-        created_at: updated.createdAt,
-      }
+    const responseBody = zAppLeaveRequest.parse({
+      id: updated.id,
+      employee_id: updated.employeeId,
+      leave_type: updated.leaveType,
+      start_date: updated.startDate,
+      end_date: updated.endDate,
+      days: updated.days,
+      reason: updated.reason,
+      status: updated.status,
+      approver_id: updated.approverId,
+      decided_comment: updated.decidedComment,
+      created_at: updated.createdAt,
+    })
 
-      return c.json(responseBody, 200)
-    }
-
-    if (updated.reason === "forbidden") {
-      throw new ForbiddenError()
-    }
-
-    if (updated.reason === "self_approval") {
-      throw new ForbiddenError()
-    }
-
-    if (updated.reason === "already_decided") {
-      throw new ConflictError("leave request already decided")
-    }
-
-    if (updated.reason === "invalid_start_date") {
-      throw new InternalError("invalid leave request start date")
-    }
-
-    throw new NotFoundError("leave request not found")
+    return c.json(responseBody, 200)
   },
 )

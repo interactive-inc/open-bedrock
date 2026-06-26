@@ -1,6 +1,8 @@
 import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
+import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   travelerId: number
@@ -12,10 +14,6 @@ export type Command = {
   createdAt: string
 }
 
-export type OverlappingTrip = { reason: "overlapping_trip" }
-
-export type InvalidDateRange = { reason: "invalid_date_range" }
-
 /**
  * 出張申請を作成する。status は "requested" で登録する。
  * 同一申請者の期間が重複する出張申請が既に存在する場合は拒否する。
@@ -23,7 +21,7 @@ export type InvalidDateRange = { reason: "invalid_date_range" }
 export class CreateBusinessTrip {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<BusinessTrip | OverlappingTrip | InvalidDateRange | Error> {
+  async run(command: Command): Promise<BusinessTrip | ApplicationError> {
     const businessTripRepository = new BusinessTripRepository(this.c)
 
     const overlapping = await businessTripRepository.findOverlapping({
@@ -34,11 +32,11 @@ export class CreateBusinessTrip {
     })
 
     if (overlapping instanceof Error) {
-      return overlapping
+      return new UnexpectedError("failed to find business trips", { cause: overlapping })
     }
 
     if (overlapping.length > 0) {
-      return { reason: "overlapping_trip" }
+      return new ConflictError("overlapping business trip already exists", "overlapping_trip")
     }
 
     const businessTrip = BusinessTrip.create({
@@ -52,17 +50,17 @@ export class CreateBusinessTrip {
     })
 
     if ("reason" in businessTrip) {
-      return businessTrip
+      return new ValidationError("invalid date range", "invalid_date_range")
     }
 
     const result = await businessTripRepository.create(businessTrip)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to create business trip", { cause: result })
     }
 
     if (result === null) {
-      return { reason: "overlapping_trip" }
+      return new ConflictError("overlapping business trip already exists", "overlapping_trip")
     }
 
     return result

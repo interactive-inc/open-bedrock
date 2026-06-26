@@ -1,9 +1,12 @@
 import { SubmitExpense } from "@/application/expense/submit-expense"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppExpense } from "@/lib/app-schemas"
 import { expenseCategorySchema, isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
 // POST /expenses — 本人の経費を申請する（submit = create）
@@ -36,11 +39,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to submit expense")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    const responseBody = {
+    const responseBody = zAppExpense.parse({
       id: created.id,
       employee_id: created.employeeId,
       category: created.category,
@@ -49,7 +52,7 @@ export const POST = factory.createHandlers(
       note: created.note,
       status: created.status,
       created_at: created.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

@@ -1,27 +1,19 @@
 import { Notification } from "@/domain/notification/notification.entity"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
-  viewerRole: string
+  session: SessionPayload
   approverId: number
   swapRequestId: number
   approvedAt: string
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type SwapRequestNotFound = { reason: "swap_request_not_found" }
-
-export type AlreadyApproved = { reason: "already_approved" }
-
-export type NotPending = { reason: "not_pending" }
-
-export type AssignmentNotFound = { reason: "assignment_not_found" }
 
 /**
  * 権限を確認し、保留中のシフト交代申請を承認する。
@@ -30,19 +22,9 @@ export type AssignmentNotFound = { reason: "assignment_not_found" }
 export class ApproveShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    input: Input,
-  ): Promise<
-    | ShiftSwapRequest
-    | Forbidden
-    | SwapRequestNotFound
-    | AlreadyApproved
-    | NotPending
-    | AssignmentNotFound
-    | Error
-  > {
-    if (canApproveShiftSwap(input.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
+    if (canApproveShiftSwap(input.session) === false) {
+      return new ForbiddenError("cannot approve shift swap", "forbidden")
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
@@ -50,11 +32,11 @@ export class ApproveShiftSwapRequest {
     const swapRequest = await swapRequestRepository.findById(input.swapRequestId)
 
     if (swapRequest instanceof Error) {
-      return swapRequest
+      return new UnexpectedError("failed to find shift swap request", { cause: swapRequest })
     }
 
     if (swapRequest === null) {
-      return { reason: "swap_request_not_found" }
+      return new NotFoundError("shift swap request not found", "swap_request_not_found")
     }
 
     // 当事者（申請者・交代相手）による自己承認を拒否する。他の承認系と同じ本人ガード。
@@ -62,11 +44,11 @@ export class ApproveShiftSwapRequest {
       input.approverId === swapRequest.requesterEmployeeId ||
       input.approverId === swapRequest.targetEmployeeId
     ) {
-      return { reason: "forbidden" }
+      return new ForbiddenError("cannot self-approve shift swap", "forbidden")
     }
 
     if (swapRequest.status !== "pending") {
-      return { reason: "not_pending" }
+      return new ConflictError("shift swap request is not pending", "not_pending")
     }
 
     // 両者の割当を取得する。どちらか一方でも無ければ承認を拒否する。
@@ -78,11 +60,11 @@ export class ApproveShiftSwapRequest {
     )
 
     if (requesterAssignment instanceof Error) {
-      return requesterAssignment
+      return new UnexpectedError("failed to find shift assignment", { cause: requesterAssignment })
     }
 
     if (requesterAssignment === null) {
-      return { reason: "assignment_not_found" }
+      return new ConflictError("shift assignment not found for swap", "assignment_not_found")
     }
 
     const targetAssignment = await assignmentRepository.findByEmployeeIdAndDate(
@@ -91,11 +73,11 @@ export class ApproveShiftSwapRequest {
     )
 
     if (targetAssignment instanceof Error) {
-      return targetAssignment
+      return new UnexpectedError("failed to find shift assignment", { cause: targetAssignment })
     }
 
     if (targetAssignment === null) {
-      return { reason: "assignment_not_found" }
+      return new ConflictError("shift assignment not found for swap", "assignment_not_found")
     }
 
     // pattern_id を入れ替え、ステータス更新をアトミックに実行する。
@@ -121,9 +103,11 @@ export class ApproveShiftSwapRequest {
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return { reason: "not_pending" }
+        return new ConflictError("shift swap request is not pending", "not_pending")
       }
-      return error instanceof Error ? error : new Error("failed to swap shift assignments")
+      return error instanceof Error
+        ? new UnexpectedError("failed to swap shift assignments", { cause: error })
+        : new UnexpectedError("failed to swap shift assignments")
     }
 
     // 通知はベストエフォート。交換は完了済みなので、通知が失敗してもログのみ残して結果を返す。

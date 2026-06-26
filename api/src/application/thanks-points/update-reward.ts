@@ -1,4 +1,6 @@
 import { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
+import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
 
@@ -10,29 +12,27 @@ export type Command = {
   isActive: boolean
 }
 
-export type RewardNotFound = { reason: "reward_not_found" }
-
-export type InvalidReward = { reason: "invalid_reward" }
-
-// 交換カタログを更新する（管理者向け）。名前・コスト・在庫・有効状態を差し替える。
+/**
+ * 交換カタログを更新する（管理者向け）。名前・コスト・在庫・有効状態を差し替える。
+ */
 export class UpdateReward {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ThanksReward | RewardNotFound | InvalidReward | Error> {
+  async run(command: Command): Promise<ThanksReward | ApplicationError> {
     const rewardRepository = new ThanksRewardRepository(this.c)
 
     const existing = await rewardRepository.findById(command.rewardId)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find reward", { cause: existing })
     }
 
     if (existing === null) {
-      return { reason: "reward_not_found" }
+      return new NotFoundError("reward not found", "reward_not_found")
     }
 
     if (existing.id === null) {
-      return new Error("persisted reward must have an id")
+      return new UnexpectedError("persisted reward must have an id")
     }
 
     // 名前・コスト・在庫の不変条件は create と同一なので create で検証し、id と作成日時は既存値を引き継ぐ。
@@ -44,7 +44,7 @@ export class UpdateReward {
     })
 
     if (validated instanceof Error) {
-      return { reason: "invalid_reward" }
+      return new ValidationError("invalid reward", "invalid_reward")
     }
 
     const next = ThanksReward.fromRow({
@@ -59,11 +59,11 @@ export class UpdateReward {
     const updated = await rewardRepository.update(next)
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update reward", { cause: updated })
     }
 
     if (updated === null) {
-      return { reason: "reward_not_found" }
+      return new NotFoundError("reward not found", "reward_not_found")
     }
 
     return updated

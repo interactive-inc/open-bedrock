@@ -1,10 +1,12 @@
 import type { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   name: string
   category: string
@@ -13,33 +15,27 @@ export type Command = {
   approverRoles: ReadonlyArray<string>
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type TemplateNotFound = { reason: "template_not_found" }
-
-export type UpdateFailure = Forbidden | TemplateNotFound
-
 /**
  * 管理権限を持つ者が申請テンプレートの内容を変更する。code は変更しない。
  */
 export class UpdateApplicationTemplate {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ApplicationTemplate | UpdateFailure | Error> {
+  async run(command: Command): Promise<ApplicationTemplate | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
-    if (canManageApplicationTemplates(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageApplicationTemplates(command.session) === false) {
+      return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 
     const current = await templateRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find application template", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     const updated = await templateRepository.update(
@@ -53,11 +49,11 @@ export class UpdateApplicationTemplate {
     )
 
     if (updated instanceof Error) {
-      return updated
+      return new UnexpectedError("failed to update application template", { cause: updated })
     }
 
     if (updated === null) {
-      return { reason: "template_not_found" }
+      return new NotFoundError("template not found", "template_not_found")
     }
 
     return updated

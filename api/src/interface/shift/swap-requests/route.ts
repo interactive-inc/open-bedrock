@@ -1,4 +1,7 @@
 import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-request"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppShiftSwapRequest, zAppShiftSwapRequestPendingList } from "@/lib/app-schemas"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
@@ -9,14 +12,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { employees, shiftSwapRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, eq } from "drizzle-orm"
@@ -32,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canApproveShiftSwap(session.role) === false) {
+  if (canApproveShiftSwap(session) === false) {
     throw new ForbiddenError()
   }
 
@@ -71,17 +67,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(shiftSwapRequests)
     .where(eq(shiftSwapRequests.status, "pending"))
 
-  const responseBody = rows.map((row) => ({
-    id: row.swapRequest.id,
-    requester_employee_code: row.requesterCode ?? "",
-    target_employee_code: row.targetCode ?? "",
-    date: row.swapRequest.date,
-    note: row.swapRequest.note,
-    status: row.swapRequest.status,
-    approved_at: row.swapRequest.approvedAt,
-  }))
+  const responseBody = zAppShiftSwapRequestPendingList.parse({
+    data: rows.map((row) => ({
+      id: row.swapRequest.id,
+      requester_employee_code: row.requesterCode ?? "",
+      target_employee_code: row.targetCode ?? "",
+      date: row.swapRequest.date,
+      note: row.swapRequest.note,
+      status: row.swapRequest.status,
+      approved_at: row.swapRequest.approvedAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /shift/swap-requests — 認証された本人がシフト交代を申請する
@@ -111,23 +110,11 @@ export const POST = factory.createHandlers(
       note: request.note ?? null,
     })
 
-    if (swapRequest instanceof Error) {
-      throw new InternalError("failed to create swap request")
+    if (swapRequest instanceof ApplicationError) {
+      throw toHttpException(swapRequest)
     }
 
-    if ("reason" in swapRequest) {
-      if (swapRequest.reason === "self_reference") {
-        throw new BadRequestError("cannot swap with yourself")
-      }
-
-      if (swapRequest.reason === "already_exists") {
-        throw new ConflictError("pending swap request already exists")
-      }
-
-      throw new NotFoundError("target employee not found")
-    }
-
-    const responseBody = {
+    const responseBody = zAppShiftSwapRequest.parse({
       id: swapRequest.id,
       requester_employee_id: swapRequest.requesterEmployeeId,
       target_employee_id: swapRequest.targetEmployeeId,
@@ -135,7 +122,7 @@ export const POST = factory.createHandlers(
       note: swapRequest.note,
       status: swapRequest.status,
       approved_at: swapRequest.approvedAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

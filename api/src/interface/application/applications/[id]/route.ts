@@ -8,13 +8,15 @@ import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
-  ConflictError,
   ForbiddenError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { zAppApplication, zAppApplicationUpdated } from "@/lib/app-schemas"
 import { z } from "zod"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -48,7 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   // 申請者本人か承認権限を持つロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
   const isOwner = row.application.applicantId === session.employeeId
 
-  if (isOwner === false && canDecideApplication(session.role) === false) {
+  if (isOwner === false && canDecideApplication(session) === false) {
     throw new ForbiddenError()
   }
 
@@ -59,7 +61,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("invalid payload data")
   }
 
-  const responseBody = {
+  const responseBody = zAppApplication.parse({
     id: row.application.id,
     template_code: row.templateCode ?? "",
     template_name: row.templateName ?? "",
@@ -68,7 +70,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     current_step: row.application.currentStep,
     payload,
     created_at: row.application.createdAt,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -94,23 +96,17 @@ export const PUT = factory.createHandlers(
       payload: body.payload,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update application")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "application_not_found") {
-        throw new NotFoundError("application not found")
-      }
+    const responseBody = zAppApplicationUpdated.parse({
+      id: updated.id,
+      status: updated.status,
+      payload: updated.payload,
+    })
 
-      if (updated.reason === "not_applicant") {
-        throw new ForbiddenError("not the applicant")
-      }
-
-      throw new ConflictError("application is already decided")
-    }
-
-    return c.json({ id: updated.id, status: updated.status, payload: updated.payload }, 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -129,20 +125,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     applicantId: session.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to withdraw application")
-  }
-
-  if (result.reason === "application_not_found") {
-    throw new NotFoundError("application not found")
-  }
-
-  if (result.reason === "not_applicant") {
-    throw new ForbiddenError("not the applicant")
-  }
-
-  if (result.reason === "not_pending") {
-    throw new ConflictError("application is already decided")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

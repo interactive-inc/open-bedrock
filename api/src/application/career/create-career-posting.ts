@@ -1,10 +1,12 @@
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import { CareerPosting } from "@/domain/career/career-posting.entity"
-import type { Context } from "@/env"
+import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   title: string
   deptId: number | null
   deptName: string | null
@@ -12,19 +14,17 @@ export type Command = {
   status: "open" | "closed"
 }
 
-export type Forbidden = { reason: "forbidden" }
-
 /**
  * 管理ロールが新しい社内公募を作成する。id は DB が採番する。
  */
 export class CreateCareerPosting {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<CareerPosting | Forbidden | Error> {
+  async run(command: Command): Promise<CareerPosting | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)
 
-    if (canManageCareerPostings(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageCareerPostings(command.session) === false) {
+      return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
     const careerPosting = CareerPosting.create({
@@ -35,6 +35,12 @@ export class CreateCareerPosting {
       status: command.status,
     })
 
-    return postingRepository.create(careerPosting)
+    const created = await postingRepository.create(careerPosting)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create career posting", { cause: created })
+    }
+
+    return created
   }
 }

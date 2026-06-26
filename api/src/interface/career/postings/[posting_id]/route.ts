@@ -5,26 +5,23 @@ import type { CareerPosting } from "@/domain/career/career-posting.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerPosting } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // 公募をレスポンス用の snake_case に整形する。
 function toResponseBody(posting: CareerPosting) {
-  return {
+  return zAppCareerPosting.parse({
     id: posting.id,
     title: posting.title,
     dept_id: posting.deptId,
     dept_name: posting.deptName,
     required_skills: posting.requiredSkills,
     status: posting.status,
-  }
+  })
 }
 
 // GET /career/postings/:posting_id — 公募の詳細（管理ロールのみ）
@@ -38,20 +35,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const posting = await new GetCareerPosting(c).run({
-    viewerRole: session.role,
+    session: session,
     postingId: postingId,
   })
 
-  if (posting instanceof Error) {
-    throw new InternalError("failed to load posting")
-  }
-
-  if ("reason" in posting) {
-    if (posting.reason === "posting_not_found") {
-      throw new NotFoundError("posting not found")
-    }
-
-    throw new ForbiddenError()
+  if (posting instanceof ApplicationError) {
+    throw toHttpException(posting)
   }
 
   return c.json(toResponseBody(posting), 200)
@@ -82,7 +71,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateCareerPosting(c).run({
-      viewerRole: session.role,
+      session: session,
       postingId: postingId,
       title: body.title,
       deptId: body.dept_id ?? null,
@@ -91,16 +80,8 @@ export const PUT = factory.createHandlers(
       status: body.status,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update posting")
-    }
-
-    if ("reason" in updated) {
-      if (updated.reason === "posting_not_found") {
-        throw new NotFoundError("posting not found")
-      }
-
-      throw new ForbiddenError()
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -118,24 +99,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const result = await new DeleteCareerPosting(c).run({
-    viewerRole: session.role,
+    session: session,
     postingId: postingId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete posting")
-  }
-
-  if (result.reason === "posting_not_found") {
-    throw new NotFoundError("posting not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "has_applied_applications") {
-    throw new ConflictError("cannot delete a posting with pending applications")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

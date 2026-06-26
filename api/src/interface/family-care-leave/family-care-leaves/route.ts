@@ -2,12 +2,10 @@ import { CreateFamilyCareLeave } from "@/application/family-care-leave/create-fa
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppFamilyCareLeave } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -45,18 +43,11 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (familyCareLeave instanceof Error) {
-      throw new InternalError("failed to create family care leave")
+    if (familyCareLeave instanceof ApplicationError) {
+      throw toHttpException(familyCareLeave)
     }
 
-    if ("reason" in familyCareLeave) {
-      if (familyCareLeave.reason === "overlapping_leave") {
-        throw new ConflictError("overlapping family care leave already exists")
-      }
-      throw new BadRequestError("end_date must be on or after start_date")
-    }
-
-    const responseBody = {
+    const responseBody = zAppFamilyCareLeave.parse({
       id: familyCareLeave.id,
       employee_id: familyCareLeave.employeeId,
       leave_kind: familyCareLeave.leaveKind,
@@ -65,7 +56,7 @@ export const POST = factory.createHandlers(
       note: familyCareLeave.note,
       status: familyCareLeave.status,
       created_at: familyCareLeave.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

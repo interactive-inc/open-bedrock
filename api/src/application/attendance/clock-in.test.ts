@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test"
 import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import { ClockIn } from "@/application/attendance/clock-in"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
+import { ApplicationError, ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 
 describe("ClockIn", () => {
   test("creates an open attendance record", async () => {
@@ -16,7 +18,7 @@ describe("ClockIn", () => {
 
     expect(result).toBeInstanceOf(AttendanceRecord)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("expected attendance record")
     }
 
@@ -35,7 +37,7 @@ describe("ClockIn", () => {
       note: "remote work",
     })
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("expected attendance record")
     }
 
@@ -51,7 +53,7 @@ describe("ClockIn", () => {
       note: null,
     })
 
-    if (first instanceof Error || "reason" in first) {
+    if (first instanceof ApplicationError) {
       throw new Error("setup failed")
     }
 
@@ -61,7 +63,7 @@ describe("ClockIn", () => {
       note: null,
     })
 
-    expect(second).toEqual({ reason: "already_clocked_in" })
+    expectApplicationError(second, ConflictError, "already_clocked_in")
   })
 
   test("allows clock in for a different employee", async () => {
@@ -91,7 +93,7 @@ describe("ClockIn", () => {
       note: null,
     })
 
-    if (first instanceof Error || "reason" in first) {
+    if (first instanceof ApplicationError) {
       throw new Error("setup failed")
     }
 

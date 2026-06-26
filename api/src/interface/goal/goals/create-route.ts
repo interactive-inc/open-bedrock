@@ -1,8 +1,11 @@
 import { CreateGoal } from "@/application/goal/create-goal"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppGoal } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
 // POST /goals — 認証された本人に紐づく目標を新規作成する
@@ -34,11 +37,11 @@ export const POST = factory.createHandlers(
       weight: json.weight,
     })
 
-    if (goal instanceof Error) {
-      throw new InternalError("failed to create goal")
+    if (goal instanceof ApplicationError) {
+      throw toHttpException(goal)
     }
 
-    const responseBody = {
+    const responseBody = zAppGoal.parse({
       id: goal.id,
       employee_id: goal.employeeId,
       period: goal.period,
@@ -46,7 +49,7 @@ export const POST = factory.createHandlers(
       kpi: goal.kpi,
       weight: goal.weight,
       status: goal.status,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

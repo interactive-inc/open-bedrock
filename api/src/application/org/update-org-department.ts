@@ -1,25 +1,23 @@
 import { canManageOrg } from "@/lib/org/can-manage-org"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/domain/org/org-department.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   parentCode: string | null
   managerEmployeeCode: string | null
   order: number
 }
-
-export type OrgForbidden = { reason: "forbidden" }
-
-export type DepartmentNotFound = { reason: "department_not_found" }
-
-export type ParentNotFound = { reason: "parent_not_found" }
-
-export type InvalidParent = { reason: "invalid_parent" }
-
-export type CircularReference = { reason: "circular_reference" }
 
 /**
  * 権限を確認し、部署ノードの親・責任者・表示順を変更する。
@@ -28,35 +26,25 @@ export type CircularReference = { reason: "circular_reference" }
 export class UpdateOrgDepartment {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    | OrgDepartment
-    | OrgForbidden
-    | DepartmentNotFound
-    | ParentNotFound
-    | InvalidParent
-    | CircularReference
-    | Error
-  > {
+  async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageOrg(command.session) === false) {
+      return new ForbiddenError("cannot manage org", "forbidden")
     }
 
     if (command.parentCode === command.code) {
-      return { reason: "invalid_parent" }
+      return new ValidationError("a department cannot be its own parent", "invalid_parent")
     }
 
     const current = await departmentRepository.findByCode(command.code)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find department", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "department_not_found" }
+      return new NotFoundError("department not found", "department_not_found")
     }
 
     const parentChecked = await this.ensureParentExists(command.parentCode)
@@ -75,11 +63,14 @@ export class UpdateOrgDepartment {
       )
 
       if (circularCheck instanceof Error) {
-        return circularCheck
+        return new UnexpectedError("failed to find departments", { cause: circularCheck })
       }
 
       if (circularCheck) {
-        return { reason: "circular_reference" }
+        return new ConflictError(
+          "circular reference detected in department hierarchy",
+          "circular_reference",
+        )
       }
     }
 
@@ -91,11 +82,11 @@ export class UpdateOrgDepartment {
     const saved = await departmentRepository.update(updated)
 
     if (saved instanceof Error) {
-      return saved
+      return new UnexpectedError("failed to update department", { cause: saved })
     }
 
     if (saved === null) {
-      return { reason: "department_not_found" }
+      return new NotFoundError("department not found", "department_not_found")
     }
 
     return saved
@@ -148,9 +139,8 @@ export class UpdateOrgDepartment {
     return false
   }
 
-  private async ensureParentExists(
-    parentCode: string | null,
-  ): Promise<ParentNotFound | Error | null> {
+  // 親コードが存在するか確認する。存在すれば null、不正なら返すべき ApplicationError を返す。
+  private async ensureParentExists(parentCode: string | null): Promise<ApplicationError | null> {
     if (parentCode === null) {
       return null
     }
@@ -158,11 +148,11 @@ export class UpdateOrgDepartment {
     const parent = await new OrgDepartmentRepository(this.c).findByCode(parentCode)
 
     if (parent instanceof Error) {
-      return parent
+      return new UnexpectedError("failed to find department", { cause: parent })
     }
 
     if (parent === null) {
-      return { reason: "parent_not_found" }
+      return new NotFoundError("parent department not found", "parent_not_found")
     }
 
     return null

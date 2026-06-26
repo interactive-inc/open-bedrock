@@ -1,11 +1,8 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
-import { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import {
-  BadRequestError,
-  ConflictError,
-  InternalError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppLeaveRequest } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import { isoDate, leaveTypeSchema } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -47,32 +44,24 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (created instanceof Error) {
-      throw new InternalError("failed to create leave request")
+    if (created instanceof ApplicationError) {
+      throw toHttpException(created)
     }
 
-    if (created instanceof LeaveRequest) {
-      const responseBody = {
-        id: created.id,
-        employee_id: created.employeeId,
-        leave_type: created.leaveType,
-        start_date: created.startDate,
-        end_date: created.endDate,
-        days: created.days,
-        reason: created.reason,
-        status: created.status,
-        approver_id: created.approverId,
-        decided_comment: created.decidedComment,
-        created_at: created.createdAt,
-      }
+    const responseBody = zAppLeaveRequest.parse({
+      id: created.id,
+      employee_id: created.employeeId,
+      leave_type: created.leaveType,
+      start_date: created.startDate,
+      end_date: created.endDate,
+      days: created.days,
+      reason: created.reason,
+      status: created.status,
+      approver_id: created.approverId,
+      decided_comment: created.decidedComment,
+      created_at: created.createdAt,
+    })
 
-      return c.json(responseBody, 201)
-    }
-
-    if (created.reason === "overlapping_leave_request") {
-      throw new ConflictError("an overlapping leave request already exists")
-    }
-
-    throw new BadRequestError("invalid leave period")
+    return c.json(responseBody, 201)
   },
 )

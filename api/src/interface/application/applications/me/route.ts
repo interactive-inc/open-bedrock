@@ -7,7 +7,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplicationMineList } from "@/lib/app-schemas"
 import { applications } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (applicationRows instanceof Error) {
-    throw new InternalError("failed to load applications")
+  if (applicationRows instanceof ApplicationError) {
+    throw toHttpException(applicationRows)
   }
 
   const totalRows = await c.var.database
@@ -48,14 +51,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(applications)
     .where(eq(applications.applicantId, session.employeeId))
 
-  const responseBody = applicationRows.map((application) => ({
-    id: application.id,
-    template_id: application.templateId,
-    status: application.status,
-    current_step: application.currentStep,
-    payload: application.payload,
-    created_at: application.createdAt,
-  }))
+  const responseBody = zAppApplicationMineList.parse({
+    data: applicationRows.map((application) => ({
+      id: application.id,
+      template_id: application.templateId,
+      status: application.status,
+      current_step: application.currentStep,
+      payload: application.payload,
+      created_at: application.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

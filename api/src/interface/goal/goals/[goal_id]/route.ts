@@ -3,21 +3,18 @@ import { GetGoal } from "@/application/goal/get-goal"
 import { UpdateGoal } from "@/application/goal/update-goal"
 import type { Goal } from "@/domain/goal/goal.entity"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppGoal } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 目標をレスポンス用の snake_case に整形する。
+// 目標をレスポンス用スキーマで検証する。
 function toResponseBody(goal: Goal) {
-  return {
+  return zAppGoal.parse({
     id: goal.id,
     employee_id: goal.employeeId,
     period: goal.period,
@@ -25,7 +22,7 @@ function toResponseBody(goal: Goal) {
     kpi: goal.kpi,
     weight: goal.weight,
     status: goal.status,
-  }
+  })
 }
 
 // パスパラメータの goal_id を正の整数に変換する。不正値は 404。
@@ -47,16 +44,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     viewerRole: viewer.role,
   })
 
-  if (goal instanceof Error) {
-    throw new InternalError("failed to load goal")
-  }
-
-  if ("reason" in goal) {
-    if (goal.reason === "goal_not_found") {
-      throw new NotFoundError("goal not found")
-    }
-
-    throw new ForbiddenError("not allowed to view this goal")
+  if (goal instanceof ApplicationError) {
+    throw toHttpException(goal)
   }
 
   return c.json(toResponseBody(goal), 200)
@@ -92,20 +81,8 @@ export const PUT = factory.createHandlers(
       weight: json.weight,
     })
 
-    if (goal instanceof Error) {
-      throw new InternalError("failed to update goal")
-    }
-
-    if ("reason" in goal) {
-      if (goal.reason === "goal_not_found") {
-        throw new NotFoundError("goal not found")
-      }
-
-      if (goal.reason === "not_owner") {
-        throw new ForbiddenError("not the goal owner")
-      }
-
-      throw new ConflictError("the goal is already finalized")
+    if (goal instanceof ApplicationError) {
+      throw toHttpException(goal)
     }
 
     return c.json(toResponseBody(goal), 200)
@@ -125,20 +102,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete goal")
-  }
-
-  if (result.reason === "goal_not_found") {
-    throw new NotFoundError("goal not found")
-  }
-
-  if (result.reason === "not_owner") {
-    throw new ForbiddenError("not the goal owner")
-  }
-
-  if (result.reason === "goal_finalized") {
-    throw new ConflictError("the goal is already finalized")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

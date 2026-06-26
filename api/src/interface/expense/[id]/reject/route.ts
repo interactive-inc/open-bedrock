@@ -1,16 +1,13 @@
 import { DecideExpense } from "@/application/expense/decide-expense"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppExpenseDecision } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
 // POST /expenses/:id/reject — 経費を却下する（承認権限が必要、コメント必須）
@@ -31,14 +28,14 @@ export const POST = factory.createHandlers(
 
     const expenseId = validateIntParam(c.req.param("id"), "expense")
 
-    if (canDecideExpense(session.role) === false) {
+    if (canDecideExpense(session) === false) {
       throw new ForbiddenError()
     }
 
     const body = c.req.valid("json")
 
     const updated = await new DecideExpense(c).run({
-      viewerRole: session.role,
+      session: session,
       expenseId,
       approverId: session.employeeId,
       action: "reject",
@@ -46,20 +43,12 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to reject expense")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "already_decided") {
-        throw new ConflictError("already decided")
-      }
-      if (updated.reason === "forbidden") {
-        throw new ForbiddenError()
-      }
-      throw new NotFoundError("expense not found")
-    }
+    const responseBody = zAppExpenseDecision.parse({ status: updated.status })
 
-    return c.json({ status: updated.status }, 200)
+    return c.json(responseBody, 200)
   },
 )

@@ -1,25 +1,21 @@
 import { CancelResignation } from "@/application/resignation/cancel-resignation"
 import { GetResignation } from "@/application/resignation/get-resignation"
 import { UpdateResignation } from "@/application/resignation/update-resignation"
-import { Resignation } from "@/domain/resignation/resignation.entity"
+import type { Resignation } from "@/domain/resignation/resignation.entity"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError, ValidationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppResignation } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/shared/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// 退職申請をレスポンス用の snake_case に整形する。
+// 退職申請をレスポンス用の snake_case に整形し、スキーマで検証する。
 function toResponseBody(resignation: Resignation) {
-  return {
+  return zAppResignation.parse({
     id: resignation.id,
     employee_id: resignation.employeeId,
     resignation_date: resignation.resignationDate,
@@ -27,7 +23,7 @@ function toResponseBody(resignation: Resignation) {
     reason: resignation.reason,
     status: resignation.status,
     created_at: resignation.createdAt,
-  }
+  })
 }
 
 // GET /resignations/:id — 退職申請の詳細（本人のみ）
@@ -43,16 +39,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (resignation instanceof Error) {
-    throw new InternalError("failed to load resignation")
-  }
-
-  if (resignation instanceof Resignation === false) {
-    if (resignation.reason === "resignation_not_found") {
-      throw new NotFoundError("resignation not found")
-    }
-
-    throw new ForbiddenError("not the applicant")
+  if (resignation instanceof ApplicationError) {
+    throw toHttpException(resignation)
   }
 
   return c.json(toResponseBody(resignation), 200)
@@ -89,7 +77,9 @@ export const PUT = factory.createHandlers(
     const today = (c.env.NOW ?? new Date().toISOString()).slice(0, 10)
 
     if (json.resignation_date < today) {
-      throw new BadRequestError("resignation_date must be today or in the future")
+      throw toHttpException(
+        new ValidationError("resignation_date must be today or in the future", "start_in_past"),
+      )
     }
 
     const resignation = await new UpdateResignation(c).run({
@@ -100,20 +90,8 @@ export const PUT = factory.createHandlers(
       reason: json.reason ?? null,
     })
 
-    if (resignation instanceof Error) {
-      throw new InternalError("failed to update resignation")
-    }
-
-    if (resignation instanceof Resignation === false) {
-      if (resignation.reason === "resignation_not_found") {
-        throw new NotFoundError("resignation not found")
-      }
-
-      if (resignation.reason === "not_modifiable") {
-        throw new ConflictError("not modifiable")
-      }
-
-      throw new ForbiddenError("not the applicant")
+    if (resignation instanceof ApplicationError) {
+      throw toHttpException(resignation)
     }
 
     return c.json(toResponseBody(resignation), 200)
@@ -133,20 +111,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     employeeId: viewer.employeeId,
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to cancel resignation")
-  }
-
-  if (result.reason === "resignation_not_found") {
-    throw new NotFoundError("resignation not found")
-  }
-
-  if (result.reason === "not_applicant") {
-    throw new ForbiddenError("not the applicant")
-  }
-
-  if (result.reason === "not_modifiable") {
-    throw new ConflictError("not modifiable")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

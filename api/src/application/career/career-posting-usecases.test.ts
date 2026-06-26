@@ -7,11 +7,14 @@ import { UpdateCareerPosting } from "@/application/career/update-career-posting"
 import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 import type { Context } from "@/env"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 async function seedPosting(context: Context): Promise<number> {
   const created = await new CreateCareerPosting(context).run({
-    viewerRole: "admin",
+    session: makeTestSession("admin"),
     title: "Platform Engineer",
     deptId: 3,
     deptName: "Engineering",
@@ -19,7 +22,7 @@ async function seedPosting(context: Context): Promise<number> {
     status: "open",
   })
 
-  if (created instanceof Error || "reason" in created || created.id === null) {
+  if (created instanceof ApplicationError || created.id === null) {
     throw new Error("seed failed")
   }
 
@@ -31,7 +34,7 @@ describe("CreateCareerPosting", () => {
     const { context } = createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       title: "Data Analyst",
       deptId: null,
       deptName: null,
@@ -41,7 +44,7 @@ describe("CreateCareerPosting", () => {
 
     expect(created).toBeInstanceOf(CareerPosting)
 
-    if (created instanceof Error || "reason" in created) {
+    if (created instanceof ApplicationError) {
       throw new Error("create failed")
     }
 
@@ -53,7 +56,7 @@ describe("CreateCareerPosting", () => {
     const { context } = createTestContext()
 
     const created = await new CreateCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       title: "X",
       deptId: null,
       deptName: null,
@@ -63,13 +66,7 @@ describe("CreateCareerPosting", () => {
 
     expect(created instanceof CareerPosting).toBe(false)
 
-    if (created instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    if ("reason" in created) {
-      expect(created.reason).toBe("forbidden")
-    }
+    expectApplicationError(created, ForbiddenError, "forbidden")
   })
 })
 
@@ -80,7 +77,7 @@ describe("GetCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
@@ -91,15 +88,11 @@ describe("GetCareerPosting", () => {
     const { context } = createTestContext()
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: 9999,
     })
 
-    if (result instanceof Error || result instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(result.reason).toBe("posting_not_found")
+    expectApplicationError(result, NotFoundError, "posting_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -108,15 +101,11 @@ describe("GetCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       postingId: postingId,
     })
 
-    if (result instanceof Error || result instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -127,7 +116,7 @@ describe("UpdateCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const updated = await new UpdateCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
       title: "Senior Platform Engineer",
       deptId: 3,
@@ -138,7 +127,7 @@ describe("UpdateCareerPosting", () => {
 
     expect(updated).toBeInstanceOf(CareerPosting)
 
-    if (updated instanceof Error || "reason" in updated) {
+    if (updated instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -150,7 +139,7 @@ describe("UpdateCareerPosting", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: 9999,
       title: "X",
       deptId: null,
@@ -159,11 +148,7 @@ describe("UpdateCareerPosting", () => {
       status: "open",
     })
 
-    if (updated instanceof Error || updated instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(updated.reason).toBe("posting_not_found")
+    expectApplicationError(updated, NotFoundError, "posting_not_found")
   })
 })
 
@@ -174,26 +159,22 @@ describe("DeleteCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       throw new Error("delete failed")
     }
 
     expect(result.reason).toBe("deleted")
 
     const afterDelete = await new GetCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
-    if (afterDelete instanceof Error || afterDelete instanceof CareerPosting) {
-      throw new Error("unexpected result")
-    }
-
-    expect(afterDelete.reason).toBe("posting_not_found")
+    expectApplicationError(afterDelete, NotFoundError, "posting_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -202,15 +183,11 @@ describe("DeleteCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       postingId: postingId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns has_applied_applications when the posting has applied applications", async () => {
@@ -225,20 +202,16 @@ describe("DeleteCareerPosting", () => {
       message: null,
     })
 
-    if (applied instanceof Error || "reason" in applied) {
+    if (applied instanceof ApplicationError) {
       throw new Error("apply failed")
     }
 
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("unexpected error")
-    }
-
-    expect(result.reason).toBe("has_applied_applications")
+    expectApplicationError(result, ConflictError, "has_applied_applications")
   })
 
   test("deletes rejected applications atomically when deleting a posting", async () => {
@@ -256,11 +229,11 @@ describe("DeleteCareerPosting", () => {
 
     // Now delete the posting — should succeed (no applied applications)
     const result = await new DeleteCareerPosting(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       postingId,
     })
 
-    if (result instanceof Error) {
+    if (result instanceof ApplicationError) {
       throw new Error("unexpected error")
     }
 

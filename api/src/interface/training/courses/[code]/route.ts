@@ -3,14 +3,11 @@ import { UpdateTrainingCourse } from "@/application/training/update-training-cou
 import type { TrainingCourse } from "@/domain/training/training-course.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { zAppTrainingCourse } from "@/lib/app-schemas"
 import { trainingCourses } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -18,7 +15,7 @@ import { z } from "zod"
 
 // 研修コースをレスポンス用の snake_case に整形する。
 function toResponseBody(course: TrainingCourse) {
-  return {
+  return zAppTrainingCourse.parse({
     id: course.id,
     code: course.code,
     title: course.title,
@@ -27,7 +24,7 @@ function toResponseBody(course: TrainingCourse) {
     category: course.category,
     is_required: course.isRequired,
     status: course.status,
-  }
+  })
 }
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -45,7 +42,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("course not found")
   }
 
-  const responseBody = {
+  const responseBody = zAppTrainingCourse.parse({
     id: row.id,
     code: row.code,
     title: row.title,
@@ -54,7 +51,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     category: row.category,
     is_required: row.isRequired,
     status: row.status,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -82,7 +79,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateTrainingCourse(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "training course"),
       title: body.title,
       category: body.category,
@@ -91,20 +88,8 @@ export const PUT = factory.createHandlers(
       isRequired: body.is_required ?? false,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update course")
-    }
-
-    if ("reason" in updated) {
-      if (updated.reason === "course_not_found") {
-        throw new NotFoundError("course not found")
-      }
-
-      if (updated.reason === "course_archived") {
-        throw new ConflictError("course is archived")
-      }
-
-      throw new ForbiddenError()
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -120,20 +105,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new ArchiveTrainingCourse(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "training course"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to archive course")
-  }
-
-  if (result.reason === "course_not_found") {
-    throw new NotFoundError("course not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

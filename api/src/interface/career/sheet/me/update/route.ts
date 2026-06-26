@@ -2,7 +2,10 @@ import { UpdateMyCareerSheet } from "@/application/career/update-my-career-sheet
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerSheet } from "@/lib/app-schemas"
 import { z } from "zod"
 
 // PUT /career/sheet/me — 本人のキャリアシートを登録・更新
@@ -31,16 +34,16 @@ export const PUT = factory.createHandlers(
       now: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update career sheet")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    const responseBody = {
+    const responseBody = zAppCareerSheet.parse({
       employee_id: updated.employeeId,
       goals_text: updated.goalsText,
       strengths_text: updated.strengthsText,
       updated_at: updated.updatedAt,
-    }
+    })
 
     return c.json(responseBody, 200)
   },

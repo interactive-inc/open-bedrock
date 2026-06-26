@@ -2,16 +2,10 @@ import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { zAppOrgReportingLineList } from "@/lib/app-schemas"
+import type { AppOrgReportingLineNode } from "@/lib/app-schemas"
 import { employees, orgMemberships } from "@/schema"
 import { eq } from "drizzle-orm"
-
-type ReportingLineNode = {
-  employee_code: string
-  employee_name: string
-  department_code: string | null
-  position: string | null
-  depth: number
-}
 
 // GET /org/reporting-line/:employee_code — 本人から上位へのレポートライン
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -63,7 +57,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("membership not found")
   }
 
-  const body: Array<ReportingLineNode> = []
+  const body: Array<AppOrgReportingLineNode> = []
 
   const visited = new Set<string>()
 
@@ -89,5 +83,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     currentCode = row.managerEmployeeCode
   }
 
-  return c.json(body, 200)
+  const responseBody = zAppOrgReportingLineList.parse(body)
+
+  return c.json(responseBody, 200)
 })

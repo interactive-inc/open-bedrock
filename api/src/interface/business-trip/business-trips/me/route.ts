@@ -1,5 +1,8 @@
 import { ListMyBusinessTrips } from "@/application/business-trip/list-my-business-trips"
+import { ApplicationError } from "@/lib/errors"
+import { zAppBusinessTripList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -7,7 +10,7 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { businessTrips } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
@@ -39,8 +42,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset,
   })
 
-  if (businessTripRows instanceof Error) {
-    throw new InternalError("failed to load business trips")
+  if (businessTripRows instanceof ApplicationError) {
+    throw toHttpException(businessTripRows)
   }
 
   const totalRows = await c.var.database
@@ -48,17 +51,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(businessTrips)
     .where(eq(businessTrips.travelerId, viewer.employeeId))
 
-  const responseBody = businessTripRows.map((businessTrip) => ({
-    id: businessTrip.id,
-    traveler_id: businessTrip.travelerId,
-    destination: businessTrip.destination,
-    start_date: businessTrip.startDate,
-    end_date: businessTrip.endDate,
-    purpose: businessTrip.purpose,
-    estimated_cost: businessTrip.estimatedCost,
-    status: businessTrip.status,
-    created_at: businessTrip.createdAt,
-  }))
+  const responseBody = zAppBusinessTripList.parse({
+    data: businessTripRows.map((businessTrip) => ({
+      id: businessTrip.id,
+      traveler_id: businessTrip.travelerId,
+      destination: businessTrip.destination,
+      start_date: businessTrip.startDate,
+      end_date: businessTrip.endDate,
+      purpose: businessTrip.purpose,
+      estimated_cost: businessTrip.estimatedCost,
+      status: businessTrip.status,
+      created_at: businessTrip.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: responseBody, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })

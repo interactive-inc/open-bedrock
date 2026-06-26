@@ -7,6 +7,7 @@ import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { factory } from "@/lib/factory"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { contextStorage } from "hono/context-storage"
@@ -65,6 +66,8 @@ async function createTestDb(): Promise<D1Database> {
       status: employee.status,
     })),
   )
+
+  await seedIamForEmployees(db)
 
   return db
 }
@@ -274,10 +277,10 @@ describe("DELETE /employees/:code", () => {
     expect(response.status).toBe(403)
   })
 
-  test("admin cannot delete their own account and gets 409", async () => {
+  test("admin cannot delete their own account and gets 403", async () => {
     const response = await request("/employees/E001", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing employee", async () => {

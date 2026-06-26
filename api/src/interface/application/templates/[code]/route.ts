@@ -1,18 +1,14 @@
 import { DeleteApplicationTemplate } from "@/application/application/delete-application-template"
 import { UpdateApplicationTemplate } from "@/application/application/update-application-template"
-import type { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { factory } from "@/lib/factory"
 import { applicationTemplates } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { eq } from "drizzle-orm"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -23,19 +19,6 @@ function toParsedJson(raw: string): unknown {
     return JSON.parse(raw)
   } catch {
     return null
-  }
-}
-
-// 申請テンプレートをレスポンス用の snake_case に整形する。
-function toResponseBody(template: ApplicationTemplate) {
-  return {
-    id: template.id,
-    code: template.code,
-    name: template.name,
-    category: template.category,
-    description: template.description,
-    schema_json: template.schemaJson,
-    approver_roles: template.approverRoles,
   }
 }
 
@@ -75,14 +58,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const approverRoles = approverRolesParsed.data
 
-  const responseBody = {
+  const responseBody = zAppApplicationTemplate.parse({
     code: row.code,
     name: row.name,
     category: row.category,
     description: row.description,
     schema_json: schemaJson,
     approver_roles: approverRoles,
-  }
+  })
 
   return c.json(responseBody, 200)
 })
@@ -110,7 +93,7 @@ export const PUT = factory.createHandlers(
     const body = c.req.valid("json")
 
     const updated = await new UpdateApplicationTemplate(c).run({
-      viewerRole: session.role,
+      session: session,
       code: validateCodeParam(c.req.param("code"), "application template"),
       name: body.name,
       category: body.category,
@@ -119,19 +102,21 @@ export const PUT = factory.createHandlers(
       approverRoles: body.approver_roles ?? [],
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update template")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "template_not_found") {
-        throw new NotFoundError("template not found")
-      }
+    const responseBody = zAppApplicationTemplateDetail.parse({
+      id: updated.id,
+      code: updated.code,
+      name: updated.name,
+      category: updated.category,
+      description: updated.description,
+      schema_json: updated.schemaJson,
+      approver_roles: updated.approverRoles,
+    })
 
-      throw new ForbiddenError()
-    }
-
-    return c.json(toResponseBody(updated), 200)
+    return c.json(responseBody, 200)
   },
 )
 
@@ -144,24 +129,12 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteApplicationTemplate(c).run({
-    viewerRole: session.role,
+    session: session,
     code: validateCodeParam(c.req.param("code"), "application template"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete template")
-  }
-
-  if (result.reason === "template_not_found") {
-    throw new NotFoundError("template not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "template_in_use") {
-    throw new ConflictError("template is in use by pending applications")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

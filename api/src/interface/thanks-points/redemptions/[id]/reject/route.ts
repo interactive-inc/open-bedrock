@@ -1,14 +1,10 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
 import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
@@ -20,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session.role) === false) {
+  if (canDecideRedemption(session) === false) {
     throw new ForbiddenError()
   }
 
@@ -37,25 +33,18 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     decidedAt: c.env.NOW ?? new Date().toISOString(),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to reject redemption")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   if ("reason" in result) {
-    if (result.reason === "redemption_not_found") {
-      throw new NotFoundError("redemption not found")
-    }
-
-    if (result.reason === "already_decided") {
-      throw new ConflictError("redemption already decided")
-    }
-
-    if (result.reason === "self_approval_forbidden") {
-      throw new ForbiddenError("cannot reject own redemption")
-    }
-
-    throw new ConflictError("redemption cannot be rejected")
+    throw toHttpException(new UnexpectedError("redemption cannot be rejected"))
   }
 
-  return c.json({ id: result.id, status: result.status }, 200)
+  const responseBody = zAppThanksRedemptionDecision.parse({
+    id: result.id,
+    status: result.status,
+  })
+
+  return c.json(responseBody, 200)
 })

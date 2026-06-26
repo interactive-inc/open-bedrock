@@ -1,4 +1,6 @@
 import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 
@@ -11,41 +13,31 @@ export type Command = {
   note: string | null
 }
 
-export type CertificateRequestNotFound = { reason: "certificate_request_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
-export type NotModifiable = { reason: "not_modifiable" }
-
 /**
  * 証明書発行依頼の種別・提出先・希望日・備考を変更する。本人以外と、確定済み依頼の変更を拒否する。
  */
 export class UpdateCertificateRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<
-    CertificateRequest | CertificateRequestNotFound | NotRequester | NotModifiable | Error
-  > {
+  async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
     const current = await certificateRequestRepository.findById(command.certificateRequestId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find certificate request", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "certificate_request_not_found" }
+      return new NotFoundError("certificate request not found", "certificate_request_not_found")
     }
 
     if (current.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     if (current.status !== "requested") {
-      return { reason: "not_modifiable" }
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
     }
 
     const updated = current.withDetails({
@@ -58,11 +50,11 @@ export class UpdateCertificateRequest {
     const result = await certificateRequestRepository.update(updated)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to update certificate request", { cause: result })
     }
 
     if (result === null) {
-      return { reason: "not_modifiable" }
+      return new ConflictError("certificate request is not modifiable", "not_modifiable")
     }
 
     return result

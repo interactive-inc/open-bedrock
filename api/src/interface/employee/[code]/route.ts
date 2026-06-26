@@ -4,21 +4,18 @@ import { UpdateEmployee } from "@/application/employee/update-employee"
 import type { Employee } from "@/domain/employee/employee.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import {
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
+import { zAppEmployee } from "@/lib/app-schemas"
 import { employeeRoleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 // 従業員をレスポンス用の snake_case に整形する。
 function toResponseBody(employee: Employee) {
-  return {
+  return zAppEmployee.parse({
     code: employee.code,
     name: employee.name,
     dept_name: employee.deptName,
@@ -26,7 +23,7 @@ function toResponseBody(employee: Employee) {
     email: employee.email,
     status: employee.status,
     role: employee.role,
-  }
+  })
 }
 
 // GET /employees/:code — 従業員 1 件の詳細
@@ -41,12 +38,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     code: validateCodeParam(c.req.param("code"), "employee"),
   })
 
-  if (employee instanceof Error) {
-    throw new InternalError("failed to load employee")
-  }
-
-  if ("reason" in employee) {
-    throw new NotFoundError("employee not found")
+  if (employee instanceof ApplicationError) {
+    throw toHttpException(employee)
   }
 
   return c.json(toResponseBody(employee), 200)
@@ -77,7 +70,7 @@ export const PUT = factory.createHandlers(
     const json = c.req.valid("json")
 
     const updated = await new UpdateEmployee(c).run({
-      viewerRole: session.role,
+      session: session,
       viewerEmployeeId: session.employeeId,
       code: validateCodeParam(c.req.param("code"), "employee"),
       profile: {
@@ -91,32 +84,8 @@ export const PUT = factory.createHandlers(
       },
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update employee")
-    }
-
-    if ("reason" in updated) {
-      if (updated.reason === "employee_not_found") {
-        throw new NotFoundError("employee not found")
-      }
-
-      if (updated.reason === "role_escalation_forbidden") {
-        throw new ForbiddenError("only admin can assign non-member roles")
-      }
-
-      if (updated.reason === "cannot_demote_self") {
-        throw new ForbiddenError("cannot remove admin role from yourself")
-      }
-
-      if (updated.reason === "last_admin") {
-        throw new ForbiddenError("cannot remove the last admin")
-      }
-
-      if (updated.reason === "email_conflict") {
-        throw new ConflictError("email already exists")
-      }
-
-      throw new ForbiddenError()
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
     return c.json(toResponseBody(updated), 200)
@@ -132,25 +101,13 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DeleteEmployee(c).run({
-    viewerRole: session.role,
+    session: session,
     viewerEmployeeId: session.employeeId,
     code: validateCodeParam(c.req.param("code"), "employee"),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to delete employee")
-  }
-
-  if (result.reason === "employee_not_found") {
-    throw new NotFoundError("employee not found")
-  }
-
-  if (result.reason === "forbidden") {
-    throw new ForbiddenError()
-  }
-
-  if (result.reason === "self_delete") {
-    throw new ConflictError("cannot delete your own account")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   return c.body(null, 204)

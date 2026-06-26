@@ -11,7 +11,10 @@ import { Survey } from "@/domain/survey/survey.entity"
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 // --- seed helpers ---
 
@@ -61,7 +64,7 @@ describe("CreateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new CreateSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       title: "Engagement Survey",
       status: "open",
       questionsJson: [{ q: "Rate your satisfaction" }],
@@ -81,7 +84,7 @@ describe("CreateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new CreateSurvey(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       title: "Draft Survey",
       status: "closed",
       questionsJson: [],
@@ -100,17 +103,13 @@ describe("CreateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new CreateSurvey(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       title: "Survey",
       status: "open",
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -123,7 +122,7 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
     })
 
@@ -147,7 +146,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
     })
 
@@ -164,45 +163,33 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_deletable")
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 
   test("returns survey_not_found for a missing survey", async () => {
     const { context } = createTestContext()
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: 9999,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns forbidden for member role", async () => {
     const { context } = createTestContext()
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       surveyId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("removes the survey and its responses from the database", async () => {
@@ -217,7 +204,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
     })
 
@@ -289,7 +276,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
       title: "Updated Title",
       status: "closed",
@@ -312,7 +299,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -330,54 +317,42 @@ describe("UpdateSurvey", () => {
     await seedResponse(context, surveyId, 1)
 
     const result = await new UpdateSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
       questionsJson: [{ q: "Changed question" }],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected questions_immutable")
-    }
-
-    expect(result.reason).toBe("questions_immutable")
+    expectApplicationError(result, ConflictError, "questions_immutable")
   })
 
   test("returns survey_not_found for a missing survey", async () => {
     const { context } = createTestContext()
 
     const result = await new UpdateSurvey(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       surveyId: 9999,
       title: "Missing",
       status: "open",
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected survey_not_found")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns forbidden for member role", async () => {
     const { context } = createTestContext()
 
     const result = await new UpdateSurvey(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       surveyId: 1,
       title: "Survey",
       status: "open",
       questionsJson: [],
     })
 
-    if (result instanceof Survey || result instanceof Error) {
-      throw new Error("expected forbidden")
-    }
-
-    expect(result.reason).toBe("forbidden")
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
 
@@ -414,15 +389,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_found")
+    expectApplicationError(result, NotFoundError, "survey_not_found")
   })
 
   test("returns survey_not_open for a closed survey", async () => {
@@ -437,15 +404,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 
   test("returns already_submitted for a duplicate response", async () => {
@@ -462,15 +421,7 @@ describe("SubmitSurveyResponse", () => {
       submittedAt: "2026-02-01T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    if (!("reason" in result)) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("already_submitted")
+    expectApplicationError(result, ConflictError, "already_submitted")
   })
 })
 
@@ -505,11 +456,7 @@ describe("GetSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected response_not_found")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -523,11 +470,7 @@ describe("GetSurveyResponse", () => {
       respondentId: 99,
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected not_respondent")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 })
 
@@ -606,11 +549,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected response_not_found")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -626,11 +565,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected not_respondent")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 
   test("returns survey_not_open when survey is closed", async () => {
@@ -650,11 +585,7 @@ describe("UpdateSurveyResponse", () => {
       submittedAt: "2026-03-01T00:00:00.000Z",
     })
 
-    if (result instanceof SurveyResponse || result instanceof Error) {
-      throw new Error("expected survey_not_open")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })
 
@@ -687,11 +618,7 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("response_not_found")
+    expectApplicationError(result, NotFoundError, "response_not_found")
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
@@ -705,11 +632,7 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 99,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("not_respondent")
+    expectApplicationError(result, ForbiddenError, "not_respondent")
   })
 
   test("returns survey_not_open when survey is closed", async () => {
@@ -727,10 +650,6 @@ describe("WithdrawSurveyResponse", () => {
       respondentId: 1,
     })
 
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("survey_not_open")
+    expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })

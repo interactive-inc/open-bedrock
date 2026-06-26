@@ -1,13 +1,8 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
 import { Thanks } from "@/domain/thanks/thanks.entity"
 import type { Context } from "@/env"
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -15,6 +10,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
+import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { employees, thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -61,18 +58,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     thanksList.flatMap((thanks) => [thanks.senderEmployeeId, thanks.recipientEmployeeId]),
   )
 
-  const items = thanksList.map((thanks) => ({
-    id: thanks.id,
-    sender_employee_id: thanks.senderEmployeeId,
-    sender_name: nameById.get(thanks.senderEmployeeId) ?? "",
-    recipient_employee_id: thanks.recipientEmployeeId,
-    recipient_name: nameById.get(thanks.recipientEmployeeId) ?? "",
-    message: thanks.message,
-    points: thanks.points,
-    created_at: thanks.createdAt,
-  }))
+  const responseBody = zAppThanksList.parse({
+    data: thanksList.map((thanks) => ({
+      id: thanks.id,
+      sender_employee_id: thanks.senderEmployeeId,
+      sender_name: nameById.get(thanks.senderEmployeeId) ?? "",
+      recipient_employee_id: thanks.recipientEmployeeId,
+      recipient_name: nameById.get(thanks.recipientEmployeeId) ?? "",
+      message: thanks.message,
+      points: thanks.points,
+      created_at: thanks.createdAt,
+    })),
+    total: totalRows.at(0)?.total ?? 0,
+  })
 
-  return c.json({ data: items, total: totalRows.at(0)?.total ?? 0 }, 200)
+  return c.json(responseBody, 200)
 })
 
 // POST /thanks — 全従業員が他の従業員へ感謝を送る（受信者にだけ通知を作成）
@@ -104,41 +104,8 @@ export const POST = factory.createHandlers(
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
-    if (result instanceof Error) {
-      throw new InternalError("failed to send thanks")
-    }
-
-    if ("reason" in result) {
-      if (result.reason === "sender_inactive") {
-        throw new ForbiddenError("sender is no longer active")
-      }
-
-      if (result.reason === "recipient_inactive") {
-        throw new NotFoundError("recipient not found")
-      }
-
-      if (result.reason === "recipient_not_found") {
-        throw new NotFoundError("recipient not found")
-      }
-
-      // 送信者はセッションから解決済みのはずなので、不在は想定外の内部状態。
-      if (result.reason === "sender_not_found") {
-        throw new InternalError("sender not found")
-      }
-
-      if (result.reason === "self_thanks") {
-        throw new BadRequestError("cannot send thanks to yourself")
-      }
-
-      if (result.reason === "insufficient_budget") {
-        throw new BadRequestError("insufficient thanks point budget")
-      }
-
-      if (result.reason === "invalid_points") {
-        throw new BadRequestError("invalid points")
-      }
-
-      throw new BadRequestError("invalid thanks")
+    if (result instanceof ApplicationError) {
+      throw toHttpException(result)
     }
 
     let nameById: Map<number, string>
@@ -150,7 +117,7 @@ export const POST = factory.createHandlers(
       nameById = new Map()
     }
 
-    const responseBody = {
+    const responseBody = zAppThanks.parse({
       id: result.id,
       sender_employee_id: result.senderEmployeeId,
       sender_name: nameById.get(result.senderEmployeeId) ?? "",
@@ -159,7 +126,7 @@ export const POST = factory.createHandlers(
       message: result.message,
       points: result.points,
       created_at: result.createdAt,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

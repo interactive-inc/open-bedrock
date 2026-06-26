@@ -1,9 +1,11 @@
 import { CreateSurvey } from "@/application/survey/create-survey"
-import { Survey } from "@/domain/survey/survey.entity"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppSurvey } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -28,26 +30,22 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
 
     const survey = await new CreateSurvey(c).run({
-      viewerRole: session.role,
+      session: session,
       title: body.title,
       status: body.status,
       questionsJson: body.questions_json,
     })
 
-    if (survey instanceof Error) {
-      throw new InternalError("failed to create survey")
+    if (survey instanceof ApplicationError) {
+      throw toHttpException(survey)
     }
 
-    if (survey instanceof Survey === false) {
-      throw new ForbiddenError()
-    }
-
-    const responseBody = {
+    const responseBody = zAppSurvey.parse({
       id: survey.id,
       title: survey.title,
       status: survey.status,
       questions_json: survey.questionsJson,
-    }
+    })
 
     return c.json(responseBody, 201)
   },

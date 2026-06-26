@@ -2,13 +2,10 @@ import { UpdateReward } from "@/application/thanks-points/update-reward"
 import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
-import {
-  BadRequestError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksReward } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -33,7 +30,7 @@ export const PATCH = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session.role) === false) {
+    if (canManageRewards(session) === false) {
       throw new ForbiddenError()
     }
 
@@ -53,28 +50,19 @@ export const PATCH = factory.createHandlers(
       isActive: json.is_active,
     })
 
-    if (updated instanceof Error) {
-      throw new InternalError("failed to update reward")
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
     }
 
-    if ("reason" in updated) {
-      if (updated.reason === "reward_not_found") {
-        throw new NotFoundError("reward not found")
-      }
+    const responseBody = zAppThanksReward.parse({
+      id: updated.id,
+      name: updated.name,
+      point_cost: updated.pointCost,
+      is_active: updated.isActive,
+      stock: updated.stock,
+      created_at: updated.createdAt,
+    })
 
-      throw new BadRequestError("invalid reward")
-    }
-
-    return c.json(
-      {
-        id: updated.id,
-        name: updated.name,
-        point_cost: updated.pointCost,
-        is_active: updated.isActive,
-        stock: updated.stock,
-        created_at: updated.createdAt,
-      },
-      200,
-    )
+    return c.json(responseBody, 200)
   },
 )

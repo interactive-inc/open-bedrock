@@ -1,14 +1,10 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
 import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
-import {
-  BadRequestError,
-  ConflictError,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { BadRequestError, ConflictError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 
@@ -20,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session.role) === false) {
+  if (canDecideRedemption(session) === false) {
     throw new ForbiddenError()
   }
 
@@ -37,29 +33,13 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     decidedAt: c.env.NOW ?? new Date().toISOString(),
   })
 
-  if (result instanceof Error) {
-    throw new InternalError("failed to approve redemption")
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
   }
 
   if ("reason" in result) {
-    if (result.reason === "redemption_not_found") {
-      throw new NotFoundError("redemption not found")
-    }
-
-    if (result.reason === "already_decided") {
-      throw new ConflictError("redemption already decided")
-    }
-
-    if (result.reason === "insufficient_balance") {
-      throw new ConflictError("insufficient balance")
-    }
-
     if (result.reason === "out_of_stock") {
       throw new ConflictError("reward out of stock")
-    }
-
-    if (result.reason === "self_approval_forbidden") {
-      throw new ForbiddenError("cannot approve own redemption")
     }
 
     // 交換は確定済みだが在庫減算だけ失敗。確定は巻き戻さず、追跡できるよう構造化ログを残し
@@ -73,11 +53,20 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       }),
     )
 
-    return c.json(
-      { id: result.redemption.id, status: result.redemption.status, stock_warning: true },
-      200,
-    )
+    const warningBody = zAppThanksRedemptionDecision.parse({
+      id: result.redemption.id,
+      status: result.redemption.status,
+      stock_warning: true,
+    })
+
+    return c.json(warningBody, 200)
   }
 
-  return c.json({ id: result.id, status: result.status, stock_warning: false }, 200)
+  const responseBody = zAppThanksRedemptionDecision.parse({
+    id: result.id,
+    status: result.status,
+    stock_warning: false,
+  })
+
+  return c.json(responseBody, 200)
 })

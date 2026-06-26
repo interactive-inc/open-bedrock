@@ -1,17 +1,13 @@
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
-import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { CareerPostingRepository } from "@/infrastructure/career/career-posting-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   postingId: number
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type PostingNotFound = { reason: "posting_not_found" }
-
-export type HasAppliedApplications = { reason: "has_applied_applications" }
 
 export type Deleted = { reason: "deleted" }
 
@@ -24,33 +20,34 @@ export type Deleted = { reason: "deleted" }
 export class DeleteCareerPosting {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<Deleted | Forbidden | PostingNotFound | HasAppliedApplications | Error> {
+  async run(command: Command): Promise<Deleted | ApplicationError> {
     const postingRepository = new CareerPostingRepository(this.c)
 
-    if (canManageCareerPostings(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageCareerPostings(command.session) === false) {
+      return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
     const current = await postingRepository.findById(command.postingId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find career posting", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "posting_not_found" }
+      return new NotFoundError("career posting not found", "posting_not_found")
     }
 
     const result = await postingRepository.deleteIfNoAppliedApplications(command.postingId)
 
     if (result instanceof Error) {
-      return result
+      return new UnexpectedError("failed to delete career posting", { cause: result })
     }
 
     if (result === null) {
-      return { reason: "has_applied_applications" }
+      return new ConflictError(
+        "career posting has applied applications",
+        "has_applied_applications",
+      )
     }
 
     return { reason: "deleted" }

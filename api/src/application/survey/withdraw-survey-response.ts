@@ -1,20 +1,14 @@
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   responseId: number
   respondentId: number
 }
 
-export type ResponseNotFound = { reason: "response_not_found" }
-
-export type NotRespondent = { reason: "not_respondent" }
-
-export type SurveyNotOpen = { reason: "survey_not_open" }
-
 export type Withdrawn = { reason: "withdrawn" }
-
-export type WithdrawSurveyResponseFailure = ResponseNotFound | NotRespondent | SurveyNotOpen
 
 /**
  * アンケート回答を取り下げる。本人以外と、公開を終えたアンケートからの取り下げを拒否する。
@@ -22,45 +16,45 @@ export type WithdrawSurveyResponseFailure = ResponseNotFound | NotRespondent | S
 export class WithdrawSurveyResponse {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Withdrawn | WithdrawSurveyResponseFailure | Error> {
+  async run(command: Command): Promise<Withdrawn | ApplicationError> {
     const surveyRepository = new SurveyRepository(this.c)
 
     const current = await surveyRepository.findResponseById(command.responseId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find survey response", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "response_not_found" }
+      return new NotFoundError("survey response not found", "response_not_found")
     }
 
     if (current.respondentId !== command.respondentId) {
-      return { reason: "not_respondent" }
+      return new ForbiddenError("not the respondent", "not_respondent")
     }
 
     const survey = await surveyRepository.findById(current.surveyId)
 
     if (survey instanceof Error) {
-      return survey
+      return new UnexpectedError("failed to find survey", { cause: survey })
     }
 
     if (survey === null || survey.isOpen() === false) {
-      return { reason: "survey_not_open" }
+      return new ConflictError("survey is not open", "survey_not_open")
     }
 
     const deleted = await surveyRepository.deleteResponse(command.responseId)
 
     if (deleted instanceof Error) {
-      return deleted
+      return new UnexpectedError("failed to delete survey response", { cause: deleted })
     }
 
     if (deleted === null) {
-      return { reason: "response_not_found" }
+      return new NotFoundError("survey response not found", "response_not_found")
     }
 
     if (deleted !== true && "reason" in deleted) {
-      return { reason: "survey_not_open" }
+      return new ConflictError("survey is not open", "survey_not_open")
     }
 
     return { reason: "withdrawn" }

@@ -1,4 +1,6 @@
 import type { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
 
@@ -7,19 +9,13 @@ export type Command = {
   requesterId: number
 }
 
-export type CertificateRequestNotFound = { reason: "certificate_request_not_found" }
-
-export type NotRequester = { reason: "not_requester" }
-
 /**
  * 証明書発行依頼を1件取得する。本人以外の閲覧を拒否する。
  */
 export class GetCertificateRequest {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<CertificateRequest | CertificateRequestNotFound | NotRequester | Error> {
+  async run(command: Command): Promise<CertificateRequest | ApplicationError> {
     const certificateRequestRepository = new CertificateRequestRepository(this.c)
 
     const certificateRequest = await certificateRequestRepository.findById(
@@ -27,15 +23,17 @@ export class GetCertificateRequest {
     )
 
     if (certificateRequest instanceof Error) {
-      return certificateRequest
+      return new UnexpectedError("failed to find certificate request", {
+        cause: certificateRequest,
+      })
     }
 
     if (certificateRequest === null) {
-      return { reason: "certificate_request_not_found" }
+      return new NotFoundError("certificate request not found", "certificate_request_not_found")
     }
 
     if (certificateRequest.requesterId !== command.requesterId) {
-      return { reason: "not_requester" }
+      return new ForbiddenError("not the requester", "not_requester")
     }
 
     return certificateRequest

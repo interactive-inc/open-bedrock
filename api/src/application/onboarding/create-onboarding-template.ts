@@ -1,20 +1,18 @@
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   code: string
   name: string
   kind: "join" | "leave"
   description: string | null
 }
-
-export type Forbidden = { reason: "forbidden" }
-
-export type TemplateCodeConflict = { reason: "template_code_conflict" }
 
 /**
  * 管理権限を持つ者が新しいオンボーディングテンプレートを作成する。
@@ -22,23 +20,21 @@ export type TemplateCodeConflict = { reason: "template_code_conflict" }
 export class CreateOnboardingTemplate {
   constructor(private readonly c: Context) {}
 
-  async run(
-    command: Command,
-  ): Promise<OnboardingTemplate | Forbidden | TemplateCodeConflict | Error> {
+  async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
 
-    if (canManageOnboarding(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+    if (canManageOnboarding(command.session) === false) {
+      return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
     const existing = await templateRepository.findByCode(command.code)
 
     if (existing instanceof Error) {
-      return existing
+      return new UnexpectedError("failed to find template", { cause: existing })
     }
 
     if (existing !== null) {
-      return { reason: "template_code_conflict" }
+      return new ConflictError("template code already exists", "template_code_conflict")
     }
 
     const template = OnboardingTemplate.create({
@@ -52,7 +48,11 @@ export class CreateOnboardingTemplate {
 
     // TOCTOU: findByCode で未検出でも並行リクエストが先に INSERT した場合
     if (result instanceof UniqueConstraintError) {
-      return { reason: "template_code_conflict" }
+      return new ConflictError("template code already exists", "template_code_conflict")
+    }
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to create template", { cause: result })
     }
 
     return result

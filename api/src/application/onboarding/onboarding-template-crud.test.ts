@@ -7,6 +7,9 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { employees } from "@/schema"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { describe, expect, test } from "bun:test"
@@ -71,7 +74,7 @@ describe("CreateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "engineer-join",
       name: "Engineer Onboarding",
       kind: "join",
@@ -90,7 +93,7 @@ describe("CreateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "engineer-join",
       name: "Engineer Onboarding",
       kind: "join",
@@ -99,9 +102,7 @@ describe("CreateOnboardingTemplate", () => {
 
     expect(created instanceof OnboardingTemplate).toBe(false)
 
-    if (created instanceof OnboardingTemplate === false && created instanceof Error === false) {
-      expect(created.reason).toBe("forbidden")
-    }
+    expectApplicationError(created, ForbiddenError, "forbidden")
   })
 
   test("a duplicate code conflicts", async () => {
@@ -110,7 +111,7 @@ describe("CreateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const created = await new CreateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
       name: "別の名称",
       kind: "join",
@@ -119,9 +120,7 @@ describe("CreateOnboardingTemplate", () => {
 
     expect(created instanceof OnboardingTemplate).toBe(false)
 
-    if (created instanceof OnboardingTemplate === false && created instanceof Error === false) {
-      expect(created.reason).toBe("template_code_conflict")
-    }
+    expectApplicationError(created, ConflictError, "template_code_conflict")
   })
 })
 
@@ -132,7 +131,7 @@ describe("GetOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "hr",
+      session: makeTestSession("hr"),
       code: "join-default",
     })
 
@@ -143,17 +142,11 @@ describe("GetOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
     })
 
-    expect(found instanceof OnboardingTemplate === false && found instanceof Error === false).toBe(
-      true,
-    )
-
-    if (found instanceof OnboardingTemplate === false && found instanceof Error === false) {
-      expect(found.reason).toBe("template_not_found")
-    }
+    expectApplicationError(found, NotFoundError, "template_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -162,13 +155,11 @@ describe("GetOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const found = await new GetOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "join-default",
     })
 
-    if (found instanceof OnboardingTemplate === false && found instanceof Error === false) {
-      expect(found.reason).toBe("forbidden")
-    }
+    expectApplicationError(found, ForbiddenError, "forbidden")
   })
 })
 
@@ -179,7 +170,7 @@ describe("UpdateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
       name: "更新後の名称",
       kind: "leave",
@@ -199,16 +190,14 @@ describe("UpdateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
       name: "x",
       kind: "join",
       description: null,
     })
 
-    if (updated instanceof OnboardingTemplate === false && updated instanceof Error === false) {
-      expect(updated.reason).toBe("template_not_found")
-    }
+    expectApplicationError(updated, NotFoundError, "template_not_found")
   })
 })
 
@@ -219,7 +208,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
     })
 
@@ -240,13 +229,11 @@ describe("DeleteOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "unknown",
     })
 
-    if (result instanceof Error === false) {
-      expect(result.reason).toBe("template_not_found")
-    }
+    expectApplicationError(result, NotFoundError, "template_not_found")
   })
 
   test("a non-privileged role is forbidden", async () => {
@@ -255,13 +242,11 @@ describe("DeleteOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "member",
+      session: makeTestSession("member"),
       code: "join-default",
     })
 
-    if (result instanceof Error === false) {
-      expect(result.reason).toBe("forbidden")
-    }
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns template_in_use when in_progress assignments exist", async () => {
@@ -271,14 +256,10 @@ describe("DeleteOnboardingTemplate", () => {
     await seedInProgressAssignment(context, "join-default")
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      viewerRole: "admin",
+      session: makeTestSession("admin"),
       code: "join-default",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
-
-    expect(result.reason).toBe("template_in_use")
+    expectApplicationError(result, ConflictError, "template_in_use")
   })
 })

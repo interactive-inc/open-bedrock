@@ -1,18 +1,18 @@
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
+import { hasPermission } from "@/lib/auth/has-permission"
+import type { SessionPayload } from "@/env"
 
 export type Props = {
   taskEmployeeId: number
-  viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
 }
 
-/** タスク完了の権限判定。本人か特権ロールのみ許可する純粋関数。 */
+/** タスク完了の権限判定。本人か onboarding:manage 権限を持つ場合のみ許可する純粋関数。 */
 export function canCompleteTask(props: Props): boolean {
-  const isOwner = props.taskEmployeeId === props.viewerEmployeeId
+  const isOwner = props.taskEmployeeId === props.session.employeeId
 
   if (isOwner) {
     return true
   }
 
-  return privilegedRoles.includes(props.viewerRole)
+  return hasPermission(props.session, "onboarding:manage")
 }

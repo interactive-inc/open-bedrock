@@ -5,8 +5,11 @@ import { GetLifeEvent } from "@/application/life-event/get-life-event"
 import { ListMyLifeEvents } from "@/application/life-event/list-my-life-events"
 import { UpdateLifeEvent } from "@/application/life-event/update-life-event"
 import { LifeEvent } from "@/domain/life-event/life-event.entity"
+import { ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 
 async function seedEvent(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateLifeEvent(context).run({
@@ -71,7 +74,7 @@ describe("GetLifeEvent", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 
   test("returns life_event_not_found for an unknown id", async () => {
@@ -82,7 +85,7 @@ describe("GetLifeEvent", () => {
       employeeId: 5,
     })
 
-    expect(result).toEqual({ reason: "life_event_not_found" })
+    expectApplicationError(result, NotFoundError, "life_event_not_found")
   })
 })
 
@@ -121,7 +124,7 @@ describe("UpdateLifeEvent", () => {
 
     expect(result).toBeInstanceOf(LifeEvent)
 
-    if (result instanceof Error || "reason" in result) {
+    if (result instanceof ApplicationError) {
       throw new Error("update failed")
     }
 
@@ -142,7 +145,7 @@ describe("UpdateLifeEvent", () => {
       detail: null,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 })
 
@@ -170,6 +173,6 @@ describe("CancelLifeEvent", () => {
       employeeId: 6,
     })
 
-    expect(result).toEqual({ reason: "not_applicant" })
+    expectApplicationError(result, ForbiddenError, "not_applicant")
   })
 })

@@ -1,12 +1,15 @@
 import { tokenPayloadSchema } from "@/lib/auth/token-payload"
+import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import type { HonoEnv } from "@/env"
+import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { createMiddleware } from "hono/factory"
 import { jwtVerify } from "jose"
 
-// Bearer トークンを検証し、本人を c.var.session に載せる。
-// JWT の role は発行時点のスナップショットなので、DB から最新 role を再取得して上書きする。
+// Bearer トークンを検証し、本人と権限を c.var.session に載せる。
+// 権限は JWT に載せず毎回 DB 解決する(改竄面の排除・即時失効)。
+// tokenVersion 不一致・account 非 active・employee retired は即 401。
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   const header = c.req.header("Authorization")
 
@@ -22,8 +25,31 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  const repo = new EmployeeRepository(c)
-  const employee = await repo.findById(payload.employeeId)
+  const accountRepository = new AccountAuthRepository(c)
+
+  const account = await accountRepository.resolveById(payload.accountId)
+
+  if (account === null || account instanceof Error) {
+    throw new UnauthorizedError("account not found")
+  }
+
+  // 停止・ロックされたアカウントの既存トークンを即時無効化する。
+  if (account.status !== "active") {
+    throw new UnauthorizedError("account is not active")
+  }
+
+  // パスワード変更・ロール剥奪・停止で ++ される tokenVersion との不一致は即時失効。
+  if (account.tokenVersion !== payload.tokenVersion) {
+    throw new UnauthorizedError("token has been revoked")
+  }
+
+  if (account.employeeId === null) {
+    throw new UnauthorizedError("account has no employee")
+  }
+
+  const employeeRepository = new EmployeeRepository(c)
+
+  const employee = await employeeRepository.findById(account.employeeId)
 
   if (employee === null || employee instanceof Error) {
     throw new UnauthorizedError("employee not found")
@@ -34,7 +60,14 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("employee is retired")
   }
 
-  c.set("session", { ...payload, role: employee.role })
+  c.set("session", {
+    accountId: account.accountId,
+    employeeId: account.employeeId,
+    employeeStatus: employee.status,
+    permissions: account.permissions,
+    roleKeys: account.roleKeys,
+    role: toPrimaryRole(account.roleKeys),
+  })
 
   await next()
 })

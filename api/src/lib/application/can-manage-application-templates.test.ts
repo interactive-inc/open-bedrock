@@ -1,24 +1,25 @@
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageApplicationTemplates", () => {
   test("manager can manage", () => {
-    expect(canManageApplicationTemplates("manager")).toBe(true)
+    expect(canManageApplicationTemplates(makeTestSession("manager"))).toBe(true)
   })
 
   test("hr can manage", () => {
-    expect(canManageApplicationTemplates("hr")).toBe(true)
+    expect(canManageApplicationTemplates(makeTestSession("hr"))).toBe(true)
   })
 
   test("admin can manage", () => {
-    expect(canManageApplicationTemplates("admin")).toBe(true)
+    expect(canManageApplicationTemplates(makeTestSession("admin"))).toBe(true)
   })
 
   test("member cannot manage", () => {
-    expect(canManageApplicationTemplates("member")).toBe(false)
+    expect(canManageApplicationTemplates(makeTestSession("member"))).toBe(false)
   })
 
   test("unknown role cannot manage", () => {
-    expect(canManageApplicationTemplates("viewer")).toBe(false)
+    expect(canManageApplicationTemplates(makeTestSession("viewer"))).toBe(false)
   })
 })

@@ -1,23 +1,15 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
-import type { Context } from "@/env"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
-  viewerRole: string
+  session: SessionPayload
   surveyId: number
 }
 
-export type Forbidden = { reason: "forbidden" }
-
-export type SurveyNotFound = { reason: "survey_not_found" }
-
 export type Deleted = { reason: "deleted" }
-
-export type NotDeletable = { reason: "not_deletable" }
-
-export type NotFound = { reason: "not_found" }
-
-export type DeleteFailure = Forbidden | SurveyNotFound | NotDeletable | NotFound
 
 /**
  * 管理権限を持つ者がアンケートを削除する。
@@ -26,9 +18,9 @@ export type DeleteFailure = Forbidden | SurveyNotFound | NotDeletable | NotFound
 export class DeleteSurvey {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<Deleted | DeleteFailure | Error> {
-    if (canManageSurveys(command.viewerRole) === false) {
-      return { reason: "forbidden" }
+  async run(command: Command): Promise<Deleted | ApplicationError> {
+    if (canManageSurveys(command.session) === false) {
+      return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
     const surveyRepository = new SurveyRepository(this.c)
@@ -36,15 +28,15 @@ export class DeleteSurvey {
     const current = await surveyRepository.findById(command.surveyId)
 
     if (current instanceof Error) {
-      return current
+      return new UnexpectedError("failed to find survey", { cause: current })
     }
 
     if (current === null) {
-      return { reason: "survey_not_found" }
+      return new NotFoundError("survey not found", "survey_not_found")
     }
 
     if (current.isOpen()) {
-      return { reason: "not_deletable" }
+      return new ConflictError("open survey cannot be deleted", "not_deletable")
     }
 
     const db = this.c.env.DB
@@ -60,21 +52,23 @@ export class DeleteSurvey {
         const survey = await surveyRepository.findById(command.surveyId)
 
         if (survey instanceof Error) {
-          return survey
+          return new UnexpectedError("failed to find survey", { cause: survey })
         }
 
         if (survey === null) {
-          return { reason: "not_found" }
+          return new ConflictError("survey was modified concurrently", "not_found")
         }
 
         if (survey.isOpen()) {
-          return { reason: "not_deletable" }
+          return new ConflictError("open survey cannot be deleted", "not_deletable")
         }
 
-        return { reason: "not_found" }
+        return new ConflictError("survey was modified concurrently", "not_found")
       }
 
-      return error instanceof Error ? error : new Error("failed to delete survey")
+      return error instanceof Error
+        ? new UnexpectedError("failed to delete survey", { cause: error })
+        : new UnexpectedError("failed to delete survey")
     }
 
     return { reason: "deleted" }

@@ -1,17 +1,15 @@
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
   swapRequestId: number
 }
-
-export type SwapRequestNotFound = { reason: "swap_request_not_found" }
-
-export type NotVisible = { reason: "not_visible" }
 
 /**
  * シフト交代申請を1件取得する。申請者本人・対象社員・承認権限者のみ閲覧できる。
@@ -19,17 +17,17 @@ export type NotVisible = { reason: "not_visible" }
 export class GetShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
-  async run(input: Input): Promise<ShiftSwapRequest | SwapRequestNotFound | NotVisible | Error> {
+  async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)
 
     const swapRequest = await swapRequestRepository.findById(input.swapRequestId)
 
     if (swapRequest instanceof Error) {
-      return swapRequest
+      return new UnexpectedError("failed to find shift swap request", { cause: swapRequest })
     }
 
     if (swapRequest === null) {
-      return { reason: "swap_request_not_found" }
+      return new NotFoundError("shift swap request not found", "swap_request_not_found")
     }
 
     const isRequester = swapRequest.requesterEmployeeId === input.viewerEmployeeId
@@ -39,9 +37,9 @@ export class GetShiftSwapRequest {
     if (
       isRequester === false &&
       isTargetEmployee === false &&
-      canApproveShiftSwap(input.viewerRole) === false
+      canApproveShiftSwap(input.session) === false
     ) {
-      return { reason: "not_visible" }
+      return new ForbiddenError("cannot view this shift swap request", "not_visible")
     }
 
     return swapRequest

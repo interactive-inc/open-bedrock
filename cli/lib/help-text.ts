@@ -199,6 +199,8 @@ commands:
   antisocial-check update     反社チェック申請を変更 (--id --partner [--address --representative --result])
   antisocial-check cancel     反社チェック申請を取り下げ (--id)
   batch                       バッチ状況
+  roles                       ロール一覧（iam:manage_roles）
+  accounts                    アカウント一覧（account:manage）
   dashboard                   ダッシュボード集計
 
 options:
