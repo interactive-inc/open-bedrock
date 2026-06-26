@@ -54,6 +54,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
       throw new ConflictError("insufficient balance")
     }
 
+    if (result.reason === "out_of_stock") {
+      throw new ConflictError("reward out of stock")
+    }
+
     if (result.reason === "self_approval_forbidden") {
       throw new ForbiddenError("cannot approve own redemption")
     }

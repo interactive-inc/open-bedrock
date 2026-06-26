@@ -415,6 +415,65 @@ describe("DecideRedemption", () => {
     expect(reward.stock).toBe(2)
   })
 
+  test("returns out_of_stock when stock is consumed between request and approve", async () => {
+    const { context } = createTestContext()
+
+    await seedBalance(context, 5, 100)
+    await seedBalance(context, 6, 100)
+
+    const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
+
+    const firstPending = await new RequestRedemption(context).run({
+      employeeId: 5,
+      rewardId,
+      createdAt: "2026-02-01T00:00:00.000Z",
+    })
+
+    const secondPending = await new RequestRedemption(context).run({
+      employeeId: 6,
+      rewardId,
+      createdAt: "2026-02-01T00:01:00.000Z",
+    })
+
+    if (!(firstPending instanceof ThanksRedemption)) {
+      throw new Error("expected first ThanksRedemption")
+    }
+
+    if (!(secondPending instanceof ThanksRedemption)) {
+      throw new Error("expected second ThanksRedemption")
+    }
+
+    const first = await new DecideRedemption(context).run({
+      redemptionId: firstPending.id ?? 0,
+      deciderId: 2,
+      action: "approve",
+      decidedAt: "2026-02-02T00:00:00.000Z",
+    })
+
+    expect(first).toBeInstanceOf(ThanksRedemption)
+
+    const second = await new DecideRedemption(context).run({
+      redemptionId: secondPending.id ?? 0,
+      deciderId: 2,
+      action: "approve",
+      decidedAt: "2026-02-02T00:01:00.000Z",
+    })
+
+    if (second instanceof Error || second instanceof ThanksRedemption) {
+      throw new Error("expected a reason result")
+    }
+
+    expect(second.reason).toBe("out_of_stock")
+
+    const reward = await new ThanksRewardRepository(context).findById(rewardId)
+
+    if (reward instanceof Error || reward === null) {
+      throw new Error("reward not found after approve")
+    }
+
+    expect(reward.stock).toBe(0)
+  })
+
   test("rejects a pending redemption", async () => {
     const { context } = createTestContext()
 
