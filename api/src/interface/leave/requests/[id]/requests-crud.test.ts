@@ -56,9 +56,6 @@ async function createTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      email: employee.email,
-      password_hash: employee.passwordHash,
-      role: employee.role,
       dept_id: employee.deptId,
       dept_name: employee.deptName,
       position: employee.position,
@@ -152,8 +149,12 @@ describe("GET /leave/requests/:id", () => {
   test("returns 200 for a manager viewing another person's request", async () => {
     const db = await createTestDb()
 
-    // employee 4 を manager ロールに上書き（シードは member）
-    await db.prepare("UPDATE employees SET role = ? WHERE id = ?").bind("manager", 4).run()
+    // employee 4(account 4) に manager ロールを付与する（認可は account_roles が正）
+    await db
+      .prepare(
+        "INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at) SELECT 4, r.id, NULL, 0 FROM roles r WHERE r.key = 'manager' AND r.is_system = 1",
+      )
+      .run()
 
     const bindings: Bindings = {
       DB: db,
@@ -187,8 +188,12 @@ describe("GET /leave/requests/:id", () => {
   test("returns 200 for an hr viewer viewing another person's request", async () => {
     const db = await createTestDb()
 
-    // employee 2 を hr ロールに上書き（シードは member）
-    await db.prepare("UPDATE employees SET role = ? WHERE id = ?").bind("hr", 2).run()
+    // employee 2(account 2) に hr ロールを付与する（認可は account_roles が正）
+    await db
+      .prepare(
+        "INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at) SELECT 2, r.id, NULL, 0 FROM roles r WHERE r.key = 'hr' AND r.is_system = 1",
+      )
+      .run()
 
     const bindings: Bindings = {
       DB: db,

@@ -13,9 +13,6 @@ describe("EmployeeRepository", () => {
         id: 1,
         code: "E001",
         name: "テスト社員",
-        email: "you@example.com",
-        password_hash: "hash",
-        role: "member",
         dept_id: null,
         dept_name: null,
         position: null,
@@ -34,7 +31,6 @@ describe("EmployeeRepository", () => {
     }
 
     expect(found.code).toBe("E001")
-    expect(found.email).toBe("you@example.com")
   })
 
   test("findByCode returns null when not seeded", async () => {

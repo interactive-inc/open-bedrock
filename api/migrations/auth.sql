@@ -1,8 +1,5 @@
--- 認証ドメインは専用テーブルを持たず、従業員台帳（employees）を土台にする。
--- employees 本体の定義は 0001_org_and_employee.sql が持つ。ここではログイン照合と
--- 本人取得に使うキーのインデックスのみを idempotent に定義する。
-
--- ログインはメールアドレスを大文字小文字を無視して照合する（LOWER(email)）。
-CREATE INDEX IF NOT EXISTS idx_employees_email_lower ON employees (LOWER(email));
-
--- /me は token の employeeId（= employees.id）で本人を引く。id は PK なので追加索引は不要。
+-- IAM Phase 7: 認証(email/password)は identities が正に移譲済み。
+-- ログイン照合は identities(provider='password', subject=正規化email)で行い、
+-- そのキーは uniq_identities_provider_subject(0003_iam.sql)が担う。
+-- 旧 employees.email を使ったログイン照合用インデックスはここでは作らない。
+-- /me は token の employeeId(= employees.id)で本人を引く。id は PK なので追加索引は不要。

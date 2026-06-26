@@ -3,6 +3,7 @@ import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -69,12 +70,22 @@ export class RegisterEmployee {
 
     const passwordHash = await toPasswordHash(command.employee.password)
 
+    // email(認証情報)の重複は identities が正。台帳 insert の前に確認する。
+    const existingByEmail = await new IdentityRepository(this.c).findEmployeeIdByEmail(
+      command.employee.email,
+    )
+
+    if (existingByEmail instanceof Error) {
+      return new UnexpectedError("failed to check email", { cause: existingByEmail })
+    }
+
+    if (existingByEmail !== null) {
+      return new ConflictError("email already exists", "email_conflict")
+    }
+
     const result = await employeeRepository.create({
       code: command.employee.code,
       name: command.employee.name,
-      email: command.employee.email,
-      passwordHash: passwordHash,
-      role: command.employee.role,
       deptId: command.employee.deptId,
       deptName: command.employee.deptName,
       position: command.employee.position,
@@ -82,13 +93,7 @@ export class RegisterEmployee {
     })
 
     if (result instanceof UniqueConstraintError) {
-      const causeMsg = result.cause instanceof Error ? result.cause.message : ""
-
-      if (/employees\.code/i.test(causeMsg)) {
-        return new ConflictError("employee code already exists", "employee_code_conflict")
-      }
-
-      return new ConflictError("email already exists", "email_conflict")
+      return new ConflictError("employee code already exists", "employee_code_conflict")
     }
 
     if (result instanceof Error) {

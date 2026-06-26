@@ -32,9 +32,6 @@ async function createTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      email: employee.email,
-      password_hash: employee.passwordHash,
-      role: employee.role,
       dept_id: employee.deptId,
       dept_name: employee.deptName,
       position: employee.position,
@@ -181,9 +178,6 @@ describe("GET /rooms/availability", () => {
         id: 4,
         code: "E004",
         name: "Manager",
-        email: "you+e004@example.com",
-        password_hash: "hash",
-        role: "manager",
         dept_id: 1,
         dept_name: "Engineering",
         position: "Manager",
@@ -191,7 +185,9 @@ describe("GET /rooms/availability", () => {
       },
     ])
 
-    await seedIamForEmployees(db)
+    await seedIamForEmployees(db, [
+      { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "manager" },
+    ])
 
     await seedD1(db, "rooms", [{ id: 10, name: "Room Alpha", capacity: 5, location: null }])
 
@@ -253,9 +249,6 @@ describe("GET /rooms/availability", () => {
         id: 4,
         code: "E004",
         name: "Manager",
-        email: "you+e004@example.com",
-        password_hash: "hash",
-        role: "manager",
         dept_id: 1,
         dept_name: "Engineering",
         position: "Manager",
@@ -263,7 +256,9 @@ describe("GET /rooms/availability", () => {
       },
     ])
 
-    await seedIamForEmployees(db)
+    await seedIamForEmployees(db, [
+      { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "manager" },
+    ])
 
     await seedD1(db, "rooms", [
       { id: 20, name: "Room Beta", capacity: 4, location: null },

@@ -5,22 +5,32 @@ import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 
-async function insertEmployee(
+// 認証情報(identities.secret)が移行対象。account と password identity を 1 組み立てる。
+async function insertPasswordIdentity(
   db: D1Database,
-  props: { id: number; passwordHash: string },
+  props: { id: number; secret: string },
 ): Promise<void> {
-  await seedD1(db, "employees", [
+  await seedD1(db, "accounts", [
     {
       id: props.id,
-      code: `E${String(props.id).padStart(3, "0")}`,
-      name: "Test Worker",
-      email: `you+e${String(props.id).padStart(3, "0")}@example.com`,
-      password_hash: props.passwordHash,
-      role: "member",
-      dept_id: null,
-      dept_name: null,
-      position: null,
+      employee_id: props.id,
       status: "active",
+      token_version: 0,
+      created_at: 0,
+      updated_at: 0,
+    },
+  ])
+
+  await seedD1(db, "identities", [
+    {
+      id: props.id,
+      account_id: props.id,
+      provider: "password",
+      subject: `you+e${String(props.id).padStart(3, "0")}@example.com`,
+      secret: props.secret,
+      email: `you+e${String(props.id).padStart(3, "0")}@example.com`,
+      email_verified: 1,
+      created_at: 0,
     },
   ])
 }
@@ -31,7 +41,7 @@ describe("MigrateLegacyHashes", () => {
 
     const legacyHash = await toLegacyPasswordHash("password123")
 
-    await insertEmployee(db, { id: 1, passwordHash: legacyHash })
+    await insertPasswordIdentity(db, { id: 1, secret: legacyHash })
 
     const result = await new MigrateLegacyHashes(context).run()
 
@@ -44,22 +54,22 @@ describe("MigrateLegacyHashes", () => {
     expect(result.skipped).toBe(0)
     expect(result.failed).toBe(0)
 
-    const row = await db.prepare("SELECT password_hash FROM employees WHERE id = 1").first()
+    const row = await db.prepare("SELECT secret FROM identities WHERE id = 1").first()
 
     if (row === null) {
-      throw new Error("employee row not found")
+      throw new Error("identity row not found")
     }
 
-    expect(typeof row.password_hash).toBe("string")
-    expect(String(row.password_hash).startsWith("pbkdf2-wrapped-legacy:")).toBe(true)
+    expect(typeof row.secret).toBe("string")
+    expect(String(row.secret).startsWith("pbkdf2-wrapped-legacy:")).toBe(true)
   })
 
-  test("skips employees with pbkdf2 format hash", async () => {
+  test("skips identities with pbkdf2 format secret", async () => {
     const { context, db } = createTestContext()
 
     const pbkdf2Hash = await toPasswordHash("password123")
 
-    await insertEmployee(db, { id: 1, passwordHash: pbkdf2Hash })
+    await insertPasswordIdentity(db, { id: 1, secret: pbkdf2Hash })
 
     const result = await new MigrateLegacyHashes(context).run()
 
@@ -72,7 +82,7 @@ describe("MigrateLegacyHashes", () => {
     expect(result.skipped).toBe(0)
   })
 
-  test("returns zero counts when no employees exist", async () => {
+  test("returns zero counts when no identities exist", async () => {
     const { context } = createTestContext()
 
     const result = await new MigrateLegacyHashes(context).run()
@@ -93,8 +103,8 @@ describe("MigrateLegacyHashes", () => {
     const legacyHash = await toLegacyPasswordHash("password123")
     const pbkdf2Hash = await toPasswordHash("password456")
 
-    await insertEmployee(db, { id: 1, passwordHash: legacyHash })
-    await insertEmployee(db, { id: 2, passwordHash: pbkdf2Hash })
+    await insertPasswordIdentity(db, { id: 1, secret: legacyHash })
+    await insertPasswordIdentity(db, { id: 2, secret: pbkdf2Hash })
 
     const result = await new MigrateLegacyHashes(context).run()
 

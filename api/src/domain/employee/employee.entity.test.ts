@@ -7,9 +7,6 @@ describe("Employee.fromRow", () => {
       id: 1,
       code: "E001",
       name: "Taro Yamada",
-      email: "taro@example.com",
-      passwordHash: "hashed",
-      role: "member",
       deptId: 10,
       deptName: "Engineering",
       position: "Staff",
@@ -20,8 +17,6 @@ describe("Employee.fromRow", () => {
     expect(employee.id).toBe(1)
     expect(employee.code).toBe("E001")
     expect(employee.name).toBe("Taro Yamada")
-    expect(employee.email).toBe("taro@example.com")
-    expect(employee.role).toBe("member")
     expect(employee.deptId).toBe(10)
     expect(employee.deptName).toBe("Engineering")
     expect(employee.position).toBe("Staff")
@@ -33,9 +28,6 @@ describe("Employee.fromRow", () => {
       id: 2,
       code: "E002",
       name: "Hanako Suzuki",
-      email: "hanako@example.com",
-      passwordHash: "hashed",
-      role: "hr",
       deptId: null,
       deptName: null,
       position: null,
@@ -53,9 +45,6 @@ describe("Employee.fromRow", () => {
       id: 3,
       code: "E003",
       name: "Jiro Tanaka",
-      email: "jiro@example.com",
-      passwordHash: "hashed",
-      role: "admin",
       deptId: 20,
       deptName: "Sales",
       position: "Manager",
@@ -72,9 +61,6 @@ describe("Employee.withStatus", () => {
       id: 1,
       code: "E001",
       name: "Taro Yamada",
-      email: "taro@example.com",
-      passwordHash: "hashed",
-      role: "member",
       deptId: 10,
       deptName: "Engineering",
       position: "Staff",
@@ -96,9 +82,6 @@ describe("Employee.withProfile", () => {
       id: 1,
       code: "E001",
       name: "Taro Yamada",
-      email: "taro@example.com",
-      passwordHash: "hashed",
-      role: "member",
       deptId: 10,
       deptName: "Engineering",
       position: "Staff",
@@ -107,8 +90,6 @@ describe("Employee.withProfile", () => {
 
     const updated = employee.withProfile({
       name: "Taro Sato",
-      email: "sato@example.com",
-      role: "hr",
       deptId: 20,
       deptName: "HR",
       position: "Lead",
@@ -117,8 +98,6 @@ describe("Employee.withProfile", () => {
 
     expect(updated).toBeInstanceOf(Employee)
     expect(updated.name).toBe("Taro Sato")
-    expect(updated.email).toBe("sato@example.com")
-    expect(updated.role).toBe("hr")
     expect(updated.deptId).toBe(20)
     expect(updated.deptName).toBe("HR")
     expect(updated.position).toBe("Lead")

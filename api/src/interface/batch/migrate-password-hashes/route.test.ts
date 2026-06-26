@@ -21,9 +21,6 @@ async function createTestDb(): Promise<D1Database> {
       id: 1,
       code: "E001",
       name: "Admin User",
-      email: "you+admin@example.com",
-      password_hash: modernHash,
-      role: "admin",
       dept_id: null,
       dept_name: null,
       position: null,
@@ -33,9 +30,6 @@ async function createTestDb(): Promise<D1Database> {
       id: 2,
       code: "E002",
       name: "Legacy User",
-      email: "you+legacy@example.com",
-      password_hash: legacyHash,
-      role: "member",
       dept_id: null,
       dept_name: null,
       position: null,
@@ -43,7 +37,11 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await seedIamForEmployees(db)
+  // 移行対象は identities.secret。E002 にレガシー secret を持たせる。
+  await seedIamForEmployees(db, [
+    { id: 1, email: "you+admin@example.com", passwordHash: modernHash, role: "admin" },
+    { id: 2, email: "you+legacy@example.com", passwordHash: legacyHash, role: "member" },
+  ])
 
   return db
 }
