@@ -8,7 +8,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ApplicationError } from "@/lib/errors"
+import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
@@ -40,7 +41,6 @@ export const GET = factory.createHandlers(
       const keywordMatch = or(
         likeKeyword(employees.name, query.q),
         likeKeyword(employees.code, query.q),
-        likeKeyword(employees.email, query.q),
       )
 
       if (keywordMatch !== undefined) {
@@ -72,11 +72,11 @@ export const GET = factory.createHandlers(
 
     const rows = await c.var.database
       .select({
+        id: employees.id,
         code: employees.code,
         name: employees.name,
         deptName: employees.deptName,
         position: employees.position,
-        email: employees.email,
         status: employees.status,
       })
       .from(employees)
@@ -90,13 +90,24 @@ export const GET = factory.createHandlers(
       .from(employees)
       .where(conditions.length === 0 ? undefined : and(...conditions))
 
+    // email は認証情報(identities)が正。台帳の表示用に id で解決する。
+    const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds(
+      rows.map((row) => row.id),
+    )
+
+    if (emailByEmployeeId instanceof Error) {
+      throw toHttpException(
+        new UnexpectedError("failed to resolve emails", { cause: emailByEmployeeId }),
+      )
+    }
+
     const responseBody = zAppEmployeeList.parse({
       data: rows.map((row) => ({
         code: row.code,
         name: row.name,
         dept_name: row.deptName,
         position: row.position,
-        email: row.email,
+        email: emailByEmployeeId.get(row.id) ?? "",
         status: row.status,
       })),
       total: totalRows.at(0)?.total ?? 0,
@@ -151,14 +162,15 @@ export const POST = factory.createHandlers(
       throw toHttpException(created)
     }
 
+    // email/role は認証・認可情報(identities/account_roles)が正。登録時の入力値をそのまま返す。
     const responseBody = zAppEmployee.parse({
       code: created.code,
       name: created.name,
       dept_name: created.deptName,
       position: created.position,
-      email: created.email,
+      email: json.email,
       status: created.status,
-      role: created.role,
+      role: json.role,
     })
 
     return c.json(responseBody, 201)

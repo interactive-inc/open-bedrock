@@ -59,9 +59,6 @@ async function createTestDb(): Promise<D1Database> {
       id: employee.id,
       code: employee.code,
       name: employee.name,
-      email: employee.email,
-      password_hash: employee.passwordHash,
-      role: employee.role,
       dept_id: employee.deptId,
       dept_name: employee.deptName,
       position: employee.position,
@@ -194,9 +191,6 @@ describe("GET /applications/inbox", () => {
         id: 5,
         code: "E005",
         name: "Emery Lane",
-        email: "you+e005@example.com",
-        password_hash: "hash",
-        role: "member",
         dept_id: 3,
         dept_name: "Engineering",
         position: "Engineer",
@@ -206,9 +200,6 @@ describe("GET /applications/inbox", () => {
         id: 99,
         code: "E099",
         name: "Robin Uchida",
-        email: "you+e099@example.com",
-        password_hash: "hash",
-        role: "hr",
         dept_id: 6,
         dept_name: "Administration",
         position: "HR",
@@ -216,7 +207,10 @@ describe("GET /applications/inbox", () => {
       },
     ])
 
-    await seedIamForEmployees(db)
+    await seedIamForEmployees(db, [
+      { id: 5, email: "you+e005@example.com", passwordHash: "hash", role: "member" },
+      { id: 99, email: "you+e099@example.com", passwordHash: "hash", role: "hr" },
+    ])
 
     const hrToken = await tokenFor(99, "hr")
 

@@ -6,9 +6,6 @@ const zProps = z.object({
   id: z.number(),
   code: z.string(),
   name: z.string(),
-  email: z.string(),
-  passwordHash: z.string(),
-  role: z.string(),
   deptId: z.number().nullable(),
   deptName: z.string().nullable(),
   position: z.string().nullable(),
@@ -23,12 +20,6 @@ export class Employee implements Props {
   readonly code!: Props["code"]
 
   readonly name!: Props["name"]
-
-  readonly email!: Props["email"]
-
-  readonly passwordHash!: Props["passwordHash"]
-
-  readonly role!: Props["role"]
 
   readonly deptId!: Props["deptId"]
 
@@ -51,9 +42,6 @@ export class Employee implements Props {
       id: row.id,
       code: row.code,
       name: row.name,
-      email: row.email,
-      passwordHash: row.passwordHash,
-      role: row.role,
       deptId: row.deptId,
       deptName: row.deptName,
       position: row.position,
@@ -65,11 +53,9 @@ export class Employee implements Props {
     return new Employee({ ...this.props, status })
   }
 
-  /** 氏名・メール・ロール・部署・役職・在籍状況を差し替えた新しい従業員を返す。 */
+  /** 氏名・部署・役職・在籍状況を差し替えた新しい従業員を返す。 */
   withProfile(profile: {
     name: Props["name"]
-    email: Props["email"]
-    role: Props["role"]
     deptId: Props["deptId"]
     deptName: Props["deptName"]
     position: Props["position"]

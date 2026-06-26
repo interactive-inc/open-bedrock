@@ -3,16 +3,14 @@ import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
-import { count, eq, notLike, sql } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 // 新規従業員の登録に必要な値。id は DB が採番するため含めない。
+// 認証(email/password)・認可(role)は employees ではなく IAM(identities/account_roles)が正。
 export type NewEmployee = {
   code: string
   name: string
-  email: string
-  passwordHash: string
-  role: string
   deptId: number | null
   deptName: string | null
   position: string | null
@@ -30,10 +28,6 @@ export class EmployeeRepository {
     return this.findOne(eq(employees.code, code))
   }
 
-  async findByEmail(email: string): Promise<Employee | null | Error> {
-    return this.findOne(sql`LOWER(${employees.email}) = LOWER(${email})`)
-  }
-
   private async findOne(condition: SQL): Promise<Employee | null | Error> {
     try {
       const rows = await this.c.var.database.select().from(employees).where(condition).limit(1)
@@ -46,21 +40,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 指定ロールの従業員数を返す。
-  async countByRole(role: string): Promise<number | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ value: count() })
-        .from(employees)
-        .where(eq(employees.role, role))
-
-      return rows.at(0)?.value ?? 0
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to count employees by role")
-    }
-  }
-
-  // 新規従業員を登録し、採番後の行を返す。
+  // 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。
   async create(newEmployee: NewEmployee): Promise<Employee | Error> {
     try {
       const rows = await this.c.var.database
@@ -68,9 +48,6 @@ export class EmployeeRepository {
         .values({
           code: newEmployee.code,
           name: newEmployee.name,
-          email: newEmployee.email,
-          passwordHash: newEmployee.passwordHash,
-          role: newEmployee.role,
           deptId: newEmployee.deptId,
           deptName: newEmployee.deptName,
           position: newEmployee.position,
@@ -92,15 +69,13 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・メール・ロール・部署・役職・在籍状況を更新する。code と認証情報には触れない。
+  // 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。
   async updateProfile(employee: Employee): Promise<Employee | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(employees)
         .set({
           name: employee.name,
-          email: employee.email,
-          role: employee.role,
           deptId: employee.deptId,
           deptName: employee.deptName,
           position: employee.position,
@@ -120,35 +95,6 @@ export class EmployeeRepository {
       }
 
       return error instanceof Error ? error : new Error("failed to update employee")
-    }
-  }
-
-  // パスワードハッシュのみ差し替える。旧フォーマット → 新フォーマット段階移行に使う。
-  async updatePasswordHash(employeeId: number, newPasswordHash: string): Promise<null | Error> {
-    try {
-      await this.c.var.database
-        .update(employees)
-        .set({ passwordHash: newPasswordHash })
-        .where(eq(employees.id, employeeId))
-
-      return null
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update password hash")
-    }
-  }
-
-  // password_hash が純正 PBKDF2 形式でない従業員を全件返す。
-  // 旧形式（hex）とラップ済み旧形式（pbkdf2-wrapped-legacy:）が対象。
-  async findAllWithNonPbkdf2Hash(): Promise<ReadonlyArray<Employee> | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select()
-        .from(employees)
-        .where(notLike(employees.passwordHash, "pbkdf2:%"))
-
-      return rows.map((row) => Employee.fromRow(row))
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to load employees with legacy hash")
     }
   }
 

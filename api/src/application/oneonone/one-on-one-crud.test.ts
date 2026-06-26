@@ -9,6 +9,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import type { Context } from "@/env"
 
 async function seedEmployees(db: D1Database): Promise<void> {
@@ -17,9 +18,6 @@ async function seedEmployees(db: D1Database): Promise<void> {
       id: 1,
       code: "E001",
       name: "Manager",
-      email: "you+manager@example.com",
-      password_hash: "pbkdf2:dummy",
-      role: "manager",
       dept_id: null,
       dept_name: null,
       position: null,
@@ -29,14 +27,17 @@ async function seedEmployees(db: D1Database): Promise<void> {
       id: 2,
       code: "E002",
       name: "Member",
-      email: "you+member@example.com",
-      password_hash: "pbkdf2:dummy",
-      role: "member",
       dept_id: null,
       dept_name: null,
       position: null,
       status: "active",
     },
+  ])
+
+  // email から対象社員を解決するため、identities(認証情報)も用意する。
+  await seedIamForEmployees(db, [
+    { id: 1, email: "you+manager@example.com", passwordHash: "pbkdf2:dummy", role: "manager" },
+    { id: 2, email: "you+member@example.com", passwordHash: "pbkdf2:dummy", role: "member" },
   ])
 }
 

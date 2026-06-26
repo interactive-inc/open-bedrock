@@ -24,9 +24,6 @@ async function insertEmployee(
       id: overrides.id,
       code: `E${String(overrides.id).padStart(3, "0")}`,
       name: "Test Worker",
-      email: overrides.email,
-      password_hash: overrides.passwordHash,
-      role: "member",
       dept_id: null,
       dept_name: null,
       position: null,
@@ -34,7 +31,15 @@ async function insertEmployee(
     },
   ])
 
-  await seedIamForEmployees(db)
+  // 認証情報(identities)が正。テストの email/passwordHash を identity に持たせる。
+  await seedIamForEmployees(db, [
+    {
+      id: overrides.id,
+      email: overrides.email,
+      passwordHash: overrides.passwordHash,
+      role: "member",
+    },
+  ])
 }
 
 describe("AuthenticateEmployee", () => {

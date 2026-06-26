@@ -18,9 +18,6 @@ async function seedEmployee(
   const created = await repository.create({
     code,
     name,
-    email: `you+${code.toLowerCase()}@example.com`,
-    passwordHash: "hash",
-    role: "member",
     deptId: 3,
     deptName: "Engineering",
     position: "Engineer",

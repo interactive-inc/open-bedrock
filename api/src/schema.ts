@@ -21,14 +21,11 @@ import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "driz
 // 非一意インデックスは除く）。インデックスを追加・変更する際は migration を正として更新し、
 // 一意・部分インデックスは本ファイルにも反映すること。
 
-// 従業員台帳
+// 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
 export const employees = sqliteTable("employees", {
   id: integer("id").primaryKey(),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull(),
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
   position: text("position"),

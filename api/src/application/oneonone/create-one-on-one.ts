@@ -1,6 +1,6 @@
 import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -22,22 +22,23 @@ export class CreateOneOnOne {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
-    const employeeRepository = new EmployeeRepository(this.c)
+    const identityRepository = new IdentityRepository(this.c)
 
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    const member = await employeeRepository.findByEmail(command.memberEmail)
+    // email は認証情報(identities)が正。対象社員を email から解決する。
+    const memberId = await identityRepository.findEmployeeIdByEmail(command.memberEmail)
 
-    if (member instanceof Error) {
-      return new UnexpectedError("failed to find member", { cause: member })
+    if (memberId instanceof Error) {
+      return new UnexpectedError("failed to find member", { cause: memberId })
     }
 
-    if (member === null) {
+    if (memberId === null) {
       return new NotFoundError("member not found", "member_not_found")
     }
 
     const oneOnOne = OneOnOne.create({
-      memberId: member.id,
+      memberId: memberId,
       managerId: command.managerId,
       heldAt: command.heldAt,
       topics: command.topics,

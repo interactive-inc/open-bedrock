@@ -23,9 +23,6 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
   const created = await repository.create({
     code: code,
     name: "Sam Rivers",
-    email: `you+${code.toLowerCase()}@example.com`,
-    passwordHash: "hash",
-    role: "member",
     deptId: 3,
     deptName: "Engineering",
     position: "Engineer",
@@ -128,8 +125,6 @@ describe("GetEmployee", () => {
 
 const profileInput = {
   name: "Renamed",
-  email: "you+renamed@example.com",
-  role: "manager",
   deptId: 4,
   deptName: "Sales",
   position: "Lead",
@@ -156,7 +151,6 @@ describe("UpdateEmployee", () => {
     }
 
     expect(result.name).toBe("Renamed")
-    expect(result.role).toBe("manager")
     expect(result.status).toBe("leave")
   })
 

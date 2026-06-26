@@ -1,3 +1,4 @@
--- employees.email に UNIQUE 制約を追加し、重複メールアドレスを DB レベルで防止する。
-CREATE UNIQUE INDEX IF NOT EXISTS idx_employees_email_unique
-  ON employees (email);
+-- IAM Phase 7: email は employees から identities へ移譲済み。
+-- 重複防止は identities の uniq_identities_provider_subject(0003_iam.sql)が担う。
+-- 旧 idx_employees_email_unique は 0006_iam_drop_employee_auth_columns.sql で破棄する。
+-- このファイルは履歴互換のため残すが、employees.email へのインデックスは作らない。

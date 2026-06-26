@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { accountRoles, accounts, employees, roles } from "@/schema"
-import { and, eq, inArray, sql } from "drizzle-orm"
+import { and, count, eq, inArray, sql } from "drizzle-orm"
 
 // IAM のアカウント管理(一覧・取得・状態遷移・ロール割当)を扱う。
 // verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
@@ -134,6 +134,76 @@ export class AccountRepository {
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to bump token version")
+    }
+  }
+
+  /**
+   * 従業員 id 群について、account_roles 由来の roleKeys を解決する。
+   */
+  async findRoleKeysByEmployeeIds(
+    employeeIds: ReadonlyArray<number>,
+  ): Promise<Map<number, ReadonlyArray<string>> | Error> {
+    try {
+      if (employeeIds.length === 0) {
+        return new Map()
+      }
+
+      const rows = await this.c.var.database
+        .select({ employeeId: accounts.employeeId, roleKey: roles.key })
+        .from(accounts)
+        .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
+        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
+        .where(inArray(accounts.employeeId, [...employeeIds]))
+
+      const result = new Map<number, Array<string>>()
+
+      for (const row of rows) {
+        if (row.employeeId === null) {
+          continue
+        }
+
+        const existing = result.get(row.employeeId)
+
+        if (existing === undefined) {
+          result.set(row.employeeId, [row.roleKey])
+        } else {
+          existing.push(row.roleKey)
+        }
+      }
+
+      return result
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to resolve role keys")
+    }
+  }
+
+  /**
+   * 従業員 id 1 件の roleKeys を解決する。不在は空配列。
+   */
+  async findRoleKeysByEmployeeId(employeeId: number): Promise<ReadonlyArray<string> | Error> {
+    const resolved = await this.findRoleKeysByEmployeeIds([employeeId])
+
+    if (resolved instanceof Error) {
+      return resolved
+    }
+
+    return resolved.get(employeeId) ?? []
+  }
+
+  /**
+   * 指定した system role を保持するアカウント数を数える。
+   */
+  async countAccountsWithSystemRole(roleKey: string): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(accountRoles)
+        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
+        .where(and(eq(roles.key, roleKey), eq(roles.isSystem, 1)))
+
+      return rows.at(0)?.value ?? 0
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to count accounts by role")
     }
   }
 }

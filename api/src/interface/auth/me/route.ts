@@ -1,9 +1,10 @@
 import { factory } from "@/lib/factory"
 import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
-import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /me — 認証済みの本人の社員情報
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -25,11 +26,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("employee not found")
   }
 
+  // email は認証情報(identities)が正。本人の id から解決する。
+  const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([row.id])
+
+  if (emailByEmployeeId instanceof Error) {
+    throw new InternalError("internal server error")
+  }
+
   const responseBody = zAppAuthMe.parse({
     id: row.id,
     code: row.code,
     name: row.name,
-    email: row.email,
+    email: emailByEmployeeId.get(row.id) ?? "",
     role: session.role,
     dept_name: row.deptName,
     position: row.position,
