@@ -132,7 +132,24 @@ export class IdentityRepository {
   }
 
   /**
-   * password identity の secret(PBKDF2)を書き戻す(レガシーハッシュ昇格)。
+   * account の password identity の id を返す。不在は null。
+   */
+  async findPasswordIdentityIdByAccount(accountId: number): Promise<number | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ id: identities.id })
+        .from(identities)
+        .where(and(eq(identities.accountId, accountId), eq(identities.provider, "password")))
+        .limit(1)
+
+      return rows.at(0)?.id ?? null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find identity")
+    }
+  }
+
+  /**
+   * password identity の secret(PBKDF2)を書き戻す(レガシーハッシュ昇格・パスワード再設定)。
    */
   async updateSecret(identityId: number, secret: string): Promise<null | Error> {
     try {
