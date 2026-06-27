@@ -1,7 +1,10 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
+import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
+import { redemptionStatusSchema } from "@/lib/schemas"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
+import { z } from "zod"
 
 // 確定済みの交換ステータス。確定は fulfilled の1つだけ。
 // 承認＝確定（fulfilled）へ直行するため approved は使わない。
@@ -15,6 +18,17 @@ export type InsufficientBalanceError = { reason: "insufficient_balance" }
 export type OutOfStockError = { reason: "out_of_stock" }
 
 export type RewardInactiveError = { reason: "reward_inactive" }
+
+const thanksRedemptionD1RowSchema = z.object({
+  id: z.number(),
+  employeeId: z.number(),
+  rewardId: z.number(),
+  pointCost: z.number(),
+  status: redemptionStatusSchema,
+  createdAt: z.string(),
+  decidedAt: z.string().nullable(),
+  deciderId: z.number().nullable(),
+})
 
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
@@ -167,34 +181,80 @@ export class ThanksRedemptionRepository {
   async approveFromPending(props: {
     redemptionId: number
     employeeId: number
+    rewardId: number
     deciderId: number
     decidedAt: string
   }): Promise<ThanksRedemption | null | Error> {
     try {
-      const balanceExpression = sql`(
-        (SELECT COALESCE(SUM(${thanks.points}), 0) FROM ${thanks}
-          WHERE ${thanks.recipientEmployeeId} = ${props.employeeId})
-        - (SELECT COALESCE(SUM(${thanksRedemptions.pointCost}), 0) FROM ${thanksRedemptions}
-          WHERE ${thanksRedemptions.employeeId} = ${props.employeeId}
-            AND ${thanksRedemptions.status} IN (${settledStatus}, 'pending')
-            AND ${thanksRedemptions.id} != ${props.redemptionId})
-      ) >= ${thanksRedemptions.pointCost}`
+      const db = this.c.env.DB
+      let approveResult: D1Result<unknown> | undefined
 
-      const rows = await this.c.var.database
-        .update(thanksRedemptions)
-        .set({ status: "fulfilled", decidedAt: props.decidedAt, deciderId: props.deciderId })
-        .where(
-          and(
-            eq(thanksRedemptions.id, props.redemptionId),
-            eq(thanksRedemptions.status, "pending"),
-            balanceExpression,
-          ),
-        )
-        .returning()
+      try {
+        const results = await db.batch([
+          db
+            .prepare(
+              "UPDATE thanks_rewards SET stock = stock - 1 WHERE id = ?1 AND stock IS NOT NULL AND stock > 0",
+            )
+            .bind(props.rewardId),
+          db
+            .prepare(
+              `
+              UPDATE thanks_redemptions
+              SET status = 'fulfilled',
+                  decided_at = ?3,
+                  decider_id = ?4
+              WHERE id = ?1
+                AND employee_id = ?2
+                AND reward_id = ?5
+                AND status = 'pending'
+                AND (
+                  (SELECT COALESCE(SUM(points), 0) FROM thanks
+                    WHERE recipient_employee_id = ?2)
+                  - (SELECT COALESCE(SUM(point_cost), 0) FROM thanks_redemptions
+                    WHERE employee_id = ?2
+                      AND status IN ('fulfilled', 'pending')
+                      AND id != ?1)
+                ) >= point_cost
+                AND (
+                  (SELECT stock FROM thanks_rewards WHERE id = ?5) IS NULL
+                  OR changes() > 0
+                )
+              RETURNING
+                id,
+                employee_id AS employeeId,
+                reward_id AS rewardId,
+                point_cost AS pointCost,
+                status,
+                created_at AS createdAt,
+                decided_at AS decidedAt,
+                decider_id AS deciderId
+              `,
+            )
+            .bind(
+              props.redemptionId,
+              props.employeeId,
+              props.decidedAt,
+              props.deciderId,
+              props.rewardId,
+            ),
+          abortWhenPreviousStatementChangedNoRows(db),
+        ])
 
-      const row = rows.at(0)
+        approveResult = results.at(1)
+      } catch (error) {
+        if (isAbortedByGuard(error)) {
+          return null
+        }
+        return error instanceof Error ? error : new Error("failed to approve thanks redemption")
+      }
 
-      return row === undefined ? null : ThanksRedemption.fromRow(row)
+      const row = parseD1Row(approveResult, thanksRedemptionD1RowSchema)
+
+      if (row instanceof Error) {
+        return row
+      }
+
+      return row === undefined ? null : new ThanksRedemption(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to approve thanks redemption")
     }
@@ -312,4 +372,12 @@ export class ThanksRedemptionRepository {
       return error instanceof Error ? error : new Error("failed to compute balance")
     }
   }
+}
+
+function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
+  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
+}
+
+function isAbortedByGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
