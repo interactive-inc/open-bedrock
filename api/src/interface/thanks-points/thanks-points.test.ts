@@ -835,8 +835,8 @@ describe("atomicity", () => {
     expect(parsed.remaining_points).toBeGreaterThanOrEqual(0)
   })
 
-  // 在庫1の景品に対し、各々残高十分な2人が同時に交換確定。在庫はマイナスにならず1件だけ在庫を消費する。
-  test("stock never goes negative under concurrent approvals", async () => {
+  // 在庫1の景品に対し、各々残高十分な2人が同時に交換確定しようとしても、承認は1件だけ成立する。
+  test("rejects one concurrent approval when finite stock is exhausted", async () => {
     const db = await createTestDb()
 
     // E005 と E010 にそれぞれ十分な残高を配る。
@@ -873,18 +873,19 @@ describe("atomicity", () => {
         method: "POST",
       })
 
-    // 残高は別人なので両方とも確定はできる（残高ガードでは弾かれない）。在庫1なので減算は1件だけ成功し、
-    // もう1件は条件付き UPDATE が 0 行で在庫を減らさない。確定は両方維持され、在庫はマイナスにならない。
     const responses = await Promise.all([approve(firstId), approve(secondId)])
 
-    expect(responses.every((response) => response.status === 200)).toBe(true)
+    const statuses = responses
+      .map((response) => response.status)
+      .sort((left, right) => left - right)
+
+    expect(statuses).toEqual([200, 409])
 
     const rewardRow = await db
       .prepare("SELECT stock FROM thanks_rewards WHERE id = ?")
       .bind(rewardId)
       .first<{ stock: number }>()
 
-    // 在庫は 1 から 0 までしか減らない（マイナスにならない）。
     expect(rewardRow?.stock).toBe(0)
     expect(rewardRow?.stock).toBeGreaterThanOrEqual(0)
   })
