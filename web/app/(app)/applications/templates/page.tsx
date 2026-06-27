@@ -31,12 +31,12 @@ export default async function ApplicationTemplatesPage() {
         description="利用可能なテンプレートから新規申請を作成します。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/applications" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/applications" />}>
               申請一覧へ
             </Button>
 
             {canManage ? (
-              <Button render={<Link href="/applications/templates/new" />}>
+              <Button nativeButton={false} render={<Link href="/applications/templates/new" />}>
                 <Plus />
                 テンプレートを作成
               </Button>

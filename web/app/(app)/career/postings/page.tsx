@@ -30,7 +30,7 @@ export default async function CareerPostingsPage() {
             <BackButton href="/career" label="キャリアに戻る" />
 
             {canManage ? (
-              <Button render={<Link href="/career/postings/new" />}>
+              <Button nativeButton={false} render={<Link href="/career/postings/new" />}>
                 <Plus />
                 新規作成
               </Button>

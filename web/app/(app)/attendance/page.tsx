@@ -32,7 +32,7 @@ export default async function AttendancePage(props: Props) {
         title="勤怠"
         description="出勤・退勤の打刻と、自分の勤怠記録を確認します。"
         actions={
-          <Button variant="outline" render={<Link href="/attendance/all" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/attendance/all" />}>
             勤怠一覧（管理者）
           </Button>
         }

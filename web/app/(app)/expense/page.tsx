@@ -34,12 +34,12 @@ export default function MyExpensesPage() {
         description="自分が申請した経費の一覧と状態"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/expense/inbox" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
               <Inbox />
               承認受信箱
             </Button>
 
-            <Button render={<Link href="/expense/new" />}>
+            <Button nativeButton={false} render={<Link href="/expense/new" />}>
               <Plus />
               新しい経費
             </Button>

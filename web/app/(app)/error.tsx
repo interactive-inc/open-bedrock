@@ -36,7 +36,7 @@ export default function AppError(props: Props) {
       <div className="flex gap-3">
         <Button onClick={props.reset}>再試行</Button>
 
-        <Button variant="outline" render={<Link href="/" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
           ホームへ戻る
         </Button>
       </div>

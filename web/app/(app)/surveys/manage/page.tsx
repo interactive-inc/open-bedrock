@@ -41,11 +41,11 @@ export default async function SurveyManagePage() {
         description="実施中のアンケートを確認・編集・削除します。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/surveys" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/surveys" />}>
               サーベイ一覧へ
             </Button>
 
-            <Button render={<Link href="/surveys/manage/new" />}>
+            <Button nativeButton={false} render={<Link href="/surveys/manage/new" />}>
               <Plus />
               新規アンケート
             </Button>

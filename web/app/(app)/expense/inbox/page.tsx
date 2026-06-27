@@ -29,7 +29,7 @@ export default function ExpenseInboxPage() {
         title="経費の承認 inbox"
         description="承認待ちの経費申請を確認します。"
         actions={
-          <Button variant="outline" render={<Link href="/expense" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/expense" />}>
             自分の経費へ
           </Button>
         }

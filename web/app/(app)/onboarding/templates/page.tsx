@@ -32,7 +32,7 @@ export default async function OnboardingTemplatesPage() {
           <>
             <BackButton href="/onboarding" label="オンボーディングに戻る" />
 
-            <Button render={<Link href="/onboarding/templates/new" />}>
+            <Button nativeButton={false} render={<Link href="/onboarding/templates/new" />}>
               <Plus />
               新規テンプレート
             </Button>

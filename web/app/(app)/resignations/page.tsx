@@ -18,7 +18,7 @@ export default function ResignationsPage() {
         title="退職申請"
         description="退職の申請と、申請状況を確認します。"
         actions={
-          <Button render={<Link href="/resignations/new" />}>
+          <Button nativeButton={false} render={<Link href="/resignations/new" />}>
             <Plus />
             新規申請
           </Button>

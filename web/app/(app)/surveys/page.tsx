@@ -16,7 +16,7 @@ export default function SurveysPage() {
         title="サーベイ"
         description="配信中のアンケートに回答します。"
         actions={
-          <Button variant="outline" render={<Link href="/surveys/manage" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/surveys/manage" />}>
             管理
           </Button>
         }

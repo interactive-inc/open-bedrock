@@ -20,7 +20,7 @@ export default async function CareerPage() {
         title="キャリア"
         description="キャリアシートの編集と自分の応募を確認します。"
         actions={
-          <Button variant="outline" render={<Link href="/career/postings" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/career/postings" />}>
             <Briefcase />
             社内公募を見る
           </Button>

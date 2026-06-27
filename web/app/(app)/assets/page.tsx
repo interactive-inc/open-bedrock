@@ -51,11 +51,11 @@ export default async function AssetsPage(props: Props) {
         description="種別・状態で絞り込み、備品の一覧を確認します。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/assets/lent/me" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/assets/lent/me" />}>
               自分の貸与品
             </Button>
 
-            <Button render={<Link href="/assets/new" />}>物品を登録</Button>
+            <Button nativeButton={false} render={<Link href="/assets/new" />}>物品を登録</Button>
           </>
         }
       />

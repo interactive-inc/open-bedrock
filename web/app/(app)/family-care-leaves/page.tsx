@@ -18,7 +18,7 @@ export default function FamilyCareLeavesPage() {
         title="産休・育休・介護休業の申出"
         description="休業の申出と、申出状況を確認します。"
         actions={
-          <Button render={<Link href="/family-care-leaves/new" />}>
+          <Button nativeButton={false} render={<Link href="/family-care-leaves/new" />}>
             <Plus />
             新規申出
           </Button>

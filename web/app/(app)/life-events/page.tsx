@@ -18,7 +18,7 @@ export default function LifeEventsPage() {
         title="ライフイベント届出"
         description="結婚・出産などのライフイベントを届け出ます。"
         actions={
-          <Button render={<Link href="/life-events/new" />}>
+          <Button nativeButton={false} render={<Link href="/life-events/new" />}>
             <Plus />
             新規届出
           </Button>

@@ -28,7 +28,7 @@ export default async function KnowledgePage(props: Props) {
         title="ナレッジ検索"
         description="社内ナレッジを検索します。"
         actions={
-          <Button render={<Link href="/knowledge/new" />}>
+          <Button nativeButton={false} render={<Link href="/knowledge/new" />}>
             <Plus />
             新規記事
           </Button>

@@ -18,7 +18,7 @@ export default function OneOnOnePage() {
         title="1on1"
         description="自分の参加した 1on1 の履歴を確認します。"
         actions={
-          <Button render={<Link href="/oneonone/new" />}>
+          <Button nativeButton={false} render={<Link href="/oneonone/new" />}>
             <Plus />
             記録を追加
           </Button>

@@ -31,7 +31,7 @@ export default async function ThanksRewardsPage() {
             <BackButton href="/thanks" label="感謝に戻る" />
 
             {canManage ? (
-              <Button variant="outline" render={<Link href="/thanks/rewards/manage" />}>
+              <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards/manage" />}>
                 <Settings />
                 景品の管理
               </Button>

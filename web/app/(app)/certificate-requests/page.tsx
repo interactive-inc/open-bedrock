@@ -18,7 +18,7 @@ export default function CertificateRequestsPage() {
         title="証明書発行依頼"
         description="在職証明など各種証明書の発行を依頼し、進捗を確認します。"
         actions={
-          <Button render={<Link href="/certificate-requests/new" />}>
+          <Button nativeButton={false} render={<Link href="/certificate-requests/new" />}>
             <Plus />
             新規依頼
           </Button>

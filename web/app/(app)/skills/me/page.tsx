@@ -17,7 +17,7 @@ export default function MySkillsPage() {
         title="自分のスキル"
         description="登録済みスキルを確認し、新しいスキルを登録します。"
         actions={
-          <Button variant="outline" render={<Link href="/skills" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/skills" />}>
             スキル一覧
           </Button>
         }

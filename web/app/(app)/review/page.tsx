@@ -30,7 +30,7 @@ export default async function ReviewPage() {
         description="評価サイクルと自分の評価フォームを確認します。"
         actions={
           canAdminister ? (
-            <Button variant="outline" render={<Link href="/review/manage" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/review/manage" />}>
               <Settings />
               管理
             </Button>

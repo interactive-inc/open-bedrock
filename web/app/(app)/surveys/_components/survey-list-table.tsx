@@ -55,7 +55,7 @@ export async function SurveyListTable() {
               <TableCell>{survey.questions_json.length}</TableCell>
 
               <TableCell className="flex justify-end gap-2">
-                <Button size="sm" render={<Link href={`/surveys/${survey.id}`} />}>
+                <Button size="sm" nativeButton={false} render={<Link href={`/surveys/${survey.id}`} />}>
                   回答
                 </Button>
 
