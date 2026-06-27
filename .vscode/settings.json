@@ -8,6 +8,8 @@
     "**/next-env.d.ts": true,
     "**/node_modules": true,
     "**/tsconfig.tsbuildinfo": true,
+    "*/.wrangler": true,
+    "*/dist": true,
     "skills-lock.json": true
   }
 }

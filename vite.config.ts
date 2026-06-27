@@ -3,10 +3,10 @@ import { defineConfig } from "vite-plus"
 export default defineConfig({
   fmt: {
     semi: false,
-    ignorePatterns: [".agents/**"],
+    ignorePatterns: [".agents/**", ".claude/**"],
   },
   lint: {
-    ignorePatterns: [".agents/**"],
+    ignorePatterns: [".agents/**", ".claude/**"],
     options: {
       typeAware: true,
     },

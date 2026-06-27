@@ -2,8 +2,6 @@
 /.claude/scheduled_tasks.lock
 /.claude/agent-memory-local
 /.claude/worktrees
-# サブエージェントのメモリ（マシン固有の中間生成物。どの階層でも無視）
-**/.claude/agent-memory
 
 # Env
 .env.local
