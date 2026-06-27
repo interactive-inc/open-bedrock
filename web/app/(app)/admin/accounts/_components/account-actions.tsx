@@ -2,9 +2,25 @@
 
 import { useActionState } from "react"
 import { toast } from "sonner"
-import { revokeAccountRoleAction, setAccountStatusAction } from "@/app/(app)/admin/accounts/actions"
+import {
+  resetPasswordAction,
+  revokeAccountRoleAction,
+  setAccountStatusAction,
+} from "@/app/(app)/admin/accounts/actions"
 import type { AccountActionFormState } from "@/app/(app)/admin/accounts/actions"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 const initialState: AccountActionFormState = { ok: false, error: null }
 
@@ -74,19 +90,113 @@ export function AccountStatusButton(props: StatusProps) {
 
   const [, formAction, isPending] = useActionState(reduce, initialState)
 
-  const nextStatus = props.status === "active" ? "suspended" : "active"
+  // 有効化(影響が小さい)は即時、停止(ログイン不可になる)は確認ダイアログを挟む。
+  if (props.status !== "active") {
+    return (
+      <form action={formAction} className="inline">
+        <input type="hidden" name="account_id" value={props.accountId} />
 
-  const label = props.status === "active" ? "停止" : "有効化"
+        <input type="hidden" name="status" value="active" />
+
+        <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+          有効化
+        </Button>
+      </form>
+    )
+  }
 
   return (
-    <form action={formAction} className="inline">
-      <input type="hidden" name="account_id" value={props.accountId} />
+    <AlertDialog>
+      <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={isPending} />}>
+        停止
+      </AlertDialogTrigger>
 
-      <input type="hidden" name="status" value={nextStatus} />
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>このアカウントを停止しますか？</AlertDialogTitle>
 
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
-        {label}
-      </Button>
-    </form>
+          <AlertDialogDescription>
+            停止するとこのアカウントはログインできなくなり、発行済みのトークンも即時無効になります。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>やめる</AlertDialogCancel>
+
+          <form action={formAction}>
+            <input type="hidden" name="account_id" value={props.accountId} />
+
+            <input type="hidden" name="status" value="suspended" />
+
+            <AlertDialogAction type="submit" variant="destructive" disabled={isPending}>
+              停止する
+            </AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+type ResetProps = {
+  accountId: number
+}
+
+// アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。
+export function ResetPasswordButton(props: ResetProps) {
+  async function reduce(
+    previousState: AccountActionFormState,
+    formData: FormData,
+  ): Promise<AccountActionFormState> {
+    const result = await resetPasswordAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("パスワードを再設定しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [, formAction, isPending] = useActionState(reduce, initialState)
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger render={<Button variant="outline" size="sm" disabled={isPending} />}>
+        PW再設定
+      </AlertDialogTrigger>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>パスワードを再設定しますか？</AlertDialogTitle>
+
+          <AlertDialogDescription>
+            新しいパスワードを設定すると、このアカウントの既存トークンは無効になります。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <form action={formAction} className="flex flex-col gap-4">
+          <input type="hidden" name="account_id" value={props.accountId} />
+
+          <Input
+            type="password"
+            name="new_password"
+            required
+            minLength={8}
+            maxLength={200}
+            placeholder="新しいパスワード（8文字以上）"
+          />
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>やめる</AlertDialogCancel>
+
+            <AlertDialogAction type="submit" disabled={isPending}>
+              再設定する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

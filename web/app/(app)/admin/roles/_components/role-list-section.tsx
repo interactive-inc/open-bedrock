@@ -9,7 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 import { getRoles } from "@/lib/api/get-roles"
+import Link from "next/link"
 
 // GET /roles を実行しロール一覧テーブルを描画する非同期 RSC。
 export async function RoleListSection() {
@@ -47,7 +49,16 @@ export async function RoleListSection() {
                   <Badge variant="outline">動的</Badge>
                 )}
               </TableCell>
-              <TableCell>{role.is_system ? null : <DeleteRoleButton roleId={role.id} />}</TableCell>
+              <TableCell className="flex gap-2">
+                <Link
+                  href={`/admin/roles/${role.id}/edit`}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  編集
+                </Link>
+
+                {role.is_system ? null : <DeleteRoleButton roleId={role.id} roleName={role.name} />}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

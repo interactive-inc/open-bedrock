@@ -4,10 +4,70 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createRole } from "@/lib/api/create-role"
 import { deleteRole } from "@/lib/api/delete-role"
+import { updateRole } from "@/lib/api/update-role"
 
 export type RoleCreateFormState = {
   ok: boolean
   error: string | null
+}
+
+export type RoleUpdateFormState = {
+  ok: boolean
+  error: string | null
+}
+
+// FormData からロール更新を実行するサーバーアクション。
+export async function updateRoleAction(
+  _prevState: RoleUpdateFormState,
+  formData: FormData,
+): Promise<RoleUpdateFormState> {
+  const roleId = toRoleId(formData.get("role_id"))
+
+  const name = toRoleText(formData.get("name"))
+
+  if (roleId === null || name === null) {
+    return { ok: false, error: "ロールと名前は必須です" }
+  }
+
+  const description = toRoleText(formData.get("description"))
+
+  const permissionKeys = formData
+    .getAll("permission_keys")
+    .filter((value): value is string => typeof value === "string")
+
+  const updated = await updateRole(roleId, {
+    name: name,
+    description: description,
+    permissionKeys: permissionKeys,
+  })
+
+  if (updated instanceof Error) {
+    return { ok: false, error: "ロールの更新に失敗しました（権限不足の可能性）" }
+  }
+
+  revalidatePath("/admin/roles")
+
+  redirect("/admin/roles")
+}
+
+function toRoleId(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function toRoleText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  return trimmed === "" ? null : trimmed
 }
 
 export type RoleDeleteFormState = {

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { grantAccountRole } from "@/lib/api/grant-account-role"
+import { resetAccountPassword } from "@/lib/api/reset-account-password"
 import { revokeAccountRole } from "@/lib/api/revoke-account-role"
 import { setAccountStatus } from "@/lib/api/set-account-status"
 
@@ -32,6 +33,34 @@ export async function revokeAccountRoleAction(
 
   if (revoked instanceof Error) {
     return { ok: false, error: "ロールの剥奪に失敗しました（最後の管理者は外せません）" }
+  }
+
+  revalidatePath("/admin/accounts")
+
+  return { ok: true, error: null }
+}
+
+// 管理者がアカウントのパスワードを再設定する。
+export async function resetPasswordAction(
+  _prevState: AccountActionFormState,
+  formData: FormData,
+): Promise<AccountActionFormState> {
+  const accountId = toPositiveInt(formData.get("account_id"))
+
+  const newPassword = toText(formData.get("new_password"))
+
+  if (accountId === null || newPassword === null) {
+    return { ok: false, error: "アカウントとパスワードを指定してください" }
+  }
+
+  if (newPassword.length < 8) {
+    return { ok: false, error: "パスワードは8文字以上にしてください" }
+  }
+
+  const reset = await resetAccountPassword(accountId, newPassword)
+
+  if (reset instanceof Error) {
+    return { ok: false, error: "パスワードの再設定に失敗しました" }
   }
 
   revalidatePath("/admin/accounts")

@@ -1,5 +1,6 @@
 import {
   AccountStatusButton,
+  ResetPasswordButton,
   RevokeRoleButton,
 } from "@/app/(app)/admin/accounts/_components/account-actions"
 import { GrantRoleForm } from "@/app/(app)/admin/accounts/_components/grant-role-form"
@@ -68,8 +69,10 @@ export async function AccountListSection() {
               <TableCell>
                 <GrantRoleForm accountId={account.id} roleKeys={roleKeys} />
               </TableCell>
-              <TableCell>
+              <TableCell className="flex gap-2">
                 <AccountStatusButton accountId={account.id} status={account.status} />
+
+                <ResetPasswordButton accountId={account.id} />
               </TableCell>
             </TableRow>
           ))}
