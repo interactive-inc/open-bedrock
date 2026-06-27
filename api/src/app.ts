@@ -163,6 +163,9 @@ import * as iamRolesRoute from "@/interface/iam/roles/route"
 import * as iamPermissionsRoute from "@/interface/iam/permissions/route"
 import * as iamAccountsRoute from "@/interface/iam/accounts/route"
 import * as iamAccountRolesRoute from "@/interface/iam/accounts/[id]/roles/route"
+import * as iamRoleDetailRoute from "@/interface/iam/roles/[id]/route"
+import * as iamAccountStatusRoute from "@/interface/iam/accounts/[id]/status/route"
+import * as iamAccountRoleRevokeRoute from "@/interface/iam/accounts/[id]/roles/[roleKey]/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
@@ -211,8 +214,13 @@ export const app = factory
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
+  .get("/roles/:id", ...iamRoleDetailRoute.GET)
+  .patch("/roles/:id", ...iamRoleDetailRoute.PATCH)
+  .delete("/roles/:id", ...iamRoleDetailRoute.DELETE)
   .get("/accounts", ...iamAccountsRoute.GET)
   .post("/accounts/:id/roles", ...iamAccountRolesRoute.POST)
+  .delete("/accounts/:id/roles/:roleKey", ...iamAccountRoleRevokeRoute.DELETE)
+  .post("/accounts/:id/status", ...iamAccountStatusRoute.POST)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)

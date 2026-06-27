@@ -1,4 +1,5 @@
 import type { Context } from "@/env"
+import type { AccountStatus } from "@/lib/schemas"
 import { accountRoles, accounts, employees, roles } from "@/schema"
 import { and, count, eq, inArray, sql } from "drizzle-orm"
 
@@ -118,6 +119,22 @@ export class AccountRepository {
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to revoke role")
+    }
+  }
+
+  /**
+   * アカウントの状態を変更し、tokenVersion を増やして既存トークンを失効させる。
+   */
+  async setStatus(accountId: number, status: AccountStatus, now: number): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .update(accounts)
+        .set({ status: status, tokenVersion: sql`${accounts.tokenVersion} + 1`, updatedAt: now })
+        .where(eq(accounts.id, accountId))
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to set account status")
     }
   }
 
