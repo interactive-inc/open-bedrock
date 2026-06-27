@@ -3,10 +3,48 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createRole } from "@/lib/api/create-role"
+import { deleteRole } from "@/lib/api/delete-role"
 
 export type RoleCreateFormState = {
   ok: boolean
   error: string | null
+}
+
+export type RoleDeleteFormState = {
+  ok: boolean
+  error: string | null
+}
+
+// 動的ロールを削除する。
+export async function deleteRoleAction(
+  _prevState: RoleDeleteFormState,
+  formData: FormData,
+): Promise<RoleDeleteFormState> {
+  const roleId = toPositiveInt(formData.get("role_id"))
+
+  if (roleId === null) {
+    return { ok: false, error: "ロールを指定してください" }
+  }
+
+  const deleted = await deleteRole(roleId)
+
+  if (deleted instanceof Error) {
+    return { ok: false, error: "削除に失敗しました（システムロールや割当中は削除できません）" }
+  }
+
+  revalidatePath("/admin/roles")
+
+  return { ok: true, error: null }
+}
+
+function toPositiveInt(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const parsed = Number(value)
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
 // FormData からロール作成を実行するサーバーアクション。

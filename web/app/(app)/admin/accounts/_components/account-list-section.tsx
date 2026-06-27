@@ -1,3 +1,7 @@
+import {
+  AccountStatusButton,
+  RevokeRoleButton,
+} from "@/app/(app)/admin/accounts/_components/account-actions"
 import { GrantRoleForm } from "@/app/(app)/admin/accounts/_components/grant-role-form"
 import { FetchError } from "@/components/fetch-error"
 import {
@@ -36,6 +40,7 @@ export async function AccountListSection() {
             <TableHead>状態</TableHead>
             <TableHead>ロール</TableHead>
             <TableHead>ロール付与</TableHead>
+            <TableHead>操作</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -55,12 +60,16 @@ export async function AccountListSection() {
                   account.role_keys.map((roleKey) => (
                     <Badge key={roleKey} variant="outline" className="font-mono text-xs">
                       {roleKey}
+                      <RevokeRoleButton accountId={account.id} roleKey={roleKey} />
                     </Badge>
                   ))
                 )}
               </TableCell>
               <TableCell>
                 <GrantRoleForm accountId={account.id} roleKeys={roleKeys} />
+              </TableCell>
+              <TableCell>
+                <AccountStatusButton accountId={account.id} status={account.status} />
               </TableCell>
             </TableRow>
           ))}

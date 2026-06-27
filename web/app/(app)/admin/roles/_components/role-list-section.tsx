@@ -1,3 +1,4 @@
+import { DeleteRoleButton } from "@/app/(app)/admin/roles/_components/delete-role-button"
 import { FetchError } from "@/components/fetch-error"
 import {
   Table,
@@ -29,6 +30,7 @@ export async function RoleListSection() {
             <TableHead>名前</TableHead>
             <TableHead>説明</TableHead>
             <TableHead>種別</TableHead>
+            <TableHead>操作</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -45,6 +47,7 @@ export async function RoleListSection() {
                   <Badge variant="outline">動的</Badge>
                 )}
               </TableCell>
+              <TableCell>{role.is_system ? null : <DeleteRoleButton roleId={role.id} />}</TableCell>
             </TableRow>
           ))}
         </TableBody>
