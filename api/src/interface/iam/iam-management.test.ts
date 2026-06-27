@@ -103,6 +103,30 @@ describe("DELETE /accounts/:id/roles/:roleKey (ロール剥奪)", () => {
   })
 })
 
+describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
+  test("admin が member アカウントのパスワードを再設定できる", async () => {
+    const response = await request({
+      path: "/accounts/5/reset-password",
+      method: "POST",
+      token: await adminToken(),
+      body: { new_password: "newsecret123" },
+    })
+
+    expect(response.status).toBe(204)
+  })
+
+  test("短すぎるパスワードは弾く (weak_password)", async () => {
+    const response = await request({
+      path: "/accounts/5/reset-password",
+      method: "POST",
+      token: await adminToken(),
+      body: { new_password: "short" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+})
+
 describe("POST /accounts/:id/status (停止)", () => {
   test("admin が member アカウントを停止できる", async () => {
     const response = await request({
