@@ -1,3 +1,4 @@
+import { GrantRoleForm } from "@/app/(app)/admin/accounts/_components/grant-role-form"
 import { FetchError } from "@/components/fetch-error"
 import {
   Table,
@@ -9,14 +10,20 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { getAccounts } from "@/lib/api/get-accounts"
+import { getRoles } from "@/lib/api/get-roles"
 
 // GET /accounts を実行しアカウント一覧テーブルを描画する非同期 RSC。
+// 各行にロール付与フォームを置く。割当可能なロールは GET /roles から取得する。
 export async function AccountListSection() {
   const accounts = await getAccounts()
 
   if (accounts instanceof Error) {
     return <FetchError message="アカウント一覧の取得に失敗しました" />
   }
+
+  const roles = await getRoles()
+
+  const roleKeys = roles instanceof Error ? [] : roles.map((role) => role.key)
 
   return (
     <div className="flex flex-col gap-2">
@@ -28,6 +35,7 @@ export async function AccountListSection() {
             <TableHead>従業員</TableHead>
             <TableHead>状態</TableHead>
             <TableHead>ロール</TableHead>
+            <TableHead>ロール付与</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -50,6 +58,9 @@ export async function AccountListSection() {
                     </Badge>
                   ))
                 )}
+              </TableCell>
+              <TableCell>
+                <GrantRoleForm accountId={account.id} roleKeys={roleKeys} />
               </TableCell>
             </TableRow>
           ))}
