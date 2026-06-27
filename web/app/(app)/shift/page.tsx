@@ -32,13 +32,13 @@ export default async function ShiftPage() {
         description="自分のシフトと交代申請を管理します。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/shift/patterns" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/shift/patterns" />}>
               <CalendarDays />
               パターン
             </Button>
 
             {canManage ? (
-              <Button variant="outline" render={<Link href="/shift/manage" />}>
+              <Button variant="outline" nativeButton={false} render={<Link href="/shift/manage" />}>
                 <Settings />
                 管理
               </Button>

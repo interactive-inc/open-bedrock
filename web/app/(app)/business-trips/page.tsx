@@ -18,7 +18,7 @@ export default function BusinessTripsPage() {
         title="出張申請"
         description="出張の申請と、申請状況を確認します。"
         actions={
-          <Button render={<Link href="/business-trips/new" />}>
+          <Button nativeButton={false} render={<Link href="/business-trips/new" />}>
             <Plus />
             新規申請
           </Button>

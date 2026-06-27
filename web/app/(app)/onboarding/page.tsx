@@ -25,7 +25,7 @@ export default async function OnboardingPage() {
         title="オンボーディング"
         description="テンプレートを管理し、社員へ割り当てます。"
         actions={
-          <Button variant="outline" render={<Link href="/onboarding/me" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/onboarding/me" />}>
             <User />
             自分のタスク
           </Button>
@@ -46,11 +46,11 @@ export default async function OnboardingPage() {
           </CardHeader>
 
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" render={<Link href="/onboarding/templates" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/onboarding/templates" />}>
               テンプレート一覧
             </Button>
 
-            <Button render={<Link href="/onboarding/templates/new" />}>
+            <Button nativeButton={false} render={<Link href="/onboarding/templates/new" />}>
               <Plus />
               新規テンプレート
             </Button>
@@ -68,7 +68,7 @@ export default async function OnboardingPage() {
           </CardHeader>
 
           <CardContent className="flex flex-wrap gap-2">
-            <Button render={<Link href="/onboarding/assignments/new" />}>
+            <Button nativeButton={false} render={<Link href="/onboarding/assignments/new" />}>
               <Plus />
               新規割当
             </Button>

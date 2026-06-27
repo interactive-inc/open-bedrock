@@ -18,7 +18,7 @@ export default function RentalsPage() {
         title="レンタル"
         description="自分の貸出予約を確認します。"
         actions={
-          <Button render={<Link href="/rentals/new" />}>
+          <Button nativeButton={false} render={<Link href="/rentals/new" />}>
             <Plus />
             新規予約
           </Button>

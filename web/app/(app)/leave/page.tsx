@@ -21,12 +21,12 @@ export default function LeavePage() {
         description="残日数を確認し、自分の申請状況を見ます。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/leave/inbox" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
               <Inbox />
               承認受信箱
             </Button>
 
-            <Button render={<Link href="/leave/new" />}>
+            <Button nativeButton={false} render={<Link href="/leave/new" />}>
               <Plus />
               休暇を申請
             </Button>

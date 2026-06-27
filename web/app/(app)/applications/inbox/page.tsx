@@ -27,7 +27,7 @@ export default function ApplicationInboxPage() {
         title="申請の承認 inbox"
         description="承認待ちの申請を確認します。"
         actions={
-          <Button variant="outline" render={<Link href="/applications" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/applications" />}>
             申請一覧へ
           </Button>
         }

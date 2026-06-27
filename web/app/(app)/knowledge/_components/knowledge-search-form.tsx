@@ -33,7 +33,7 @@ export function KnowledgeSearchForm(props: Props) {
       <div className="flex items-center gap-2">
         <Button type="submit">検索</Button>
 
-        <Button variant="ghost" render={<Link href="/knowledge" />}>
+        <Button variant="ghost" nativeButton={false} render={<Link href="/knowledge" />}>
           クリア
         </Button>
       </div>

@@ -38,7 +38,7 @@ export default async function TrainingCourseDetailPage(props: Props) {
             <BackButton href="/training" label="一覧に戻る" />
 
             {canManage ? (
-              <Button variant="outline" render={<Link href={`/training/${course.code}/edit`} />}>
+              <Button variant="outline" nativeButton={false} render={<Link href={`/training/${course.code}/edit`} />}>
                 編集
               </Button>
             ) : null}

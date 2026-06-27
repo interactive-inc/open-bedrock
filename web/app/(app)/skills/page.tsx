@@ -26,7 +26,7 @@ export default async function SkillsPage(props: Props) {
       <PageHeader
         title="スキル一覧"
         description="スキルをキーワード・カテゴリで検索します。"
-        actions={<Button render={<Link href="/skills/me" />}>自分のスキル</Button>}
+        actions={<Button nativeButton={false} render={<Link href="/skills/me" />}>自分のスキル</Button>}
       />
 
       <SkillSearchForm q={q} category={category} />

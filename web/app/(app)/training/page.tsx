@@ -28,12 +28,12 @@ export default async function TrainingPage() {
         description="研修コースの一覧から受講を申し込みます。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/training/me" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/training/me" />}>
               自分の受講
             </Button>
 
             {canManage ? (
-              <Button render={<Link href="/training/new" />}>
+              <Button nativeButton={false} render={<Link href="/training/new" />}>
                 <Plus />
                 新規コース
               </Button>

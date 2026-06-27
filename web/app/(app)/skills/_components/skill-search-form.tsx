@@ -33,7 +33,7 @@ export function SkillSearchForm(props: Props) {
       <div className="flex items-center gap-2">
         <Button type="submit">検索</Button>
 
-        <Button variant="ghost" render={<Link href="/skills" />}>
+        <Button variant="ghost" nativeButton={false} render={<Link href="/skills" />}>
           クリア
         </Button>
       </div>

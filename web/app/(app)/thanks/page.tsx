@@ -22,12 +22,12 @@ export default function ThanksPage() {
         description="サンクスポイントの残量と、社内の感謝を見渡す。"
         actions={
           <>
-            <Button variant="outline" render={<Link href="/thanks/rewards" />}>
+            <Button variant="outline" nativeButton={false} render={<Link href="/thanks/rewards" />}>
               <Gift />
               景品を見る
             </Button>
 
-            <Button render={<Link href="/thanks/send" />}>
+            <Button nativeButton={false} render={<Link href="/thanks/send" />}>
               <Plus />
               感謝を送る
             </Button>

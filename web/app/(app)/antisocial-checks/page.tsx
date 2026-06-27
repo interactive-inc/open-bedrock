@@ -18,7 +18,7 @@ export default function AntisocialChecksPage() {
         title="反社チェック申請"
         description="反社チェックの申請と、申請状況を確認します。"
         actions={
-          <Button render={<Link href="/antisocial-checks/new" />}>
+          <Button nativeButton={false} render={<Link href="/antisocial-checks/new" />}>
             <Plus />
             新規申請
           </Button>

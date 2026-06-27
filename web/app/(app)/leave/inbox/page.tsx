@@ -28,7 +28,7 @@ export default function LeaveInboxPage() {
         title="休暇の承認 inbox"
         description="承認待ちの休暇申請を確認します。"
         actions={
-          <Button variant="outline" render={<Link href="/leave" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/leave" />}>
             休暇へ戻る
           </Button>
         }
