@@ -1355,6 +1355,18 @@ export const zAppRoleList = z.object({
 
 export type AppRoleList = z.infer<typeof zAppRoleList>
 
+/** ロール詳細のレスポンス（割当済み permission キー付き）。 */
+export const zAppRoleDetail = z.object({
+  id: z.number(),
+  key: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  is_system: z.boolean(),
+  permission_keys: z.array(z.string()),
+})
+
+export type AppRoleDetail = z.infer<typeof zAppRoleDetail>
+
 /** 権限カタログ 1 件のレスポンス。 */
 export const zAppPermission = z.object({
   key: z.string(),

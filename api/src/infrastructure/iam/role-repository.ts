@@ -115,4 +115,65 @@ export class RoleRepository {
       return caught instanceof Error ? caught : new Error("failed to check role assignment")
     }
   }
+
+  async updateMeta(props: {
+    roleId: number
+    name: string
+    description: string | null
+  }): Promise<null | Error> {
+    try {
+      await this.c.var.database
+        .update(roles)
+        .set({ name: props.name, description: props.description })
+        .where(eq(roles.id, props.roleId))
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to update role")
+    }
+  }
+
+  /**
+   * ロールの permission を一括置換する。既存を削除してから permission キー群を再付与する。
+   */
+  async replacePermissions(
+    roleId: number,
+    permissionKeys: ReadonlyArray<string>,
+  ): Promise<null | Error> {
+    try {
+      const db = this.c.var.database
+
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId))
+
+      if (permissionKeys.length === 0) {
+        return null
+      }
+
+      const permissionRows = await db
+        .select()
+        .from(permissions)
+        .where(inArray(permissions.key, [...permissionKeys]))
+
+      for (const permission of permissionRows) {
+        await db
+          .insert(rolePermissions)
+          .values({ roleId: roleId, permissionId: permission.id })
+          .onConflictDoNothing()
+      }
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to replace role permissions")
+    }
+  }
+
+  async deleteById(roleId: number): Promise<null | Error> {
+    try {
+      await this.c.var.database.delete(roles).where(eq(roles.id, roleId))
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to delete role")
+    }
+  }
 }
