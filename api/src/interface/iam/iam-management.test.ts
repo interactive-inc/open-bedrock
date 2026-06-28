@@ -151,6 +151,26 @@ describe("POST /accounts/:id/status (停止)", () => {
   })
 })
 
+describe("ロール作成", () => {
+  test("作成したロールに permission が永続化される (GET で読み戻して確認)", async () => {
+    const db = await createTestDb()
+
+    const roleId = await createAuditorRole(await adminToken(), db)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/roles/${roleId}`,
+      token: await adminToken(),
+    })
+
+    const body = (await response.json()) as { permission_keys: ReadonlyArray<string> }
+
+    expect(response.status).toBe(200)
+    expect(body.permission_keys).toContain("dashboard:view")
+  })
+})
+
 describe("ロール編集・削除", () => {
   test("動的ロールを更新できる (PATCH)", async () => {
     const db = await createTestDb()

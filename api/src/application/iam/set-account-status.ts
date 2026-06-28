@@ -1,6 +1,12 @@
 import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 import { accountStatusSchema } from "@/lib/schemas"
-import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
@@ -46,6 +52,27 @@ export class SetAccountStatus {
 
     if (exists === false) {
       return new NotFoundError("account not found", "account_not_found")
+    }
+
+    // 非アクティブ化で唯一の admin を失う(system lockout)のを防ぐ。
+    if (parsedStatus.data !== "active") {
+      const targetIsAdmin = await accountRepository.accountHasSystemRole(command.accountId, "admin")
+
+      if (targetIsAdmin instanceof Error) {
+        return new UnexpectedError("failed to check account role", { cause: targetIsAdmin })
+      }
+
+      if (targetIsAdmin === true) {
+        const activeAdminCount = await accountRepository.countAccountsWithSystemRole("admin")
+
+        if (activeAdminCount instanceof Error) {
+          return new UnexpectedError("failed to count admins", { cause: activeAdminCount })
+        }
+
+        if (activeAdminCount <= 1) {
+          return new ConflictError("cannot deactivate the last admin", "last_admin")
+        }
+      }
     }
 
     const updated = await accountRepository.setStatus(

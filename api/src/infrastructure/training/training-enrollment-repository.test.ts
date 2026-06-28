@@ -3,10 +3,11 @@ import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import type { Context } from "@/env"
 import { describe, expect, test } from "bun:test"
 
 // テスト用のアクティブなコースを作成してそのIDを返す。
-async function seedActiveCourse(context: Parameters<typeof TrainingCourseRepository>[0]) {
+async function seedActiveCourse(context: Context) {
   const repo = new TrainingCourseRepository(context)
   const course = await repo.create(
     TrainingCourse.create({

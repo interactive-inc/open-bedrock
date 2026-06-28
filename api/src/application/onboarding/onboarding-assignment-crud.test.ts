@@ -45,9 +45,6 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
     id,
     code,
     name: "You",
-    email: `you+${code}@example.com`,
-    passwordHash: "x",
-    role: "member",
     deptId: 1,
     deptName: "Dept",
     position: "Staff",
@@ -310,7 +307,7 @@ async function seedTemplate(context: Context): Promise<void> {
   const { onboardingTemplates: tbl, onboardingTemplateTasks: ttbl } = await import("@/schema")
 
   await context.var.database.insert(tbl).values({
-    id: template.id,
+    id: template.id ?? undefined,
     code: template.code,
     name: template.name,
     kind: template.kind,

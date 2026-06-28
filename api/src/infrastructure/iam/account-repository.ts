@@ -208,7 +208,8 @@ export class AccountRepository {
   }
 
   /**
-   * 指定した system role を保持するアカウント数を数える。
+   * 指定した system role を保持する有効な(active)アカウント数を数える。
+   * last-admin ガードに使うため、停止・ロック中のアカウントは数えない。
    */
   async countAccountsWithSystemRole(roleKey: string): Promise<number | Error> {
     try {
@@ -216,11 +217,31 @@ export class AccountRepository {
         .select({ value: count() })
         .from(accountRoles)
         .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .where(and(eq(roles.key, roleKey), eq(roles.isSystem, 1)))
+        .innerJoin(accounts, eq(accounts.id, accountRoles.accountId))
+        .where(and(eq(roles.key, roleKey), eq(roles.isSystem, 1), eq(accounts.status, "active")))
 
       return rows.at(0)?.value ?? 0
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to count accounts by role")
+    }
+  }
+
+  /**
+   * 指定アカウントが指定の system role を保持しているか。
+   */
+  async accountHasSystemRole(accountId: number, roleKey: string): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(accountRoles)
+        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
+        .where(
+          and(eq(accountRoles.accountId, accountId), eq(roles.key, roleKey), eq(roles.isSystem, 1)),
+        )
+
+      return (rows.at(0)?.value ?? 0) > 0
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to check account role")
     }
   }
 }

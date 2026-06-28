@@ -56,6 +56,12 @@ export class CreateRole {
       return new UnexpectedError("failed to create role", { cause: created })
     }
 
+    const replaced = await roleRepository.replacePermissions(created.id, command.permissionKeys)
+
+    if (replaced instanceof Error) {
+      return new UnexpectedError("failed to attach role permissions", { cause: replaced })
+    }
+
     return created
   }
 }

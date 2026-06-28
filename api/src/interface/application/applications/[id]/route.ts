@@ -1,5 +1,6 @@
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
+import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import { applications, applicationTemplates, employees } from "@/schema"
@@ -47,11 +48,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("application not found")
   }
 
-  // 申請者本人か承認権限を持つロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
+  // 申請者本人か承認できるロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
+  // 承認可否は decide-application と同じ二分岐: テンプレートに approverRoles があれば
+  // そのロール保持者、無ければ application:approve 権限保持者。
   const isOwner = row.application.applicantId === session.employeeId
 
-  if (isOwner === false && canDecideApplication(session) === false) {
-    throw new ForbiddenError()
+  if (isOwner === false) {
+    const template = await new ApplicationTemplateRepository(c).findById(row.application.templateId)
+
+    if (template instanceof Error) {
+      throw new InternalError("failed to find application template")
+    }
+
+    const canApprove =
+      template !== null && template.approverRoles.length > 0
+        ? session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
+        : canDecideApplication(session)
+
+    if (canApprove === false) {
+      throw new ForbiddenError()
+    }
   }
 
   let payload: unknown
