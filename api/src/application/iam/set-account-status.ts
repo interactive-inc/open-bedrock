@@ -10,6 +10,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 
 export type Command = {
   session: SessionPayload
@@ -55,6 +56,7 @@ export class SetAccountStatus {
     }
 
     // 非アクティブ化で唯一の admin を失う(system lockout)のを防ぐ。
+    // 事前チェックは親切なエラー用、最終防御は原子的 batch の LastAdminError(TOCTOU 防止)。
     if (parsedStatus.data !== "active") {
       const targetIsAdmin = await accountRepository.accountHasSystemRole(command.accountId, "admin")
 
@@ -63,15 +65,21 @@ export class SetAccountStatus {
       }
 
       if (targetIsAdmin === true) {
-        const activeAdminCount = await accountRepository.countAccountsWithSystemRole("admin")
+        const updated = await accountRepository.setStatusGuardingLastAdmin(
+          command.accountId,
+          parsedStatus.data,
+          command.now,
+        )
 
-        if (activeAdminCount instanceof Error) {
-          return new UnexpectedError("failed to count admins", { cause: activeAdminCount })
-        }
-
-        if (activeAdminCount <= 1) {
+        if (updated instanceof LastAdminError) {
           return new ConflictError("cannot deactivate the last admin", "last_admin")
         }
+
+        if (updated instanceof Error) {
+          return new UnexpectedError("failed to set account status", { cause: updated })
+        }
+
+        return { reason: "updated" }
       }
     }
 
