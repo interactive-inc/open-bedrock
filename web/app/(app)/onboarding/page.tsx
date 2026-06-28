@@ -46,7 +46,11 @@ export default async function OnboardingPage() {
           </CardHeader>
 
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" nativeButton={false} render={<Link href="/onboarding/templates" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/onboarding/templates" />}
+            >
               テンプレート一覧
             </Button>
 

@@ -18,11 +18,11 @@ import { Input } from "@/components/ui/input"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
-  // 編集対象の従業員。hidden の code と各入力の初期値に使う。
+  // 編集対象の従業員。hidden の code/dept_id と各入力の初期値に使う。
+  // email/role は IAM(アカウント管理)で扱うため、台帳編集フォームには含めない。
   code: string
   name: string
-  email: string
-  role: string
+  deptId: number | null
   deptName: string | null
   position: string | null
   status: string
@@ -71,13 +71,13 @@ export function EmployeeEditForm(props: Props) {
         <DialogHeader>
           <DialogTitle>従業員を編集</DialogTitle>
 
-          <DialogDescription>
-            氏名・メール・ロール・部署・役職・在籍状況を変更します。
-          </DialogDescription>
+          <DialogDescription>氏名・部署・役職・在籍状況を変更します。</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="code" value={props.code} />
+
+          <input type="hidden" name="dept_id" value={props.deptId ?? ""} />
 
           <FieldGroup>
             <Field>
@@ -90,25 +90,6 @@ export function EmployeeEditForm(props: Props) {
                 maxLength={FORM_CONSTRAINTS.employee.nameMax}
                 required
               />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="edit-employee-email">メール</FieldLabel>
-
-              <Input
-                id="edit-employee-email"
-                name="email"
-                type="email"
-                defaultValue={props.email}
-                maxLength={FORM_CONSTRAINTS.employee.emailMax}
-                required
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="edit-employee-role">ロール</FieldLabel>
-
-              <Input id="edit-employee-role" name="role" defaultValue={props.role} required />
             </Field>
 
             <Field>
