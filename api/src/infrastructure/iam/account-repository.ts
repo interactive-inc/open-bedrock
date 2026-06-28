@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/lib/schemas"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { accountRoles, accounts, employees, roles } from "@/schema"
 import { and, count, eq, inArray, sql } from "drizzle-orm"
 
@@ -139,6 +140,64 @@ export class AccountRepository {
   }
 
   /**
+   * ロールを剥奪し tokenVersion を増やす。剥奪の結果 active な admin が 0 件になる場合は
+   * batch ごと rollback して LastAdminError を返す。並行リクエストでも last-admin チェックと
+   * 剥奪を原子的に行い、TOCTOU による全 admin 消失(lockout)を防ぐ。
+   */
+  async revokeRoleGuardingLastAdmin(
+    accountId: number,
+    roleId: number,
+    now: number,
+  ): Promise<null | Error | LastAdminError> {
+    try {
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
+        ).bind(accountId, roleId),
+        abortWhenNoActiveAdmin(this.c.env.DB),
+        this.c.env.DB.prepare(
+          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
+        ).bind(accountId, now),
+      ])
+
+      return null
+    } catch (caught) {
+      if (isAbortedByLastAdminGuard(caught)) {
+        return new LastAdminError()
+      }
+
+      return caught instanceof Error ? caught : new Error("failed to revoke role")
+    }
+  }
+
+  /**
+   * アカウントを非アクティブ化し tokenVersion を増やす。結果 active な admin が 0 件になる
+   * 場合は batch ごと rollback して LastAdminError を返す（TOCTOU 防止）。
+   */
+  async setStatusGuardingLastAdmin(
+    accountId: number,
+    status: AccountStatus,
+    now: number,
+  ): Promise<null | Error | LastAdminError> {
+    try {
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
+        ).bind(accountId, status, now),
+        abortWhenNoActiveAdmin(this.c.env.DB),
+      ])
+
+      return null
+    } catch (caught) {
+      if (isAbortedByLastAdminGuard(caught)) {
+        return new LastAdminError()
+      }
+
+      return caught instanceof Error ? caught : new Error("failed to set account status")
+    }
+  }
+
+  /**
    * tokenVersion を 1 増やし、updatedAt を更新する。発行済みトークンを即時失効させる。
    */
   async bumpTokenVersion(accountId: number, now: number): Promise<null | Error> {
@@ -244,4 +303,24 @@ export class AccountRepository {
       return caught instanceof Error ? caught : new Error("failed to check account role")
     }
   }
+}
+
+/**
+ * batch 内で直前までの変更を反映した状態で active な admin が 0 件なら、
+ * json_extract('', '$') の評価エラーで batch 全体を rollback させるガード文。
+ */
+function abortWhenNoActiveAdmin(db: D1Database): D1PreparedStatement {
+  return db.prepare(
+    `SELECT CASE WHEN (
+       SELECT COUNT(*) FROM account_roles ar
+       JOIN roles r ON r.id = ar.role_id
+       JOIN accounts a ON a.id = ar.account_id
+       WHERE r.key = 'admin' AND r.is_system = 1 AND a.status = 'active'
+     ) = 0 THEN json_extract('', '$') ELSE 1 END AS ok`,
+  )
+}
+
+/** abortWhenNoActiveAdmin による意図的な rollback かを判定する。他の batch 失敗は本物の DB エラー。 */
+function isAbortedByLastAdminGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }

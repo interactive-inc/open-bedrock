@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 
 export type Command = {
@@ -41,7 +42,9 @@ export class RevokeAccountRole {
 
     const accountRepository = new AccountRepository(this.c)
 
-    // 最後の system admin を外すと誰も管理できなくなるため禁止する。
+    // system admin の剥奪は、原子的な last-admin ガード付き batch で行う。
+    // 事前の count チェックは無くても安全(batch がガードする)だが、並行でない通常ケースで
+    // 親切なエラーを早く返すために残す。最終防御は batch 側の LastAdminError。
     if (role.key === "admin" && role.isSystem === 1) {
       const adminCount = await accountRepository.countAccountsWithSystemRole("admin")
 
@@ -52,6 +55,22 @@ export class RevokeAccountRole {
       if (adminCount <= 1) {
         return new ConflictError("cannot remove the last admin", "last_admin")
       }
+
+      const revoked = await accountRepository.revokeRoleGuardingLastAdmin(
+        command.accountId,
+        role.id,
+        command.now,
+      )
+
+      if (revoked instanceof LastAdminError) {
+        return new ConflictError("cannot remove the last admin", "last_admin")
+      }
+
+      if (revoked instanceof Error) {
+        return new UnexpectedError("failed to revoke role", { cause: revoked })
+      }
+
+      return { reason: "revoked" }
     }
 
     const revoked = await accountRepository.revokeRole(command.accountId, role.id)
