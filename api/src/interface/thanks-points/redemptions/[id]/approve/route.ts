@@ -4,7 +4,12 @@ import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { BadRequestError, ConflictError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 

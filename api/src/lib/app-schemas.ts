@@ -450,7 +450,7 @@ export const zAppFamilyCareLeave = z.object({
   start_date: z.string(),
   end_date: z.string(),
   note: z.string().nullable(),
-  status: z.enum(["requested"]),
+  status: z.enum(["requested", "approved", "cancelled"]),
   created_at: z.string(),
 })
 export type AppFamilyCareLeave = z.infer<typeof zAppFamilyCareLeave>

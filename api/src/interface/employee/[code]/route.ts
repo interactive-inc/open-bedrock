@@ -13,7 +13,6 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
-import { employeeRoleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -67,15 +66,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(body, 200)
 })
 
-// PUT /employees/:code — 従業員の氏名・メール・ロール・部署・役職・在籍状況を変更（権限が必要）
+// PUT /employees/:code — 従業員台帳の氏名・部署・役職・在籍状況を変更（権限が必要）。
+// email は identity(認証)、role は account_roles(認可)が正で、ここでは扱わない。
+// メール変更はアカウント管理、ロール変更は /admin/accounts のロール付与・剥奪で行う。
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
       name: z.string().min(1).max(200),
-      email: z.string().email().max(254),
-      role: employeeRoleSchema,
       dept_id: z.number().int().nullable().optional(),
       dept_name: z.string().max(200).nullable().optional(),
       position: z.string().max(200).nullable().optional(),

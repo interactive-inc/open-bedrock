@@ -8,7 +8,7 @@ const zProps = z.object({
   startDate: z.string(),
   endDate: z.string(),
   note: z.string().nullable(),
-  status: z.enum(["requested"]),
+  status: z.enum(["requested", "approved", "cancelled"]),
   createdAt: z.string(),
 })
 

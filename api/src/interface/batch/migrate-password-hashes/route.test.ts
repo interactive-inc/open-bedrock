@@ -77,7 +77,12 @@ describe("POST /batch/migrate-password-hashes", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const body = (await response.json()) as {
+      total: number
+      migrated: number
+      skipped: number
+      failed: number
+    }
 
     expect(body.total).toBe(1)
     expect(body.migrated).toBe(1)

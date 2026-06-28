@@ -43,7 +43,9 @@ function toPreparedStatement(
   const statement = {
     bind: (...next: Array<unknown>) => toPreparedStatement(sqlite, query, next),
     first: async (column?: string) => {
-      const row = sqlite.query<Record<string, unknown>>(query).get(...bindings())
+      const row = sqlite
+        .query<Record<string, unknown>, Array<SqliteBinding>>(query)
+        .get(...bindings())
 
       if (row === null) {
         return null

@@ -23,7 +23,11 @@ export type FulfilledWithStockError = {
   stockError: Error
 }
 
-export type DecideResult = ThanksRedemption | OutOfStock | FulfilledWithStockError | ApplicationError
+export type DecideResult =
+  | ThanksRedemption
+  | OutOfStock
+  | FulfilledWithStockError
+  | ApplicationError
 
 /**
  * 交換申請を承認（確定）または却下する。
@@ -126,9 +130,7 @@ export class DecideRedemption {
 
   // 承認 UPDATE が 0 行のとき、在庫切れか残高不足か既に決裁済みかを判定する。
   // pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
-  private async classifyZeroUpdate(
-    redemptionId: number,
-  ): Promise<OutOfStock | ApplicationError> {
+  private async classifyZeroUpdate(redemptionId: number): Promise<OutOfStock | ApplicationError> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
     const after = await redemptionRepository.findById(redemptionId)
