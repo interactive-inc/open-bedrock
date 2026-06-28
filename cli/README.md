@@ -31,4 +31,4 @@ bun index.ts app inbox
 一覧系コマンドで他者を指定するフラグは、叩く API のパラメータに合わせて 2 種類ある。どちらも管理者・マネージャ向けの任意フラグで、省略時は本人が対象になる。
 
 - `--employee-id <id>` … 数値の社員 ID。`goal` / `attendance` の一覧で使う（API が `employee_id` を受けるため）
-- `--employee-code <code>` … 文字列の社員コード。`training` / `shift` / `org` / `payroll` などで使う（API が `employee_code` を受けるため）
+- `--employee-code <code>` … 文字列の社員コード。`training` / `shift` / `org` などで使う（API が `employee_code` を受けるため）

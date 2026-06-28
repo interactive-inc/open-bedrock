@@ -88,12 +88,6 @@ import orgHandler from "@/app/org/route"
 import orgLineHandler from "@/app/org/line/[employee_code]/route"
 import orgMembersHandler from "@/app/org/members/[dept_code]/route"
 import orgTreeHandler from "@/app/org/tree/route"
-import payrollHandler from "@/app/payroll/route"
-import payrollIssueHandler from "@/app/payroll/issue/route"
-import payrollReviseHandler from "@/app/payroll/revise/route"
-import payrollRevisionHandler from "@/app/payroll/revision/[employee_code]/route"
-import payrollSlipHandler from "@/app/payroll/slip/route"
-import payrollSlipShowHandler from "@/app/payroll/slip/show/[payslip_id]/route"
 import reviewCycleCreateHandler from "@/app/review/cycle/create/route"
 import reviewCycleHandler from "@/app/review/cycle/route"
 import reviewCyclesHandler from "@/app/review/cycles/route"
@@ -170,12 +164,6 @@ import certificateRequestMineHandler from "@/app/certificate-request/mine/route"
 import certificateRequestShowHandler from "@/app/certificate-request/show/route"
 import certificateRequestUpdateHandler from "@/app/certificate-request/update/route"
 import certificateRequestCancelHandler from "@/app/certificate-request/cancel/route"
-import yearEndAdjustmentHandler from "@/app/year-end-adjustment/route"
-import yearEndAdjustmentRequestHandler from "@/app/year-end-adjustment/request/route"
-import yearEndAdjustmentMineHandler from "@/app/year-end-adjustment/mine/route"
-import yearEndAdjustmentShowHandler from "@/app/year-end-adjustment/show/route"
-import yearEndAdjustmentUpdateHandler from "@/app/year-end-adjustment/update/route"
-import yearEndAdjustmentCancelHandler from "@/app/year-end-adjustment/cancel/route"
 import antisocialCheckHandler from "@/app/antisocial-check/route"
 import antisocialCheckRequestHandler from "@/app/antisocial-check/request/route"
 import antisocialCheckMineHandler from "@/app/antisocial-check/mine/route"
@@ -201,10 +189,6 @@ import onboardingTemplateCreateHandler from "@/app/onboarding/template-create/ro
 import onboardingTemplateUpdateHandler from "@/app/onboarding/template-update/route"
 import onboardingTemplateDeleteHandler from "@/app/onboarding/template-delete/route"
 import onboardingTemplateShowHandler from "@/app/onboarding/template/[code]/route"
-import payrollCorrectHandler from "@/app/payroll/correct/route"
-import payrollCancelHandler from "@/app/payroll/cancel/route"
-import salaryRevisionCorrectHandler from "@/app/salary-revision/correct/route"
-import salaryRevisionCancelHandler from "@/app/salary-revision/cancel/route"
 import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
 import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
 import reviewCycleOpenHandler from "@/app/review/cycle/open/route"
@@ -428,13 +412,6 @@ routes.post("/accounts", ...accountsHandler)
 routes.post("/onboarding/complete/:task_id?", ...onboardingCompleteHandler)
 routes.post("/onboarding/show/:employee_code?", ...onboardingShowHandler)
 
-routes.post("/payroll", ...payrollHandler)
-routes.post("/payroll/slip", ...payrollSlipHandler)
-routes.post("/payroll/slip/show/:payslip_id?", ...payrollSlipShowHandler)
-routes.post("/payroll/issue", ...payrollIssueHandler)
-routes.post("/payroll/revision/:employee_code?", ...payrollRevisionHandler)
-routes.post("/payroll/revise", ...payrollReviseHandler)
-
 routes.post("/review", ...reviewHandler)
 routes.post("/review/cycles", ...reviewCyclesHandler)
 routes.post("/review/cycle", ...reviewCycleHandler)
@@ -501,12 +478,6 @@ routes.post("/certificate-request/mine", ...certificateRequestMineHandler)
 routes.post("/certificate-request/show", ...certificateRequestShowHandler)
 routes.post("/certificate-request/update", ...certificateRequestUpdateHandler)
 routes.post("/certificate-request/cancel", ...certificateRequestCancelHandler)
-routes.post("/year-end-adjustment", ...yearEndAdjustmentHandler)
-routes.post("/year-end-adjustment/request", ...yearEndAdjustmentRequestHandler)
-routes.post("/year-end-adjustment/mine", ...yearEndAdjustmentMineHandler)
-routes.post("/year-end-adjustment/show", ...yearEndAdjustmentShowHandler)
-routes.post("/year-end-adjustment/update", ...yearEndAdjustmentUpdateHandler)
-routes.post("/year-end-adjustment/cancel", ...yearEndAdjustmentCancelHandler)
 routes.post("/antisocial-check", ...antisocialCheckHandler)
 routes.post("/antisocial-check/request", ...antisocialCheckRequestHandler)
 routes.post("/antisocial-check/mine", ...antisocialCheckMineHandler)
@@ -532,10 +503,6 @@ routes.post("/onboarding/template-create", ...onboardingTemplateCreateHandler)
 routes.post("/onboarding/template-update", ...onboardingTemplateUpdateHandler)
 routes.post("/onboarding/template-delete", ...onboardingTemplateDeleteHandler)
 routes.post("/onboarding/template/:code?", ...onboardingTemplateShowHandler)
-routes.post("/payroll/correct", ...payrollCorrectHandler)
-routes.post("/payroll/cancel", ...payrollCancelHandler)
-routes.post("/salary-revision/correct", ...salaryRevisionCorrectHandler)
-routes.post("/salary-revision/cancel", ...salaryRevisionCancelHandler)
 routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
 routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
 routes.post("/review/cycle/open", ...reviewCycleOpenHandler)

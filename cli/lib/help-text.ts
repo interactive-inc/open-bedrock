@@ -48,15 +48,6 @@ commands:
   attendance me               自分の勤怠 ([--from --to])
   attendance summary          月次サマリ ([--month])
   attendance list             勤怠一覧 ([--employee-id --from --to])
-  payroll slip                自分の給与明細一覧 ([--period])
-  payroll slip show <id>      給与明細の詳細
-  payroll issue               給与明細を発行 (--employee-code --period --base [--allowances --deductions])
-  payroll revision <code>     給与改定履歴(管理者)
-  payroll revise              給与改定 (--employee-code --effective-date --new-base [--reason])
-  payroll correct             給与明細を訂正 (--id --period --base --allowances --deductions --net)
-  payroll cancel              給与明細を取消 (--id)
-  salary-revision correct     給与改定を訂正 (--id --effective --new-base-salary [--reason])
-  salary-revision cancel      給与改定を取消 (--id)
   room avail                  会議室空き状況 (--start --end [--capacity])
   room reserve                会議室予約 (--room-id --start --end [--purpose])
   rooms list                  会議室一覧
@@ -188,11 +179,6 @@ commands:
   resignation show            退職申請の詳細 (--id)
   resignation update          退職申請を変更 (--id --date [--last --reason])
   resignation cancel          退職申請を取り下げ (--id)
-  year-end-adjustment request 年末調整の申告 (--year [--note])
-  year-end-adjustment mine    自分の年末調整申告一覧
-  year-end-adjustment show    年末調整申告の詳細 (--id)
-  year-end-adjustment update  年末調整申告を変更 (--id --year [--note])
-  year-end-adjustment cancel  年末調整申告を取り下げ (--id)
   antisocial-check request    反社チェック申請 (--partner [--address --representative])
   antisocial-check mine       自分の反社チェック申請一覧
   antisocial-check show       反社チェック申請の詳細 (--id)
