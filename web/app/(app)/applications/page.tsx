@@ -18,11 +18,17 @@ export default function MyApplicationsPage() {
         description="自分の申請の状況を確認します。"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/applications/inbox" />}>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/applications/inbox" />}
+            >
               承認 inbox
             </Button>
 
-            <Button nativeButton={false} render={<Link href="/applications/templates" />}>新規申請</Button>
+            <Button nativeButton={false} render={<Link href="/applications/templates" />}>
+              新規申請
+            </Button>
           </>
         }
       />

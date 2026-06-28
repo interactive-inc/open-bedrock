@@ -15,7 +15,9 @@ export default function RootNotFound() {
         </p>
       </div>
 
-      <Button nativeButton={false} render={<Link href="/" />}>ホームへ戻る</Button>
+      <Button nativeButton={false} render={<Link href="/" />}>
+        ホームへ戻る
+      </Button>
     </main>
   )
 }

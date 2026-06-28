@@ -197,26 +197,7 @@ export async function updateEmployeeAction(
     return { ok: false, error: name.message }
   }
 
-  const email = toRequiredText(formData.get("email"), {
-    label: "メール",
-    max: FORM_CONSTRAINTS.employee.emailMax,
-  })
-
-  if (email instanceof Error) {
-    return { ok: false, error: email.message }
-  }
-
-  if (isValidEmail(email) === false) {
-    return { ok: false, error: "メールはメールアドレス形式で入力してください" }
-  }
-
-  const role = toRole(formData.get("role"))
-
   const status = toStatus(formData.get("status"))
-
-  if (role === null) {
-    return { ok: false, error: "ロールを入力してください" }
-  }
 
   if (status === null) {
     return { ok: false, error: "在籍状況を選択してください" }
@@ -242,8 +223,6 @@ export async function updateEmployeeAction(
 
   const updated = await updateEmployee(code, {
     name: name,
-    email: email,
-    role: role,
     dept_id: toPositiveIntId(formData.get("dept_id")),
     dept_name: deptName,
     position: position,

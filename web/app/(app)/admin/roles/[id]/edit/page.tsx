@@ -1,6 +1,7 @@
 import { RoleEditForm } from "@/app/(app)/admin/roles/_components/role-edit-form"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
+import { getMe } from "@/lib/api/get-me"
 import { getPermissions } from "@/lib/api/get-permissions"
 import { getRole } from "@/lib/api/get-role"
 import { notFound } from "next/navigation"
@@ -12,7 +13,17 @@ type Props = {
 }
 
 // ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:manage_roles が必要）。
+// 権限が無いユーザーには 404 を返す。
 export default async function AdminRoleEditPage(props: Props) {
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    currentUser.permissions.includes("iam:manage_roles") === false
+  ) {
+    notFound()
+  }
+
   const params = await props.params
 
   const roleId = Number(params.id)

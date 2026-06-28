@@ -28,11 +28,9 @@ export type EmployeeCreateRequest = {
   status: EmployeeStatus
 }
 
-// PUT /employees/:code のリクエストボディ。
+// PUT /employees/:code のリクエストボディ。email/role は IAM(identities/account_roles)が正で台帳更新では扱わない。
 export type EmployeeUpdateRequest = {
   name: string
-  email: string
-  role: "member" | "manager" | "hr" | "admin"
   dept_id?: number | null
   dept_name?: string | null
   position?: string | null
