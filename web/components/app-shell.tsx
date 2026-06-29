@@ -4,6 +4,17 @@ import { LogOut } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { SidebarNav } from "@/components/sidebar-nav"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -58,13 +69,37 @@ export function AppShell(props: Props) {
 
           <SidebarMenu>
             <SidebarMenuItem>
-              <form action={props.onLogout}>
-                <SidebarMenuButton render={<button type="submit" />}>
-                  <LogOut />
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <SidebarMenuButton>
+                      <LogOut />
 
-                  <span>ログアウト</span>
-                </SidebarMenuButton>
-              </form>
+                      <span>ログアウト</span>
+                    </SidebarMenuButton>
+                  }
+                />
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>ログアウトしますか?</AlertDialogTitle>
+
+                    <AlertDialogDescription>
+                      もう一度ログインするにはパスワードが必要です。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+
+                    <form action={props.onLogout}>
+                      <AlertDialogAction type="submit" variant="destructive">
+                        ログアウト
+                      </AlertDialogAction>
+                    </form>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
