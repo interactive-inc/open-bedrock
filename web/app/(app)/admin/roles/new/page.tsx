@@ -24,7 +24,15 @@ export default async function AdminRoleNewPage() {
   if (permissions instanceof Error) {
     return (
       <div className="flex flex-col gap-6">
-        <PageHeader title="ロール作成" description="新しいロールを作成します。" />
+        <PageHeader
+          title="ロール作成"
+          description="新しいロールを作成します。"
+          breadcrumbs={[
+            { label: "管理", href: "/admin" },
+            { label: "ロール", href: "/admin/roles" },
+            { label: "新規作成" },
+          ]}
+        />
 
         <FetchError message="権限カタログの取得に失敗しました" />
       </div>
@@ -33,7 +41,15 @@ export default async function AdminRoleNewPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="ロール作成" description="新しいロールを作成し、権限を割り当てます。" />
+      <PageHeader
+        title="ロール作成"
+        description="新しいロールを作成し、権限を割り当てます。"
+        breadcrumbs={[
+          { label: "管理", href: "/admin" },
+          { label: "ロール", href: "/admin/roles" },
+          { label: "新規作成" },
+        ]}
+      />
 
       <RoleCreateForm permissions={permissions} />
     </div>

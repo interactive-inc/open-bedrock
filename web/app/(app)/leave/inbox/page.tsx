@@ -27,6 +27,7 @@ export default function LeaveInboxPage() {
       <PageHeader
         title="休暇の承認 inbox"
         description="承認待ちの休暇申請を確認します。"
+        breadcrumbs={[{ label: "休暇", href: "/leave" }, { label: "承認 inbox" }]}
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/leave" />}>
             休暇へ戻る
@@ -56,14 +57,14 @@ async function LeaveInboxTable() {
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label={`承認待ちの休暇申請 ${leaveRequests.length} 件`}>
         <TableHeader>
           <TableRow>
             <TableHead>申請者</TableHead>
             <TableHead>種別</TableHead>
-            <TableHead>期間</TableHead>
-            <TableHead>日数</TableHead>
-            <TableHead>理由</TableHead>
+            <TableHead className="hidden md:table-cell">期間</TableHead>
+            <TableHead className="hidden sm:table-cell">日数</TableHead>
+            <TableHead className="hidden lg:table-cell">理由</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead>操作</TableHead>
           </TableRow>
@@ -78,13 +79,17 @@ async function LeaveInboxTable() {
                 <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">
+              <TableCell className="hidden text-muted-foreground md:table-cell">
                 {leaveRequest.start_date} 〜 {leaveRequest.end_date}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.days} 日</TableCell>
+              <TableCell className="hidden text-muted-foreground sm:table-cell">
+                {leaveRequest.days} 日
+              </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.reason ?? "-"}</TableCell>
+              <TableCell className="hidden text-muted-foreground lg:table-cell">
+                {leaveRequest.reason ?? "-"}
+              </TableCell>
 
               <TableCell>
                 <LeaveStatusBadge status={leaveRequest.status} />
