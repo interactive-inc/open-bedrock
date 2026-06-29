@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/application/survey/create-survey"
 import { DeleteSurvey } from "@/application/survey/delete-survey"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { GetSurveyResponse } from "@/application/survey/get-survey-response"
 import { ListMySurveyResponses } from "@/application/survey/list-my-survey-responses"
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"
@@ -245,11 +246,11 @@ describe("DeleteSurvey", () => {
     try {
       await db.batch([
         db.prepare("DELETE FROM surveys WHERE id = ?1 AND status != 'open'").bind(surveyId),
-        db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok"),
+        abortWhenPreviousStatementChangedNoRows(db),
         db.prepare("DELETE FROM survey_responses WHERE survey_id = ?1").bind(surveyId),
       ])
     } catch (error) {
-      aborted = error instanceof Error && error.message.includes("malformed JSON")
+      aborted = isAbortedByGuard(error)
     }
 
     expect(aborted).toBe(true)

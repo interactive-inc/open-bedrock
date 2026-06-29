@@ -1,6 +1,7 @@
 import { OrgDepartment } from "@/domain/org/org-department.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { orgDepartments, orgMemberships } from "@/schema"
 import { asc, eq } from "drizzle-orm"
@@ -203,14 +204,4 @@ export class OrgDepartmentRepository {
       order: row.sortOrder,
     })
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
-}
-
-// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
-// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
-function isAbortedByGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }
