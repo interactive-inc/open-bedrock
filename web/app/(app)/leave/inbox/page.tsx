@@ -7,6 +7,7 @@ import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { SortableTableHead } from "@/components/sortable-table-head"
 import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,13 +18,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getLeaveInbox } from "@/lib/api/get-leave-inbox"
+import { getLeaveInbox, type LeaveInboxSort } from "@/lib/api/get-leave-inbox"
 
 export const metadata = { title: "承認待ちの休暇" }
 
 const PAGE_SIZE = 20
 
-type SearchParams = Promise<{ page?: string }>
+const SORT_VALUES: ReadonlyArray<LeaveInboxSort> = [
+  "created_at_desc",
+  "created_at_asc",
+  "start_date_desc",
+  "start_date_asc",
+]
+
+type SearchParams = Promise<{ page?: string; sort?: string }>
+
+function toSort(raw: string | undefined): LeaveInboxSort {
+  if (raw !== undefined && (SORT_VALUES as ReadonlyArray<string>).includes(raw)) {
+    return raw as LeaveInboxSort
+  }
+
+  return "created_at_desc"
+}
 
 // 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
 export default async function LeaveInboxPage(props: { searchParams: SearchParams }) {
@@ -32,6 +48,8 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
   const offset = (page - 1) * PAGE_SIZE
+
+  const sort = toSort(searchParams.sort)
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,7 +65,7 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <LeaveInboxTable offset={offset} />
+        <LeaveInboxTable offset={offset} sort={sort} />
       </Suspense>
     </div>
   )
@@ -55,8 +73,8 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
 
 // /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
 // 権限が無い場合は api が 403 を返すため Error として扱う。
-async function LeaveInboxTable(props: { offset: number }) {
-  const result = await getLeaveInbox({ limit: PAGE_SIZE, offset: props.offset })
+async function LeaveInboxTable(props: { offset: number; sort: LeaveInboxSort }) {
+  const result = await getLeaveInbox({ limit: PAGE_SIZE, offset: props.offset, sort: props.sort })
 
   if (result instanceof Error) {
     return <FetchError message="inbox の取得に失敗しました (承認権限が必要です)" />
@@ -74,7 +92,14 @@ async function LeaveInboxTable(props: { offset: number }) {
             <TableRow>
               <TableHead>申請者</TableHead>
               <TableHead>種別</TableHead>
-              <TableHead className="hidden md:table-cell">期間</TableHead>
+              <SortableTableHead
+                pathname="/leave/inbox"
+                currentSort={props.sort}
+                ascValue="start_date_asc"
+                descValue="start_date_desc"
+                label="期間"
+                className="hidden md:table-cell"
+              />
               <TableHead className="hidden sm:table-cell">日数</TableHead>
               <TableHead className="hidden lg:table-cell">理由</TableHead>
               <TableHead>ステータス</TableHead>
@@ -121,6 +146,7 @@ async function LeaveInboxTable(props: { offset: number }) {
         total={result.total}
         limit={PAGE_SIZE}
         offset={props.offset}
+        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort }}
       />
     </div>
   )

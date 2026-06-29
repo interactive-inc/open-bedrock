@@ -22,7 +22,7 @@ export function MyShiftAssignments(props: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
             <TableHead>日付</TableHead>

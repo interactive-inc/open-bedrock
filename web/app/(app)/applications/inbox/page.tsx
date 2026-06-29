@@ -7,6 +7,7 @@ import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { SortableTableHead } from "@/components/sortable-table-head"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -16,13 +17,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getApplicationInbox } from "@/lib/api/get-application-inbox"
+import { getApplicationInbox, type ApplicationInboxSort } from "@/lib/api/get-application-inbox"
 
 export const metadata = { title: "承認待ちの申請" }
 
 const PAGE_SIZE = 20
 
-type SearchParams = Promise<{ page?: string }>
+const SORT_VALUES: ReadonlyArray<ApplicationInboxSort> = ["created_at_desc", "created_at_asc"]
+
+type SearchParams = Promise<{ page?: string; sort?: string }>
+
+function toSort(raw: string | undefined): ApplicationInboxSort {
+  if (raw !== undefined && (SORT_VALUES as ReadonlyArray<string>).includes(raw)) {
+    return raw as ApplicationInboxSort
+  }
+
+  return "created_at_desc"
+}
 
 // 承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
 export default async function ApplicationInboxPage(props: { searchParams: SearchParams }) {
@@ -31,6 +42,8 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
   const offset = (page - 1) * PAGE_SIZE
+
+  const sort = toSort(searchParams.sort)
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,14 +59,18 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <InboxTable offset={offset} />
+        <InboxTable offset={offset} sort={sort} />
       </Suspense>
     </div>
   )
 }
 
-async function InboxTable(props: { offset: number }) {
-  const result = await getApplicationInbox({ limit: PAGE_SIZE, offset: props.offset })
+async function InboxTable(props: { offset: number; sort: ApplicationInboxSort }) {
+  const result = await getApplicationInbox({
+    limit: PAGE_SIZE,
+    offset: props.offset,
+    sort: props.sort,
+  })
 
   if (result instanceof Error) {
     return <FetchError message="inbox の取得に失敗しました" />
@@ -72,7 +89,14 @@ async function InboxTable(props: { offset: number }) {
               <TableHead>申請名</TableHead>
               <TableHead>申請者</TableHead>
               <TableHead>ステータス</TableHead>
-              <TableHead className="hidden md:table-cell">申請日</TableHead>
+              <SortableTableHead
+                pathname="/applications/inbox"
+                currentSort={props.sort}
+                ascValue="created_at_asc"
+                descValue="created_at_desc"
+                label="申請日"
+                className="hidden md:table-cell"
+              />
               <TableHead>操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -115,6 +139,7 @@ async function InboxTable(props: { offset: number }) {
         total={result.total}
         limit={PAGE_SIZE}
         offset={props.offset}
+        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort }}
       />
     </div>
   )

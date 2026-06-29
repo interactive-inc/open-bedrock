@@ -62,7 +62,7 @@ export async function OnboardingEmployeeView(props: Props) {
 
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
+              <Table aria-label="一覧">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>

@@ -31,7 +31,7 @@ type Props = {
 export function AttendanceRecordTable(props: Props) {
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
             <TableHead>勤務日</TableHead>

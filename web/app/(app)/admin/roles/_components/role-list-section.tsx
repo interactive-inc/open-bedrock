@@ -25,7 +25,7 @@ export async function RoleListSection() {
     <div className="flex flex-col gap-2">
       <p className="text-sm text-muted-foreground">{roles.length} 件</p>
 
-      <Table>
+      <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
             <TableHead>キー</TableHead>

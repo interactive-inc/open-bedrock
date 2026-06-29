@@ -8,7 +8,15 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, count, eq, like, or } from "drizzle-orm"
+import { and, asc, count, desc, eq, like, or } from "drizzle-orm"
+
+// 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。
+const SORT_OPTIONS = {
+  created_at_desc: desc(applications.createdAt),
+  created_at_asc: asc(applications.createdAt),
+} as const
+
+type SortKey = keyof typeof SORT_OPTIONS
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppApplicationInboxList } from "@/lib/app-schemas"
 
@@ -51,6 +59,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     or(isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined, ...roleMatches),
   )
 
+  const sortQuery = c.req.query("sort") ?? ""
+
+  const sortKey: SortKey = sortQuery in SORT_OPTIONS ? (sortQuery as SortKey) : "created_at_desc"
+
   // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
   const rows = await c.var.database
     .select({
@@ -65,6 +77,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .innerJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
     .leftJoin(employees, eq(employees.id, applications.applicantId))
     .where(pendingWithRole)
+    .orderBy(SORT_OPTIONS[sortKey])
     .limit(limit)
     .offset(offset)
 

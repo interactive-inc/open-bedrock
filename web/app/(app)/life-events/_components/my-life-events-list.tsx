@@ -38,7 +38,7 @@ export function MyLifeEventsList(props: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
             <TableHead>種別</TableHead>

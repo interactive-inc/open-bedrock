@@ -34,7 +34,7 @@ export async function AccountListSection() {
     <div className="flex flex-col gap-2">
       <p className="text-sm text-muted-foreground">{accounts.length} 件</p>
 
-      <Table>
+      <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
             <TableHead>従業員</TableHead>

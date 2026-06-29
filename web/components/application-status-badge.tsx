@@ -1,7 +1,8 @@
 import { Badge } from "@/components/ui/badge"
+import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 type Props = {
-  status: string
+  status: ApplicationStatus
 }
 
 // 申請ステータスを日本語ラベルと配色付きの Badge で表示する。
