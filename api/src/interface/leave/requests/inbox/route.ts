@@ -10,7 +10,17 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees, leaveRequests } from "@/schema"
-import { count, desc, eq } from "drizzle-orm"
+import { asc, count, desc, eq } from "drizzle-orm"
+
+// 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。
+const SORT_OPTIONS = {
+  created_at_desc: desc(leaveRequests.createdAt),
+  created_at_asc: asc(leaveRequests.createdAt),
+  start_date_desc: desc(leaveRequests.startDate),
+  start_date_asc: asc(leaveRequests.startDate),
+} as const
+
+type SortKey = keyof typeof SORT_OPTIONS
 
 // GET /leave/requests/inbox — 承認権限者向けの承認待ち一覧
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -38,12 +48,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
+  const sortQuery = c.req.query("sort") ?? ""
+
+  const sortKey: SortKey = sortQuery in SORT_OPTIONS ? (sortQuery as SortKey) : "created_at_desc"
+
   const rows = await c.var.database
     .select({ leaveRequest: leaveRequests, applicantName: employees.name })
     .from(leaveRequests)
     .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
     .where(eq(leaveRequests.status, "pending"))
-    .orderBy(desc(leaveRequests.id))
+    .orderBy(SORT_OPTIONS[sortKey])
     .limit(limit)
     .offset(offset)
 

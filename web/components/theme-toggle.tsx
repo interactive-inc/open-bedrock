@@ -20,6 +20,7 @@ export function ThemeToggle(props: Props) {
         variant="ghost"
         size="icon"
         aria-label={isDark ? "ライトモードに切替" : "ダークモードに切替"}
+        title={isDark ? "ライトモードに切替" : "ダークモードに切替"}
       >
         {isDark ? <Sun /> : <Moon />}
       </Button>
