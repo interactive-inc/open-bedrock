@@ -15,9 +15,14 @@ import {
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 
-async function seedEmployee(context: Context, code: string): Promise<number> {
+async function seedEmployee(
+  context: Context,
+  code: string,
+  options: { role?: string; status?: "active" | "leave" | "retired" } = {},
+): Promise<number> {
   const repository = new EmployeeRepository(context)
 
   const created = await repository.create({
@@ -26,11 +31,22 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
     deptId: 3,
     deptName: "Engineering",
     position: "Engineer",
-    status: "active",
+    status: options.status ?? "active",
   })
 
   if (created instanceof Error) {
     throw new Error("seed failed")
+  }
+
+  if (options.role !== undefined) {
+    await seedIamForEmployees(context.env.DB, [
+      {
+        id: created.id,
+        email: `you+${code.toLowerCase()}@example.com`,
+        passwordHash: "hash",
+        role: options.role,
+      },
+    ])
   }
 
   return created.id
@@ -181,6 +197,50 @@ describe("UpdateEmployee", () => {
 
     expectApplicationError(result, NotFoundError, "employee_not_found")
   })
+
+  test("rejects retiring the last login-enabled admin with last_admin", async () => {
+    const context = createTestContext().context
+
+    await seedEmployee(context, "E908", { role: "admin" })
+
+    const result = await new UpdateEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
+      code: "E908",
+      profile: { ...profileInput, status: "retired" },
+    })
+
+    expectApplicationError(result, ConflictError, "last_admin")
+
+    const found = await new EmployeeRepository(context).findByCode("E908")
+    expect(found).toBeInstanceOf(Employee)
+
+    if (found instanceof Employee) {
+      expect(found.status).toBe("active")
+    }
+  })
+
+  test("allows retiring an admin when another login-enabled admin remains", async () => {
+    const context = createTestContext().context
+
+    await seedEmployee(context, "E909", { role: "admin" })
+    await seedEmployee(context, "E919", { role: "admin" })
+
+    const result = await new UpdateEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
+      code: "E909",
+      profile: { ...profileInput, status: "retired" },
+    })
+
+    expect(result).toBeInstanceOf(Employee)
+
+    if (result instanceof ApplicationError) {
+      throw new Error("update failed")
+    }
+
+    expect(result.status).toBe("retired")
+  })
 })
 
 describe("DeleteEmployee", () => {
@@ -214,6 +274,43 @@ describe("DeleteEmployee", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "self_delete")
+  })
+
+  test("rejects deleting the last login-enabled admin with last_admin", async () => {
+    const context = createTestContext().context
+
+    await seedEmployee(context, "E912", { role: "admin" })
+    const hrId = await seedEmployee(context, "E913", { role: "hr" })
+
+    const result = await new DeleteEmployee(context).run({
+      session: makeTestSession("hr", hrId),
+      viewerEmployeeId: hrId,
+      code: "E912",
+    })
+
+    expectApplicationError(result, ConflictError, "last_admin")
+
+    const found = await new EmployeeRepository(context).findByCode("E912")
+    expect(found).toBeInstanceOf(Employee)
+  })
+
+  test("allows deleting an admin when another login-enabled admin remains", async () => {
+    const context = createTestContext().context
+
+    const deleteTargetId = await seedEmployee(context, "E914", { role: "admin" })
+    const viewerId = await seedEmployee(context, "E915", { role: "admin" })
+
+    const result = await new DeleteEmployee(context).run({
+      session: makeTestSession("admin", viewerId),
+      viewerEmployeeId: viewerId,
+      code: "E914",
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+
+    const found = await new EmployeeRepository(context).findByCode("E914")
+    expect(found).toBeNull()
+    expect(deleteTargetId).not.toBe(viewerId)
   })
 
   test("rejects a non privileged role with forbidden", async () => {

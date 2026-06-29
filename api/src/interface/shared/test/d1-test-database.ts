@@ -11,13 +11,11 @@ export function createD1TestDatabase(schema: string): D1Database {
   const database = {
     prepare: (query: string) => toPreparedStatement(sqlite, query, []),
     batch: async (statements: Array<D1PreparedStatement>) => {
-      const results = []
+      const transaction = sqlite.transaction((transactionStatements: Array<D1PreparedStatement>) =>
+        transactionStatements.map((statement) => toPreparedStatementSync(statement).all()),
+      )
 
-      for (const statement of statements) {
-        results.push(await statement.all())
-      }
-
-      return results
+      return transaction(statements)
     },
     exec: async (query: string) => {
       sqlite.exec(query)
@@ -41,6 +39,7 @@ function toPreparedStatement(
   const bindings = (): Array<SqliteBinding> => values.map(toSqliteBinding)
 
   const statement = {
+    __openKarteAllSync: () => toResult(sqlite.query(query).all(...bindings())),
     bind: (...next: Array<unknown>) => toPreparedStatement(sqlite, query, next),
     first: async (column?: string) => {
       const row = sqlite
@@ -74,6 +73,18 @@ function toPreparedStatement(
   }
 
   return castToD1PreparedStatement(statement)
+}
+
+function toPreparedStatementSync(statement: D1PreparedStatement): {
+  all: () => D1Result<unknown>
+} {
+  const maybeSync = statement as unknown as { __openKarteAllSync?: () => D1Result<unknown> }
+
+  if (maybeSync.__openKarteAllSync === undefined) {
+    throw new Error("test D1 batch received an unsupported prepared statement")
+  }
+
+  return { all: maybeSync.__openKarteAllSync }
 }
 
 function toResult(rows: Array<unknown>) {
