@@ -1,5 +1,6 @@
 import { Notification } from "@/domain/notification/notification.entity"
-import { Thanks } from "@/domain/thanks/thanks.entity"
+import { Thanks, thanksRowSchema } from "@/domain/thanks/thanks.entity"
+import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
 import {
   ConflictError,
   ForbiddenError,
@@ -177,7 +178,7 @@ export class SendThanks {
         const results = await db.batch([
           db
             .prepare(
-              "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING *",
+              "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
             )
             .bind(
               props.thanks.senderEmployeeId,
@@ -188,7 +189,17 @@ export class SendThanks {
             ),
         ])
 
-        return this.parseThanksRow(results[0])
+        const row = parseD1Row(results[0], thanksRowSchema)
+
+        if (row instanceof Error) {
+          return new UnexpectedError("failed to parse thanks row", { cause: row })
+        }
+
+        if (row === undefined) {
+          return new UnexpectedError("failed to insert thanks")
+        }
+
+        return Thanks.fromRow(row)
       }
 
       // ポイント付き: consume UPDATE → 条件付き INSERT を 1 トランザクションで実行する。
@@ -202,7 +213,7 @@ export class SendThanks {
           .bind(props.points, props.senderEmployeeId, props.period),
         db
           .prepare(
-            "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING *",
+            "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
           )
           .bind(
             props.thanks.senderEmployeeId,
@@ -220,37 +231,21 @@ export class SendThanks {
         return null
       }
 
-      return this.parseThanksRow(insertResult)
+      const row = parseD1Row(insertResult, thanksRowSchema)
+
+      if (row instanceof Error) {
+        return new UnexpectedError("failed to parse thanks row", { cause: row })
+      }
+
+      if (row === undefined) {
+        return new UnexpectedError("failed to insert thanks")
+      }
+
+      return Thanks.fromRow(row)
     } catch (error) {
       return error instanceof Error
         ? new UnexpectedError("failed to send thanks", { cause: error })
         : new UnexpectedError("failed to send thanks")
     }
-  }
-
-  private parseThanksRow(result: D1Result): Thanks | ApplicationError {
-    const row = result.results[0] as
-      | {
-          id: number
-          sender_employee_id: number
-          recipient_employee_id: number
-          message: string
-          points: number
-          created_at: string
-        }
-      | undefined
-
-    if (row === undefined) {
-      return new UnexpectedError("failed to insert thanks")
-    }
-
-    return Thanks.fromRow({
-      id: row.id,
-      senderEmployeeId: row.sender_employee_id,
-      recipientEmployeeId: row.recipient_employee_id,
-      message: row.message,
-      points: row.points,
-      createdAt: row.created_at,
-    })
   }
 }
