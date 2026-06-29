@@ -53,54 +53,6 @@ describe("LeaveRequest.create", () => {
   })
 })
 
-describe("LeaveRequest.decide", () => {
-  test("returns a new LeaveRequest with approved status and approver", () => {
-    const request = LeaveRequest.create({
-      employeeId: 7,
-      leaveType: "annual",
-      startDate: "2026-07-01",
-      endDate: "2026-07-03",
-      days: 3,
-      reason: null,
-      createdAt: "2026-06-15T09:00:00.000Z",
-    })
-
-    const approved = request.decide({
-      status: "approved",
-      approverId: 2,
-      decidedComment: "Approved",
-    })
-
-    expect(approved).toBeInstanceOf(LeaveRequest)
-    expect(approved.status).toBe("approved")
-    expect(approved.approverId).toBe(2)
-    expect(approved.decidedComment).toBe("Approved")
-    expect(approved.employeeId).toBe(7)
-  })
-
-  test("returns a new LeaveRequest with rejected status and approver", () => {
-    const request = LeaveRequest.create({
-      employeeId: 7,
-      leaveType: "special",
-      startDate: "2026-08-01",
-      endDate: "2026-08-01",
-      days: 1,
-      reason: "Personal",
-      createdAt: "2026-07-20T09:00:00.000Z",
-    })
-
-    const rejected = request.decide({
-      status: "rejected",
-      approverId: 3,
-      decidedComment: null,
-    })
-
-    expect(rejected.status).toBe("rejected")
-    expect(rejected.approverId).toBe(3)
-    expect(rejected.decidedComment).toBeNull()
-  })
-})
-
 describe("LeaveRequest.isModifiable", () => {
   test("is true for pending", () => {
     const request = LeaveRequest.create({
@@ -117,40 +69,36 @@ describe("LeaveRequest.isModifiable", () => {
   })
 
   test("is false for approved", () => {
-    const request = LeaveRequest.create({
+    const approved = new LeaveRequest({
+      id: null,
       employeeId: 7,
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-01",
       days: 1,
       reason: null,
-      createdAt: "2026-06-15T09:00:00.000Z",
-    })
-
-    const approved = request.decide({
       status: "approved",
       approverId: 2,
       decidedComment: null,
+      createdAt: "2026-06-15T09:00:00.000Z",
     })
 
     expect(approved.isModifiable).toBe(false)
   })
 
   test("is false for rejected", () => {
-    const request = LeaveRequest.create({
+    const rejected = new LeaveRequest({
+      id: null,
       employeeId: 7,
       leaveType: "annual",
       startDate: "2026-07-01",
       endDate: "2026-07-01",
       days: 1,
       reason: null,
-      createdAt: "2026-06-15T09:00:00.000Z",
-    })
-
-    const rejected = request.decide({
       status: "rejected",
       approverId: 3,
       decidedComment: "Denied",
+      createdAt: "2026-06-15T09:00:00.000Z",
     })
 
     expect(rejected.isModifiable).toBe(false)
