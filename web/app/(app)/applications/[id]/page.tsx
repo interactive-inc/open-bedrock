@@ -1,11 +1,14 @@
+import { CheckCircle2, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
 import { PageHeader } from "@/components/page-header"
+import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
+import type { ApplicationApprovalEntry } from "@/lib/api/types/application-types"
 
 export const metadata = { title: "申請詳細" }
 
@@ -74,6 +77,79 @@ export default async function ApplicationDetailPage(props: Props) {
           </pre>
         </div>
       </Card>
+
+      {application.status === "pending" && application.approver_roles.length > 0 ? (
+        <Card className="p-0 gap-0">
+          <div className="flex flex-col gap-2 p-4">
+            <span className="text-sm font-medium">次の承認者</span>
+
+            <div className="flex flex-wrap gap-2">
+              {application.approver_roles.map((role) => (
+                <Badge key={role} variant="secondary">
+                  {role}
+                </Badge>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              上記いずれかのロールを持つ人が承認できます。
+            </p>
+          </div>
+        </Card>
+      ) : null}
+
+      <ApprovalHistory approvals={application.approvals} />
     </div>
+  )
+}
+
+// 申請への承認/却下アクションの履歴。古い順に並べる。
+function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEntry> }) {
+  if (props.approvals.length === 0) {
+    return null
+  }
+
+  return (
+    <Card className="p-0 gap-0">
+      <div className="flex flex-col gap-3 p-4">
+        <span className="text-sm font-medium">承認履歴</span>
+
+        <ol className="flex flex-col gap-3">
+          {props.approvals.map((approval) => {
+            const Icon = approval.action === "approve" ? CheckCircle2 : XCircle
+
+            const colorClass =
+              approval.action === "approve" ? "text-emerald-600" : "text-destructive"
+
+            const label = approval.action === "approve" ? "承認" : "却下"
+
+            return (
+              <li
+                key={approval.id}
+                className="flex items-start gap-3 rounded-md border bg-muted/30 p-3"
+              >
+                <Icon className={`mt-0.5 size-4 shrink-0 ${colorClass}`} aria-hidden />
+
+                <div className="flex flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span className="text-sm font-medium">{approval.approver_name}</span>
+
+                    <span className={`text-xs ${colorClass}`}>が{label}</span>
+
+                    <span className="text-xs text-muted-foreground">{approval.created_at}</span>
+                  </div>
+
+                  {approval.comment !== null && approval.comment !== "" ? (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {approval.comment}
+                    </p>
+                  ) : null}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+    </Card>
   )
 }

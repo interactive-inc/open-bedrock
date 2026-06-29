@@ -52,6 +52,17 @@ export type ApplicationInboxResponse = {
   created_at: string
 }
 
+export type ApplicationApprovalAction = "approve" | "reject"
+
+// 申請への承認/却下アクション 1 件。GET /applications/:id の approvals[] に並ぶ。
+export type ApplicationApprovalEntry = {
+  id: number
+  approver_name: string
+  action: ApplicationApprovalAction
+  comment: string | null
+  created_at: string
+}
+
 // GET /applications/:id および POST /applications のレスポンス。
 export type ApplicationDetailResponse = {
   id: number
@@ -62,6 +73,10 @@ export type ApplicationDetailResponse = {
   current_step: string | null
   payload: unknown
   created_at: string
+  // 承認履歴（古い順）。POST 直後は空配列。
+  approvals: ReadonlyArray<ApplicationApprovalEntry>
+  // テンプレートの承認可能ロール（空配列なら application:approve 権限保持者が承認可）。
+  approver_roles: ReadonlyArray<string>
 }
 
 // POST /applications/:id/approve|reject のレスポンス。

@@ -49,6 +49,17 @@ export const zAppAntisocialCheckList = z.object({
 export type AppAntisocialCheckList = z.infer<typeof zAppAntisocialCheckList>
 
 // ===== application =====
+/** 申請への承認/却下アクション 1 件。GET /applications/:id の approvals[] に並ぶ。 */
+export const zAppApplicationApproval = z.object({
+  id: z.number(),
+  approver_name: z.string(),
+  action: z.enum(["approve", "reject"]),
+  comment: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppApplicationApproval = z.infer<typeof zAppApplicationApproval>
+
 /** 申請 1 件（詳細・作成のレスポンス）。GET /applications/:id と POST /applications で使う。 */
 export const zAppApplication = z.object({
   id: z.number(),
@@ -59,6 +70,10 @@ export const zAppApplication = z.object({
   current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
+  /** 承認/却下の履歴。古い順。POST /applications の直後は空配列で返す。 */
+  approvals: z.array(zAppApplicationApproval).default([]),
+  /** テンプレートの承認可能ロール（空配列なら application:approve 権限保持者）。 */
+  approver_roles: z.array(z.string()).default([]),
 })
 
 export type AppApplication = z.infer<typeof zAppApplication>
