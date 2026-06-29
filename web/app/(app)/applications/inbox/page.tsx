@@ -26,6 +26,7 @@ export default function ApplicationInboxPage() {
       <PageHeader
         title="申請の承認 inbox"
         description="承認待ちの申請を確認します。"
+        breadcrumbs={[{ label: "申請", href: "/applications" }, { label: "承認 inbox" }]}
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/applications" />}>
             申請一覧へ
@@ -54,13 +55,13 @@ async function InboxTable() {
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table aria-label={`承認待ちの申請 ${applications.length} 件`}>
         <TableHeader>
           <TableRow>
             <TableHead>申請名</TableHead>
             <TableHead>申請者</TableHead>
             <TableHead>ステータス</TableHead>
-            <TableHead>申請日</TableHead>
+            <TableHead className="hidden md:table-cell">申請日</TableHead>
             <TableHead>操作</TableHead>
           </TableRow>
         </TableHeader>
@@ -83,7 +84,9 @@ async function InboxTable() {
                 <ApplicationStatusBadge status={application.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{application.created_at}</TableCell>
+              <TableCell className="hidden text-muted-foreground md:table-cell">
+                {application.created_at}
+              </TableCell>
 
               <TableCell>
                 <InboxDecisionForm applicationId={application.id} />
