@@ -1,11 +1,13 @@
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
+import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 
 export type Command = {
+  session: SessionPayload
   redemptionId: number
   deciderId: number
   action: "approve" | "reject"
@@ -38,6 +40,10 @@ export class DecideRedemption {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<DecideResult> {
+    if (canDecideRedemption(command.session) === false) {
+      return new ForbiddenError("cannot decide redemption", "forbidden")
+    }
+
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 
     const existing = await redemptionRepository.findById(command.redemptionId)
@@ -57,16 +63,17 @@ export class DecideRedemption {
     }
 
     if (command.action === "reject") {
-      return this.reject(command)
+      return this.reject(redemptionRepository, command)
     }
 
-    return this.approve(command)
+    return this.approve(redemptionRepository, existing, command)
   }
 
   // 却下。pending からの条件付き UPDATE で確定済みは弾く。0 行更新は already_decided。
-  private async reject(command: Command): Promise<ThanksRedemption | ApplicationError> {
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
+  private async reject(
+    redemptionRepository: ThanksRedemptionRepository,
+    command: Command,
+  ): Promise<ThanksRedemption | ApplicationError> {
     const updated = await redemptionRepository.rejectFromPending({
       redemptionId: command.redemptionId,
       deciderId: command.deciderId,
@@ -87,32 +94,18 @@ export class DecideRedemption {
   // 承認＝確定。残高チェックと在庫減算を同一 batch に畳み込んだ条件付き UPDATE で確定する。
   // 0 行更新は「残高不足 or 在庫切れ or 既に決裁済み」。findById で pending を確認してから区別する。
   private async approve(
+    redemptionRepository: ThanksRedemptionRepository,
+    existing: ThanksRedemption,
     command: Command,
   ): Promise<ThanksRedemption | OutOfStock | FulfilledWithStockError | ApplicationError> {
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
-    const before = await redemptionRepository.findById(command.redemptionId)
-
-    if (before instanceof Error) {
-      return new UnexpectedError("failed to find redemption", { cause: before })
-    }
-
-    if (before === null) {
+    if (existing.status !== "pending") {
       return new ConflictError("redemption already decided", "already_decided")
-    }
-
-    if (before.status !== "pending") {
-      return new ConflictError("redemption already decided", "already_decided")
-    }
-
-    if (before.employeeId === command.deciderId) {
-      return new ForbiddenError("cannot decide own redemption", "self_approval_forbidden")
     }
 
     const updated = await redemptionRepository.approveFromPending({
       redemptionId: command.redemptionId,
-      employeeId: before.employeeId,
-      rewardId: before.rewardId,
+      employeeId: existing.employeeId,
+      rewardId: existing.rewardId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,
     })
