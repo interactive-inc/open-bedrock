@@ -1,0 +1,124 @@
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
+/**
+ * 一覧画面で使うページ送り。total/limit/offset から件数を計算して、
+ * `?page=N` を維持しつつ前後と数ページ分のリンクを描画する。
+ * 現在のページ周辺 ±1 だけ表示し、それ以外は省略する単純な実装。
+ */
+type Props = {
+  pathname: string
+  total: number
+  limit: number
+  offset: number
+}
+
+function buildHref(pathname: string, page: number): string {
+  if (page <= 1) {
+    return pathname
+  }
+
+  return `${pathname}?page=${page}`
+}
+
+export function TablePagination(props: Props) {
+  const totalPages = Math.max(1, Math.ceil(props.total / props.limit))
+
+  const currentPage = Math.floor(props.offset / props.limit) + 1
+
+  if (totalPages <= 1) {
+    return <p className="text-xs text-muted-foreground">全 {props.total} 件</p>
+  }
+
+  const start = props.offset + 1
+
+  const end = Math.min(props.total, props.offset + props.limit)
+
+  const visiblePages: number[] = []
+
+  for (let page = 1; page <= totalPages; page++) {
+    if (page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) {
+      visiblePages.push(page)
+    }
+  }
+
+  const canPrev = currentPage > 1
+
+  const canNext = currentPage < totalPages
+
+  return (
+    <nav
+      aria-label="ページ送り"
+      className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="text-xs text-muted-foreground">
+        {start}–{end} / 全 {props.total} 件
+      </p>
+
+      <div className="flex items-center gap-1">
+        {canPrev ? (
+          <Button variant="ghost" size="sm" nativeButton={false}>
+            <Link
+              href={buildHref(props.pathname, currentPage - 1)}
+              aria-label="前のページ"
+              className="flex items-center gap-1"
+            >
+              <ChevronLeft className="size-4" />
+              <span className="hidden sm:inline">前へ</span>
+            </Link>
+          </Button>
+        ) : (
+          <span className="flex items-center gap-1 px-3 py-1 text-sm text-muted-foreground">
+            <ChevronLeft className="size-4" />
+            <span className="hidden sm:inline">前へ</span>
+          </span>
+        )}
+
+        {visiblePages.map((page, index) => {
+          const previousPage = visiblePages[index - 1]
+
+          const hasGap = previousPage !== undefined && page - previousPage > 1
+
+          const isActive = page === currentPage
+
+          return (
+            <span key={page} className="flex items-center gap-1">
+              {hasGap ? <span className="px-1 text-muted-foreground">…</span> : null}
+
+              {isActive ? (
+                <Button variant="outline" size="sm" disabled aria-current="page">
+                  {page}
+                </Button>
+              ) : (
+                <Button variant="ghost" size="sm" nativeButton={false}>
+                  <Link href={buildHref(props.pathname, page)} aria-label={`${page} ページ目`}>
+                    {page}
+                  </Link>
+                </Button>
+              )}
+            </span>
+          )
+        })}
+
+        {canNext ? (
+          <Button variant="ghost" size="sm" nativeButton={false}>
+            <Link
+              href={buildHref(props.pathname, currentPage + 1)}
+              aria-label="次のページ"
+              className="flex items-center gap-1"
+            >
+              <span className="hidden sm:inline">次へ</span>
+              <ChevronRight className="size-4" />
+            </Link>
+          </Button>
+        ) : (
+          <span className="flex items-center gap-1 px-3 py-1 text-sm text-muted-foreground">
+            <span className="hidden sm:inline">次へ</span>
+            <ChevronRight className="size-4" />
+          </span>
+        )}
+      </div>
+    </nav>
+  )
+}

@@ -1,6 +1,7 @@
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { Suspense } from "react"
+import { TablePagination } from "@/components/table-pagination"
 import { InboxDecisionForm } from "@/app/(app)/applications/inbox/_components/inbox-decision-form"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
@@ -19,8 +20,18 @@ import { getApplicationInbox } from "@/lib/api/get-application-inbox"
 
 export const metadata = { title: "承認待ちの申請" }
 
+const PAGE_SIZE = 20
+
+type SearchParams = Promise<{ page?: string }>
+
 // 承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
-export default function ApplicationInboxPage() {
+export default async function ApplicationInboxPage(props: { searchParams: SearchParams }) {
+  const searchParams = await props.searchParams
+
+  const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
+
+  const offset = (page - 1) * PAGE_SIZE
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -35,66 +46,76 @@ export default function ApplicationInboxPage() {
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <InboxTable />
+        <InboxTable offset={offset} />
       </Suspense>
     </div>
   )
 }
 
-// /applications/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
-async function InboxTable() {
-  const applications = await getApplicationInbox()
+async function InboxTable(props: { offset: number }) {
+  const result = await getApplicationInbox({ limit: PAGE_SIZE, offset: props.offset })
 
-  if (applications instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="inbox の取得に失敗しました" />
   }
 
-  if (applications.length === 0) {
+  if (result.data.length === 0) {
     return <EmptyState title="承認待ちの申請はありません" />
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table aria-label={`承認待ちの申請 ${applications.length} 件`}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>申請名</TableHead>
-            <TableHead>申請者</TableHead>
-            <TableHead>ステータス</TableHead>
-            <TableHead className="hidden md:table-cell">申請日</TableHead>
-            <TableHead>操作</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {applications.map((application) => (
-            <TableRow key={application.id}>
-              <TableCell>
-                <Link
-                  href={`/applications/${application.id}`}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
-                  {application.template_name}
-                </Link>
-              </TableCell>
-
-              <TableCell className="text-muted-foreground">{application.applicant_name}</TableCell>
-
-              <TableCell>
-                <ApplicationStatusBadge status={application.status} />
-              </TableCell>
-
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {application.created_at}
-              </TableCell>
-
-              <TableCell>
-                <InboxDecisionForm applicationId={application.id} />
-              </TableCell>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-x-auto">
+        <Table aria-label={`承認待ちの申請 ${result.total} 件`}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>申請名</TableHead>
+              <TableHead>申請者</TableHead>
+              <TableHead>ステータス</TableHead>
+              <TableHead className="hidden md:table-cell">申請日</TableHead>
+              <TableHead>操作</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+
+          <TableBody>
+            {result.data.map((application) => (
+              <TableRow key={application.id}>
+                <TableCell>
+                  <Link
+                    href={`/applications/${application.id}`}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {application.template_name}
+                  </Link>
+                </TableCell>
+
+                <TableCell className="text-muted-foreground">
+                  {application.applicant_name}
+                </TableCell>
+
+                <TableCell>
+                  <ApplicationStatusBadge status={application.status} />
+                </TableCell>
+
+                <TableCell className="hidden text-muted-foreground md:table-cell">
+                  {application.created_at}
+                </TableCell>
+
+                <TableCell>
+                  <InboxDecisionForm applicationId={application.id} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TablePagination
+        pathname="/applications/inbox"
+        total={result.total}
+        limit={PAGE_SIZE}
+        offset={props.offset}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -20,8 +21,18 @@ import { getLeaveInbox } from "@/lib/api/get-leave-inbox"
 
 export const metadata = { title: "承認待ちの休暇" }
 
+const PAGE_SIZE = 20
+
+type SearchParams = Promise<{ page?: string }>
+
 // 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
-export default function LeaveInboxPage() {
+export default async function LeaveInboxPage(props: { searchParams: SearchParams }) {
+  const searchParams = await props.searchParams
+
+  const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
+
+  const offset = (page - 1) * PAGE_SIZE
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -36,7 +47,7 @@ export default function LeaveInboxPage() {
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <LeaveInboxTable />
+        <LeaveInboxTable offset={offset} />
       </Suspense>
     </div>
   )
@@ -44,64 +55,73 @@ export default function LeaveInboxPage() {
 
 // /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
 // 権限が無い場合は api が 403 を返すため Error として扱う。
-async function LeaveInboxTable() {
-  const leaveRequests = await getLeaveInbox()
+async function LeaveInboxTable(props: { offset: number }) {
+  const result = await getLeaveInbox({ limit: PAGE_SIZE, offset: props.offset })
 
-  if (leaveRequests instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="inbox の取得に失敗しました (承認権限が必要です)" />
   }
 
-  if (leaveRequests.length === 0) {
+  if (result.data.length === 0) {
     return <EmptyState title="承認待ちの休暇申請はありません" />
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table aria-label={`承認待ちの休暇申請 ${leaveRequests.length} 件`}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>申請者</TableHead>
-            <TableHead>種別</TableHead>
-            <TableHead className="hidden md:table-cell">期間</TableHead>
-            <TableHead className="hidden sm:table-cell">日数</TableHead>
-            <TableHead className="hidden lg:table-cell">理由</TableHead>
-            <TableHead>ステータス</TableHead>
-            <TableHead>操作</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {leaveRequests.map((leaveRequest) => (
-            <TableRow key={leaveRequest.id}>
-              <TableCell className="font-medium">{leaveRequest.applicant_name}</TableCell>
-
-              <TableCell className="text-muted-foreground">
-                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
-              </TableCell>
-
-              <TableCell className="hidden text-muted-foreground md:table-cell">
-                {leaveRequest.start_date} 〜 {leaveRequest.end_date}
-              </TableCell>
-
-              <TableCell className="hidden text-muted-foreground sm:table-cell">
-                {leaveRequest.days} 日
-              </TableCell>
-
-              <TableCell className="hidden text-muted-foreground lg:table-cell">
-                {leaveRequest.reason ?? "-"}
-              </TableCell>
-
-              <TableCell>
-                <LeaveStatusBadge status={leaveRequest.status} />
-              </TableCell>
-
-              <TableCell>
-                <LeaveInboxDecisionForm leaveRequestId={leaveRequest.id} />
-              </TableCell>
+    <div className="flex flex-col gap-4">
+      <div className="overflow-x-auto">
+        <Table aria-label={`承認待ちの休暇申請 ${result.total} 件`}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>申請者</TableHead>
+              <TableHead>種別</TableHead>
+              <TableHead className="hidden md:table-cell">期間</TableHead>
+              <TableHead className="hidden sm:table-cell">日数</TableHead>
+              <TableHead className="hidden lg:table-cell">理由</TableHead>
+              <TableHead>ステータス</TableHead>
+              <TableHead>操作</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+
+          <TableBody>
+            {result.data.map((leaveRequest) => (
+              <TableRow key={leaveRequest.id}>
+                <TableCell className="font-medium">{leaveRequest.applicant_name}</TableCell>
+
+                <TableCell className="text-muted-foreground">
+                  <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                </TableCell>
+
+                <TableCell className="hidden text-muted-foreground md:table-cell">
+                  {leaveRequest.start_date} 〜 {leaveRequest.end_date}
+                </TableCell>
+
+                <TableCell className="hidden text-muted-foreground sm:table-cell">
+                  {leaveRequest.days} 日
+                </TableCell>
+
+                <TableCell className="hidden text-muted-foreground lg:table-cell">
+                  {leaveRequest.reason ?? "-"}
+                </TableCell>
+
+                <TableCell>
+                  <LeaveStatusBadge status={leaveRequest.status} />
+                </TableCell>
+
+                <TableCell>
+                  <LeaveInboxDecisionForm leaveRequestId={leaveRequest.id} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TablePagination
+        pathname="/leave/inbox"
+        total={result.total}
+        limit={PAGE_SIZE}
+        offset={props.offset}
+      />
     </div>
   )
 }
