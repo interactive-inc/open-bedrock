@@ -4,6 +4,16 @@ import { z } from "zod"
 /** 感謝メッセージの必須・最大長の不変条件。空白のみは不可、1000 文字まで。 */
 export const thanksMessageSchema = z.string().trim().min(1).max(1000)
 
+/** D1 batch の RETURNING 結果行を安全にパースする。fromRow の引数型に対応する。 */
+export const thanksRowSchema = z.object({
+  id: z.number(),
+  senderEmployeeId: z.number(),
+  recipientEmployeeId: z.number(),
+  message: z.string(),
+  points: z.number(),
+  createdAt: z.string(),
+})
+
 const zProps = z.object({
   id: z.number().nullable(),
   senderEmployeeId: z.number(),
