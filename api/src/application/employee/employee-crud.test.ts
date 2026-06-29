@@ -17,7 +17,11 @@ import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
-async function seedEmployee(context: Context, code: string): Promise<number> {
+async function seedEmployee(
+  context: Context,
+  code: string,
+  options: { status?: "active" | "leave" | "retired" } = {},
+): Promise<number> {
   const repository = new EmployeeRepository(context)
 
   const created = await repository.create({
@@ -26,7 +30,7 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
     deptId: 3,
     deptName: "Engineering",
     position: "Engineer",
-    status: "active",
+    status: options.status ?? "active",
   })
 
   if (created instanceof Error) {
@@ -34,6 +38,24 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
   }
 
   return created.id
+}
+
+async function seedAccountRole(db: D1Database, employeeId: number, roleKey: string): Promise<void> {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO accounts (id, employee_id, status, token_version, created_at, updated_at)
+       VALUES (?1, ?1, 'active', 0, 0, 0)`,
+    )
+    .bind(employeeId)
+    .run()
+
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at)
+       SELECT ?1, r.id, NULL, 0 FROM roles r WHERE r.key = ?2 AND r.is_system = 1`,
+    )
+    .bind(employeeId, roleKey)
+    .run()
 }
 
 const newEmployeeInput = {
@@ -181,6 +203,52 @@ describe("UpdateEmployee", () => {
 
     expectApplicationError(result, NotFoundError, "employee_not_found")
   })
+
+  test("rejects retiring the last login-enabled admin with last_admin", async () => {
+    const { context, db } = createTestContext()
+
+    const adminId = await seedEmployee(context, "E908")
+    await seedAccountRole(db, adminId, "admin")
+
+    const result = await new UpdateEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
+      code: "E908",
+      profile: {
+        ...profileInput,
+        status: "retired",
+      },
+    })
+
+    expectApplicationError(result, ConflictError, "last_admin")
+  })
+
+  test("allows retiring an admin when another login-enabled admin remains", async () => {
+    const { context, db } = createTestContext()
+
+    const adminId = await seedEmployee(context, "E909")
+    const otherAdminId = await seedEmployee(context, "E919")
+    await seedAccountRole(db, adminId, "admin")
+    await seedAccountRole(db, otherAdminId, "admin")
+
+    const result = await new UpdateEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: 0,
+      code: "E909",
+      profile: {
+        ...profileInput,
+        status: "retired",
+      },
+    })
+
+    expect(result).toBeInstanceOf(Employee)
+
+    if (result instanceof ApplicationError) {
+      throw new Error("update failed")
+    }
+
+    expect(result.status).toBe("retired")
+  })
 })
 
 describe("DeleteEmployee", () => {
@@ -214,6 +282,22 @@ describe("DeleteEmployee", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "self_delete")
+  })
+
+  test("rejects deleting the last login-enabled admin with last_admin", async () => {
+    const { context, db } = createTestContext()
+
+    const adminId = await seedEmployee(context, "E912")
+    const hrId = await seedEmployee(context, "E913")
+    await seedAccountRole(db, adminId, "admin")
+
+    const result = await new DeleteEmployee(context).run({
+      session: makeTestSession("hr"),
+      viewerEmployeeId: hrId,
+      code: "E912",
+    })
+
+    expectApplicationError(result, ConflictError, "last_admin")
   })
 
   test("rejects a non privileged role with forbidden", async () => {

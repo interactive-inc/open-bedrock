@@ -1,8 +1,12 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/lib/schemas"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import {
+  abortWhenNoLoginEnabledAdmin,
+  isAbortedByLastAdminGuard,
+} from "@/infrastructure/iam/last-admin-guard"
 import { accountRoles, accounts, employees, roles } from "@/schema"
-import { and, count, eq, inArray, sql } from "drizzle-orm"
+import { and, count, eq, inArray, ne, sql } from "drizzle-orm"
 
 // IAM のアカウント管理(一覧・取得・状態遷移・ロール割当)を扱う。
 // verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
@@ -154,7 +158,7 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
         ).bind(accountId, roleId),
-        abortWhenNoActiveAdmin(this.c.env.DB),
+        abortWhenNoLoginEnabledAdmin(this.c.env.DB),
         this.c.env.DB.prepare(
           "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
         ).bind(accountId, now),
@@ -184,7 +188,7 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
         ).bind(accountId, status, now),
-        abortWhenNoActiveAdmin(this.c.env.DB),
+        abortWhenNoLoginEnabledAdmin(this.c.env.DB),
       ])
 
       return null
@@ -267,8 +271,8 @@ export class AccountRepository {
   }
 
   /**
-   * 指定した system role を保持する有効な(active)アカウント数を数える。
-   * last-admin ガードに使うため、停止・ロック中のアカウントは数えない。
+   * 指定した system role を保持するログイン可能なアカウント数を数える。
+   * 停止・ロック中のアカウントと退職済み従業員は数えない。
    */
   async countAccountsWithSystemRole(roleKey: string): Promise<number | Error> {
     try {
@@ -277,11 +281,51 @@ export class AccountRepository {
         .from(accountRoles)
         .innerJoin(roles, eq(roles.id, accountRoles.roleId))
         .innerJoin(accounts, eq(accounts.id, accountRoles.accountId))
-        .where(and(eq(roles.key, roleKey), eq(roles.isSystem, 1), eq(accounts.status, "active")))
+        .innerJoin(employees, eq(employees.id, accounts.employeeId))
+        .where(
+          and(
+            eq(roles.key, roleKey),
+            eq(roles.isSystem, 1),
+            eq(accounts.status, "active"),
+            ne(employees.status, "retired"),
+          ),
+        )
 
       return rows.at(0)?.value ?? 0
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to count accounts by role")
+    }
+  }
+
+  /**
+   * 指定従業員の active account が指定 system role を持ち、退職済みでないか。
+   */
+  async employeeHasLoginEnabledSystemRole(
+    employeeId: number,
+    roleKey: string,
+  ): Promise<boolean | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ value: count() })
+        .from(accounts)
+        .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
+        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
+        .innerJoin(employees, eq(employees.id, accounts.employeeId))
+        .where(
+          and(
+            eq(accounts.employeeId, employeeId),
+            eq(accounts.status, "active"),
+            eq(roles.key, roleKey),
+            eq(roles.isSystem, 1),
+            ne(employees.status, "retired"),
+          ),
+        )
+
+      return (rows.at(0)?.value ?? 0) > 0
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to check employee login-enabled role")
     }
   }
 
@@ -303,24 +347,4 @@ export class AccountRepository {
       return caught instanceof Error ? caught : new Error("failed to check account role")
     }
   }
-}
-
-/**
- * batch 内で直前までの変更を反映した状態で active な admin が 0 件なら、
- * json_extract('', '$') の評価エラーで batch 全体を rollback させるガード文。
- */
-function abortWhenNoActiveAdmin(db: D1Database): D1PreparedStatement {
-  return db.prepare(
-    `SELECT CASE WHEN (
-       SELECT COUNT(*) FROM account_roles ar
-       JOIN roles r ON r.id = ar.role_id
-       JOIN accounts a ON a.id = ar.account_id
-       WHERE r.key = 'admin' AND r.is_system = 1 AND a.status = 'active'
-     ) = 0 THEN json_extract('', '$') ELSE 1 END AS ok`,
-  )
-}
-
-/** abortWhenNoActiveAdmin による意図的な rollback かを判定する。他の batch 失敗は本物の DB エラー。 */
-function isAbortedByLastAdminGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }

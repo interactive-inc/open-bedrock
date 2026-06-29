@@ -85,7 +85,25 @@ function memberToken(): Promise<string> {
   })
 }
 
+function hrToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 2,
+    email: "you+e002@example.com",
+    role: "hr",
+  })
+}
+
 async function request(
+  path: string,
+  token: string | null,
+  method?: string,
+  body?: unknown,
+): Promise<Response> {
+  return requestWithDb(await createTestDb(), path, token, method, body)
+}
+
+async function requestWithDb(
+  db: D1Database,
   path: string,
   token: string | null,
   method?: string,
@@ -102,7 +120,7 @@ async function request(
   }
 
   const bindings: Bindings = {
-    DB: await createTestDb(),
+    DB: db,
     JWT_SECRET: jwtSecret,
     NOW: "2026-01-01T00:00:00.000Z",
   }
@@ -116,6 +134,16 @@ async function request(
     },
     bindings,
   )
+}
+
+async function grantSystemRole(db: D1Database, accountId: number, roleKey: string): Promise<void> {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at)
+       SELECT ?1, r.id, NULL, 0 FROM roles r WHERE r.key = ?2 AND r.is_system = 1`,
+    )
+    .bind(accountId, roleKey)
+    .run()
 }
 
 describe("GET /employees/:code", () => {
@@ -259,6 +287,18 @@ describe("PUT /employees/:code", () => {
 
     expect(response.status).toBe(404)
   })
+
+  test("returns 409 when retiring the last admin", async () => {
+    const response = await request("/employees/E001", await adminToken(), "PUT", {
+      name: "Alex Carter",
+      dept_id: 1,
+      dept_name: "Corporate Planning",
+      position: "CTO",
+      status: "retired",
+    })
+
+    expect(response.status).toBe(409)
+  })
 })
 
 describe("DELETE /employees/:code", () => {
@@ -278,6 +318,16 @@ describe("DELETE /employees/:code", () => {
     const response = await request("/employees/E001", await adminToken(), "DELETE")
 
     expect(response.status).toBe(403)
+  })
+
+  test("returns 409 when deleting the last admin", async () => {
+    const db = await createTestDb()
+
+    await grantSystemRole(db, 2, "hr")
+
+    const response = await requestWithDb(db, "/employees/E001", await hrToken(), "DELETE")
+
+    expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing employee", async () => {

@@ -2,7 +2,9 @@ import type { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
@@ -43,7 +45,30 @@ export class UpdateEmployee {
       return new NotFoundError("employee not found", "employee_not_found")
     }
 
-    const updated = await employeeRepository.updateProfile(employee.withProfile(command.profile))
+    const nextEmployee = employee.withProfile(command.profile)
+
+    const isRetiring = employee.status !== "retired" && command.profile.status === "retired"
+
+    const shouldGuardLastAdmin =
+      isRetiring === true
+        ? await new AccountRepository(this.c).employeeHasLoginEnabledSystemRole(
+            employee.id,
+            "admin",
+          )
+        : false
+
+    if (shouldGuardLastAdmin instanceof Error) {
+      return new UnexpectedError("failed to check employee role", { cause: shouldGuardLastAdmin })
+    }
+
+    const updated =
+      shouldGuardLastAdmin === true
+        ? await employeeRepository.updateProfileGuardingLastLoginEnabledAdmin(nextEmployee)
+        : await employeeRepository.updateProfile(nextEmployee)
+
+    if (updated instanceof LastAdminError) {
+      return new ConflictError("cannot retire the last admin", "last_admin")
+    }
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update employee", { cause: updated })

@@ -1,5 +1,10 @@
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import {
+  abortWhenNoLoginEnabledAdmin,
+  isAbortedByLastAdminGuard,
+} from "@/infrastructure/iam/last-admin-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
@@ -92,6 +97,41 @@ export class EmployeeRepository {
         return new UniqueConstraintError("employee unique constraint violated", {
           cause: error,
         })
+      }
+
+      return error instanceof Error ? error : new Error("failed to update employee")
+    }
+  }
+
+  // 氏名・部署・役職・在籍状況を更新し、結果としてログイン可能な admin が 0 件なら rollback する。
+  async updateProfileGuardingLastLoginEnabledAdmin(
+    employee: Employee,
+  ): Promise<Employee | null | Error | LastAdminError> {
+    try {
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `UPDATE employees
+           SET name = ?2,
+               dept_id = ?3,
+               dept_name = ?4,
+               position = ?5,
+               status = ?6
+           WHERE code = ?1`,
+        ).bind(
+          employee.code,
+          employee.name,
+          employee.deptId,
+          employee.deptName,
+          employee.position,
+          employee.status,
+        ),
+        abortWhenNoLoginEnabledAdmin(this.c.env.DB),
+      ])
+
+      return await this.findByCode(employee.code)
+    } catch (error) {
+      if (isAbortedByLastAdminGuard(error)) {
+        return new LastAdminError()
       }
 
       return error instanceof Error ? error : new Error("failed to update employee")

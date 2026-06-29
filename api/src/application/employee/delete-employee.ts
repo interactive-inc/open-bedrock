@@ -1,8 +1,14 @@
 import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
 import type { Context, SessionPayload } from "@/env"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import {
+  abortWhenNoLoginEnabledAdmin,
+  isAbortedByLastAdminGuard,
+} from "@/infrastructure/iam/last-admin-guard"
 
 export type Command = {
   session: SessionPayload
@@ -40,7 +46,24 @@ export class DeleteEmployee {
       return new ForbiddenError("cannot delete your own account", "self_delete")
     }
 
-    const cascadeResult = await this.deleteRelatedRecords(employee.id, employee.code)
+    const accountRepository = new AccountRepository(this.c)
+
+    const isLoginEnabledAdmin = await accountRepository.employeeHasLoginEnabledSystemRole(
+      employee.id,
+      "admin",
+    )
+
+    if (isLoginEnabledAdmin instanceof Error) {
+      return new UnexpectedError("failed to check employee role", { cause: isLoginEnabledAdmin })
+    }
+
+    const cascadeResult = await this.deleteRelatedRecords(employee.id, employee.code, {
+      guardLastAdmin: isLoginEnabledAdmin,
+    })
+
+    if (cascadeResult instanceof LastAdminError) {
+      return new ConflictError("cannot delete the last admin", "last_admin")
+    }
 
     if (cascadeResult instanceof Error) {
       return cascadeResult
@@ -58,11 +81,12 @@ export class DeleteEmployee {
   private async deleteRelatedRecords(
     employeeId: number,
     employeeCode: string,
-  ): Promise<null | UnexpectedError> {
+    options: { guardLastAdmin: boolean },
+  ): Promise<null | UnexpectedError | LastAdminError> {
     try {
       const db = this.c.env.DB
 
-      await db.batch([
+      const statements: D1PreparedStatement[] = [
         // --- 子テーブルの孫レコードを先に削除（サブクエリ） ---
         db
           .prepare(
@@ -158,10 +182,20 @@ export class DeleteEmployee {
 
         // --- 従業員本体を batch 末尾で削除（アトミック性を保証） ---
         db.prepare("DELETE FROM employees WHERE code = ?1").bind(employeeCode),
-      ])
+      ]
+
+      if (options.guardLastAdmin) {
+        statements.push(abortWhenNoLoginEnabledAdmin(db))
+      }
+
+      await db.batch(statements)
 
       return null
     } catch (error) {
+      if (isAbortedByLastAdminGuard(error)) {
+        return new LastAdminError()
+      }
+
       return error instanceof Error
         ? new UnexpectedError("failed to delete related employee records", { cause: error })
         : new UnexpectedError("failed to delete related employee records")
