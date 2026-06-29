@@ -1,25 +1,40 @@
 import { EmployeeTable } from "@/app/(app)/employees/_components/employee-table"
 import { FetchError } from "@/components/fetch-error"
+import { TablePagination } from "@/components/table-pagination"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import type { EmployeeSearchFilter } from "@/lib/api/types/employee-search-filter"
 
 type Props = {
   filter: EmployeeSearchFilter
+  offset: number
+  limit: number
 }
 
 // 絞り込み条件で GET /employees を実行し、結果テーブルを描画する非同期 RSC。
 export async function EmployeeListSection(props: Props) {
-  const employees = await getEmployeeList(props.filter)
+  const result = await getEmployeeList(props.filter, { limit: props.limit, offset: props.offset })
 
-  if (employees instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="従業員一覧の取得に失敗しました" />
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm text-muted-foreground">{employees.length} 件</p>
+  const filterParams: Record<string, string | undefined> = {
+    q: props.filter.q ?? undefined,
+    dept: props.filter.dept ?? undefined,
+    status: props.filter.status ?? undefined,
+  }
 
-      <EmployeeTable employees={employees} />
+  return (
+    <div className="flex flex-col gap-4">
+      <EmployeeTable employees={result.items} />
+
+      <TablePagination
+        pathname="/employees"
+        total={result.total}
+        limit={props.limit}
+        offset={props.offset}
+        extraParams={filterParams}
+      />
     </div>
   )
 }

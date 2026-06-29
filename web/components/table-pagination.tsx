@@ -12,14 +12,32 @@ type Props = {
   total: number
   limit: number
   offset: number
+  // ?page= と一緒に維持したい他の searchParams（例: sort）
+  extraParams?: Record<string, string | undefined>
 }
 
-function buildHref(pathname: string, page: number): string {
-  if (page <= 1) {
-    return pathname
+function buildHref(
+  pathname: string,
+  page: number,
+  extraParams?: Record<string, string | undefined>,
+): string {
+  const search = new URLSearchParams()
+
+  if (page > 1) {
+    search.set("page", String(page))
   }
 
-  return `${pathname}?page=${page}`
+  if (extraParams !== undefined) {
+    for (const [key, value] of Object.entries(extraParams)) {
+      if (value !== undefined && value !== "") {
+        search.set(key, value)
+      }
+    }
+  }
+
+  const queryString = search.toString()
+
+  return queryString === "" ? pathname : `${pathname}?${queryString}`
 }
 
 export function TablePagination(props: Props) {
@@ -60,7 +78,7 @@ export function TablePagination(props: Props) {
         {canPrev ? (
           <Button variant="ghost" size="sm" nativeButton={false}>
             <Link
-              href={buildHref(props.pathname, currentPage - 1)}
+              href={buildHref(props.pathname, currentPage - 1, props.extraParams)}
               aria-label="前のページ"
               className="flex items-center gap-1"
             >
@@ -92,7 +110,10 @@ export function TablePagination(props: Props) {
                 </Button>
               ) : (
                 <Button variant="ghost" size="sm" nativeButton={false}>
-                  <Link href={buildHref(props.pathname, page)} aria-label={`${page} ページ目`}>
+                  <Link
+                    href={buildHref(props.pathname, page, props.extraParams)}
+                    aria-label={`${page} ページ目`}
+                  >
                     {page}
                   </Link>
                 </Button>

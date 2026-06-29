@@ -16,11 +16,11 @@ export async function searchRecipientsAction(
     return []
   }
 
-  const employees = await getEmployeeList({ q: trimmedQuery, dept: null, status: null })
+  const result = await getEmployeeList({ q: trimmedQuery, dept: null, status: null })
 
-  if (employees instanceof Error) {
+  if (result instanceof Error) {
     return []
   }
 
-  return employees
+  return result.items
 }

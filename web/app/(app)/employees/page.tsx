@@ -21,7 +21,15 @@ export default async function EmployeesPage(props: Props) {
 
   const filter = toFilter(params)
 
-  const suspenseKey = `${filter.q ?? ""}:${filter.dept ?? ""}:${filter.status ?? ""}`
+  const rawPage = toSingleValue(params.page)
+
+  const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
+
+  const pageSize = 20
+
+  const offset = (page - 1) * pageSize
+
+  const suspenseKey = `${filter.q ?? ""}:${filter.dept ?? ""}:${filter.status ?? ""}:${page}`
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,7 +38,7 @@ export default async function EmployeesPage(props: Props) {
       <EmployeeSearchForm filter={filter} />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
-        <EmployeeListSection filter={filter} />
+        <EmployeeListSection filter={filter} offset={offset} limit={pageSize} />
       </Suspense>
     </div>
   )

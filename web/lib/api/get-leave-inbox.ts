@@ -1,8 +1,15 @@
 import { createClient } from "@/lib/api/hc-client"
 
+export type LeaveInboxSort =
+  | "created_at_desc"
+  | "created_at_asc"
+  | "start_date_desc"
+  | "start_date_asc"
+
 type Params = {
   limit?: number
   offset?: number
+  sort?: LeaveInboxSort
 }
 
 // GET /leave/requests/inbox。承認者向けの承認待ち休暇申請一覧。data と total を併せて返す。
@@ -14,6 +21,7 @@ export async function getLeaveInbox(params: Params = {}) {
     query: {
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,
+      sort: params.sort,
     },
   })
 
