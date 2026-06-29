@@ -1,6 +1,6 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
-import { ForbiddenError } from "@/lib/errors"
+import { ForbiddenError, ValidationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
@@ -129,6 +129,91 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "reject",
       comment: "policy violation",
+    })
+
+    if (result instanceof Error) {
+      throw result
+    }
+
+    if (!(result instanceof LeaveRequest)) {
+      throw new Error("unexpected failure")
+    }
+
+    expect(result.status).toBe("rejected")
+  })
+
+  test("returns cross_fiscal_year when leave request spans fiscal years", async () => {
+    const { context } = createTestContext()
+
+    const repository = new LeaveRequestRepository(context)
+
+    // 2026-03-30 (FY2025) → 2026-04-02 (FY2026) crosses fiscal year boundary
+    const created = await repository.create(
+      LeaveRequest.create({
+        employeeId: 5,
+        leaveType: "annual",
+        startDate: "2026-03-30",
+        endDate: "2026-04-02",
+        days: 4,
+        reason: "vacation",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error || created === null) {
+      throw new Error("seed failed")
+    }
+
+    const result = await new DecideLeaveRequest(context).run({
+      session: makeTestSession("manager"),
+      leaveRequestId: created.id ?? 0,
+      approverId: 2,
+      action: "approve",
+      comment: null,
+    })
+
+    expectApplicationError(result, ValidationError, "cross_fiscal_year")
+  })
+
+  test("allows approval when leave request stays within the same fiscal year", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "leave_balances", [
+      {
+        employee_id: 5,
+        fiscal_year: "2026",
+        leave_type: "annual",
+        granted_days: 20,
+        used_days: 0,
+        remaining_days: 20,
+      },
+    ])
+
+    const repository = new LeaveRequestRepository(context)
+
+    // 2026-03-28 → 2026-03-31: both belong to FY2025, no cross-year issue
+    const created = await repository.create(
+      LeaveRequest.create({
+        employeeId: 5,
+        leaveType: "annual",
+        startDate: "2026-03-28",
+        endDate: "2026-03-31",
+        days: 4,
+        reason: "vacation",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      }),
+    )
+
+    if (created instanceof Error || created === null) {
+      throw new Error("seed failed")
+    }
+
+    const result = await new DecideLeaveRequest(context).run({
+      session: makeTestSession("manager"),
+      leaveRequestId: created.id ?? 0,
+      approverId: 2,
+      action: "reject",
+      comment: "no coverage",
     })
 
     if (result instanceof Error) {
