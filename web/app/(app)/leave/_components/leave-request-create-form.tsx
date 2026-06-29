@@ -7,6 +7,8 @@ import type { LeaveActionState } from "@/app/(app)/leave/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { Spinner } from "@/components/ui/spinner"
 
 const initialState: LeaveActionState = { ok: false, error: null }
 
@@ -39,21 +41,17 @@ export function LeaveRequestCreateForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4 rounded-2xl border p-4">
-      <h2 className="text-lg font-medium">休暇を申請</h2>
+      <h3 className="text-lg font-medium">休暇を申請</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field>
           <FieldLabel htmlFor="leave-type">休暇種別</FieldLabel>
 
-          <select
-            id="leave-type"
-            name="leave_type"
-            defaultValue="annual"
-            className="border-input bg-transparent flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <option value="annual">年次有給</option>
-            <option value="special">特別休暇</option>
-          </select>
+          <NativeSelect id="leave-type" name="leave_type" defaultValue="annual" className="w-full">
+            <NativeSelectOption value="annual">年次有給</NativeSelectOption>
+
+            <NativeSelectOption value="special">特別休暇</NativeSelectOption>
+          </NativeSelect>
         </Field>
 
         <Field>
@@ -83,6 +81,7 @@ export function LeaveRequestCreateForm() {
 
       <div>
         <Button type="submit" disabled={isPending}>
+          {isPending ? <Spinner className="mr-2" /> : null}
           {isPending ? "提出中..." : "申請する"}
         </Button>
       </div>

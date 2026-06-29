@@ -2,6 +2,17 @@
 
 import { Bell, LogOut, User } from "lucide-react"
 import Link from "next/link"
+import { useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -32,6 +43,8 @@ type Props = {
  */
 export function AppHeader(props: Props) {
   const initial = props.currentUser.name.slice(0, 1).toUpperCase()
+
+  const [logoutOpen, setLogoutOpen] = useState(false)
 
   return (
     <header className="flex h-14 items-center gap-2 px-4">
@@ -91,20 +104,34 @@ export function AppHeader(props: Props) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem
-              variant="destructive"
-              closeOnClick={false}
-              render={
-                <form action={props.onLogout}>
-                  <button type="submit" className="flex w-full items-center gap-2">
-                    <LogOut />
-                    <span>ログアウト</span>
-                  </button>
-                </form>
-              }
-            />
+            <DropdownMenuItem variant="destructive" onClick={() => setLogoutOpen(true)}>
+              <LogOut />
+              <span>ログアウト</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>ログアウトしますか?</AlertDialogTitle>
+
+              <AlertDialogDescription>
+                もう一度ログインするにはパスワードが必要です。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+
+              <form action={props.onLogout}>
+                <AlertDialogAction type="submit" variant="destructive">
+                  ログアウト
+                </AlertDialogAction>
+              </form>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </header>
   )

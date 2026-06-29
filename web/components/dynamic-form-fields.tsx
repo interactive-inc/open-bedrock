@@ -54,7 +54,11 @@ export function DynamicFormFields(props: Props) {
           <Field key={field.id}>
             <FieldLabel htmlFor={inputId}>
               {field.label}
-              {field.required ? <span className="ml-1 text-destructive">*</span> : null}
+              {field.required ? (
+                <abbr title="必須" className="ml-1 text-destructive no-underline">
+                  *
+                </abbr>
+              ) : null}
             </FieldLabel>
 
             {field.type === "text" ? (
@@ -62,6 +66,7 @@ export function DynamicFormFields(props: Props) {
                 id={inputId}
                 value={values[field.id] ?? ""}
                 required={field.required}
+                aria-required={field.required}
                 onChange={(event) => setValue(field.id, event.target.value)}
               />
             ) : null}
@@ -72,6 +77,7 @@ export function DynamicFormFields(props: Props) {
                 rows={4}
                 value={values[field.id] ?? ""}
                 required={field.required}
+                aria-required={field.required}
                 onChange={(event) => setValue(field.id, event.target.value)}
               />
             ) : null}
@@ -82,6 +88,7 @@ export function DynamicFormFields(props: Props) {
                 type="number"
                 value={values[field.id] ?? ""}
                 required={field.required}
+                aria-required={field.required}
                 onChange={(event) => setValue(field.id, event.target.value)}
               />
             ) : null}
@@ -92,6 +99,7 @@ export function DynamicFormFields(props: Props) {
                 type="date"
                 value={values[field.id] ?? ""}
                 required={field.required}
+                aria-required={field.required}
                 onChange={(event) => setValue(field.id, event.target.value)}
               />
             ) : null}
@@ -101,6 +109,7 @@ export function DynamicFormFields(props: Props) {
                 id={inputId}
                 value={values[field.id] ?? ""}
                 required={field.required}
+                aria-required={field.required}
                 className="w-full"
                 onChange={(event) => setValue(field.id, event.target.value)}
               >
