@@ -1,6 +1,7 @@
 import { LeaveRequest, leaveRequestRowSchema } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
 import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 
@@ -346,8 +347,4 @@ export class LeaveRequestRepository {
       return error instanceof Error ? error : new Error("failed to delete leave_request")
     }
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
 }

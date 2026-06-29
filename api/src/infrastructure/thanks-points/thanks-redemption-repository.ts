@@ -1,6 +1,7 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { redemptionStatusSchema } from "@/lib/schemas"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
@@ -372,12 +373,4 @@ export class ThanksRedemptionRepository {
       return error instanceof Error ? error : new Error("failed to compute balance")
     }
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
-}
-
-function isAbortedByGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }

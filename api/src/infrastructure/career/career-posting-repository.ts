@@ -1,5 +1,6 @@
 import { CareerPosting } from "@/domain/career/career-posting.entity"
 import type { Context } from "@/env"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { careerPostings } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -114,14 +115,4 @@ export class CareerPostingRepository {
       return error instanceof Error ? error : new Error("failed to delete career_posting")
     }
   }
-}
-
-function abortWhenPreviousStatementChangedNoRows(db: D1Database): D1PreparedStatement {
-  return db.prepare("SELECT CASE WHEN changes() = 0 THEN json_extract('', '$') ELSE 1 END AS ok")
-}
-
-// ガード文（abortWhenPreviousStatementChangedNoRows）の json_extract('', '$') による
-// 意図的な abort かを判定する。これ以外の batch 失敗は本物の DB エラーとして伝播させる。
-function isAbortedByGuard(error: unknown): boolean {
-  return error instanceof Error && error.message.includes("malformed JSON")
 }
