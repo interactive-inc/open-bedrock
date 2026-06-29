@@ -104,11 +104,16 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
 }
 
 // 申請内容の更新フォームを Dialog で開く。payload を JSON テキストで編集して送信する。
+// 編集途中で閉じようとした場合は confirm() で破棄確認を行う。
 function UpdateApplicationDialog(props: {
   application: ApplicationListItem
   applicationId: number
 }) {
   const [open, setOpen] = useState(false)
+
+  const [isDirty, setIsDirty] = useState(false)
+
+  const initialPayload = JSON.stringify(props.application.payload, null, 2)
 
   async function reduce(
     previousState: ApplicationActionState,
@@ -117,6 +122,7 @@ function UpdateApplicationDialog(props: {
     const result = await updateApplicationAction(previousState, formData)
 
     if (result.ok) {
+      setIsDirty(false)
       setOpen(false)
     }
 
@@ -128,8 +134,22 @@ function UpdateApplicationDialog(props: {
     error: null,
   })
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && isDirty) {
+      const ok = window.confirm("編集中の内容は破棄されます。閉じてよろしいですか?")
+
+      if (!ok) {
+        return
+      }
+
+      setIsDirty(false)
+    }
+
+    setOpen(nextOpen)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
 
       <DialogContent>
@@ -150,7 +170,8 @@ function UpdateApplicationDialog(props: {
                 id="update_payload"
                 name="payload"
                 rows={8}
-                defaultValue={JSON.stringify(props.application.payload, null, 2)}
+                defaultValue={initialPayload}
+                onChange={(event) => setIsDirty(event.target.value !== initialPayload)}
               />
             </Field>
           </FieldGroup>

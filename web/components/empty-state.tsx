@@ -29,7 +29,9 @@ export function EmptyState(props: Props) {
         ) : null}
       </div>
 
-      {props.action !== undefined ? <div>{props.action}</div> : null}
+      {props.action !== undefined ? (
+        <div className="[&_a]:min-h-11 [&_button]:min-h-11">{props.action}</div>
+      ) : null}
     </div>
   )
 }
