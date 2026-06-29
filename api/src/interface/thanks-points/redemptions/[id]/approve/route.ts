@@ -32,6 +32,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const result = await new DecideRedemption(c).run({
+    session,
     redemptionId,
     deciderId: session.employeeId,
     action: "approve",

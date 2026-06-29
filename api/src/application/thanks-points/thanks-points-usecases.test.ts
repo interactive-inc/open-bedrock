@@ -13,6 +13,7 @@ import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-re
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { eq } from "drizzle-orm"
 import { describe, expect, test } from "bun:test"
@@ -355,6 +356,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -406,6 +408,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: firstPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -415,6 +418,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: secondPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -454,6 +458,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -485,6 +490,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
+      session: makeTestSession("admin", 5),
       redemptionId: pending.id ?? 0,
       deciderId: 5,
       action: "approve",
@@ -498,6 +504,7 @@ describe("DecideRedemption", () => {
     const { context } = createTestContext()
 
     const result = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: 9999,
       deciderId: 2,
       action: "approve",
@@ -525,6 +532,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -534,6 +542,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -575,6 +584,7 @@ describe("DecideRedemption", () => {
     })
 
     const result = await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -649,6 +659,7 @@ describe("ListPendingRedemptions", () => {
 
     // approve して fulfilled にする
     await new DecideRedemption(context).run({
+      session: makeTestSession("admin"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
