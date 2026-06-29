@@ -3,12 +3,12 @@ import { WithdrawApplication } from "@/application/application/withdraw-applicat
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { factory } from "@/lib/factory"
-import { applications, applicationTemplates, employees } from "@/schema"
+import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { eq } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
@@ -51,15 +51,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   // 申請者本人か承認できるロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
   // 承認可否は decide-application と同じ二分岐: テンプレートに approverRoles があれば
   // そのロール保持者、無ければ application:approve 権限保持者。
+  const template = await new ApplicationTemplateRepository(c).findById(row.application.templateId)
+
+  if (template instanceof Error) {
+    throw new InternalError("failed to find application template")
+  }
+
   const isOwner = row.application.applicantId === session.employeeId
 
   if (isOwner === false) {
-    const template = await new ApplicationTemplateRepository(c).findById(row.application.templateId)
-
-    if (template instanceof Error) {
-      throw new InternalError("failed to find application template")
-    }
-
     const canApprove =
       template !== null && template.approverRoles.length > 0
         ? session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
@@ -77,6 +77,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("invalid payload data")
   }
 
+  // 承認/却下の履歴（古い順）。承認者名は employees から left join で取得する。
+  const approvalRows = await c.var.database
+    .select({
+      id: applicationApprovals.id,
+      action: applicationApprovals.action,
+      comment: applicationApprovals.comment,
+      createdAt: applicationApprovals.createdAt,
+      approverName: employees.name,
+    })
+    .from(applicationApprovals)
+    .leftJoin(employees, eq(employees.id, applicationApprovals.approverId))
+    .where(eq(applicationApprovals.applicationId, applicationId))
+    .orderBy(asc(applicationApprovals.createdAt))
+
   const responseBody = zAppApplication.parse({
     id: row.application.id,
     template_code: row.templateCode ?? "",
@@ -86,6 +100,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     current_step: row.application.currentStep,
     payload,
     created_at: row.application.createdAt,
+    approvals: approvalRows.map((approval) => ({
+      id: approval.id,
+      approver_name: approval.approverName ?? "(削除済みの社員)",
+      action: approval.action,
+      comment: approval.comment,
+      created_at: approval.createdAt,
+    })),
+    approver_roles: template?.approverRoles ?? [],
   })
 
   return c.json(responseBody, 200)
