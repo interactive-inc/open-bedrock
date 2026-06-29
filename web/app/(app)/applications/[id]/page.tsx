@@ -44,6 +44,10 @@ export default async function ApplicationDetailPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={application.template_name}
+        breadcrumbs={[
+          { label: "申請", href: "/applications" },
+          { label: application.template_name },
+        ]}
         actions={<BackButton href="/applications" label="一覧に戻る" />}
       />
 
