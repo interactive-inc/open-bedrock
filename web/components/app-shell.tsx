@@ -26,14 +26,12 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
-import type { Theme } from "@/lib/theme/get-theme"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
   onLogout: () => void
   unreadNotificationCount: number
-  theme: Theme
 }
 
 /**
@@ -110,7 +108,6 @@ export function AppShell(props: Props) {
           currentUser={props.currentUser}
           onLogout={props.onLogout}
           unreadNotificationCount={props.unreadNotificationCount}
-          theme={props.theme}
         />
 
         <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{props.children}</main>
