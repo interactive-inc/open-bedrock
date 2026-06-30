@@ -99,11 +99,11 @@ export class ApproveShiftSwapRequest {
           .bind(approved.status, approved.approvedAt, swapRequest.id),
         abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id = ?3")
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3")
           .bind(targetAssignment.patternId, requesterAssignment.id, requesterAssignment.patternId),
         abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id = ?3")
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3")
           .bind(requesterAssignment.patternId, targetAssignment.id, targetAssignment.patternId),
         abortWhenPreviousStatementChangedNoRows(db),
       ])

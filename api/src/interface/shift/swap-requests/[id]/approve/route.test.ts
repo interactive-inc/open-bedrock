@@ -118,6 +118,121 @@ async function createTestDbWithoutAssignments(): Promise<D1Database> {
   return db
 }
 
+// pattern_id が NULL の割当を持つ DB を作る（申請者・交代相手ともに pattern_id = NULL）。
+async function createTestDbWithNullPatternIds(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "shift_swap_requests",
+    seedShiftSwapRequests.map((swapRequest) => ({
+      id: swapRequest.id,
+      requester_employee_id: swapRequest.requesterEmployeeId,
+      target_employee_id: swapRequest.targetEmployeeId,
+      date: swapRequest.date,
+      note: swapRequest.note,
+      status: swapRequest.status,
+      approved_at: swapRequest.approvedAt,
+    })),
+  )
+
+  // swap request id=1: requester=5, target=4, date="2026-06-01"
+  // 両者とも pattern_id = NULL（シフト種別未設定の割当）
+  await seedD1(db, "shift_assignments", [
+    {
+      id: 1,
+      employee_id: 5,
+      pattern_id: null,
+      date: "2026-06-01",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+    {
+      id: 2,
+      employee_id: 4,
+      pattern_id: null,
+      date: "2026-06-01",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+  ])
+
+  return db
+}
+
+// requester の pattern_id が NULL、target の pattern_id が非 NULL の DB を作る。
+async function createTestDbWithRequesterNullPatternId(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "shift_swap_requests",
+    seedShiftSwapRequests.map((swapRequest) => ({
+      id: swapRequest.id,
+      requester_employee_id: swapRequest.requesterEmployeeId,
+      target_employee_id: swapRequest.targetEmployeeId,
+      date: swapRequest.date,
+      note: swapRequest.note,
+      status: swapRequest.status,
+      approved_at: swapRequest.approvedAt,
+    })),
+  )
+
+  // requester (employee 5) は pattern_id = NULL、target (employee 4) は pattern_id = 2
+  await seedD1(db, "shift_assignments", [
+    {
+      id: 1,
+      employee_id: 5,
+      pattern_id: null,
+      date: "2026-06-01",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+    {
+      id: 2,
+      employee_id: 4,
+      pattern_id: 2,
+      date: "2026-06-01",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+  ])
+
+  return db
+}
+
 // 片方の割当のみある DB を作る（requester の割当だけ）。
 async function createTestDbWithPartialAssignment(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -404,5 +519,72 @@ describe("POST /shift/swap-requests/:id/approve", () => {
       .first<{ pattern_id: number }>()
 
     expect(preserved?.pattern_id).toBe(2)
+  })
+
+  // pattern_id が NULL の割当に対する楽観ロックの NULL-safe 比較の検証。
+  // SQLite では `NULL = NULL` が false になるため、`IS` 演算子を使わないと
+  // pattern_id が NULL の割当への UPDATE が 0 行になり、409 が返ってしまう。
+  test("approves swap when both requester and target have null pattern_id (returns 200)", async () => {
+    const db = await createTestDbWithNullPatternIds()
+
+    const response = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      db,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = shiftSwapRequestResponseSchema.safeParse(await response.json())
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("approved")
+    }
+
+    // NULL どうしの交換後も両者の pattern_id は NULL のまま（交換結果として一貫している）。
+    const requesterRow = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
+      .first<{ pattern_id: number | null }>()
+
+    const targetRow = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 2")
+      .first<{ pattern_id: number | null }>()
+
+    expect(requesterRow?.pattern_id).toBeNull()
+    expect(targetRow?.pattern_id).toBeNull()
+  })
+
+  test("approves swap when requester has null pattern_id and target has non-null pattern_id (returns 200)", async () => {
+    const db = await createTestDbWithRequesterNullPatternId()
+
+    const response = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      db,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = shiftSwapRequestResponseSchema.safeParse(await response.json())
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("approved")
+    }
+
+    // requester (id=1) は NULL → 2、target (id=2) は 2 → NULL になる。
+    const requesterRow = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
+      .first<{ pattern_id: number | null }>()
+
+    const targetRow = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 2")
+      .first<{ pattern_id: number | null }>()
+
+    expect(requesterRow?.pattern_id).toBe(2)
+    expect(targetRow?.pattern_id).toBeNull()
   })
 })
