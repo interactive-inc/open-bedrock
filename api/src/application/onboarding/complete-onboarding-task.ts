@@ -39,15 +39,37 @@ export class CompleteOnboardingTask {
       return new ForbiddenError("cannot complete task", "forbidden")
     }
 
-    const updated = await assignmentRepository.update(
-      assignment.completeTask(command.taskId, command.completedAt),
+    if (assignment.id === null) {
+      return new UnexpectedError("assignment has no id")
+    }
+
+    const updated = await assignmentRepository.completeTask(
+      command.taskId,
+      assignment.id,
+      command.completedAt,
     )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const completed = updated.tasks.find((task) => task.id === command.taskId)
+    // null = task was already done (guard aborted) — re-fetch to avoid returning the
+    // pre-lock snapshot, which may reflect state from before a concurrent write.
+    let source = updated
+    if (source === null) {
+      const current = await assignmentRepository.findByTaskId(command.taskId)
+      if (current instanceof Error) {
+        return new UnexpectedError("failed to re-fetch assignment after guard abort", {
+          cause: current,
+        })
+      }
+      if (current === null) {
+        return new NotFoundError("task not found", "task_not_found")
+      }
+      source = current
+    }
+
+    const completed = source.tasks.find((task) => task.id === command.taskId)
 
     if (completed === undefined) {
       return new NotFoundError("task not found", "task_not_found")

@@ -256,6 +256,83 @@ export class OnboardingAssignmentRepository {
     }
   }
 
+  // タスク 1 件を完了にする。条件付き UPDATE で pending → done に変更し、
+  // assignment status を同一 batch 内の SQL 集計から再計算する。
+  // タスクが既に done の場合はガードで abort → null を返す。
+  async completeTask(
+    taskId: number,
+    assignmentId: number,
+    completedAt: string,
+  ): Promise<OnboardingAssignment | null | Error> {
+    try {
+      const db = this.c.env.DB
+      await db.batch([
+        db
+          .prepare(
+            "UPDATE onboarding_tasks SET status = 'done', completed_at = ?1 WHERE id = ?2 AND status = 'pending'",
+          )
+          .bind(completedAt, taskId),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
+            "UPDATE onboarding_assignments SET status = CASE WHEN (SELECT COUNT(*) FROM onboarding_tasks WHERE assignment_id = ?1 AND status = 'pending') = 0 THEN 'completed' ELSE 'in_progress' END WHERE id = ?1",
+          )
+          .bind(assignmentId),
+      ])
+
+      const result = await this.findById(assignmentId)
+
+      if (result === null) {
+        return new Error("assignment not found after completing task")
+      }
+
+      return result
+    } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
+      return error instanceof Error ? error : new Error("failed to complete task")
+    }
+  }
+
+  // タスク 1 件の完了を取り消す。条件付き UPDATE で done → pending に変更し、
+  // assignment status を同一 batch 内の SQL 集計から再計算する。
+  // タスクが既に pending の場合はガードで abort → null を返す。
+  async uncompleteTask(
+    taskId: number,
+    assignmentId: number,
+  ): Promise<OnboardingAssignment | null | Error> {
+    try {
+      const db = this.c.env.DB
+      await db.batch([
+        db
+          .prepare(
+            "UPDATE onboarding_tasks SET status = 'pending', completed_at = NULL WHERE id = ?1 AND status = 'done'",
+          )
+          .bind(taskId),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
+            "UPDATE onboarding_assignments SET status = CASE WHEN (SELECT COUNT(*) FROM onboarding_tasks WHERE assignment_id = ?1 AND status = 'pending') = 0 THEN 'completed' ELSE 'in_progress' END WHERE id = ?1",
+          )
+          .bind(assignmentId),
+      ])
+
+      const result = await this.findById(assignmentId)
+
+      if (result === null) {
+        return new Error("assignment not found after uncompleting task")
+      }
+
+      return result
+    } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
+      return error instanceof Error ? error : new Error("failed to uncomplete task")
+    }
+  }
+
   // 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
   // assignment を先に DELETE し、ガード文で 0 行なら後続の tasks DELETE を abort する。
   async delete(assignmentId: number): Promise<true | null | Error> {
