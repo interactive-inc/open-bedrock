@@ -24,10 +24,11 @@ export const Default: Story = {
       role: "admin",
       dept_name: "Engineering",
       position: "Senior Engineer",
+      permissions: ["notification:view"],
+      role_keys: ["admin"],
     },
     onLogout: fn(),
     unreadNotificationCount: 3,
-    theme: "light",
   },
 }
 
@@ -41,9 +42,10 @@ export const NoDepartment: Story = {
       role: "member",
       dept_name: null,
       position: null,
+      permissions: [],
+      role_keys: ["member"],
     },
     onLogout: fn(),
     unreadNotificationCount: 0,
-    theme: "dark",
   },
 }

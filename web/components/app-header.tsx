@@ -27,14 +27,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
-import type { Theme } from "@/lib/theme/get-theme"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 type Props = {
   currentUser: MeResponse
   onLogout: () => void
   unreadNotificationCount: number
-  theme: Theme
 }
 
 /**
@@ -72,7 +70,7 @@ export function AppHeader(props: Props) {
           ) : null}
         </Button>
 
-        <ThemeToggle theme={props.theme} />
+        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownMenuTrigger

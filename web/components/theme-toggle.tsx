@@ -1,29 +1,34 @@
-import { Moon, Sun } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { toggleThemeAction } from "@/lib/theme/toggle-theme-action"
-import type { Theme } from "@/lib/theme/get-theme"
+"use client"
 
-type Props = {
-  theme: Theme
-}
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 
 /**
- * ライト / ダークを切り替えるアイコンボタン。Server Action で cookie を反転させて再描画する。
+ * ライト / ダークを切り替えるアイコンボタン。設定画面では system を含む3択を扱う。
  */
-export function ThemeToggle(props: Props) {
-  const isDark = props.theme === "dark"
+export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false)
+  const { resolvedTheme, setTheme } = useTheme()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDark = mounted && resolvedTheme === "dark"
+  const nextTheme = isDark ? "light" : "dark"
 
   return (
-    <form action={toggleThemeAction}>
-      <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        aria-label={isDark ? "ライトモードに切替" : "ダークモードに切替"}
-        title={isDark ? "ライトモードに切替" : "ダークモードに切替"}
-      >
-        {isDark ? <Sun /> : <Moon />}
-      </Button>
-    </form>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={isDark ? "ライトモードに切替" : "ダークモードに切替"}
+      title={isDark ? "ライトモードに切替" : "ダークモードに切替"}
+      onClick={() => setTheme(nextTheme)}
+    >
+      {isDark ? <Sun /> : <Moon />}
+    </Button>
   )
 }

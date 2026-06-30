@@ -5,7 +5,6 @@ import { AuthProvider } from "@/components/auth-provider"
 import { isAuthError } from "@/lib/api/auth-error"
 import { getMe } from "@/lib/api/get-me"
 import { getMyUnreadCount } from "@/lib/api/get-my-unread-count"
-import { getTheme } from "@/lib/theme/get-theme"
 
 type Props = {
   children: React.ReactNode
@@ -34,15 +33,12 @@ export default async function AppLayout(props: Props) {
 
   const unreadNotificationCount = unreadCount instanceof Error ? 0 : unreadCount.count
 
-  const theme = await getTheme()
-
   return (
     <AuthProvider currentUser={currentUser}>
       <AppShell
         currentUser={currentUser}
         onLogout={logoutAction}
         unreadNotificationCount={unreadNotificationCount}
-        theme={theme}
       >
         {props.children}
       </AppShell>
