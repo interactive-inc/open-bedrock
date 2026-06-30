@@ -39,15 +39,23 @@ export class CompleteOnboardingTask {
       return new ForbiddenError("cannot complete task", "forbidden")
     }
 
-    const updated = await assignmentRepository.update(
-      assignment.completeTask(command.taskId, command.completedAt),
+    if (assignment.id === null) {
+      return new UnexpectedError("assignment has no id")
+    }
+
+    const updated = await assignmentRepository.completeTask(
+      command.taskId,
+      assignment.id,
+      command.completedAt,
     )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const completed = updated.tasks.find((task) => task.id === command.taskId)
+    // null = task was already done (guard aborted) — treat as idempotent success.
+    const source = updated ?? assignment
+    const completed = source.tasks.find((task) => task.id === command.taskId)
 
     if (completed === undefined) {
       return new NotFoundError("task not found", "task_not_found")

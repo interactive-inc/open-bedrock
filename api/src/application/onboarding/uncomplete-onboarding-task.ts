@@ -38,13 +38,22 @@ export class UncompleteOnboardingTask {
       return new ForbiddenError("cannot uncomplete task", "forbidden")
     }
 
-    const updated = await assignmentRepository.update(assignment.uncompleteTask(command.taskId))
+    if (assignment.id === null) {
+      return new UnexpectedError("assignment has no id")
+    }
+
+    const updated = await assignmentRepository.uncompleteTask(
+      command.taskId,
+      assignment.id,
+    )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const reverted = updated.tasks.find((task) => task.id === command.taskId)
+    // null = task was already pending (guard aborted) — treat as idempotent success.
+    const source = updated ?? assignment
+    const reverted = source.tasks.find((task) => task.id === command.taskId)
 
     if (reverted === undefined) {
       return new NotFoundError("task not found", "task_not_found")
