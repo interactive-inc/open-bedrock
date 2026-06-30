@@ -53,8 +53,22 @@ export class CompleteOnboardingTask {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    // null = task was already done (guard aborted) — treat as idempotent success.
-    const source = updated ?? assignment
+    // null = task was already done (guard aborted) — re-fetch to avoid returning the
+    // pre-lock snapshot, which may reflect state from before a concurrent write.
+    let source = updated
+    if (source === null) {
+      const current = await assignmentRepository.findByTaskId(command.taskId)
+      if (current instanceof Error) {
+        return new UnexpectedError("failed to re-fetch assignment after guard abort", {
+          cause: current,
+        })
+      }
+      if (current === null) {
+        return new NotFoundError("task not found", "task_not_found")
+      }
+      source = current
+    }
+
     const completed = source.tasks.find((task) => task.id === command.taskId)
 
     if (completed === undefined) {

@@ -235,4 +235,44 @@ describe("POST /onboarding/tasks/:id/complete", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("concurrent complete: second request returns current done status, not stale pending", async () => {
+    // Simulates two requests that both read `pending` before either writes.
+    // The first completes the task; the second hits the guard abort.
+    // The second response must reflect the DB state (`done`), not the pre-fetch snapshot.
+    const db = await createTestDb()
+    const ownerToken = await token(5, "member")
+
+    // First request: task 200 is pending → completes it to done.
+    const first = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/onboarding/tasks/200/complete",
+      token: ownerToken,
+      method: "POST",
+    })
+
+    expect(first.status).toBe(200)
+
+    // Second request on the same DB: task is already done, guard aborts.
+    // Response must still return the current `done` state, not the old `pending` snapshot.
+    const second = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/onboarding/tasks/200/complete",
+      token: ownerToken,
+      method: "POST",
+    })
+
+    expect(second.status).toBe(200)
+
+    const parsed = onboardingTaskResponseSchema.safeParse(await second.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("done")
+      expect(parsed.data.completed_at).toBe(fixedNow)
+    }
+  })
 })
