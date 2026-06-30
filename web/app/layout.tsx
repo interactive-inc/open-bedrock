@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Noto_Sans, Playfair_Display } from "next/font/google"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils"
-import { getTheme } from "@/lib/theme/get-theme"
 
 const playfairDisplayHeading = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" })
 
@@ -31,17 +31,15 @@ type Props = {
   children: React.ReactNode
 }
 
-export default async function RootLayout(props: Props) {
-  const theme = await getTheme()
-
+export default function RootLayout(props: Props) {
   return (
     <html
       lang="ja"
+      suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
         "font-sans",
-        theme === "dark" ? "dark" : "",
         geistSans.variable,
         geistMono.variable,
         notoSans.variable,
@@ -49,9 +47,11 @@ export default async function RootLayout(props: Props) {
       )}
     >
       <body className="min-h-full flex flex-col">
-        {props.children}
+        <ThemeProvider>
+          {props.children}
 
-        <Toaster />
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
