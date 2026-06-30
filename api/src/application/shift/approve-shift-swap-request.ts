@@ -84,6 +84,9 @@ export class ApproveShiftSwapRequest {
     // pattern_id を入れ替え、ステータス更新をアトミックに実行する。
     // status='pending' ガード付きで先にステータスを更新し、並行承認による二重スワップを防ぐ。
     // 0 行更新（既に承認/却下済み）は abortWhenPreviousStatementChangedNoRows でバッチ全体を中断する。
+    //
+    // 各割当の UPDATE にも楽観ロック（AND pattern_id = ?expected）を付けて、同一社員が
+    // 同日に複数の交換申請を持つ場合の並行承認で lost update を防ぐ。
     const approved = swapRequest.withApproved(input.approvedAt)
 
     try {
@@ -96,15 +99,17 @@ export class ApproveShiftSwapRequest {
           .bind(approved.status, approved.approvedAt, swapRequest.id),
         abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2")
-          .bind(targetAssignment.patternId, requesterAssignment.id),
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id = ?3")
+          .bind(targetAssignment.patternId, requesterAssignment.id, requesterAssignment.patternId),
+        abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2")
-          .bind(requesterAssignment.patternId, targetAssignment.id),
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id = ?3")
+          .bind(requesterAssignment.patternId, targetAssignment.id, targetAssignment.patternId),
+        abortWhenPreviousStatementChangedNoRows(db),
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return new ConflictError("shift swap request is not pending", "not_pending")
+        return new ConflictError("shift swap conflict: request or assignment changed concurrently", "conflict")
       }
       return error instanceof Error
         ? new UnexpectedError("failed to swap shift assignments", { cause: error })

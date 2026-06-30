@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedShiftSwapRequests } from "@/infrastructure/seed/seed-shift-swap-requests"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -350,5 +351,58 @@ describe("POST /shift/swap-requests/:id/approve", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  // 同日多重交換の並行承認で lost update を防ぐ楽観ロックの検証。
+  // 同一社員 (employee 5) が同日に 2 件の交換申請を持ち、1 件目が承認された直後に
+  // 2 件目のバッチが「古い pattern_id」で UPDATE を発行するシナリオを再現する。
+  // WHERE pattern_id = ?expectedOld が 0 行を返し、abortWhenPreviousStatementChangedNoRows
+  // がバッチを中断することで、先の交換の効果が失われないことを確認する。
+  test("rejects concurrent swap when assignment pattern_id was changed (lost update prevention)", async () => {
+    const db = await createTestDb()
+
+    // --- 1. 正規の承認で pattern_id を入れ替える ---
+    const firstResponse = await request({
+      path: "/shift/swap-requests/1/approve",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      db,
+    })
+
+    expect(firstResponse.status).toBe(200)
+
+    // 承認後: requester (id=1) は pattern 2、target (id=2) は pattern 1
+    const afterFirst = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
+      .first<{ pattern_id: number }>()
+
+    expect(afterFirst?.pattern_id).toBe(2)
+
+    // --- 2. 並行承認を再現: 古い pattern_id (1) で UPDATE を試行する ---
+    // 並行リーダーは承認前の pattern_id=1 を読み取っている。
+    // この stale な値で UPDATE を発行すると WHERE 不一致で 0 行になり、ガードが発火する。
+    const stalePatternId = 1
+
+    let aborted = false
+
+    try {
+      await db.batch([
+        db
+          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id = ?3")
+          .bind(3, 1, stalePatternId),
+        abortWhenPreviousStatementChangedNoRows(db),
+      ])
+    } catch (error) {
+      aborted = isAbortedByGuard(error)
+    }
+
+    expect(aborted).toBe(true)
+
+    // pattern_id が上書きされていないことを確認する（先の交換が保全されている）。
+    const preserved = await db
+      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
+      .first<{ pattern_id: number }>()
+
+    expect(preserved?.pattern_id).toBe(2)
   })
 })
