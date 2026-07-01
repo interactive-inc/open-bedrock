@@ -5,7 +5,7 @@
 
 ## 統合方針
 
-security-first(JWT に権限を載せずサーバ側 DB 解決一本化・refresh ローテ + tokenVersion 失効・OAuth は sub 固定)を骨格に、pragmatic(can-* シグネチャ温存・migration 連番・SSOT permission-keys・KV 活用)と clean-iam(accounts/identities/roles/permissions/role_permissions/account_roles 完全分離)を統合。
+security-first(JWT に権限を載せずサーバ側 DB 解決一本化・refresh ローテ + tokenVersion 失効・OAuth は sub 固定)を骨格に、pragmatic(can-\* シグネチャ温存・migration 連番・SSOT permission-keys・KV 活用)と clean-iam(accounts/identities/roles/permissions/role_permissions/account_roles 完全分離)を統合。
 
 fail-open は一切採用しない。認可解決失敗・未知 permission キーは常に deny(fail-closed)。最終的に employees.email/password_hash/role の3列を撤去し employees は純台帳に戻す。D1/SQLite では FK 制約を張らず論理参照 + unique/部分 index で担保。
 
@@ -22,9 +22,9 @@ fail-open は一切採用しない。認可解決失敗・未知 permission キ�
 
 ## permission カタログ
 
-粒度 `<domain>:<action>[:<scope>]`。約40-50 permission。self スコープは permission に載せず所有者判定としてコードに残す(最小権限)。28 can-* + goal-access 2 + インライン2 ≒ 32ゲートを起点に正規化。
+粒度 `<domain>:<action>[:<scope>]`。約40-50 permission。self スコープは permission に載せず所有者判定としてコードに残す(最小権限)。28 can-\* + goal-access 2 + インライン2 ≒ 32ゲートを起点に正規化。
 
-system role 4値の再現: member=self中心(permission なし) / manager=承認 + 大半の管理 / hr=manager + org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:* + account:manage。
+system role 4値の再現: member=self中心(permission なし) / manager=承認 + 大半の管理 / hr=manager + org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:\* + account:manage。
 
 per-template 動的ロール(approver_roles)は permission に正規化せず roleKey 参照として残す。
 
@@ -42,7 +42,7 @@ OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true
 - **Phase 1**: 新8テーブルの migration + schema.ts 同期(無害、既存無変更)。
 - **Phase 2**: backfill(各 employee に accounts/identities/account_roles を 1:1 生成、roles/permissions/role_permissions シード)。冪等。
 - **Phase 3**: 認証カットオーバー(AuthenticateWithPassword、JWT claims 変更、verify-bearer 改修、refresh token)。
-- **Phase 4**: 認可 permission 化(has-permission.ts、can-* を canX(session) へ、Command.viewerRole→session)。
+- **Phase 4**: 認可 permission 化(has-permission.ts、can-\* を canX(session) へ、Command.viewerRole→session)。
 - **Phase 4.5**: per-template 動的ロール正規化(approver_roles/owner_role を roleKey 参照へ)。
 - **Phase 5**: IAM/アカウント管理 API・画面・cli(/accounts, /roles, /permissions、escalation guard、last-admin 不変条件)。
 - **Phase 6**: 権限ベースサイドバー(/me に permissions/role_keys、sidebar-nav に requiredPermission)。
@@ -58,7 +58,7 @@ Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改
 
 - Phase 0〜2: permission カタログ・8テーブル・マスタシード・backfill 完了
 - Phase 3: 認証を identities/accounts ベースへカットオーバー（JWT に権限を載せず DB 解決、tokenVersion 失効）
-- Phase 4/4.5: 全 can-* を permission ベースへ、承認の動的ロールを roleKeys 複数対応へ
+- Phase 4/4.5: 全 can-\* を permission ベースへ、承認の動的ロールを roleKeys 複数対応へ
 - Phase 5: ロール管理 API（GET/POST /roles）、権限カタログ API（GET /permissions）、アカウント一覧 API（GET /accounts）、アカウントへのロール割当 API（POST /accounts/:id/roles、escalation guard・自己付与禁止・tokenVersion 失効）、/me の permissions/role_keys 返却、Web 管理画面（/admin/roles・/admin/accounts）、cli（karte roles・karte accounts）
 - Phase 6: 権限ベースのサイドバー出し分け（filterByPermission）
 

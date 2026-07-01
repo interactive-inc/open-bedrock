@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedShiftSwapRequests } from "@/infrastructure/seed/seed-shift-swap-requests"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"

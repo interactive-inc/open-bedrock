@@ -1,7 +1,10 @@
 import { Application } from "@/domain/application/application.entity"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { applicationApprovals, applications } from "@/schema"
 import { DEFAULT_LIST_LIMIT } from "@/interface/shared/to-bounded-int"
 import { and, count, desc, eq } from "drizzle-orm"

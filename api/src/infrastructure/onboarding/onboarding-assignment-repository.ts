@@ -2,7 +2,10 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.
 import { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
 import { and, asc, count, eq, inArray, ne } from "drizzle-orm"

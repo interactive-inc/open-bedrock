@@ -42,10 +42,7 @@ export class UncompleteOnboardingTask {
       return new UnexpectedError("assignment has no id")
     }
 
-    const updated = await assignmentRepository.uncompleteTask(
-      command.taskId,
-      assignment.id,
-    )
+    const updated = await assignmentRepository.uncompleteTask(command.taskId, assignment.id)
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
