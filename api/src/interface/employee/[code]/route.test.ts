@@ -259,6 +259,18 @@ describe("PUT /employees/:code", () => {
 
     expect(response.status).toBe(404)
   })
+
+  test("returns 409 when retiring the last admin", async () => {
+    const response = await request("/employees/E001", await adminToken(), "PUT", {
+      name: "Alex Carter",
+      dept_id: 1,
+      dept_name: "Corporate Planning",
+      position: "CTO",
+      status: "retired",
+    })
+
+    expect(response.status).toBe(409)
+  })
 })
 
 describe("DELETE /employees/:code", () => {
