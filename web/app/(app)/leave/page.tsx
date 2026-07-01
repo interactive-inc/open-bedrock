@@ -7,13 +7,20 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getMe } from "@/lib/api/get-me"
+import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
 
 export const metadata = { title: "休暇" }
 
 /**
  * 休暇のメイン画面。残日数と自分の申請一覧に集中させ、申請フォームは /leave/new に分離する。
  */
-export default function LeavePage() {
+export default async function LeavePage() {
+  const currentUser = await getMe()
+
+  const canViewAll =
+    currentUser instanceof Error ? false : canViewAllLeaves(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -21,6 +28,12 @@ export default function LeavePage() {
         description="残日数を確認し、自分の申請状況を見ます。"
         actions={
           <>
+            {canViewAll ? (
+              <Button variant="outline" nativeButton={false} render={<Link href="/leave/admin" />}>
+                休暇申請管理
+              </Button>
+            ) : null}
+
             <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
               <Inbox />
               承認受信箱

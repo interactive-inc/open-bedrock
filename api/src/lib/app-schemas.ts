@@ -481,6 +481,29 @@ export const zAppExpenseDecision = z.object({
 
 export type AppExpenseDecision = z.infer<typeof zAppExpenseDecision>
 
+/** 全社経費申請一覧（GET /expenses/admin）の 1 件。 */
+export const zAppExpenseAdminItem = z.object({
+  id: z.number(),
+  applicant_id: z.number(),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
+  category: expenseCategory,
+  amount: z.number(),
+  spent_at: z.string(),
+  status: expenseStatus,
+  created_at: z.string(),
+})
+
+export type AppExpenseAdminItem = z.infer<typeof zAppExpenseAdminItem>
+
+/** 全社経費申請一覧（GET /expenses/admin）のレスポンス。 */
+export const zAppExpenseAdminList = z.object({
+  data: z.array(zAppExpenseAdminItem),
+  total: z.number(),
+})
+
+export type AppExpenseAdminList = z.infer<typeof zAppExpenseAdminList>
+
 // ===== family-care-leave =====
 export const zAppFamilyCareLeave = z.object({
   id: z.string(),
@@ -656,6 +679,31 @@ export const zAppLeaveRequestInboxList = z.object({
 })
 
 export type AppLeaveRequestInboxList = z.infer<typeof zAppLeaveRequestInboxList>
+
+/** 全社休暇申請一覧（GET /leave/requests/admin）の 1 件。 */
+export const zAppLeaveRequestAdminItem = z.object({
+  id: z.number(),
+  applicant_id: z.number(),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
+  leave_type: z.enum(["annual", "special"]),
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+  reason: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
+  created_at: z.string(),
+})
+
+export type AppLeaveRequestAdminItem = z.infer<typeof zAppLeaveRequestAdminItem>
+
+/** 全社休暇申請一覧（GET /leave/requests/admin）のレスポンス。 */
+export const zAppLeaveRequestAdminList = z.object({
+  data: z.array(zAppLeaveRequestAdminItem),
+  total: z.number(),
+})
+
+export type AppLeaveRequestAdminList = z.infer<typeof zAppLeaveRequestAdminList>
 
 /** 本人の休暇残数 1 件（GET /balance/me）。 */
 export const zAppLeaveBalance = z.object({
@@ -1150,6 +1198,32 @@ export const zAppShiftSwapRequestPendingList = z.object({
 
 export type AppShiftSwapRequestPendingList = z.infer<typeof zAppShiftSwapRequestPendingList>
 
+/** 全社シフト交代申請一覧（GET /shift/swap-requests/admin）の 1 件。社員名・部署も付与する。 */
+export const zAppShiftSwapRequestAdminItem = z.object({
+  id: z.number(),
+  requester_employee_id: z.number(),
+  requester_employee_code: z.string(),
+  requester_name: z.string(),
+  requester_dept_name: z.string().nullable(),
+  target_employee_id: z.number(),
+  target_employee_code: z.string(),
+  target_name: z.string(),
+  date: z.string(),
+  note: z.string().nullable(),
+  status: z.string(),
+  approved_at: z.string().nullable(),
+})
+
+export type AppShiftSwapRequestAdminItem = z.infer<typeof zAppShiftSwapRequestAdminItem>
+
+/** 全社シフト交代申請一覧のレスポンス。 */
+export const zAppShiftSwapRequestAdminList = z.object({
+  data: z.array(zAppShiftSwapRequestAdminItem),
+  total: z.number(),
+})
+
+export type AppShiftSwapRequestAdminList = z.infer<typeof zAppShiftSwapRequestAdminList>
+
 // ===== skill =====
 /** スキルマスタ 1 件のレスポンス。 */
 export const zAppSkill = z.object({
@@ -1312,6 +1386,31 @@ export const zAppThanksRedemptionDecision = z.object({
 })
 
 export type AppThanksRedemptionDecision = z.infer<typeof zAppThanksRedemptionDecision>
+
+/** 全社サンクス交換申請一覧（GET /thanks/redemptions/admin）の 1 件。申請者名・景品名を含む。 */
+export const zAppThanksRedemptionAdminItem = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  employee_name: z.string(),
+  employee_dept_name: z.string().nullable(),
+  reward_id: z.number(),
+  reward_name: z.string(),
+  point_cost: z.number(),
+  status: z.enum(["pending", "rejected", "fulfilled"]),
+  created_at: z.string(),
+  decided_at: z.string().nullable(),
+  decider_id: z.number().nullable(),
+})
+
+export type AppThanksRedemptionAdminItem = z.infer<typeof zAppThanksRedemptionAdminItem>
+
+/** 全社サンクス交換申請一覧のレスポンス。 */
+export const zAppThanksRedemptionAdminList = z.object({
+  data: z.array(zAppThanksRedemptionAdminItem),
+  total: z.number(),
+})
+
+export type AppThanksRedemptionAdminList = z.infer<typeof zAppThanksRedemptionAdminList>
 
 /** 自分の受領残高のレスポンス。 */
 export const zAppThanksBalance = z.object({

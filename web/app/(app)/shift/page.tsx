@@ -13,6 +13,7 @@ import { getMe } from "@/lib/api/get-me"
 import { getMyShiftAssignments } from "@/lib/api/get-my-shift-assignments"
 import { getMyShiftSwapRequests } from "@/lib/api/get-my-shift-swap-requests"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 
 export const metadata = { title: "シフト" }
 
@@ -25,6 +26,9 @@ export default async function ShiftPage() {
 
   const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.role)
 
+  const canViewAllSwaps =
+    currentUser instanceof Error ? false : canViewAllShiftSwaps(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -36,6 +40,12 @@ export default async function ShiftPage() {
               <CalendarDays />
               パターン
             </Button>
+
+            {canViewAllSwaps ? (
+              <Button variant="outline" nativeButton={false} render={<Link href="/shift/admin" />}>
+                交代管理
+              </Button>
+            ) : null}
 
             {canManage ? (
               <Button variant="outline" nativeButton={false} render={<Link href="/shift/manage" />}>

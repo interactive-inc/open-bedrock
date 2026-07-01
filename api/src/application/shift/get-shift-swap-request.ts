@@ -1,4 +1,5 @@
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
+import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
@@ -37,7 +38,8 @@ export class GetShiftSwapRequest {
     if (
       isRequester === false &&
       isTargetEmployee === false &&
-      canApproveShiftSwap(input.session) === false
+      canApproveShiftSwap(input.session) === false &&
+      canViewAllShiftSwaps(input.session) === false
     ) {
       return new ForbiddenError("cannot view this shift swap request", "not_visible")
     }

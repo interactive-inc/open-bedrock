@@ -44,6 +44,7 @@ import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
 import * as dashboardRoute from "@/interface/dashboard/route"
 import * as employeeListRoute from "@/interface/employee/route"
+import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
 import * as expenseCreateRoute from "@/interface/expense/route"
 import * as expenseDetailRoute from "@/interface/expense/[id]/route"
@@ -56,6 +57,7 @@ import * as goalListRoute from "@/interface/goal/goals/route"
 import * as knowledgeDetailRoute from "@/interface/knowledge/[id]/route"
 import * as knowledgeListRoute from "@/interface/knowledge/route"
 import * as leaveBalanceMeRoute from "@/interface/leave/balance/me/route"
+import * as leaveRequestAdminRoute from "@/interface/leave/requests/admin/route"
 import * as leaveRequestApproveRoute from "@/interface/leave/requests/[id]/approve/route"
 import * as leaveRequestCreateRoute from "@/interface/leave/requests/route"
 import * as leaveRequestInboxRoute from "@/interface/leave/requests/inbox/route"
@@ -78,6 +80,7 @@ import * as thanksBalanceMeRoute from "@/interface/thanks-points/balance/me/rout
 import * as thanksRewardsRoute from "@/interface/thanks-points/rewards/route"
 import * as thanksRewardDetailRoute from "@/interface/thanks-points/rewards/[id]/route"
 import * as thanksRedemptionsRoute from "@/interface/thanks-points/redemptions/route"
+import * as thanksRedemptionsAdminRoute from "@/interface/thanks-points/redemptions/admin/route"
 import * as thanksRedemptionsMeRoute from "@/interface/thanks-points/redemptions/me/route"
 import * as thanksRedemptionsInboxRoute from "@/interface/thanks-points/redemptions/inbox/route"
 import * as thanksRedemptionApproveRoute from "@/interface/thanks-points/redemptions/[id]/approve/route"
@@ -102,6 +105,7 @@ import * as shiftAssignmentMeRoute from "@/interface/shift/assignments/me/route"
 import * as shiftAssignmentPublishRoute from "@/interface/shift/assignments/[id]/publish/route"
 import * as shiftPatternCreateRoute from "@/interface/shift/patterns/create-route"
 import * as shiftPatternListRoute from "@/interface/shift/patterns/route"
+import * as shiftSwapRequestAdminRoute from "@/interface/shift/swap-requests/admin/route"
 import * as shiftSwapRequestApproveRoute from "@/interface/shift/swap-requests/[id]/approve/route"
 import * as shiftSwapRequestRoute from "@/interface/shift/swap-requests/route"
 import * as skillListRoute from "@/interface/skill/skills/route"
@@ -263,6 +267,7 @@ export const app = factory
   .get("/thanks/rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/rewards/:id", ...thanksRewardDetailRoute.PATCH)
+  .get("/thanks/redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
   .get("/thanks/redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .get("/thanks/redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .post("/thanks/redemptions", ...thanksRedemptionsRoute.POST)
@@ -292,6 +297,7 @@ export const app = factory
   .get("/attendance/me", ...attendanceMeRoute.GET)
   .get("/attendance", ...attendanceListRoute.GET)
   .get("/leave/balance/me", ...leaveBalanceMeRoute.GET)
+  .get("/leave/requests/admin", ...leaveRequestAdminRoute.GET)
   .get("/leave/requests/inbox", ...leaveRequestInboxRoute.GET)
   .get("/leave/requests/me", ...leaveRequestMeRoute.GET)
   .post("/leave/requests/:id/approve", ...leaveRequestApproveRoute.POST)
@@ -302,6 +308,7 @@ export const app = factory
   .get("/onboarding/templates", ...onboardingTemplateListRoute.GET)
   .post("/onboarding/assign", ...onboardingAssignRoute.POST)
   .post("/onboarding/tasks/:id/complete", ...onboardingTaskCompleteRoute.POST)
+  .get("/expenses/admin", ...expenseAdminRoute.GET)
   .get("/expenses/inbox", ...expenseInboxRoute.GET)
   .get("/expenses/me", ...expenseMeRoute.GET)
   .get("/expenses/:id", ...expenseDetailRoute.GET)
@@ -327,6 +334,7 @@ export const app = factory
   .get("/shift/patterns", ...shiftPatternListRoute.GET)
   .post("/shift/patterns", ...shiftPatternCreateRoute.POST)
   .post("/shift/swap-requests/:id/approve", ...shiftSwapRequestApproveRoute.POST)
+  .get("/shift/swap-requests/admin", ...shiftSwapRequestAdminRoute.GET)
   .get("/shift/swap-requests", ...shiftSwapRequestRoute.GET)
   .post("/shift/swap-requests", ...shiftSwapRequestRoute.POST)
   .post("/review-cycles", ...reviewCycleCreateRoute.POST)
