@@ -6,7 +6,9 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
+import { getMe } from "@/lib/api/get-me"
 import { listMyApplications } from "@/lib/api/list-my-applications"
+import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
 
 export const metadata = { title: "申請" }
 
@@ -22,6 +24,11 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
 
   const offset = (page - 1) * PAGE_SIZE
 
+  const currentUser = await getMe()
+
+  const canViewAll =
+    currentUser instanceof Error ? false : canViewAllApplications(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -29,6 +36,16 @@ export default async function MyApplicationsPage(props: { searchParams: SearchPa
         description="自分の申請の状況を確認します。"
         actions={
           <>
+            {canViewAll ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/applications/admin" />}
+              >
+                申請管理
+              </Button>
+            ) : null}
+
             <Button
               variant="outline"
               nativeButton={false}

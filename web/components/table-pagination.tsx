@@ -125,7 +125,7 @@ export function TablePagination(props: Props) {
         {canNext ? (
           <Button variant="ghost" size="sm" nativeButton={false}>
             <Link
-              href={buildHref(props.pathname, currentPage + 1)}
+              href={buildHref(props.pathname, currentPage + 1, props.extraParams)}
               aria-label="次のページ"
               className="flex items-center gap-1"
             >

@@ -2,6 +2,7 @@ import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { canDecideApplication } from "@/lib/application/can-decide-application"
+import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
 import { factory } from "@/lib/factory"
 import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
@@ -48,9 +49,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("application not found")
   }
 
-  // 申請者本人か承認できるロールのみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
+  // 申請者本人・承認できるロール・全社閲覧権限保持者のみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
   // 承認可否は decide-application と同じ二分岐: テンプレートに approverRoles があれば
   // そのロール保持者、無ければ application:approve 権限保持者。
+  // application:read:all は監査目的の横断閲覧で、/applications/admin の一覧と対称にする。
   const template = await new ApplicationTemplateRepository(c).findById(row.application.templateId)
 
   if (template instanceof Error) {
@@ -65,7 +67,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         ? session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
         : canDecideApplication(session)
 
-    if (canApprove === false) {
+    if (canApprove === false && canViewAllApplications(session) === false) {
       throw new ForbiddenError()
     }
   }

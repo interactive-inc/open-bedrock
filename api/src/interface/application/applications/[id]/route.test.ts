@@ -142,4 +142,74 @@ describe("GET /applications/:id", () => {
 
     expect(response.status).toBe(200)
   })
+
+  test("returns 200 for application:read:all holder even when template approverRoles does not include them", async () => {
+    // seedApplications の id=1 は templateId=1 (paid_leave, approverRoles=["manager"])。
+    // hr は "manager" ではないが application:read:all を持つので詳細を閲覧できる。
+    // seedEmployees の id=2 は manager 固定なので、hr 用に別 employee を差し込む。
+    const db = createD1TestDatabase(loadSchema())
+
+    await seedD1(
+      db,
+      "application_templates",
+      seedApplicationTemplates.map((template) => ({
+        id: template.id,
+        code: template.code,
+        name: template.name,
+        category: template.category,
+        description: template.description,
+        schema_json: JSON.stringify(template.schemaJson),
+        approver_roles: JSON.stringify(template.approverRoles),
+      })),
+    )
+
+    await seedD1(
+      db,
+      "applications",
+      seedApplications.map((application) => ({
+        id: application.id,
+        template_id: application.templateId,
+        applicant_id: application.applicantId,
+        status: application.status,
+        current_step: application.currentStep,
+        payload: JSON.stringify(application.payload),
+        created_at: application.createdAt,
+      })),
+    )
+
+    await seedD1(db, "employees", [
+      {
+        id: 5,
+        code: "E005",
+        name: "Emery Lane",
+        dept_id: 3,
+        dept_name: "Engineering",
+        position: "Engineer",
+        status: "active",
+      },
+      {
+        id: 200,
+        code: "E200",
+        name: "HR User",
+        dept_id: 2,
+        dept_name: "Human Resources",
+        position: "HR",
+        status: "active",
+      },
+    ])
+
+    await seedIamForEmployees(db, [
+      { id: 5, email: "you+e005@example.com", passwordHash: "hash", role: "member" },
+      { id: 200, email: "you+e200@example.com", passwordHash: "hash", role: "hr" },
+    ])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1",
+      token: await tokenFor(200, "hr"),
+    })
+
+    expect(response.status).toBe(200)
+  })
 })

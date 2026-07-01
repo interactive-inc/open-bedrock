@@ -14,6 +14,8 @@ type Props = {
   descValue: string
   label: string
   className?: string
+  // sort と一緒に維持したい他の searchParams（例: フィルタ状態）
+  extraParams?: Record<string, string | undefined>
 }
 
 export function SortableTableHead(props: Props) {
@@ -27,7 +29,19 @@ export function SortableTableHead(props: Props) {
 
   const Icon = isAsc ? ArrowUp : isDesc ? ArrowDown : ChevronsUpDown
 
-  const href = `${props.pathname}?sort=${nextSort}`
+  const search = new URLSearchParams()
+
+  search.set("sort", nextSort)
+
+  if (props.extraParams !== undefined) {
+    for (const [key, value] of Object.entries(props.extraParams)) {
+      if (value !== undefined && value !== "") {
+        search.set(key, value)
+      }
+    }
+  }
+
+  const href = `${props.pathname}?${search.toString()}`
 
   return (
     <TableHead className={props.className}>

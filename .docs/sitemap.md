@@ -23,6 +23,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/applications` は自分が提出した申請の状況を確認する画面。
 - `/applications/inbox` は自分宛ての承認待ち申請を確認し、承認または却下する画面。
+- `/applications/admin` は全社の申請を横断で確認する管理画面(`application:read:all`)。
 - `/applications/[id]` は申請内容と承認状況を確認する詳細画面。
 - `/applications/templates` は利用可能な申請テンプレートを確認し、新規申請を作成する画面。
 - `/applications/templates/new` は新しい申請テンプレートの名称、カテゴリ、入力項目を登録する画面。
