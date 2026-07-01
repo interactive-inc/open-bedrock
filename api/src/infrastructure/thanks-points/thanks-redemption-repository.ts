@@ -1,7 +1,10 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { redemptionStatusSchema } from "@/lib/schemas"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"

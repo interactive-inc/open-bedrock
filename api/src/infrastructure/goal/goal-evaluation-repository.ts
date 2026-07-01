@@ -2,7 +2,10 @@ import type { Goal } from "@/domain/goal/goal.entity"
 import { GoalEvaluation, goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { goalEvaluations } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 

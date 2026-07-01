@@ -2,7 +2,10 @@ import { Expense, expenseRowSchema } from "@/domain/expense/expense.entity"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { expenseApprovals, expenses } from "@/schema"
 import { and, eq } from "drizzle-orm"
 

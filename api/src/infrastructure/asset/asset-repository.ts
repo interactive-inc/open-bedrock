@@ -2,7 +2,10 @@ import { Asset, assetRowSchema } from "@/domain/asset/asset.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { assets } from "@/schema"
 import { eq } from "drizzle-orm"

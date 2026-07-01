@@ -1,5 +1,8 @@
 import { Notification } from "@/domain/notification/notification.entity"
-import { abortWhenPreviousStatementChangedNoRows, isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
@@ -99,17 +102,24 @@ export class ApproveShiftSwapRequest {
           .bind(approved.status, approved.approvedAt, swapRequest.id),
         abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3")
+          .prepare(
+            "UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3",
+          )
           .bind(targetAssignment.patternId, requesterAssignment.id, requesterAssignment.patternId),
         abortWhenPreviousStatementChangedNoRows(db),
         db
-          .prepare("UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3")
+          .prepare(
+            "UPDATE shift_assignments SET pattern_id = ?1 WHERE id = ?2 AND pattern_id IS ?3",
+          )
           .bind(requesterAssignment.patternId, targetAssignment.id, targetAssignment.patternId),
         abortWhenPreviousStatementChangedNoRows(db),
       ])
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return new ConflictError("shift swap conflict: request or assignment changed concurrently", "conflict")
+        return new ConflictError(
+          "shift swap conflict: request or assignment changed concurrently",
+          "conflict",
+        )
       }
       return error instanceof Error
         ? new UnexpectedError("failed to swap shift assignments", { cause: error })
