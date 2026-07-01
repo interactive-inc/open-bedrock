@@ -40,6 +40,10 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "thanks_reward:manage",
   "thanks_redemption:approve",
   "application:read:all",
+  "expense:read:all",
+  "leave:read:all",
+  "thanks_redemption:read:all",
+  "shift_swap:read:all",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。

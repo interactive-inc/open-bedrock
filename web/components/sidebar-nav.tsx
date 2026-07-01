@@ -235,6 +235,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "一覧", href: "/expense" },
           { label: "新規", href: "/expense/new" },
           { label: "受信箱", href: "/expense/inbox" },
+          {
+            label: "全社の経費",
+            href: "/expense/admin",
+            requiredPermission: "expense:read:all",
+          },
         ],
       },
       {
@@ -245,6 +250,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "一覧", href: "/leave" },
           { label: "新規", href: "/leave/new" },
           { label: "受信箱", href: "/leave/inbox" },
+          {
+            label: "全社の休暇",
+            href: "/leave/admin",
+            requiredPermission: "leave:read:all",
+          },
         ],
       },
       {
@@ -264,6 +274,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "自分", href: "/shift" },
           { label: "パターン", href: "/shift/patterns" },
           { label: "管理", href: "/shift/manage" },
+          {
+            label: "全社の交代",
+            href: "/shift/admin",
+            requiredPermission: "shift_swap:read:all",
+          },
         ],
       },
     ],
@@ -308,6 +323,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "送る", href: "/thanks/send" },
           { label: "景品", href: "/thanks/rewards" },
           { label: "景品の管理", href: "/thanks/rewards/manage" },
+          {
+            label: "全社の交換",
+            href: "/thanks/admin",
+            requiredPermission: "thanks_redemption:read:all",
+          },
         ],
       },
     ],

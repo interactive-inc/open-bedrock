@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { getMe } from "@/lib/api/get-me"
 import { getMyExpenses } from "@/lib/api/get-my-expenses"
+import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
 
 export const metadata = { title: "経費" }
@@ -26,7 +28,12 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
  * 自分の経費一覧画面。「経費」というオブジェクト一覧に集中させ、
  * 新規作成は /expense/new、承認受信箱は /expense/inbox に分離する。
  */
-export default function MyExpensesPage() {
+export default async function MyExpensesPage() {
+  const currentUser = await getMe()
+
+  const canViewAll =
+    currentUser instanceof Error ? false : canViewAllExpenses(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -34,6 +41,16 @@ export default function MyExpensesPage() {
         description="自分が申請した経費の一覧と状態"
         actions={
           <>
+            {canViewAll ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/expense/admin" />}
+              >
+                経費申請管理
+              </Button>
+            ) : null}
+
             <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
               <Inbox />
               承認受信箱

@@ -28,7 +28,9 @@ export const PERMISSION_CATALOG = [
     description: "申請テンプレートを管理する",
   },
   { key: "expense:approve", category: "expense", description: "経費申請を承認・却下する" },
+  { key: "expense:read:all", category: "expense", description: "全社の経費申請を横断で閲覧する" },
   { key: "leave:approve", category: "leave", description: "休暇申請を承認・却下する" },
+  { key: "leave:read:all", category: "leave", description: "全社の休暇申請を横断で閲覧する" },
   { key: "notification:send", category: "notification", description: "通知を送信する" },
   { key: "oneonone:create", category: "oneonone", description: "1on1 を作成する" },
   { key: "review:administer", category: "review", description: "評価サイクルを運営する" },
@@ -42,6 +44,11 @@ export const PERMISSION_CATALOG = [
   { key: "training:manage", category: "training", description: "研修コースを管理する" },
   { key: "shift:manage", category: "shift", description: "シフトを管理する" },
   { key: "shift_swap:approve", category: "shift", description: "シフト交代を承認する" },
+  {
+    key: "shift_swap:read:all",
+    category: "shift",
+    description: "全社のシフト交代申請を横断で閲覧する",
+  },
   { key: "survey:manage", category: "survey", description: "アンケートを管理する" },
   {
     key: "antisocial_check:manage",
@@ -60,6 +67,11 @@ export const PERMISSION_CATALOG = [
     key: "thanks_redemption:approve",
     category: "thanks",
     description: "サンクスの交換申請を承認する",
+  },
+  {
+    key: "thanks_redemption:read:all",
+    category: "thanks",
+    description: "全社のサンクス交換申請を横断で閲覧する",
   },
   { key: "goal:read:all", category: "goal", description: "他者の目標を閲覧する" },
   { key: "goal:evaluate", category: "goal", description: "目標を評価する(上長)" },

@@ -1,6 +1,7 @@
 import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
+import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
 import type { Expense } from "@/domain/expense/expense.entity"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -54,7 +55,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isOwner = row.expense.employeeId === session.employeeId
 
-  if (isOwner === false && canDecideExpense(session) === false) {
+  // 申請者本人・承認権限者・全社閲覧権限保持者のみ閲覧可。/expenses/admin 一覧と対称にする。
+  if (
+    isOwner === false &&
+    canDecideExpense(session) === false &&
+    canViewAllExpenses(session) === false
+  ) {
     throw new ForbiddenError()
   }
 
