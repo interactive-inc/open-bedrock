@@ -117,6 +117,30 @@ export const zAppApplicationInboxList = z.object({
 
 export type AppApplicationInboxList = z.infer<typeof zAppApplicationInboxList>
 
+/** 全社申請一覧（GET /applications/admin）の 1 件。applicant_name と template_code を含む。 */
+export const zAppApplicationAdminItem = z.object({
+  id: z.number(),
+  template_code: z.string(),
+  template_name: z.string(),
+  template_category: z.string(),
+  applicant_id: z.number(),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
+  current_step: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
+  created_at: z.string(),
+})
+
+export type AppApplicationAdminItem = z.infer<typeof zAppApplicationAdminItem>
+
+/** 全社申請一覧（GET /applications/admin）のレスポンス。 */
+export const zAppApplicationAdminList = z.object({
+  data: z.array(zAppApplicationAdminItem),
+  total: z.number(),
+})
+
+export type AppApplicationAdminList = z.infer<typeof zAppApplicationAdminList>
+
 /** 本人の申請一覧（GET /applications/me）の 1 件。template_id と payload を含む。 */
 export const zAppApplicationMineItem = z.object({
   id: z.number().nullable(),

@@ -18,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getApplicationInbox, type ApplicationInboxSort } from "@/lib/api/get-application-inbox"
+import { getMe } from "@/lib/api/get-me"
+import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
 
 export const metadata = { title: "承認待ちの申請" }
 
@@ -45,6 +47,11 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
 
   const sort = toSort(searchParams.sort)
 
+  const currentUser = await getMe()
+
+  const canViewAll =
+    currentUser instanceof Error ? false : canViewAllApplications(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -52,9 +59,21 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
         description="承認待ちの申請を確認します。"
         breadcrumbs={[{ label: "申請", href: "/applications" }, { label: "承認 inbox" }]}
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/applications" />}>
-            申請一覧へ
-          </Button>
+          <>
+            {canViewAll ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/applications/admin" />}
+              >
+                申請管理
+              </Button>
+            ) : null}
+
+            <Button variant="outline" nativeButton={false} render={<Link href="/applications" />}>
+              申請一覧へ
+            </Button>
+          </>
         }
       />
 

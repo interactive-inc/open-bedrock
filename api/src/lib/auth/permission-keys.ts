@@ -18,6 +18,11 @@ export const PERMISSION_CATALOG = [
   { key: "org:manage", category: "org", description: "組織・部署を管理する" },
   { key: "application:approve", category: "application", description: "申請を承認・却下する" },
   {
+    key: "application:read:all",
+    category: "application",
+    description: "全社の申請を横断で閲覧する",
+  },
+  {
     key: "application_template:manage",
     category: "application",
     description: "申請テンプレートを管理する",

@@ -7,6 +7,7 @@ import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { rateLimitMiddleware } from "@/interface/shared/rate-limit-middleware"
 import { factory } from "@/lib/factory"
+import * as applicationAdminRoute from "@/interface/application/applications/admin/route"
 import * as applicationApproveRoute from "@/interface/application/applications/[id]/approve/route"
 import * as applicationDetailRoute from "@/interface/application/applications/[id]/route"
 import * as applicationInboxRoute from "@/interface/application/applications/inbox/route"
@@ -232,6 +233,7 @@ export const app = factory
   .get("/goals", ...goalListRoute.GET)
   .post("/goals", ...goalCreateRoute.POST)
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
+  .get("/applications/admin", ...applicationAdminRoute.GET)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
   .get("/applications/me", ...applicationApplicationsMeRoute.GET)
   .get("/applications/:id", ...applicationDetailRoute.GET)

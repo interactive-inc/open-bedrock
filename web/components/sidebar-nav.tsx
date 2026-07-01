@@ -218,6 +218,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "自分の申請", href: "/applications" },
           { label: "受信箱", href: "/applications/inbox" },
+          {
+            label: "全社の申請",
+            href: "/applications/admin",
+            requiredPermission: "application:read:all",
+          },
           { label: "テンプレート", href: "/applications/templates" },
           { label: "新規テンプレート", href: "/applications/templates/new" },
         ],
