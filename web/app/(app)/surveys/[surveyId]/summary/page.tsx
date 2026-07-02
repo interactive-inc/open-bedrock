@@ -40,6 +40,7 @@ export default async function SurveySummaryPage(props: Props) {
           <Button
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={<Link href={`/surveys/${summary.survey_id}`} />}
           >
             回答する
