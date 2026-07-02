@@ -18,6 +18,7 @@ import type { ShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
 
 type Props = {
   swapRequests: Array<ShiftSwapRequestResponse>
+  employeeNameMap: Record<number, string>
 }
 
 const initialState: ShiftFormState = { ok: false, error: null }
@@ -34,7 +35,7 @@ export function MyShiftSwapRequests(props: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>対象日</TableHead>
-            <TableHead>交代相手 ID</TableHead>
+            <TableHead>交代相手</TableHead>
             <TableHead>備考</TableHead>
             <TableHead>状態</TableHead>
             <TableHead className="text-right">操作</TableHead>
@@ -46,7 +47,10 @@ export function MyShiftSwapRequests(props: Props) {
             <TableRow key={swapRequest.id}>
               <TableCell className="font-medium">{swapRequest.date}</TableCell>
 
-              <TableCell className="tabular-nums">{swapRequest.target_employee_id}</TableCell>
+              <TableCell>
+                {props.employeeNameMap[swapRequest.target_employee_id] ??
+                  `#${swapRequest.target_employee_id}`}
+              </TableCell>
 
               <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>
 

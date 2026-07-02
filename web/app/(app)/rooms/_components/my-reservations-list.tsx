@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
+import { formatDateTime } from "@/lib/format-datetime"
 import { cancelRoomReservationAction, updateRoomReservationAction } from "@/app/(app)/rooms/actions"
 import type { RoomReservationActionState } from "@/app/(app)/rooms/actions"
 import { EmptyState } from "@/components/empty-state"
@@ -27,6 +28,7 @@ import type { RoomReservationResponse } from "@/lib/api/types/room-types"
 
 type Props = {
   reservations: ReadonlyArray<RoomReservationResponse>
+  roomNameMap: Record<number, string>
 }
 
 // 自分の会議室予約一覧。各行に変更（Dialog フォーム）とキャンセルボタンを置く表示コンポーネント。
@@ -40,7 +42,7 @@ export function MyReservationsList(props: Props) {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead>会議室 ID</TableHead>
+            <TableHead>会議室</TableHead>
             <TableHead>開始</TableHead>
             <TableHead>終了</TableHead>
             <TableHead>用途</TableHead>
@@ -51,11 +53,13 @@ export function MyReservationsList(props: Props) {
         <TableBody>
           {props.reservations.map((reservation) => (
             <TableRow key={reservation.id}>
-              <TableCell className="font-medium">{reservation.room_id}</TableCell>
+              <TableCell className="font-medium">
+                {props.roomNameMap[reservation.room_id] ?? `#${reservation.room_id}`}
+              </TableCell>
 
-              <TableCell>{reservation.start_at}</TableCell>
+              <TableCell>{formatDateTime(reservation.start_at)}</TableCell>
 
-              <TableCell>{reservation.end_at}</TableCell>
+              <TableCell>{formatDateTime(reservation.end_at)}</TableCell>
 
               <TableCell>{reservation.purpose ?? "-"}</TableCell>
 

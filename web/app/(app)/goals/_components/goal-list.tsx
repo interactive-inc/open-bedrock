@@ -33,7 +33,12 @@ export async function GoalList(props: Props) {
   }
 
   if (goals.length === 0) {
-    return <EmptyState title="目標がありません" />
+    return (
+      <EmptyState
+        title="目標がありません"
+        description="右上の「新規目標」から目標を設定しましょう。"
+      />
+    )
   }
 
   return (

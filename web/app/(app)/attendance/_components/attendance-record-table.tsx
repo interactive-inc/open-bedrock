@@ -38,7 +38,7 @@ export function AttendanceRecordTable(props: Props) {
           <TableRow>
             <TableHead>勤務日</TableHead>
 
-            {props.withEmployeeId ? <TableHead>従業員 ID</TableHead> : null}
+            {props.withEmployeeId ? <TableHead>従業員</TableHead> : null}
 
             <TableHead>出勤</TableHead>
             <TableHead>退勤</TableHead>
@@ -52,7 +52,7 @@ export function AttendanceRecordTable(props: Props) {
             <TableRow key={record.id}>
               <TableCell className="font-medium">{record.work_date}</TableCell>
 
-              {props.withEmployeeId ? <TableCell>{record.employee_id}</TableCell> : null}
+              {props.withEmployeeId ? <TableCell>#{record.employee_id}</TableCell> : null}
 
               <TableCell>{formatDateTime(record.clock_in_at)}</TableCell>
 

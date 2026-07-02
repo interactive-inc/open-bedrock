@@ -100,7 +100,12 @@ export function ReviewCycleList(props: Props) {
   const isDeleting = deleteAction[2]
 
   if (props.cycles.length === 0) {
-    return <EmptyState title="評価サイクルはありません" />
+    return (
+      <EmptyState
+        title="評価サイクルはありません"
+        description="「管理」画面から評価サイクルを作成できます。"
+      />
+    )
   }
 
   return (

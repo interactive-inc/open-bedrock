@@ -32,6 +32,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   responses: ReadonlyArray<SurveyResponseItem>
+  surveyTitleMap: Record<number, string>
 }
 
 // 回答内容を「設問 id: 値」のペア配列に正規化する。answers_json は unknown のため安全に絞り込む。
@@ -51,8 +52,7 @@ export function MyResponsesList(props: Props) {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">ID</TableHead>
-            <TableHead className="w-24">アンケート</TableHead>
+            <TableHead>アンケート</TableHead>
             <TableHead>提出日時</TableHead>
             <TableHead className="w-48 text-right">操作</TableHead>
           </TableRow>
@@ -69,9 +69,9 @@ export function MyResponsesList(props: Props) {
 
             return (
               <TableRow key={responseId}>
-                <TableCell className="text-muted-foreground">{responseId}</TableCell>
-
-                <TableCell className="font-medium">{response.survey_id}</TableCell>
+                <TableCell className="font-medium">
+                  {props.surveyTitleMap[response.survey_id] ?? `#${response.survey_id}`}
+                </TableCell>
 
                 <TableCell>{formatDateTime(response.submitted_at)}</TableCell>
 

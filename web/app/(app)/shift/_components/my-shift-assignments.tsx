@@ -12,6 +12,7 @@ import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 
 type Props = {
   assignments: Array<ShiftAssignmentResponse>
+  patternNameMap: Record<number, string>
 }
 
 // 本人の担当シフト一覧。日付・パターン・備考・公開状態をテーブルで表示する。
@@ -26,7 +27,7 @@ export function MyShiftAssignments(props: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>日付</TableHead>
-            <TableHead>パターン ID</TableHead>
+            <TableHead>パターン</TableHead>
             <TableHead>備考</TableHead>
             <TableHead>状態</TableHead>
           </TableRow>
@@ -37,7 +38,11 @@ export function MyShiftAssignments(props: Props) {
             <TableRow key={assignment.id}>
               <TableCell className="font-medium">{assignment.date}</TableCell>
 
-              <TableCell className="tabular-nums">{assignment.pattern_id}</TableCell>
+              <TableCell>
+                {assignment.pattern_id !== null
+                  ? (props.patternNameMap[assignment.pattern_id] ?? "-")
+                  : "-"}
+              </TableCell>
 
               <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
 

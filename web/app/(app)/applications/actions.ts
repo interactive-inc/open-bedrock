@@ -26,7 +26,10 @@ export async function updateApplicationAction(
   const payload = toPayload(formData.get("payload"))
 
   if (payload instanceof Error) {
-    return { ok: false, error: "申請内容は JSON 形式で入力してください" }
+    return {
+      ok: false,
+      error: "申請内容の形式が正しくありません。括弧や引用符の対応を確認してください。",
+    }
   }
 
   const updated = await updateApplication(applicationId, payload)

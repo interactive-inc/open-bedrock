@@ -45,6 +45,8 @@ export default factory.createHandlers(
 
     config.token = result.access_token
 
+    config.refresh_token = result.refresh_token ?? null
+
     await saveConfig(config)
 
     return c.text(`ログイン成功 base_url=${config.base_url}`)

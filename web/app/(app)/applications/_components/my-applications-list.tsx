@@ -38,7 +38,12 @@ type Props = {
 // 自分の申請一覧。承認待ちの申請には変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
 export function MyApplicationsList(props: Props) {
   if (props.applications.length === 0) {
-    return <EmptyState title="提出済みの申請はまだありません" />
+    return (
+      <EmptyState
+        title="提出済みの申請はまだありません"
+        description="右上の「新規申請」から申請を提出できます。"
+      />
+    )
   }
 
   return (
@@ -159,7 +164,7 @@ function UpdateApplicationDialog(props: {
         <DialogHeader>
           <DialogTitle>申請内容を変更</DialogTitle>
 
-          <DialogDescription>申請内容（JSON）を編集します。</DialogDescription>
+          <DialogDescription>申請内容を編集して保存してください。</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
@@ -167,7 +172,7 @@ function UpdateApplicationDialog(props: {
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="update_payload">申請内容（JSON）</FieldLabel>
+              <FieldLabel htmlFor="update_payload">申請内容</FieldLabel>
 
               <Textarea
                 id="update_payload"

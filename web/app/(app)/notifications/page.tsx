@@ -4,6 +4,7 @@ import { NotificationCreateForm } from "@/app/(app)/notifications/_components/no
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { TablePagination } from "@/components/table-pagination"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { getMe } from "@/lib/api/get-me"
@@ -12,9 +13,19 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 
 export const metadata = { title: "通知" }
 
+const PAGE_SIZE = 20
+
+type SearchParams = Promise<{ page?: string }>
+
 // 通知画面。自分宛ての通知一覧を RSC で取得して表示し、特権ロールには作成フォームを併設する。
 // 作成は api 側でも特権ロール限定のため、非特権ロールには作成フォームを出さない。
-export default async function NotificationsPage() {
+export default async function NotificationsPage(props: { searchParams: SearchParams }) {
+  const searchParams = await props.searchParams
+
+  const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
+
+  const offset = (page - 1) * PAGE_SIZE
+
   const currentUser = await getMe()
 
   const canCreate = currentUser instanceof Error ? false : canManageNotifications(currentUser.role)
@@ -24,7 +35,7 @@ export default async function NotificationsPage() {
       <PageHeader title="通知" description="自分宛ての通知を確認します。" />
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
-        <MyNotifications />
+        <MyNotifications offset={offset} />
       </Suspense>
 
       {canCreate ? (
@@ -36,15 +47,25 @@ export default async function NotificationsPage() {
   )
 }
 
-// /notifications/me を認証付きで取得して一覧を描画する非同期 RSC。
-async function MyNotifications() {
-  const notifications = await getMyNotifications()
+async function MyNotifications(props: { offset: number }) {
+  const result = await getMyNotifications({ limit: PAGE_SIZE, offset: props.offset })
 
-  if (notifications instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="通知一覧の取得に失敗しました" />
   }
 
-  return <NotificationList notifications={notifications} />
+  return (
+    <div className="flex flex-col gap-4">
+      <NotificationList notifications={result.data} />
+
+      <TablePagination
+        pathname="/notifications"
+        total={result.total}
+        limit={PAGE_SIZE}
+        offset={props.offset}
+      />
+    </div>
+  )
 }
 
 async function NotificationCreateSection() {

@@ -88,7 +88,7 @@ async function Results(props: ResultsProps) {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-1 text-sm">
-          <span>評価対象: 社員 #{result.subject_employee_id}</span>
+          <span>評価対象: {props.employeeCode}</span>
 
           <span>フォーム数: {result.form_count}</span>
 
@@ -128,7 +128,7 @@ function ResultsTable(props: ResultsTableProps) {
         <TableBody>
           {props.forms.map((form) => (
             <TableRow key={form.id}>
-              <TableCell>社員 #{form.reviewer_employee_id}</TableCell>
+              <TableCell>#{form.reviewer_employee_id}</TableCell>
 
               <TableCell>{toReviewerTypeLabel(form.reviewer_type)}</TableCell>
 

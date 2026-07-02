@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { MyResponsesList } from "@/app/(app)/surveys/_components/my-responses-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { getSurveyList } from "@/lib/api/get-survey-list"
 import { listMySurveyResponses } from "@/lib/api/list-my-survey-responses"
 
 export const metadata = { title: "自分の回答" }
@@ -29,5 +30,10 @@ async function MyResponsesSection() {
     return <FetchError message="回答の取得に失敗しました" />
   }
 
-  return <MyResponsesList responses={responses} />
+  const surveys = await getSurveyList()
+
+  const surveyTitleMap: Record<number, string> =
+    surveys instanceof Error ? {} : Object.fromEntries(surveys.map((s) => [s.id, s.title]))
+
+  return <MyResponsesList responses={responses} surveyTitleMap={surveyTitleMap} />
 }

@@ -3,11 +3,18 @@ import type { KnowledgeSearchQuery } from "@/lib/api/types/knowledge-types"
 
 // GET /knowledge を session トークン付きで呼び、ナレッジ検索結果を取得する。
 // 検索語 q とカテゴリ category は null のとき送信されない。
-export async function getKnowledgeList(query: KnowledgeSearchQuery) {
+export async function getKnowledgeList(
+  query: KnowledgeSearchQuery & { limit: number; offset: number },
+) {
   const client = await createClient()
 
   const response = await client.knowledge.$get({
-    query: { q: query.q ?? undefined, category: query.category ?? undefined },
+    query: {
+      q: query.q ?? undefined,
+      category: query.category ?? undefined,
+      limit: String(query.limit),
+      offset: String(query.offset),
+    },
   })
 
   if (!response.ok) {
@@ -15,5 +22,6 @@ export async function getKnowledgeList(query: KnowledgeSearchQuery) {
   }
 
   const body = await response.json()
-  return body.data
+
+  return { data: body.data, total: body.total }
 }

@@ -55,7 +55,9 @@ export function NotificationList(props: Props) {
   const [, markAllDispatch, isMarkingAll] = useActionState(markAllReduce, initialState)
 
   if (props.notifications.length === 0) {
-    return <EmptyState title="通知はありません" />
+    return (
+      <EmptyState title="通知はありません" description="新しい通知が届くとここに表示されます。" />
+    )
   }
 
   return (
