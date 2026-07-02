@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation"
 import { logoutAction } from "@/app/(app)/actions/logout"
 import { AppShell } from "@/components/app-shell"
 import { AuthProvider } from "@/components/auth-provider"
-import { isAuthError } from "@/lib/api/auth-error"
+import { AuthError, isAuthError } from "@/lib/api/auth-error"
 import { getMe } from "@/lib/api/get-me"
 import { getMyUnreadCount } from "@/lib/api/get-my-unread-count"
 
@@ -21,7 +20,7 @@ export default async function AppLayout(props: Props) {
     currentUser = await getMe()
   } catch (error) {
     if (isAuthError(error)) {
-      redirect("/login")
+      throw new AuthError()
     }
 
     throw error
