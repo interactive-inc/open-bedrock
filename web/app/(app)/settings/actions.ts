@@ -16,11 +16,15 @@ export async function setLocaleAction(
   _previousState: SetLocaleState,
   formData: FormData,
 ): Promise<SetLocaleState> {
-  const locale = zLocale.parse(formData.get("locale"))
+  const result = zLocale.safeParse(formData.get("locale"))
+
+  if (!result.success) {
+    return { ok: false, error: "不正な言語コードです" }
+  }
 
   const cookieStore = await cookies()
 
-  cookieStore.set(localeCookieName, locale, {
+  cookieStore.set(localeCookieName, result.data, {
     path: "/",
     maxAge: 31536000,
   })
