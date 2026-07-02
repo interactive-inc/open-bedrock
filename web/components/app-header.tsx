@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 type Props = {
   currentUser: MeResponse
@@ -36,7 +35,7 @@ type Props = {
 }
 
 /**
- * 上部ヘッダ。サイドバーのトリガ、通知ベル、テーマ切替、ユーザーメニューを置く。
+ * 上部ヘッダ。サイドバーのトリガ、通知ベル、ユーザーメニューを置く。
  * 「open-karte」のテキストは廃止し、ブランドは左側サイドバーに集約する。
  */
 export function AppHeader(props: Props) {
@@ -69,8 +68,6 @@ export function AppHeader(props: Props) {
             </Badge>
           ) : null}
         </Button>
-
-        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownMenuTrigger
