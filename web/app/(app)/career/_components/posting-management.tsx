@@ -21,6 +21,7 @@ export function PostingManagement(props: Props) {
         <Button
           variant="outline"
           size="sm"
+          nativeButton={false}
           render={<Link href={`/career/postings/${props.posting.id}/edit`} />}
         >
           編集

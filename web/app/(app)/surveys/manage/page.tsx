@@ -109,6 +109,7 @@ async function SurveysTable() {
                   <Button
                     variant="outline"
                     size="sm"
+                    nativeButton={false}
                     render={<Link href={`/surveys/${survey.id}/edit`} />}
                   >
                     編集

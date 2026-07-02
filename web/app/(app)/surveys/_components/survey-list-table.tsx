@@ -66,6 +66,7 @@ export async function SurveyListTable() {
                 <Button
                   size="sm"
                   variant="outline"
+                  nativeButton={false}
                   render={<Link href={`/surveys/${survey.id}/summary`} />}
                 >
                   集計

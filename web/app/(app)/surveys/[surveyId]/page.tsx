@@ -54,6 +54,7 @@ export default async function SurveyAnswerPage(props: Props) {
           <Button
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={<Link href={`/surveys/${survey.id}/summary`} />}
           >
             集計を見る
