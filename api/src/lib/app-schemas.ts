@@ -253,9 +253,10 @@ export const zAppAttendanceSummary = z.object({
 export type AppAttendanceSummary = z.infer<typeof zAppAttendanceSummary>
 
 // ===== auth =====
-/** ログイン成功時のアクセストークン。 */
+/** ログイン成功時のアクセストークンとリフレッシュトークン。 */
 export const zAppAuthToken = z.object({
   access_token: z.string(),
+  refresh_token: z.string().nullable(),
 })
 
 export type AppAuthToken = z.infer<typeof zAppAuthToken>

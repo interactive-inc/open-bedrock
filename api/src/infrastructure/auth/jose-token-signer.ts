@@ -19,7 +19,7 @@ export class JoseTokenSigner {
       return await new SignJWT(claims)
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("15m")
+        .setExpirationTime("1h")
         .sign(encodedSecret)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("token signing failed")

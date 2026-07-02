@@ -18,5 +18,8 @@ export async function postLogin(body: LoginRequest) {
     return new Error("failed to login")
   }
 
-  return { access_token: loginResult.access_token }
+  return {
+    access_token: loginResult.access_token,
+    refresh_token: loginResult.refresh_token ?? null,
+  }
 }
