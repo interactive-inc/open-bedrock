@@ -1,3 +1,4 @@
+import { formatDate, formatDateTime } from "@/lib/format-datetime"
 import { Suspense } from "react"
 import { ExpenseDecisionForm } from "@/app/(app)/expense/_components/expense-decision-form"
 import { BackButton } from "@/components/back-button"
@@ -76,9 +77,9 @@ async function ExpenseDetailView(props: ViewProps) {
               <span className="tabular-nums">{amountFormatter.format(expense.amount)} 円</span>
             </DetailField>
 
-            <DetailField label="利用日">{expense.spent_at}</DetailField>
+            <DetailField label="利用日">{formatDate(expense.spent_at)}</DetailField>
 
-            <DetailField label="申請日">{expense.created_at}</DetailField>
+            <DetailField label="申請日">{formatDateTime(expense.created_at)}</DetailField>
 
             <DetailField label="メモ" span="full">
               <span className="whitespace-pre-wrap">{expense.note ?? "-"}</span>

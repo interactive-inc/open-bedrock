@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { useActionState, useState } from "react"
 import {
@@ -73,7 +74,9 @@ export function MyApplicationsList(props: Props) {
                 {application.current_step ?? "-"}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{application.created_at}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDateTime(application.created_at)}
+              </TableCell>
 
               <TableCell>
                 <ApplicationRowActions application={application} />

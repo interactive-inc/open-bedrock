@@ -4,12 +4,13 @@ import { useActionState } from "react"
 import { assignOnboardingAction } from "@/app/(app)/onboarding/actions"
 import type { AssignState } from "@/app/(app)/onboarding/actions"
 import type { OnboardingTemplate } from "@/lib/api/types/onboarding-types"
+import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
 
 type Props = {
   templates: ReadonlyArray<OnboardingTemplate>
+  employees: ReadonlyArray<{ code: string; name: string }>
 }
 
 const initialState: AssignState = { ok: false, message: null }
@@ -29,9 +30,14 @@ export function AssignForm(props: Props) {
     <form action={formAction} className="flex flex-col gap-4">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="employee_code">社員コード</FieldLabel>
+          <FieldLabel htmlFor="employee_code">対象社員</FieldLabel>
 
-          <Input id="employee_code" name="employee_code" placeholder="例: E001" required />
+          <EmployeeSelect
+            id="employee_code"
+            name="employee_code"
+            employees={props.employees}
+            required
+          />
         </Field>
 
         <Field>

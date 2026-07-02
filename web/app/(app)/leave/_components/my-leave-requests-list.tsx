@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateTime } from "@/lib/format-datetime"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { cancelLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/leave/actions"
@@ -69,7 +70,9 @@ export function MyLeaveRequestsList(props: Props) {
                 <LeaveStatusBadge status={leaveRequest.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDateTime(leaveRequest.created_at)}
+              </TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

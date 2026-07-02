@@ -4,18 +4,23 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { updateSurveyAction } from "@/app/(app)/surveys/manage/actions"
 import type { SurveyFormState } from "@/app/(app)/surveys/manage/actions"
+import { QuestionBuilder } from "@/app/(app)/surveys/_components/question-builder"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   id: number
   title: string
   status: "open" | "closed"
-  questionsJsonText: string
+  questionsJson: ReadonlyArray<{
+    id: string
+    type: string
+    text: string
+    options?: ReadonlyArray<string>
+  }>
 }
 
 const initialState: SurveyFormState = { ok: false, error: null }
@@ -74,16 +79,7 @@ export function SurveyEditForm(props: Props) {
           </NativeSelect>
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="edit-survey-questions">設問（JSON 配列・任意）</FieldLabel>
-
-          <Textarea
-            id="edit-survey-questions"
-            name="questions_json"
-            defaultValue={props.questionsJsonText}
-            rows={10}
-          />
-        </Field>
+        <QuestionBuilder initialQuestions={props.questionsJson} />
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 

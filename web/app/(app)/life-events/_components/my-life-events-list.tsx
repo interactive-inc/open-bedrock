@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table"
 import type { LifeEventResponse } from "@/lib/api/types/life-event-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   lifeEvents: ReadonlyArray<LifeEventResponse>
@@ -58,7 +59,7 @@ export function MyLifeEventsList(props: Props) {
 
               <TableCell>{lifeEvent.detail ?? "-"}</TableCell>
 
-              <TableCell>{lifeEvent.status}</TableCell>
+              <TableCell>{statusLabel(lifeEvent.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

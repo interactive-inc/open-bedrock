@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateTime } from "@/lib/format-datetime"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ReviewFormState } from "@/app/(app)/review/actions"
@@ -74,7 +75,7 @@ export function MyReviewForms(props: Props) {
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                 <span>スコア: {form.score ?? "-"}</span>
 
-                <span>提出日時: {form.submitted_at ?? "-"}</span>
+                <span>提出日時: {formatDateTime(form.submitted_at)}</span>
               </div>
             ) : (
               <form action={submitDispatch} className="flex flex-col gap-4">

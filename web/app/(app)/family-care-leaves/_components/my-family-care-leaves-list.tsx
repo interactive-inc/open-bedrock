@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table"
 import type { FamilyCareLeaveResponse } from "@/lib/api/types/family-care-leave-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   familyCareLeaves: ReadonlyArray<FamilyCareLeaveResponse>
@@ -76,7 +77,7 @@ export function MyFamilyCareLeavesList(props: Props) {
 
               <TableCell>{familyCareLeave.note ?? "-"}</TableCell>
 
-              <TableCell>{familyCareLeave.status}</TableCell>
+              <TableCell>{statusLabel(familyCareLeave.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

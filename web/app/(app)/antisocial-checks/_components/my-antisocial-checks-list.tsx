@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AntisocialCheckResponse } from "@/lib/api/types/antisocial-check-types"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   antisocialChecks: ReadonlyArray<AntisocialCheckResponse>
@@ -63,7 +64,7 @@ export function MyAntisocialChecksList(props: Props) {
 
               <TableCell>{antisocialCheck.result ?? "-"}</TableCell>
 
-              <TableCell>{antisocialCheck.status}</TableCell>
+              <TableCell>{statusLabel(antisocialCheck.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-datetime"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
@@ -54,7 +55,9 @@ export async function MyLeaveRequestsTable() {
                 <LeaveStatusBadge status={leaveRequest.status} />
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{leaveRequest.created_at}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDateTime(leaveRequest.created_at)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

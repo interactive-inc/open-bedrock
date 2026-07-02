@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { RentalReservationResponse } from "@/lib/api/types/rental-types"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   reservations: ReadonlyArray<RentalReservationResponse>
@@ -63,7 +64,7 @@ export function MyReservationsList(props: Props) {
 
               <TableCell>{reservation.purpose ?? "-"}</TableCell>
 
-              <TableCell>{reservation.status}</TableCell>
+              <TableCell>{statusLabel(reservation.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

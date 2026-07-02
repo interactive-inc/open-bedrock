@@ -1,4 +1,5 @@
 import { AssignmentActions } from "@/app/(app)/onboarding/_components/assignment-actions"
+import { formatDate, formatDateTime } from "@/lib/format-datetime"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
@@ -56,7 +57,7 @@ export async function OnboardingEmployeeView(props: Props) {
 
             <CardDescription>
               {assignment.employee_name}（{assignment.employee_code}） / 割当日{" "}
-              {assignment.assigned_at}
+              {formatDate(assignment.assigned_at)}
             </CardDescription>
           </CardHeader>
 
@@ -86,7 +87,7 @@ export async function OnboardingEmployeeView(props: Props) {
                       </TableCell>
 
                       <TableCell className="text-right text-xs text-muted-foreground">
-                        {task.completed_at ?? "—"}
+                        {formatDateTime(task.completed_at)}
                       </TableCell>
                     </TableRow>
                   ))}

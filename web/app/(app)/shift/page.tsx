@@ -9,6 +9,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { getMe } from "@/lib/api/get-me"
 import { getMyShiftAssignments } from "@/lib/api/get-my-shift-assignments"
 import { getMyShiftSwapRequests } from "@/lib/api/get-my-shift-swap-requests"
@@ -73,15 +74,9 @@ export default async function ShiftPage() {
         </Suspense>
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>シフト交代を申請</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <ShiftSwapRequestForm />
-        </CardContent>
-      </Card>
+      <Suspense fallback={<ListSkeleton rows={2} />}>
+        <ShiftSwapSection />
+      </Suspense>
     </div>
   )
 }
@@ -104,4 +99,25 @@ async function MySwapRequests() {
   }
 
   return <MyShiftSwapRequests swapRequests={swapRequests} />
+}
+
+async function ShiftSwapSection() {
+  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+
+  const employees =
+    employeeResult instanceof Error
+      ? []
+      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>シフト交代を申請</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <ShiftSwapRequestForm employees={employees} />
+      </CardContent>
+    </Card>
+  )
 }

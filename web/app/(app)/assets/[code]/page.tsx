@@ -7,6 +7,7 @@ import { DetailField } from "@/components/detail-field"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getAssetByCode } from "@/lib/api/get-asset-by-code"
+import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 
 export const metadata = { title: "備品詳細" }
@@ -24,6 +25,13 @@ export default async function AssetDetailPage(props: Props) {
   if (asset instanceof Error) {
     handleDetailError(asset)
   }
+
+  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+
+  const employees =
+    employeeResult instanceof Error
+      ? []
+      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
 
   return (
     <div className="flex flex-col gap-6">
@@ -53,7 +61,9 @@ export default async function AssetDetailPage(props: Props) {
         <div className="flex flex-col gap-4 p-6">
           <h2 className="text-lg font-semibold">貸与・返却</h2>
 
-          {asset.status === "in_stock" ? <AssetLendForm code={asset.code} /> : null}
+          {asset.status === "in_stock" ? (
+            <AssetLendForm code={asset.code} employees={employees} />
+          ) : null}
 
           {asset.status === "lent" ? <AssetReturnForm code={asset.code} /> : null}
         </div>

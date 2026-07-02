@@ -1,4 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
+import { formatDateTime } from "@/lib/format-datetime"
 import { Suspense } from "react"
 import { toReviewerTypeLabel } from "@/app/(app)/review/_lib/to-reviewer-type-label"
 import { BackButton } from "@/components/back-button"
@@ -141,7 +142,9 @@ function ResultsTable(props: ResultsTableProps) {
                 )}
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{form.submitted_at ?? "-"}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDateTime(form.submitted_at)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

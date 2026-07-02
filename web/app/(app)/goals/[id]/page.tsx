@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getGoal } from "@/lib/api/get-goal"
+import { statusLabel } from "@/lib/status-label"
 
 export const metadata = { title: "目標詳細" }
 
@@ -65,7 +66,9 @@ export default async function GoalDetailPage(props: Props) {
 
           <div className="flex items-center gap-2">
             <span className="w-24 text-muted-foreground">ステータス</span>
-            <Badge variant={goal.status === "done" ? "secondary" : "outline"}>{goal.status}</Badge>
+            <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
+              {statusLabel(goal.status)}
+            </Badge>
           </div>
         </CardContent>
       </Card>

@@ -5,17 +5,21 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { createOneOnOneAction } from "@/app/(app)/oneonone/actions"
 import type { OneOnOneActionState } from "@/app/(app)/oneonone/actions"
+import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: OneOnOneActionState = { ok: false, error: null }
 
+type Props = {
+  employees: ReadonlyArray<{ code: string; name: string }>
+}
+
 // 1on1 記録の作成フォーム。useActionState で createOneOnOneAction を呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
-export function OneOnOneCreateForm() {
+export function OneOnOneCreateForm(props: Props) {
   const router = useRouter()
 
   // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
@@ -50,20 +54,16 @@ export function OneOnOneCreateForm() {
 
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="create-member-email">メンバー</FieldLabel>
+          <FieldLabel htmlFor="create-member-code">メンバー</FieldLabel>
 
-          <Input
-            id="create-member-email"
-            name="member_email"
-            type="email"
-            placeholder="you@example.com"
-            maxLength={FORM_CONSTRAINTS.oneOnOne.memberEmailMax}
+          <EmployeeSelect
+            id="create-member-code"
+            name="member_employee_code"
+            employees={props.employees}
             required
           />
 
-          <FieldDescription>
-            記録するメンバーのメールアドレス。上長は自分が設定されます。
-          </FieldDescription>
+          <FieldDescription>上長は自分が設定されます。</FieldDescription>
         </Field>
 
         <Field>

@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
+import { formatDateTime } from "@/lib/format-datetime"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
@@ -64,7 +65,7 @@ export default async function ApplicationDetailPage(props: Props) {
 
           <DetailField label="現在のステップ">{application.current_step ?? "-"}</DetailField>
 
-          <DetailField label="申請日">{application.created_at}</DetailField>
+          <DetailField label="申請日">{formatDateTime(application.created_at)}</DetailField>
         </dl>
       </Card>
 
@@ -136,7 +137,9 @@ function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEn
 
                     <span className={`text-xs ${colorClass}`}>が{label}</span>
 
-                    <span className="text-xs text-muted-foreground">{approval.created_at}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDateTime(approval.created_at)}
+                    </span>
                   </div>
 
                   {approval.comment !== null && approval.comment !== "" ? (
