@@ -1,4 +1,5 @@
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
+import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context, SessionPayload } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
@@ -86,6 +87,16 @@ export class DecideExpense {
 
       return new ConflictError("expense already decided", "already_decided")
     }
+
+    // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
+    await new NotifyApprovalResult(this.c).run({
+      recipientEmployeeId: existing.employeeId,
+      action: command.action,
+      subjectLabel: "経費申請",
+      sourceDomain: "expense",
+      sourceId: command.expenseId,
+      createdAt: command.createdAt,
+    })
 
     return { status: decided.status }
   }

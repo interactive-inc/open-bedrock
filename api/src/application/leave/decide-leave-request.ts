@@ -1,4 +1,5 @@
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
+import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import type { Context, SessionPayload } from "@/env"
@@ -18,6 +19,7 @@ export type Command = {
   approverId: number
   action: "approve" | "reject"
   comment: string | null
+  createdAt: string
 }
 
 /**
@@ -93,6 +95,16 @@ export class DecideLeaveRequest {
         return new ConflictError("insufficient leave balance", "insufficient_balance")
       }
 
+      // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
+      await new NotifyApprovalResult(this.c).run({
+        recipientEmployeeId: existing.employeeId,
+        action: command.action,
+        subjectLabel: "休暇申請",
+        sourceDomain: "leave",
+        sourceId: command.leaveRequestId,
+        createdAt: command.createdAt,
+      })
+
       return approved
     }
 
@@ -110,6 +122,16 @@ export class DecideLeaveRequest {
     if (decided === null) {
       return new ConflictError("the leave request is already decided", "already_decided")
     }
+
+    // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
+    await new NotifyApprovalResult(this.c).run({
+      recipientEmployeeId: existing.employeeId,
+      action: command.action,
+      subjectLabel: "休暇申請",
+      sourceDomain: "leave",
+      sourceId: command.leaveRequestId,
+      createdAt: command.createdAt,
+    })
 
     return decided
   }

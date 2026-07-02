@@ -1,4 +1,5 @@
 import { canDecideApplication } from "@/lib/application/can-decide-application"
+import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
 import type { Context, SessionPayload } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
@@ -112,6 +113,16 @@ export class DecideApplication {
 
       return new ConflictError("application is already decided", "already_decided")
     }
+
+    // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
+    await new NotifyApprovalResult(this.c).run({
+      recipientEmployeeId: existing.applicantId,
+      action: command.action,
+      subjectLabel: `申請「${template.name}」`,
+      sourceDomain: "application",
+      sourceId: command.applicationId,
+      createdAt: command.createdAt,
+    })
 
     return { status: decided.status }
   }

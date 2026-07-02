@@ -40,6 +40,7 @@ export const POST = factory.createHandlers(
       approverId: session.employeeId,
       action: "reject",
       comment: body.comment,
+      createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
     if (updated instanceof ApplicationError) {
