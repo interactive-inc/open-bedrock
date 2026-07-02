@@ -56,6 +56,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "approve",
       comment: null,
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -74,6 +75,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "reject",
       comment: "insufficient coverage",
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     if (result instanceof Error) {
@@ -111,6 +113,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 5,
       action: "approve",
       comment: null,
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     expectApplicationError(result, ForbiddenError, "self_approval")
@@ -129,6 +132,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "reject",
       comment: "policy violation",
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     if (result instanceof Error) {
@@ -170,6 +174,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "approve",
       comment: null,
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     expectApplicationError(result, ValidationError, "cross_fiscal_year")
@@ -214,6 +219,7 @@ describe("DecideLeaveRequest", () => {
       approverId: 2,
       action: "reject",
       comment: "no coverage",
+      createdAt: "2026-06-15T00:00:00.000Z",
     })
 
     if (result instanceof Error) {
