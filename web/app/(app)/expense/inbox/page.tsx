@@ -1,4 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
+import { formatDate } from "@/lib/format-datetime"
 import Link from "next/link"
 import { Suspense } from "react"
 import { EmptyState } from "@/components/empty-state"
@@ -79,7 +80,9 @@ async function ExpenseInboxTable() {
                 {amountFormatter.format(expense.amount)} 円
               </TableCell>
 
-              <TableCell className="text-muted-foreground">{expense.spent_at}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDate(expense.spent_at)}
+              </TableCell>
 
               <TableCell>
                 <ExpenseStatusBadge status={expense.status} />

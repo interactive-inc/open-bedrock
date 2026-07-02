@@ -1,0 +1,40 @@
+const STATUS_LABELS: Record<string, string> = {
+  open: "受付中",
+  closed: "終了",
+  pending: "承認待ち",
+  approved: "承認済み",
+  rejected: "却下",
+  cancelled: "取消",
+  requested: "申請中",
+  cleared: "問題なし",
+  flagged: "要確認",
+  completed: "完了",
+  issued: "発行済み",
+  submitted: "提出済み",
+  accepted: "受理",
+  applied: "応募済み",
+  draft: "下書き",
+  in_progress: "進行中",
+  done: "完了",
+  enrolled: "受講中",
+  active: "有効",
+  archived: "アーカイブ",
+  reserved: "予約中",
+  returned: "返却済み",
+  lent: "貸出中",
+  overdue: "期限超過",
+  settled: "精算済み",
+  fulfilled: "交換済み",
+  reported: "届出済み",
+  not_started: "未着手",
+  planned: "計画中",
+  confirmed: "確定",
+  published: "公開済み",
+  in_review: "レビュー中",
+  on_hold: "保留",
+}
+
+/** 英語ステータス文字列を日本語ラベルに変換する */
+export function statusLabel(status: string): string {
+  return STATUS_LABELS[status] ?? status
+}

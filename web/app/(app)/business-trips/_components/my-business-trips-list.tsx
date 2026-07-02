@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table"
 import type { BusinessTripResponse } from "@/lib/api/types/business-trip-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   businessTrips: ReadonlyArray<BusinessTripResponse>
@@ -67,7 +68,7 @@ export function MyBusinessTripsList(props: Props) {
 
               <TableCell>{businessTrip.estimated_cost ?? "-"}</TableCell>
 
-              <TableCell>{businessTrip.status}</TableCell>
+              <TableCell>{statusLabel(businessTrip.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

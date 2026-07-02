@@ -5,6 +5,7 @@ import { NotificationList } from "@/app/(app)/notifications/_components/notifica
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
@@ -27,15 +28,9 @@ export default async function NotificationsPage() {
       </Suspense>
 
       {canCreate ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>通知を作成</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <NotificationCreateForm />
-          </CardContent>
-        </Card>
+        <Suspense fallback={<ListSkeleton rows={2} />}>
+          <NotificationCreateSection />
+        </Suspense>
       ) : null}
     </div>
   )
@@ -50,4 +45,25 @@ async function MyNotifications() {
   }
 
   return <NotificationList notifications={notifications} />
+}
+
+async function NotificationCreateSection() {
+  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+
+  const employees =
+    employeeResult instanceof Error
+      ? []
+      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>通知を作成</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <NotificationCreateForm employees={employees} />
+      </CardContent>
+    </Card>
+  )
 }

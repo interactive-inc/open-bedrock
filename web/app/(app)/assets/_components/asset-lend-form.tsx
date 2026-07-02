@@ -5,12 +5,12 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { lendAssetAction } from "@/app/(app)/assets/actions"
 import type { AssetLendFormState } from "@/app/(app)/assets/actions"
+import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 
 type Props = {
-  // 貸与対象の資産コード。hidden フィールドへ埋め込む。
   code: string
+  employees: ReadonlyArray<{ code: string; name: string }>
 }
 
 const initialState: AssetLendFormState = { ok: false, error: null }
@@ -46,12 +46,11 @@ export function AssetLendForm(props: Props) {
       <input type="hidden" name="code" value={props.code} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <EmployeeSelect
+          id="lend-employee-code"
           name="employee_code"
-          placeholder="従業員コード"
-          aria-label="従業員コード"
-          className="w-48"
-          aria-invalid={state.error !== null}
+          employees={props.employees}
+          className="w-64"
           required
         />
 

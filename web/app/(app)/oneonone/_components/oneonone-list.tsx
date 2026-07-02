@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-datetime"
 import { FetchError } from "@/components/fetch-error"
 import { getOneOnOneList } from "@/lib/api/get-oneonone-list"
 import { EmptyState } from "@/components/empty-state"
@@ -27,7 +28,7 @@ export async function OneOnOneList() {
                 上長: {oneOnOne.manager_name}
               </span>
               <span className="text-sm font-normal text-muted-foreground">
-                {oneOnOne.held_at.slice(0, 16)}
+                {formatDateTime(oneOnOne.held_at)}
               </span>
             </CardTitle>
           </CardHeader>

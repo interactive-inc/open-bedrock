@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/empty-state"
@@ -102,7 +103,7 @@ export function RedemptionAdminTable(props: Props) {
               </TableCell>
 
               <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.created_at}
+                {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>
           ))}

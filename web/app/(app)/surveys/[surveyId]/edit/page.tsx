@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { z } from "zod"
 import { SurveyEditForm } from "@/app/(app)/surveys/[surveyId]/edit/_components/survey-edit-form"
 import { SurveyDeleteButton } from "@/app/(app)/surveys/manage/_components/survey-delete-button"
 import { BackButton } from "@/components/back-button"
@@ -8,6 +9,15 @@ import { getMe } from "@/lib/api/get-me"
 import { getSurvey } from "@/lib/api/get-survey"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
+
+const questionSchema = z.array(
+  z.object({
+    id: z.string(),
+    type: z.string(),
+    text: z.string(),
+    options: z.array(z.string()).optional(),
+  }),
+)
 
 export const metadata = { title: "サーベイの編集" }
 
@@ -57,7 +67,7 @@ export default async function EditSurveyPage(props: Props) {
             id={survey.id}
             title={survey.title}
             status={survey.status === "closed" ? "closed" : "open"}
-            questionsJsonText={JSON.stringify(survey.questions_json, null, 2)}
+            questionsJson={questionSchema.catch([]).parse(survey.questions_json)}
           />
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -88,7 +89,9 @@ export function NotificationList(props: Props) {
                   )}
                 </div>
 
-                <span className="text-xs text-muted-foreground">{notification.created_at}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateTime(notification.created_at)}
+                </span>
               </div>
             </CardHeader>
 

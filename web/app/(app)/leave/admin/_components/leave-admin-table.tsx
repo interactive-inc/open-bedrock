@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
@@ -109,7 +110,7 @@ export function LeaveAdminTable(props: Props) {
               </TableCell>
 
               <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.created_at}
+                {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>
           ))}

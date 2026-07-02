@@ -1,4 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
+import { statusLabel } from "@/lib/status-label"
 import Link from "next/link"
 import { getGoalList } from "@/lib/api/get-goal-list"
 import { EmptyState } from "@/components/empty-state"
@@ -68,7 +69,7 @@ export async function GoalList(props: Props) {
 
               <TableCell>
                 <Badge variant={goal.status === "done" ? "secondary" : "outline"}>
-                  {goal.status}
+                  {statusLabel(goal.status)}
                 </Badge>
               </TableCell>
             </TableRow>

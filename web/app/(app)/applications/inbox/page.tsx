@@ -1,4 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
+import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { Suspense } from "react"
 import { TablePagination } from "@/components/table-pagination"
@@ -141,7 +142,7 @@ async function InboxTable(props: { offset: number; sort: ApplicationInboxSort })
                 </TableCell>
 
                 <TableCell className="hidden text-muted-foreground md:table-cell">
-                  {application.created_at}
+                  {formatDateTime(application.created_at)}
                 </TableCell>
 
                 <TableCell>

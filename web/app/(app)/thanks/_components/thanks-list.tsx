@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format-datetime"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +27,7 @@ export async function ThanksList() {
               <span className="text-sm font-normal text-muted-foreground">→</span>
               <span>{thanks.recipient_name}</span>
               <span className="text-sm font-normal text-muted-foreground">
-                {thanks.created_at.slice(0, 16)}
+                {formatDateTime(thanks.created_at)}
               </span>
             </CardTitle>
           </CardHeader>

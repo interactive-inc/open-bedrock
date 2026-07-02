@@ -7,6 +7,7 @@ import { BackButton } from "@/components/back-button"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { getMe } from "@/lib/api/get-me"
 import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
@@ -40,15 +41,9 @@ export default async function ShiftManagePage() {
         </Suspense>
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>シフトを割り当て</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          <ShiftAssignmentCreateForm />
-        </CardContent>
-      </Card>
+      <Suspense fallback={<ListSkeleton rows={2} />}>
+        <CreateAssignmentSection />
+      </Suspense>
     </div>
   )
 }
@@ -61,4 +56,25 @@ async function AllAssignments() {
   }
 
   return <ShiftAssignmentList assignments={assignments} canManage={true} />
+}
+
+async function CreateAssignmentSection() {
+  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+
+  const employees =
+    employeeResult instanceof Error
+      ? []
+      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>シフトを割り当て</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <ShiftAssignmentCreateForm employees={employees} />
+      </CardContent>
+    </Card>
+  )
 }

@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { CertificateRequestResponse } from "@/lib/api/types/certificate-request-types"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   certificateRequests: ReadonlyArray<CertificateRequestResponse>
@@ -63,7 +64,7 @@ export function MyCertificateRequestsList(props: Props) {
 
               <TableCell>{certificateRequest.note ?? "-"}</TableCell>
 
-              <TableCell>{certificateRequest.status}</TableCell>
+              <TableCell>{statusLabel(certificateRequest.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

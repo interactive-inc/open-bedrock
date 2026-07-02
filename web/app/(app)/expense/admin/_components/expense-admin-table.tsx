@@ -1,3 +1,4 @@
+import { formatDate, formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
@@ -101,7 +102,7 @@ export function ExpenseAdminTable(props: Props) {
               </TableCell>
 
               <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.spent_at}
+                {formatDate(row.spent_at)}
               </TableCell>
 
               <TableCell>
@@ -109,7 +110,7 @@ export function ExpenseAdminTable(props: Props) {
               </TableCell>
 
               <TableCell className="hidden text-muted-foreground md:table-cell">
-                {row.created_at}
+                {formatDateTime(row.created_at)}
               </TableCell>
             </TableRow>
           ))}

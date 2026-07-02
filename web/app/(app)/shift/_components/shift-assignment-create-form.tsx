@@ -4,6 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { createShiftAssignmentAction } from "@/app/(app)/shift/actions"
+import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -11,9 +12,13 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// シフト割当の作成フォーム（特権ロール向け）。社員コード・パターンコード・対象日・備考を送る。
+type Props = {
+  employees: ReadonlyArray<{ code: string; name: string }>
+}
+
+// シフト割当の作成フォーム（特権ロール向け）。対象社員・パターンコード・対象日・備考を送る。
 // 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
-export function ShiftAssignmentCreateForm() {
+export function ShiftAssignmentCreateForm(props: Props) {
   // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {
     const next = await createShiftAssignmentAction(previousState, formData)
@@ -37,9 +42,14 @@ export function ShiftAssignmentCreateForm() {
     <form action={dispatch}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="assignment-employee-code">社員コード</FieldLabel>
+          <FieldLabel htmlFor="assignment-employee-code">対象社員</FieldLabel>
 
-          <Input id="assignment-employee-code" name="employee_code" placeholder="E0001" required />
+          <EmployeeSelect
+            id="assignment-employee-code"
+            name="employee_code"
+            employees={props.employees}
+            required
+          />
         </Field>
 
         <Field>

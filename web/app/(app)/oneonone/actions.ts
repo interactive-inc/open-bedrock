@@ -3,13 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { createOneOnOne } from "@/lib/api/create-oneonone"
 import { deleteOneOnOne } from "@/lib/api/delete-oneonone"
+import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
 import { updateOneOnOne } from "@/lib/api/update-oneonone"
-import {
-  FORM_CONSTRAINTS,
-  isValidEmail,
-  toOptionalText,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type OneOnOneActionState = {
@@ -17,24 +13,28 @@ export type OneOnOneActionState = {
   error: string | null
 }
 
-// 1on1 記録作成 Server Action。member_email 必須、topics/manager_note/next_action は任意。
+// 1on1 記録作成 Server Action。member_employee_code 必須、topics/manager_note/next_action は任意。
 // 成功時は /oneonone を revalidate して履歴へ反映する。
 export async function createOneOnOneAction(
   previousState: OneOnOneActionState,
   formData: FormData,
 ): Promise<OneOnOneActionState> {
-  const memberEmail = toRequiredText(formData.get("member_email"), {
-    label: "メンバーのメールアドレス",
-    max: FORM_CONSTRAINTS.oneOnOne.memberEmailMax,
+  const memberCode = toRequiredText(formData.get("member_employee_code"), {
+    label: "メンバー",
+    max: 20,
   })
 
-  if (memberEmail instanceof Error) {
-    return { ok: false, error: memberEmail.message }
+  if (memberCode instanceof Error) {
+    return { ok: false, error: memberCode.message }
   }
 
-  if (isValidEmail(memberEmail) === false) {
-    return { ok: false, error: "メンバーのメールアドレスはメールアドレス形式で入力してください" }
+  const member = await getEmployeeByCode(memberCode)
+
+  if (member instanceof Error || member === null) {
+    return { ok: false, error: "指定されたメンバーが見つかりません" }
   }
+
+  const memberEmail = member.email
 
   const topics = toOneOnOneText(formData.get("topics"), "トピック")
 

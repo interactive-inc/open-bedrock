@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDateTime } from "@/lib/format-datetime"
 import { useActionState, useState } from "react"
 import {
   updateSurveyResponseAction,
@@ -72,7 +73,7 @@ export function MyResponsesList(props: Props) {
 
                 <TableCell className="font-medium">{response.survey_id}</TableCell>
 
-                <TableCell>{response.submitted_at}</TableCell>
+                <TableCell>{formatDateTime(response.submitted_at)}</TableCell>
 
                 <TableCell>
                   <div className="flex justify-end gap-2">

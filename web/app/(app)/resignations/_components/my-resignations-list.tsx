@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table"
 import type { ResignationResponse } from "@/lib/api/types/resignation-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   resignations: ReadonlyArray<ResignationResponse>
@@ -69,7 +70,7 @@ export function MyResignationsList(props: Props) {
 
               <TableCell>{resignation.reason ?? "-"}</TableCell>
 
-              <TableCell>{resignation.status}</TableCell>
+              <TableCell>{statusLabel(resignation.status)}</TableCell>
 
               <TableCell>
                 <div className="flex justify-end gap-2">

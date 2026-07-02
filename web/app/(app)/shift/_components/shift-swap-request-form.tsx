@@ -4,6 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { createShiftSwapRequestAction } from "@/app/(app)/shift/actions"
+import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -11,9 +12,13 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// シフト交代の申請フォーム（本人向け）。交代相手の社員コード・対象日・備考を native form で送る。
+type Props = {
+  employees: ReadonlyArray<{ code: string; name: string }>
+}
+
+// シフト交代の申請フォーム（本人向け）。交代相手・対象日・備考を native form で送る。
 // 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
-export function ShiftSwapRequestForm() {
+export function ShiftSwapRequestForm(props: Props) {
   // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {
     const next = await createShiftSwapRequestAction(previousState, formData)
@@ -37,9 +42,14 @@ export function ShiftSwapRequestForm() {
     <form action={dispatch}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="swap-target-code">交代相手の社員コード</FieldLabel>
+          <FieldLabel htmlFor="swap-target-code">交代相手</FieldLabel>
 
-          <Input id="swap-target-code" name="target_employee_code" placeholder="E0001" required />
+          <EmployeeSelect
+            id="swap-target-code"
+            name="target_employee_code"
+            employees={props.employees}
+            required
+          />
         </Field>
 
         <Field>
