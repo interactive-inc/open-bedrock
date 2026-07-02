@@ -30,7 +30,7 @@ per-template 動的ロール(approver_roles)は permission に正規化せず ro
 
 ## 認証フロー
 
-複数ログイン方法を identities の多態で吸収。全成功フロー: identity検証 → account取得 → status=active → employees.status が retired でない → access token(短命15分) + refresh token(長命) 発行。
+複数ログイン方法を identities の多態で吸収。全成功フロー: identity検証 → account取得 → status=active → employees.status が retired でない → access token(短命1時間) + refresh token(長命7日、ローテーション) 発行。
 
 JWT claims = `{ accountId, employeeId, tokenVersion }` のみ(email/role/permission は載せない)。permission は verify-bearer が毎回 DB 解決(accountRoles⋈rolePermissions⋈permissions を1クエリ)して session に Set で展開。tokenVersion 不一致なら 401(即時失効)。
 
@@ -50,7 +50,7 @@ OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true
 
 ## セキュリティ要点
 
-権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / 付与できるロールは付与者の部分集合 / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(15分 + refresh ローテ + tokenVersion)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
+権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / 付与できるロールは付与者の部分集合 / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(1時間 + refresh ローテ + tokenVersion)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
 
 ## 実装状況
 
@@ -71,4 +71,4 @@ Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改
 
 ## 既知リスク
 
-D1 に FK 無し(孤児行はアプリ層 + index + 監査)、permission 二重定義の同期ズレ(起動時 subset チェック)、二重正期間(Phase2-6)の整合、approver_roles の未知キー突合、admin 全許可固定の硬直、毎リクエスト join のレイテンシ、OR 結合は deny を表現できない、access token 15分化はクライアント自動更新が前提。
+D1 に FK 無し(孤児行はアプリ層 + index + 監査)、permission 二重定義の同期ズレ(起動時 subset チェック)、二重正期間(Phase2-6)の整合、approver_roles の未知キー突合、admin 全許可固定の硬直、毎リクエスト join のレイテンシ、OR 結合は deny を表現できない、access token 1時間 + refresh token 7日。POST /auth/refresh でローテーション更新。

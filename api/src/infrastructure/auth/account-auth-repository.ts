@@ -24,6 +24,38 @@ export class AccountAuthRepository {
     Object.freeze(this)
   }
 
+  async findById(accountId: number): Promise<
+    | {
+        accountId: number
+        employeeId: number | null
+        status: string
+        tokenVersion: number
+      }
+    | null
+    | Error
+  > {
+    try {
+      const db = this.c.var.database
+
+      const rows = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1)
+
+      const account = rows.at(0)
+
+      if (account === undefined) {
+        return null
+      }
+
+      return {
+        accountId: account.id,
+        employeeId: account.employeeId,
+        status: account.status,
+        tokenVersion: account.tokenVersion,
+      }
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find account")
+    }
+  }
+
   async resolveById(accountId: number): Promise<ResolvedAccount | null | Error> {
     try {
       const db = this.c.var.database

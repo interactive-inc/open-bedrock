@@ -54,6 +54,7 @@ export const POST = factory.createHandlers(
       email,
       password: json.password,
       jwtSecret: c.env.JWT_SECRET,
+      userAgent: c.req.header("User-Agent") ?? null,
     })
 
     if (result instanceof ApplicationError) {
@@ -81,6 +82,7 @@ export const POST = factory.createHandlers(
 
     const responseBody = zAppAuthToken.parse({
       access_token: result.accessToken,
+      refresh_token: result.refreshToken,
     })
 
     return c.json(responseBody, 200)

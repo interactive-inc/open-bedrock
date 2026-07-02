@@ -45,5 +45,15 @@ export async function loginAction(
     maxAge: sessionMaxAge(result.access_token),
   })
 
+  if (result.refresh_token !== null) {
+    cookieStore.set("refresh_token", result.refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60,
+    })
+  }
+
   redirect("/")
 }

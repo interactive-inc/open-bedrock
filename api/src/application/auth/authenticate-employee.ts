@@ -8,13 +8,16 @@ import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
+import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 
 export type Command = {
   email: string
   password: string
   jwtSecret: string
+  userAgent: string | null
 }
 
 export type InvalidCredentials = { reason: "invalid_credentials" }
@@ -89,6 +92,26 @@ export class AuthenticateEmployee {
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
-    return { accessToken }
+    const rawRefreshToken = crypto.randomUUID()
+
+    const hashedToken = await refreshTokenHash(rawRefreshToken)
+
+    const refreshTokenRepository = new RefreshTokenRepository(this.c)
+
+    const nowEpoch = Math.floor(Date.now() / 1000)
+
+    const createResult = await refreshTokenRepository.create({
+      accountId: identity.accountId,
+      tokenHash: hashedToken,
+      familyId: crypto.randomUUID(),
+      userAgent: command.userAgent,
+      nowEpoch,
+    })
+
+    if (createResult instanceof Error) {
+      return new UnexpectedError("failed to create refresh token", { cause: createResult })
+    }
+
+    return { accessToken, refreshToken: rawRefreshToken }
   }
 }

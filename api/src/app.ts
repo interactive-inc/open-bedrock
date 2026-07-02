@@ -29,6 +29,7 @@ import * as attendanceMeRoute from "@/interface/attendance/me/route"
 import * as attendanceMeSummaryRoute from "@/interface/attendance/me/summary/route"
 import * as authLoginRoute from "@/interface/auth/login/route"
 import * as authMeRoute from "@/interface/auth/me/route"
+import * as authRefreshRoute from "@/interface/auth/refresh/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
 import * as batchRoute from "@/interface/batch/route"
 import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
@@ -215,6 +216,7 @@ export const app = factory
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
   .post("/auth/login", ...authLoginRoute.POST)
+  .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/employees", ...employeeListRoute.GET)
   .get("/roles", ...iamRolesRoute.GET)
