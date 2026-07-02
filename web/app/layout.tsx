@@ -3,6 +3,9 @@ import { Geist, Geist_Mono, Noto_Sans, Playfair_Display } from "next/font/google
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { getDictionary } from "@/lib/i18n/get-dictionary"
+import { getLocale } from "@/lib/i18n/get-locale"
+import { TranslatorProvider } from "@/lib/i18n/translator-provider"
 import { cn } from "@/lib/utils"
 
 const playfairDisplayHeading = Playfair_Display({ subsets: ["latin"], variable: "--font-heading" })
@@ -31,10 +34,12 @@ type Props = {
   children: React.ReactNode
 }
 
-export default function RootLayout(props: Props) {
+export default async function RootLayout(props: Props) {
+  const locale = await getLocale()
+
   return (
     <html
-      lang="ja"
+      lang={locale}
       suppressHydrationWarning
       className={cn(
         "h-full",
@@ -48,9 +53,11 @@ export default function RootLayout(props: Props) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          {props.children}
+          <TranslatorProvider dictionary={getDictionary(locale)}>
+            {props.children}
 
-          <Toaster />
+            <Toaster />
+          </TranslatorProvider>
         </ThemeProvider>
       </body>
     </html>
