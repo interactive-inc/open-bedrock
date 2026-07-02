@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createCertificateRequestAction } from "@/app/(app)/certificate-requests/actions"
@@ -13,6 +14,8 @@ const initialState: CertificateRequestActionState = { ok: false, error: null }
 // 証明書発行依頼フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
 export function CertificateRequestCreateForm() {
+  const router = useRouter()
+
   // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
   async function reduce(
     previousState: CertificateRequestActionState,
@@ -22,6 +25,8 @@ export function CertificateRequestCreateForm() {
 
     if (result.ok) {
       toast.success("証明書発行を依頼しました")
+
+      router.push("/certificate-requests")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

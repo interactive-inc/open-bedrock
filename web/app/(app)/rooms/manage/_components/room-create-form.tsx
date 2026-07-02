@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createRoomAction } from "@/app/(app)/rooms/manage/actions"
@@ -13,6 +14,8 @@ const initialState: RoomCreateFormState = { ok: false, error: null }
 // 会議室登録フォーム。名称・定員・任意の所在地を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function RoomCreateForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: RoomCreateFormState,
     formData: FormData,
@@ -21,6 +24,8 @@ export function RoomCreateForm() {
 
     if (result.ok) {
       toast.success("会議室を登録しました")
+
+      router.push("/rooms/manage")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

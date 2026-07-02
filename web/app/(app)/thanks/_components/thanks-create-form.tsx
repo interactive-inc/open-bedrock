@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { sendThanksAction } from "@/app/(app)/thanks/actions"
@@ -17,6 +18,8 @@ const initialState: ThanksActionState = { ok: false, error: null }
 // 感謝の送付フォーム。useActionState で sendThanksAction を呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
 export function ThanksCreateForm() {
+  const router = useRouter()
+
   const [recipient, setRecipient] = useState<EmployeeListItem | null>(null)
 
   // useActionState の reducer。送り先未選択ならここで弾き、選択済みなら Server Action を実行する。
@@ -34,6 +37,8 @@ export function ThanksCreateForm() {
 
     if (result.ok) {
       toast.success("感謝を送りました")
+
+      router.push("/thanks")
       setRecipient(null)
     } else if (result.error !== null) {
       toast.error(result.error)

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createResignationAction } from "@/app/(app)/resignations/actions"
@@ -14,6 +15,8 @@ const initialState: ResignationActionState = { ok: false, error: null }
 // 退職申請フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
 export function ResignationCreateForm() {
+  const router = useRouter()
+
   // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
   async function reduce(
     previousState: ResignationActionState,
@@ -23,6 +26,8 @@ export function ResignationCreateForm() {
 
     if (result.ok) {
       toast.success("退職を申請しました")
+
+      router.push("/resignations")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

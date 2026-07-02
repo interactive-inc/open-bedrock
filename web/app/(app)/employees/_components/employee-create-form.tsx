@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createEmployeeAction } from "@/app/(app)/employees/actions"
@@ -17,6 +18,8 @@ const selectClassName =
 // 従業員登録フォーム。コード・氏名・メール・初期パスワード・ロール・在籍状況を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function EmployeeCreateForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: EmployeeCreateFormState,
     formData: FormData,
@@ -25,6 +28,8 @@ export function EmployeeCreateForm() {
 
     if (result.ok) {
       toast.success("従業員を登録しました")
+
+      router.push("/employees")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

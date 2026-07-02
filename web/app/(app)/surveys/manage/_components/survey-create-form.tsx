@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createSurveyAction } from "@/app/(app)/surveys/manage/actions"
@@ -16,6 +17,8 @@ const initialState: SurveyFormState = { ok: false, error: null }
 // アンケート登録フォーム。タイトル・状態・設問 JSON を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function SurveyCreateForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: SurveyFormState,
     formData: FormData,
@@ -24,6 +27,8 @@ export function SurveyCreateForm() {
 
     if (result.ok) {
       toast.success("アンケートを作成しました")
+
+      router.push("/surveys/manage")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

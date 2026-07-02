@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createAssetAction } from "@/app/(app)/assets/actions"
@@ -13,6 +14,8 @@ const initialState: AssetCreateFormState = { ok: false, error: null }
 // 物品登録フォーム。コード・名称・種別・任意のシリアル/購入日を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
 export function AssetCreateForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: AssetCreateFormState,
     formData: FormData,
@@ -21,6 +24,8 @@ export function AssetCreateForm() {
 
     if (result.ok) {
       toast.success("物品を登録しました")
+
+      router.push("/assets")
     } else if (result.error !== null) {
       toast.error(result.error)
     }

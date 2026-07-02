@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createLeaveRequestAction } from "@/app/(app)/leave/actions"
@@ -14,7 +15,10 @@ const initialState: LeaveActionState = { ok: false, error: null }
 
 // 休暇申請フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+// 成功時は自分の休暇一覧へ遷移し、残日数と申請ステータスを見せる。
 export function LeaveRequestCreateForm() {
+  const router = useRouter()
+
   // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
   async function reduce(
     previousState: LeaveActionState,
@@ -24,6 +28,8 @@ export function LeaveRequestCreateForm() {
 
     if (result.ok) {
       toast.success("休暇申請を提出しました")
+
+      router.push("/leave")
     } else if (result.error !== null) {
       toast.error(result.error)
     }
