@@ -7,6 +7,7 @@ const DEFAULT_BASE_URL = process.env.KARTE_API ?? "http://127.0.0.1:8787"
 export type KarteConfig = {
   base_url: string
   token: string | null
+  refresh_token: string | null
 }
 
 // 設定ディレクトリ/ファイルのパスを都度解決する。
@@ -32,10 +33,10 @@ export async function loadConfig(): Promise<KarteConfig> {
       process.stderr.write(
         `warning: ${configPaths().file} を解析できませんでした。既定設定で続行します\n`,
       )
-      return { base_url: DEFAULT_BASE_URL, token: null }
+      return { base_url: DEFAULT_BASE_URL, token: null, refresh_token: null }
     }
   }
-  return { base_url: DEFAULT_BASE_URL, token: null }
+  return { base_url: DEFAULT_BASE_URL, token: null, refresh_token: null }
 }
 
 export async function saveConfig(config: KarteConfig): Promise<void> {

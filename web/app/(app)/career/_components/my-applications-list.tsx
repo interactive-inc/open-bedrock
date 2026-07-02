@@ -32,6 +32,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   applications: ReadonlyArray<CareerApplication>
+  postingTitleMap: Record<number, string>
 }
 
 const statusLabels: Record<CareerApplication["status"], string> = {
@@ -51,7 +52,7 @@ export function MyApplicationsList(props: Props) {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead>公募 ID</TableHead>
+            <TableHead>公募</TableHead>
             <TableHead>メッセージ</TableHead>
             <TableHead>状態</TableHead>
             <TableHead className="text-right">操作</TableHead>
@@ -69,7 +70,9 @@ export function MyApplicationsList(props: Props) {
 
             return (
               <TableRow key={applicationId}>
-                <TableCell className="font-medium">{application.posting_id}</TableCell>
+                <TableCell className="font-medium">
+                  {props.postingTitleMap[application.posting_id] ?? `#${application.posting_id}`}
+                </TableCell>
 
                 <TableCell>{application.message ?? "-"}</TableCell>
 

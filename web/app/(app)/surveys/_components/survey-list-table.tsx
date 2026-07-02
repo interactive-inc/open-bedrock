@@ -31,7 +31,6 @@ export async function SurveyListTable() {
       <Table aria-label="一覧">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">ID</TableHead>
             <TableHead>タイトル</TableHead>
             <TableHead className="w-24">状態</TableHead>
             <TableHead className="w-24">設問数</TableHead>
@@ -42,8 +41,6 @@ export async function SurveyListTable() {
         <TableBody>
           {surveys.map((survey) => (
             <TableRow key={survey.id}>
-              <TableCell className="text-muted-foreground">{survey.id}</TableCell>
-
               <TableCell className="font-medium">{survey.title}</TableCell>
 
               <TableCell>

@@ -14,7 +14,12 @@ export async function ThanksList() {
   }
 
   if (thanksList.length === 0) {
-    return <EmptyState title="まだ感謝がありません" />
+    return (
+      <EmptyState
+        title="まだ感謝がありません"
+        description="右上の「感謝を送る」から同僚に感謝を伝えましょう。"
+      />
+    )
   }
 
   return (

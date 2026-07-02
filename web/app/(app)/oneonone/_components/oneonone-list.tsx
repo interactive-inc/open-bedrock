@@ -1,25 +1,35 @@
 import { formatDateTime } from "@/lib/format-datetime"
-import { FetchError } from "@/components/fetch-error"
-import { getOneOnOneList } from "@/lib/api/get-oneonone-list"
 import { EmptyState } from "@/components/empty-state"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-// 1on1 履歴をサーバ側 fetch してカード描画する非同期 RSC。
-// 自由記述が長いためテーブルでなくカードで topics / 上長メモ / ネクストアクションを並べる。
-export async function OneOnOneList() {
-  const oneOnOnes = await getOneOnOneList()
+type OneOnOneItem = {
+  id: string
+  held_at: string
+  member_name: string
+  manager_name: string
+  topics: string | null
+  manager_note: string | null
+  next_action: string | null
+}
 
-  if (oneOnOnes instanceof Error) {
-    return <FetchError message="1on1 の取得に失敗しました" />
-  }
+type Props = {
+  oneOnOnes: ReadonlyArray<OneOnOneItem>
+}
 
-  if (oneOnOnes.length === 0) {
-    return <EmptyState title="1on1 の記録がありません" />
+// 1on1 履歴をカード描画する。自由記述が長いためテーブルでなくカードで並べる。
+export function OneOnOneList(props: Props) {
+  if (props.oneOnOnes.length === 0) {
+    return (
+      <EmptyState
+        title="1on1 の記録がありません"
+        description="右上の「記録を追加」から最初の 1on1 を記録しましょう。"
+      />
+    )
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {oneOnOnes.map((oneOnOne) => (
+      {props.oneOnOnes.map((oneOnOne) => (
         <Card key={oneOnOne.id}>
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">

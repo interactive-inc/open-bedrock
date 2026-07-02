@@ -34,6 +34,8 @@ import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 type Props = {
   assignments: Array<ShiftAssignmentResponse>
   canManage: boolean
+  employeeNameMap: Record<number, string>
+  patternNameMap: Record<number, string>
 }
 
 const initialState: ShiftFormState = { ok: false, error: null }
@@ -72,8 +74,8 @@ export function ShiftAssignmentList(props: Props) {
         <TableHeader>
           <TableRow>
             <TableHead>日付</TableHead>
-            <TableHead>社員 ID</TableHead>
-            <TableHead>パターン ID</TableHead>
+            <TableHead>従業員</TableHead>
+            <TableHead>パターン</TableHead>
             <TableHead>備考</TableHead>
             <TableHead>状態</TableHead>
             <TableHead className="text-right">操作</TableHead>
@@ -85,9 +87,15 @@ export function ShiftAssignmentList(props: Props) {
             <TableRow key={assignment.id}>
               <TableCell className="font-medium">{assignment.date}</TableCell>
 
-              <TableCell className="tabular-nums">{assignment.employee_id}</TableCell>
+              <TableCell>
+                {props.employeeNameMap[assignment.employee_id] ?? `#${assignment.employee_id}`}
+              </TableCell>
 
-              <TableCell className="tabular-nums">{assignment.pattern_id}</TableCell>
+              <TableCell>
+                {assignment.pattern_id !== null
+                  ? (props.patternNameMap[assignment.pattern_id] ?? "-")
+                  : "-"}
+              </TableCell>
 
               <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
 

@@ -21,7 +21,12 @@ type Props = {
 // 受講申込済みのコースには申込済バッジを、未申込の active コースには受講申込ボタンを出す。
 export function CourseList(props: Props) {
   if (props.courses.length === 0) {
-    return <EmptyState title="研修コースはまだありません" />
+    return (
+      <EmptyState
+        title="研修コースはまだありません"
+        description="管理者がコースを作成すると一覧に表示されます。"
+      />
+    )
   }
 
   return (

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import { getMe } from "@/lib/api/get-me"
 import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
+import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 
 export const metadata = { title: "シフト管理" }
@@ -55,7 +56,21 @@ async function AllAssignments() {
     return <FetchError message="シフト割当一覧の取得に失敗しました" />
   }
 
-  return <ShiftAssignmentList assignments={assignments} canManage={true} />
+  const patterns = await getShiftPatterns()
+
+  const patternNameMap: Record<number, string> =
+    patterns instanceof Error
+      ? {}
+      : Object.fromEntries(patterns.filter((p) => p.id !== null).map((p) => [p.id, p.name]))
+
+  return (
+    <ShiftAssignmentList
+      assignments={assignments}
+      canManage={true}
+      employeeNameMap={{}}
+      patternNameMap={patternNameMap}
+    />
+  )
 }
 
 async function CreateAssignmentSection() {

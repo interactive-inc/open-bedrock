@@ -20,7 +20,12 @@ export async function MySkillList() {
   }
 
   if (mySkills.length === 0) {
-    return <EmptyState title="まだスキルが登録されていません" />
+    return (
+      <EmptyState
+        title="まだスキルが登録されていません"
+        description="スキル一覧から自分のスキルを登録しましょう。"
+      />
+    )
   }
 
   return (

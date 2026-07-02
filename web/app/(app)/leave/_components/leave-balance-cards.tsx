@@ -13,7 +13,12 @@ export async function LeaveBalanceCards() {
   }
 
   if (balances.length === 0) {
-    return <EmptyState title="付与された休暇はまだありません" />
+    return (
+      <EmptyState
+        title="付与された休暇はまだありません"
+        description="休暇が付与されるとここに残日数が表示されます。"
+      />
+    )
   }
 
   return (
