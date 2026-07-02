@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { postLogin } from "@/lib/api/post-login"
 import { sessionMaxAge } from "@/lib/auth/session-max-age"
+import { getTranslator } from "@/lib/i18n/get-translator"
 
 export type LoginState = {
   ok: boolean
@@ -18,18 +19,20 @@ export async function loginAction(
   previousState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
+  const t = await getTranslator()
+
   const email = formData.get("email")
 
   const password = formData.get("password")
 
   if (typeof email !== "string" || typeof password !== "string") {
-    return { ok: false, error: "メールアドレスとパスワードを入力してください" }
+    return { ok: false, error: t("メールアドレスとパスワードを入力してください") }
   }
 
   const result = await postLogin({ email, password })
 
   if (result instanceof Error) {
-    return { ok: false, error: "メールアドレスまたはパスワードが正しくありません" }
+    return { ok: false, error: t("メールアドレスまたはパスワードが正しくありません") }
   }
 
   const cookieStore = await cookies()
