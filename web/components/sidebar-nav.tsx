@@ -135,7 +135,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: Users,
         children: [
           { label: "一覧", href: "/employees" },
-          { label: "新規登録", href: "/employees/new" },
+          { label: "新規登録", href: "/employees/new", requiredPermission: "employee:create" },
         ],
       },
       {
@@ -163,7 +163,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "コース一覧", href: "/training" },
           { label: "自分の受講", href: "/training/me" },
-          { label: "新規コース", href: "/training/new" },
+          { label: "新規コース", href: "/training/new", requiredPermission: "training:manage" },
         ],
       },
       {
@@ -173,7 +173,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "マイキャリア", href: "/career" },
           { label: "社内公募", href: "/career/postings" },
-          { label: "新規公募", href: "/career/postings/new" },
+          {
+            label: "新規公募",
+            href: "/career/postings/new",
+            requiredPermission: "career_posting:manage",
+          },
         ],
       },
       {
@@ -181,10 +185,22 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/onboarding",
         icon: ClipboardList,
         children: [
-          { label: "ハブ", href: "/onboarding" },
-          { label: "テンプレート", href: "/onboarding/templates" },
-          { label: "新規テンプレート", href: "/onboarding/templates/new" },
-          { label: "新規割当", href: "/onboarding/assignments/new" },
+          { label: "ハブ", href: "/onboarding", requiredPermission: "onboarding:manage" },
+          {
+            label: "テンプレート",
+            href: "/onboarding/templates",
+            requiredPermission: "onboarding:manage",
+          },
+          {
+            label: "新規テンプレート",
+            href: "/onboarding/templates/new",
+            requiredPermission: "onboarding:manage",
+          },
+          {
+            label: "新規割当",
+            href: "/onboarding/assignments/new",
+            requiredPermission: "onboarding:manage",
+          },
           { label: "自分のタスク", href: "/onboarding/me" },
         ],
       },
@@ -208,7 +224,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: ClipboardCheck,
         children: [
           { label: "サイクル", href: "/review" },
-          { label: "管理", href: "/review/manage" },
+          { label: "管理", href: "/review/manage", requiredPermission: "review:administer" },
         ],
       },
       {
@@ -217,14 +233,26 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: FileText,
         children: [
           { label: "自分の申請", href: "/applications" },
-          { label: "受信箱", href: "/applications/inbox" },
+          {
+            label: "受信箱",
+            href: "/applications/inbox",
+            requiredPermission: "application:approve",
+          },
           {
             label: "全社の申請",
             href: "/applications/admin",
             requiredPermission: "application:read:all",
           },
-          { label: "テンプレート", href: "/applications/templates" },
-          { label: "新規テンプレート", href: "/applications/templates/new" },
+          {
+            label: "テンプレート",
+            href: "/applications/templates",
+            requiredPermission: "application_template:manage",
+          },
+          {
+            label: "新規テンプレート",
+            href: "/applications/templates/new",
+            requiredPermission: "application_template:manage",
+          },
         ],
       },
       {
@@ -234,7 +262,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "一覧", href: "/expense" },
           { label: "新規", href: "/expense/new" },
-          { label: "受信箱", href: "/expense/inbox" },
+          { label: "受信箱", href: "/expense/inbox", requiredPermission: "expense:approve" },
           {
             label: "全社の経費",
             href: "/expense/admin",
@@ -249,7 +277,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "一覧", href: "/leave" },
           { label: "新規", href: "/leave/new" },
-          { label: "受信箱", href: "/leave/inbox" },
+          { label: "受信箱", href: "/leave/inbox", requiredPermission: "leave:approve" },
           {
             label: "全社の休暇",
             href: "/leave/admin",
@@ -263,7 +291,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: TimerReset,
         children: [
           { label: "自分", href: "/attendance" },
-          { label: "全員", href: "/attendance/all" },
+          { label: "全員", href: "/attendance/all", requiredPermission: "attendance:read:all" },
         ],
       },
       {
@@ -273,7 +301,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "自分", href: "/shift" },
           { label: "パターン", href: "/shift/patterns" },
-          { label: "管理", href: "/shift/manage" },
+          { label: "管理", href: "/shift/manage", requiredPermission: "shift:manage" },
           {
             label: "全社の交代",
             href: "/shift/admin",
@@ -301,8 +329,12 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: MessagesSquare,
         children: [
           { label: "回答する", href: "/surveys" },
-          { label: "管理", href: "/surveys/manage" },
-          { label: "新規アンケート", href: "/surveys/manage/new" },
+          { label: "管理", href: "/surveys/manage", requiredPermission: "survey:manage" },
+          {
+            label: "新規アンケート",
+            href: "/surveys/manage/new",
+            requiredPermission: "survey:manage",
+          },
         ],
       },
       {
@@ -322,7 +354,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "タイムライン", href: "/thanks" },
           { label: "送る", href: "/thanks/send" },
           { label: "景品", href: "/thanks/rewards" },
-          { label: "景品の管理", href: "/thanks/rewards/manage" },
+          {
+            label: "景品の管理",
+            href: "/thanks/rewards/manage",
+            requiredPermission: "thanks_reward:manage",
+          },
           {
             label: "全社の交換",
             href: "/thanks/admin",
@@ -342,8 +378,12 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "空き状況", href: "/rooms" },
           { label: "自分の予約", href: "/rooms/me" },
-          { label: "マスタ", href: "/rooms/manage" },
-          { label: "会議室を登録", href: "/rooms/manage/new" },
+          { label: "マスタ", href: "/rooms/manage", requiredPermission: "room:manage" },
+          {
+            label: "会議室を登録",
+            href: "/rooms/manage/new",
+            requiredPermission: "room:manage",
+          },
         ],
       },
       {
@@ -361,7 +401,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: Boxes,
         children: [
           { label: "一覧", href: "/assets" },
-          { label: "新規登録", href: "/assets/new" },
+          { label: "新規登録", href: "/assets/new", requiredPermission: "asset:manage" },
           { label: "自分の貸与品", href: "/assets/lent/me" },
         ],
       },
