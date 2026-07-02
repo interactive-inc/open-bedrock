@@ -5,7 +5,7 @@ import {
   Briefcase,
   CalendarClock,
   CalendarDays,
-  ChevronRight,
+  ChevronDown,
   ClipboardCheck,
   ClipboardList,
   Coins,
@@ -612,7 +612,7 @@ export function SidebarNav(props: Props) {
                         <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
                           <Icon />
                           <span>{item.label}</span>
-                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[panel-open]/collapsible:rotate-90" />
+                          <ChevronDown className="ml-auto size-4 transition-transform group-data-[panel-open]/collapsible:rotate-180" />
                         </SidebarMenuButton>
                       }
                     />
