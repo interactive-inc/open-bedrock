@@ -39,17 +39,11 @@ export class DeleteRole {
       return new ConflictError("cannot delete a system role", "system_role")
     }
 
-    const assigned = await roleRepository.isAssignedToAnyAccount(command.roleId)
+    const deleted = await roleRepository.deleteWithPermissionsGuardingAssignment(command.roleId)
 
-    if (assigned instanceof Error) {
-      return new UnexpectedError("failed to check role assignment", { cause: assigned })
-    }
-
-    if (assigned === true) {
+    if (deleted === "role_in_use") {
       return new ConflictError("role is assigned to accounts", "role_in_use")
     }
-
-    const deleted = await roleRepository.deleteById(command.roleId)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete role", { cause: deleted })
