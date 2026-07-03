@@ -7,6 +7,12 @@ export type LoginRequest = {
 
 export type LoginResponse = {
   access_token: string
+  refresh_token: string | null
+}
+
+export type RefreshResponse = {
+  access_token: string
+  refresh_token: string | null
 }
 
 export type MeResponse = {
