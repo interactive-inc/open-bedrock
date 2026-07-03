@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { LoginGate } from "@/components/login-gate"
 import { Button } from "@/components/ui/button"
 import { isAuthErrorDigest } from "@/lib/api/auth-error"
@@ -12,6 +13,8 @@ type Props = {
 /**
  * ルートセグメントのエラーバウンダリ。`AuthError` ならログインフォームに差し替え、
  * それ以外は汎用の回復導線を出す。
+ * `(app)/layout.tsx` 配下（保護領域）で投げられた認証エラーもここまでバブルアップさせ、
+ * AppShell（サイドバー）ごとアンマウントした状態で全画面のログイン画面にする。
  */
 export default function RootError(props: Props) {
   if (isAuthErrorDigest(props.error.digest)) {
@@ -34,6 +37,10 @@ export default function RootError(props: Props) {
 
       <div className="flex gap-3">
         <Button onClick={props.reset}>再試行</Button>
+
+        <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
+          ホームへ戻る
+        </Button>
       </div>
     </main>
   )
