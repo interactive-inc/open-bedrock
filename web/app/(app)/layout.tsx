@@ -4,6 +4,7 @@ import { AuthProvider } from "@/components/auth-provider"
 import { AuthError, isAuthError } from "@/lib/api/auth-error"
 import { getMe } from "@/lib/api/get-me"
 import { getMyUnreadCount } from "@/lib/api/get-my-unread-count"
+import { getLocale } from "@/lib/i18n/get-locale"
 
 type Props = {
   children: React.ReactNode
@@ -32,10 +33,13 @@ export default async function AppLayout(props: Props) {
 
   const unreadNotificationCount = unreadCount instanceof Error ? 0 : unreadCount.count
 
+  const locale = await getLocale()
+
   return (
     <AuthProvider currentUser={currentUser}>
       <AppShell
         currentUser={currentUser}
+        locale={locale}
         onLogout={logoutAction}
         unreadNotificationCount={unreadNotificationCount}
       >

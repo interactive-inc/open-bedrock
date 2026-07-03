@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, LogOut, User } from "lucide-react"
+import { Bell, LogOut, Settings, User } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import {
@@ -25,11 +25,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { SettingsDialog } from "@/components/settings-dialog"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   currentUser: MeResponse
+  locale: Locale
   onLogout: () => void
   unreadNotificationCount: number
 }
@@ -42,6 +45,8 @@ export function AppHeader(props: Props) {
   const initial = props.currentUser.name.slice(0, 1).toUpperCase()
 
   const [logoutOpen, setLogoutOpen] = useState(false)
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <header className="flex h-14 items-center gap-2 px-4">
@@ -97,6 +102,11 @@ export function AppHeader(props: Props) {
               <span>プロフィール</span>
             </DropdownMenuItem>
 
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <Settings />
+              <span>設定</span>
+            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
 
             <DropdownMenuItem variant="destructive" onClick={() => setLogoutOpen(true)}>
@@ -105,6 +115,12 @@ export function AppHeader(props: Props) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <SettingsDialog
+          locale={props.locale}
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+        />
 
         <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
           <AlertDialogContent>

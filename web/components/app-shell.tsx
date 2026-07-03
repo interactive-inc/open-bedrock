@@ -26,10 +26,12 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
+  locale: Locale
   onLogout: () => void
   unreadNotificationCount: number
 }
@@ -58,7 +60,7 @@ export function AppShell(props: Props) {
           />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter className="border-t border-border/70 bg-muted/60">
           <div className="flex flex-col gap-0.5 px-2 py-1">
             <span className="text-sm font-medium">{props.currentUser.name}</span>
 
@@ -106,6 +108,7 @@ export function AppShell(props: Props) {
       <SidebarInset>
         <AppHeader
           currentUser={props.currentUser}
+          locale={props.locale}
           onLogout={props.onLogout}
           unreadNotificationCount={props.unreadNotificationCount}
         />

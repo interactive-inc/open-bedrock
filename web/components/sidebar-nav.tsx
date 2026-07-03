@@ -20,7 +20,6 @@ import {
   Package,
   Plane,
   Search,
-  Settings,
   ShieldCheck,
   Sparkles,
   Target,
@@ -100,7 +99,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
     heading: "ホーム",
     items: [
       { label: "ホーム", href: "/", icon: LayoutDashboard },
-      { label: "設定", href: "/settings", icon: Settings },
     ],
   },
   {
