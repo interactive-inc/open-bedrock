@@ -60,7 +60,7 @@ export function AppShell(props: Props) {
           />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter className="border-t border-border/70 bg-muted/60">
           <div className="flex flex-col gap-0.5 px-2 py-1">
             <span className="text-sm font-medium">{props.currentUser.name}</span>
 
