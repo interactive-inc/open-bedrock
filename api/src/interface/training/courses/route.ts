@@ -21,6 +21,8 @@ export const GET = factory.createHandlers(
     z.object({
       category: z.string().optional(),
       status: z.enum(["active", "archived"]).optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
     }),
   ),
   async (c) => {

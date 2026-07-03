@@ -35,9 +35,9 @@ async function MyEnrollments() {
     return <FetchError message="受講一覧の取得に失敗しました" />
   }
 
-  const courses = await getTrainingCourses()
+  const courses = await getTrainingCourses({ limit: 100, offset: 0 })
 
-  const courseList = courses instanceof Error ? [] : courses
+  const courseList = courses instanceof Error ? [] : courses.data
 
   return <MyEnrollmentList enrollments={enrollments} courses={courseList} />
 }
