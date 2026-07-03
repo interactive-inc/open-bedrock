@@ -38,11 +38,13 @@ export const WithAssignments: Story = {
         published_at: null,
       },
     ],
+    patternNameMap: { 1: "早番", 2: "遅番" },
   },
 }
 
 export const Empty: Story = {
   args: {
     assignments: [],
+    patternNameMap: {},
   },
 }

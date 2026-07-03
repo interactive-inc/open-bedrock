@@ -7,6 +7,7 @@ import { createNotificationAction } from "@/app/(app)/notifications/actions"
 import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
