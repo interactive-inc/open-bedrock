@@ -134,32 +134,42 @@ export class RoleRepository {
   }
 
   /**
-   * ロールの permission を一括置換する。既存を削除してから permission キー群を再付与する。
+   * ロールの permission を一括置換する。
+   * permission キーの解決後、既存の DELETE と新規 INSERT を同一の D1 batch にまとめる。
+   * 途中失敗時は batch 全体が rollback され、既存権限が保持される。
    */
   async replacePermissions(
     roleId: number,
     permissionKeys: ReadonlyArray<string>,
   ): Promise<null | Error> {
     try {
-      const db = this.c.var.database
-
-      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId))
+      const db = this.c.env.DB
 
       if (permissionKeys.length === 0) {
+        await db.batch([db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId)])
+
         return null
       }
 
-      const permissionRows = await db
+      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）
+      const drizzle = this.c.var.database
+
+      const permissionRows = await drizzle
         .select()
         .from(permissions)
         .where(inArray(permissions.key, [...permissionKeys]))
 
-      for (const permission of permissionRows) {
-        await db
-          .insert(rolePermissions)
-          .values({ roleId: roleId, permissionId: permission.id })
-          .onConflictDoNothing()
-      }
+      // DELETE と全 INSERT を同一 batch にまとめてアトミックに実行する
+      await db.batch([
+        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId),
+        ...permissionRows.map((permission) =>
+          db
+            .prepare(
+              "INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)",
+            )
+            .bind(roleId, permission.id),
+        ),
+      ])
 
       return null
     } catch (caught) {
@@ -176,4 +186,41 @@ export class RoleRepository {
       return caught instanceof Error ? caught : new Error("failed to delete role")
     }
   }
+
+  /**
+   * ロールと紐づく role_permissions を単一の D1 batch で一括削除する。
+   * batch 内で account_roles に割当がないことを検証し、割当があれば batch ごと rollback する。
+   * TOCTOU を防ぎ、role_permissions の孤立も防ぐ。
+   */
+  async deleteWithPermissionsGuardingAssignment(
+    roleId: number,
+  ): Promise<null | "role_in_use" | Error> {
+    try {
+      const db = this.c.env.DB
+
+      await db.batch([
+        db
+          .prepare(
+            `SELECT CASE WHEN EXISTS (
+             SELECT 1 FROM account_roles WHERE role_id = ?1
+           ) THEN json_extract('', '$') ELSE 1 END AS ok`,
+          )
+          .bind(roleId),
+        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(roleId),
+        db.prepare("DELETE FROM roles WHERE id = ?1").bind(roleId),
+      ])
+
+      return null
+    } catch (caught) {
+      if (isAbortedByRoleInUseGuard(caught)) {
+        return "role_in_use"
+      }
+
+      return caught instanceof Error ? caught : new Error("failed to delete role")
+    }
+  }
+}
+
+function isAbortedByRoleInUseGuard(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("malformed JSON")
 }
