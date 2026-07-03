@@ -26,10 +26,12 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
+  locale: Locale
   onLogout: () => void
   unreadNotificationCount: number
 }
@@ -106,6 +108,7 @@ export function AppShell(props: Props) {
       <SidebarInset>
         <AppHeader
           currentUser={props.currentUser}
+          locale={props.locale}
           onLogout={props.onLogout}
           unreadNotificationCount={props.unreadNotificationCount}
         />
