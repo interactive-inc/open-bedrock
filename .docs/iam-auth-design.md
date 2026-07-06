@@ -11,14 +11,14 @@ fail-open は一切採用しない。認可解決失敗・未知 permission キ�
 
 ## データモデル(新規8テーブル)
 
-- **accounts**: id / employeeId(論理FK, null可) / status(active|suspended|locked) / tokenVersion(default 0) / createdAt / updatedAt。部分 uniqueIndex(employeeId) where NOT NULL で 1従業員=1アカウント。
-- **identities**: id / accountId / provider(password|google|github|oidc) / subject(password=正規化email, OAuth=sub) / secret(PBKDF2のみ, null可) / email(null可) / emailVerified(default 0) / lastUsedAt / createdAt。uniqueIndex(provider, subject)。
-- **roles**: id / key(unique, 不変) / name / description / isSystem(default 0) / createdAt。
-- **permissions**: id / key(unique, "<domain>:<action>[:<scope>]") / description / category。正はコードの PERMISSION_KEYS、テーブルは UI 用の写し。
-- **rolePermissions**: roleId / permissionId。PK(roleId, permissionId)。
-- **accountRoles**: accountId / roleId / grantedBy(null可) / grantedAt。PK(accountId, roleId)。複数ロール可、実効 permission は和集合。
-- **refreshTokens**: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / expiresAt / revokedAt / userAgent / createdAt。
-- **auditLogs**(append-only): id / actorAccountId / action / targetType / targetId / metadata(JSON) / ip / createdAt。UPDATE/DELETE はアプリ層で禁止。
+- accounts: id / employeeId(論理FK, null可) / status(active|suspended|locked) / tokenVersion(default 0) / createdAt / updatedAt。部分 uniqueIndex(employeeId) where NOT NULL で 1従業員=1アカウント。
+- identities: id / accountId / provider(password|google|github|oidc) / subject(password=正規化email, OAuth=sub) / secret(PBKDF2のみ, null可) / email(null可) / emailVerified(default 0) / lastUsedAt / createdAt。uniqueIndex(provider, subject)。
+- roles: id / key(unique, 不変) / name / description / isSystem(default 0) / createdAt。
+- permissions: id / key(unique, "<domain>:<action>[:<scope>]") / description / category。正はコードの PERMISSION_KEYS、テーブルは UI 用の写し。
+- rolePermissions: roleId / permissionId。PK(roleId, permissionId)。
+- accountRoles: accountId / roleId / grantedBy(null可) / grantedAt。PK(accountId, roleId)。複数ロール可、実効 permission は和集合。
+- refreshTokens: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / expiresAt / revokedAt / userAgent / createdAt。
+- auditLogs(append-only): id / actorAccountId / action / targetType / targetId / metadata(JSON) / ip / createdAt。UPDATE/DELETE はアプリ層で禁止。
 
 ## permission カタログ
 
@@ -38,15 +38,15 @@ OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true
 
 ## 実装フェーズ
 
-- **Phase 0**: PERMISSION_KEYS 定義、system role 許可集合確定、schema 追加(z.enum)、seed の role 乖離解消、subset チェック。
-- **Phase 1**: 新8テーブルの migration + schema.ts 同期(無害、既存無変更)。
-- **Phase 2**: backfill(各 employee に accounts/identities/account_roles を 1:1 生成、roles/permissions/role_permissions シード)。冪等。
-- **Phase 3**: 認証カットオーバー(AuthenticateWithPassword、JWT claims 変更、verify-bearer 改修、refresh token)。
-- **Phase 4**: 認可 permission 化(has-permission.ts、can-\* を canX(session) へ、Command.viewerRole→session)。
-- **Phase 4.5**: per-template 動的ロール正規化(approver_roles/owner_role を roleKey 参照へ)。
-- **Phase 5**: IAM/アカウント管理 API・画面・cli(/accounts, /roles, /permissions、escalation guard、last-admin 不変条件)。
-- **Phase 6**: 権限ベースサイドバー(/me に permissions/role_keys、sidebar-nav に requiredPermission)。
-- **Phase 7**: クリーンアップ(employees.email/password_hash/role drop、role 単一参照撤去)。
+- Phase 0: PERMISSION_KEYS 定義、system role 許可集合確定、schema 追加(z.enum)、seed の role 乖離解消、subset チェック。
+- Phase 1: 新8テーブルの migration + schema.ts 同期(無害、既存無変更)。
+- Phase 2: backfill(各 employee に accounts/identities/account_roles を 1:1 生成、roles/permissions/role_permissions シード)。冪等。
+- Phase 3: 認証カットオーバー(AuthenticateWithPassword、JWT claims 変更、verify-bearer 改修、refresh token)。
+- Phase 4: 認可 permission 化(has-permission.ts、can-\* を canX(session) へ、Command.viewerRole→session)。
+- Phase 4.5: per-template 動的ロール正規化(approver_roles/owner_role を roleKey 参照へ)。
+- Phase 5: IAM/アカウント管理 API・画面・cli(/accounts, /roles, /permissions、escalation guard、last-admin 不変条件)。
+- Phase 6: 権限ベースサイドバー(/me に permissions/role_keys、sidebar-nav に requiredPermission)。
+- Phase 7: クリーンアップ(employees.email/password_hash/role drop、role 単一参照撤去)。
 
 ## セキュリティ要点
 
@@ -68,6 +68,8 @@ Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改
   台帳更新に縮小（ロール変更は Grant/Revoke AccountRole へ委譲）。dev seed は seeds/iam.sql で IAM を投入。
 
 全8フェーズ完了。api 2016 pass / cli 118 pass / web 改修由来型エラー 0、migrate（drop 含む）→ seed クリーン通過。
+
+Phase 7 の残作業として残っていた移行互換の role 単一参照も撤去済み。SessionPayload から role フィールドを削除し、api の認可（goal-access・attendance 検索・register-employee）と web の全 can-\* ヘルパー（21+1個）を permission ベースへ統一。/me の role はレスポンス互換のため roleKeys から導出して返す（認可には使わない）。職能別プリセットロール（review_admin / general_affairs / it_admin / auditor、is_system=0）を 0009_role_presets.sql で追加。ロール設計の全体は roles-and-permissions.md を参照。
 
 ## 既知リスク
 
