@@ -103,9 +103,10 @@ describe("POST /roles", () => {
       path: "/roles",
       token: await adminToken(),
       method: "POST",
+      // auditor はプリセットロール(0009_role_presets.sql)で seed 済みのため、テスト専用キーを使う。
       body: {
-        key: "auditor",
-        name: "監査担当",
+        key: "test_auditor",
+        name: "監査担当(テスト)",
         description: null,
         permission_keys: ["dashboard:view"],
       },
@@ -120,7 +121,7 @@ describe("POST /roles", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.key).toBe("auditor")
+      expect(parsed.data.key).toBe("test_auditor")
       expect(parsed.data.is_system).toBe(false)
     }
   })
