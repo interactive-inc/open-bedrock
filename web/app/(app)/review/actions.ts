@@ -31,7 +31,7 @@ export async function createReviewCycleAction(
 ): Promise<ReviewFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
@@ -78,7 +78,7 @@ export async function openReviewCycleAction(
 ): Promise<ReviewFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
@@ -107,7 +107,7 @@ export async function closeReviewCycleAction(
 ): Promise<ReviewFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
@@ -136,7 +136,7 @@ export async function updateReviewCycleAction(
 ): Promise<ReviewFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
@@ -193,7 +193,7 @@ export async function deleteReviewCycleAction(
 ): Promise<ReviewFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 

@@ -1,6 +1,4 @@
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
-
-// 通知の作成を行える特権ロールか判定する（api の canSendNotification と同一基準）。
-export function canManageNotifications(role: string): boolean {
-  return privilegedRoles.includes(role)
+/** 通知を作成・送信できる権限（notification:send）を持つか判定する（api の canSendNotification と同一基準）。 */
+export function canManageNotifications(permissions: ReadonlyArray<string>): boolean {
+  return permissions.includes("notification:send")
 }

@@ -45,7 +45,7 @@ export async function decideApplicationAction(
 ): Promise<DecisionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canDecideApplication(currentUser.role) === false) {
+  if (currentUser instanceof Error || canDecideApplication(currentUser.permissions) === false) {
     return { ok: false, error: "申請を承認・却下する権限がありません" }
   }
 

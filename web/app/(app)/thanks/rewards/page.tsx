@@ -19,7 +19,7 @@ export const metadata = { title: "感謝の景品" }
 export default async function ThanksRewardsPage() {
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageRewards(currentUser.role)
+  const canManage = currentUser instanceof Error ? false : canManageRewards(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

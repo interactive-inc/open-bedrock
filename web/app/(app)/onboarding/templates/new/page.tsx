@@ -14,7 +14,7 @@ export const metadata = { title: "オンボーディングテンプレートの�
 export default async function NewOnboardingTemplatePage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     notFound()
   }
 

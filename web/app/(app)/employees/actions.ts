@@ -72,7 +72,7 @@ export async function createEmployeeAction(
 ): Promise<EmployeeCreateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
@@ -175,7 +175,7 @@ export async function updateEmployeeAction(
 ): Promise<EmployeeUpdateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
@@ -247,7 +247,7 @@ export async function deleteEmployeeAction(
 ): Promise<EmployeeDeleteFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 

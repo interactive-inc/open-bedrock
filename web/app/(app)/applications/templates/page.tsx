@@ -22,7 +22,7 @@ export default async function ApplicationTemplatesPage() {
   const currentUser = await getMe()
 
   const canManage =
-    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
+    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

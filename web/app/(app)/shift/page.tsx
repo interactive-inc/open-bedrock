@@ -26,7 +26,7 @@ export const metadata = { title: "シフト" }
 export default async function ShiftPage() {
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.role)
+  const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.permissions)
 
   const canViewAllSwaps =
     currentUser instanceof Error ? false : canViewAllShiftSwaps(currentUser.permissions)

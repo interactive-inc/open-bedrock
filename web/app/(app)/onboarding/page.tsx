@@ -15,7 +15,7 @@ export const metadata = { title: "オンボーディング" }
 export default async function OnboardingPage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     notFound()
   }
 
