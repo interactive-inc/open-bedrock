@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { cancelShiftSwapRequest } from "@/lib/api/cancel-shift-swap-request"
 import { createShiftAssignment } from "@/lib/api/create-shift-assignment"
 import { createShiftPattern } from "@/lib/api/create-shift-pattern"
@@ -63,6 +64,7 @@ export async function createShiftSwapRequestAction(
 }
 
 // シフト割当作成 Server Action（特権ロール）。employee_code/pattern_code/date 必須、note 任意。
+// 成功時は /shift/manage へ redirect する。
 export async function createShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -117,7 +119,7 @@ export async function createShiftAssignmentAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  return { ok: true, error: null }
+  redirect("/shift/manage")
 }
 
 // シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。
@@ -151,6 +153,7 @@ export async function publishShiftAssignmentAction(
 }
 
 // シフトパターン作成 Server Action（特権ロール）。code/name/start_time/end_time 必須、break_minutes 任意。
+// 成功時は /shift/patterns へ redirect する。
 export async function createShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -219,7 +222,7 @@ export async function createShiftPatternAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  return { ok: true, error: null }
+  redirect("/shift/patterns")
 }
 
 // シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。

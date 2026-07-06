@@ -33,16 +33,13 @@ type Props = {
 }
 
 // 通知の作成フォーム（特権ロール向け）。宛先・種別・タイトル・本文を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+// 成功時は action が一覧へ redirect するため、toast は失敗時のみ出す。
 export function NotificationCreateForm(props: Props) {
-  // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(
     async (previousState: NotificationFormState, formData: FormData) => {
       const next = await createNotificationAction(previousState, formData)
 
-      if (next.ok) {
-        toast.success("通知を作成しました")
-      } else if (next.error !== null) {
+      if (next.error !== null) {
         toast.error(next.error)
       }
 

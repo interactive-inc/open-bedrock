@@ -1,11 +1,12 @@
 import { FetchError } from "@/components/fetch-error"
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { Suspense } from "react"
-import { ShiftPatternCreateForm } from "@/app/(app)/shift/_components/shift-pattern-create-form"
 import { ShiftPatternList } from "@/app/(app)/shift/_components/shift-pattern-list"
 import { BackButton } from "@/components/back-button"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
@@ -14,7 +15,7 @@ export const metadata = { title: "シフトパターン" }
 
 /**
  * シフトパターン一覧。「パターン」というオブジェクトに集中させ、
- * 特権ロールには新規作成フォームを併設する。
+ * 新規作成は /shift/patterns/new に分離して特権ロールにだけ導線を出す。
  */
 export default async function ShiftPatternsPage() {
   const currentUser = await getMe()
@@ -26,24 +27,23 @@ export default async function ShiftPatternsPage() {
       <PageHeader
         title="シフトパターン"
         description="シフトの定型パターンを一覧します。"
-        actions={<BackButton href="/shift" label="シフトに戻る" />}
+        actions={
+          <>
+            <BackButton href="/shift" label="シフトに戻る" />
+
+            {canManage ? (
+              <Button nativeButton={false} render={<Link href="/shift/patterns/new" />}>
+                <Plus />
+                パターンを作成
+              </Button>
+            ) : null}
+          </>
+        }
       />
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
         <Patterns canManage={canManage} />
       </Suspense>
-
-      {canManage ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>シフトパターンを作成</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <ShiftPatternCreateForm />
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   )
 }

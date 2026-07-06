@@ -1,13 +1,13 @@
 import { FetchError } from "@/components/fetch-error"
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { ShiftAssignmentCreateForm } from "@/app/(app)/shift/_components/shift-assignment-create-form"
 import { ShiftAssignmentList } from "@/app/(app)/shift/_components/shift-assignment-list"
 import { BackButton } from "@/components/back-button"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getShiftAssignments } from "@/lib/api/get-shift-assignments"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
@@ -16,7 +16,7 @@ import { canManageShift } from "@/lib/shift/can-manage-shift"
 export const metadata = { title: "シフト管理" }
 
 /**
- * シフトの管理（特権ロールのみ）。横断割当一覧と新規割当フォーム。
+ * シフトの管理（特権ロールのみ）。横断割当一覧を表示し、新規割当は /shift/manage/new に分離する。
  * 権限が無いユーザーには 404 を返し UI を露出しない。
  */
 export default async function ShiftManagePage() {
@@ -30,8 +30,17 @@ export default async function ShiftManagePage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="シフト管理"
-        description="全員のシフト割当を確認し、新しい割当を作成します。"
-        actions={<BackButton href="/shift" label="シフトに戻る" />}
+        description="全員のシフト割当を確認します。"
+        actions={
+          <>
+            <BackButton href="/shift" label="シフトに戻る" />
+
+            <Button nativeButton={false} render={<Link href="/shift/manage/new" />}>
+              <Plus />
+              シフトを割り当て
+            </Button>
+          </>
+        }
       />
 
       <section className="flex flex-col gap-3">
@@ -41,10 +50,6 @@ export default async function ShiftManagePage() {
           <AllAssignments />
         </Suspense>
       </section>
-
-      <Suspense fallback={<ListSkeleton rows={2} />}>
-        <CreateAssignmentSection />
-      </Suspense>
     </div>
   )
 }
@@ -70,26 +75,5 @@ async function AllAssignments() {
       employeeNameMap={{}}
       patternNameMap={patternNameMap}
     />
-  )
-}
-
-async function CreateAssignmentSection() {
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
-
-  const employees =
-    employeeResult instanceof Error
-      ? []
-      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>シフトを割り当て</CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <ShiftAssignmentCreateForm employees={employees} />
-      </CardContent>
-    </Card>
   )
 }
