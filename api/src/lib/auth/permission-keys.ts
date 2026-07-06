@@ -6,7 +6,7 @@ import { z } from "zod"
 
 /**
  * 全 permission のカタログ。key とカテゴリ(UI グルーピング用)の対応。
- * 既存の can-* ゲートと goal-access・インライン判定を正規化したもの。
+ * 既存の can-* ゲートとインライン判定を正規化したもの。
  */
 export const PERMISSION_CATALOG = [
   { key: "dashboard:view", category: "general", description: "ダッシュボードを閲覧する" },

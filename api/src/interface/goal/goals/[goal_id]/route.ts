@@ -30,7 +30,7 @@ function toGoalId(value: string | undefined): number {
   return validateIntParam(value, "goal")
 }
 
-// GET /goals/:goal_id — 目標の詳細（本人と特権ロールのみ）
+// GET /goals/:goal_id — 目標の詳細（本人と goal:read:all 権限のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
 
@@ -41,7 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const goal = await new GetGoal(c).run({
     goalId: toGoalId(c.req.param("goal_id") ?? ""),
     viewerEmployeeId: viewer.employeeId,
-    viewerRole: viewer.role,
+    session: viewer,
   })
 
   if (goal instanceof ApplicationError) {

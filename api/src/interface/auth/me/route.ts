@@ -1,4 +1,5 @@
 import { factory } from "@/lib/factory"
+import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
@@ -38,7 +39,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     code: row.code,
     name: row.name,
     email: emailByEmployeeId.get(row.id) ?? "",
-    role: session.role,
+    // レスポンス互換: 単一 role は roleKeys の代表値から導出する。
+    role: toPrimaryRole(session.roleKeys),
     dept_name: row.deptName,
     position: row.position,
     permissions: [...session.permissions],

@@ -1,15 +1,14 @@
 import type { AttendanceSearchQuery } from "@/interface/attendance/attendance-search-query"
+import { canReadAllAttendance } from "@/lib/attendance/can-read-all-attendance"
 import { ForbiddenError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-
-const privilegedRoles: ReadonlyArray<string> = ["manager", "hr", "admin"]
+import type { SessionPayload } from "@/env"
 
 export type Props = {
   requestedEmployeeId: number | null
   from: string | null
   to: string | null
-  viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
 }
 
 // 検索条件を解決する。他人を指定したのに権限がなければ判別可能な失敗を返す。
@@ -17,14 +16,12 @@ export function resolveAttendanceSearchQuery(
   props: Props,
 ): AttendanceSearchQuery | ApplicationError {
   if (props.requestedEmployeeId === null) {
-    return { employeeId: props.viewerEmployeeId, from: props.from, to: props.to }
+    return { employeeId: props.session.employeeId, from: props.from, to: props.to }
   }
 
-  const isViewingOthers = props.requestedEmployeeId !== props.viewerEmployeeId
+  const isViewingOthers = props.requestedEmployeeId !== props.session.employeeId
 
-  const canViewOthers = privilegedRoles.includes(props.viewerRole)
-
-  if (isViewingOthers && !canViewOthers) {
+  if (isViewingOthers && canReadAllAttendance(props.session) === false) {
     return new ForbiddenError("cannot view other employee attendance", "forbidden")
   }
 

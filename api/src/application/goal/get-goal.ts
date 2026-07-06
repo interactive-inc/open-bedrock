@@ -1,6 +1,6 @@
 import type { Goal } from "@/domain/goal/goal.entity"
-import type { Context } from "@/env"
-import { canViewOthers } from "@/lib/goal/goal-access"
+import type { Context, SessionPayload } from "@/env"
+import { canReadAllGoals } from "@/lib/goal/can-read-all-goals"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -8,11 +8,11 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 export type Command = {
   goalId: number
   viewerEmployeeId: number
-  viewerRole: string
+  session: SessionPayload
 }
 
 /**
- * 目標を1件取得する。本人と特権ロール以外の閲覧を拒否する。
+ * 目標を1件取得する。本人と goal:read:all 権限以外の閲覧を拒否する。
  */
 export class GetGoal {
   constructor(private readonly c: Context) {}
@@ -32,7 +32,7 @@ export class GetGoal {
 
     const isOwner = goal.employeeId === command.viewerEmployeeId
 
-    if (isOwner === false && canViewOthers(command.viewerRole) === false) {
+    if (isOwner === false && canReadAllGoals(command.session) === false) {
       return new ForbiddenError("cannot view this goal", "not_viewable")
     }
 

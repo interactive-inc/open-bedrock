@@ -1,7 +1,7 @@
-// 移行互換: 複数ロールを持つアカウントから、既存 can-*(単一 role) が期待する代表 role を導出する。
-// 既存 can-* は admin>hr>manager>member の強弱で判定していたため、保持する system role のうち
+// レスポンス互換: 複数ロールを持つアカウントから、/me が返す単一 role の代表値を導出する。
+// 旧 can-* は admin>hr>manager>member の強弱で判定していたため、保持する system role のうち
 // 最も強いものを代表とする。system role を持たない(動的ロールのみ)場合は member 扱い。
-// Phase 7 で can-* が permission ベースへ移行したら、この互換関数は不要になる。
+// 認可判定には使わない(認可は hasPermission が正)。
 
 const SYSTEM_ROLE_STRENGTH: ReadonlyArray<string> = ["admin", "hr", "manager", "member"]
 

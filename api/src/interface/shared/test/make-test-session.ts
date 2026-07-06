@@ -19,6 +19,5 @@ export function makeTestSession(role: string, employeeId = 1): SessionPayload {
     employeeStatus: "active",
     permissions: permissions,
     roleKeys: [role],
-    role: role,
   }
 }

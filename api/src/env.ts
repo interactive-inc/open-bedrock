@@ -20,15 +20,13 @@ export type Bindings = {
 }
 
 // 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
-// permissions/roleKeys が認可の正。role は移行互換用(Phase 7 で撤去予定、新規参照禁止)。
+// permissions/roleKeys が認可の正。認可判定は hasPermission(session, key) に委譲する。
 export type SessionPayload = {
   accountId: number
   employeeId: number
   employeeStatus: EmployeeStatus
   permissions: ReadonlySet<string>
   roleKeys: ReadonlyArray<string>
-  // 移行互換: 既存 can-* が単一 role を見るため、roleKeys の代表値を載せる。新規参照は禁止。
-  role: string
 }
 
 // リクエストスコープの変数。database に Drizzle、session に本人を載せる。
