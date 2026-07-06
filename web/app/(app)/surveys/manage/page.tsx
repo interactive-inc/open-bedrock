@@ -30,7 +30,7 @@ export const metadata = { title: "サーベイ管理" }
 export default async function SurveyManagePage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     notFound()
   }
 

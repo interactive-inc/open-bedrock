@@ -1,6 +1,4 @@
-const privilegedRoles: ReadonlyArray<string> = ["hr", "admin"]
-
-// 組織図の部署ノードを作成・変更・削除できるロールかを判定する（api の canManageOrg と同一基準）。
-export function canManageOrg(role: string): boolean {
-  return privilegedRoles.includes(role)
+/** 組織図の部署ノードを作成・変更・削除できる権限（org:manage）を持つか判定する（api の canManageOrg と同一基準）。 */
+export function canManageOrg(permissions: ReadonlyArray<string>): boolean {
+  return permissions.includes("org:manage")
 }

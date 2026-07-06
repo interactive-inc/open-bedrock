@@ -71,7 +71,7 @@ export async function createShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -129,7 +129,7 @@ export async function publishShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -160,7 +160,7 @@ export async function createShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -232,7 +232,7 @@ export async function updateShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -272,7 +272,7 @@ export async function deleteShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -302,7 +302,7 @@ export async function updateShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -338,7 +338,7 @@ export async function deleteShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 

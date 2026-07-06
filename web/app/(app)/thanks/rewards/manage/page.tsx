@@ -14,7 +14,7 @@ export const metadata = { title: "景品の管理" }
 export default async function ThanksRewardsManagePage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageRewards(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageRewards(currentUser.permissions) === false) {
     notFound()
   }
 

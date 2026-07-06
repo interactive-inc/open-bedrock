@@ -11,7 +11,7 @@ export const metadata = { title: "会議室を登録" }
 export default async function NewRoomPage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageRooms(me.role)) {
+  if (me instanceof Error || !canManageRooms(me.permissions)) {
     notFound()
   }
 

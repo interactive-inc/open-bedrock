@@ -14,7 +14,7 @@ export const metadata = { title: "通知を作成" }
 export default async function NotificationNewPage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageNotifications(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageNotifications(currentUser.permissions) === false) {
     notFound()
   }
 

@@ -14,7 +14,7 @@ export const metadata = { title: "シフトを割り当て" }
 export default async function ShiftAssignmentNewPage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     notFound()
   }
 

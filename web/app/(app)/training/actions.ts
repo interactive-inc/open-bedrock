@@ -80,7 +80,7 @@ export async function createTrainingCourseAction(
 ): Promise<TrainingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     return { ok: false, error: "研修コースを管理する権限がありません" }
   }
 
@@ -183,7 +183,7 @@ export async function updateTrainingCourseAction(
 ): Promise<TrainingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     return { ok: false, error: "研修コースを管理する権限がありません" }
   }
 
@@ -256,7 +256,7 @@ export async function archiveTrainingCourseAction(
 ): Promise<TrainingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     return { ok: false, error: "研修コースを管理する権限がありません" }
   }
 

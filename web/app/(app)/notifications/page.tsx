@@ -28,7 +28,8 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
 
   const currentUser = await getMe()
 
-  const canCreate = currentUser instanceof Error ? false : canManageNotifications(currentUser.role)
+  const canCreate =
+    currentUser instanceof Error ? false : canManageNotifications(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

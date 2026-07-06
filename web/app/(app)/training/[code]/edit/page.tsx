@@ -23,7 +23,7 @@ export default async function EditTrainingCoursePage(props: Props) {
 
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     notFound()
   }
 

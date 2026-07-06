@@ -14,7 +14,7 @@ export const metadata = { title: "公募の新規作成" }
 export default async function NewCareerPostingPage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.permissions) === false) {
     notFound()
   }
 

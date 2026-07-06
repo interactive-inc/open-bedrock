@@ -30,7 +30,8 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
 
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageTraining(currentUser.role)
+  const canManage =
+    currentUser instanceof Error ? false : canManageTraining(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

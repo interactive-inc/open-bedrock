@@ -1,5 +1,4 @@
-// application:read:all を持つかで判定する（api の canViewAllApplications と同一基準）。
-// role 名ではなく /me が返す permissions 配列を見て判定する。
+/** 申請を全件（他者分含む）閲覧できる権限（application:read:all）を持つか判定する（api の canViewAllApplications と同一基準）。 */
 export function canViewAllApplications(permissions: ReadonlyArray<string>): boolean {
   return permissions.includes("application:read:all")
 }

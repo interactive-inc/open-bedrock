@@ -18,7 +18,8 @@ export const metadata = { title: "社内公募" }
 export default async function CareerPostingsPage() {
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageCareerPostings(currentUser.role)
+  const canManage =
+    currentUser instanceof Error ? false : canManageCareerPostings(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

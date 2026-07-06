@@ -20,7 +20,7 @@ export const metadata = { title: "シフトパターン" }
 export default async function ShiftPatternsPage() {
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.role)
+  const canManage = currentUser instanceof Error ? false : canManageShift(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

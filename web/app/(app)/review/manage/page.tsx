@@ -16,7 +16,7 @@ export const metadata = { title: "評価の管理" }
 export default async function ReviewManagePage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canAdministerCycle(currentUser.role) === false) {
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
     notFound()
   }
 

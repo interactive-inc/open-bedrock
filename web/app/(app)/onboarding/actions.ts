@@ -28,7 +28,7 @@ export async function assignOnboardingAction(
 ): Promise<AssignState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
@@ -140,7 +140,7 @@ export async function rescheduleOnboardingAssignmentAction(
 ): Promise<AssignmentMutationState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
@@ -187,7 +187,7 @@ export async function cancelOnboardingAssignmentAction(
 ): Promise<AssignmentMutationState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
@@ -277,7 +277,7 @@ export async function createOnboardingTemplateAction(
 ): Promise<TemplateMutationState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
@@ -308,7 +308,7 @@ export async function updateOnboardingTemplateAction(
 ): Promise<TemplateMutationState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
@@ -343,7 +343,7 @@ export async function deleteOnboardingTemplateAction(
 ): Promise<TemplateMutationState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageOnboarding(me.role)) {
+  if (me instanceof Error || !canManageOnboarding(me.permissions)) {
     return { ok: false, message: "権限がありません" }
   }
 
