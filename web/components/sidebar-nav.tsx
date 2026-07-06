@@ -97,9 +97,7 @@ function filterByPermission(
 const navGroups: ReadonlyArray<NavGroup> = [
   {
     heading: "ホーム",
-    items: [
-      { label: "ホーム", href: "/", icon: LayoutDashboard },
-    ],
+    items: [{ label: "ホーム", href: "/", icon: LayoutDashboard }],
   },
   {
     heading: "受信箱",

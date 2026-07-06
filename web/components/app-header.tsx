@@ -116,11 +116,7 @@ export function AppHeader(props: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <SettingsDialog
-          locale={props.locale}
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-        />
+        <SettingsDialog locale={props.locale} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
         <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
           <AlertDialogContent>
