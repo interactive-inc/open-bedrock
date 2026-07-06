@@ -1,4 +1,5 @@
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("resolveEvaluationPermission", () => {
@@ -7,7 +8,7 @@ describe("resolveEvaluationPermission", () => {
       kind: "self",
       goalEmployeeId: 10,
       viewerEmployeeId: 10,
-      viewerRole: "member",
+      session: makeTestSession("member", 10),
     })
 
     expect(permission).toBe(null)
@@ -18,73 +19,73 @@ describe("resolveEvaluationPermission", () => {
       kind: "self",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "member",
+      session: makeTestSession("member", 20),
     })
 
     expect(permission).toEqual({ reason: "forbidden" })
   })
 
-  test("manager kind: manager role returns null", () => {
+  test("manager kind: manager session returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "manager",
+      session: makeTestSession("manager", 20),
     })
 
     expect(permission).toBe(null)
   })
 
-  test("manager kind: hr role returns null", () => {
+  test("manager kind: hr session returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "hr",
+      session: makeTestSession("hr", 20),
     })
 
     expect(permission).toBe(null)
   })
 
-  test("manager kind: admin role returns null", () => {
+  test("manager kind: admin session returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "admin",
+      session: makeTestSession("admin", 20),
     })
 
     expect(permission).toBe(null)
   })
 
-  test("manager kind: member role returns forbidden", () => {
+  test("manager kind: member session returns forbidden", () => {
     const permission = resolveEvaluationPermission({
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "member",
+      session: makeTestSession("member", 20),
     })
 
     expect(permission).toEqual({ reason: "forbidden" })
   })
 
-  test("final kind: manager role returns null", () => {
+  test("final kind: manager session returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "final",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "manager",
+      session: makeTestSession("manager", 20),
     })
 
     expect(permission).toBe(null)
   })
 
-  test("final kind: member role returns forbidden", () => {
+  test("final kind: member session returns forbidden", () => {
     const permission = resolveEvaluationPermission({
       kind: "final",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      viewerRole: "member",
+      session: makeTestSession("member", 20),
     })
 
     expect(permission).toEqual({ reason: "forbidden" })

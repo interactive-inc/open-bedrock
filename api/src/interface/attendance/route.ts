@@ -16,7 +16,7 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 
-// GET /attendance — 勤怠検索（他人の閲覧は権限ロールのみ）
+// GET /attendance — 勤怠検索（他人の閲覧は attendance:read:all 権限のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const parsed = attendanceListQuerySchema.safeParse(c.req.query())
 
@@ -40,8 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     requestedEmployeeId,
     from: parsed.data.from ?? null,
     to: parsed.data.to ?? null,
-    viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    session: session,
   })
 
   if (query instanceof ApplicationError) {

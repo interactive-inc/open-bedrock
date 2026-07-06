@@ -1,5 +1,4 @@
 import { tokenPayloadSchema } from "@/lib/auth/token-payload"
-import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -66,7 +65,6 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     employeeStatus: employee.status,
     permissions: account.permissions,
     roleKeys: account.roleKeys,
-    role: toPrimaryRole(account.roleKeys),
   })
 
   await next()
