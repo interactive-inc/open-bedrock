@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { createOrgDepartment } from "@/lib/api/create-org-department"
 import { deleteOrgDepartment } from "@/lib/api/delete-org-department"
 import { getMe } from "@/lib/api/get-me"
@@ -15,7 +16,7 @@ export type OrgDepartmentActionState = {
 }
 
 // 部署ノード作成 Server Action。code/department_id/order 必須、parent/manager は任意。
-// 権限不足やコード重複は api がエラーを返す。成功時は /org を revalidate する。
+// 権限不足やコード重複は api がエラーを返す。成功時は一覧へ redirect する。
 export async function createOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
@@ -58,7 +59,9 @@ export async function createOrgDepartmentAction(
 
   revalidatePath("/org")
 
-  return { ok: true, error: null }
+  revalidatePath("/org/departments")
+
+  redirect("/org/departments")
 }
 
 // 部署ノード変更 Server Action。code/order 必須、parent/manager は任意。
