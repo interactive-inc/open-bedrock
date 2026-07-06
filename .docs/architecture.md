@@ -24,7 +24,7 @@ cli は引数をローカルの HTTP リクエストに変換し、内部の Hon
 
 ログインで取得した JWT トークンを Authorization ヘッダに Bearer トークンとして付与する。cli はトークンを ~/.karte/config.json に保存する。web は httpOnly cookie に保持する。api は jose でトークンを検証する。
 
-JWT の有効期限は発行から 8 時間。期限切れトークンは 401 を返す。
+認証情報は identities テーブル、アカウント状態は accounts テーブルが正で、従業員台帳(employees)は認証情報を持たない。アクセストークンの有効期限は 1 時間、リフレッシュトークンは 7 日でローテーションする(POST /auth/refresh、再利用検知つき)。期限切れ・tokenVersion 不一致のトークンは 401 を返す。web は middleware がアクセストークン失効時に refresh_token cookie から自動で再発行する。設計の全体は [[iam-auth-design|IAM 認証・認可システム設計]] を参照。
 
 ## Security
 
@@ -40,7 +40,7 @@ API レスポンスには hono/secure-headers で X-Content-Type-Options: nosnif
 
 リクエストボディは 1 MB を上限とする(Hono bodyLimit ミドルウェア)。フリーテキストフィールドは最大 200〜50,000 字、ID・コード類は最大 200 字のバリデーションを各ルートに設ける。日付フィールドは ISO 8601 形式(YYYY-MM-DD)を強制する。
 
-ルートの認可は employee_id の所有者照合で行う。他者のデータへのアクセスは application の summary など明示的に許可された操作を除き拒否する。
+ルートの認可は permission ベースで行う。verify-bearer がリクエスト毎に DB からアカウントの permission 集合を解決し、各ルートの can- ヘルパーが deny-by-default で判定する。自分のデータ(self)は permission にせず employee_id の所有者照合で許可する。ロールは permission の集合として動的に定義できる。詳細は [[roles-and-permissions|ロールと権限]] を参照。
 
 状態遷移を伴う操作(休暇申請の承認・却下など)は事前条件チェックを持ち、同一リクエストの二重処理を防ぐ。
 

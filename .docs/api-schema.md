@@ -4,7 +4,9 @@ api ワークスペース(Hono on Cloudflare Workers)が提供する HTTP API。
 
 ## 認証方式
 
-ログインで JWT トークンを取得し、以降のリクエストは Authorization ヘッダに Bearer トークンを付与する。api は jose でトークンを検証する。
+ログイン(POST /auth/login)でアクセストークン(JWT、1時間)とリフレッシュトークン(7日)を取得し、以降のリクエストは Authorization ヘッダに Bearer トークンを付与する。アクセストークンの失効時は POST /auth/refresh でローテーション再発行する。api は jose でトークンを検証する。
+
+認可は permission ベース(deny-by-default)で、権限のないリクエストは 403 を返す。考え方は [[roles-and-permissions|ロールと権限]] を参照する。
 
 ## エンドポイント構造
 
