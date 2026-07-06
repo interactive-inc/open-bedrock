@@ -60,7 +60,13 @@ async function createAuditorRole(token: string, db: D1Database): Promise<number>
     path: "/roles",
     token,
     method: "POST",
-    body: { key: "auditor", name: "監査", description: null, permission_keys: ["dashboard:view"] },
+    // auditor はプリセットロール(0009_role_presets.sql)で seed 済みのため、テスト専用キーを使う。
+    body: {
+      key: "test_auditor",
+      name: "監査(テスト)",
+      description: null,
+      permission_keys: ["dashboard:view"],
+    },
   })
 
   const body = (await response.json()) as { id: number }
