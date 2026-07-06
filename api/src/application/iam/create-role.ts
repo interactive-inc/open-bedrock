@@ -5,7 +5,6 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import type { RoleRow } from "@/schema"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
   session: SessionPayload
@@ -41,25 +40,20 @@ export class CreateRole {
 
     const roleRepository = new RoleRepository(this.c)
 
-    const created = await roleRepository.create({
+    const created = await roleRepository.createWithPermissions({
       key: command.key,
       name: command.name,
       description: command.description,
       createdAt: command.now,
+      permissionKeys: command.permissionKeys,
     })
 
-    if (created instanceof UniqueConstraintError) {
+    if (created === "role_key_conflict") {
       return new ConflictError("role key already exists", "role_key_conflict")
     }
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create role", { cause: created })
-    }
-
-    const replaced = await roleRepository.replacePermissions(created.id, command.permissionKeys)
-
-    if (replaced instanceof Error) {
-      return new UnexpectedError("failed to attach role permissions", { cause: replaced })
     }
 
     return created
