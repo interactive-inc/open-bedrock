@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import {
-  createOrgDepartmentAction,
   deleteOrgDepartmentAction,
   updateOrgDepartmentAction,
 } from "@/app/(app)/org/departments/actions"
@@ -33,13 +32,11 @@ type Props = {
   departments: ReadonlyArray<OrgDepartmentResponse>
 }
 
-// 部署ノードの管理表。新規作成フォームと、各行の変更（Dialog）・削除ボタンを置く。
-// 作成・変更・削除はいずれも権限が必要で、権限不足時は api がエラーを返す。
+// 部署ノードの管理表。各行の変更（Dialog）・削除ボタンを置く。新規作成は /org/departments/new で行う。
+// 変更・削除はいずれも権限が必要で、権限不足時は api がエラーを返す。
 export function OrgDepartmentManagerList(props: Props) {
   return (
     <div className="flex flex-col gap-6">
-      <CreateDepartmentForm />
-
       <div className="overflow-x-auto">
         <Table aria-label="一覧">
           <TableHeader>
@@ -84,71 +81,6 @@ export function OrgDepartmentManagerList(props: Props) {
         </Table>
       </div>
     </div>
-  )
-}
-
-// 部署ノード作成フォーム。コード・マスタ ID・表示順は必須、親と責任者は任意。
-function CreateDepartmentForm() {
-  async function reduce(
-    previousState: OrgDepartmentActionState,
-    formData: FormData,
-  ): Promise<OrgDepartmentActionState> {
-    const result = await createOrgDepartmentAction(previousState, formData)
-
-    if (result.ok) {
-      toast.success("部署を作成しました")
-    } else if (result.error !== null) {
-      toast.error(result.error)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
-
-  return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-md border p-4">
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="create_code">部署コード</FieldLabel>
-
-          <Input id="create_code" name="code" placeholder="D010" />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="create_department_id">部署マスタ ID</FieldLabel>
-
-          <Input id="create_department_id" name="department_id" type="number" />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="create_parent_code">親コード</FieldLabel>
-
-          <Input id="create_parent_code" name="parent_code" placeholder="任意" />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="create_manager">責任者の従業員コード</FieldLabel>
-
-          <Input id="create_manager" name="manager_employee_code" placeholder="任意" />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="create_order">表示順</FieldLabel>
-
-          <Input id="create_order" name="order" type="number" />
-        </Field>
-      </FieldGroup>
-
-      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-
-      <Button type="submit" disabled={pending}>
-        部署を作成
-      </Button>
-    </form>
   )
 }
 
