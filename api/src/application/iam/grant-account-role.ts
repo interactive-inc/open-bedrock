@@ -70,7 +70,7 @@ export class GrantAccountRole {
       return new NotFoundError("account not found", "account_not_found")
     }
 
-    const granted = await accountRepository.grantRole({
+    const granted = await accountRepository.grantRoleAndBumpTokenVersion({
       accountId: command.accountId,
       roleId: role.id,
       grantedBy: command.session.accountId,
@@ -79,13 +79,6 @@ export class GrantAccountRole {
 
     if (granted instanceof Error) {
       return new UnexpectedError("failed to grant role", { cause: granted })
-    }
-
-    // 付与した権限を即時反映させるため対象の既存トークンを失効させる。
-    const bumped = await accountRepository.bumpTokenVersion(command.accountId, command.now)
-
-    if (bumped instanceof Error) {
-      return new UnexpectedError("failed to revoke sessions", { cause: bumped })
     }
 
     return { reason: "granted" }

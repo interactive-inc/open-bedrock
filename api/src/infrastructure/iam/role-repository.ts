@@ -78,6 +78,45 @@ export class RoleRepository {
     }
   }
 
+  /**
+   * ロール作成と権限付与を原子的に行う。
+   * create で role を挿入し、その ID を使って replacePermissions で権限を一括挿入する。
+   * replacePermissions が失敗した場合はロールを削除してクリーンアップする。
+   */
+  async createWithPermissions(props: {
+    key: string
+    name: string
+    description: string | null
+    createdAt: number
+    permissionKeys: ReadonlyArray<string>
+  }): Promise<RoleRow | "role_key_conflict" | Error> {
+    const created = await this.create({
+      key: props.key,
+      name: props.name,
+      description: props.description,
+      createdAt: props.createdAt,
+    })
+
+    if (created instanceof UniqueConstraintError) {
+      return "role_key_conflict"
+    }
+
+    if (created instanceof Error) {
+      return created
+    }
+
+    const replaced = await this.replacePermissions(created.id, props.permissionKeys)
+
+    if (replaced instanceof Error) {
+      // 権限付与が失敗したらロールを削除して孤立を防ぐ
+      await this.deleteById(created.id)
+
+      return replaced
+    }
+
+    return created
+  }
+
   async permissionKeysOf(roleId: number): Promise<ReadonlyArray<string> | Error> {
     try {
       const grants = await this.c.var.database
@@ -177,6 +216,48 @@ export class RoleRepository {
     }
   }
 
+  /**
+   * ロールのメタ情報と権限を単一の D1 batch で原子的に更新する。
+   * 途中失敗でメタだけ変わって権限が旧のままになることを防ぐ。
+   */
+  async updateMetaAndPermissions(props: {
+    roleId: number
+    name: string
+    description: string | null
+    permissionKeys: ReadonlyArray<string>
+  }): Promise<null | Error> {
+    try {
+      const db = this.c.env.DB
+
+      const permissionIds =
+        props.permissionKeys.length === 0
+          ? []
+          : await this.resolvePermissionIds(props.permissionKeys)
+
+      if (permissionIds instanceof Error) {
+        return permissionIds
+      }
+
+      await db.batch([
+        db
+          .prepare("UPDATE roles SET name = ?2, description = ?3 WHERE id = ?1")
+          .bind(props.roleId, props.name, props.description),
+        db.prepare("DELETE FROM role_permissions WHERE role_id = ?1").bind(props.roleId),
+        ...permissionIds.map((permissionId) =>
+          db
+            .prepare(
+              "INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?1, ?2)",
+            )
+            .bind(props.roleId, permissionId),
+        ),
+      ])
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to update role")
+    }
+  }
+
   async deleteById(roleId: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(roles).where(eq(roles.id, roleId))
@@ -217,6 +298,24 @@ export class RoleRepository {
       }
 
       return caught instanceof Error ? caught : new Error("failed to delete role")
+    }
+  }
+
+  /**
+   * permission キーを ID に解決する。batch 外の読み取り専用操作。
+   */
+  private async resolvePermissionIds(
+    permissionKeys: ReadonlyArray<string>,
+  ): Promise<ReadonlyArray<number> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(permissions)
+        .where(inArray(permissions.key, [...permissionKeys]))
+
+      return rows.map((row) => row.id)
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to resolve permission ids")
     }
   }
 }
