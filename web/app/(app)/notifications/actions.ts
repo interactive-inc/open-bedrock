@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { createNotification } from "@/lib/api/create-notification"
 import { getMe } from "@/lib/api/get-me"
 import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
@@ -74,6 +75,7 @@ function toNotificationKind(value: FormDataEntryValue | null): NotificationKind 
 }
 
 // 通知作成 Server Action（特権ロール）。recipient_employee_code/kind/title 必須、body 任意。
+// 成功時は一覧へ redirect する。
 export async function createNotificationAction(
   _previousState: NotificationFormState,
   formData: FormData,
@@ -121,5 +123,5 @@ export async function createNotificationAction(
 
   revalidatePath("/notifications")
 
-  return { ok: true, error: null }
+  redirect("/notifications")
 }
