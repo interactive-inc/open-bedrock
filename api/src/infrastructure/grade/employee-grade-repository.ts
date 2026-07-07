@@ -52,6 +52,7 @@ export class EmployeeGradeRepository {
           effectiveDate: employeeGrade.effectiveDate,
           reason: employeeGrade.reason,
           createdAt: employeeGrade.createdAt,
+          reviewCycleId: employeeGrade.reviewCycleId,
         })
         .returning()
 

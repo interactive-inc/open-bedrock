@@ -1,6 +1,7 @@
 import type {
   AccountStatus,
   BatchJobStatus,
+  CalendarDayKind,
   EmployeeStatus,
   ExpenseApprovalAction,
   ExpenseCategory,
@@ -10,6 +11,7 @@ import type {
   LeaveType,
   RedemptionStatus,
   RingiStatus,
+  WorkStyle,
 } from "@/lib/schemas"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
@@ -147,6 +149,8 @@ export const reviewForms = sqliteTable("review_forms", {
   comment: text("comment"),
   status: text("status").notNull(),
   submittedAt: text("submitted_at"),
+  // 開示制御。hidden は被評価者本人に非公開、disclosed で本人閲覧可。既存行は disclosed 互換。
+  visibility: text("visibility").notNull().default("disclosed"),
 })
 
 export type ReviewFormRow = InferSelectModel<typeof reviewForms>
@@ -422,6 +426,39 @@ export const attendanceRecords = sqliteTable(
 )
 
 export type AttendanceRecordRow = InferSelectModel<typeof attendanceRecords>
+
+// 会社カレンダー（会社休日と振替出勤日の記録）。通常営業日は行を持たない。判定・計算は持たず記録のみ。
+export const companyCalendarDays = sqliteTable(
+  "company_calendar_days",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    calendarDate: text("calendar_date").notNull(),
+    kind: text("kind").notNull().$type<CalendarDayKind>(),
+    name: text("name"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一日の重複登録を DB レベルで防ぐ（1 日 1 行）。
+  (table) => [uniqueIndex("uq_company_calendar_days_date").on(table.calendarDate)],
+)
+
+export type CompanyCalendarDayRow = InferSelectModel<typeof companyCalendarDays>
+
+// 従業員の勤務形態の期間つき記録（regular / flextime / discretionary / shift）。制度の適法性判定はしない。事実の記録のみ。
+export const employeeWorkStyles = sqliteTable(
+  "employee_work_styles",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    style: text("style").notNull().$type<WorkStyle>(),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_employee_work_styles_employee").on(table.employeeId)],
+)
+
+export type EmployeeWorkStyleRow = InferSelectModel<typeof employeeWorkStyles>
 
 // バッチジョブの実行状況（夜間同期・通知送信などの記録）。
 export const batchJobs = sqliteTable("batch_jobs", {
@@ -857,6 +894,8 @@ export const employeeGrades = sqliteTable(
     effectiveDate: text("effective_date").notNull(),
     reason: text("reason"),
     createdAt: text("created_at").notNull(),
+    // 任意で評価サイクルへ紐付ける（等級と評価の接続）。未紐付けは null。
+    reviewCycleId: integer("review_cycle_id"),
   },
   // 同一社員・同一発効日の割当の重複を DB レベルで防ぐ。
   (table) => [
@@ -967,6 +1006,61 @@ export const decisions = sqliteTable(
 )
 
 export type DecisionRow = InferSelectModel<typeof decisions>
+
+// ライセンス・SaaS 台帳（更新期限・管理担当の事実記録。支払・会計連動は持たない）
+export const licenses = sqliteTable("licenses", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  vendor: text("vendor"),
+  category: text("category"),
+  seats: integer("seats"),
+  renewalDeadline: text("renewal_deadline"),
+  ownerEmployeeId: integer("owner_employee_id"),
+  note: text("note"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type LicenseRow = InferSelectModel<typeof licenses>
+
+// インシデント記録（発生した障害・事故の事実記録。原因判定は持たない）
+export const itIncidents = sqliteTable("it_incidents", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  occurredAt: text("occurred_at").notNull(),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  severity: text("severity"),
+  status: text("status").notNull(),
+  resolvedAt: text("resolved_at"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type ItIncidentRow = InferSelectModel<typeof itIncidents>
+
+// 予算枠（会計年度・部署ごとの予算の事実記録。金額は整数円）
+export const budgets = sqliteTable("budgets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  fiscalYear: integer("fiscal_year").notNull(),
+  departmentCode: text("department_code"),
+  title: text("title").notNull(),
+  amount: integer("amount").notNull(),
+  note: text("note"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type BudgetRow = InferSelectModel<typeof budgets>
+
+// 予算枠の消化記録（枠に対する手動の消化記録。稟議・経費との自動連動はしない）
+export const budgetConsumptions = sqliteTable("budget_consumptions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  budgetId: integer("budget_id").notNull(),
+  amount: integer("amount").notNull(),
+  note: text("note"),
+  recordedOn: text("recorded_on").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type BudgetConsumptionRow = InferSelectModel<typeof budgetConsumptions>
 
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
 // IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
@@ -1131,6 +1225,241 @@ export const contracts = sqliteTable(
 
 export type ContractRow = InferSelectModel<typeof contracts>
 
+// 社内アナウンス（全社お知らせ。draft→published→archived の状態を持つ）。
+export const announcements = sqliteTable(
+  "announcements",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    title: text("title").notNull(),
+    bodyMd: text("body_md").notNull(),
+    publishedOn: text("published_on"),
+    authorEmployeeId: integer("author_employee_id").notNull(),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_announcements_status").on(table.status)],
+)
+
+export type AnnouncementRow = InferSelectModel<typeof announcements>
+
+// 規程集（就業規則などの版管理台帳）。
+export const regulations = sqliteTable(
+  "regulations",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    code: text("code").notNull().unique(),
+    title: text("title").notNull(),
+    category: text("category"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_regulations_status").on(table.status)],
+)
+
+export type RegulationRow = InferSelectModel<typeof regulations>
+
+// 規程の改定版（version は整数の連番。同一規程内で version は一意）。
+export const regulationVersions = sqliteTable(
+  "regulation_versions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    regulationId: integer("regulation_id").notNull(),
+    version: integer("version").notNull(),
+    bodyMd: text("body_md").notNull(),
+    effectiveOn: text("effective_on").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("idx_regulation_versions_unique").on(table.regulationId, table.version),
+    index("idx_regulation_versions_regulation").on(table.regulationId),
+  ],
+)
+
+export type RegulationVersionRow = InferSelectModel<typeof regulationVersions>
+
+// 文書台帳（契約書・許認可などのメタデータ台帳。本体ファイルは持たず所在のみ記録する）。
+export const documents = sqliteTable(
+  "documents",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    title: text("title").notNull(),
+    category: text("category"),
+    location: text("location").notNull(),
+    partnerCode: text("partner_code"),
+    expiresOn: text("expires_on"),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_documents_expires_on").on(table.expiresOn)],
+)
+
+export type DocumentRow = InferSelectModel<typeof documents>
+
+// 資格・免許マスタ（コード・名称・発行元・説明）。会社で管理対象とする資格の台帳。
+export const certifications = sqliteTable("certifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  issuer: text("issuer"),
+  description: text("description"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type CertificationRow = InferSelectModel<typeof certifications>
+
+// 従業員の資格保有記録（取得日・有効期限つき）。更新要否の判定はしない（台帳）。
+export const employeeCertifications = sqliteTable(
+  "employee_certifications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    certificationId: integer("certification_id").notNull(),
+    acquiredOn: text("acquired_on").notNull(),
+    expiresOn: text("expires_on"),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一従業員・同一資格・同一取得日の重複記録を DB レベルで防ぐ。
+  (table) => [
+    uniqueIndex("idx_employee_certifications_unique").on(
+      table.employeeId,
+      table.certificationId,
+      table.acquiredOn,
+    ),
+    index("idx_employee_certifications_employee").on(table.employeeId),
+  ],
+)
+
+export type EmployeeCertificationRow = InferSelectModel<typeof employeeCertifications>
+
+// 健康診断・ストレスチェックの実施記録のみ。要配慮個人情報である「結果」は絶対に持たない。
+export const healthCheckups = sqliteTable(
+  "health_checkups",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    fiscalYear: integer("fiscal_year").notNull(),
+    checkupKind: text("checkup_kind").notNull(),
+    conductedOn: text("conducted_on"),
+    status: text("status").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    index("idx_health_checkups_employee").on(table.employeeId),
+    index("idx_health_checkups_fiscal_year").on(table.fiscalYear),
+  ],
+)
+
+export type HealthCheckupRow = InferSelectModel<typeof healthCheckups>
+
+// 労災・事故の発生記録。起きた事実の時系列記録のみ（記録）。対象者不特定の事故もあるため employee_id は NULL 可。
+export const workAccidents = sqliteTable(
+  "work_accidents",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    occurredOn: text("occurred_on").notNull(),
+    employeeId: integer("employee_id"),
+    location: text("location"),
+    summary: text("summary").notNull(),
+    severity: text("severity"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    index("idx_work_accidents_occurred_on").on(table.occurredOn),
+    index("idx_work_accidents_employee").on(table.employeeId),
+  ],
+)
+
+export type WorkAccidentRow = InferSelectModel<typeof workAccidents>
+
+// 採用の募集ポジション（社外個人情報を扱う候補者の親。open/closed の状態を持つ）。
+export const recruitmentPositions = sqliteTable(
+  "recruitment_positions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    title: text("title").notNull(),
+    departmentCode: text("department_code"),
+    status: text("status").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_recruitment_positions_status").on(table.status)],
+)
+
+export type RecruitmentPositionRow = InferSelectModel<typeof recruitmentPositions>
+
+// 応募者（社外個人情報。選考ステージを applied→…→hired/rejected で進める）。
+export const recruitmentCandidates = sqliteTable(
+  "recruitment_candidates",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    positionId: integer("position_id").notNull(),
+    name: text("name").notNull(),
+    email: text("email"),
+    source: text("source"),
+    stage: text("stage").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_recruitment_candidates_position").on(table.positionId)],
+)
+
+export type RecruitmentCandidateRow = InferSelectModel<typeof recruitmentCandidates>
+
+// 表彰の記録（社内公開。判定や評価計算は持たず事実の記録のみ）。
+export const commendations = sqliteTable(
+  "commendations",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    title: text("title").notNull(),
+    reason: text("reason").notNull(),
+    awardedOn: text("awarded_on").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_commendations_employee").on(table.employeeId)],
+)
+
+export type CommendationRow = InferSelectModel<typeof commendations>
+
+// 懲戒の記録（非公開。本人にも見せない設計。判定は持たず事実の記録のみ）。
+export const disciplinaryActions = sqliteTable(
+  "disciplinary_actions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    employeeId: integer("employee_id").notNull(),
+    kind: text("kind").notNull(),
+    summary: text("summary").notNull(),
+    decidedOn: text("decided_on").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_disciplinary_actions_employee").on(table.employeeId)],
+)
+
+export type DisciplinaryActionRow = InferSelectModel<typeof disciplinaryActions>
+
+// 人員計画（年度・部署ごとの計画人数。実在籍数との比較は API 側で active 数を添える）。
+export const headcountPlans = sqliteTable(
+  "headcount_plans",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    fiscalYear: integer("fiscal_year").notNull(),
+    departmentCode: text("department_code"),
+    plannedCount: integer("planned_count").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一年度・同一部署の二重登録を DB レベルで防ぐ。
+  (table) => [
+    uniqueIndex("uq_headcount_plans_year_department").on(table.fiscalYear, table.departmentCode),
+  ],
+)
+
+export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
+
 export const schema = {
   accounts,
   identities,
@@ -1199,4 +1528,21 @@ export const schema = {
   meetings,
   meetingMinutes,
   decisions,
+  announcements,
+  regulations,
+  regulationVersions,
+  documents,
+  certifications,
+  employeeCertifications,
+  healthCheckups,
+  workAccidents,
+  recruitmentPositions,
+  recruitmentCandidates,
+  commendations,
+  disciplinaryActions,
+  headcountPlans,
+  licenses,
+  itIncidents,
+  budgets,
+  budgetConsumptions,
 }

@@ -8,6 +8,8 @@ const zProps = z.object({
   effectiveDate: z.string(),
   reason: z.string().nullable(),
   createdAt: z.string(),
+  // 任意で評価サイクルへ紐付ける（等級と評価の接続）。未紐付けは null。
+  reviewCycleId: z.number().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -27,6 +29,8 @@ export class EmployeeGrade implements Props {
 
   readonly createdAt!: Props["createdAt"]
 
+  readonly reviewCycleId!: Props["reviewCycleId"]
+
   constructor(private readonly props: Props) {
     zProps.parse(props)
 
@@ -42,6 +46,7 @@ export class EmployeeGrade implements Props {
     effectiveDate: string
     reason: string | null
     createdAt: string
+    reviewCycleId: number | null
   }): EmployeeGrade {
     return new EmployeeGrade({
       id: null,
@@ -50,6 +55,7 @@ export class EmployeeGrade implements Props {
       effectiveDate: props.effectiveDate,
       reason: props.reason,
       createdAt: props.createdAt,
+      reviewCycleId: props.reviewCycleId,
     })
   }
 
@@ -61,6 +67,7 @@ export class EmployeeGrade implements Props {
       effectiveDate: row.effectiveDate,
       reason: row.reason,
       createdAt: row.createdAt,
+      reviewCycleId: row.reviewCycleId,
     })
   }
 }

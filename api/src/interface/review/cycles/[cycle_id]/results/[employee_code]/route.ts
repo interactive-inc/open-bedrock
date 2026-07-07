@@ -69,6 +69,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     form_count: view.formCount,
     submitted_count: view.submittedCount,
     average_score: view.averageScore,
+    reviewer_type_summary: view.reviewerTypeSummary.map((summary) => ({
+      reviewer_type: summary.reviewerType,
+      form_count: summary.formCount,
+      submitted_count: summary.submittedCount,
+    })),
     forms: view.forms.map((form) => ({
       id: form.id,
       cycle_id: form.cycleId,
@@ -79,6 +84,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       score: form.score,
       status: form.status,
       submitted_at: form.submittedAt,
+      visibility: form.visibility,
     })),
   })
   return c.json(responseBody, 200)

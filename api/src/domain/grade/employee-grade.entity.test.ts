@@ -9,6 +9,7 @@ describe("EmployeeGrade.create", () => {
       effectiveDate: "2026-04-01",
       reason: "Promotion",
       createdAt: "2026-04-01T00:00:00.000Z",
+      reviewCycleId: null,
     })
 
     expect(assignment).toBeInstanceOf(EmployeeGrade)
@@ -17,5 +18,6 @@ describe("EmployeeGrade.create", () => {
     expect(assignment.gradeId).toBe(2)
     expect(assignment.effectiveDate).toBe("2026-04-01")
     expect(assignment.reason).toBe("Promotion")
+    expect(assignment.reviewCycleId).toBe(null)
   })
 })

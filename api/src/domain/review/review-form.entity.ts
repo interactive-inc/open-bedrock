@@ -1,4 +1,9 @@
-import { toAnswers, toFormStatus, toReviewerType } from "@/lib/review/review-form-helpers"
+import {
+  toAnswers,
+  toFormStatus,
+  toReviewerType,
+  toVisibility,
+} from "@/lib/review/review-form-helpers"
 import type { ReviewFormRow } from "@/schema"
 import { z } from "zod"
 
@@ -14,6 +19,8 @@ const zProps = z.object({
   comment: z.string().nullable(),
   status: z.enum(["pending", "submitted"]),
   submittedAt: z.string().nullable(),
+  // hidden は被評価者本人に非公開、disclosed で本人閲覧可。
+  visibility: z.enum(["hidden", "disclosed"]),
 })
 
 type Props = z.infer<typeof zProps>
@@ -29,6 +36,7 @@ export class ReviewForm implements Props {
   readonly comment!: Props["comment"]
   readonly status!: Props["status"]
   readonly submittedAt!: Props["submittedAt"]
+  readonly visibility!: Props["visibility"]
 
   constructor(private readonly props: Props) {
     zProps.parse(props)
@@ -48,6 +56,7 @@ export class ReviewForm implements Props {
       comment: row.comment ?? null,
       status: toFormStatus(row.status),
       submittedAt: row.submittedAt,
+      visibility: toVisibility(row.visibility),
     })
   }
 

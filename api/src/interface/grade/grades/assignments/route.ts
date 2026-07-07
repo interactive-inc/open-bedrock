@@ -105,6 +105,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       effective_date: assignment.effectiveDate,
       reason: assignment.reason,
       created_at: assignment.createdAt,
+      review_cycle_id: assignment.reviewCycleId,
     })),
     total,
   })
@@ -122,6 +123,7 @@ export const POST = factory.createHandlers(
       grade_id: z.number().int().positive(),
       effective_date: isoDate,
       reason: z.string().max(3_000).nullable().optional(),
+      review_cycle_id: z.number().int().positive().nullable().optional(),
     }),
   ),
   async (c) => {
@@ -140,6 +142,7 @@ export const POST = factory.createHandlers(
       effectiveDate: json.effective_date,
       reason: json.reason ?? null,
       createdAt: c.env.NOW ?? new Date().toISOString(),
+      reviewCycleId: json.review_cycle_id ?? null,
     })
 
     if (assignment instanceof ApplicationError) {
@@ -153,6 +156,7 @@ export const POST = factory.createHandlers(
       effective_date: assignment.effectiveDate,
       reason: assignment.reason,
       created_at: assignment.createdAt,
+      review_cycle_id: assignment.reviewCycleId,
     })
 
     return c.json(responseBody, 201)

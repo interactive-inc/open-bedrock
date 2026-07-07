@@ -1,5 +1,7 @@
 import type { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import type { ReviewForm } from "@/domain/review/review-form.entity"
+import type { ReviewerTypeSummary } from "@/lib/review/to-reviewer-type-summary"
+import { toReviewerTypeSummary } from "@/lib/review/to-reviewer-type-summary"
 
 export type ReviewResultView = {
   cycleId: number
@@ -7,6 +9,7 @@ export type ReviewResultView = {
   formCount: number
   submittedCount: number
   averageScore: number | null
+  reviewerTypeSummary: ReadonlyArray<ReviewerTypeSummary>
   forms: ReadonlyArray<ReviewForm>
 }
 
@@ -47,6 +50,7 @@ export function toReviewResultView(
     formCount: forms.length,
     submittedCount,
     averageScore,
+    reviewerTypeSummary: toReviewerTypeSummary(forms),
     forms,
   }
 }

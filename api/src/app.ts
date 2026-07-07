@@ -33,6 +33,11 @@ import * as attendanceClockOutRoute from "@/interface/attendance/clock-out/route
 import * as attendanceListRoute from "@/interface/attendance/route"
 import * as attendanceMeRoute from "@/interface/attendance/me/route"
 import * as attendanceMeSummaryRoute from "@/interface/attendance/me/summary/route"
+import * as attendanceOvertimeSummaryRoute from "@/interface/attendance/overtime-summary/route"
+import * as calendarListRoute from "@/interface/calendar/route"
+import * as calendarDayCreateRoute from "@/interface/calendar/days/create-route"
+import * as calendarDayDetailRoute from "@/interface/calendar/days/[id]/route"
+import * as workStyleRoute from "@/interface/work-style/route"
 import * as authLoginRoute from "@/interface/auth/login/route"
 import * as authMeRoute from "@/interface/auth/me/route"
 import * as authRefreshRoute from "@/interface/auth/refresh/route"
@@ -44,6 +49,14 @@ import * as businessTripMineRoute from "@/interface/business-trip/business-trips
 import * as businessTripAdminRoute from "@/interface/business-trip/business-trips/admin/route"
 import * as businessTripApproveRoute from "@/interface/business-trip/business-trips/[id]/approve/route"
 import * as businessTripRejectRoute from "@/interface/business-trip/business-trips/[id]/reject/route"
+import * as certificationListRoute from "@/interface/certification/route"
+import * as certificationDetailRoute from "@/interface/certification/[id]/route"
+import * as employeeCertificationListRoute from "@/interface/certification/employee-certifications/route"
+import * as employeeCertificationDetailRoute from "@/interface/certification/employee-certifications/[id]/route"
+import * as healthCheckupListRoute from "@/interface/health-checkup/route"
+import * as healthCheckupCompleteRoute from "@/interface/health-checkup/[id]/complete/route"
+import * as workAccidentListRoute from "@/interface/work-accident/route"
+import * as workAccidentCloseRoute from "@/interface/work-accident/[id]/close/route"
 import * as rentalReservationCreateRoute from "@/interface/rental/reservations/route"
 import * as rentalReservationDetailRoute from "@/interface/rental/reservations/[id]/route"
 import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/route"
@@ -82,6 +95,16 @@ import * as gradeListRoute from "@/interface/grade/grades/route"
 import * as employeeEventsRoute from "@/interface/employee-event/employee-events/route"
 import * as knowledgeDetailRoute from "@/interface/knowledge/[id]/route"
 import * as knowledgeListRoute from "@/interface/knowledge/route"
+import * as announcementListRoute from "@/interface/announcement/route"
+import * as announcementDetailRoute from "@/interface/announcement/[id]/route"
+import * as announcementPublishRoute from "@/interface/announcement/[id]/publish/route"
+import * as announcementArchiveRoute from "@/interface/announcement/[id]/archive/route"
+import * as regulationListRoute from "@/interface/regulation/route"
+import * as regulationDetailRoute from "@/interface/regulation/[code]/route"
+import * as regulationVersionsRoute from "@/interface/regulation/[code]/versions/route"
+import * as regulationArchiveRoute from "@/interface/regulation/[code]/archive/route"
+import * as documentListRoute from "@/interface/document/route"
+import * as documentDetailRoute from "@/interface/document/[id]/route"
 import * as leaveBalanceMeRoute from "@/interface/leave/balance/me/route"
 import * as leaveBalanceRoute from "@/interface/leave/balance/route"
 import * as leaveRequestAdminRoute from "@/interface/leave/requests/admin/route"
@@ -117,6 +140,9 @@ import * as orgReportingLineRoute from "@/interface/org/reporting-line/[employee
 import * as orgTreeRoute from "@/interface/org/tree/route"
 import * as reviewCycleCloseRoute from "@/interface/review/cycles/[cycle_id]/close/route"
 import * as reviewCycleCreateRoute from "@/interface/review/cycles-create/route"
+import * as reviewCycleDiscloseRoute from "@/interface/review/cycles/[cycle_id]/disclose/route"
+import * as reviewCycleFormsBulkRoute from "@/interface/review/cycles/[cycle_id]/forms-bulk/route"
+import * as reviewFormsRoute from "@/interface/review/forms/route"
 import * as reviewCycleListRoute from "@/interface/review/cycles/route"
 import * as reviewCycleOpenRoute from "@/interface/review/cycles/[cycle_id]/open/route"
 import * as reviewCycleResultsRoute from "@/interface/review/cycles/[cycle_id]/results/[employee_code]/route"
@@ -221,6 +247,25 @@ import * as meetingMinutesDetailRoute from "@/interface/meeting/minutes/[id]/rou
 import * as decisionListRoute from "@/interface/decision/decisions/route"
 import * as decisionDetailRoute from "@/interface/decision/decisions/[id]/route"
 import * as decisionSupersedeRoute from "@/interface/decision/decisions/[id]/supersede/route"
+import * as recruitmentPositionListRoute from "@/interface/recruitment/positions/route"
+import * as recruitmentPositionDetailRoute from "@/interface/recruitment/positions/[id]/route"
+import * as recruitmentCandidateListRoute from "@/interface/recruitment/positions/[id]/candidates/route"
+import * as recruitmentCandidateDetailRoute from "@/interface/recruitment/candidates/[id]/route"
+import * as recruitmentCandidateAdvanceRoute from "@/interface/recruitment/candidates/[id]/advance/route"
+import * as commendationListRoute from "@/interface/commendation/route"
+import * as commendationDetailRoute from "@/interface/commendation/[id]/route"
+import * as disciplinaryActionListRoute from "@/interface/disciplinary-action/route"
+import * as headcountPlanListRoute from "@/interface/headcount-plan/route"
+import * as headcountPlanDetailRoute from "@/interface/headcount-plan/[id]/route"
+import * as licenseListRoute from "@/interface/license/route"
+import * as licenseDetailRoute from "@/interface/license/[id]/route"
+import * as licenseCancelRoute from "@/interface/license/[id]/cancel/route"
+import * as itIncidentListRoute from "@/interface/it-incident/route"
+import * as itIncidentResolveRoute from "@/interface/it-incident/[id]/resolve/route"
+import * as budgetListRoute from "@/interface/budget/route"
+import * as budgetDetailRoute from "@/interface/budget/[id]/route"
+import * as budgetConsumptionRoute from "@/interface/budget/[id]/consumptions/route"
+import * as salaryRevisionListRoute from "@/interface/salary-revision/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
@@ -309,6 +354,11 @@ export const app = factory
   .get("/application-templates", ...applicationTemplateListRoute.GET)
   .get("/knowledge/:id", ...knowledgeDetailRoute.GET)
   .get("/knowledge", ...knowledgeListRoute.GET)
+  .get("/announcements/:id", ...announcementDetailRoute.GET)
+  .get("/announcements", ...announcementListRoute.GET)
+  .get("/regulations/:code", ...regulationDetailRoute.GET)
+  .get("/regulations", ...regulationListRoute.GET)
+  .get("/documents", ...documentListRoute.GET)
   .get("/rooms/availability", ...roomAvailabilityRoute.GET)
   .post("/rooms/reservations", ...roomReservationCreateRoute.POST)
   .get("/rooms/reservations/me", ...roomReservationMineRoute.GET)
@@ -364,6 +414,12 @@ export const app = factory
   .get("/attendance/me/summary", ...attendanceMeSummaryRoute.GET)
   .get("/attendance/me", ...attendanceMeRoute.GET)
   .get("/attendance", ...attendanceListRoute.GET)
+  .get("/attendance/overtime-summary", ...attendanceOvertimeSummaryRoute.GET)
+  .get("/calendar", ...calendarListRoute.GET)
+  .post("/calendar/days", ...calendarDayCreateRoute.POST)
+  .delete("/calendar/days/:id", ...calendarDayDetailRoute.DELETE)
+  .get("/work-styles", ...workStyleRoute.GET)
+  .post("/work-styles", ...workStyleRoute.POST)
   .get("/leave/balance/me", ...leaveBalanceMeRoute.GET)
   .get("/leave/balance", ...leaveBalanceRoute.GET)
   .get("/leave/requests/admin", ...leaveRequestAdminRoute.GET)
@@ -411,9 +467,12 @@ export const app = factory
   .get("/review-cycles", ...reviewCycleListRoute.GET)
   .post("/review-cycles/:cycle_id/close", ...reviewCycleCloseRoute.POST)
   .post("/review-cycles/:cycle_id/open", ...reviewCycleOpenRoute.POST)
+  .post("/review-cycles/:cycle_id/disclose", ...reviewCycleDiscloseRoute.POST)
+  .post("/review-cycles/:cycle_id/forms/bulk", ...reviewCycleFormsBulkRoute.POST)
   .get("/review-cycles/:cycle_id/results/:employee_code", ...reviewCycleResultsRoute.GET)
   .post("/review-forms/:form_id/submit", ...reviewFormSubmitRoute.POST)
   .get("/review-forms/me", ...reviewFormMeRoute.GET)
+  .get("/review-forms", ...reviewFormsRoute.GET)
   .put("/applications/:id", ...applicationDetailRoute.PUT)
   .delete("/applications/:id", ...applicationDetailRoute.DELETE)
   .get("/career/applications/me", ...careerApplicationsMeRoute.GET)
@@ -468,6 +527,15 @@ export const app = factory
   .post("/knowledge", ...knowledgeListRoute.POST)
   .put("/knowledge/:id", ...knowledgeDetailRoute.PUT)
   .delete("/knowledge/:id", ...knowledgeDetailRoute.DELETE)
+  .post("/announcements", ...announcementListRoute.POST)
+  .put("/announcements/:id", ...announcementDetailRoute.PUT)
+  .post("/announcements/:id/publish", ...announcementPublishRoute.POST)
+  .post("/announcements/:id/archive", ...announcementArchiveRoute.POST)
+  .post("/regulations", ...regulationListRoute.POST)
+  .post("/regulations/:code/versions", ...regulationVersionsRoute.POST)
+  .post("/regulations/:code/archive", ...regulationArchiveRoute.POST)
+  .post("/documents", ...documentListRoute.POST)
+  .put("/documents/:id", ...documentDetailRoute.PUT)
   .put("/assets/:code", ...assetDetailRoute.PUT)
   .delete("/assets/:code", ...assetDetailRoute.DELETE)
   .put("/expenses/:id", ...expenseDetailRoute.PUT)
@@ -482,6 +550,18 @@ export const app = factory
   .delete("/business-trips/:id", ...businessTripDetailRoute.DELETE)
   .post("/business-trips/:id/approve", ...businessTripApproveRoute.POST)
   .post("/business-trips/:id/reject", ...businessTripRejectRoute.POST)
+  .get("/certifications", ...certificationListRoute.GET)
+  .post("/certifications", ...certificationListRoute.POST)
+  .put("/certifications/:id", ...certificationDetailRoute.PUT)
+  .get("/employee-certifications", ...employeeCertificationListRoute.GET)
+  .post("/employee-certifications", ...employeeCertificationListRoute.POST)
+  .delete("/employee-certifications/:id", ...employeeCertificationDetailRoute.DELETE)
+  .get("/health-checkups", ...healthCheckupListRoute.GET)
+  .post("/health-checkups", ...healthCheckupListRoute.POST)
+  .post("/health-checkups/:id/complete", ...healthCheckupCompleteRoute.POST)
+  .get("/work-accidents", ...workAccidentListRoute.GET)
+  .post("/work-accidents", ...workAccidentListRoute.POST)
+  .post("/work-accidents/:id/close", ...workAccidentCloseRoute.POST)
   .post("/rentals", ...rentalReservationCreateRoute.POST)
   .get("/rentals/me", ...rentalReservationMineRoute.GET)
   .get("/rentals/admin", ...rentalReservationAdminRoute.GET)
@@ -564,6 +644,35 @@ export const app = factory
   .post("/decisions", ...decisionListRoute.POST)
   .get("/decisions/:id", ...decisionDetailRoute.GET)
   .put("/decisions/:id", ...decisionDetailRoute.PUT)
+  .post("/recruitment/candidates/:id/advance", ...recruitmentCandidateAdvanceRoute.POST)
+  .put("/recruitment/candidates/:id", ...recruitmentCandidateDetailRoute.PUT)
+  .get("/recruitment/positions/:id/candidates", ...recruitmentCandidateListRoute.GET)
+  .post("/recruitment/positions/:id/candidates", ...recruitmentCandidateListRoute.POST)
+  .get("/recruitment/positions/:id", ...recruitmentPositionDetailRoute.GET)
+  .put("/recruitment/positions/:id", ...recruitmentPositionDetailRoute.PUT)
+  .get("/recruitment/positions", ...recruitmentPositionListRoute.GET)
+  .post("/recruitment/positions", ...recruitmentPositionListRoute.POST)
+  .get("/commendations", ...commendationListRoute.GET)
+  .post("/commendations", ...commendationListRoute.POST)
+  .delete("/commendations/:id", ...commendationDetailRoute.DELETE)
+  .get("/disciplinary-actions", ...disciplinaryActionListRoute.GET)
+  .post("/disciplinary-actions", ...disciplinaryActionListRoute.POST)
+  .get("/headcount-plans", ...headcountPlanListRoute.GET)
+  .post("/headcount-plans", ...headcountPlanListRoute.POST)
+  .put("/headcount-plans/:id", ...headcountPlanDetailRoute.PUT)
+  .get("/licenses", ...licenseListRoute.GET)
+  .post("/licenses", ...licenseListRoute.POST)
+  .post("/licenses/:id/cancel", ...licenseCancelRoute.POST)
+  .put("/licenses/:id", ...licenseDetailRoute.PUT)
+  .get("/it-incidents", ...itIncidentListRoute.GET)
+  .post("/it-incidents", ...itIncidentListRoute.POST)
+  .post("/it-incidents/:id/resolve", ...itIncidentResolveRoute.POST)
+  .get("/budgets", ...budgetListRoute.GET)
+  .post("/budgets", ...budgetListRoute.POST)
+  .post("/budgets/:id/consumptions", ...budgetConsumptionRoute.POST)
+  .put("/budgets/:id", ...budgetDetailRoute.PUT)
+  .get("/salary-revisions", ...salaryRevisionListRoute.GET)
+  .post("/salary-revisions", ...salaryRevisionListRoute.POST)
 
 export type AppType = typeof app
 

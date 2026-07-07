@@ -109,6 +109,7 @@ describe("ReviewFormRepository", () => {
       comment: null,
       status: "submitted",
       submittedAt: "2026-05-31T00:00:00.000Z",
+      visibility: "disclosed",
     })
 
     const result = await repository.update(form)

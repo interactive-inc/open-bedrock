@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { seedGrades } from "@/infrastructure/seed/seed-grades"
 import { seedEmployeeGrades } from "@/infrastructure/seed/seed-employee-grades"
+import { seedReviewCycles } from "@/infrastructure/seed/seed-review-cycles"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -18,6 +19,7 @@ const assignmentResponseSchema = z.object({
   effective_date: z.string(),
   reason: z.string().nullable(),
   created_at: z.string(),
+  review_cycle_id: z.number().nullable(),
 })
 
 const jwtSecret = "grade-assignments-route-test-secret"
@@ -61,6 +63,18 @@ async function createTestDb(): Promise<D1Database> {
       rank: grade.rank,
       description: grade.description,
       created_at: grade.createdAt,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "review_cycles",
+    seedReviewCycles.map((cycle) => ({
+      id: cycle.id,
+      title: cycle.title,
+      period: cycle.period,
+      status: cycle.status,
+      due_date: cycle.dueDate,
     })),
   )
 
@@ -233,6 +247,50 @@ describe("POST /grades/assignments", () => {
       expect(parsed.data.employee_id).toBe(9)
       expect(parsed.data.grade_id).toBe(2)
     }
+  })
+
+  test("links an assignment to an existing review cycle", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/grades/assignments",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        employee_id: 9,
+        grade_id: 2,
+        effective_date: "2026-04-01",
+        review_cycle_id: 1,
+      },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = assignmentResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.review_cycle_id).toBe(1)
+    }
+  })
+
+  test("unknown review_cycle_id is 404", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/grades/assignments",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        employee_id: 9,
+        grade_id: 2,
+        effective_date: "2026-04-01",
+        review_cycle_id: 999,
+      },
+    })
+
+    expect(response.status).toBe(404)
   })
 
   test("member without grade:manage is forbidden", async () => {
