@@ -75,6 +75,74 @@ export async function createGoalAction(
   return { ok: true, error: null }
 }
 
+// 全社/部門目標の作成 Server Action。ownerType=company|department。
+// company は department_code 不要、department は department_code 必須。
+// 権限判定は api 側で行う（権限が無ければ 403 を error に載せて返す）。成功時は /goals/tree を revalidate する。
+export async function createStructuralGoalAction(
+  previousState: GoalActionState,
+  formData: FormData,
+): Promise<GoalActionState> {
+  const ownerTypeRaw = formData.get("ownerType")
+
+  if (ownerTypeRaw !== "company" && ownerTypeRaw !== "department") {
+    return { ok: false, error: "目標の種別を選択してください" }
+  }
+
+  const period = toRequiredText(formData.get("period"), {
+    label: "期間",
+    max: FORM_CONSTRAINTS.goal.periodMax,
+  })
+
+  if (period instanceof Error) {
+    return { ok: false, error: period.message }
+  }
+
+  const title = toRequiredText(formData.get("title"), {
+    label: "タイトル",
+    max: FORM_CONSTRAINTS.goal.titleMax,
+  })
+
+  if (title instanceof Error) {
+    return { ok: false, error: title.message }
+  }
+
+  const weight = toOptionalIntInRange(formData.get("weight"), {
+    label: "ウェイト",
+    min: FORM_CONSTRAINTS.goal.weightMin,
+    max: FORM_CONSTRAINTS.goal.weightMax,
+  })
+
+  if (weight instanceof Error) {
+    return { ok: false, error: weight.message }
+  }
+
+  const departmentCode =
+    ownerTypeRaw === "department"
+      ? toRequiredText(formData.get("departmentCode"), { label: "部門コード", max: 100 })
+      : null
+
+  if (departmentCode instanceof Error) {
+    return { ok: false, error: departmentCode.message }
+  }
+
+  const goal = await createGoal({
+    period,
+    title,
+    weight: weight ?? 10,
+    owner_type: ownerTypeRaw,
+    department_code: departmentCode ?? undefined,
+  })
+
+  if (goal instanceof Error) {
+    return { ok: false, error: goal.message }
+  }
+
+  revalidatePath("/goals/tree")
+  revalidatePath("/goals")
+
+  return { ok: true, error: null }
+}
+
 // 目標変更 Server Action。goalId/period/title 必須、weight/kpi は任意。
 // 本人以外や確定評価済みは api がエラーを返す。成功時は /goals を revalidate する。
 export async function updateGoalAction(

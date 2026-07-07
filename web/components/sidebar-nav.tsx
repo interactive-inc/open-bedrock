@@ -3,7 +3,10 @@
 import {
   Award,
   Bell,
+  BookOpenCheck,
   Boxes,
+  Building2,
+  FileCheck,
   Briefcase,
   CalendarClock,
   CalendarDays,
@@ -122,6 +125,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/leave/inbox",
         icon: Inbox,
         requiredPermission: "leave:approve",
+      },
+      {
+        label: "稟議の決裁",
+        href: "/ringi/inbox",
+        icon: Inbox,
       },
     ],
   },
@@ -304,6 +312,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: Target,
         children: [
           { label: "一覧", href: "/goals" },
+          { label: "ツリー", href: "/goals/tree" },
           { label: "新規", href: "/goals/new" },
         ],
       },
@@ -469,6 +478,42 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "一覧", href: "/rentals" },
           { label: "新規予約", href: "/rentals/new" },
         ],
+      },
+    ],
+  },
+  {
+    heading: "経営と対外",
+    items: [
+      {
+        label: "稟議",
+        href: "/ringi",
+        icon: FileCheck,
+        children: [
+          { label: "自分の稟議", href: "/ringi" },
+          { label: "新規起案", href: "/ringi/new" },
+          { label: "横断閲覧", href: "/ringi/admin", requiredPermission: "ringi:read:all" },
+        ],
+      },
+      {
+        label: "会議体",
+        href: "/meetings",
+        icon: CalendarDays,
+      },
+      {
+        label: "意思決定記録",
+        href: "/decisions",
+        icon: BookOpenCheck,
+      },
+      {
+        label: "経営ダッシュボード",
+        href: "/dashboard/management",
+        icon: LayoutDashboard,
+        requiredPermission: "management_dashboard:view",
+      },
+      {
+        label: "取引先",
+        href: "/partners",
+        icon: Building2,
       },
     ],
   },
