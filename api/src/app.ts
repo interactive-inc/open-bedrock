@@ -36,10 +36,14 @@ import * as businessTripCreateRoute from "@/interface/business-trip/business-tri
 import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
 import * as businessTripMineRoute from "@/interface/business-trip/business-trips/me/route"
 import * as businessTripAdminRoute from "@/interface/business-trip/business-trips/admin/route"
+import * as businessTripApproveRoute from "@/interface/business-trip/business-trips/[id]/approve/route"
+import * as businessTripRejectRoute from "@/interface/business-trip/business-trips/[id]/reject/route"
 import * as rentalReservationCreateRoute from "@/interface/rental/reservations/route"
 import * as rentalReservationDetailRoute from "@/interface/rental/reservations/[id]/route"
 import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/route"
 import * as rentalReservationAdminRoute from "@/interface/rental/reservations/admin/route"
+import * as rentalReservationLendRoute from "@/interface/rental/reservations/[id]/lend/route"
+import * as rentalReservationReturnRoute from "@/interface/rental/reservations/[id]/return/route"
 import * as careerPostingApplyRoute from "@/interface/career/postings/[posting_id]/apply/route"
 import * as careerPostingDetailRoute from "@/interface/career/postings/[posting_id]/route"
 import * as careerPostingListRoute from "@/interface/career/postings/route"
@@ -57,9 +61,15 @@ import * as expenseRejectRoute from "@/interface/expense/[id]/reject/route"
 import * as goalCreateRoute from "@/interface/goal/goals/create-route"
 import * as goalEvaluationCreateRoute from "@/interface/goal/goals/[goal_id]/evaluations/route"
 import * as goalListRoute from "@/interface/goal/goals/route"
+import * as gradeCreateRoute from "@/interface/grade/grades/create-route"
+import * as gradeDetailRoute from "@/interface/grade/grades/[id]/route"
+import * as gradeAssignmentsRoute from "@/interface/grade/grades/assignments/route"
+import * as gradeListRoute from "@/interface/grade/grades/route"
+import * as employeeEventsRoute from "@/interface/employee-event/employee-events/route"
 import * as knowledgeDetailRoute from "@/interface/knowledge/[id]/route"
 import * as knowledgeListRoute from "@/interface/knowledge/route"
 import * as leaveBalanceMeRoute from "@/interface/leave/balance/me/route"
+import * as leaveBalanceRoute from "@/interface/leave/balance/route"
 import * as leaveRequestAdminRoute from "@/interface/leave/requests/admin/route"
 import * as leaveRequestApproveRoute from "@/interface/leave/requests/[id]/approve/route"
 import * as leaveRequestCreateRoute from "@/interface/leave/requests/route"
@@ -150,18 +160,26 @@ import * as resignationCreateRoute from "@/interface/resignation/resignations/ro
 import * as resignationDetailRoute from "@/interface/resignation/resignations/[id]/route"
 import * as resignationMineRoute from "@/interface/resignation/resignations/me/route"
 import * as resignationAdminRoute from "@/interface/resignation/resignations/admin/route"
+import * as resignationAcceptRoute from "@/interface/resignation/resignations/[id]/accept/route"
+import * as resignationRejectRoute from "@/interface/resignation/resignations/[id]/reject/route"
 import * as lifeEventCreateRoute from "@/interface/life-event/life-events/route"
 import * as lifeEventDetailRoute from "@/interface/life-event/life-events/[id]/route"
 import * as lifeEventMineRoute from "@/interface/life-event/life-events/me/route"
 import * as lifeEventAdminRoute from "@/interface/life-event/life-events/admin/route"
+import * as lifeEventApproveRoute from "@/interface/life-event/life-events/[id]/approve/route"
+import * as lifeEventRejectRoute from "@/interface/life-event/life-events/[id]/reject/route"
 import * as familyCareLeaveCreateRoute from "@/interface/family-care-leave/family-care-leaves/route"
 import * as familyCareLeaveDetailRoute from "@/interface/family-care-leave/family-care-leaves/[id]/route"
 import * as familyCareLeaveMineRoute from "@/interface/family-care-leave/family-care-leaves/me/route"
 import * as familyCareLeaveAdminRoute from "@/interface/family-care-leave/family-care-leaves/admin/route"
+import * as familyCareLeaveApproveRoute from "@/interface/family-care-leave/family-care-leaves/[id]/approve/route"
+import * as familyCareLeaveCancelRoute from "@/interface/family-care-leave/family-care-leaves/[id]/cancel/route"
 import * as certificateRequestCreateRoute from "@/interface/certificate-request/certificate-requests/route"
 import * as certificateRequestDetailRoute from "@/interface/certificate-request/certificate-requests/[id]/route"
 import * as certificateRequestMineRoute from "@/interface/certificate-request/certificate-requests/me/route"
 import * as certificateRequestAdminRoute from "@/interface/certificate-request/certificate-requests/admin/route"
+import * as certificateRequestIssueRoute from "@/interface/certificate-request/certificate-requests/[id]/issue/route"
+import * as certificateRequestRejectRoute from "@/interface/certificate-request/certificate-requests/[id]/reject/route"
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
@@ -247,6 +265,14 @@ export const app = factory
   .get("/goals", ...goalListRoute.GET)
   .post("/goals", ...goalCreateRoute.POST)
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
+  .get("/grades/assignments", ...gradeAssignmentsRoute.GET)
+  .post("/grades/assignments", ...gradeAssignmentsRoute.POST)
+  .get("/grades", ...gradeListRoute.GET)
+  .post("/grades", ...gradeCreateRoute.POST)
+  .put("/grades/:id", ...gradeDetailRoute.PUT)
+  .delete("/grades/:id", ...gradeDetailRoute.DELETE)
+  .get("/employee-events", ...employeeEventsRoute.GET)
+  .post("/employee-events", ...employeeEventsRoute.POST)
   .get("/applications/admin", ...applicationAdminRoute.GET)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
   .get("/applications/me", ...applicationApplicationsMeRoute.GET)
@@ -307,9 +333,11 @@ export const app = factory
   .get("/attendance/me", ...attendanceMeRoute.GET)
   .get("/attendance", ...attendanceListRoute.GET)
   .get("/leave/balance/me", ...leaveBalanceMeRoute.GET)
+  .get("/leave/balance", ...leaveBalanceRoute.GET)
   .get("/leave/requests/admin", ...leaveRequestAdminRoute.GET)
   .get("/leave/requests/inbox", ...leaveRequestInboxRoute.GET)
   .get("/leave/requests/me", ...leaveRequestMeRoute.GET)
+  .get("/leave/requests", ...leaveRequestCreateRoute.GET)
   .post("/leave/requests/:id/approve", ...leaveRequestApproveRoute.POST)
   .post("/leave/requests/:id/reject", ...leaveRequestRejectRoute.POST)
   .post("/leave/requests", ...leaveRequestCreateRoute.POST)
@@ -420,36 +448,48 @@ export const app = factory
   .get("/business-trips/:id", ...businessTripDetailRoute.GET)
   .put("/business-trips/:id", ...businessTripDetailRoute.PUT)
   .delete("/business-trips/:id", ...businessTripDetailRoute.DELETE)
+  .post("/business-trips/:id/approve", ...businessTripApproveRoute.POST)
+  .post("/business-trips/:id/reject", ...businessTripRejectRoute.POST)
   .post("/rentals", ...rentalReservationCreateRoute.POST)
   .get("/rentals/me", ...rentalReservationMineRoute.GET)
   .get("/rentals/admin", ...rentalReservationAdminRoute.GET)
   .get("/rentals/:id", ...rentalReservationDetailRoute.GET)
   .put("/rentals/:id", ...rentalReservationDetailRoute.PUT)
   .delete("/rentals/:id", ...rentalReservationDetailRoute.DELETE)
+  .post("/rentals/:id/lend", ...rentalReservationLendRoute.POST)
+  .post("/rentals/:id/return", ...rentalReservationReturnRoute.POST)
   .post("/resignations", ...resignationCreateRoute.POST)
   .get("/resignations/me", ...resignationMineRoute.GET)
   .get("/resignations/admin", ...resignationAdminRoute.GET)
   .get("/resignations/:id", ...resignationDetailRoute.GET)
   .put("/resignations/:id", ...resignationDetailRoute.PUT)
   .delete("/resignations/:id", ...resignationDetailRoute.DELETE)
+  .post("/resignations/:id/accept", ...resignationAcceptRoute.POST)
+  .post("/resignations/:id/reject", ...resignationRejectRoute.POST)
   .post("/life-events", ...lifeEventCreateRoute.POST)
   .get("/life-events/me", ...lifeEventMineRoute.GET)
   .get("/life-events/admin", ...lifeEventAdminRoute.GET)
   .get("/life-events/:id", ...lifeEventDetailRoute.GET)
   .put("/life-events/:id", ...lifeEventDetailRoute.PUT)
   .delete("/life-events/:id", ...lifeEventDetailRoute.DELETE)
+  .post("/life-events/:id/approve", ...lifeEventApproveRoute.POST)
+  .post("/life-events/:id/reject", ...lifeEventRejectRoute.POST)
   .post("/family-care-leaves", ...familyCareLeaveCreateRoute.POST)
   .get("/family-care-leaves/me", ...familyCareLeaveMineRoute.GET)
   .get("/family-care-leaves/admin", ...familyCareLeaveAdminRoute.GET)
   .get("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.GET)
   .put("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.PUT)
   .delete("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.DELETE)
+  .post("/family-care-leaves/:id/approve", ...familyCareLeaveApproveRoute.POST)
+  .post("/family-care-leaves/:id/cancel", ...familyCareLeaveCancelRoute.POST)
   .post("/certificate-requests", ...certificateRequestCreateRoute.POST)
   .get("/certificate-requests/me", ...certificateRequestMineRoute.GET)
   .get("/certificate-requests/admin", ...certificateRequestAdminRoute.GET)
   .get("/certificate-requests/:id", ...certificateRequestDetailRoute.GET)
   .put("/certificate-requests/:id", ...certificateRequestDetailRoute.PUT)
   .delete("/certificate-requests/:id", ...certificateRequestDetailRoute.DELETE)
+  .post("/certificate-requests/:id/issue", ...certificateRequestIssueRoute.POST)
+  .post("/certificate-requests/:id/reject", ...certificateRequestRejectRoute.POST)
   .post("/antisocial-checks", ...antisocialCheckCreateRoute.POST)
   .get("/antisocial-checks/me", ...antisocialCheckMineRoute.GET)
   .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)

@@ -559,6 +559,70 @@ export const zAppGoalEvaluation = z.object({
 
 export type AppGoalEvaluation = z.infer<typeof zAppGoalEvaluation>
 
+// ===== grade =====
+/** 等級マスタ 1 件のレスポンス。 */
+export const zAppGrade = z.object({
+  id: z.number(),
+  code: z.string(),
+  name: z.string(),
+  rank: z.number(),
+  description: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppGrade = z.infer<typeof zAppGrade>
+
+/** 等級マスタ一覧のレスポンス。 */
+export const zAppGradeList = z.object({
+  data: z.array(zAppGrade),
+  total: z.number(),
+})
+
+export type AppGradeList = z.infer<typeof zAppGradeList>
+
+/** 等級割当 1 件のレスポンス。 */
+export const zAppEmployeeGrade = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  grade_id: z.number(),
+  effective_date: z.string(),
+  reason: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppEmployeeGrade = z.infer<typeof zAppEmployeeGrade>
+
+/** 等級割当履歴のレスポンス。 */
+export const zAppEmployeeGradeList = z.object({
+  data: z.array(zAppEmployeeGrade),
+  total: z.number(),
+})
+
+export type AppEmployeeGradeList = z.infer<typeof zAppEmployeeGradeList>
+
+// ===== employee-event =====
+/** 異動・在籍イベント 1 件のレスポンス。 */
+export const zAppEmployeeEvent = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  kind: z.string(),
+  effective_date: z.string(),
+  from_department_code: z.string().nullable(),
+  to_department_code: z.string().nullable(),
+  note: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppEmployeeEvent = z.infer<typeof zAppEmployeeEvent>
+
+/** 異動・在籍イベント履歴のレスポンス。 */
+export const zAppEmployeeEventList = z.object({
+  data: z.array(zAppEmployeeEvent),
+  total: z.number(),
+})
+
+export type AppEmployeeEventList = z.infer<typeof zAppEmployeeEventList>
+
 // ===== knowledge =====
 /** ナレッジ記事一覧の 1 件（本文は snippet に短縮）。 */
 export const zAppKnowledgeListItem = z.object({

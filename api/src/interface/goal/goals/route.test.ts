@@ -223,3 +223,130 @@ describe("GET /goals", () => {
     expect(response.status).toBe(401)
   })
 })
+
+// scope=reports 用に、manager(id2)が id20/id21 の 2 名を配下に持つ小さな組織を組む。
+// seed 側は manager が 1 名しか配下を持たないため、ここで専用データを用意する。
+const scopeEmployeeRows = [
+  { id: 2, code: "M002", name: "Mgr", email: "you+m002@example.com", role: "manager" },
+  { id: 20, code: "R020", name: "ReportA", email: "you+r020@example.com", role: "member" },
+  { id: 21, code: "R021", name: "ReportB", email: "you+r021@example.com", role: "member" },
+  { id: 22, code: "S022", name: "Solo", email: "you+s022@example.com", role: "manager" },
+]
+
+async function createScopeTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    })),
+  )
+
+  await seedIamForEmployees(
+    db,
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
+    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
+    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
+    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
+  ])
+
+  await seedD1(db, "goals", [
+    {
+      id: 100,
+      employee_id: 20,
+      period: "2025-H2",
+      title: "A goal",
+      kpi: null,
+      weight: 50,
+      status: "draft",
+    },
+    {
+      id: 101,
+      employee_id: 21,
+      period: "2025-H2",
+      title: "B goal",
+      kpi: null,
+      weight: 50,
+      status: "draft",
+    },
+  ])
+
+  return db
+}
+
+describe("GET /goals?scope=reports", () => {
+  test("manager gets goals of all reports (2 employees)", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=reports",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      const employeeIds = parsed.data.data.map((goal) => goal.employee_id).sort((a, b) => a - b)
+
+      expect(employeeIds).toEqual([20, 21])
+    }
+  })
+
+  test("manager with no reports gets an empty list", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=reports",
+      token: await tokenFor(22, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
+    }
+  })
+
+  test("member requesting scope=reports is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=reports",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+})

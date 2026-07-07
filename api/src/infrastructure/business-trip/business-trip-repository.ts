@@ -120,6 +120,27 @@ export class BusinessTripRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<BusinessTrip | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(businessTrips)
+        .set({ status: props.toStatus })
+        .where(and(eq(businessTrips.id, props.id), eq(businessTrips.status, props.fromStatus)))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : BusinessTrip.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update business_trip status")
+    }
+  }
+
   // 出張申請を削除する。status が requested のときのみ削除し、0 行削除は null を返す。
   async delete(id: string): Promise<true | null | Error> {
     try {

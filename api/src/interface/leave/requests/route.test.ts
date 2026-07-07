@@ -230,3 +230,181 @@ describe("POST /leave/requests", () => {
     expect(response.status).toBe(401)
   })
 })
+
+const leaveAdminItemSchema = z.object({
+  id: z.number(),
+  applicant_id: z.number(),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
+  leave_type: z.enum(["annual", "special"]),
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+  reason: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
+  created_at: z.string(),
+})
+
+const leaveListSchema = z.object({
+  data: z.array(leaveAdminItemSchema),
+  total: z.number(),
+})
+
+// scope/relation 用に、manager(id2)が id20/id21 の 2 名を配下に持つ小さな組織を組む。
+const scopeEmployeeRows = [
+  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager" },
+  { id: 20, code: "R020", email: "you+r020@example.com", role: "member" },
+  { id: 21, code: "R021", email: "you+r021@example.com", role: "member" },
+  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager" },
+]
+
+async function createScopeTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.code,
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    })),
+  )
+
+  await seedIamForEmployees(
+    db,
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
+    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
+    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
+    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
+  ])
+
+  await seedD1(db, "leave_requests", [
+    {
+      id: 100,
+      employee_id: 20,
+      leave_type: "annual",
+      start_date: "2026-06-01",
+      end_date: "2026-06-02",
+      days: 2,
+      reason: null,
+      status: "pending",
+      approver_id: null,
+      decided_comment: null,
+      created_at: "2026-05-20T00:00:00Z",
+    },
+    {
+      id: 101,
+      employee_id: 21,
+      leave_type: "special",
+      start_date: "2026-07-01",
+      end_date: "2026-07-01",
+      days: 1,
+      reason: null,
+      status: "approved",
+      approver_id: 2,
+      decided_comment: "ok",
+      created_at: "2026-05-21T00:00:00Z",
+    },
+  ])
+
+  return db
+}
+
+describe("GET /leave/requests", () => {
+  test("manager reads a single report's requests via employee_id", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/leave/requests?employee_id=20",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveListSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.every((item) => item.applicant_id === 20)).toBe(true)
+    }
+  })
+
+  test("member requesting another employee_id is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/leave/requests?employee_id=21",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("manager gets scope=reports across all reports (2 employees)", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/leave/requests?scope=reports",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveListSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      const applicantIds = parsed.data.data.map((item) => item.applicant_id).sort((a, b) => a - b)
+
+      expect(applicantIds).toEqual([20, 21])
+    }
+  })
+
+  test("manager with no reports gets an empty scope=reports list", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/leave/requests?scope=reports",
+      token: await tokenFor(22, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveListSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(0)
+    }
+  })
+
+  test("member requesting scope=reports is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/leave/requests?scope=reports",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+})

@@ -1,4 +1,6 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/lib/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
@@ -10,11 +12,13 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, count, eq } from "drizzle-orm"
+import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
-// GET /goals — 本人の目標一覧。goal:read:all 権限は employee_id 指定で他者を閲覧できる
+// GET /goals — 本人の目標一覧。
+// employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。
+// scope=reports で配下全員分、scope=all で全社分を一覧する(対応 permission 必須)。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -24,6 +28,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const period = c.req.query("period") ?? null
 
+  const scope = c.req.query("scope") ?? null
+
   const employeeIdParam = c.req.query("employee_id")
 
   const requestedEmployeeId = (() => {
@@ -32,27 +38,56 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     return Number.isInteger(parsed) ? parsed : null
   })()
 
-  const targetEmployeeId = requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
+  const conditions: Array<SQL> = []
 
-  const isViewingOthers = targetEmployeeId !== session.employeeId
-
-  if (isViewingOthers) {
-    const relation = await resolveEmployeeRelation({
-      c,
-      viewerEmployeeId: session.employeeId,
-      targetEmployeeId,
-    })
-
-    if (relation instanceof Error) {
-      throw new InternalError("failed to resolve employee relation")
-    }
-
-    if (canReadGoalOf(session, relation) === false) {
+  if (requestedEmployeeId === null && scope === "reports") {
+    if (hasPermission(session, "goal:read:reports") === false) {
       throw new ForbiddenError()
     }
-  }
 
-  const conditions: Array<SQL> = [eq(goals.employeeId, targetEmployeeId)]
+    const reportEmployeeIds = await listReportEmployeeIds({
+      c,
+      viewerEmployeeId: session.employeeId,
+    })
+
+    if (reportEmployeeIds instanceof Error) {
+      throw new InternalError("failed to resolve report employees")
+    }
+
+    if (reportEmployeeIds.length === 0) {
+      const emptyBody = zAppGoalList.parse({ data: [], total: 0 })
+
+      return c.json(emptyBody, 200)
+    }
+
+    conditions.push(inArray(goals.employeeId, reportEmployeeIds))
+  } else if (requestedEmployeeId === null && scope === "all") {
+    if (hasPermission(session, "goal:read:all") === false) {
+      throw new ForbiddenError()
+    }
+  } else {
+    const targetEmployeeId = requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
+
+    const isViewingOthers = targetEmployeeId !== session.employeeId
+
+    if (isViewingOthers) {
+      const relation = await resolveEmployeeRelation({
+        c,
+        viewerEmployeeId: session.employeeId,
+        targetEmployeeId,
+      })
+
+      if (relation instanceof Error) {
+        throw new InternalError("failed to resolve employee relation")
+      }
+
+      if (canReadGoalOf(session, relation) === false) {
+        throw new ForbiddenError()
+      }
+    }
+
+    conditions.push(eq(goals.employeeId, targetEmployeeId))
+  }
 
   if (period !== null) {
     conditions.push(eq(goals.period, period))

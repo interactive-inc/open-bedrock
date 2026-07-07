@@ -808,6 +808,59 @@ export const certificateRequests = sqliteTable("certificate_requests", {
 
 export type CertificateRequestRow = InferSelectModel<typeof certificateRequests>
 
+// 等級マスタ（並び順の rank を持つ等級の定義。判定・計算は持たず定義のみ）
+export const grades = sqliteTable(
+  "grades",
+  {
+    id: integer("id").primaryKey(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    rank: integer("rank").notNull(),
+    description: text("description"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 等級コードは全社で一意（同一コードの二重登録を防ぐ）。
+  (table) => [uniqueIndex("uq_grades_code").on(table.code)],
+)
+
+export type GradeRow = InferSelectModel<typeof grades>
+
+// 等級の割当履歴（社員ごとに、いつからどの等級か。事実の記録のみ）
+export const employeeGrades = sqliteTable(
+  "employee_grades",
+  {
+    id: integer("id").primaryKey(),
+    employeeId: integer("employee_id").notNull(),
+    gradeId: integer("grade_id").notNull(),
+    effectiveDate: text("effective_date").notNull(),
+    reason: text("reason"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 同一社員・同一発効日の割当の重複を DB レベルで防ぐ。
+  (table) => [
+    uniqueIndex("uq_employee_grades_employee_effective_date").on(
+      table.employeeId,
+      table.effectiveDate,
+    ),
+  ],
+)
+
+export type EmployeeGradeRow = InferSelectModel<typeof employeeGrades>
+
+// 異動・在籍イベント履歴（入社・異動・休職・復職・退職。判定は持たず事実の記録のみ）
+export const employeeEvents = sqliteTable("employee_events", {
+  id: integer("id").primaryKey(),
+  employeeId: integer("employee_id").notNull(),
+  kind: text("kind").notNull(),
+  effectiveDate: text("effective_date").notNull(),
+  fromDepartmentCode: text("from_department_code"),
+  toDepartmentCode: text("to_department_code"),
+  note: text("note"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type EmployeeEventRow = InferSelectModel<typeof employeeEvents>
+
 // 年末調整の申告受付（提出状況の記録のみ。税額の計算や判定は持たない）
 export const yearEndAdjustments = sqliteTable(
   "year_end_adjustments",

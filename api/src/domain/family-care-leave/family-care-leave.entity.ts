@@ -98,4 +98,22 @@ export class FamilyCareLeave implements Props {
       note: props.note,
     })
   }
+
+  /** requested のときだけ approved へ進めた新しい休業申出を返す。それ以外は遷移不可を返す。 */
+  withApproved(): FamilyCareLeave | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new FamilyCareLeave({ ...this.props, status: "approved" })
+  }
+
+  /** requested のときだけ cancelled へ進めた新しい休業申出を返す。それ以外は遷移不可を返す。 */
+  withCancelled(): FamilyCareLeave | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new FamilyCareLeave({ ...this.props, status: "cancelled" })
+  }
 }
