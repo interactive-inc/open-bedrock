@@ -27,6 +27,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/admin/roles/new` は権限を選んで新しいロールを作成する画面。
 - `/admin/roles/[id]/edit` はロールの名称と権限の割当を変更する画面。
 - `/admin/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面(`account:manage`)。
+- `/admin/audit-logs` は監査ログを操作種別や対象で絞り込んで閲覧する管理画面(`audit_log:read`)。
 
 ## 申請ワークフロー
 
@@ -161,6 +162,12 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/certificate-requests/new` は証明書の種類と用途を記入して発行を依頼する画面。
 - `/antisocial-checks` は反社チェック申請と申請状況を確認する画面。
 - `/antisocial-checks/new` は対象者と確認内容を記入して反社チェックを申請する画面。
+- `/certificate-requests/admin` は全社の証明書発行依頼を横断で確認する管理画面(`certificate_request:read:all`)。
+- `/resignations/admin` は全社の退職手続きを横断で確認する管理画面(`resignation:read:all`)。
+- `/life-events/admin` は全社のライフイベント届を横断で確認する管理画面(`life_event:read:all`)。
+- `/family-care-leaves/admin` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
+- `/business-trips/admin` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
+- `/rentals/admin` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
 
 ## システム
 
