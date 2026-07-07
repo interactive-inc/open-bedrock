@@ -45,6 +45,16 @@ import goalCreateHandler from "@/app/goal/create/route"
 import goalEvaluateHandler from "@/app/goal/evaluate/[goal_id]/route"
 import goalHandler from "@/app/goal/route"
 import goalListHandler from "@/app/goal/list/route"
+import gradesHandler from "@/app/grades/route"
+import gradesListHandler from "@/app/grades/list/route"
+import gradesCreateHandler from "@/app/grades/create/route"
+import gradesUpdateHandler from "@/app/grades/update/route"
+import gradesDeleteHandler from "@/app/grades/delete/route"
+import gradesAssignmentsHandler from "@/app/grades/assignments/route"
+import gradesAssignHandler from "@/app/grades/assign/route"
+import employeeEventsHandler from "@/app/employee-events/route"
+import employeeEventsListHandler from "@/app/employee-events/list/route"
+import employeeEventsRecordHandler from "@/app/employee-events/record/route"
 import kbGetHandler from "@/app/kb/get/[kid]/route"
 import kbHandler from "@/app/kb/route"
 import kbSearchHandler from "@/app/kb/search/route"
@@ -136,6 +146,8 @@ import businessTripAdminHandler from "@/app/business-trip/admin/route"
 import businessTripShowHandler from "@/app/business-trip/show/route"
 import businessTripUpdateHandler from "@/app/business-trip/update/route"
 import businessTripCancelHandler from "@/app/business-trip/cancel/route"
+import businessTripApproveHandler from "@/app/business-trip/approve/route"
+import businessTripRejectHandler from "@/app/business-trip/reject/route"
 import rentalHandler from "@/app/rental/route"
 import rentalReserveHandler from "@/app/rental/reserve/route"
 import rentalMineHandler from "@/app/rental/mine/route"
@@ -143,6 +155,8 @@ import rentalAdminHandler from "@/app/rental/admin/route"
 import rentalShowHandler from "@/app/rental/show/route"
 import rentalUpdateHandler from "@/app/rental/update/route"
 import rentalCancelHandler from "@/app/rental/cancel/route"
+import rentalLendHandler from "@/app/rental/lend/route"
+import rentalReturnHandler from "@/app/rental/return/route"
 import resignationHandler from "@/app/resignation/route"
 import resignationRequestHandler from "@/app/resignation/request/route"
 import resignationMineHandler from "@/app/resignation/mine/route"
@@ -150,6 +164,8 @@ import resignationAdminHandler from "@/app/resignation/admin/route"
 import resignationShowHandler from "@/app/resignation/show/route"
 import resignationUpdateHandler from "@/app/resignation/update/route"
 import resignationCancelHandler from "@/app/resignation/cancel/route"
+import resignationAcceptHandler from "@/app/resignation/accept/route"
+import resignationRejectHandler from "@/app/resignation/reject/route"
 import lifeEventHandler from "@/app/life-event/route"
 import lifeEventRequestHandler from "@/app/life-event/request/route"
 import lifeEventMineHandler from "@/app/life-event/mine/route"
@@ -157,6 +173,8 @@ import lifeEventAdminHandler from "@/app/life-event/admin/route"
 import lifeEventShowHandler from "@/app/life-event/show/route"
 import lifeEventUpdateHandler from "@/app/life-event/update/route"
 import lifeEventCancelHandler from "@/app/life-event/cancel/route"
+import lifeEventApproveHandler from "@/app/life-event/approve/route"
+import lifeEventRejectHandler from "@/app/life-event/reject/route"
 import familyCareLeaveHandler from "@/app/family-care-leave/route"
 import familyCareLeaveRequestHandler from "@/app/family-care-leave/request/route"
 import familyCareLeaveMineHandler from "@/app/family-care-leave/mine/route"
@@ -164,6 +182,8 @@ import familyCareLeaveAdminHandler from "@/app/family-care-leave/admin/route"
 import familyCareLeaveShowHandler from "@/app/family-care-leave/show/route"
 import familyCareLeaveUpdateHandler from "@/app/family-care-leave/update/route"
 import familyCareLeaveCancelHandler from "@/app/family-care-leave/cancel/route"
+import familyCareLeaveApproveHandler from "@/app/family-care-leave/approve/route"
+import familyCareLeaveCancelApprovalHandler from "@/app/family-care-leave/cancel-approval/route"
 import certificateRequestHandler from "@/app/certificate-request/route"
 import certificateRequestRequestHandler from "@/app/certificate-request/request/route"
 import certificateRequestMineHandler from "@/app/certificate-request/mine/route"
@@ -171,6 +191,8 @@ import certificateRequestAdminHandler from "@/app/certificate-request/admin/rout
 import certificateRequestShowHandler from "@/app/certificate-request/show/route"
 import certificateRequestUpdateHandler from "@/app/certificate-request/update/route"
 import certificateRequestCancelHandler from "@/app/certificate-request/cancel/route"
+import certificateRequestIssueHandler from "@/app/certificate-request/issue/route"
+import certificateRequestRejectHandler from "@/app/certificate-request/reject/route"
 import antisocialCheckHandler from "@/app/antisocial-check/route"
 import antisocialCheckRequestHandler from "@/app/antisocial-check/request/route"
 import antisocialCheckMineHandler from "@/app/antisocial-check/mine/route"
@@ -348,6 +370,18 @@ routes.post("/goal/list", ...goalListHandler)
 routes.post("/goal/create", ...goalCreateHandler)
 routes.post("/goal/evaluate/:goal_id?", ...goalEvaluateHandler)
 
+routes.post("/grades", ...gradesHandler)
+routes.post("/grades/list", ...gradesListHandler)
+routes.post("/grades/create", ...gradesCreateHandler)
+routes.post("/grades/update", ...gradesUpdateHandler)
+routes.post("/grades/delete", ...gradesDeleteHandler)
+routes.post("/grades/assignments", ...gradesAssignmentsHandler)
+routes.post("/grades/assign", ...gradesAssignHandler)
+
+routes.post("/employee-events", ...employeeEventsHandler)
+routes.post("/employee-events/list", ...employeeEventsListHandler)
+routes.post("/employee-events/record", ...employeeEventsRecordHandler)
+
 routes.post("/1on1", ...oneononeHandler)
 routes.post("/1on1/list", ...oneononeListHandler)
 routes.post("/1on1/create", ...oneononeCreateHandler)
@@ -457,6 +491,8 @@ routes.post("/business-trip/admin", ...businessTripAdminHandler)
 routes.post("/business-trip/show", ...businessTripShowHandler)
 routes.post("/business-trip/update", ...businessTripUpdateHandler)
 routes.post("/business-trip/cancel", ...businessTripCancelHandler)
+routes.post("/business-trip/approve", ...businessTripApproveHandler)
+routes.post("/business-trip/reject", ...businessTripRejectHandler)
 routes.post("/rental", ...rentalHandler)
 routes.post("/rental/reserve", ...rentalReserveHandler)
 routes.post("/rental/mine", ...rentalMineHandler)
@@ -464,6 +500,8 @@ routes.post("/rental/admin", ...rentalAdminHandler)
 routes.post("/rental/show", ...rentalShowHandler)
 routes.post("/rental/update", ...rentalUpdateHandler)
 routes.post("/rental/cancel", ...rentalCancelHandler)
+routes.post("/rental/lend", ...rentalLendHandler)
+routes.post("/rental/return", ...rentalReturnHandler)
 routes.post("/resignation", ...resignationHandler)
 routes.post("/resignation/request", ...resignationRequestHandler)
 routes.post("/resignation/mine", ...resignationMineHandler)
@@ -471,6 +509,8 @@ routes.post("/resignation/admin", ...resignationAdminHandler)
 routes.post("/resignation/show", ...resignationShowHandler)
 routes.post("/resignation/update", ...resignationUpdateHandler)
 routes.post("/resignation/cancel", ...resignationCancelHandler)
+routes.post("/resignation/accept", ...resignationAcceptHandler)
+routes.post("/resignation/reject", ...resignationRejectHandler)
 routes.post("/life-event", ...lifeEventHandler)
 routes.post("/life-event/request", ...lifeEventRequestHandler)
 routes.post("/life-event/mine", ...lifeEventMineHandler)
@@ -478,6 +518,8 @@ routes.post("/life-event/admin", ...lifeEventAdminHandler)
 routes.post("/life-event/show", ...lifeEventShowHandler)
 routes.post("/life-event/update", ...lifeEventUpdateHandler)
 routes.post("/life-event/cancel", ...lifeEventCancelHandler)
+routes.post("/life-event/approve", ...lifeEventApproveHandler)
+routes.post("/life-event/reject", ...lifeEventRejectHandler)
 routes.post("/family-care-leave", ...familyCareLeaveHandler)
 routes.post("/family-care-leave/request", ...familyCareLeaveRequestHandler)
 routes.post("/family-care-leave/mine", ...familyCareLeaveMineHandler)
@@ -485,6 +527,8 @@ routes.post("/family-care-leave/admin", ...familyCareLeaveAdminHandler)
 routes.post("/family-care-leave/show", ...familyCareLeaveShowHandler)
 routes.post("/family-care-leave/update", ...familyCareLeaveUpdateHandler)
 routes.post("/family-care-leave/cancel", ...familyCareLeaveCancelHandler)
+routes.post("/family-care-leave/approve", ...familyCareLeaveApproveHandler)
+routes.post("/family-care-leave/cancel-approval", ...familyCareLeaveCancelApprovalHandler)
 routes.post("/certificate-request", ...certificateRequestHandler)
 routes.post("/certificate-request/request", ...certificateRequestRequestHandler)
 routes.post("/certificate-request/mine", ...certificateRequestMineHandler)
@@ -492,6 +536,8 @@ routes.post("/certificate-request/admin", ...certificateRequestAdminHandler)
 routes.post("/certificate-request/show", ...certificateRequestShowHandler)
 routes.post("/certificate-request/update", ...certificateRequestUpdateHandler)
 routes.post("/certificate-request/cancel", ...certificateRequestCancelHandler)
+routes.post("/certificate-request/issue", ...certificateRequestIssueHandler)
+routes.post("/certificate-request/reject", ...certificateRequestRejectHandler)
 routes.post("/antisocial-check", ...antisocialCheckHandler)
 routes.post("/antisocial-check/request", ...antisocialCheckRequestHandler)
 routes.post("/antisocial-check/mine", ...antisocialCheckMineHandler)

@@ -7,6 +7,8 @@ usage:
   karte business-trip mine
   karte business-trip show --id <business-trip-id>
   karte business-trip update --id <id> --destination <s> --start <date> --end <date> --purpose <s> [--cost <n>]
-  karte business-trip cancel --id <business-trip-id>`
+  karte business-trip cancel --id <business-trip-id>
+  karte business-trip approve --id <business-trip-id>
+  karte business-trip reject --id <business-trip-id>`
 
 export default factory.createHandlers((c) => c.text(help))
