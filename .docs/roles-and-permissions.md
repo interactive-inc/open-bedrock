@@ -43,15 +43,16 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 
 判定は次のカスケード。self → :all 保持 → 配下かつ :reports 保持 → 同部署かつ :department 保持 → 拒否。関係解決(org の走査)は他者のデータに触るときだけ実行する。
 
-適用済みのキーは goal:read:{all,reports,department} / goal:evaluate と goal:evaluate:reports / attendance:read:{all,reports,department}。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため admin は保持する)。
+適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため admin は保持する)。
 
-残り: 休暇など他の機微ドメインへの適用、一覧 API のスコープ絞り込み(「配下全員の目標を一覧で」)、部署の階層(下位部署を含めるか)の扱い。
+一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests は employee_id 指定なしで scope=reports(配下全員分)または scope=all(全社)を受け付け、対応する permission が無ければ 403。
+
+残り: 部署の階層(下位部署を含めるか)の扱い。
 
 ## ギャップ(次にやること)
 
-- スコープの拡大。第1弾(目標・評価・勤怠)は済み。休暇などへの適用と、一覧 API のスコープ絞り込みが残る
-- フィールドレベルの出し分け。従業員台帳に等級・評価系フィールドを載せる前に、閲覧権限による項目の伏せ込みが必要
-- 労務系ドメイン(証明書発行・退職・産休育休介護・ライフイベント・出張・貸与品)の横断閲覧(read:all)は実装済み。申出の状態を人事が代理で進める操作 permission が残っている
+- 項目単位の出し分けは「機微項目を別資源に分離して権限を貼る」方式で解決した(等級は employees のカラムではなく grade ドメインの割当履歴として持ち、権限が無ければ API も画面も見えない)。従業員台帳本体に機微カラムを足すときも同じ方式を使う
+- 部署スコープの階層(下位部署を含めるか)が未定義
 - knowledge / skill / oneonone に管理 permission が無い
 
 ## 実装の決まりごと

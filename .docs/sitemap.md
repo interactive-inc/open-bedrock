@@ -20,6 +20,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/org/departments/new` は新しい部署ノードを登録する画面。
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
+- `/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
 
 ## 管理(IAM)
 
