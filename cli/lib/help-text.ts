@@ -43,6 +43,12 @@ commands:
   expense mine                自分の経費申請一覧
   expense update <id>         経費申請を変更
   expense delete <id>         経費申請を取り下げ
+  ringi submit                稟議申請 (--approver-id --title --amount --reason)
+  ringi me                    自分の稟議一覧 ([--status])
+  ringi inbox                 承認待ちの稟議一覧
+  ringi approve <id>          稟議を承認 ([--comment])
+  ringi reject <id>           稟議を却下 (--comment)
+  ringi admin                 稟議全件参照 ([--status --applicant-id --sort --limit --offset])
   attendance clock-in         出勤打刻 ([--note])
   attendance clock-out        退勤打刻 ([--note])
   attendance me               自分の勤怠 ([--from --to])
@@ -192,6 +198,28 @@ commands:
   antisocial-check show       反社チェック申請の詳細 (--id)
   antisocial-check update     反社チェック申請を変更 (--id --partner [--address --representative --result])
   antisocial-check cancel     反社チェック申請を取り下げ (--id)
+  meetings list               会議体一覧
+  meetings show <code>        会議体の詳細
+  meetings create             会議体を登録 (--code --name [--cadence --description])
+  meetings update <code>      会議体を更新 (--name [--cadence --description])
+  meetings archive <code>     会議体をアーカイブ
+  minutes list <meeting_code> 議事録一覧
+  minutes show <id>           議事録の詳細
+  minutes add <meeting_code>  議事録を記録 (--held-on --title --body [--attendees])
+  minutes edit <id>           議事録を更新 (--held-on --title --body [--attendees])
+  decisions list              意思決定記録の一覧
+  decisions show <id>         意思決定記録の詳細
+  decisions create            意思決定記録を作成 (--title --decided-on --context --decision [--consequences])
+  decisions update <id>       意思決定記録を更新 (--title --decided-on --context --decision [--consequences])
+  decisions supersede <id>    後続の決定で supersede (--by)
+  partners list               取引先一覧 (--q --status)
+  partners show <code>        取引先の詳細
+  partners register           取引先を登録 (--code --name [--category --corporate-number --note])
+  partners update <id>        取引先を更新 (--name [--category --corporate-number --note])
+  partners archive <id>       取引先をアーカイブ
+  contracts list              契約記録一覧 (--partner-id --order)
+  contracts create            契約記録を作成 (--partner-id --title --contract-date [--starts-on --ends-on --renewal-deadline --note])
+  contracts update <id>       契約記録を更新 (--title --contract-date [--starts-on --ends-on --renewal-deadline --note])
   batch                       バッチ状況
   roles                       ロール一覧（iam:manage_roles）
   accounts                    アカウント一覧（account:manage）
