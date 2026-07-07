@@ -34,6 +34,14 @@ import attendanceHandler from "@/app/attendance/route"
 import attendanceListHandler from "@/app/attendance/list/route"
 import attendanceMeHandler from "@/app/attendance/me/route"
 import attendanceSummaryHandler from "@/app/attendance/summary/route"
+import attendanceOvertimeHandler from "@/app/attendance/overtime/route"
+import calendarHandler from "@/app/calendar/route"
+import calendarListHandler from "@/app/calendar/list/route"
+import calendarAddHandler from "@/app/calendar/add/route"
+import calendarDeleteHandler from "@/app/calendar/delete/route"
+import workStylesHandler from "@/app/work-styles/route"
+import workStylesListHandler from "@/app/work-styles/list/route"
+import workStylesAddHandler from "@/app/work-styles/add/route"
 import batchHandler from "@/app/batch/route"
 import batchMigratePasswordHashesHandler from "@/app/batch/migrate-password-hashes/route"
 import careerApplyHandler from "@/app/career/apply/[posting_id]/route"
@@ -123,6 +131,9 @@ import reviewCycleHandler from "@/app/review/cycle/route"
 import reviewCyclesHandler from "@/app/review/cycles/route"
 import reviewHandler from "@/app/review/route"
 import reviewMineHandler from "@/app/review/mine/route"
+import reviewFormsHandler from "@/app/review/forms/route"
+import reviewFormsBulkHandler from "@/app/review/forms-bulk/route"
+import reviewDiscloseHandler from "@/app/review/disclose/route"
 import reviewResultsHandler from "@/app/review/results/[cycle_id]/[employee_code]/route"
 import reviewSubmitHandler from "@/app/review/submit/[form_id]/route"
 import roomAvailHandler from "@/app/room/avail/route"
@@ -149,6 +160,18 @@ import surveyAnswerHandler from "@/app/survey/answer/[survey_id]/route"
 import surveyHandler from "@/app/survey/route"
 import surveyListHandler from "@/app/survey/list/route"
 import surveySummaryHandler from "@/app/survey/summary/[survey_id]/route"
+import certificationsHandler from "@/app/certifications/route"
+import certificationsCreateHandler from "@/app/certifications/create/route"
+import certificationsUpdateHandler from "@/app/certifications/update/[id]/route"
+import certificationsRecordsHandler from "@/app/certifications/records/route"
+import certificationsRecordAddHandler from "@/app/certifications/record-add/route"
+import certificationsRecordRemoveHandler from "@/app/certifications/record-remove/[id]/route"
+import healthCheckupsHandler from "@/app/health-checkups/route"
+import healthCheckupsCreateHandler from "@/app/health-checkups/create/route"
+import healthCheckupsCompleteHandler from "@/app/health-checkups/complete/[id]/route"
+import workAccidentsHandler from "@/app/work-accidents/route"
+import workAccidentsCreateHandler from "@/app/work-accidents/create/route"
+import workAccidentsCloseHandler from "@/app/work-accidents/close/[id]/route"
 import trainingCompleteHandler from "@/app/training/complete/[id]/route"
 import trainingCourseHandler from "@/app/training/course/[code]/route"
 import trainingCourseCreateHandler from "@/app/training/course-create/route"
@@ -269,6 +292,23 @@ import goalUpdateHandler from "@/app/goal/update/route"
 import kbAddHandler from "@/app/kb/add/route"
 import kbDeleteHandler from "@/app/kb/delete/route"
 import kbEditHandler from "@/app/kb/edit/route"
+import announcementsHandler from "@/app/announcements/route"
+import announcementsListHandler from "@/app/announcements/list/route"
+import announcementsShowHandler from "@/app/announcements/show/[announcement_id]/route"
+import announcementsCreateHandler from "@/app/announcements/create/route"
+import announcementsUpdateHandler from "@/app/announcements/update/[announcement_id]/route"
+import announcementsPublishHandler from "@/app/announcements/publish/[announcement_id]/route"
+import announcementsArchiveHandler from "@/app/announcements/archive/[announcement_id]/route"
+import regulationsHandler from "@/app/regulations/route"
+import regulationsListHandler from "@/app/regulations/list/route"
+import regulationsShowHandler from "@/app/regulations/show/[regulation_code]/route"
+import regulationsRegisterHandler from "@/app/regulations/register/route"
+import regulationsAddVersionHandler from "@/app/regulations/add-version/[regulation_code]/route"
+import regulationsArchiveHandler from "@/app/regulations/archive/[regulation_code]/route"
+import documentsHandler from "@/app/documents/route"
+import documentsListHandler from "@/app/documents/list/route"
+import documentsRegisterHandler from "@/app/documents/register/route"
+import documentsUpdateHandler from "@/app/documents/update/[document_id]/route"
 import leaveCancelHandler from "@/app/leave/cancel/route"
 import leaveShowHandler from "@/app/leave/show/route"
 import leaveUpdateHandler from "@/app/leave/update/route"
@@ -320,6 +360,41 @@ import decisionsShowHandler from "@/app/decisions/show/[id]/route"
 import decisionsCreateHandler from "@/app/decisions/create/route"
 import decisionsUpdateHandler from "@/app/decisions/update/[id]/route"
 import decisionsSupersedeHandler from "@/app/decisions/supersede/[id]/route"
+import recruitmentHandler from "@/app/recruitment/route"
+import recruitmentPositionsHandler from "@/app/recruitment/positions/route"
+import recruitmentPositionCreateHandler from "@/app/recruitment/position-create/route"
+import recruitmentPositionUpdateHandler from "@/app/recruitment/position-update/[id]/route"
+import recruitmentCandidatesHandler from "@/app/recruitment/candidates/[position_id]/route"
+import recruitmentCandidateAddHandler from "@/app/recruitment/candidate-add/[position_id]/route"
+import recruitmentAdvanceHandler from "@/app/recruitment/advance/[id]/route"
+import commendationsHandler from "@/app/commendations/route"
+import commendationsListHandler from "@/app/commendations/list/route"
+import commendationsCreateHandler from "@/app/commendations/create/route"
+import commendationsDeleteHandler from "@/app/commendations/delete/[id]/route"
+import disciplinaryActionsHandler from "@/app/disciplinary-actions/route"
+import disciplinaryActionsListHandler from "@/app/disciplinary-actions/list/route"
+import disciplinaryActionsCreateHandler from "@/app/disciplinary-actions/create/route"
+import headcountPlansHandler from "@/app/headcount-plans/route"
+import headcountPlansListHandler from "@/app/headcount-plans/list/route"
+import headcountPlansCreateHandler from "@/app/headcount-plans/create/route"
+import headcountPlansUpdateHandler from "@/app/headcount-plans/update/[id]/route"
+import licensesHandler from "@/app/licenses/route"
+import licensesListHandler from "@/app/licenses/list/route"
+import licensesCreateHandler from "@/app/licenses/create/route"
+import licensesUpdateHandler from "@/app/licenses/update/[license_id]/route"
+import licensesCancelHandler from "@/app/licenses/cancel/[license_id]/route"
+import itIncidentsHandler from "@/app/it-incidents/route"
+import itIncidentsListHandler from "@/app/it-incidents/list/route"
+import itIncidentsCreateHandler from "@/app/it-incidents/create/route"
+import itIncidentsResolveHandler from "@/app/it-incidents/resolve/[incident_id]/route"
+import budgetsHandler from "@/app/budgets/route"
+import budgetsListHandler from "@/app/budgets/list/route"
+import budgetsCreateHandler from "@/app/budgets/create/route"
+import budgetsUpdateHandler from "@/app/budgets/update/[budget_id]/route"
+import budgetsConsumeHandler from "@/app/budgets/consume/[budget_id]/route"
+import salaryRevisionsHandler from "@/app/salary-revisions/route"
+import salaryRevisionsListHandler from "@/app/salary-revisions/list/route"
+import salaryRevisionsCreateHandler from "@/app/salary-revisions/create/route"
 
 const base = factory.createApp()
 
@@ -487,6 +562,16 @@ routes.post("/attendance/clock-out", ...attendanceClockOutHandler)
 routes.post("/attendance/me", ...attendanceMeHandler)
 routes.post("/attendance/summary", ...attendanceSummaryHandler)
 routes.post("/attendance/list", ...attendanceListHandler)
+routes.post("/attendance/overtime", ...attendanceOvertimeHandler)
+
+routes.post("/calendar", ...calendarHandler)
+routes.post("/calendar/list", ...calendarListHandler)
+routes.post("/calendar/add", ...calendarAddHandler)
+routes.post("/calendar/delete", ...calendarDeleteHandler)
+
+routes.post("/work-styles", ...workStylesHandler)
+routes.post("/work-styles/list", ...workStylesListHandler)
+routes.post("/work-styles/add", ...workStylesAddHandler)
 
 routes.post("/leave", ...leaveHandler)
 routes.post("/leave/balance", ...leaveBalanceHandler)
@@ -516,6 +601,9 @@ routes.post("/review/cycles", ...reviewCyclesHandler)
 routes.post("/review/cycle", ...reviewCycleHandler)
 routes.post("/review/cycle/create", ...reviewCycleCreateHandler)
 routes.post("/review/mine", ...reviewMineHandler)
+routes.post("/review/forms", ...reviewFormsHandler)
+routes.post("/review/forms-bulk", ...reviewFormsBulkHandler)
+routes.post("/review/disclose", ...reviewDiscloseHandler)
 routes.post("/review/submit/:form_id?", ...reviewSubmitHandler)
 routes.post("/review/results/:cycle_id?/:employee_code?", ...reviewResultsHandler)
 
@@ -551,6 +639,21 @@ routes.post("/business-trip/update", ...businessTripUpdateHandler)
 routes.post("/business-trip/cancel", ...businessTripCancelHandler)
 routes.post("/business-trip/approve", ...businessTripApproveHandler)
 routes.post("/business-trip/reject", ...businessTripRejectHandler)
+routes.post("/certifications", ...certificationsHandler)
+routes.post("/certifications/create", ...certificationsCreateHandler)
+routes.post("/certifications/update/:id?", ...certificationsUpdateHandler)
+routes.post("/certifications/records", ...certificationsRecordsHandler)
+routes.post("/certifications/record-add", ...certificationsRecordAddHandler)
+routes.post("/certifications/record-remove/:id?", ...certificationsRecordRemoveHandler)
+
+routes.post("/health-checkups", ...healthCheckupsHandler)
+routes.post("/health-checkups/create", ...healthCheckupsCreateHandler)
+routes.post("/health-checkups/complete/:id?", ...healthCheckupsCompleteHandler)
+
+routes.post("/work-accidents", ...workAccidentsHandler)
+routes.post("/work-accidents/create", ...workAccidentsCreateHandler)
+routes.post("/work-accidents/close/:id?", ...workAccidentsCloseHandler)
+
 routes.post("/rental", ...rentalHandler)
 routes.post("/rental/reserve", ...rentalReserveHandler)
 routes.post("/rental/mine", ...rentalMineHandler)
@@ -655,6 +758,23 @@ routes.post("/goal/update", ...goalUpdateHandler)
 routes.post("/kb/add", ...kbAddHandler)
 routes.post("/kb/delete", ...kbDeleteHandler)
 routes.post("/kb/edit", ...kbEditHandler)
+routes.post("/announcements", ...announcementsHandler)
+routes.post("/announcements/list", ...announcementsListHandler)
+routes.post("/announcements/show/:announcement_id?", ...announcementsShowHandler)
+routes.post("/announcements/create", ...announcementsCreateHandler)
+routes.post("/announcements/update/:announcement_id?", ...announcementsUpdateHandler)
+routes.post("/announcements/publish/:announcement_id?", ...announcementsPublishHandler)
+routes.post("/announcements/archive/:announcement_id?", ...announcementsArchiveHandler)
+routes.post("/regulations", ...regulationsHandler)
+routes.post("/regulations/list", ...regulationsListHandler)
+routes.post("/regulations/show/:regulation_code?", ...regulationsShowHandler)
+routes.post("/regulations/register", ...regulationsRegisterHandler)
+routes.post("/regulations/add-version/:regulation_code?", ...regulationsAddVersionHandler)
+routes.post("/regulations/archive/:regulation_code?", ...regulationsArchiveHandler)
+routes.post("/documents", ...documentsHandler)
+routes.post("/documents/list", ...documentsListHandler)
+routes.post("/documents/register", ...documentsRegisterHandler)
+routes.post("/documents/update/:document_id?", ...documentsUpdateHandler)
 routes.post("/leave/cancel", ...leaveCancelHandler)
 routes.post("/leave/show", ...leaveShowHandler)
 routes.post("/leave/update", ...leaveUpdateHandler)
@@ -706,5 +826,40 @@ routes.post("/decisions/show/:id?", ...decisionsShowHandler)
 routes.post("/decisions/create", ...decisionsCreateHandler)
 routes.post("/decisions/update/:id?", ...decisionsUpdateHandler)
 routes.post("/decisions/supersede/:id?", ...decisionsSupersedeHandler)
+routes.post("/recruitment", ...recruitmentHandler)
+routes.post("/recruitment/positions", ...recruitmentPositionsHandler)
+routes.post("/recruitment/position-create", ...recruitmentPositionCreateHandler)
+routes.post("/recruitment/position-update/:id?", ...recruitmentPositionUpdateHandler)
+routes.post("/recruitment/candidates/:position_id?", ...recruitmentCandidatesHandler)
+routes.post("/recruitment/candidate-add/:position_id?", ...recruitmentCandidateAddHandler)
+routes.post("/recruitment/advance/:id?", ...recruitmentAdvanceHandler)
+routes.post("/commendations", ...commendationsHandler)
+routes.post("/commendations/list", ...commendationsListHandler)
+routes.post("/commendations/create", ...commendationsCreateHandler)
+routes.post("/commendations/delete/:id?", ...commendationsDeleteHandler)
+routes.post("/disciplinary-actions", ...disciplinaryActionsHandler)
+routes.post("/disciplinary-actions/list", ...disciplinaryActionsListHandler)
+routes.post("/disciplinary-actions/create", ...disciplinaryActionsCreateHandler)
+routes.post("/headcount-plans", ...headcountPlansHandler)
+routes.post("/headcount-plans/list", ...headcountPlansListHandler)
+routes.post("/headcount-plans/create", ...headcountPlansCreateHandler)
+routes.post("/headcount-plans/update/:id?", ...headcountPlansUpdateHandler)
+routes.post("/licenses", ...licensesHandler)
+routes.post("/licenses/list", ...licensesListHandler)
+routes.post("/licenses/create", ...licensesCreateHandler)
+routes.post("/licenses/update/:license_id?", ...licensesUpdateHandler)
+routes.post("/licenses/cancel/:license_id?", ...licensesCancelHandler)
+routes.post("/it-incidents", ...itIncidentsHandler)
+routes.post("/it-incidents/list", ...itIncidentsListHandler)
+routes.post("/it-incidents/create", ...itIncidentsCreateHandler)
+routes.post("/it-incidents/resolve/:incident_id?", ...itIncidentsResolveHandler)
+routes.post("/budgets", ...budgetsHandler)
+routes.post("/budgets/list", ...budgetsListHandler)
+routes.post("/budgets/create", ...budgetsCreateHandler)
+routes.post("/budgets/update/:budget_id?", ...budgetsUpdateHandler)
+routes.post("/budgets/consume/:budget_id?", ...budgetsConsumeHandler)
+routes.post("/salary-revisions", ...salaryRevisionsHandler)
+routes.post("/salary-revisions/list", ...salaryRevisionsListHandler)
+routes.post("/salary-revisions/create", ...salaryRevisionsCreateHandler)
 
 export const app = routes

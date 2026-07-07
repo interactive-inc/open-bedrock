@@ -30,6 +30,20 @@ commands:
   kb add                      ナレッジを作成
   kb edit <id>                ナレッジを更新
   kb delete <id>              ナレッジを削除
+  announcements list          社内アナウンス一覧 (--status)
+  announcements show <id>     アナウンス詳細
+  announcements create        アナウンスを下書き作成 (--title --body)
+  announcements update <id>   アナウンスを更新 (--title --body)
+  announcements publish <id>  公開して全社へ通知
+  announcements archive <id>  アナウンスをアーカイブ
+  regulations list            規程一覧 (--status)
+  regulations show <code>     規程詳細（最新版＋版一覧）
+  regulations register        規程を新規登録 (--code --title --body --effective-on [--category --note])
+  regulations add-version <code>  新版を追加 (--body --effective-on [--note])
+  regulations archive <code>  規程をアーカイブ
+  documents list              文書台帳一覧（期限の近い順） (--category)
+  documents register          文書を登録 (--title --location [--category --partner-code --expires-on --note])
+  documents update <id>       文書を更新 (--title --location [--category --partner-code --expires-on --note])
   leave request               休暇申請 (--type --start --end [--reason])
   leave mine                  自分の休暇申請一覧
   leave show <id>             休暇申請の詳細
@@ -54,6 +68,7 @@ commands:
   attendance me               自分の勤怠 ([--from --to])
   attendance summary          月次サマリ ([--month])
   attendance list             勤怠一覧 ([--employee-id --from --to])
+  attendance overtime         時間外の参考集計 ([--month --scope])
   room avail                  会議室空き状況 (--start --end [--capacity])
   room reserve                会議室予約 (--room-id --start --end [--purpose])
   rooms list                  会議室一覧
@@ -78,7 +93,12 @@ commands:
   grades update               等級を更新 (--id --code --name --rank [--description])
   grades delete               等級を削除 (--id)
   grades assignments          等級の割当履歴 (--employee-id)
-  grades assign               等級の割当を記録 (--employee-id --grade-id --effective-date [--reason])
+  grades assign               等級の割当を記録 (--employee-id --grade-id --effective-date [--reason --review-cycle-id])
+  calendar list               会社カレンダー一覧 ([--year])
+  calendar add                会社休日/振替出勤日を記録 (--date --kind [--name])
+  calendar delete             会社カレンダーを削除 (--id)
+  work-styles list            勤務形態一覧 ([--employee-id])
+  work-styles add             勤務形態を記録 (--employee-id --style --starts-on [--ends-on --note])
   employee-events list        異動・在籍イベント履歴 (--employee-id --kind)
   employee-events record      異動・在籍イベントを記録 (--employee-id --kind --effective-date [--from --to --note])
   1on1 list                   1on1 履歴
@@ -88,6 +108,9 @@ commands:
   1on1 mine                   自分の 1on1 一覧
   review cycles               レビューサイクル一覧
   review mine                 自分の評価依頼一覧
+  review forms                被評価者ごとのフォーム/提出状況 (--subject-employee-id [--cycle-id])
+  review forms-bulk           フォームを一括作成/360度 (--cycle-id --forms <file>)(管理者)
+  review disclose             サイクル内の全フォームを一括開示 (--cycle-id)(管理者)
   review submit <id>          評価送信 (--score [--comment])
   review results <cycle> <code>  評価結果を確認(管理者)
   review cycle create         サイクル作成 (--title --period [--due])
@@ -168,6 +191,18 @@ commands:
   business-trip show          出張申請の詳細 (--id)
   business-trip update        出張申請を変更 (--id --destination --start --end --purpose [--cost])
   business-trip cancel        出張申請を取り下げ (--id)
+  certifications              資格マスタ一覧
+  certifications create        資格マスタ作成 (--code --name [--issuer --description])
+  certifications update <id>   資格マスタを更新 (--name [--issuer --description])
+  certifications records       資格保有記録一覧 ([--employee-id])
+  certifications record-add    資格保有記録を追加 (--employee-id --certification-id --acquired [--expires --note])
+  certifications record-remove <id> 資格保有記録を削除
+  health-checkups             健診・ストレスチェックの実施記録一覧 ([--fiscal-year --employee-id])
+  health-checkups create       実施記録を作成 (--employee-id --fiscal-year --kind [--status --conducted --note])
+  health-checkups complete <id> 実施記録を完了 (--conducted)
+  work-accidents              労災・事故の発生記録一覧 ([--status --employee-id])
+  work-accidents create        発生記録を作成 (--occurred --summary [--employee-id --location --severity])
+  work-accidents close <id>    発生記録を closed にする
   rental reserve              レンタル予約 (--item --start --end [--purpose])
   rental mine                 自分のレンタル予約一覧
   rental show                 レンタル予約の詳細 (--id)
@@ -220,6 +255,33 @@ commands:
   contracts list              契約記録一覧 (--partner-id --order)
   contracts create            契約記録を作成 (--partner-id --title --contract-date [--starts-on --ends-on --renewal-deadline --note])
   contracts update <id>       契約記録を更新 (--title --contract-date [--starts-on --ends-on --renewal-deadline --note])
+  recruitment positions       募集一覧 (--status) ※recruitment:manage
+  recruitment position-create 募集を作成 (--title [--department-code --status --note])
+  recruitment position-update <id> 募集を更新 (--title --status [--department-code --note])
+  recruitment candidates <position_id> 応募者一覧
+  recruitment candidate-add <position_id> 応募者を追加 (--name [--email --source --note])
+  recruitment advance <candidate_id> 選考ステージを前進 (--stage)
+  commendations list          表彰の記録一覧 (--employee-id) ※閲覧は全認証者
+  commendations create        表彰を記録 (--employee-id --title --reason --awarded-on)
+  commendations delete <id>   表彰の記録を削除
+  disciplinary-actions list   懲戒の記録一覧 (--employee-id) ※read:all・本人にも非公開
+  disciplinary-actions create 懲戒を記録 (--employee-id --kind --summary --decided-on)
+  headcount-plans list        人員計画一覧 (--fiscal-year) ※実在籍数つき・read:all
+  headcount-plans create      人員計画を作成 (--fiscal-year --planned-count [--department-code --note])
+  headcount-plans update <id> 人員計画を更新 (--planned-count [--note])
+  licenses list               ライセンス・SaaS 台帳一覧 (--status) ※read:all
+  licenses create             ライセンスを登録 (--name [--vendor --category --seats --renewal-deadline --owner-employee-id --note])
+  licenses update <id>        ライセンスを更新 (--name [--vendor --category --seats --renewal-deadline --owner-employee-id --note])
+  licenses cancel <id>        ライセンスを解約
+  it-incidents list           インシデント記録一覧 (--status) ※read:all
+  it-incidents create         インシデントを記録 (--occurred-at --title --summary [--severity])
+  it-incidents resolve <id>   インシデントを解消済みにする
+  budgets list                予算枠一覧 (--fiscal-year --department-code) ※消化・残額つき・read:all
+  budgets create              予算枠を作成 (--fiscal-year --title --amount [--department-code --note])
+  budgets update <id>         予算枠を更新 (--fiscal-year --title --amount [--department-code --note])
+  budgets consume <id>        予算枠の消化を記録 (--amount --recorded-on [--note])
+  salary-revisions list       給与改定履歴 (--employee-id) ※最機微・salary_revision 権限のみ
+  salary-revisions create     給与改定を記録 (--employee-id --effective-date --previous-base-salary --new-base-salary [--reason])
   batch                       バッチ状況
   roles                       ロール一覧（iam:manage_roles）
   accounts                    アカウント一覧（account:manage）
