@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { LifeEventAdminActions } from "@/app/(app)/life-events/admin/_components/life-event-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -24,6 +25,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社のライフイベント届一覧テーブル。詳細は各届出のページへ、従業員 ID クリックで絞り込む。
@@ -43,6 +45,7 @@ export function LifeEventAdminTable(props: Props) {
             <TableHead className="hidden md:table-cell">詳細</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">届出日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -79,6 +82,16 @@ export function LifeEventAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  {row.status === "submitted" ? (
+                    <LifeEventAdminActions lifeEventId={row.id} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

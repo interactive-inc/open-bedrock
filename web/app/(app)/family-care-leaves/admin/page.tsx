@@ -13,6 +13,7 @@ import {
   type FamilyCareLeaveAdminFilter,
 } from "@/lib/api/get-family-care-leave-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
 import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all-family-care-leaves"
 
 export const metadata = { title: "産休・育休・介護休業管理" }
@@ -31,6 +32,8 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
   ) {
     notFound()
   }
+
+  const canManage = canManageFamilyCareLeaves(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -84,7 +87,12 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <FamilyCareLeaveAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <FamilyCareLeaveAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -94,6 +102,7 @@ async function FamilyCareLeaveAdminSection(props: {
   filter: FamilyCareLeaveAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getFamilyCareLeaveAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -106,7 +115,11 @@ async function FamilyCareLeaveAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <FamilyCareLeaveAdminTable rows={result.data} total={result.total} />
+      <FamilyCareLeaveAdminTable
+        rows={result.data}
+        total={result.total}
+        canManage={props.canManage}
+      />
 
       <TablePagination
         pathname="/family-care-leaves/admin"

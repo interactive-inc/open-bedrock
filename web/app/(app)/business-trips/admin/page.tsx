@@ -13,6 +13,7 @@ import {
   type BusinessTripAdminFilter,
 } from "@/lib/api/get-business-trip-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
 import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-business-trips"
 
 export const metadata = { title: "出張申請管理" }
@@ -28,6 +29,8 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
   if (currentUser instanceof Error || canViewAllBusinessTrips(currentUser.permissions) === false) {
     notFound()
   }
+
+  const canManage = canManageBusinessTrips(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -74,7 +77,12 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <BusinessTripAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <BusinessTripAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -84,6 +92,7 @@ async function BusinessTripAdminSection(props: {
   filter: BusinessTripAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getBusinessTripAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -96,7 +105,7 @@ async function BusinessTripAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <BusinessTripAdminTable rows={result.data} total={result.total} />
+      <BusinessTripAdminTable rows={result.data} total={result.total} canManage={props.canManage} />
 
       <TablePagination
         pathname="/business-trips/admin"

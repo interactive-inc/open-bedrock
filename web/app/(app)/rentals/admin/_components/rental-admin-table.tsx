@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { RentalAdminActions } from "@/app/(app)/rentals/admin/_components/rental-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -25,6 +26,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社の貸与品予約一覧テーブル。詳細は各予約のページへ、申請者 ID クリックで絞り込む。
@@ -44,6 +46,7 @@ export function RentalAdminTable(props: Props) {
             <TableHead className="hidden md:table-cell">用途</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">申請日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -84,6 +87,12 @@ export function RentalAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  <RentalAdminActions reservationId={row.id} status={row.status} />
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

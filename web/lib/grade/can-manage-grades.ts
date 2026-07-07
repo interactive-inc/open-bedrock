@@ -1,0 +1,4 @@
+/** 等級マスタの登録・更新・削除・付与を行える権限（grade:manage）を持つか判定する（api の canManageGrades と同一基準）。 */
+export function canManageGrades(permissions: ReadonlyArray<string>): boolean {
+  return permissions.includes("grade:manage")
+}

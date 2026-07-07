@@ -13,6 +13,7 @@ import {
   type ResignationAdminFilter,
 } from "@/lib/api/get-resignation-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 import { canViewAllResignations } from "@/lib/resignation/can-view-all-resignations"
 
 export const metadata = { title: "退職手続き管理" }
@@ -28,6 +29,8 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
   if (currentUser instanceof Error || canViewAllResignations(currentUser.permissions) === false) {
     notFound()
   }
+
+  const canManage = canManageResignations(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -74,7 +77,12 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <ResignationAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <ResignationAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -84,6 +92,7 @@ async function ResignationAdminSection(props: {
   filter: ResignationAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getResignationAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -96,7 +105,7 @@ async function ResignationAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <ResignationAdminTable rows={result.data} total={result.total} />
+      <ResignationAdminTable rows={result.data} total={result.total} canManage={props.canManage} />
 
       <TablePagination
         pathname="/resignations/admin"

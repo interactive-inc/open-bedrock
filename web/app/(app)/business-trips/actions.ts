@@ -1,9 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { approveBusinessTrip } from "@/lib/api/approve-business-trip"
 import { cancelBusinessTrip } from "@/lib/api/cancel-business-trip"
 import { createBusinessTrip } from "@/lib/api/create-business-trip"
+import { getMe } from "@/lib/api/get-me"
+import { rejectBusinessTrip } from "@/lib/api/reject-business-trip"
 import { updateBusinessTrip } from "@/lib/api/update-business-trip"
+import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
 import {
   FORM_CONSTRAINTS,
   toOptionalIntInRange,
@@ -15,6 +19,73 @@ import {
 export type BusinessTripActionState = {
   ok: boolean
   error: string | null
+}
+
+// 人事が出張申請を承認する Server Action。business_trip_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function approveBusinessTripAction(
+  previousState: BusinessTripActionState,
+  formData: FormData,
+): Promise<BusinessTripActionState> {
+  const id = toBusinessTripIdText(formData.get("business_trip_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageBusinessTrips(currentUser.permissions) === false) {
+    return { ok: false, error: "出張申請を管理する権限がありません" }
+  }
+
+  const approved = await approveBusinessTrip(id)
+
+  if (approved instanceof Error) {
+    return { ok: false, error: approved.message }
+  }
+
+  revalidatePath("/business-trips/admin")
+
+  return { ok: true, error: null }
+}
+
+// 人事が出張申請を却下する Server Action。business_trip_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function rejectBusinessTripAction(
+  previousState: BusinessTripActionState,
+  formData: FormData,
+): Promise<BusinessTripActionState> {
+  const id = toBusinessTripIdText(formData.get("business_trip_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageBusinessTrips(currentUser.permissions) === false) {
+    return { ok: false, error: "出張申請を管理する権限がありません" }
+  }
+
+  const rejected = await rejectBusinessTrip(id)
+
+  if (rejected instanceof Error) {
+    return { ok: false, error: rejected.message }
+  }
+
+  revalidatePath("/business-trips/admin")
+
+  return { ok: true, error: null }
+}
+
+// id 用の FormData 値を取り出す。未入力は null。
+function toBusinessTripIdText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
+  }
+
+  return value.trim()
 }
 
 // 出張申請作成 Server Action。destination/start_date/end_date/purpose 必須、estimated_cost は任意。

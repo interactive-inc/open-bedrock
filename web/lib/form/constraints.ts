@@ -22,6 +22,18 @@ export const FORM_CONSTRAINTS = {
     requiredSkillsMax: 3_000,
     applicationMessageMax: 3_000,
   },
+  grade: {
+    codeMax: 100,
+    nameMax: 200,
+    rankMin: 1,
+    rankMax: 9_999,
+    descriptionMax: 3_000,
+    reasonMax: 3_000,
+  },
+  employeeEvent: {
+    departmentCodeMax: 200,
+    noteMax: 3_000,
+  },
   goal: {
     periodMax: 100,
     titleMax: 500,

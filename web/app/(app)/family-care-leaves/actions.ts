@@ -1,9 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { approveFamilyCareLeave } from "@/lib/api/approve-family-care-leave"
 import { cancelFamilyCareLeave } from "@/lib/api/cancel-family-care-leave"
+import { cancelFamilyCareLeaveApproval } from "@/lib/api/cancel-family-care-leave-approval"
 import { createFamilyCareLeave } from "@/lib/api/create-family-care-leave"
+import { getMe } from "@/lib/api/get-me"
 import { updateFamilyCareLeave } from "@/lib/api/update-family-care-leave"
+import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
 import {
   FORM_CONSTRAINTS,
   toOptionalText,
@@ -15,6 +19,79 @@ import {
 export type FamilyCareLeaveActionState = {
   ok: boolean
   error: string | null
+}
+
+// 人事が休業申出を承認する Server Action。family_care_leave_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function approveFamilyCareLeaveAction(
+  previousState: FamilyCareLeaveActionState,
+  formData: FormData,
+): Promise<FamilyCareLeaveActionState> {
+  const id = toFamilyCareLeaveIdText(formData.get("family_care_leave_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申出を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    canManageFamilyCareLeaves(currentUser.permissions) === false
+  ) {
+    return { ok: false, error: "休業申出を管理する権限がありません" }
+  }
+
+  const approved = await approveFamilyCareLeave(id)
+
+  if (approved instanceof Error) {
+    return { ok: false, error: approved.message }
+  }
+
+  revalidatePath("/family-care-leaves/admin")
+
+  return { ok: true, error: null }
+}
+
+// 人事が休業申出を取消にする Server Action。family_care_leave_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function cancelFamilyCareLeaveApprovalAction(
+  previousState: FamilyCareLeaveActionState,
+  formData: FormData,
+): Promise<FamilyCareLeaveActionState> {
+  const id = toFamilyCareLeaveIdText(formData.get("family_care_leave_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申出を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    canManageFamilyCareLeaves(currentUser.permissions) === false
+  ) {
+    return { ok: false, error: "休業申出を管理する権限がありません" }
+  }
+
+  const cancelled = await cancelFamilyCareLeaveApproval(id)
+
+  if (cancelled instanceof Error) {
+    return { ok: false, error: cancelled.message }
+  }
+
+  revalidatePath("/family-care-leaves/admin")
+
+  return { ok: true, error: null }
+}
+
+// id 用の FormData 値を取り出す。未入力は null。
+function toFamilyCareLeaveIdText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
+  }
+
+  return value.trim()
 }
 
 // 休業申出作成 Server Action。leave_kind/start_date/end_date 必須、note は任意。

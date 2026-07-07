@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Award,
   Bell,
   Boxes,
   Briefcase,
@@ -291,6 +292,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "部署", href: "/org/departments" },
         ],
       },
+      { label: "等級", href: "/grades", icon: Award },
     ],
   },
   {

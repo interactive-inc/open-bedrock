@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { CertificateRequestAdminActions } from "@/app/(app)/certificate-requests/admin/_components/certificate-request-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -25,6 +26,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社の証明書発行依頼一覧テーブル。詳細は各依頼のページへ、依頼者名クリックで絞り込む。
@@ -44,6 +46,7 @@ export function CertificateRequestAdminTable(props: Props) {
             <TableHead className="hidden md:table-cell">希望日</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">依頼日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -82,6 +85,16 @@ export function CertificateRequestAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  {row.status === "requested" ? (
+                    <CertificateRequestAdminActions certificateRequestId={row.id} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

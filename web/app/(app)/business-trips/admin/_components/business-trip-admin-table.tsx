@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { BusinessTripAdminActions } from "@/app/(app)/business-trips/admin/_components/business-trip-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -26,6 +27,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社の出張申請一覧テーブル。詳細は各申請のページへ、出張者 ID クリックで絞り込む。
@@ -45,6 +47,7 @@ export function BusinessTripAdminTable(props: Props) {
             <TableHead className="hidden md:table-cell">概算費用</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">申請日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -87,6 +90,16 @@ export function BusinessTripAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  {row.status === "requested" ? (
+                    <BusinessTripAdminActions businessTripId={row.id} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

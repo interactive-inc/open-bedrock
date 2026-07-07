@@ -10,6 +10,7 @@ import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getRentalAdminList, type RentalAdminFilter } from "@/lib/api/get-rental-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageRentals } from "@/lib/rental/can-manage-rentals"
 import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-reservations"
 
 export const metadata = { title: "貸与品予約管理" }
@@ -28,6 +29,8 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
   ) {
     notFound()
   }
+
+  const canManage = canManageRentals(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -74,7 +77,12 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <RentalAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <RentalAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -84,6 +92,7 @@ async function RentalAdminSection(props: {
   filter: RentalAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getRentalAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -96,7 +105,7 @@ async function RentalAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <RentalAdminTable rows={result.data} total={result.total} />
+      <RentalAdminTable rows={result.data} total={result.total} canManage={props.canManage} />
 
       <TablePagination
         pathname="/rentals/admin"
