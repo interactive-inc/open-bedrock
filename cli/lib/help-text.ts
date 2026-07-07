@@ -67,6 +67,14 @@ commands:
   goal mine                   自分の目標一覧
   goal update <id>            目標を更新
   goal delete <id>            目標を削除
+  grades list                 等級マスタ一覧
+  grades create               等級を作成 (--code --name --rank [--description])
+  grades update               等級を更新 (--id --code --name --rank [--description])
+  grades delete               等級を削除 (--id)
+  grades assignments          等級の割当履歴 (--employee-id)
+  grades assign               等級の割当を記録 (--employee-id --grade-id --effective-date [--reason])
+  employee-events list        異動・在籍イベント履歴 (--employee-id --kind)
+  employee-events record      異動・在籍イベントを記録 (--employee-id --kind --effective-date [--from --to --note])
   1on1 list                   1on1 履歴
   1on1 create                 1on1 作成 (--member-email [--topics --manager-note --next-action])
   1on1 show <id>              1on1 の詳細

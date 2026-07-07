@@ -7,6 +7,8 @@ usage:
   karte rental mine                                                                自分の一覧
   karte rental show --id <reservation-id>                                          詳細
   karte rental update --id <reservation-id> --item <name> --start <date> --end <date> [--purpose <p>]
-  karte rental cancel --id <reservation-id>                                        取消`
+  karte rental cancel --id <reservation-id>                                        取消
+  karte rental lend --id <reservation-id>                                          貸出
+  karte rental return --id <reservation-id>                                        返却`
 
 export default factory.createHandlers((c) => c.text(help))
