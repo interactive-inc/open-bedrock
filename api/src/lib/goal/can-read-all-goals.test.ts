@@ -3,8 +3,8 @@ import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canReadAllGoals", () => {
-  test("manager can read all", () => {
-    expect(canReadAllGoals(makeTestSession("manager"))).toBe(true)
+  test("manager cannot read all (scoped to reports since 0011)", () => {
+    expect(canReadAllGoals(makeTestSession("manager"))).toBe(false)
   })
 
   test("hr can read all", () => {

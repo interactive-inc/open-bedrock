@@ -12,7 +12,28 @@ import { ApplicationError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
 import type { Context } from "@/env"
+
+// 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。
+async function seedReportsTo(
+  db: D1Database,
+  props: { managerId: number; managerCode: string; ownerId: number; ownerCode: string },
+): Promise<void> {
+  await seedD1(db, "employees", [
+    { id: props.managerId, code: props.managerCode, name: "Manager", status: "active" },
+    { id: props.ownerId, code: props.ownerCode, name: "Owner", status: "active" },
+  ])
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: props.managerCode, manager_employee_code: null },
+    {
+      department_code: "D001",
+      employee_code: props.ownerCode,
+      manager_employee_code: props.managerCode,
+    },
+  ])
+}
 
 async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
   const result = await new CreateGoal(context).run({
@@ -111,7 +132,26 @@ describe("GetGoal", () => {
     expect(result).toBeInstanceOf(Goal)
   })
 
-  test("returns the goal for a manager viewing another's goal", async () => {
+  test("returns the goal for a manager viewing a report's goal", async () => {
+    const { context, db } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    await seedReportsTo(db, { managerId: 2, managerCode: "E002", ownerId: 1, ownerCode: "E001" })
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new GetGoal(context).run({
+      goalId: goal.id,
+      viewerEmployeeId: 2,
+      session: makeTestSession("manager", 2),
+    })
+
+    expect(result).toBeInstanceOf(Goal)
+  })
+
+  test("rejects a manager viewing a non-report's goal", async () => {
     const { context } = createTestContext()
     const goal = await seedGoal(context, 1)
 
@@ -122,10 +162,10 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: goal.id,
       viewerEmployeeId: 2,
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
     })
 
-    expect(result).toBeInstanceOf(Goal)
+    expectApplicationError(result, ForbiddenError, "not_viewable")
   })
 
   test("rejects non-owner member with not_viewable", async () => {
@@ -386,7 +426,30 @@ describe("CreateGoalEvaluation", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
-  test("creates a manager evaluation for a privileged role", async () => {
+  test("creates a manager evaluation for the report's manager", async () => {
+    const { context, db } = createTestContext()
+    const goal = await seedGoal(context, 1)
+
+    await seedReportsTo(db, { managerId: 2, managerCode: "E002", ownerId: 1, ownerCode: "E001" })
+
+    if (goal.id === null) {
+      throw new Error("id is null")
+    }
+
+    const result = await new CreateGoalEvaluation(context).run({
+      goalId: goal.id,
+      kind: "manager",
+      score: 5,
+      comment: "Excellent",
+      evaluatorId: 2,
+      session: makeTestSession("manager", 2),
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expect(result).toBeInstanceOf(GoalEvaluation)
+  })
+
+  test("rejects a manager evaluation for a non-report", async () => {
     const { context } = createTestContext()
     const goal = await seedGoal(context, 1)
 
@@ -400,11 +463,11 @@ describe("CreateGoalEvaluation", () => {
       score: 5,
       comment: "Excellent",
       evaluatorId: 2,
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toBeInstanceOf(GoalEvaluation)
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects manager evaluation by member with forbidden", async () => {

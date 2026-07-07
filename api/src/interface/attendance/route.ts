@@ -1,4 +1,6 @@
 import { resolveAttendanceSearchQuery } from "@/interface/attendance/resolve-attendance-search-query"
+import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { attendanceListQuerySchema } from "@/interface/attendance/attendance-list-query"
 import {
   DEFAULT_LIST_LIMIT,
@@ -14,7 +16,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
-import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /attendance — 勤怠検索（他人の閲覧は attendance:read:all 権限のみ）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -36,11 +38,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     return Number.isInteger(parsed2) ? parsed2 : null
   })()
 
+  const isViewingOthers = requestedEmployeeId !== null && requestedEmployeeId !== session.employeeId
+
+  let relation: EmployeeRelation | null = null
+
+  if (isViewingOthers && requestedEmployeeId !== null) {
+    const resolved = await resolveEmployeeRelation({
+      c,
+      viewerEmployeeId: session.employeeId,
+      targetEmployeeId: requestedEmployeeId,
+    })
+
+    if (resolved instanceof Error) {
+      throw new InternalError("failed to resolve employee relation")
+    }
+
+    relation = resolved
+  }
+
   const query = resolveAttendanceSearchQuery({
     requestedEmployeeId,
     from: parsed.data.from ?? null,
     to: parsed.data.to ?? null,
     session: session,
+    relation,
   })
 
   if (query instanceof ApplicationError) {

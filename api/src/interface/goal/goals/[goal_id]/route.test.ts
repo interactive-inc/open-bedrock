@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/infrastructure/seed/seed-goal-evaluations"
 import { seedGoals } from "@/infrastructure/seed/seed-goals"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -49,6 +50,16 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   await seedD1(
     db,
@@ -162,6 +173,24 @@ describe("GET /goals/:goal_id", () => {
     const response = await request({
       path: `/goals/${othersGoalId}`,
       token: await tokenFor(5, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("manager can view a report's goal (E004 over E005's goal 1)", async () => {
+    const response = await request({
+      path: `/goals/${ownGoalId}`,
+      token: await tokenFor(4, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("manager cannot view a non-report's goal (E004 not over E009's goal 3)", async () => {
+    const response = await request({
+      path: `/goals/${othersGoalId}`,
+      token: await tokenFor(4, "manager"),
     })
 
     expect(response.status).toBe(403)
