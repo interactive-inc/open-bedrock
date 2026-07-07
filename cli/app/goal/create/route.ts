@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte goal create --period <p> --title <t> [--kpi <k>] [--weight <n>]`
+export const help = `karte goal create --period <p> --title <t> [--kpi <k>] [--weight <n>] [--owner-type individual|department|company] [--department-code <c>] [--parent-goal-id <id>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -16,6 +16,9 @@ export default factory.createHandlers(
       title: z.string().optional(),
       kpi: z.string().optional(),
       weight: z.string().optional(),
+      "owner-type": z.enum(["individual", "department", "company"]).optional(),
+      "department-code": z.string().optional(),
+      "parent-goal-id": z.string().optional(),
     }),
   ),
   async (c) => {
@@ -33,6 +36,11 @@ export default factory.createHandlers(
         title: query.title,
         weight: query.weight ? toFiniteNumber(query.weight, "--weight") : 10,
         kpi: query.kpi,
+        owner_type: query["owner-type"] ?? "individual",
+        department_code: query["department-code"],
+        parent_goal_id: query["parent-goal-id"]
+          ? toFiniteNumber(query["parent-goal-id"], "--parent-goal-id")
+          : undefined,
       },
     })
 

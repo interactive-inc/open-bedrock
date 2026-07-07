@@ -18,6 +18,16 @@ import assetMineHandler from "@/app/asset/mine/route"
 import assetRegisterHandler from "@/app/asset/register/route"
 import assetReturnHandler from "@/app/asset/return/[asset_code]/route"
 import assetShowHandler from "@/app/asset/show/[asset_code]/route"
+import partnersHandler from "@/app/partners/route"
+import partnersListHandler from "@/app/partners/list/route"
+import partnersShowHandler from "@/app/partners/show/[partner_code]/route"
+import partnersRegisterHandler from "@/app/partners/register/route"
+import partnersUpdateHandler from "@/app/partners/update/[partner_id]/route"
+import partnersArchiveHandler from "@/app/partners/archive/[partner_id]/route"
+import contractsHandler from "@/app/contracts/route"
+import contractsListHandler from "@/app/contracts/list/route"
+import contractsCreateHandler from "@/app/contracts/create/route"
+import contractsUpdateHandler from "@/app/contracts/update/[contract_id]/route"
 import attendanceClockInHandler from "@/app/attendance/clock-in/route"
 import attendanceClockOutHandler from "@/app/attendance/clock-out/route"
 import attendanceHandler from "@/app/attendance/route"
@@ -32,6 +42,7 @@ import careerPostingsHandler from "@/app/career/postings/route"
 import careerSheetHandler from "@/app/career/sheet/route"
 import careerSheetUpdateHandler from "@/app/career/sheet-update/route"
 import dashboardHandler from "@/app/dashboard/route"
+import dashboardManagementHandler from "@/app/dashboard/management/route"
 import employeeHandler from "@/app/employee/route"
 import employeeSearchHandler from "@/app/employee/search/route"
 import expenseApproveHandler from "@/app/expense/approve/[expense_id]/route"
@@ -41,10 +52,18 @@ import expenseMineHandler from "@/app/expense/mine/route"
 import expenseRejectHandler from "@/app/expense/reject/[expense_id]/route"
 import expenseShowHandler from "@/app/expense/show/[expense_id]/route"
 import expenseSubmitHandler from "@/app/expense/submit/route"
+import ringiHandler from "@/app/ringi/route"
+import ringiAdminHandler from "@/app/ringi/admin/route"
+import ringiApproveHandler from "@/app/ringi/approve/[ringi_id]/route"
+import ringiInboxHandler from "@/app/ringi/inbox/route"
+import ringiMeHandler from "@/app/ringi/me/route"
+import ringiRejectHandler from "@/app/ringi/reject/[ringi_id]/route"
+import ringiSubmitHandler from "@/app/ringi/submit/route"
 import goalCreateHandler from "@/app/goal/create/route"
 import goalEvaluateHandler from "@/app/goal/evaluate/[goal_id]/route"
 import goalHandler from "@/app/goal/route"
 import goalListHandler from "@/app/goal/list/route"
+import goalTreeHandler from "@/app/goal/tree/route"
 import gradesHandler from "@/app/grades/route"
 import gradesListHandler from "@/app/grades/list/route"
 import gradesCreateHandler from "@/app/grades/create/route"
@@ -284,6 +303,23 @@ import trainingCourseArchiveHandler from "@/app/training/course-archive/route"
 import trainingCourseUpdateHandler from "@/app/training/course-update/route"
 import trainingRescheduleHandler from "@/app/training/reschedule/route"
 import trainingShowHandler from "@/app/training/show/route"
+import meetingsHandler from "@/app/meetings/route"
+import meetingsListHandler from "@/app/meetings/list/route"
+import meetingsShowHandler from "@/app/meetings/show/[code]/route"
+import meetingsCreateHandler from "@/app/meetings/create/route"
+import meetingsUpdateHandler from "@/app/meetings/update/[code]/route"
+import meetingsArchiveHandler from "@/app/meetings/archive/[code]/route"
+import minutesHandler from "@/app/minutes/route"
+import minutesListHandler from "@/app/minutes/list/[meeting_code]/route"
+import minutesShowHandler from "@/app/minutes/show/[id]/route"
+import minutesAddHandler from "@/app/minutes/add/[meeting_code]/route"
+import minutesEditHandler from "@/app/minutes/edit/[id]/route"
+import decisionsHandler from "@/app/decisions/route"
+import decisionsListHandler from "@/app/decisions/list/route"
+import decisionsShowHandler from "@/app/decisions/show/[id]/route"
+import decisionsCreateHandler from "@/app/decisions/create/route"
+import decisionsUpdateHandler from "@/app/decisions/update/[id]/route"
+import decisionsSupersedeHandler from "@/app/decisions/supersede/[id]/route"
 
 const base = factory.createApp()
 
@@ -365,8 +401,17 @@ routes.post("/expense/show/:expense_id?", ...expenseShowHandler)
 routes.post("/expense/approve/:expense_id?", ...expenseApproveHandler)
 routes.post("/expense/reject/:expense_id?", ...expenseRejectHandler)
 
+routes.post("/ringi", ...ringiHandler)
+routes.post("/ringi/submit", ...ringiSubmitHandler)
+routes.post("/ringi/me", ...ringiMeHandler)
+routes.post("/ringi/inbox", ...ringiInboxHandler)
+routes.post("/ringi/approve/:ringi_id?", ...ringiApproveHandler)
+routes.post("/ringi/reject/:ringi_id?", ...ringiRejectHandler)
+routes.post("/ringi/admin", ...ringiAdminHandler)
+
 routes.post("/goal", ...goalHandler)
 routes.post("/goal/list", ...goalListHandler)
+routes.post("/goal/tree", ...goalTreeHandler)
 routes.post("/goal/create", ...goalCreateHandler)
 routes.post("/goal/evaluate/:goal_id?", ...goalEvaluateHandler)
 
@@ -416,6 +461,18 @@ routes.post("/asset/show/:asset_code?", ...assetShowHandler)
 routes.post("/asset/register", ...assetRegisterHandler)
 routes.post("/asset/lend/:asset_code?", ...assetLendHandler)
 routes.post("/asset/return/:asset_code?", ...assetReturnHandler)
+
+routes.post("/partners", ...partnersHandler)
+routes.post("/partners/list", ...partnersListHandler)
+routes.post("/partners/show/:partner_code?", ...partnersShowHandler)
+routes.post("/partners/register", ...partnersRegisterHandler)
+routes.post("/partners/update/:partner_id?", ...partnersUpdateHandler)
+routes.post("/partners/archive/:partner_id?", ...partnersArchiveHandler)
+
+routes.post("/contracts", ...contractsHandler)
+routes.post("/contracts/list", ...contractsListHandler)
+routes.post("/contracts/create", ...contractsCreateHandler)
+routes.post("/contracts/update/:contract_id?", ...contractsUpdateHandler)
 
 routes.post("/notify", ...notifyHandler)
 routes.post("/notify/list", ...notifyListHandler)
@@ -484,6 +541,7 @@ routes.post("/shift/swap-approve/:id?", ...shiftSwapApproveHandler)
 routes.post("/batch", ...batchHandler)
 routes.post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesHandler)
 routes.post("/dashboard", ...dashboardHandler)
+routes.post("/dashboard/management", ...dashboardManagementHandler)
 routes.post("/business-trip", ...businessTripHandler)
 routes.post("/business-trip/request", ...businessTripRequestHandler)
 routes.post("/business-trip/mine", ...businessTripMineHandler)
@@ -631,5 +689,22 @@ routes.post("/training/course-archive", ...trainingCourseArchiveHandler)
 routes.post("/training/course-update", ...trainingCourseUpdateHandler)
 routes.post("/training/reschedule", ...trainingRescheduleHandler)
 routes.post("/training/show", ...trainingShowHandler)
+routes.post("/meetings", ...meetingsHandler)
+routes.post("/meetings/list", ...meetingsListHandler)
+routes.post("/meetings/show/:code?", ...meetingsShowHandler)
+routes.post("/meetings/create", ...meetingsCreateHandler)
+routes.post("/meetings/update/:code?", ...meetingsUpdateHandler)
+routes.post("/meetings/archive/:code?", ...meetingsArchiveHandler)
+routes.post("/minutes", ...minutesHandler)
+routes.post("/minutes/list/:meeting_code?", ...minutesListHandler)
+routes.post("/minutes/show/:id?", ...minutesShowHandler)
+routes.post("/minutes/add/:meeting_code?", ...minutesAddHandler)
+routes.post("/minutes/edit/:id?", ...minutesEditHandler)
+routes.post("/decisions", ...decisionsHandler)
+routes.post("/decisions/list", ...decisionsListHandler)
+routes.post("/decisions/show/:id?", ...decisionsShowHandler)
+routes.post("/decisions/create", ...decisionsCreateHandler)
+routes.post("/decisions/update/:id?", ...decisionsUpdateHandler)
+routes.post("/decisions/supersede/:id?", ...decisionsSupersedeHandler)
 
 export const app = routes
