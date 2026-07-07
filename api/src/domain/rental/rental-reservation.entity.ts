@@ -8,7 +8,7 @@ const zProps = z.object({
   startDate: z.string(),
   endDate: z.string(),
   purpose: z.string().nullable(),
-  status: z.enum(["requested"]),
+  status: z.enum(["requested", "lent", "returned"]),
   createdAt: z.string(),
 })
 
@@ -100,5 +100,23 @@ export class RentalReservation implements Props {
       startDate: props.startDate,
       endDate: props.endDate,
     })
+  }
+
+  /** requested のときだけ lent へ進めた新しい予約を返す。それ以外は遷移不可を返す。 */
+  withLent(): RentalReservation | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new RentalReservation({ ...this.props, status: "lent" })
+  }
+
+  /** lent のときだけ returned へ進めた新しい予約を返す。それ以外は遷移不可を返す。 */
+  withReturned(): RentalReservation | { reason: "invalid_transition" } {
+    if (this.status !== "lent") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new RentalReservation({ ...this.props, status: "returned" })
   }
 }

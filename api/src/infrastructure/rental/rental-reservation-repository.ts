@@ -180,6 +180,31 @@ export class RentalReservationRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<RentalReservation | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(rentalReservations)
+        .set({ status: props.toStatus })
+        .where(
+          and(eq(rentalReservations.id, props.id), eq(rentalReservations.status, props.fromStatus)),
+        )
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : RentalReservation.fromRow(row)
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to update rental_reservation status")
+    }
+  }
+
   // 予約を削除する。status が requested の行のみ対象とする。
   // 0 行削除（対象なし or status が requested でない）なら null を返す。
   async delete(id: string): Promise<true | null | Error> {

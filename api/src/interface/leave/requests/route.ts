@@ -1,13 +1,172 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { zAppLeaveRequest } from "@/lib/app-schemas"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
+import { canReadLeaveOf } from "@/lib/leave/can-read-leave-of"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
+import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/lib/factory"
 import { isoDate, leaveTypeSchema } from "@/lib/schemas"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { employees, leaveRequests } from "@/schema"
+import { and, count, desc, eq, inArray } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+
+// GET /leave/requests — 他者の休暇申請一覧。
+// employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。
+// scope=reports で配下全員分、scope=all で全社分を一覧する(対応 permission 必須)。
+// 本人分は /leave/requests/me を使う。
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "query",
+    z.object({
+      employee_id: z.string().optional(),
+      scope: z.enum(["reports", "all"]).optional(),
+      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const query = c.req.valid("query")
+
+    const requestedEmployeeId = (() => {
+      if (query.employee_id === undefined) return null
+      const parsed = Number(query.employee_id)
+      return Number.isInteger(parsed) ? parsed : null
+    })()
+
+    const conditions: Array<SQL> = []
+
+    if (requestedEmployeeId === null && query.scope === "reports") {
+      if (hasPermission(session, "leave:read:reports") === false) {
+        throw new ForbiddenError()
+      }
+
+      const reportEmployeeIds = await listReportEmployeeIds({
+        c,
+        viewerEmployeeId: session.employeeId,
+      })
+
+      if (reportEmployeeIds instanceof Error) {
+        throw new InternalError("failed to resolve report employees")
+      }
+
+      if (reportEmployeeIds.length === 0) {
+        const emptyBody = zAppLeaveRequestAdminList.parse({ data: [], total: 0 })
+
+        return c.json(emptyBody, 200)
+      }
+
+      conditions.push(inArray(leaveRequests.employeeId, reportEmployeeIds))
+    } else if (requestedEmployeeId === null && query.scope === "all") {
+      if (hasPermission(session, "leave:read:all") === false) {
+        throw new ForbiddenError()
+      }
+    } else {
+      const targetEmployeeId =
+        requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
+
+      const relation = await resolveEmployeeRelation({
+        c,
+        viewerEmployeeId: session.employeeId,
+        targetEmployeeId,
+      })
+
+      if (relation instanceof Error) {
+        throw new InternalError("failed to resolve employee relation")
+      }
+
+      if (canReadLeaveOf(session, relation) === false) {
+        throw new ForbiddenError()
+      }
+
+      conditions.push(eq(leaveRequests.employeeId, targetEmployeeId))
+    }
+
+    if (query.status !== undefined) {
+      conditions.push(eq(leaveRequests.status, query.status))
+    }
+
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+
+    const where = conditions.length === 0 ? undefined : and(...conditions)
+
+    const rows = await c.var.database
+      .select({
+        id: leaveRequests.id,
+        employeeId: leaveRequests.employeeId,
+        applicantName: employees.name,
+        applicantDeptName: employees.deptName,
+        leaveType: leaveRequests.leaveType,
+        startDate: leaveRequests.startDate,
+        endDate: leaveRequests.endDate,
+        days: leaveRequests.days,
+        reason: leaveRequests.reason,
+        status: leaveRequests.status,
+        createdAt: leaveRequests.createdAt,
+      })
+      .from(leaveRequests)
+      .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
+      .where(where)
+      .orderBy(desc(leaveRequests.id))
+      .limit(limit)
+      .offset(offset)
+
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(leaveRequests)
+      .where(where)
+
+    const responseBody = zAppLeaveRequestAdminList.parse({
+      data: rows.map((row) => ({
+        id: row.id,
+        applicant_id: row.employeeId,
+        applicant_name: row.applicantName ?? "",
+        applicant_dept_name: row.applicantDeptName,
+        leave_type: row.leaveType,
+        start_date: row.startDate,
+        end_date: row.endDate,
+        days: row.days,
+        reason: row.reason,
+        status: row.status,
+        created_at: row.createdAt,
+      })),
+      total: totalRows.at(0)?.total ?? 0,
+    })
+
+    return c.json(responseBody, 200)
+  },
+)
 
 // POST /leave/requests — 本人として休暇申請を作成
 export const POST = factory.createHandlers(

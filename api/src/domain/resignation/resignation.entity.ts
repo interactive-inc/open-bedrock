@@ -86,4 +86,22 @@ export class Resignation implements Props {
       reason: props.reason,
     })
   }
+
+  /** requested のときだけ accepted へ進めた新しい退職申請を返す。それ以外は遷移不可を返す。 */
+  withAccepted(): Resignation | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new Resignation({ ...this.props, status: "accepted" })
+  }
+
+  /** requested のときだけ rejected へ進めた新しい退職申請を返す。それ以外は遷移不可を返す。 */
+  withRejected(): Resignation | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new Resignation({ ...this.props, status: "rejected" })
+  }
 }

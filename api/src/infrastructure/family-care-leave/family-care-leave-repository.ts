@@ -166,6 +166,29 @@ export class FamilyCareLeaveRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<FamilyCareLeave | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(familyCareLeaves)
+        .set({ status: props.toStatus })
+        .where(
+          and(eq(familyCareLeaves.id, props.id), eq(familyCareLeaves.status, props.fromStatus)),
+        )
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : FamilyCareLeave.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update family_care_leave status")
+    }
+  }
+
   // 休業申出を削除する。status が "requested" の行のみ対象。
   async delete(id: string): Promise<true | null | Error> {
     try {

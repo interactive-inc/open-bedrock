@@ -79,6 +79,27 @@ export class LifeEventRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<LifeEvent | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(lifeEvents)
+        .set({ status: props.toStatus })
+        .where(and(eq(lifeEvents.id, props.id), eq(lifeEvents.status, props.fromStatus)))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : LifeEvent.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update life_event status")
+    }
+  }
+
   // ライフイベント届出を削除する。status が "submitted" の行のみ対象。
   async delete(id: string): Promise<true | null | Error> {
     try {

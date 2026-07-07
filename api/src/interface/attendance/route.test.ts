@@ -146,3 +146,125 @@ describe("GET /attendance", () => {
     expect(response.status).toBe(401)
   })
 })
+
+// scope=reports 用に、manager(id2)が id20/id21 の 2 名を配下に持つ小さな組織を組む。
+const scopeEmployeeRows = [
+  { id: 2, code: "M002", email: "you+m002@example.com", role: "manager" },
+  { id: 20, code: "R020", email: "you+r020@example.com", role: "member" },
+  { id: 21, code: "R021", email: "you+r021@example.com", role: "member" },
+  { id: 22, code: "S022", email: "you+s022@example.com", role: "manager" },
+]
+
+async function createScopeTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.code,
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    })),
+  )
+
+  await seedIamForEmployees(
+    db,
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
+    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
+    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
+    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
+  ])
+
+  await seedD1(db, "attendance_records", [
+    {
+      id: 100,
+      employee_id: 20,
+      work_date: "2026-06-01",
+      clock_in_at: "2026-06-01T09:00:00Z",
+      clock_out_at: "2026-06-01T18:00:00Z",
+      work_minutes: 480,
+      status: "closed",
+    },
+    {
+      id: 101,
+      employee_id: 21,
+      work_date: "2026-06-01",
+      clock_in_at: "2026-06-01T09:00:00Z",
+      clock_out_at: "2026-06-01T18:00:00Z",
+      work_minutes: 480,
+      status: "closed",
+    },
+  ])
+
+  return db
+}
+
+describe("GET /attendance?scope=reports", () => {
+  test("manager gets attendance of all reports (2 employees)", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/attendance?scope=reports",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      const employeeIds = parsed.data.data.map((record) => record.employee_id).sort((a, b) => a - b)
+
+      expect(employeeIds).toEqual([20, 21])
+    }
+  })
+
+  test("manager with no reports gets an empty list", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/attendance?scope=reports",
+      token: await tokenFor(22, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(0)
+      expect(parsed.data.data.length).toBe(0)
+    }
+  })
+
+  test("member requesting scope=reports is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createScopeTestDb(),
+      jwtSecret,
+      path: "/attendance?scope=reports",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+})

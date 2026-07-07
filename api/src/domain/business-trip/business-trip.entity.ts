@@ -110,4 +110,22 @@ export class BusinessTrip implements Props {
       estimatedCost: props.estimatedCost,
     })
   }
+
+  /** requested のときだけ approved へ進めた新しい出張申請を返す。それ以外は遷移不可を返す。 */
+  withApproved(): BusinessTrip | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new BusinessTrip({ ...this.props, status: "approved" })
+  }
+
+  /** requested のときだけ rejected へ進めた新しい出張申請を返す。それ以外は遷移不可を返す。 */
+  withRejected(): BusinessTrip | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new BusinessTrip({ ...this.props, status: "rejected" })
+  }
 }

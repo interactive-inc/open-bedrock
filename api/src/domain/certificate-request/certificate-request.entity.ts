@@ -90,4 +90,22 @@ export class CertificateRequest implements Props {
       note: props.note,
     })
   }
+
+  /** requested のときだけ issued へ進めた新しい依頼を返す。それ以外は遷移不可を返す。 */
+  withIssued(): CertificateRequest | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new CertificateRequest({ ...this.props, status: "issued" })
+  }
+
+  /** requested のときだけ rejected へ進めた新しい依頼を返す。それ以外は遷移不可を返す。 */
+  withRejected(): CertificateRequest | { reason: "invalid_transition" } {
+    if (this.status !== "requested") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new CertificateRequest({ ...this.props, status: "rejected" })
+  }
 }

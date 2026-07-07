@@ -89,6 +89,34 @@ export class CertificateRequestRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<CertificateRequest | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(certificateRequests)
+        .set({ status: props.toStatus })
+        .where(
+          and(
+            eq(certificateRequests.id, props.id),
+            eq(certificateRequests.status, props.fromStatus),
+          ),
+        )
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : CertificateRequest.fromRow(row)
+    } catch (error) {
+      return error instanceof Error
+        ? error
+        : new Error("failed to update certificate_request status")
+    }
+  }
+
   // 証明書発行依頼を削除する。status が requested の行のみ対象とする。
   async delete(id: string): Promise<true | null | Error> {
     try {

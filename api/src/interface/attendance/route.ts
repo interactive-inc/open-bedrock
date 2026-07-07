@@ -1,6 +1,8 @@
 import { resolveAttendanceSearchQuery } from "@/interface/attendance/resolve-attendance-search-query"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/interface/attendance/attendance-list-query"
 import {
   DEFAULT_LIST_LIMIT,
@@ -15,10 +17,17 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, gte, lte } from "drizzle-orm"
-import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { and, asc, count, eq, gte, inArray, lte } from "drizzle-orm"
+import {
+  BadRequestError,
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/interface/lib/errors"
 
-// GET /attendance — 勤怠検索（他人の閲覧は attendance:read:all 権限のみ）
+// GET /attendance — 勤怠検索。
+// employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。
+// scope=reports で配下全員分、scope=all で全社分を一覧する(対応 permission 必須)。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const parsed = attendanceListQuerySchema.safeParse(c.req.query())
 
@@ -32,54 +41,88 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
+  const scope = c.req.query("scope") ?? null
+
   const requestedEmployeeId = (() => {
     if (parsed.data.employee_id === undefined) return null
     const parsed2 = Number(parsed.data.employee_id)
     return Number.isInteger(parsed2) ? parsed2 : null
   })()
 
-  const isViewingOthers = requestedEmployeeId !== null && requestedEmployeeId !== session.employeeId
+  const from = parsed.data.from ?? null
 
-  let relation: EmployeeRelation | null = null
-
-  if (isViewingOthers && requestedEmployeeId !== null) {
-    const resolved = await resolveEmployeeRelation({
-      c,
-      viewerEmployeeId: session.employeeId,
-      targetEmployeeId: requestedEmployeeId,
-    })
-
-    if (resolved instanceof Error) {
-      throw new InternalError("failed to resolve employee relation")
-    }
-
-    relation = resolved
-  }
-
-  const query = resolveAttendanceSearchQuery({
-    requestedEmployeeId,
-    from: parsed.data.from ?? null,
-    to: parsed.data.to ?? null,
-    session: session,
-    relation,
-  })
-
-  if (query instanceof ApplicationError) {
-    throw toHttpException(query)
-  }
+  const to = parsed.data.to ?? null
 
   const conditions: Array<SQL> = []
 
-  if (query.employeeId !== null) {
-    conditions.push(eq(attendanceRecords.employeeId, query.employeeId))
+  if (requestedEmployeeId === null && scope === "reports") {
+    if (hasPermission(session, "attendance:read:reports") === false) {
+      throw new ForbiddenError()
+    }
+
+    const reportEmployeeIds = await listReportEmployeeIds({
+      c,
+      viewerEmployeeId: session.employeeId,
+    })
+
+    if (reportEmployeeIds instanceof Error) {
+      throw new InternalError("failed to resolve report employees")
+    }
+
+    if (reportEmployeeIds.length === 0) {
+      const emptyBody = zAppAttendanceRecordList.parse({ data: [], total: 0 })
+
+      return c.json(emptyBody, 200)
+    }
+
+    conditions.push(inArray(attendanceRecords.employeeId, reportEmployeeIds))
+  } else if (requestedEmployeeId === null && scope === "all") {
+    if (hasPermission(session, "attendance:read:all") === false) {
+      throw new ForbiddenError()
+    }
+  } else {
+    const isViewingOthers =
+      requestedEmployeeId !== null && requestedEmployeeId !== session.employeeId
+
+    let relation: EmployeeRelation | null = null
+
+    if (isViewingOthers && requestedEmployeeId !== null) {
+      const resolved = await resolveEmployeeRelation({
+        c,
+        viewerEmployeeId: session.employeeId,
+        targetEmployeeId: requestedEmployeeId,
+      })
+
+      if (resolved instanceof Error) {
+        throw new InternalError("failed to resolve employee relation")
+      }
+
+      relation = resolved
+    }
+
+    const query = resolveAttendanceSearchQuery({
+      requestedEmployeeId,
+      from,
+      to,
+      session: session,
+      relation,
+    })
+
+    if (query instanceof ApplicationError) {
+      throw toHttpException(query)
+    }
+
+    if (query.employeeId !== null) {
+      conditions.push(eq(attendanceRecords.employeeId, query.employeeId))
+    }
   }
 
-  if (query.from !== null) {
-    conditions.push(gte(attendanceRecords.workDate, query.from))
+  if (from !== null) {
+    conditions.push(gte(attendanceRecords.workDate, from))
   }
 
-  if (query.to !== null) {
-    conditions.push(lte(attendanceRecords.workDate, query.to))
+  if (to !== null) {
+    conditions.push(lte(attendanceRecords.workDate, to))
   }
 
   const limit = toBoundedInt({

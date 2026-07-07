@@ -105,6 +105,27 @@ export class ResignationRepository {
     }
   }
 
+  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  async updateStatus(props: {
+    id: string
+    fromStatus: string
+    toStatus: string
+  }): Promise<Resignation | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(resignations)
+        .set({ status: props.toStatus })
+        .where(and(eq(resignations.id, props.id), eq(resignations.status, props.fromStatus)))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Resignation.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update resignation status")
+    }
+  }
+
   // 退職申請を削除する。status が "requested" の行のみ対象。
   async delete(id: string): Promise<true | null | Error> {
     try {

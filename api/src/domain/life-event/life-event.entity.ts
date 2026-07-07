@@ -82,4 +82,22 @@ export class LifeEvent implements Props {
       detail: props.detail,
     })
   }
+
+  /** submitted のときだけ approved へ進めた新しい届出を返す。それ以外は遷移不可を返す。 */
+  withApproved(): LifeEvent | { reason: "invalid_transition" } {
+    if (this.status !== "submitted") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new LifeEvent({ ...this.props, status: "approved" })
+  }
+
+  /** submitted のときだけ rejected へ進めた新しい届出を返す。それ以外は遷移不可を返す。 */
+  withRejected(): LifeEvent | { reason: "invalid_transition" } {
+    if (this.status !== "submitted") {
+      return { reason: "invalid_transition" }
+    }
+
+    return new LifeEvent({ ...this.props, status: "rejected" })
+  }
 }
