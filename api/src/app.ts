@@ -35,9 +35,11 @@ import * as batchRoute from "@/interface/batch/route"
 import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
 import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
 import * as businessTripMineRoute from "@/interface/business-trip/business-trips/me/route"
+import * as businessTripAdminRoute from "@/interface/business-trip/business-trips/admin/route"
 import * as rentalReservationCreateRoute from "@/interface/rental/reservations/route"
 import * as rentalReservationDetailRoute from "@/interface/rental/reservations/[id]/route"
 import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/route"
+import * as rentalReservationAdminRoute from "@/interface/rental/reservations/admin/route"
 import * as careerPostingApplyRoute from "@/interface/career/postings/[posting_id]/apply/route"
 import * as careerPostingDetailRoute from "@/interface/career/postings/[posting_id]/route"
 import * as careerPostingListRoute from "@/interface/career/postings/route"
@@ -147,15 +149,19 @@ import * as trainingEnrollmentsIdRoute from "@/interface/training/enrollments/[i
 import * as resignationCreateRoute from "@/interface/resignation/resignations/route"
 import * as resignationDetailRoute from "@/interface/resignation/resignations/[id]/route"
 import * as resignationMineRoute from "@/interface/resignation/resignations/me/route"
+import * as resignationAdminRoute from "@/interface/resignation/resignations/admin/route"
 import * as lifeEventCreateRoute from "@/interface/life-event/life-events/route"
 import * as lifeEventDetailRoute from "@/interface/life-event/life-events/[id]/route"
 import * as lifeEventMineRoute from "@/interface/life-event/life-events/me/route"
+import * as lifeEventAdminRoute from "@/interface/life-event/life-events/admin/route"
 import * as familyCareLeaveCreateRoute from "@/interface/family-care-leave/family-care-leaves/route"
 import * as familyCareLeaveDetailRoute from "@/interface/family-care-leave/family-care-leaves/[id]/route"
 import * as familyCareLeaveMineRoute from "@/interface/family-care-leave/family-care-leaves/me/route"
+import * as familyCareLeaveAdminRoute from "@/interface/family-care-leave/family-care-leaves/admin/route"
 import * as certificateRequestCreateRoute from "@/interface/certificate-request/certificate-requests/route"
 import * as certificateRequestDetailRoute from "@/interface/certificate-request/certificate-requests/[id]/route"
 import * as certificateRequestMineRoute from "@/interface/certificate-request/certificate-requests/me/route"
+import * as certificateRequestAdminRoute from "@/interface/certificate-request/certificate-requests/admin/route"
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
@@ -173,6 +179,7 @@ import * as iamRoleDetailRoute from "@/interface/iam/roles/[id]/route"
 import * as iamAccountStatusRoute from "@/interface/iam/accounts/[id]/status/route"
 import * as iamAccountRoleRevokeRoute from "@/interface/iam/accounts/[id]/roles/[roleKey]/route"
 import * as iamAccountResetPasswordRoute from "@/interface/iam/accounts/[id]/reset-password/route"
+import * as iamAuditLogsRoute from "@/interface/iam/audit-logs/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
@@ -230,6 +237,7 @@ export const app = factory
   .delete("/accounts/:id/roles/:roleKey", ...iamAccountRoleRevokeRoute.DELETE)
   .post("/accounts/:id/status", ...iamAccountStatusRoute.POST)
   .post("/accounts/:id/reset-password", ...iamAccountResetPasswordRoute.POST)
+  .get("/audit-logs", ...iamAuditLogsRoute.GET)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
@@ -408,31 +416,37 @@ export const app = factory
   .delete("/training/courses/:code", ...trainingCourseDetailRoute.DELETE)
   .post("/business-trips", ...businessTripCreateRoute.POST)
   .get("/business-trips/me", ...businessTripMineRoute.GET)
+  .get("/business-trips/admin", ...businessTripAdminRoute.GET)
   .get("/business-trips/:id", ...businessTripDetailRoute.GET)
   .put("/business-trips/:id", ...businessTripDetailRoute.PUT)
   .delete("/business-trips/:id", ...businessTripDetailRoute.DELETE)
   .post("/rentals", ...rentalReservationCreateRoute.POST)
   .get("/rentals/me", ...rentalReservationMineRoute.GET)
+  .get("/rentals/admin", ...rentalReservationAdminRoute.GET)
   .get("/rentals/:id", ...rentalReservationDetailRoute.GET)
   .put("/rentals/:id", ...rentalReservationDetailRoute.PUT)
   .delete("/rentals/:id", ...rentalReservationDetailRoute.DELETE)
   .post("/resignations", ...resignationCreateRoute.POST)
   .get("/resignations/me", ...resignationMineRoute.GET)
+  .get("/resignations/admin", ...resignationAdminRoute.GET)
   .get("/resignations/:id", ...resignationDetailRoute.GET)
   .put("/resignations/:id", ...resignationDetailRoute.PUT)
   .delete("/resignations/:id", ...resignationDetailRoute.DELETE)
   .post("/life-events", ...lifeEventCreateRoute.POST)
   .get("/life-events/me", ...lifeEventMineRoute.GET)
+  .get("/life-events/admin", ...lifeEventAdminRoute.GET)
   .get("/life-events/:id", ...lifeEventDetailRoute.GET)
   .put("/life-events/:id", ...lifeEventDetailRoute.PUT)
   .delete("/life-events/:id", ...lifeEventDetailRoute.DELETE)
   .post("/family-care-leaves", ...familyCareLeaveCreateRoute.POST)
   .get("/family-care-leaves/me", ...familyCareLeaveMineRoute.GET)
+  .get("/family-care-leaves/admin", ...familyCareLeaveAdminRoute.GET)
   .get("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.GET)
   .put("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.PUT)
   .delete("/family-care-leaves/:id", ...familyCareLeaveDetailRoute.DELETE)
   .post("/certificate-requests", ...certificateRequestCreateRoute.POST)
   .get("/certificate-requests/me", ...certificateRequestMineRoute.GET)
+  .get("/certificate-requests/admin", ...certificateRequestAdminRoute.GET)
   .get("/certificate-requests/:id", ...certificateRequestDetailRoute.GET)
   .put("/certificate-requests/:id", ...certificateRequestDetailRoute.PUT)
   .delete("/certificate-requests/:id", ...certificateRequestDetailRoute.DELETE)

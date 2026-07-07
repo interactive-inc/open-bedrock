@@ -1541,3 +1541,25 @@ export const zAppAccountList = z.object({
 })
 
 export type AppAccountList = z.infer<typeof zAppAccountList>
+
+/** 監査ログ 1 件のレスポンス。metadata は保存された生 JSON 文字列。 */
+export const zAppAuditLog = z.object({
+  id: z.number(),
+  actor_account_id: z.number().nullable(),
+  action: z.string(),
+  target_type: z.string().nullable(),
+  target_id: z.number().nullable(),
+  metadata: z.string().nullable(),
+  ip: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppAuditLog = z.infer<typeof zAppAuditLog>
+
+/** 監査ログ一覧のレスポンス。 */
+export const zAppAuditLogList = z.object({
+  data: z.array(zAppAuditLog),
+  total: z.number(),
+})
+
+export type AppAuditLogList = z.infer<typeof zAppAuditLogList>
