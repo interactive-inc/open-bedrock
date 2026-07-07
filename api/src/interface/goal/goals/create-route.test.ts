@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/infrastructure/seed/seed-goal-evaluations"
 import { seedGoals } from "@/infrastructure/seed/seed-goals"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -40,6 +41,16 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   await seedD1(
     db,
@@ -152,5 +163,111 @@ describe("POST /goals", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  test("admin (review:administer) can create a company goal", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: { period: "2026-H1", title: "Company OKR", owner_type: "company" },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = z
+      .object({ owner_type: z.string(), department_code: z.string().nullable() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.owner_type).toBe("company")
+      expect(parsed.data.department_code).toBeNull()
+    }
+  })
+
+  test("member cannot create a company goal", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { period: "2026-H1", title: "Company OKR", owner_type: "company" },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("manager of the department can create a department goal for their department", async () => {
+    // E004 は manager かつ D003 所属。D003 の部門目標を作成できる。
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "D003 dept goal",
+        owner_type: "department",
+        department_code: "D003",
+      },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = z
+      .object({ owner_type: z.string(), department_code: z.string().nullable() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.owner_type).toBe("department")
+      expect(parsed.data.department_code).toBe("D003")
+    }
+  })
+
+  test("manager (also a review administrator) can create a department goal for another department", async () => {
+    // system role の manager は review:administer も持つため、自部門以外の部門目標も作成できる。
+    // goal:evaluate:reports のみに絞った部門スコープの検証は
+    // can-write-department-goal.test.ts の単体テストで担保する。
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "D004 dept goal",
+        owner_type: "department",
+        department_code: "D004",
+      },
+    })
+
+    expect(response.status).toBe(201)
+  })
+
+  test("member cannot create a department goal", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "D003 dept goal",
+        owner_type: "department",
+        department_code: "D003",
+      },
+    })
+
+    expect(response.status).toBe(403)
   })
 })

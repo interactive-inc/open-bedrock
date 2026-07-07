@@ -22,6 +22,9 @@ function toResponseBody(goal: Goal) {
     kpi: goal.kpi,
     weight: goal.weight,
     status: goal.status,
+    owner_type: goal.ownerType,
+    parent_goal_id: goal.parentGoalId,
+    department_code: goal.departmentCode,
   })
 }
 

@@ -1,4 +1,5 @@
 import { Goal } from "@/domain/goal/goal.entity"
+import type { GoalOwnerType } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -10,6 +11,9 @@ export type Command = {
   title: string
   kpi: string | null
   weight: number
+  ownerType?: GoalOwnerType
+  parentGoalId?: number | null
+  departmentCode?: string | null
 }
 
 /**
@@ -27,6 +31,9 @@ export class CreateGoal {
       title: command.title,
       kpi: command.kpi,
       weight: command.weight,
+      ownerType: command.ownerType,
+      parentGoalId: command.parentGoalId,
+      departmentCode: command.departmentCode,
     })
 
     const created = await repository.create(goal)

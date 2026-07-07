@@ -2,6 +2,7 @@ import { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { goals } from "@/schema"
 import { and, asc, eq, ne } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
 
 export class GoalRepository {
   constructor(private readonly c: Context) {}
@@ -43,6 +44,27 @@ export class GoalRepository {
     }
   }
 
+  // 指定 period の目標を全 owner_type ぶん id 昇順で返す。period 未指定なら全期間。
+  async findAllByPeriod(period: string | null): Promise<ReadonlyArray<Goal> | Error> {
+    try {
+      const conditions: Array<SQL> = []
+
+      if (period !== null) {
+        conditions.push(eq(goals.period, period))
+      }
+
+      const rows = await this.c.var.database
+        .select()
+        .from(goals)
+        .where(and(...conditions))
+        .orderBy(asc(goals.id))
+
+      return rows.map((row) => Goal.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load goals")
+    }
+  }
+
   async create(goal: Goal): Promise<Goal | Error> {
     try {
       const rows = await this.c.var.database
@@ -54,6 +76,9 @@ export class GoalRepository {
           kpi: goal.kpi,
           weight: goal.weight,
           status: goal.status,
+          ownerType: goal.ownerType,
+          parentGoalId: goal.parentGoalId,
+          departmentCode: goal.departmentCode,
         })
         .returning()
 

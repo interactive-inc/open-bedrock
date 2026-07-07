@@ -9,6 +9,7 @@ import type {
   LeaveStatus,
   LeaveType,
   RedemptionStatus,
+  RingiStatus,
 } from "@/lib/schemas"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
@@ -500,9 +501,27 @@ export const expenseApprovals = sqliteTable("expense_approvals", {
 
 export type ExpenseApprovalRow = InferSelectModel<typeof expenseApprovals>
 
+// 稟議（金額つきの汎用決裁）。起案時に承認者を 1 名指定する単段決裁。決裁結果は行に inline 保持する。
+export const ringiRequests = sqliteTable("ringi_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  applicantId: integer("applicant_id").notNull(),
+  approverId: integer("approver_id").notNull(),
+  title: text("title").notNull(),
+  amount: integer("amount").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().$type<RingiStatus>(),
+  decidedAt: text("decided_at"),
+  decisionComment: text("decision_comment"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
+
 // 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
 // is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
-// 目標（社員ごと・評価期間ごとの目標と重み・状態）
+// 目標（社員ごと・評価期間ごとの目標と重み・状態）。
+// owner_type は目標の所有主体(individual/department/company)。parent_goal_id で全社→部門→個人の
+// 階層をつなぎ、department_code は部門目標の所属部門を表す。個人目標では department_code は null。
 export const goals = sqliteTable("goals", {
   id: integer("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
@@ -511,6 +530,9 @@ export const goals = sqliteTable("goals", {
   kpi: text("kpi"),
   weight: integer("weight").notNull(),
   status: text("status").notNull(),
+  ownerType: text("owner_type").notNull().default("individual"),
+  parentGoalId: integer("parent_goal_id"),
+  departmentCode: text("department_code"),
 })
 
 export type GoalRow = InferSelectModel<typeof goals>
@@ -892,6 +914,60 @@ export const antisocialChecks = sqliteTable("antisocial_checks", {
 
 export type AntisocialCheckRow = InferSelectModel<typeof antisocialChecks>
 
+// 会議体マスタ（定例会議などの器。cadence は開催頻度メモ）
+export const meetings = sqliteTable(
+  "meetings",
+  {
+    id: integer("id").primaryKey(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    cadence: text("cadence"),
+    description: text("description"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_meetings_status").on(table.status)],
+)
+
+export type MeetingRow = InferSelectModel<typeof meetings>
+
+// 議事録（会議体ごとの開催記録）
+export const meetingMinutes = sqliteTable(
+  "meeting_minutes",
+  {
+    id: integer("id").primaryKey(),
+    meetingId: integer("meeting_id").notNull(),
+    heldOn: text("held_on").notNull(),
+    title: text("title").notNull(),
+    attendees: text("attendees"),
+    bodyMd: text("body_md").notNull(),
+    authorEmployeeId: integer("author_employee_id").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_meeting_minutes_meeting").on(table.meetingId)],
+)
+
+export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
+
+// 意思決定記録（ADR 形式。文脈・決定・帰結を記録し、後続の決定で supersede する）
+export const decisions = sqliteTable(
+  "decisions",
+  {
+    id: integer("id").primaryKey(),
+    title: text("title").notNull(),
+    decidedOn: text("decided_on").notNull(),
+    context: text("context").notNull(),
+    decision: text("decision").notNull(),
+    consequences: text("consequences"),
+    status: text("status").notNull(),
+    supersededById: integer("superseded_by_id"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_decisions_status").on(table.status)],
+)
+
+export type DecisionRow = InferSelectModel<typeof decisions>
+
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
 // IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
 export const accounts = sqliteTable(
@@ -1022,6 +1098,39 @@ export const auditLogs = sqliteTable(
 
 export type AuditLogRow = InferSelectModel<typeof auditLogs>
 
+// 取引先台帳（顧客・仕入先ほか。反社チェック・契約記録の親マスタ）
+export const partners = sqliteTable("partners", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category"),
+  corporateNumber: text("corporate_number"),
+  note: text("note"),
+  status: text("status").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type PartnerRow = InferSelectModel<typeof partners>
+
+// 契約記録（契約日・期間・更新期限の事実記録。中身のレビューや法的判定はしない）
+export const contracts = sqliteTable(
+  "contracts",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    partnerId: integer("partner_id").notNull(),
+    title: text("title").notNull(),
+    contractDate: text("contract_date").notNull(),
+    startsOn: text("starts_on"),
+    endsOn: text("ends_on"),
+    renewalDeadline: text("renewal_deadline"),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_contracts_partner").on(table.partnerId)],
+)
+
+export type ContractRow = InferSelectModel<typeof contracts>
+
 export const schema = {
   accounts,
   identities,
@@ -1085,4 +1194,9 @@ export const schema = {
   certificateRequests,
   yearEndAdjustments,
   antisocialChecks,
+  partners,
+  contracts,
+  meetings,
+  meetingMinutes,
+  decisions,
 }
