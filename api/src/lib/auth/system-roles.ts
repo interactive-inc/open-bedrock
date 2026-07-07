@@ -69,6 +69,8 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "grade:read:all",
   "employee_event:manage",
   "employee_event:read:all",
+  // 人事KPI(在籍・退職・評価分布)を扱うため経営ダッシュボードも閲覧できる。
+  "management_dashboard:view",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
@@ -83,6 +85,13 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "goal:read:department",
   "attendance:read:department",
   "leave:read:department",
+  // 経営・対外ドメイン。実務は executive / general_affairs プリセットが担う。
+  "ringi:read:all",
+  "partner:manage",
+  "contract:manage",
+  "contract:read:all",
+  "meeting:manage",
+  "decision:manage",
 ]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
