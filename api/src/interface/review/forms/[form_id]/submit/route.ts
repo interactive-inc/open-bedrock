@@ -71,6 +71,7 @@ export const POST = factory.createHandlers(
       comment: submitted.comment,
       status: submitted.status,
       submitted_at: submitted.submittedAt,
+      visibility: submitted.visibility,
     })
 
     return c.json(responseBody, 200)

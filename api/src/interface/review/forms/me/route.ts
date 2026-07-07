@@ -53,6 +53,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       score: row.score,
       status: row.status,
       submitted_at: row.submittedAt,
+      visibility: row.visibility,
     })),
     total: totalRows.at(0)?.total ?? 0,
   })

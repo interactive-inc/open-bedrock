@@ -100,3 +100,13 @@ export type RingiStatus = z.infer<typeof ringiStatusSchema>
 export const redemptionStatusSchema = z.enum(["pending", "rejected", "fulfilled"])
 
 export type RedemptionStatus = z.infer<typeof redemptionStatusSchema>
+
+/** 会社カレンダーの日種別。holiday=会社休日、workday=振替出勤日。通常営業日は行を持たない。 */
+export const calendarDayKindSchema = z.enum(["holiday", "workday"])
+
+export type CalendarDayKind = z.infer<typeof calendarDayKindSchema>
+
+/** 勤務形態の区分。制度の適法性判定はせず、区分の記録のみ。 */
+export const workStyleSchema = z.enum(["regular", "flextime", "discretionary", "shift"])
+
+export type WorkStyle = z.infer<typeof workStyleSchema>

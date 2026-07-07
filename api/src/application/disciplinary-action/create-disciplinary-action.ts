@@ -1,0 +1,46 @@
+import { DisciplinaryAction } from "@/domain/disciplinary-action/disciplinary-action.entity"
+import { canManageDisciplinaryActions } from "@/lib/disciplinary-action/can-manage-disciplinary-actions"
+import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+import type { Context, SessionPayload } from "@/env"
+import { DisciplinaryActionRepository } from "@/infrastructure/disciplinary-action/disciplinary-action-repository"
+
+export type Command = {
+  session: SessionPayload
+  employeeId: number
+  kind: string
+  summary: string
+  decidedOn: string
+  createdAt: string
+}
+
+/**
+ * 権限を確認し、社員の懲戒を1件記録する。非公開のため本人にも開かない。
+ */
+export class CreateDisciplinaryAction {
+  constructor(private readonly c: Context) {}
+
+  async run(command: Command): Promise<DisciplinaryAction | ApplicationError> {
+    if (canManageDisciplinaryActions(command.session) === false) {
+      return new ForbiddenError("cannot manage disciplinary actions", "forbidden")
+    }
+
+    const repository = new DisciplinaryActionRepository(this.c)
+
+    const action = DisciplinaryAction.create({
+      employeeId: command.employeeId,
+      kind: command.kind,
+      summary: command.summary,
+      decidedOn: command.decidedOn,
+      createdAt: command.createdAt,
+    })
+
+    const created = await repository.create(action)
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create disciplinary action", { cause: created })
+    }
+
+    return created
+  }
+}

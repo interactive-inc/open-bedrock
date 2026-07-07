@@ -21,6 +21,10 @@ export function toFormStatus(value: string): "pending" | "submitted" {
   return value === "submitted" ? "submitted" : "pending"
 }
 
+export function toVisibility(value: string): "hidden" | "disclosed" {
+  return value === "hidden" ? "hidden" : "disclosed"
+}
+
 export function toAnswers(value: string): ReadonlyArray<unknown> {
   try {
     const decoded: unknown = JSON.parse(value)

@@ -1,0 +1,48 @@
+import type { Announcement } from "@/domain/announcement/announcement.entity"
+import type { Context, SessionPayload } from "@/env"
+import { AnnouncementRepository } from "@/infrastructure/announcement/announcement-repository"
+import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
+
+export type Command = {
+  session: SessionPayload
+  announcementId: number
+}
+
+/**
+ * 権限を確認し、社内アナウンスをアーカイブする。物理削除はしない。
+ */
+export class ArchiveAnnouncement {
+  constructor(private readonly c: Context) {}
+
+  async run(command: Command): Promise<Announcement | ApplicationError> {
+    const announcementRepository = new AnnouncementRepository(this.c)
+
+    if (canManageAnnouncements(command.session) === false) {
+      return new ForbiddenError("cannot manage announcements", "forbidden")
+    }
+
+    const current = await announcementRepository.findById(command.announcementId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find announcement", { cause: current })
+    }
+
+    if (current === null) {
+      return new NotFoundError("announcement not found", "announcement_not_found")
+    }
+
+    const result = await announcementRepository.update(current.archive())
+
+    if (result instanceof Error) {
+      return new UnexpectedError("failed to archive announcement", { cause: result })
+    }
+
+    if (result === null) {
+      return new NotFoundError("announcement not found", "announcement_not_found")
+    }
+
+    return result
+  }
+}

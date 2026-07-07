@@ -36,6 +36,7 @@ describe("toReviewResultView", () => {
       comment: null,
       status: "submitted",
       submittedAt: "2026-01-01T00:00:00.000Z",
+      visibility: "disclosed",
     })
 
     const form2 = new ReviewForm({
@@ -49,6 +50,7 @@ describe("toReviewResultView", () => {
       comment: null,
       status: "submitted",
       submittedAt: "2026-01-02T00:00:00.000Z",
+      visibility: "disclosed",
     })
 
     const view = toReviewResultView(cycle, [form1, form2], 5)
@@ -84,6 +86,7 @@ describe("toReviewResultView", () => {
       comment: null,
       status: "pending",
       submittedAt: null,
+      visibility: "disclosed",
     })
 
     const view = toReviewResultView(cycle, [pendingForm], 5)
