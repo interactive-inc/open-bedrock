@@ -79,6 +79,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/skills` はスキルをキーワードやカテゴリで検索する画面。
 - `/skills/me` は自分の登録済みスキルを確認し、新しいスキルを登録する画面。
 - `/goals` は期間と従業員で絞り込み、目標を確認する画面。
+- `/goals/tree` は全社、部門、個人の目標を階層で俯瞰する画面。
 - `/goals/new` は期間と内容を入力して目標を登録する画面。
 - `/goals/[id]` は目標の内容、評価、状態を確認する詳細画面。
 
@@ -169,6 +170,23 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/family-care-leaves/admin` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
 - `/business-trips/admin` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
 - `/rentals/admin` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
+
+## 経営と対外
+
+- `/ringi` は自分が起案した稟議の一覧と状態を確認する画面。
+- `/ringi/new` は承認者、金額、理由を記入して稟議を起案する画面。
+- `/ringi/inbox` は自分宛の決裁待ち稟議を承認または却下する画面。
+- `/ringi/admin` は全社の稟議を横断で確認する管理画面(`ringi:read:all`)。
+- `/partners` は取引先台帳を検索し、登録する画面。
+- `/partners/new` は新しい取引先を登録する画面(`partner:manage`)。
+- `/partners/[code]` は取引先の詳細と契約記録を確認する画面(契約は `contract:read:all`)。
+- `/dashboard/management` は経営ダッシュボードを確認する画面(`management_dashboard:view`)。
+- `/meetings` は会議体の一覧を確認し、登録済みの会議体へ移動する画面。
+- `/meetings/new` は会議体のコードと名称を登録する画面(`meeting:manage`)。
+- `/meetings/[code]` は会議体の詳細と議事録一覧を確認し、議事録を記録する画面。
+- `/decisions` は会社の意思決定記録を一覧する画面。
+- `/decisions/new` は意思決定記録を ADR 形式で作成する画面(`decision:manage`)。
+- `/decisions/[id]` は意思決定記録の背景、決定、帰結を確認する画面。
 
 ## システム
 
