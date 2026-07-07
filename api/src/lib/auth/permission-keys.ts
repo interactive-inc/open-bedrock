@@ -73,9 +73,34 @@ export const PERMISSION_CATALOG = [
     category: "thanks",
     description: "全社のサンクス交換申請を横断で閲覧する",
   },
-  { key: "goal:read:all", category: "goal", description: "他者の目標を閲覧する" },
-  { key: "goal:evaluate", category: "goal", description: "目標を評価する(上長)" },
+  { key: "goal:read:all", category: "goal", description: "全社の目標を閲覧する" },
+  {
+    key: "goal:read:reports",
+    category: "goal",
+    description: "レポートライン配下の目標を閲覧する",
+  },
+  {
+    key: "goal:read:department",
+    category: "goal",
+    description: "同じ部署の目標を閲覧する",
+  },
+  { key: "goal:evaluate", category: "goal", description: "全社の目標を評価する" },
+  {
+    key: "goal:evaluate:reports",
+    category: "goal",
+    description: "レポートライン配下の目標を評価する",
+  },
   { key: "attendance:read:all", category: "attendance", description: "全従業員の勤怠を閲覧する" },
+  {
+    key: "attendance:read:reports",
+    category: "attendance",
+    description: "レポートライン配下の勤怠を閲覧する",
+  },
+  {
+    key: "attendance:read:department",
+    category: "attendance",
+    description: "同じ部署の勤怠を閲覧する",
+  },
   {
     key: "certificate_request:read:all",
     category: "certificate-request",

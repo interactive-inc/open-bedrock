@@ -28,9 +28,11 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "batch:view",
   "onboarding:manage",
   "onboarding:view:all",
-  "goal:read:all",
-  "goal:evaluate",
-  "attendance:read:all",
+  // スコープ権限: manager は全社(:all)ではなくレポートライン配下(:reports)のみ。
+  // 移行前の「manager の権限が全社に効く」挙動を 0011 で意図的に狭めた。
+  "goal:read:reports",
+  "goal:evaluate:reports",
+  "attendance:read:reports",
 ]
 
 // hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。
@@ -50,6 +52,10 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "family_care_leave:read:all",
   "business_trip:read:all",
   "rental:read:all",
+  // manager から :all を外したため、hr の全社スコープはここで明示的に持つ。
+  "goal:read:all",
+  "goal:evaluate",
+  "attendance:read:all",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
@@ -59,6 +65,10 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "iam:assign_roles",
   "account:manage",
   "audit_log:read",
+  // どのプリセットにも実務付与しない department スコープも、escalation guard
+  // （付与するロールの権限 ⊆ 付与者の権限）を通すため admin は保持する。
+  "goal:read:department",
+  "attendance:read:department",
 ]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
