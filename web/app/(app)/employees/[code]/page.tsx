@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { EmployeeDetail } from "@/app/(app)/employees/[code]/_components/employee-detail"
 import { EmployeeEventHistory } from "@/app/(app)/employees/[code]/_components/employee-event-history"
 import { EmployeeGradeHistory } from "@/app/(app)/employees/[code]/_components/employee-grade-history"
+import { EmployeeSalaryRevisionHistory } from "@/app/(app)/employees/[code]/_components/employee-salary-revision-history"
+import { EmployeeWorkStyleHistory } from "@/app/(app)/employees/[code]/_components/employee-work-style-history"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,6 +31,14 @@ export default async function EmployeeDetailPage(props: Props) {
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
         <EmployeeGradeHistory code={params.code} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <EmployeeSalaryRevisionHistory code={params.code} />
+      </Suspense>
+
+      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <EmployeeWorkStyleHistory code={params.code} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>

@@ -1,0 +1,21 @@
+// api/src/interface/work-style のレスポンスと同形の手書き type。
+// api と疎結合にするため api 側からは import しない（snake_case で受ける）。
+
+// 勤務形態の区分。制度の適法性判定はしない。
+export type WorkStyle = "regular" | "flextime" | "discretionary" | "shift"
+
+// GET /work-styles のレスポンス要素。
+export type EmployeeWorkStyleResponse = {
+  id: number
+  employee_id: number
+  style: WorkStyle
+  starts_on: string
+  ends_on: string | null
+  note: string | null
+  created_at: string
+}
+
+// GET /work-styles のクエリ。employee_code で対象を指定する。
+export type WorkStyleSearchQuery = {
+  employeeCode: string
+}
