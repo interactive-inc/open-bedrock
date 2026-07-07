@@ -17,8 +17,8 @@
 member / manager / hr / admin の4つ。is_system=1 で編集不可。移行互換のためのベースラインであり、新しい職能はプリセットロールか独自ロールで表現する。
 
 - member: permission なし。自分のデータと全員公開の情報のみ
-- manager: 承認と大半の管理(部下スコープは未実装のため現状は全社に効く点に注意)
-- hr: manager に加えて組織管理・従業員削除・横断閲覧
+- manager: 承認と大半の管理。目標・評価・勤怠はレポートライン配下(:reports)のみで、全社は見えない
+- hr: manager に加えて組織管理・従業員削除・全社横断閲覧(:all)
 - admin: 全権。IAM とアカウント管理を含む
 
 ## プリセットロール
@@ -32,20 +32,24 @@ migration(0009_role_presets.sql)で投入する編集可能なロール(is_syste
 
 推奨の使い分け。一般従業員は member のまま、部下を持ったら manager を足す。人事部門は hr、評価の確定は review_admin だけに絞る。管理部門の担当には general_affairs、システム管理者には it_admin を与え、admin は最小人数に留める。
 
-## スコープ設計(未実装・目標)
+## スコープ設計(第1弾実装済み)
 
-現状の permission は self(コード判定)と all の実質2値で、「上長は自分の部下だけ」「人事担当は自部門だけ」を表現できない。目標は scope を4段階にする。
+permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧に適用済み。
 
-- self: 本人。permission にせずコード判定のまま
-- reports: 自分のレポートライン配下([[index|全体地図]] の org が正)
-- department: 自分の所属部署
+- self: 本人。permission にせず所有者判定としてコードに残す
+- reports: 自分のレポートライン配下。org_memberships の manager チェーンを対象従業員から上に辿り、閲覧者が現れるかで判定(直属に限らず配下全体)
+- department: 自分の所属部署。org_memberships の department_code の一致で判定
 - all: 全社
 
-導入方針。キーを "domain:action:scope" 形式に増補し、既存の read:all 系キーはそのまま all として残す。判定は hasPermission に「対象従業員とセッション本人の関係を org から解決する」関数を追加する形で拡張する。評価・目標・勤怠・休暇のような機微データから順に適用する。
+判定は次のカスケード。self → :all 保持 → 配下かつ :reports 保持 → 同部署かつ :department 保持 → 拒否。関係解決(org の走査)は他者のデータに触るときだけ実行する。
+
+適用済みのキーは goal:read:{all,reports,department} / goal:evaluate と goal:evaluate:reports / attendance:read:{all,reports,department}。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため admin は保持する)。
+
+残り: 休暇など他の機微ドメインへの適用、一覧 API のスコープ絞り込み(「配下全員の目標を一覧で」)、部署の階層(下位部署を含めるか)の扱い。
 
 ## ギャップ(次にやること)
 
-- スコープ次元の導入(上記)。manager の権限が現状全社に効いてしまう問題の解消が最優先
+- スコープの拡大。第1弾(目標・評価・勤怠)は済み。休暇などへの適用と、一覧 API のスコープ絞り込みが残る
 - フィールドレベルの出し分け。従業員台帳に等級・評価系フィールドを載せる前に、閲覧権限による項目の伏せ込みが必要
 - 労務系ドメイン(証明書発行・退職・産休育休介護・ライフイベント・出張・貸与品)の横断閲覧(read:all)は実装済み。申出の状態を人事が代理で進める操作 permission が残っている
 - knowledge / skill / oneonone に管理 permission が無い
