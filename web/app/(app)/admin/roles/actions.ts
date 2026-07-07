@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createRole } from "@/lib/api/create-role"
 import { deleteRole } from "@/lib/api/delete-role"
+import { getMe } from "@/lib/api/get-me"
 import { updateRole } from "@/lib/api/update-role"
+import { canManageRoles } from "@/lib/iam/can-manage-roles"
 
 export type RoleCreateFormState = {
   ok: boolean
@@ -16,11 +18,17 @@ export type RoleUpdateFormState = {
   error: string | null
 }
 
-// FormData からロール更新を実行するサーバーアクション。
+// FormData からロール更新を実行するサーバーアクション。iam:manage_roles 権限が必要。
 export async function updateRoleAction(
   _prevState: RoleUpdateFormState,
   formData: FormData,
 ): Promise<RoleUpdateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const roleId = toRoleId(formData.get("role_id"))
 
   const name = toRoleText(formData.get("name"))
@@ -75,11 +83,17 @@ export type RoleDeleteFormState = {
   error: string | null
 }
 
-// 動的ロールを削除する。
+// 動的ロールを削除する。iam:manage_roles 権限が必要。
 export async function deleteRoleAction(
   _prevState: RoleDeleteFormState,
   formData: FormData,
 ): Promise<RoleDeleteFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const roleId = toPositiveInt(formData.get("role_id"))
 
   if (roleId === null) {
@@ -107,12 +121,18 @@ function toPositiveInt(value: FormDataEntryValue | null): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
-// FormData からロール作成を実行するサーバーアクション。
+// FormData からロール作成を実行するサーバーアクション。iam:manage_roles 権限が必要。
 // permission_keys は同名の複数チェックボックスから配列で受け取る。
 export async function createRoleAction(
   _prevState: RoleCreateFormState,
   formData: FormData,
 ): Promise<RoleCreateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const key = toText(formData.get("key"))
 
   const name = toText(formData.get("name"))

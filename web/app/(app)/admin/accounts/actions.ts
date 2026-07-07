@@ -1,10 +1,13 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { getMe } from "@/lib/api/get-me"
 import { grantAccountRole } from "@/lib/api/grant-account-role"
 import { resetAccountPassword } from "@/lib/api/reset-account-password"
 import { revokeAccountRole } from "@/lib/api/revoke-account-role"
 import { setAccountStatus } from "@/lib/api/set-account-status"
+import { canAssignRoles } from "@/lib/iam/can-assign-roles"
+import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 
 export type GrantRoleFormState = {
   ok: boolean
@@ -16,11 +19,17 @@ export type AccountActionFormState = {
   error: string | null
 }
 
-// アカウントからロールを剥奪する。
+// アカウントからロールを剥奪する。iam:assign_roles 権限が必要。
 export async function revokeAccountRoleAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
@@ -40,11 +49,17 @@ export async function revokeAccountRoleAction(
   return { ok: true, error: null }
 }
 
-// 管理者がアカウントのパスワードを再設定する。
+// 管理者がアカウントのパスワードを再設定する。account:manage 権限が必要。
 export async function resetPasswordAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
+    return { ok: false, error: "アカウントを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const newPassword = toText(formData.get("new_password"))
@@ -68,11 +83,17 @@ export async function resetPasswordAction(
   return { ok: true, error: null }
 }
 
-// アカウントの状態を変更する（停止・有効化）。
+// アカウントの状態を変更する（停止・有効化）。account:manage 権限が必要。
 export async function setAccountStatusAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
+    return { ok: false, error: "アカウントを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const status = toStatus(formData.get("status"))
@@ -100,11 +121,17 @@ function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "l
   return null
 }
 
-// FormData からアカウントへのロール付与を実行するサーバーアクション。
+// FormData からアカウントへのロール付与を実行するサーバーアクション。iam:assign_roles 権限が必要。
 export async function grantAccountRoleAction(
   _prevState: GrantRoleFormState,
   formData: FormData,
 ): Promise<GrantRoleFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
