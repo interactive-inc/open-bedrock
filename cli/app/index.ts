@@ -68,6 +68,7 @@ import onboardingHandler from "@/app/onboarding/route"
 import onboardingMeHandler from "@/app/onboarding/me/route"
 import rolesHandler from "@/app/roles/route"
 import accountsHandler from "@/app/accounts/route"
+import auditLogsHandler from "@/app/audit-logs/route"
 import onboardingShowHandler from "@/app/onboarding/show/[employee_code]/route"
 import onboardingTemplatesHandler from "@/app/onboarding/templates/route"
 import oneononeCreateHandler from "@/app/1on1/create/route"
@@ -131,36 +132,42 @@ import whoamiHandler from "@/app/whoami/route"
 import businessTripHandler from "@/app/business-trip/route"
 import businessTripRequestHandler from "@/app/business-trip/request/route"
 import businessTripMineHandler from "@/app/business-trip/mine/route"
+import businessTripAdminHandler from "@/app/business-trip/admin/route"
 import businessTripShowHandler from "@/app/business-trip/show/route"
 import businessTripUpdateHandler from "@/app/business-trip/update/route"
 import businessTripCancelHandler from "@/app/business-trip/cancel/route"
 import rentalHandler from "@/app/rental/route"
 import rentalReserveHandler from "@/app/rental/reserve/route"
 import rentalMineHandler from "@/app/rental/mine/route"
+import rentalAdminHandler from "@/app/rental/admin/route"
 import rentalShowHandler from "@/app/rental/show/route"
 import rentalUpdateHandler from "@/app/rental/update/route"
 import rentalCancelHandler from "@/app/rental/cancel/route"
 import resignationHandler from "@/app/resignation/route"
 import resignationRequestHandler from "@/app/resignation/request/route"
 import resignationMineHandler from "@/app/resignation/mine/route"
+import resignationAdminHandler from "@/app/resignation/admin/route"
 import resignationShowHandler from "@/app/resignation/show/route"
 import resignationUpdateHandler from "@/app/resignation/update/route"
 import resignationCancelHandler from "@/app/resignation/cancel/route"
 import lifeEventHandler from "@/app/life-event/route"
 import lifeEventRequestHandler from "@/app/life-event/request/route"
 import lifeEventMineHandler from "@/app/life-event/mine/route"
+import lifeEventAdminHandler from "@/app/life-event/admin/route"
 import lifeEventShowHandler from "@/app/life-event/show/route"
 import lifeEventUpdateHandler from "@/app/life-event/update/route"
 import lifeEventCancelHandler from "@/app/life-event/cancel/route"
 import familyCareLeaveHandler from "@/app/family-care-leave/route"
 import familyCareLeaveRequestHandler from "@/app/family-care-leave/request/route"
 import familyCareLeaveMineHandler from "@/app/family-care-leave/mine/route"
+import familyCareLeaveAdminHandler from "@/app/family-care-leave/admin/route"
 import familyCareLeaveShowHandler from "@/app/family-care-leave/show/route"
 import familyCareLeaveUpdateHandler from "@/app/family-care-leave/update/route"
 import familyCareLeaveCancelHandler from "@/app/family-care-leave/cancel/route"
 import certificateRequestHandler from "@/app/certificate-request/route"
 import certificateRequestRequestHandler from "@/app/certificate-request/request/route"
 import certificateRequestMineHandler from "@/app/certificate-request/mine/route"
+import certificateRequestAdminHandler from "@/app/certificate-request/admin/route"
 import certificateRequestShowHandler from "@/app/certificate-request/show/route"
 import certificateRequestUpdateHandler from "@/app/certificate-request/update/route"
 import certificateRequestCancelHandler from "@/app/certificate-request/cancel/route"
@@ -409,6 +416,7 @@ routes.post("/onboarding/assign/:employee_code?", ...onboardingAssignHandler)
 routes.post("/onboarding/me", ...onboardingMeHandler)
 routes.post("/roles", ...rolesHandler)
 routes.post("/accounts", ...accountsHandler)
+routes.post("/audit-logs", ...auditLogsHandler)
 routes.post("/onboarding/complete/:task_id?", ...onboardingCompleteHandler)
 routes.post("/onboarding/show/:employee_code?", ...onboardingShowHandler)
 
@@ -445,36 +453,42 @@ routes.post("/dashboard", ...dashboardHandler)
 routes.post("/business-trip", ...businessTripHandler)
 routes.post("/business-trip/request", ...businessTripRequestHandler)
 routes.post("/business-trip/mine", ...businessTripMineHandler)
+routes.post("/business-trip/admin", ...businessTripAdminHandler)
 routes.post("/business-trip/show", ...businessTripShowHandler)
 routes.post("/business-trip/update", ...businessTripUpdateHandler)
 routes.post("/business-trip/cancel", ...businessTripCancelHandler)
 routes.post("/rental", ...rentalHandler)
 routes.post("/rental/reserve", ...rentalReserveHandler)
 routes.post("/rental/mine", ...rentalMineHandler)
+routes.post("/rental/admin", ...rentalAdminHandler)
 routes.post("/rental/show", ...rentalShowHandler)
 routes.post("/rental/update", ...rentalUpdateHandler)
 routes.post("/rental/cancel", ...rentalCancelHandler)
 routes.post("/resignation", ...resignationHandler)
 routes.post("/resignation/request", ...resignationRequestHandler)
 routes.post("/resignation/mine", ...resignationMineHandler)
+routes.post("/resignation/admin", ...resignationAdminHandler)
 routes.post("/resignation/show", ...resignationShowHandler)
 routes.post("/resignation/update", ...resignationUpdateHandler)
 routes.post("/resignation/cancel", ...resignationCancelHandler)
 routes.post("/life-event", ...lifeEventHandler)
 routes.post("/life-event/request", ...lifeEventRequestHandler)
 routes.post("/life-event/mine", ...lifeEventMineHandler)
+routes.post("/life-event/admin", ...lifeEventAdminHandler)
 routes.post("/life-event/show", ...lifeEventShowHandler)
 routes.post("/life-event/update", ...lifeEventUpdateHandler)
 routes.post("/life-event/cancel", ...lifeEventCancelHandler)
 routes.post("/family-care-leave", ...familyCareLeaveHandler)
 routes.post("/family-care-leave/request", ...familyCareLeaveRequestHandler)
 routes.post("/family-care-leave/mine", ...familyCareLeaveMineHandler)
+routes.post("/family-care-leave/admin", ...familyCareLeaveAdminHandler)
 routes.post("/family-care-leave/show", ...familyCareLeaveShowHandler)
 routes.post("/family-care-leave/update", ...familyCareLeaveUpdateHandler)
 routes.post("/family-care-leave/cancel", ...familyCareLeaveCancelHandler)
 routes.post("/certificate-request", ...certificateRequestHandler)
 routes.post("/certificate-request/request", ...certificateRequestRequestHandler)
 routes.post("/certificate-request/mine", ...certificateRequestMineHandler)
+routes.post("/certificate-request/admin", ...certificateRequestAdminHandler)
 routes.post("/certificate-request/show", ...certificateRequestShowHandler)
 routes.post("/certificate-request/update", ...certificateRequestUpdateHandler)
 routes.post("/certificate-request/cancel", ...certificateRequestCancelHandler)

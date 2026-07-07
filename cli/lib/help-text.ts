@@ -187,6 +187,7 @@ commands:
   batch                       バッチ状況
   roles                       ロール一覧（iam:manage_roles）
   accounts                    アカウント一覧（account:manage）
+  audit-logs                  監査ログ一覧（audit_log:read）
   dashboard                   ダッシュボード集計
 
 options:
