@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Bell,
   Boxes,
   Briefcase,
   CalendarClock,
@@ -19,6 +20,7 @@ import {
   MessagesSquare,
   Package,
   Plane,
+  ScrollText,
   Search,
   ShieldCheck,
   Sparkles,
@@ -123,106 +125,8 @@ const navGroups: ReadonlyArray<NavGroup> = [
     ],
   },
   {
-    heading: "人材",
+    heading: "申請",
     items: [
-      {
-        label: "従業員",
-        href: "/employees",
-        icon: Users,
-        children: [
-          { label: "一覧", href: "/employees" },
-          { label: "新規登録", href: "/employees/new", requiredPermission: "employee:create" },
-        ],
-      },
-      {
-        label: "組織",
-        href: "/org",
-        icon: GitBranch,
-        children: [
-          { label: "概要", href: "/org" },
-          { label: "部署", href: "/org/departments" },
-        ],
-      },
-      {
-        label: "スキル",
-        href: "/skills",
-        icon: Sparkles,
-        children: [
-          { label: "一覧", href: "/skills" },
-          { label: "自分のスキル", href: "/skills/me" },
-        ],
-      },
-      {
-        label: "研修",
-        href: "/training",
-        icon: GraduationCap,
-        children: [
-          { label: "コース一覧", href: "/training" },
-          { label: "自分の受講", href: "/training/me" },
-          { label: "新規コース", href: "/training/new", requiredPermission: "training:manage" },
-        ],
-      },
-      {
-        label: "キャリア",
-        href: "/career",
-        icon: Briefcase,
-        children: [
-          { label: "マイキャリア", href: "/career" },
-          { label: "社内公募", href: "/career/postings" },
-          {
-            label: "新規公募",
-            href: "/career/postings/new",
-            requiredPermission: "career_posting:manage",
-          },
-        ],
-      },
-      {
-        label: "オンボーディング",
-        href: "/onboarding",
-        icon: ClipboardList,
-        children: [
-          { label: "ハブ", href: "/onboarding", requiredPermission: "onboarding:manage" },
-          {
-            label: "テンプレート",
-            href: "/onboarding/templates",
-            requiredPermission: "onboarding:manage",
-          },
-          {
-            label: "新規テンプレート",
-            href: "/onboarding/templates/new",
-            requiredPermission: "onboarding:manage",
-          },
-          {
-            label: "新規割当",
-            href: "/onboarding/assignments/new",
-            requiredPermission: "onboarding:manage",
-          },
-          { label: "自分のタスク", href: "/onboarding/me" },
-        ],
-      },
-    ],
-  },
-  {
-    heading: "業務",
-    items: [
-      {
-        label: "目標",
-        href: "/goals",
-        icon: Target,
-        children: [
-          { label: "一覧", href: "/goals" },
-          { label: "新規", href: "/goals/new" },
-        ],
-      },
-      {
-        label: "評価",
-        href: "/review",
-        icon: ClipboardCheck,
-        children: [
-          { label: "サイクル", href: "/review" },
-          { label: "管理", href: "/review/manage", requiredPermission: "review:administer" },
-        ],
-      },
       {
         label: "申請",
         href: "/applications",
@@ -267,6 +171,74 @@ const navGroups: ReadonlyArray<NavGroup> = [
         ],
       },
       {
+        label: "出張",
+        href: "/business-trips",
+        icon: Plane,
+        children: [
+          { label: "一覧", href: "/business-trips" },
+          { label: "新規申請", href: "/business-trips/new" },
+        ],
+      },
+      {
+        label: "証明書",
+        href: "/certificate-requests",
+        icon: FileText,
+        children: [
+          { label: "自分の依頼", href: "/certificate-requests" },
+          { label: "新規依頼", href: "/certificate-requests/new" },
+        ],
+      },
+      {
+        label: "ライフイベント",
+        href: "/life-events",
+        icon: ClipboardList,
+        children: [
+          { label: "一覧", href: "/life-events" },
+          { label: "新規登録", href: "/life-events/new" },
+        ],
+      },
+      {
+        label: "介護休業",
+        href: "/family-care-leaves",
+        icon: HeartHandshake,
+        children: [
+          { label: "一覧", href: "/family-care-leaves" },
+          { label: "新規申請", href: "/family-care-leaves/new" },
+        ],
+      },
+      {
+        label: "退職届",
+        href: "/resignations",
+        icon: FileText,
+        children: [
+          { label: "一覧", href: "/resignations" },
+          { label: "新規申請", href: "/resignations/new" },
+        ],
+      },
+      {
+        label: "反社チェック",
+        href: "/antisocial-checks",
+        icon: ShieldCheck,
+        children: [
+          { label: "一覧", href: "/antisocial-checks" },
+          { label: "新規宣誓", href: "/antisocial-checks/new" },
+        ],
+      },
+    ],
+  },
+  {
+    heading: "勤怠と休暇",
+    items: [
+      {
+        label: "勤怠",
+        href: "/attendance",
+        icon: TimerReset,
+        children: [
+          { label: "自分", href: "/attendance" },
+          { label: "全員", href: "/attendance/all", requiredPermission: "attendance:read:all" },
+        ],
+      },
+      {
         label: "休暇",
         href: "/leave",
         icon: Plane,
@@ -279,15 +251,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
             href: "/leave/admin",
             requiredPermission: "leave:read:all",
           },
-        ],
-      },
-      {
-        label: "勤怠",
-        href: "/attendance",
-        icon: TimerReset,
-        children: [
-          { label: "自分", href: "/attendance" },
-          { label: "全員", href: "/attendance/all", requiredPermission: "attendance:read:all" },
         ],
       },
       {
@@ -308,7 +271,119 @@ const navGroups: ReadonlyArray<NavGroup> = [
     ],
   },
   {
-    heading: "コミュニケーション",
+    heading: "人と組織",
+    items: [
+      {
+        label: "従業員",
+        href: "/employees",
+        icon: Users,
+        children: [
+          { label: "一覧", href: "/employees" },
+          { label: "新規登録", href: "/employees/new", requiredPermission: "employee:create" },
+        ],
+      },
+      {
+        label: "組織",
+        href: "/org",
+        icon: GitBranch,
+        children: [
+          { label: "概要", href: "/org" },
+          { label: "部署", href: "/org/departments" },
+        ],
+      },
+    ],
+  },
+  {
+    heading: "成長と評価",
+    items: [
+      {
+        label: "目標",
+        href: "/goals",
+        icon: Target,
+        children: [
+          { label: "一覧", href: "/goals" },
+          { label: "新規", href: "/goals/new" },
+        ],
+      },
+      {
+        label: "評価",
+        href: "/review",
+        icon: ClipboardCheck,
+        children: [
+          { label: "サイクル", href: "/review" },
+          { label: "管理", href: "/review/manage", requiredPermission: "review:administer" },
+        ],
+      },
+      {
+        label: "スキル",
+        href: "/skills",
+        icon: Sparkles,
+        children: [
+          { label: "一覧", href: "/skills" },
+          { label: "自分のスキル", href: "/skills/me" },
+        ],
+      },
+      {
+        label: "研修",
+        href: "/training",
+        icon: GraduationCap,
+        children: [
+          { label: "コース一覧", href: "/training" },
+          { label: "自分の受講", href: "/training/me" },
+          { label: "新規コース", href: "/training/new", requiredPermission: "training:manage" },
+        ],
+      },
+      {
+        label: "キャリア",
+        href: "/career",
+        icon: Briefcase,
+        children: [
+          { label: "マイキャリア", href: "/career" },
+          { label: "社内公募", href: "/career/postings" },
+          {
+            label: "新規公募",
+            href: "/career/postings/new",
+            requiredPermission: "career_posting:manage",
+          },
+        ],
+      },
+      {
+        label: "1on1",
+        href: "/oneonone",
+        icon: CalendarClock,
+        children: [
+          { label: "履歴", href: "/oneonone" },
+          { label: "記録を追加", href: "/oneonone/new" },
+        ],
+      },
+      {
+        label: "オンボーディング",
+        href: "/onboarding",
+        icon: ClipboardList,
+        children: [
+          { label: "ハブ", href: "/onboarding", requiredPermission: "onboarding:manage" },
+          {
+            label: "テンプレート",
+            href: "/onboarding/templates",
+            requiredPermission: "onboarding:manage",
+          },
+          {
+            label: "新規テンプレート",
+            href: "/onboarding/templates/new",
+            requiredPermission: "onboarding:manage",
+          },
+          {
+            label: "新規割当",
+            href: "/onboarding/assignments/new",
+            requiredPermission: "onboarding:manage",
+          },
+          { label: "自分のタスク", href: "/onboarding/me" },
+        ],
+      },
+    ],
+  },
+  {
+    heading: "情報",
     items: [
       {
         label: "ナレッジ",
@@ -334,15 +409,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
         ],
       },
       {
-        label: "1on1",
-        href: "/oneonone",
-        icon: CalendarClock,
-        children: [
-          { label: "履歴", href: "/oneonone" },
-          { label: "記録を追加", href: "/oneonone/new" },
-        ],
-      },
-      {
         label: "感謝",
         href: "/thanks",
         icon: HeartHandshake,
@@ -362,10 +428,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           },
         ],
       },
+      { label: "通知", href: "/notifications", icon: Bell },
     ],
   },
   {
-    heading: "リソース",
+    heading: "物と場所",
     items: [
       {
         label: "会議室",
@@ -383,15 +450,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
         ],
       },
       {
-        label: "レンタル",
-        href: "/rentals",
-        icon: Package,
-        children: [
-          { label: "一覧", href: "/rentals" },
-          { label: "新規予約", href: "/rentals/new" },
-        ],
-      },
-      {
         label: "備品",
         href: "/assets",
         icon: Boxes,
@@ -401,71 +459,20 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "自分の貸与品", href: "/assets/lent/me" },
         ],
       },
-    ],
-  },
-  {
-    heading: "依頼",
-    items: [
       {
-        label: "証明書",
-        href: "/certificate-requests",
-        icon: FileText,
+        label: "レンタル",
+        href: "/rentals",
+        icon: Package,
         children: [
-          { label: "自分の依頼", href: "/certificate-requests" },
-          { label: "新規依頼", href: "/certificate-requests/new" },
-        ],
-      },
-      {
-        label: "出張",
-        href: "/business-trips",
-        icon: Plane,
-        children: [
-          { label: "一覧", href: "/business-trips" },
-          { label: "新規申請", href: "/business-trips/new" },
-        ],
-      },
-      {
-        label: "介護休業",
-        href: "/family-care-leaves",
-        icon: HeartHandshake,
-        children: [
-          { label: "一覧", href: "/family-care-leaves" },
-          { label: "新規申請", href: "/family-care-leaves/new" },
-        ],
-      },
-      {
-        label: "ライフイベント",
-        href: "/life-events",
-        icon: ClipboardList,
-        children: [
-          { label: "一覧", href: "/life-events" },
-          { label: "新規登録", href: "/life-events/new" },
-        ],
-      },
-      {
-        label: "退職届",
-        href: "/resignations",
-        icon: FileText,
-        children: [
-          { label: "一覧", href: "/resignations" },
-          { label: "新規申請", href: "/resignations/new" },
-        ],
-      },
-      {
-        label: "反社チェック",
-        href: "/antisocial-checks",
-        icon: ShieldCheck,
-        children: [
-          { label: "一覧", href: "/antisocial-checks" },
-          { label: "新規宣誓", href: "/antisocial-checks/new" },
+          { label: "一覧", href: "/rentals" },
+          { label: "新規予約", href: "/rentals/new" },
         ],
       },
     ],
   },
   {
-    heading: "システム",
+    heading: "管理",
     items: [
-      { label: "バッチ", href: "/batch", icon: Workflow, requiredPermission: "batch:view" },
       {
         label: "ロール管理",
         href: "/admin/roles",
@@ -478,6 +485,50 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: UserCog,
         requiredPermission: "account:manage",
       },
+      {
+        label: "監査ログ",
+        href: "/admin/audit-logs",
+        icon: ScrollText,
+        requiredPermission: "audit_log:read",
+      },
+      {
+        label: "労務の横断閲覧",
+        href: "/certificate-requests/admin",
+        icon: ClipboardList,
+        children: [
+          {
+            label: "証明書発行",
+            href: "/certificate-requests/admin",
+            requiredPermission: "certificate_request:read:all",
+          },
+          {
+            label: "退職手続き",
+            href: "/resignations/admin",
+            requiredPermission: "resignation:read:all",
+          },
+          {
+            label: "ライフイベント",
+            href: "/life-events/admin",
+            requiredPermission: "life_event:read:all",
+          },
+          {
+            label: "産休・育休・介護",
+            href: "/family-care-leaves/admin",
+            requiredPermission: "family_care_leave:read:all",
+          },
+          {
+            label: "出張",
+            href: "/business-trips/admin",
+            requiredPermission: "business_trip:read:all",
+          },
+          {
+            label: "貸与品予約",
+            href: "/rentals/admin",
+            requiredPermission: "rental:read:all",
+          },
+        ],
+      },
+      { label: "バッチ", href: "/batch", icon: Workflow, requiredPermission: "batch:view" },
     ],
   },
 ]
@@ -531,8 +582,8 @@ function isParentActive(pathname: string, item: NavItem): boolean {
 }
 
 /**
- * オブジェクト軸でグループ化したサイドバーナビ。各オブジェクトの CRUD を Collapsible で展開する。
- * 入力でメニューを絞り込み、現在のパスを含む親は自動で開いた状態にする。
+ * コアの業務領域（申請・時間・人・成長）を上、補足領域（情報・物と場所）を下、管理を最後に並べたサイドバーナビ。
+ * 各項目の詳細ページは Collapsible で展開する。入力でメニューを絞り込み、現在のパスを含む親は自動で開いた状態にする。
  */
 export function SidebarNav(props: Props) {
   const pathname = usePathname()
