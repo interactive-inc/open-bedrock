@@ -32,10 +32,16 @@ export default async function GoalsPage(props: Props) {
         title="目標"
         description="期間と従業員で絞り込み、目標を確認します。"
         actions={
-          <Button nativeButton={false} render={<Link href={newHref} />}>
-            <Plus />
-            新規目標
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" nativeButton={false} render={<Link href="/goals/tree" />}>
+              目標ツリー
+            </Button>
+
+            <Button nativeButton={false} render={<Link href={newHref} />}>
+              <Plus />
+              新規目標
+            </Button>
+          </div>
         }
       />
 

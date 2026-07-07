@@ -45,11 +45,17 @@ export type GoalResponse = {
 }
 
 // POST /goals のリクエストボディ。weight 未指定時は api 側で 10 が入る。kpi は未指定可。
+// 目標の所有主体。individual=個人 / department=部門 / company=全社。
+export type GoalOwnerType = "individual" | "department" | "company"
+
 export type GoalCreateRequest = {
   period: string
   title: string
   weight?: number
   kpi?: string
+  owner_type?: GoalOwnerType
+  department_code?: string
+  parent_goal_id?: number
 }
 
 // PUT /goals/:goalId のリクエストボディ。
