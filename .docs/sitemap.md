@@ -21,6 +21,9 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 - `/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
+- `/recruitment` は採用の募集一覧と候補者パイプラインを管理する画面(`recruitment:manage`)。
+- `/commendations` は表彰の一覧(社内公開)と管理者による記録を行う画面。
+- `/headcount-plans` は人員計画と実在籍数を比較する画面(`headcount_plan:read:all`)。
 
 ## 管理(IAM)
 
@@ -48,6 +51,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/leave/new` は休暇種別、期間、理由を入力して休暇を申請する画面。
 - `/leave/inbox` は承認待ちの休暇申請を確認し、承認または却下する画面。
 - `/leave/admin` は全社の休暇申請を横断で確認する管理画面(`leave:read:all`)。
+- `/attendance/overtime` は時間外の参考集計を確認する画面(スコープ権限で範囲を出し分け)。
+- `/calendar` は会社カレンダー(休日・振替出勤日)を確認し、管理者(`calendar:manage`)が編集する画面。
 
 ## 経費
 
@@ -62,6 +67,9 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/knowledge` は社内ナレッジをキーワードやカテゴリで検索する画面。
 - `/knowledge/new` はナレッジ記事のタイトル、カテゴリ、本文を登録する画面。
 - `/knowledge/[id]` はナレッジ記事の本文とカテゴリを確認する画面。
+- `/announcements` は社内アナウンスの一覧と詳細を確認し、管理者(`announcement:manage`)が作成、公開する画面。
+- `/regulations` は規程集の一覧と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
+- `/documents` は文書台帳(所在・期限)を確認、登録する画面(`document:read:all`)。
 
 ## 会議室と備品
 
@@ -78,6 +86,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/skills` はスキルをキーワードやカテゴリで検索する画面。
 - `/skills/me` は自分の登録済みスキルを確認し、新しいスキルを登録する画面。
+- `/certifications` は資格・免許のマスタと保有記録を確認、管理する画面。
 - `/goals` は期間と従業員で絞り込み、目標を確認する画面。
 - `/goals/tree` は全社、部門、個人の目標を階層で俯瞰する画面。
 - `/goals/new` は期間と内容を入力して目標を登録する画面。
@@ -170,6 +179,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/family-care-leaves/admin` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
 - `/business-trips/admin` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
 - `/rentals/admin` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
+- `/health-checkups` は健康診断・ストレスチェックの実施記録を管理する画面(`health_checkup:read:all`)。
+- `/work-accidents` は労災・事故の発生記録を確認、登録する画面(`work_accident:read:all`)。
 
 ## 経営と対外
 
@@ -181,6 +192,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/partners/new` は新しい取引先を登録する画面(`partner:manage`)。
 - `/partners/[code]` は取引先の詳細と契約記録を確認する画面(契約は `contract:read:all`)。
 - `/dashboard/management` は経営ダッシュボードを確認する画面(`management_dashboard:view`)。
+- `/budgets` は予算枠と消化・残額を確認、記録する画面(`budget:read:all`)。
 - `/meetings` は会議体の一覧を確認し、登録済みの会議体へ移動する画面。
 - `/meetings/new` は会議体のコードと名称を登録する画面(`meeting:manage`)。
 - `/meetings/[code]` は会議体の詳細と議事録一覧を確認し、議事録を記録する画面。
@@ -192,3 +204,5 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/batch` はバックグラウンドで実行されるバッチジョブの最新状況を確認する画面。
 - `/settings` は表示テーマや表示言語の個人設定を変更する画面。
+- `/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。
+- `/it-incidents` はインシデントの発生と解消を記録する画面(`it_incident:read:all`)。
