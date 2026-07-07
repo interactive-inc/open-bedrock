@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { closeReviewCycle } from "@/lib/api/close-review-cycle"
 import { createReviewCycle } from "@/lib/api/create-review-cycle"
+import { createReviewFormsBulk } from "@/lib/api/create-review-forms-bulk"
 import { deleteReviewCycle } from "@/lib/api/delete-review-cycle"
+import { discloseReviewCycle } from "@/lib/api/disclose-review-cycle"
 import { getMe } from "@/lib/api/get-me"
 import { openReviewCycle } from "@/lib/api/open-review-cycle"
 import { submitReviewForm } from "@/lib/api/submit-review-form"
@@ -17,6 +19,21 @@ import {
 } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
+
+// reviewer_type の許可値。フォーム入力の検証に使う。
+const REVIEWER_TYPES = ["self", "manager", "peer", "subordinate"] as const
+
+type ReviewerType = (typeof REVIEWER_TYPES)[number]
+
+function toReviewerType(value: FormDataEntryValue | null): ReviewerType | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const matched = REVIEWER_TYPES.find((type) => type === value)
+
+  return matched ?? null
+}
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ReviewFormState = {
@@ -252,6 +269,88 @@ export async function submitReviewFormAction(
 
   if (submitted instanceof Error) {
     return { ok: false, error: submitted.message }
+  }
+
+  revalidatePath("/review")
+  revalidatePath("/review/manage")
+
+  return { ok: true, error: null }
+}
+
+// 評価フォーム一括開示 Server Action。hidden input の cycle_id を受け取る（特権ロール）。
+export async function discloseReviewCycleAction(
+  _previousState: ReviewFormState,
+  formData: FormData,
+): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+
+  if (cycleId === null) {
+    return { ok: false, error: "サイクル ID が不正です" }
+  }
+
+  const disclosed = await discloseReviewCycle(cycleId)
+
+  if (disclosed instanceof Error) {
+    return { ok: false, error: disclosed.message }
+  }
+
+  revalidatePath("/review")
+  revalidatePath("/review/manage")
+
+  return { ok: true, error: null }
+}
+
+// 評価フォーム一括作成 Server Action（360度評価）。被評価者・評価者・評価者種別を受け取る（特権ロール）。
+export async function createReviewFormsBulkAction(
+  _previousState: ReviewFormState,
+  formData: FormData,
+): Promise<ReviewFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAdministerCycle(currentUser.permissions) === false) {
+    return { ok: false, error: "評価サイクルを管理する権限がありません" }
+  }
+
+  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+
+  if (cycleId === null) {
+    return { ok: false, error: "サイクル ID が不正です" }
+  }
+
+  const subjectEmployeeId = toPositiveIntId(formData.get("subject_employee_id"))
+
+  if (subjectEmployeeId === null) {
+    return { ok: false, error: "被評価者 ID が不正です" }
+  }
+
+  const reviewerEmployeeId = toPositiveIntId(formData.get("reviewer_employee_id"))
+
+  if (reviewerEmployeeId === null) {
+    return { ok: false, error: "評価者 ID が不正です" }
+  }
+
+  const reviewerType = toReviewerType(formData.get("reviewer_type"))
+
+  if (reviewerType === null) {
+    return { ok: false, error: "評価者種別が不正です" }
+  }
+
+  const created = await createReviewFormsBulk(cycleId, [
+    {
+      subject_employee_id: subjectEmployeeId,
+      reviewer_employee_id: reviewerEmployeeId,
+      reviewer_type: reviewerType,
+    },
+  ])
+
+  if (created instanceof Error) {
+    return { ok: false, error: created.message }
   }
 
   revalidatePath("/review")

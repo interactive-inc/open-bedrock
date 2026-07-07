@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation"
 import { ReviewCycleCreateForm } from "@/app/(app)/review/_components/review-cycle-create-form"
+import { ReviewDiscloseForm } from "@/app/(app)/review/_components/review-disclose-form"
+import { ReviewFormsBulkCreateForm } from "@/app/(app)/review/_components/review-forms-bulk-create-form"
 import { ReviewResultsSearchForm } from "@/app/(app)/review/_components/review-results-search-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
+import { getReviewCycles } from "@/lib/api/get-review-cycles"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
 export const metadata = { title: "評価の管理" }
@@ -20,11 +23,15 @@ export default async function ReviewManagePage() {
     notFound()
   }
 
+  const cycles = await getReviewCycles()
+
+  const cycleList = cycles instanceof Error ? [] : cycles
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="評価の管理"
-        description="評価サイクルの作成と、評価結果の横断検索を行います。"
+        description="評価サイクルの作成・360度評価フォームの一括作成・結果の開示と横断検索を行います。"
         actions={<BackButton href="/review" label="評価に戻る" />}
       />
 
@@ -35,6 +42,26 @@ export default async function ReviewManagePage() {
 
         <CardContent>
           <ReviewCycleCreateForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>評価フォームを一括作成（360度評価）</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <ReviewFormsBulkCreateForm cycles={cycleList} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>評価結果を開示</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <ReviewDiscloseForm cycles={cycleList} />
         </CardContent>
       </Card>
 

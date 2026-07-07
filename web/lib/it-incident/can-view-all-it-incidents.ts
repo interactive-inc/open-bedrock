@@ -1,0 +1,4 @@
+/** 全社のインシデント記録を横断で閲覧できる権限（it_incident:read:all）を持つか判定する（api の canViewAllItIncidents と同一基準）。 */
+export function canViewAllItIncidents(permissions: ReadonlyArray<string>): boolean {
+  return permissions.includes("it_incident:read:all")
+}

@@ -44,6 +44,13 @@ export type ReviewFormResponse = {
   submitted_at: string | null
 }
 
+// POST /review-cycles/:cycle_id/forms/bulk のリクエスト各要素（被評価者と評価者種別の組）。
+export type ReviewFormBulkItem = {
+  subject_employee_id: number
+  reviewer_employee_id: number
+  reviewer_type: "self" | "manager" | "peer" | "subordinate"
+}
+
 // POST /review-forms/:form_id/submit のリクエスト body。
 export type ReviewFormSubmitRequest = {
   score: number | null

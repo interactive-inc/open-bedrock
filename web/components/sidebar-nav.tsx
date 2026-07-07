@@ -4,6 +4,7 @@ import {
   Award,
   Bell,
   BookOpenCheck,
+  UserPlus,
   Boxes,
   Building2,
   FileCheck,
@@ -245,8 +246,10 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "自分", href: "/attendance" },
           { label: "全員", href: "/attendance/all", requiredPermission: "attendance:read:all" },
+          { label: "時間外の集計", href: "/attendance/overtime" },
         ],
       },
+      { label: "会社カレンダー", href: "/calendar", icon: CalendarDays },
       {
         label: "休暇",
         href: "/leave",
@@ -301,6 +304,19 @@ const navGroups: ReadonlyArray<NavGroup> = [
         ],
       },
       { label: "等級", href: "/grades", icon: Award },
+      {
+        label: "採用",
+        href: "/recruitment",
+        icon: UserPlus,
+        requiredPermission: "recruitment:manage",
+      },
+      { label: "表彰", href: "/commendations", icon: Award },
+      {
+        label: "人員計画",
+        href: "/headcount-plans",
+        icon: Users,
+        requiredPermission: "headcount_plan:read:all",
+      },
     ],
   },
   {
@@ -334,6 +350,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "自分のスキル", href: "/skills/me" },
         ],
       },
+      { label: "資格・免許", href: "/certifications", icon: Award },
       {
         label: "研修",
         href: "/training",
@@ -439,6 +456,8 @@ const navGroups: ReadonlyArray<NavGroup> = [
           },
         ],
       },
+      { label: "アナウンス", href: "/announcements", icon: Bell },
+      { label: "規程集", href: "/regulations", icon: BookOpenCheck },
       { label: "通知", href: "/notifications", icon: Bell },
     ],
   },
@@ -515,6 +534,18 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/partners",
         icon: Building2,
       },
+      {
+        label: "予算枠",
+        href: "/budgets",
+        icon: Boxes,
+        requiredPermission: "budget:read:all",
+      },
+      {
+        label: "文書台帳",
+        href: "/documents",
+        icon: FileCheck,
+        requiredPermission: "document:read:all",
+      },
     ],
   },
   {
@@ -537,6 +568,30 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/admin/audit-logs",
         icon: ScrollText,
         requiredPermission: "audit_log:read",
+      },
+      {
+        label: "健診の実施記録",
+        href: "/health-checkups",
+        icon: ClipboardCheck,
+        requiredPermission: "health_checkup:read:all",
+      },
+      {
+        label: "労災・事故記録",
+        href: "/work-accidents",
+        icon: ClipboardList,
+        requiredPermission: "work_accident:read:all",
+      },
+      {
+        label: "ライセンス台帳",
+        href: "/licenses",
+        icon: ShieldCheck,
+        requiredPermission: "license:read:all",
+      },
+      {
+        label: "インシデント記録",
+        href: "/it-incidents",
+        icon: ScrollText,
+        requiredPermission: "it_incident:read:all",
       },
       {
         label: "労務の横断閲覧",
