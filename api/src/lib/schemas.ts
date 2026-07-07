@@ -91,6 +91,11 @@ export const expenseApprovalActionSchema = z.enum(["approve", "reject"])
 
 export type ExpenseApprovalAction = z.infer<typeof expenseApprovalActionSchema>
 
+/** 稟議ステータス */
+export const ringiStatusSchema = z.enum(["pending", "approved", "rejected"])
+
+export type RingiStatus = z.infer<typeof ringiStatusSchema>
+
 /** サンクスポイント交換ステータス */
 export const redemptionStatusSchema = z.enum(["pending", "rejected", "fulfilled"])
 

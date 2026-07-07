@@ -129,6 +129,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       kpi: row.kpi,
       weight: row.weight,
       status: row.status,
+      owner_type: row.ownerType,
+      parent_goal_id: row.parentGoalId,
+      department_code: row.departmentCode,
     })),
     total: totalRows.at(0)?.total ?? 0,
   })

@@ -1,6 +1,11 @@
 import type { GoalRow } from "@/schema"
 import { z } from "zod"
 
+/** 目標の所有主体。individual は個人、department は部門、company は全社。 */
+export const goalOwnerTypeSchema = z.enum(["individual", "department", "company"])
+
+export type GoalOwnerType = z.infer<typeof goalOwnerTypeSchema>
+
 const zProps = z.object({
   id: z.number().nullable(),
   employeeId: z.number(),
@@ -9,6 +14,9 @@ const zProps = z.object({
   kpi: z.string().nullable(),
   weight: z.number().int().min(1).max(100),
   status: z.string(),
+  ownerType: goalOwnerTypeSchema,
+  parentGoalId: z.number().nullable(),
+  departmentCode: z.string().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -30,6 +38,12 @@ export class Goal implements Props {
 
   readonly status!: Props["status"]
 
+  readonly ownerType!: Props["ownerType"]
+
+  readonly parentGoalId!: Props["parentGoalId"]
+
+  readonly departmentCode!: Props["departmentCode"]
+
   constructor(private readonly props: Props) {
     zProps.parse(props)
 
@@ -45,6 +59,9 @@ export class Goal implements Props {
     title: string
     kpi: string | null
     weight: number
+    ownerType?: GoalOwnerType
+    parentGoalId?: number | null
+    departmentCode?: string | null
   }): Goal {
     return new Goal({
       id: null,
@@ -54,6 +71,9 @@ export class Goal implements Props {
       kpi: props.kpi,
       weight: props.weight,
       status: "draft",
+      ownerType: props.ownerType ?? "individual",
+      parentGoalId: props.parentGoalId ?? null,
+      departmentCode: props.departmentCode ?? null,
     })
   }
 
@@ -66,6 +86,9 @@ export class Goal implements Props {
       kpi: row.kpi,
       weight: row.weight,
       status: row.status,
+      ownerType: goalOwnerTypeSchema.parse(row.ownerType),
+      parentGoalId: row.parentGoalId,
+      departmentCode: row.departmentCode,
     })
   }
 

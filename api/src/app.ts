@@ -22,6 +22,12 @@ import * as assetLentMeRoute from "@/interface/asset/lent/me/route"
 import * as assetListRoute from "@/interface/asset/route"
 import * as assetRegisterRoute from "@/interface/asset/register/route"
 import * as assetReturnRoute from "@/interface/asset/[code]/return/route"
+import * as partnerListRoute from "@/interface/partner/route"
+import * as partnerDetailRoute from "@/interface/partner/[code]/route"
+import * as partnerUpdateRoute from "@/interface/partner/[id]/route"
+import * as partnerArchiveRoute from "@/interface/partner/[id]/archive/route"
+import * as contractListRoute from "@/interface/contract/route"
+import * as contractDetailRoute from "@/interface/contract/[id]/route"
 import * as attendanceClockInRoute from "@/interface/attendance/clock-in/route"
 import * as attendanceClockOutRoute from "@/interface/attendance/clock-out/route"
 import * as attendanceListRoute from "@/interface/attendance/route"
@@ -44,12 +50,19 @@ import * as rentalReservationMineRoute from "@/interface/rental/reservations/me/
 import * as rentalReservationAdminRoute from "@/interface/rental/reservations/admin/route"
 import * as rentalReservationLendRoute from "@/interface/rental/reservations/[id]/lend/route"
 import * as rentalReservationReturnRoute from "@/interface/rental/reservations/[id]/return/route"
+import * as ringiAdminRoute from "@/interface/ringi/admin/route"
+import * as ringiApproveRoute from "@/interface/ringi/[id]/approve/route"
+import * as ringiCreateRoute from "@/interface/ringi/route"
+import * as ringiInboxRoute from "@/interface/ringi/inbox/route"
+import * as ringiMeRoute from "@/interface/ringi/me/route"
+import * as ringiRejectRoute from "@/interface/ringi/[id]/reject/route"
 import * as careerPostingApplyRoute from "@/interface/career/postings/[posting_id]/apply/route"
 import * as careerPostingDetailRoute from "@/interface/career/postings/[posting_id]/route"
 import * as careerPostingListRoute from "@/interface/career/postings/route"
 import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
 import * as dashboardRoute from "@/interface/dashboard/route"
+import * as dashboardManagementRoute from "@/interface/dashboard/management/route"
 import * as employeeListRoute from "@/interface/employee/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
@@ -61,6 +74,7 @@ import * as expenseRejectRoute from "@/interface/expense/[id]/reject/route"
 import * as goalCreateRoute from "@/interface/goal/goals/create-route"
 import * as goalEvaluationCreateRoute from "@/interface/goal/goals/[goal_id]/evaluations/route"
 import * as goalListRoute from "@/interface/goal/goals/route"
+import * as goalTreeRoute from "@/interface/goal/goals/tree/route"
 import * as gradeCreateRoute from "@/interface/grade/grades/create-route"
 import * as gradeDetailRoute from "@/interface/grade/grades/[id]/route"
 import * as gradeAssignmentsRoute from "@/interface/grade/grades/assignments/route"
@@ -199,6 +213,14 @@ import * as iamAccountRoleRevokeRoute from "@/interface/iam/accounts/[id]/roles/
 import * as iamAccountResetPasswordRoute from "@/interface/iam/accounts/[id]/reset-password/route"
 import * as iamAuditLogsRoute from "@/interface/iam/audit-logs/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
+import * as meetingListRoute from "@/interface/meeting/meetings/route"
+import * as meetingDetailRoute from "@/interface/meeting/meetings/[code]/route"
+import * as meetingArchiveRoute from "@/interface/meeting/meetings/[code]/archive/route"
+import * as meetingMinutesListRoute from "@/interface/meeting/meetings/[code]/minutes/route"
+import * as meetingMinutesDetailRoute from "@/interface/meeting/minutes/[id]/route"
+import * as decisionListRoute from "@/interface/decision/decisions/route"
+import * as decisionDetailRoute from "@/interface/decision/decisions/[id]/route"
+import * as decisionSupersedeRoute from "@/interface/decision/decisions/[id]/supersede/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
@@ -257,12 +279,14 @@ export const app = factory
   .post("/accounts/:id/reset-password", ...iamAccountResetPasswordRoute.POST)
   .get("/audit-logs", ...iamAuditLogsRoute.GET)
   .get("/dashboard", ...dashboardRoute.GET)
+  .get("/dashboard/management", ...dashboardManagementRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
   .get("/org/tree", ...orgTreeRoute.GET)
   .get("/org/departments/:code/members", ...orgDepartmentMembersRoute.GET)
   .get("/org/reporting-line/:employee_code", ...orgReportingLineRoute.GET)
   .get("/goals", ...goalListRoute.GET)
+  .get("/goals/tree", ...goalTreeRoute.GET)
   .post("/goals", ...goalCreateRoute.POST)
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
   .get("/grades/assignments", ...gradeAssignmentsRoute.GET)
@@ -327,6 +351,14 @@ export const app = factory
   .get("/assets/:code", ...assetDetailRoute.GET)
   .post("/assets", ...assetRegisterRoute.POST)
   .get("/assets", ...assetListRoute.GET)
+  .post("/partners/:id/archive", ...partnerArchiveRoute.POST)
+  .get("/partners/:code", ...partnerDetailRoute.GET)
+  .put("/partners/:id", ...partnerUpdateRoute.PUT)
+  .post("/partners", ...partnerListRoute.POST)
+  .get("/partners", ...partnerListRoute.GET)
+  .get("/contracts", ...contractListRoute.GET)
+  .post("/contracts", ...contractListRoute.POST)
+  .put("/contracts/:id", ...contractDetailRoute.PUT)
   .post("/attendance/clock-in", ...attendanceClockInRoute.POST)
   .post("/attendance/clock-out", ...attendanceClockOutRoute.POST)
   .get("/attendance/me/summary", ...attendanceMeSummaryRoute.GET)
@@ -458,6 +490,12 @@ export const app = factory
   .delete("/rentals/:id", ...rentalReservationDetailRoute.DELETE)
   .post("/rentals/:id/lend", ...rentalReservationLendRoute.POST)
   .post("/rentals/:id/return", ...rentalReservationReturnRoute.POST)
+  .get("/ringi/admin", ...ringiAdminRoute.GET)
+  .get("/ringi/inbox", ...ringiInboxRoute.GET)
+  .get("/ringi/me", ...ringiMeRoute.GET)
+  .post("/ringi/:id/approve", ...ringiApproveRoute.POST)
+  .post("/ringi/:id/reject", ...ringiRejectRoute.POST)
+  .post("/ringi", ...ringiCreateRoute.POST)
   .post("/resignations", ...resignationCreateRoute.POST)
   .get("/resignations/me", ...resignationMineRoute.GET)
   .get("/resignations/admin", ...resignationAdminRoute.GET)
@@ -512,6 +550,20 @@ export const app = factory
   .delete("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.DELETE)
   .put("/review-cycles/:cycle_id", ...reviewCycleEditRoute.PUT)
   .delete("/review-cycles/:cycle_id", ...reviewCycleEditRoute.DELETE)
+  .get("/meetings", ...meetingListRoute.GET)
+  .post("/meetings", ...meetingListRoute.POST)
+  .post("/meetings/:code/archive", ...meetingArchiveRoute.POST)
+  .get("/meetings/:code/minutes", ...meetingMinutesListRoute.GET)
+  .post("/meetings/:code/minutes", ...meetingMinutesListRoute.POST)
+  .get("/meetings/:code", ...meetingDetailRoute.GET)
+  .put("/meetings/:code", ...meetingDetailRoute.PUT)
+  .get("/minutes/:id", ...meetingMinutesDetailRoute.GET)
+  .put("/minutes/:id", ...meetingMinutesDetailRoute.PUT)
+  .post("/decisions/:id/supersede", ...decisionSupersedeRoute.POST)
+  .get("/decisions", ...decisionListRoute.GET)
+  .post("/decisions", ...decisionListRoute.POST)
+  .get("/decisions/:id", ...decisionDetailRoute.GET)
+  .put("/decisions/:id", ...decisionDetailRoute.PUT)
 
 export type AppType = typeof app
 
