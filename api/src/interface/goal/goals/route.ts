@@ -1,4 +1,5 @@
-import { canReadAllGoals } from "@/lib/goal/can-read-all-goals"
+import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/lib/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/schema"
@@ -11,7 +12,7 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /goals — 本人の目標一覧。goal:read:all 権限は employee_id 指定で他者を閲覧できる
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -35,8 +36,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isViewingOthers = targetEmployeeId !== session.employeeId
 
-  if (isViewingOthers && canReadAllGoals(session) === false) {
-    throw new ForbiddenError()
+  if (isViewingOthers) {
+    const relation = await resolveEmployeeRelation({
+      c,
+      viewerEmployeeId: session.employeeId,
+      targetEmployeeId,
+    })
+
+    if (relation instanceof Error) {
+      throw new InternalError("failed to resolve employee relation")
+    }
+
+    if (canReadGoalOf(session, relation) === false) {
+      throw new ForbiddenError()
+    }
   }
 
   const conditions: Array<SQL> = [eq(goals.employeeId, targetEmployeeId)]

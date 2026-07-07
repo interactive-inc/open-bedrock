@@ -1,4 +1,5 @@
-import { canEvaluateGoal } from "@/lib/goal/can-evaluate-goal"
+import { canEvaluateGoalOf } from "@/lib/goal/can-evaluate-goal-of"
+import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import type { SessionPayload } from "@/env"
 
@@ -9,9 +10,10 @@ export type Props = {
   goalEmployeeId: number
   viewerEmployeeId: number
   session: SessionPayload
+  relation: EmployeeRelation
 }
 
-/** self は本人のみ、manager/final は goal:evaluate 権限のみ許可する。 */
+/** self は本人のみ、manager/final は評価スコープ(all/reports)で許可する。 */
 export function resolveEvaluationPermission(props: Props): null | Forbidden {
   if (props.kind === "self") {
     const isOwner = props.goalEmployeeId === props.viewerEmployeeId
@@ -19,5 +21,5 @@ export function resolveEvaluationPermission(props: Props): null | Forbidden {
     return isOwner ? null : { reason: "forbidden" }
   }
 
-  return canEvaluateGoal(props.session) ? null : { reason: "forbidden" }
+  return canEvaluateGoalOf(props.session, props.relation) ? null : { reason: "forbidden" }
 }

@@ -1,5 +1,7 @@
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
+import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -41,11 +43,18 @@ export class CreateGoalEvaluation {
       return new ConflictError("goal is already finalized", "goal_finalized")
     }
 
+    const relation = await this.resolveRelation(command.kind, goal.employeeId, command.evaluatorId)
+
+    if (relation instanceof Error) {
+      return new UnexpectedError("failed to resolve employee relation", { cause: relation })
+    }
+
     const permission = resolveEvaluationPermission({
       kind: command.kind,
       goalEmployeeId: goal.employeeId,
       viewerEmployeeId: command.evaluatorId,
       session: command.session,
+      relation,
     })
 
     if (permission !== null) {
@@ -114,5 +123,22 @@ export class CreateGoalEvaluation {
     }
 
     return evaluation
+  }
+
+  // self 評価は本人一致のみで判定するため org を引かない。manager/final のみ関係を解決する。
+  private async resolveRelation(
+    kind: GoalEvaluationKind,
+    goalEmployeeId: number,
+    evaluatorId: number,
+  ): Promise<EmployeeRelation | Error> {
+    if (kind === "self") {
+      return { isSelf: false, isReport: false, isSameDepartment: false }
+    }
+
+    return resolveEmployeeRelation({
+      c: this.c,
+      viewerEmployeeId: evaluatorId,
+      targetEmployeeId: goalEmployeeId,
+    })
   }
 }

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/infrastructure/seed/seed-goal-evaluations"
 import { seedGoals } from "@/infrastructure/seed/seed-goals"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -52,6 +53,16 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   await seedD1(
     db,
@@ -118,13 +129,14 @@ describe("POST /goals/:goal_id/evaluations", () => {
     }
   })
 
-  test("final evaluation by a manager flips goal status to done", async () => {
+  test("final evaluation by the report's manager flips goal status to done", async () => {
     const db = await createTestDb()
 
+    // 目標1 は E005(id 5)。その上長 E004(id 4, manager) が final 評価できる。
     const evaluateResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/goals/3/evaluations",
+      path: "/goals/1/evaluations",
       token: await tokenFor(4, "manager"),
       method: "POST",
       body: { kind: "final", score: 90 },
@@ -135,8 +147,8 @@ describe("POST /goals/:goal_id/evaluations", () => {
     const listResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/goals?employee_id=9&period=2026-H1",
-      token: await tokenFor(9, "member"),
+      path: "/goals?employee_id=5&period=2026-H1",
+      token: await tokenFor(1, "admin"),
     })
 
     const parsed = z
@@ -146,9 +158,23 @@ describe("POST /goals/:goal_id/evaluations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data[0]?.id).toBe(3)
-      expect(parsed.data.data[0]?.status).toBe("done")
+      const finalized = parsed.data.data.find((goal) => goal.id === 1)
+      expect(finalized?.status).toBe("done")
     }
+  })
+
+  test("manager cannot evaluate a non-report's goal", async () => {
+    // 目標3 は E009(id 9)。E009 の上長は E001 で、E004(id 4) は配下に含まない。
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals/3/evaluations",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { kind: "final", score: 90 },
+    })
+
+    expect(response.status).toBe(403)
   })
 
   test("non-owner self evaluation is forbidden", async () => {

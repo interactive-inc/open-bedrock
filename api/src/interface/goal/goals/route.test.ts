@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedGoalEvaluations } from "@/infrastructure/seed/seed-goal-evaluations"
 import { seedGoals } from "@/infrastructure/seed/seed-goals"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -40,6 +41,16 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   await seedD1(
     db,
@@ -153,6 +164,38 @@ describe("GET /goals", () => {
       jwtSecret,
       path: "/goals?employee_id=9",
       token: await tokenFor(5, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("manager can read a report's goals (E004 over E005)", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals?employee_id=5",
+      token: await tokenFor(4, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.every((goal) => goal.employee_id === 5)).toBe(true)
+    }
+  })
+
+  test("manager cannot read a non-report's goals (E004 not over E009)", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/goals?employee_id=9",
+      token: await tokenFor(4, "manager"),
     })
 
     expect(response.status).toBe(403)

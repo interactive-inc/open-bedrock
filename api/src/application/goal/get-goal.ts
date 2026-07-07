@@ -1,6 +1,7 @@
 import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context, SessionPayload } from "@/env"
-import { canReadAllGoals } from "@/lib/goal/can-read-all-goals"
+import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
+import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -32,8 +33,20 @@ export class GetGoal {
 
     const isOwner = goal.employeeId === command.viewerEmployeeId
 
-    if (isOwner === false && canReadAllGoals(command.session) === false) {
-      return new ForbiddenError("cannot view this goal", "not_viewable")
+    if (isOwner === false) {
+      const relation = await resolveEmployeeRelation({
+        c: this.c,
+        viewerEmployeeId: command.viewerEmployeeId,
+        targetEmployeeId: goal.employeeId,
+      })
+
+      if (relation instanceof Error) {
+        return new UnexpectedError("failed to resolve employee relation", { cause: relation })
+      }
+
+      if (canReadGoalOf(command.session, relation) === false) {
+        return new ForbiddenError("cannot view this goal", "not_viewable")
+      }
     }
 
     return goal
