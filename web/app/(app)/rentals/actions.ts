@@ -3,12 +3,83 @@
 import { revalidatePath } from "next/cache"
 import { cancelRentalReservation } from "@/lib/api/cancel-rental-reservation"
 import { createRentalReservation } from "@/lib/api/create-rental-reservation"
+import { getMe } from "@/lib/api/get-me"
+import { lendRentalReservation } from "@/lib/api/lend-rental-reservation"
+import { returnRentalReservation } from "@/lib/api/return-rental-reservation"
 import { updateRentalReservation } from "@/lib/api/update-rental-reservation"
+import { canManageRentals } from "@/lib/rental/can-manage-rentals"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type RentalReservationActionState = {
   ok: boolean
   error: string | null
+}
+
+// 総務・人事が貸与品予約を貸出済みにする Server Action。reservation_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function lendRentalReservationAction(
+  previousState: RentalReservationActionState,
+  formData: FormData,
+): Promise<RentalReservationActionState> {
+  const id = toReservationIdText(formData.get("reservation_id"))
+
+  if (id === null) {
+    return { ok: false, error: "予約を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageRentals(currentUser.permissions) === false) {
+    return { ok: false, error: "貸与品予約を管理する権限がありません" }
+  }
+
+  const lent = await lendRentalReservation(id)
+
+  if (lent instanceof Error) {
+    return { ok: false, error: lent.message }
+  }
+
+  revalidatePath("/rentals/admin")
+
+  return { ok: true, error: null }
+}
+
+// 総務・人事が貸与品予約を返却済みにする Server Action。reservation_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function returnRentalReservationAction(
+  previousState: RentalReservationActionState,
+  formData: FormData,
+): Promise<RentalReservationActionState> {
+  const id = toReservationIdText(formData.get("reservation_id"))
+
+  if (id === null) {
+    return { ok: false, error: "予約を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageRentals(currentUser.permissions) === false) {
+    return { ok: false, error: "貸与品予約を管理する権限がありません" }
+  }
+
+  const returned = await returnRentalReservation(id)
+
+  if (returned instanceof Error) {
+    return { ok: false, error: returned.message }
+  }
+
+  revalidatePath("/rentals/admin")
+
+  return { ok: true, error: null }
+}
+
+// id 用の FormData 値を取り出す。未入力は null。
+function toReservationIdText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
+  }
+
+  return value.trim()
 }
 
 // レンタル予約申請 Server Action。item_name/start_date/end_date 必須、purpose は任意。

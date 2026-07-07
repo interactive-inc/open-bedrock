@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { FamilyCareLeaveAdminActions } from "@/app/(app)/family-care-leaves/admin/_components/family-care-leave-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -25,6 +26,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社の産休・育休・介護休業の申出一覧テーブル。詳細は各申出のページへ、従業員 ID クリックで絞り込む。
@@ -43,6 +45,7 @@ export function FamilyCareLeaveAdminTable(props: Props) {
             <TableHead>期間</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">申出日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -79,6 +82,16 @@ export function FamilyCareLeaveAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  {row.status === "requested" ? (
+                    <FamilyCareLeaveAdminActions familyCareLeaveId={row.id} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

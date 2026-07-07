@@ -13,6 +13,7 @@ import {
   type LifeEventAdminFilter,
 } from "@/lib/api/get-life-event-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
 import { canViewAllLifeEvents } from "@/lib/life-event/can-view-all-life-events"
 
 export const metadata = { title: "ライフイベント届管理" }
@@ -28,6 +29,8 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
   if (currentUser instanceof Error || canViewAllLifeEvents(currentUser.permissions) === false) {
     notFound()
   }
+
+  const canManage = canManageLifeEvents(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -77,7 +80,12 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <LifeEventAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <LifeEventAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -87,6 +95,7 @@ async function LifeEventAdminSection(props: {
   filter: LifeEventAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getLifeEventAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -99,7 +108,7 @@ async function LifeEventAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <LifeEventAdminTable rows={result.data} total={result.total} />
+      <LifeEventAdminTable rows={result.data} total={result.total} canManage={props.canManage} />
 
       <TablePagination
         pathname="/life-events/admin"

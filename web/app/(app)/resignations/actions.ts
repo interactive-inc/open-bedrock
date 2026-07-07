@@ -1,8 +1,11 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { acceptResignation } from "@/lib/api/accept-resignation"
 import { cancelResignation } from "@/lib/api/cancel-resignation"
 import { createResignation } from "@/lib/api/create-resignation"
+import { getMe } from "@/lib/api/get-me"
+import { rejectResignation } from "@/lib/api/reject-resignation"
 import { updateResignation } from "@/lib/api/update-resignation"
 import {
   FORM_CONSTRAINTS,
@@ -10,11 +13,79 @@ import {
   toOptionalText,
   toRequiredIsoDate,
 } from "@/lib/form/constraints"
+import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ResignationActionState = {
   ok: boolean
   error: string | null
+}
+
+// 人事が退職申請を受理する Server Action。resignation_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function acceptResignationAction(
+  previousState: ResignationActionState,
+  formData: FormData,
+): Promise<ResignationActionState> {
+  const id = toResignationIdText(formData.get("resignation_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageResignations(currentUser.permissions) === false) {
+    return { ok: false, error: "退職申請を管理する権限がありません" }
+  }
+
+  const accepted = await acceptResignation(id)
+
+  if (accepted instanceof Error) {
+    return { ok: false, error: accepted.message }
+  }
+
+  revalidatePath("/resignations/admin")
+
+  return { ok: true, error: null }
+}
+
+// 人事が退職申請を却下する Server Action。resignation_id 必須。
+// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+export async function rejectResignationAction(
+  previousState: ResignationActionState,
+  formData: FormData,
+): Promise<ResignationActionState> {
+  const id = toResignationIdText(formData.get("resignation_id"))
+
+  if (id === null) {
+    return { ok: false, error: "申請を特定できませんでした" }
+  }
+
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageResignations(currentUser.permissions) === false) {
+    return { ok: false, error: "退職申請を管理する権限がありません" }
+  }
+
+  const rejected = await rejectResignation(id)
+
+  if (rejected instanceof Error) {
+    return { ok: false, error: rejected.message }
+  }
+
+  revalidatePath("/resignations/admin")
+
+  return { ok: true, error: null }
+}
+
+// id 用の FormData 値を取り出す。未入力は null。
+function toResignationIdText(value: FormDataEntryValue | null): string | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
+  }
+
+  return value.trim()
 }
 
 // 退職申請作成 Server Action。resignation_date 必須、last_working_date と reason は任意。

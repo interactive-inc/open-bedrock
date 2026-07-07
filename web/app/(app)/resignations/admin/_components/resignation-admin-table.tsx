@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { ResignationAdminActions } from "@/app/(app)/resignations/admin/_components/resignation-admin-actions"
 import { EmptyState } from "@/components/empty-state"
 import {
   Table,
@@ -24,6 +25,7 @@ type Row = {
 type Props = {
   rows: ReadonlyArray<Row>
   total: number
+  canManage: boolean
 }
 
 // 全社の退職手続き一覧テーブル。詳細は各手続きのページへ、従業員 ID クリックで絞り込む。
@@ -42,6 +44,7 @@ export function ResignationAdminTable(props: Props) {
             <TableHead className="hidden md:table-cell">最終出社日</TableHead>
             <TableHead>ステータス</TableHead>
             <TableHead className="hidden md:table-cell">申請日</TableHead>
+            {props.canManage ? <TableHead>操作</TableHead> : null}
           </TableRow>
         </TableHeader>
 
@@ -69,6 +72,16 @@ export function ResignationAdminTable(props: Props) {
               <TableCell className="hidden text-muted-foreground md:table-cell">
                 {formatDateTime(row.created_at)}
               </TableCell>
+
+              {props.canManage ? (
+                <TableCell>
+                  {row.status === "requested" ? (
+                    <ResignationAdminActions resignationId={row.id} />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>

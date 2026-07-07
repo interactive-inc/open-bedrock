@@ -13,6 +13,7 @@ import {
   type CertificateRequestAdminFilter,
 } from "@/lib/api/get-certificate-request-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
 import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-view-all-certificate-requests"
 
 export const metadata = { title: "証明書発行依頼管理" }
@@ -31,6 +32,8 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
   ) {
     notFound()
   }
+
+  const canManage = canManageCertificateRequests(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -84,7 +87,12 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <CertificateRequestAdminSection filter={filter} offset={offset} extraParams={extraParams} />
+        <CertificateRequestAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
       </Suspense>
     </div>
   )
@@ -94,6 +102,7 @@ async function CertificateRequestAdminSection(props: {
   filter: CertificateRequestAdminFilter
   offset: number
   extraParams: Record<string, string | undefined>
+  canManage: boolean
 }) {
   const result = await getCertificateRequestAdminList(props.filter, {
     limit: PAGE_SIZE,
@@ -106,7 +115,11 @@ async function CertificateRequestAdminSection(props: {
 
   return (
     <div className="flex flex-col gap-4">
-      <CertificateRequestAdminTable rows={result.data} total={result.total} />
+      <CertificateRequestAdminTable
+        rows={result.data}
+        total={result.total}
+        canManage={props.canManage}
+      />
 
       <TablePagination
         pathname="/certificate-requests/admin"
