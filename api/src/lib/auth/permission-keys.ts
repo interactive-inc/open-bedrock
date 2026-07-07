@@ -107,6 +107,63 @@ export const PERMISSION_CATALOG = [
     description: "全社の証明書発行依頼を横断で閲覧する",
   },
   {
+    key: "certificate_request:manage",
+    category: "certificate-request",
+    description: "証明書発行依頼の状態を代理で進める",
+  },
+  {
+    key: "resignation:manage",
+    category: "resignation",
+    description: "退職手続きの状態を代理で進める",
+  },
+  {
+    key: "life_event:manage",
+    category: "life-event",
+    description: "ライフイベント届の状態を代理で進める",
+  },
+  {
+    key: "family_care_leave:manage",
+    category: "family-care-leave",
+    description: "産休・育休・介護休業の申出の状態を代理で進める",
+  },
+  {
+    key: "business_trip:manage",
+    category: "business-trip",
+    description: "出張申請の状態を代理で進める",
+  },
+  {
+    key: "rental:manage",
+    category: "rental",
+    description: "貸与品予約の状態を代理で進める",
+  },
+  {
+    key: "leave:read:reports",
+    category: "leave",
+    description: "レポートライン配下の休暇申請を閲覧する",
+  },
+  {
+    key: "leave:read:department",
+    category: "leave",
+    description: "同じ部署の休暇申請を閲覧する",
+  },
+  { key: "grade:manage", category: "grade", description: "等級マスタと等級の割当を管理する" },
+  { key: "grade:read:all", category: "grade", description: "全社の等級を閲覧する" },
+  {
+    key: "grade:read:reports",
+    category: "grade",
+    description: "レポートライン配下の等級を閲覧する",
+  },
+  {
+    key: "employee_event:manage",
+    category: "employee",
+    description: "異動・在籍イベントの履歴を記録する",
+  },
+  {
+    key: "employee_event:read:all",
+    category: "employee",
+    description: "全社の異動・在籍イベント履歴を閲覧する",
+  },
+  {
     key: "resignation:read:all",
     category: "resignation",
     description: "全社の退職手続きを横断で閲覧する",

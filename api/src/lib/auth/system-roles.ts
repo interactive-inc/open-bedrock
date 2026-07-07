@@ -33,6 +33,8 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "goal:read:reports",
   "goal:evaluate:reports",
   "attendance:read:reports",
+  "leave:read:reports",
+  "grade:read:reports",
 ]
 
 // hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。
@@ -56,6 +58,17 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "goal:read:all",
   "goal:evaluate",
   "attendance:read:all",
+  // 労務手続きの代理処理と、人事データベース(等級・異動履歴)の管理。
+  "certificate_request:manage",
+  "resignation:manage",
+  "life_event:manage",
+  "family_care_leave:manage",
+  "business_trip:manage",
+  "rental:manage",
+  "grade:manage",
+  "grade:read:all",
+  "employee_event:manage",
+  "employee_event:read:all",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
@@ -69,6 +82,7 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   // （付与するロールの権限 ⊆ 付与者の権限）を通すため admin は保持する。
   "goal:read:department",
   "attendance:read:department",
+  "leave:read:department",
 ]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
