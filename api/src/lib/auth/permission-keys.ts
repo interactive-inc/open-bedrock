@@ -76,6 +76,37 @@ export const PERMISSION_CATALOG = [
   { key: "goal:read:all", category: "goal", description: "他者の目標を閲覧する" },
   { key: "goal:evaluate", category: "goal", description: "目標を評価する(上長)" },
   { key: "attendance:read:all", category: "attendance", description: "全従業員の勤怠を閲覧する" },
+  {
+    key: "certificate_request:read:all",
+    category: "certificate-request",
+    description: "全社の証明書発行依頼を横断で閲覧する",
+  },
+  {
+    key: "resignation:read:all",
+    category: "resignation",
+    description: "全社の退職手続きを横断で閲覧する",
+  },
+  {
+    key: "life_event:read:all",
+    category: "life-event",
+    description: "全社のライフイベント届を横断で閲覧する",
+  },
+  {
+    key: "family_care_leave:read:all",
+    category: "family-care-leave",
+    description: "全社の産休・育休・介護休業の申出を横断で閲覧する",
+  },
+  {
+    key: "business_trip:read:all",
+    category: "business-trip",
+    description: "全社の出張申請を横断で閲覧する",
+  },
+  {
+    key: "rental:read:all",
+    category: "rental",
+    description: "全社の貸与品予約を横断で閲覧する",
+  },
+  { key: "audit_log:read", category: "iam", description: "監査ログを閲覧する" },
   { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
   { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {

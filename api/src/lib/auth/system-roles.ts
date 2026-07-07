@@ -44,6 +44,12 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "leave:read:all",
   "thanks_redemption:read:all",
   "shift_swap:read:all",
+  "certificate_request:read:all",
+  "resignation:read:all",
+  "life_event:read:all",
+  "family_care_leave:read:all",
+  "business_trip:read:all",
+  "rental:read:all",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
@@ -52,6 +58,7 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "iam:manage_roles",
   "iam:assign_roles",
   "account:manage",
+  "audit_log:read",
 ]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
