@@ -41,6 +41,8 @@ export class AssetRepository {
           purchasedOn: asset.purchasedOn,
           status: asset.status,
           holderEmployeeId: asset.holderEmployeeId,
+          disposedOn: asset.disposedOn,
+          disposalReason: asset.disposalReason,
         })
         .returning()
 
@@ -112,7 +114,9 @@ export class AssetRepository {
               serial,
               purchased_on AS purchasedOn,
               status,
-              holder_employee_id AS holderEmployeeId
+              holder_employee_id AS holderEmployeeId,
+              disposed_on AS disposedOn,
+              disposal_reason AS disposalReason
             `,
           ).bind(props.assetCode, props.employeeId),
           abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
@@ -167,7 +171,9 @@ export class AssetRepository {
               serial,
               purchased_on AS purchasedOn,
               status,
-              holder_employee_id AS holderEmployeeId
+              holder_employee_id AS holderEmployeeId,
+              disposed_on AS disposedOn,
+              disposal_reason AS disposalReason
             `,
           ).bind(props.assetCode),
           abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
@@ -203,6 +209,54 @@ export class AssetRepository {
       return Asset.fromRow(updatedRow)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to return asset")
+    }
+  }
+
+  // 在庫中の資産を廃棄済みへ更新する。in_stock でなければ 0 行更新となり null を返す。
+  // 貸出中・廃棄済みは条件不一致で弾かれる（並行リクエストとの競合も条件付き write で防ぐ）。
+  async disposeFromStock(props: {
+    assetCode: string
+    disposedOn: string
+    reason: string
+  }): Promise<Asset | null | Error> {
+    try {
+      const result = await this.c.env.DB.prepare(
+        `
+        UPDATE assets
+        SET status = 'disposed',
+            holder_employee_id = NULL,
+            disposed_on = ?2,
+            disposal_reason = ?3
+        WHERE code = ?1
+          AND status = 'in_stock'
+        RETURNING
+          code,
+          name,
+          kind,
+          serial,
+          purchased_on AS purchasedOn,
+          status,
+          holder_employee_id AS holderEmployeeId,
+          disposed_on AS disposedOn,
+          disposal_reason AS disposalReason
+        `,
+      )
+        .bind(props.assetCode, props.disposedOn, props.reason)
+        .all()
+
+      const updatedRow = parseD1Row(result, assetRowSchema)
+
+      if (updatedRow instanceof Error) {
+        return updatedRow
+      }
+
+      if (updatedRow === undefined) {
+        return null
+      }
+
+      return Asset.fromRow(updatedRow)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to dispose asset")
     }
   }
 

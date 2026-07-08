@@ -4,7 +4,7 @@ import { z } from "zod"
 // ここのスキーマで parse して形を保証する。web/cli はこのファイルの型（z.infer）を
 // 共有してレスポンスを型付けする。1 ファイル 1 スキーマ規約の例外として 1 ファイルに集約する。
 
-/** 資産 1 件のレスポンス。 */
+/** 資産 1 件のレスポンス。廃棄済みは disposed_on / disposal_reason を伴う。 */
 export const zAppAsset = z.object({
   code: z.string(),
   name: z.string(),
@@ -13,9 +13,81 @@ export const zAppAsset = z.object({
   purchased_on: z.string().nullable(),
   status: z.string(),
   holder_employee_id: z.number().nullable(),
+  disposed_on: z.string().nullable().default(null),
+  disposal_reason: z.string().nullable().default(null),
 })
 
 export type AppAsset = z.infer<typeof zAppAsset>
+
+/** 保有状況一覧（GET /assets/holdings）の 1 件。誰が何をいつ借りているか。 */
+export const zAppAssetHolding = z.object({
+  asset_code: z.string(),
+  asset_name: z.string(),
+  kind: z.string(),
+  holder_employee_id: z.number(),
+  holder_employee_code: z.string(),
+  holder_employee_name: z.string(),
+  lent_at: z.string().nullable(),
+})
+
+export type AppAssetHolding = z.infer<typeof zAppAssetHolding>
+
+/** 保有状況一覧のレスポンス。 */
+export const zAppAssetHoldingList = z.object({
+  data: z.array(zAppAssetHolding),
+  total: z.number(),
+})
+
+export type AppAssetHoldingList = z.infer<typeof zAppAssetHoldingList>
+
+/** 棚卸しセッション 1 件（対象資産の確認状況を含む）。 */
+export const zAppStocktakeItem = z.object({
+  asset_code: z.string(),
+  asset_name: z.string(),
+  kind: z.string(),
+  checked_at: z.string().nullable(),
+  checker_employee_id: z.number().nullable(),
+  location_note: z.string().nullable(),
+})
+
+export type AppStocktakeItem = z.infer<typeof zAppStocktakeItem>
+
+/** 棚卸しセッション 1 件のレスポンス（詳細。items を含む）。 */
+export const zAppStocktake = z.object({
+  id: z.string(),
+  name: z.string(),
+  target_date: z.string(),
+  status: z.enum(["open", "closed"]),
+  created_at: z.string(),
+  closed_at: z.string().nullable(),
+  checked_count: z.number(),
+  total_count: z.number(),
+  items: z.array(zAppStocktakeItem).default([]),
+})
+
+export type AppStocktake = z.infer<typeof zAppStocktake>
+
+/** 棚卸しセッション一覧の 1 件（items を含まない）。 */
+export const zAppStocktakeListItem = z.object({
+  id: z.string(),
+  name: z.string(),
+  target_date: z.string(),
+  status: z.enum(["open", "closed"]),
+  created_at: z.string(),
+  closed_at: z.string().nullable(),
+  checked_count: z.number(),
+  total_count: z.number(),
+})
+
+export type AppStocktakeListItem = z.infer<typeof zAppStocktakeListItem>
+
+/** 棚卸しセッション一覧のレスポンス。 */
+export const zAppStocktakeList = z.object({
+  data: z.array(zAppStocktakeListItem),
+  total: z.number(),
+})
+
+export type AppStocktakeList = z.infer<typeof zAppStocktakeList>
 
 /** 資産一覧のレスポンス。 */
 export const zAppAssetList = z.object({

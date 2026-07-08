@@ -17,11 +17,17 @@ import * as applicationSubmitRoute from "@/interface/application/applications/su
 import * as applicationTemplateDetailRoute from "@/interface/application/templates/[code]/route"
 import * as applicationTemplateListRoute from "@/interface/application/templates/route"
 import * as assetDetailRoute from "@/interface/asset/[code]/route"
+import * as assetDisposeRoute from "@/interface/asset/[code]/dispose/route"
+import * as assetHoldingsRoute from "@/interface/asset/holdings/route"
 import * as assetLendRoute from "@/interface/asset/[code]/lend/route"
 import * as assetLentMeRoute from "@/interface/asset/lent/me/route"
 import * as assetListRoute from "@/interface/asset/route"
 import * as assetRegisterRoute from "@/interface/asset/register/route"
 import * as assetReturnRoute from "@/interface/asset/[code]/return/route"
+import * as stocktakeCheckRoute from "@/interface/stocktake/[id]/assets/[code]/check/route"
+import * as stocktakeCloseRoute from "@/interface/stocktake/[id]/close/route"
+import * as stocktakeDetailRoute from "@/interface/stocktake/[id]/route"
+import * as stocktakeListRoute from "@/interface/stocktake/route"
 import * as attendanceClockInRoute from "@/interface/attendance/clock-in/route"
 import * as attendanceClockOutRoute from "@/interface/attendance/clock-out/route"
 import * as attendanceListRoute from "@/interface/attendance/route"
@@ -288,11 +294,18 @@ export const app = factory
   .get("/career/sheet/me", ...careerSheetMeRoute.GET)
   .put("/career/sheet/me", ...careerSheetMeUpdateRoute.PUT)
   .get("/assets/lent/me", ...assetLentMeRoute.GET)
+  .get("/assets/holdings", ...assetHoldingsRoute.GET)
   .post("/assets/:code/lend", ...assetLendRoute.POST)
   .post("/assets/:code/return", ...assetReturnRoute.POST)
+  .post("/assets/:code/dispose", ...assetDisposeRoute.POST)
   .get("/assets/:code", ...assetDetailRoute.GET)
   .post("/assets", ...assetRegisterRoute.POST)
   .get("/assets", ...assetListRoute.GET)
+  .post("/stocktakes/:id/assets/:code/check", ...stocktakeCheckRoute.POST)
+  .post("/stocktakes/:id/close", ...stocktakeCloseRoute.POST)
+  .get("/stocktakes/:id", ...stocktakeDetailRoute.GET)
+  .get("/stocktakes", ...stocktakeListRoute.GET)
+  .post("/stocktakes", ...stocktakeListRoute.POST)
   .post("/attendance/clock-in", ...attendanceClockInRoute.POST)
   .post("/attendance/clock-out", ...attendanceClockOutRoute.POST)
   .get("/attendance/me/summary", ...attendanceMeSummaryRoute.GET)

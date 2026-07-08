@@ -49,3 +49,23 @@ describe("Asset.withDetails", () => {
     expect(updated.holderEmployeeId).toBeNull()
   })
 })
+
+describe("Asset.withDisposed", () => {
+  test("returns new Asset in disposed status recording reason and date", () => {
+    const asset = Asset.create({
+      code: "A-001",
+      name: "Laptop",
+      kind: "pc",
+      serial: "SN-12345",
+      purchasedOn: "2026-04-01",
+    })
+
+    const disposed = asset.withDisposed({ disposedOn: "2026-07-01", reason: "故障" })
+
+    expect(disposed).toBeInstanceOf(Asset)
+    expect(disposed.status).toBe("disposed")
+    expect(disposed.disposedOn).toBe("2026-07-01")
+    expect(disposed.disposalReason).toBe("故障")
+    expect(disposed.holderEmployeeId).toBeNull()
+  })
+})

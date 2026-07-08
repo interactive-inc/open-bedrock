@@ -375,7 +375,7 @@ export const applicationApprovals = sqliteTable("application_approvals", {
 
 export type ApplicationApprovalRow = InferSelectModel<typeof applicationApprovals>
 
-// 資産台帳（asset ドメイン）。code がPK。在庫/貸出状態と保有者を持つ。
+// 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。
 export const assets = sqliteTable("assets", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -384,6 +384,8 @@ export const assets = sqliteTable("assets", {
   purchasedOn: text("purchased_on"),
   status: text("status").notNull(),
   holderEmployeeId: integer("holder_employee_id"),
+  disposedOn: text("disposed_on"),
+  disposalReason: text("disposal_reason"),
 })
 
 export type AssetRow = InferSelectModel<typeof assets>
@@ -398,6 +400,37 @@ export const assetLendings = sqliteTable("asset_lendings", {
 })
 
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>
+
+// 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。
+export const stocktakes = sqliteTable(
+  "stocktakes",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    targetDate: text("target_date").notNull(),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+    closedAt: text("closed_at"),
+  },
+  (table) => [index("idx_stocktakes_status").on(table.status)],
+)
+
+export type StocktakeRow = InferSelectModel<typeof stocktakes>
+
+// 棚卸しセッションでの資産ごとの現物確認記録。checked_at:null は未確認。
+export const stocktakeItems = sqliteTable(
+  "stocktake_items",
+  {
+    stocktakeId: text("stocktake_id").notNull(),
+    assetCode: text("asset_code").notNull(),
+    checkedAt: text("checked_at"),
+    checkerEmployeeId: integer("checker_employee_id"),
+    locationNote: text("location_note"),
+  },
+  (table) => [primaryKey({ columns: [table.stocktakeId, table.assetCode] })],
+)
+
+export type StocktakeItemRow = InferSelectModel<typeof stocktakeItems>
 
 // 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。
 export const attendanceRecords = sqliteTable(
@@ -1003,6 +1036,8 @@ export const schema = {
   applicationApprovals,
   assets,
   assetLendings,
+  stocktakes,
+  stocktakeItems,
   attendanceRecords,
   batchJobs,
   careerPostings,
