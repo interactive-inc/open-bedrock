@@ -10,16 +10,16 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
-const jwtSecret = "asset-list-route-test-secret"
+const jwtSecret = "asset-holdings-route-test-secret"
 
-const assetResponseSchema = z.object({
-  code: z.string(),
-  name: z.string(),
+const holdingSchema = z.object({
+  asset_code: z.string(),
+  asset_name: z.string(),
   kind: z.string(),
-  serial: z.string().nullable(),
-  purchased_on: z.string().nullable(),
-  status: z.string(),
-  holder_employee_id: z.number().nullable(),
+  holder_employee_id: z.number(),
+  holder_employee_code: z.string(),
+  holder_employee_name: z.string(),
+  lent_at: z.string().nullable(),
 })
 
 async function createTestDb(): Promise<D1Database> {
@@ -52,6 +52,8 @@ async function createTestDb(): Promise<D1Database> {
       purchased_on: asset.purchasedOn,
       status: asset.status,
       holder_employee_id: asset.holderEmployeeId,
+      disposed_on: asset.disposedOn,
+      disposal_reason: asset.disposalReason,
     })),
   )
 
@@ -70,6 +72,14 @@ async function createTestDb(): Promise<D1Database> {
   return db
 }
 
+function adminToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 1,
+    email: "you+e001@example.com",
+    role: "admin",
+  })
+}
+
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 5,
@@ -78,58 +88,41 @@ function memberToken(): Promise<string> {
   })
 }
 
-async function request(
-  path: string,
-  token: string | null,
-  method?: string,
-  body?: unknown,
-): Promise<Response> {
-  return requestWithContext({
-    db: await createTestDb(),
-    jwtSecret,
-    path,
-    token,
-    method,
-    body,
-  })
+async function request(path: string, token: string | null): Promise<Response> {
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
 
-describe("GET /assets", () => {
-  test("returns 200 with all assets in snake_case shape", async () => {
-    const response = await request("/assets", await memberToken())
+describe("GET /assets/holdings", () => {
+  test("lists lent assets with holder and lent_at for a privileged role", async () => {
+    const response = await request("/assets/holdings", await adminToken())
 
     expect(response.status).toBe(200)
 
     const parsed = z
-      .object({ data: z.array(assetResponseSchema), total: z.number() })
+      .object({ data: z.array(holdingSchema), total: z.number() })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.length).toBe(6)
+      // seed の lent は A0001(E005) と A0002(E009) の 2 件。
+      expect(parsed.data.total).toBe(2)
+
+      const first = parsed.data.data.find((row) => row.asset_code === "A0001")
+
+      expect(first?.holder_employee_id).toBe(5)
+      expect(first?.lent_at).toBe("2026-04-01T09:00:00Z")
     }
   })
 
-  test("filters by kind", async () => {
-    const response = await request("/assets?kind=pc", await memberToken())
+  test("member is forbidden", async () => {
+    const response = await request("/assets/holdings", await memberToken())
 
-    expect(response.status).toBe(200)
-
-    const parsed = z
-      .object({ data: z.array(assetResponseSchema), total: z.number() })
-      .safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.data.length).toBe(3)
-      expect(parsed.data.data.every((asset) => asset.kind === "pc")).toBe(true)
-    }
+    expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets", null)
+    const response = await request("/assets/holdings", null)
 
     expect(response.status).toBe(401)
   })

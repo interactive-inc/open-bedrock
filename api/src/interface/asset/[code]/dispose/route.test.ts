@@ -10,7 +10,7 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { z } from "zod"
 
-const jwtSecret = "asset-list-route-test-secret"
+const jwtSecret = "asset-dispose-route-test-secret"
 
 const assetResponseSchema = z.object({
   code: z.string(),
@@ -20,6 +20,8 @@ const assetResponseSchema = z.object({
   purchased_on: z.string().nullable(),
   status: z.string(),
   holder_employee_id: z.number().nullable(),
+  disposed_on: z.string().nullable(),
+  disposal_reason: z.string().nullable(),
 })
 
 async function createTestDb(): Promise<D1Database> {
@@ -52,6 +54,8 @@ async function createTestDb(): Promise<D1Database> {
       purchased_on: asset.purchasedOn,
       status: asset.status,
       holder_employee_id: asset.holderEmployeeId,
+      disposed_on: asset.disposedOn,
+      disposal_reason: asset.disposalReason,
     })),
   )
 
@@ -68,6 +72,14 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   return db
+}
+
+function adminToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 1,
+    email: "you+e001@example.com",
+    role: "admin",
+  })
 }
 
 function memberToken(): Promise<string> {
@@ -94,43 +106,80 @@ async function request(
   })
 }
 
-describe("GET /assets", () => {
-  test("returns 200 with all assets in snake_case shape", async () => {
-    const response = await request("/assets", await memberToken())
+describe("POST /assets/:code/dispose", () => {
+  test("privileged role disposes an in_stock asset and returns 200", async () => {
+    const response = await request("/assets/A0003/dispose", await adminToken(), "POST", {
+      reason: "故障のため廃棄",
+      disposed_on: "2026-07-01",
+    })
 
     expect(response.status).toBe(200)
 
-    const parsed = z
-      .object({ data: z.array(assetResponseSchema), total: z.number() })
-      .safeParse(await response.json())
+    const parsed = assetResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.length).toBe(6)
+      expect(parsed.data.status).toBe("disposed")
+      expect(parsed.data.holder_employee_id).toBe(null)
+      expect(parsed.data.disposed_on).toBe("2026-07-01")
+      expect(parsed.data.disposal_reason).toBe("故障のため廃棄")
     }
   })
 
-  test("filters by kind", async () => {
-    const response = await request("/assets?kind=pc", await memberToken())
+  test("returns 409 when the asset is lent", async () => {
+    const response = await request("/assets/A0001/dispose", await adminToken(), "POST", {
+      reason: "廃棄",
+    })
 
-    expect(response.status).toBe(200)
+    expect(response.status).toBe(409)
+  })
 
-    const parsed = z
-      .object({ data: z.array(assetResponseSchema), total: z.number() })
-      .safeParse(await response.json())
+  test("returns 409 when the asset is already disposed", async () => {
+    const response = await request("/assets/A0011/dispose", await adminToken(), "POST", {
+      reason: "廃棄",
+    })
 
-    expect(parsed.success).toBe(true)
+    expect(response.status).toBe(409)
+  })
 
-    if (parsed.success) {
-      expect(parsed.data.data.length).toBe(3)
-      expect(parsed.data.data.every((asset) => asset.kind === "pc")).toBe(true)
-    }
+  test("returns 404 for an unknown asset", async () => {
+    const response = await request("/assets/A9999/dispose", await adminToken(), "POST", {
+      reason: "廃棄",
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("member is forbidden", async () => {
+    const response = await request("/assets/A0003/dispose", await memberToken(), "POST", {
+      reason: "廃棄",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 400 when reason is missing", async () => {
+    const response = await request("/assets/A0003/dispose", await adminToken(), "POST", {})
+
+    expect(response.status).toBe(400)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/assets", null)
+    const response = await request("/assets/A0003/dispose", null, "POST", {
+      reason: "廃棄",
+    })
 
     expect(response.status).toBe(401)
+  })
+})
+
+describe("POST /assets/:code/lend after dispose", () => {
+  test("returns 409 when trying to lend a disposed asset", async () => {
+    const response = await request("/assets/A0011/lend", await adminToken(), "POST", {
+      employee_code: "E005",
+    })
+
+    expect(response.status).toBe(409)
   })
 })
