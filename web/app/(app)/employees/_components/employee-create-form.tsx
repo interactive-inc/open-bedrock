@@ -101,7 +101,18 @@ export function EmployeeCreateForm() {
         <Field>
           <FieldLabel htmlFor="employee-role">ロール</FieldLabel>
 
-          <Input id="employee-role" name="role" placeholder="member" required />
+          <select
+            id="employee-role"
+            name="role"
+            defaultValue="member"
+            className={selectClassName}
+            required
+          >
+            <option value="member">メンバー</option>
+            <option value="manager">マネージャー</option>
+            <option value="hr">人事</option>
+            <option value="admin">管理者</option>
+          </select>
         </Field>
 
         <Field>

@@ -1,4 +1,5 @@
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
+import { hasPermission } from "@/lib/auth/has-permission"
 import { Employee } from "@/domain/employee/employee.entity"
 import { canManageEmployees } from "@/lib/employee/can-manage-employees"
 import type { Context, SessionPayload } from "@/env"
@@ -39,8 +40,8 @@ export class RegisterEmployee {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 
-    // admin 以外は member ロールしか付与できない
-    if (command.employee.role !== "member" && command.session.role !== "admin") {
+    // employee:assign_role 権限がなければ member 以外のロールを付与できない
+    if (command.employee.role !== "member" && !hasPermission(command.session, "employee:assign_role")) {
       return new ForbiddenError(
         "only admin can assign non-member roles",
         "role_escalation_forbidden",

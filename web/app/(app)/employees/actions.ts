@@ -66,15 +66,18 @@ function toStatus(value: FormDataEntryValue | null): EmployeeStatus | null {
 }
 
 // 従業員登録の Server Action。code/name/email/password/role/status 必須、部署・役職は任意。
+// バリデーションエラーは集約して一度に返す。
 export async function createEmployeeAction(
   previousState: EmployeeCreateFormState,
   formData: FormData,
 ): Promise<EmployeeCreateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
+
+  const errors: Array<string> = []
 
   const code = toRequiredText(formData.get("code"), {
     label: "コード",
@@ -82,7 +85,7 @@ export async function createEmployeeAction(
   })
 
   if (code instanceof Error) {
-    return { ok: false, error: code.message }
+    errors.push(code.message)
   }
 
   const name = toRequiredText(formData.get("name"), {
@@ -91,7 +94,7 @@ export async function createEmployeeAction(
   })
 
   if (name instanceof Error) {
-    return { ok: false, error: name.message }
+    errors.push(name.message)
   }
 
   const email = toRequiredText(formData.get("email"), {
@@ -100,11 +103,9 @@ export async function createEmployeeAction(
   })
 
   if (email instanceof Error) {
-    return { ok: false, error: email.message }
-  }
-
-  if (isValidEmail(email) === false) {
-    return { ok: false, error: "メールはメールアドレス形式で入力してください" }
+    errors.push(email.message)
+  } else if (isValidEmail(email) === false) {
+    errors.push("メールはメールアドレス形式で入力してください")
   }
 
   const password = toRequiredText(formData.get("password"), {
@@ -114,7 +115,7 @@ export async function createEmployeeAction(
   })
 
   if (password instanceof Error) {
-    return { ok: false, error: password.message }
+    errors.push(password.message)
   }
 
   const role = toRole(formData.get("role"))
@@ -122,11 +123,11 @@ export async function createEmployeeAction(
   const status = toStatus(formData.get("status"))
 
   if (role === null) {
-    return { ok: false, error: "ロールを入力してください" }
+    errors.push("ロールを入力してください")
   }
 
   if (status === null) {
-    return { ok: false, error: "在籍状況を選択してください" }
+    errors.push("在籍状況を選択してください")
   }
 
   const deptName = toOptionalText(formData.get("dept_name"), {
@@ -135,7 +136,7 @@ export async function createEmployeeAction(
   })
 
   if (deptName instanceof Error) {
-    return { ok: false, error: deptName.message }
+    errors.push(deptName.message)
   }
 
   const position = toOptionalText(formData.get("position"), {
@@ -144,19 +145,24 @@ export async function createEmployeeAction(
   })
 
   if (position instanceof Error) {
-    return { ok: false, error: position.message }
+    errors.push(position.message)
   }
 
+  if (errors.length > 0) {
+    return { ok: false, error: errors.join("、") }
+  }
+
+  // errors.length === 0 なら全フィールドは非 Error 確定
   const created = await createEmployee({
-    code: code,
-    name: name,
-    email: email,
-    password: password,
-    role: role,
+    code: code as string,
+    name: name as string,
+    email: email as string,
+    password: password as string,
+    role: role as EmployeeRole,
     dept_id: toPositiveIntId(formData.get("dept_id")),
-    dept_name: deptName,
-    position: position,
-    status: status,
+    dept_name: deptName as string | null,
+    position: position as string | null,
+    status: status as EmployeeStatus,
   })
 
   if (created instanceof Error) {
@@ -175,7 +181,7 @@ export async function updateEmployeeAction(
 ): Promise<EmployeeUpdateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
@@ -247,7 +253,7 @@ export async function deleteEmployeeAction(
 ): Promise<EmployeeDeleteFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
     return { ok: false, error: "従業員を管理する権限がありません" }
   }
 
