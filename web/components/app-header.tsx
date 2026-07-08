@@ -26,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SettingsDialog } from "@/components/settings-dialog"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
 import type { Locale } from "@/lib/i18n/locale"
 
@@ -50,8 +49,6 @@ export function AppHeader(props: Props) {
 
   return (
     <header className="flex h-14 items-center gap-2 px-4">
-      <SidebarTrigger />
-
       <div className="ml-auto flex items-center gap-1">
         <Button
           variant="ghost"
@@ -116,11 +113,7 @@ export function AppHeader(props: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <SettingsDialog
-          locale={props.locale}
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-        />
+        <SettingsDialog locale={props.locale} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
         <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
           <AlertDialogContent>
