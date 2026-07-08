@@ -41,7 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const goal = await new GetGoal(c).run({
     goalId: toGoalId(c.req.param("goal_id") ?? ""),
     viewerEmployeeId: viewer.employeeId,
-    viewerRole: viewer.role,
+    viewerSession: viewer,
   })
 
   if (goal instanceof ApplicationError) {
