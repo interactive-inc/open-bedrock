@@ -97,9 +97,7 @@ function filterByPermission(
 const navGroups: ReadonlyArray<NavGroup> = [
   {
     heading: "ホーム",
-    items: [
-      { label: "ホーム", href: "/", icon: LayoutDashboard },
-    ],
+    items: [{ label: "ホーム", href: "/", icon: LayoutDashboard }],
   },
   {
     heading: "受信箱",
@@ -401,6 +399,8 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "一覧", href: "/assets" },
           { label: "新規登録", href: "/assets/new", requiredPermission: "asset:manage" },
           { label: "自分の貸与品", href: "/assets/lent/me" },
+          { label: "保有状況", href: "/assets/holdings", requiredPermission: "asset:manage" },
+          { label: "棚卸し", href: "/stocktakes", requiredPermission: "asset:manage" },
         ],
       },
     ],

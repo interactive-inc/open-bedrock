@@ -1,3 +1,4 @@
+import { AssetDisposeForm } from "@/app/(app)/assets/_components/asset-dispose-form"
 import { AssetLendForm } from "@/app/(app)/assets/_components/asset-lend-form"
 import { AssetReturnForm } from "@/app/(app)/assets/_components/asset-return-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
@@ -54,20 +55,44 @@ export default async function AssetDetailPage(props: Props) {
           <DetailField label="保有者">
             {asset.holder_employee_id === null ? "-" : `#${asset.holder_employee_id}`}
           </DetailField>
+
+          {asset.status === "disposed" ? (
+            <>
+              <DetailField label="廃棄日">{asset.disposed_on ?? "-"}</DetailField>
+
+              <DetailField label="廃棄理由">{asset.disposal_reason ?? "-"}</DetailField>
+            </>
+          ) : null}
         </dl>
       </Card>
 
-      <Card className="p-0 gap-0">
-        <div className="flex flex-col gap-4 p-6">
-          <h2 className="text-lg font-semibold">貸与・返却</h2>
+      {asset.status === "disposed" ? null : (
+        <Card className="p-0 gap-0">
+          <div className="flex flex-col gap-4 p-6">
+            <h2 className="text-lg font-semibold">貸与・返却</h2>
 
-          {asset.status === "in_stock" ? (
-            <AssetLendForm code={asset.code} employees={employees} />
-          ) : null}
+            {asset.status === "in_stock" ? (
+              <AssetLendForm code={asset.code} employees={employees} />
+            ) : null}
 
-          {asset.status === "lent" ? <AssetReturnForm code={asset.code} /> : null}
-        </div>
-      </Card>
+            {asset.status === "lent" ? <AssetReturnForm code={asset.code} /> : null}
+          </div>
+        </Card>
+      )}
+
+      {asset.status === "in_stock" ? (
+        <Card className="p-0 gap-0">
+          <div className="flex flex-col gap-4 p-6">
+            <h2 className="text-lg font-semibold">廃棄</h2>
+
+            <p className="text-sm text-muted-foreground">
+              廃棄すると在庫から外れ、貸与できなくなります。
+            </p>
+
+            <AssetDisposeForm code={asset.code} />
+          </div>
+        </Card>
+      ) : null}
     </div>
   )
 }
