@@ -19,7 +19,6 @@ export const PATCH = factory.createHandlers(
     z.object({
       name: z.string().min(1).max(200),
       point_cost: rewardPointCostSchema,
-      stock: z.number().int().nonnegative().nullable(),
       is_active: z.boolean(),
     }),
   ),
@@ -46,7 +45,6 @@ export const PATCH = factory.createHandlers(
       rewardId,
       name: json.name,
       pointCost: json.point_cost,
-      stock: json.stock,
       isActive: json.is_active,
     })
 

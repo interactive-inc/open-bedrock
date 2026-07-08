@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { updateRoleAction } from "@/app/(app)/admin/roles/actions"
@@ -26,13 +27,19 @@ const initialState: RoleUpdateFormState = { ok: false, error: null }
 
 // ロール編集フォーム。現在の名前・説明・権限を初期値に表示し、変更を PATCH する。
 export function RoleEditForm(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: RoleUpdateFormState,
     formData: FormData,
   ): Promise<RoleUpdateFormState> {
     const result = await updateRoleAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("ロールを更新しました")
+
+      router.push("/admin/roles")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

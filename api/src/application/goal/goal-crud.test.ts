@@ -11,6 +11,7 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import type { Context } from "@/env"
 
 async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
@@ -40,7 +41,7 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
     score: 5,
     comment: "Good work",
     evaluatorId: 999,
-    viewerRole: "admin",
+    viewerSession: makeTestSession("admin", 999),
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
@@ -104,7 +105,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: goal.id,
       viewerEmployeeId: 1,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member"),
     })
 
     expect(result).toBeInstanceOf(Goal)
@@ -121,7 +122,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: goal.id,
       viewerEmployeeId: 2,
-      viewerRole: "manager",
+      viewerSession: makeTestSession("manager", 2),
     })
 
     expect(result).toBeInstanceOf(Goal)
@@ -138,7 +139,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: goal.id,
       viewerEmployeeId: 2,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member", 2),
     })
 
     expectApplicationError(result, ForbiddenError, "not_viewable")
@@ -150,7 +151,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: 9999,
       viewerEmployeeId: 1,
-      viewerRole: "admin",
+      viewerSession: makeTestSession("admin"),
     })
 
     expectApplicationError(result, NotFoundError, "goal_not_found")
@@ -350,7 +351,7 @@ describe("CreateGoalEvaluation", () => {
       score: 4,
       comment: "I did well",
       evaluatorId: 1,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -378,7 +379,7 @@ describe("CreateGoalEvaluation", () => {
       score: 3,
       comment: null,
       evaluatorId: 2,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -399,7 +400,7 @@ describe("CreateGoalEvaluation", () => {
       score: 5,
       comment: "Excellent",
       evaluatorId: 2,
-      viewerRole: "manager",
+      viewerSession: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -420,7 +421,7 @@ describe("CreateGoalEvaluation", () => {
       score: 3,
       comment: null,
       evaluatorId: 2,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -441,7 +442,7 @@ describe("CreateGoalEvaluation", () => {
       score: 4,
       comment: null,
       evaluatorId: 1,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -451,7 +452,7 @@ describe("CreateGoalEvaluation", () => {
       score: 3,
       comment: null,
       evaluatorId: 1,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member"),
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
@@ -467,7 +468,7 @@ describe("CreateGoalEvaluation", () => {
       score: 3,
       comment: null,
       evaluatorId: 1,
-      viewerRole: "member",
+      viewerSession: makeTestSession("member"),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 

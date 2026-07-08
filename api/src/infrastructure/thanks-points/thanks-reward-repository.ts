@@ -96,6 +96,34 @@ export class ThanksRewardRepository {
     }
   }
 
+  /**
+   * stock 以外のメタ情報(名前・コスト・有効状態)だけを更新する。
+   * 在庫は decrementStock() で原子的に操作するため、管理画面からの上書きを避けて lost update を防ぐ。
+   */
+  async updateWithoutStock(reward: ThanksReward): Promise<ThanksReward | null | Error> {
+    try {
+      if (reward.id === null) {
+        return new Error("cannot update unsaved reward")
+      }
+
+      const rows = await this.c.var.database
+        .update(thanksRewards)
+        .set({
+          name: reward.name,
+          pointCost: reward.pointCost,
+          isActive: reward.isActive,
+        })
+        .where(eq(thanksRewards.id, reward.id))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : ThanksReward.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update thanks reward")
+    }
+  }
+
   // 在庫を 1 だけ原子的に減らす。stock IS NOT NULL AND stock>0 のときだけ更新するため
   // 同時承認でも在庫はマイナスにならない。無制限（stock=null）と在庫切れを区別して返す。
   // SQL 例外は Error として返し、握りつぶさず呼び出し側で追跡できるようにする。
