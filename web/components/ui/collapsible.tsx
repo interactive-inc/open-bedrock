@@ -19,25 +19,8 @@ function CollapsibleTrigger({ ...props }: CollapsiblePrimitive.Trigger.Props) {
   return <CollapsiblePrimitive.Trigger data-slot="collapsible-trigger" {...props} />
 }
 
-function CollapsibleContent({
-  className,
-  style,
-  ...props
-}: CollapsiblePrimitive.Panel.Props & { className?: string; style?: React.CSSProperties }) {
-  return (
-    <CollapsiblePrimitive.Panel
-      data-slot="collapsible-content"
-      className={className}
-      keepMounted
-      style={{
-        height: "var(--collapsible-panel-height)",
-        overflow: "hidden",
-        transition: "height 0.3s ease",
-        ...style,
-      }}
-      {...props}
-    />
-  )
+function CollapsibleContent({ ...props }: CollapsiblePrimitive.Panel.Props) {
+  return <CollapsiblePrimitive.Panel data-slot="collapsible-content" keepMounted {...props} />
 }
 
 export { Collapsible, CollapsibleTrigger, CollapsibleContent }

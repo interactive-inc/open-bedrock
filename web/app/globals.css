@@ -128,3 +128,15 @@
     @apply font-sans;
   }
 }
+
+/* Collapsible accordion transition */
+[data-slot="collapsible-content"] {
+  overflow: hidden;
+  height: var(--collapsible-panel-height);
+  transition: height 0.3s ease;
+}
+
+[data-slot="collapsible-content"][data-starting-style],
+[data-slot="collapsible-content"][data-ending-style] {
+  height: 0;
+}
