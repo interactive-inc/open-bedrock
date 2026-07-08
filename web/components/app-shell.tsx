@@ -1,29 +1,14 @@
 "use client"
 
-import { LogOut } from "lucide-react"
 import Link from "next/link"
-import { AppHeader } from "@/components/app-header"
 import { SidebarNav } from "@/components/sidebar-nav"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { SidebarUserMenu } from "@/components/sidebar-user-menu"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
@@ -62,61 +47,29 @@ export function AppShell(props: Props) {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-border/70 bg-muted/60">
-          <Link
-            href="/settings"
-            className="flex flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
-          >
-            <span className="text-sm font-medium">{props.currentUser.name}</span>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/settings"
+              className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
+            >
+              <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
 
-            <span className="text-xs text-muted-foreground">{props.currentUser.role}</span>
-          </Link>
+              <span className="truncate text-xs text-muted-foreground">
+                {props.currentUser.role}
+              </span>
+            </Link>
 
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <SidebarMenuButton>
-                      <LogOut />
-
-                      <span>ログアウト</span>
-                    </SidebarMenuButton>
-                  }
-                />
-
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>ログアウトしますか?</AlertDialogTitle>
-
-                    <AlertDialogDescription>
-                      もう一度ログインするにはパスワードが必要です。
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
-
-                    <form action={props.onLogout}>
-                      <AlertDialogAction type="submit" variant="destructive">
-                        ログアウト
-                      </AlertDialogAction>
-                    </form>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </SidebarMenuItem>
-          </SidebarMenu>
+            <SidebarUserMenu
+              currentUser={props.currentUser}
+              locale={props.locale}
+              onLogout={props.onLogout}
+              unreadNotificationCount={props.unreadNotificationCount}
+            />
+          </div>
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset>
-        <AppHeader
-          currentUser={props.currentUser}
-          locale={props.locale}
-          onLogout={props.onLogout}
-          unreadNotificationCount={props.unreadNotificationCount}
-        />
-
         <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{props.children}</main>
       </SidebarInset>
     </SidebarProvider>
