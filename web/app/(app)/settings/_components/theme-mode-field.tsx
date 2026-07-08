@@ -53,7 +53,7 @@ export function ThemeModeField() {
 
   return (
     <FieldGroup>
-      <Field orientation="responsive">
+      <Field orientation="vertical">
         <FieldContent>
           <FieldTitle id="theme-mode-label">表示テーマ</FieldTitle>
           <FieldDescription>

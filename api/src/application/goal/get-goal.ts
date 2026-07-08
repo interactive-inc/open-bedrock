@@ -1,5 +1,5 @@
 import type { Goal } from "@/domain/goal/goal.entity"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { canViewOthers } from "@/lib/goal/goal-access"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -8,7 +8,7 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 export type Command = {
   goalId: number
   viewerEmployeeId: number
-  viewerRole: string
+  viewerSession: SessionPayload
 }
 
 /**
@@ -32,7 +32,7 @@ export class GetGoal {
 
     const isOwner = goal.employeeId === command.viewerEmployeeId
 
-    if (isOwner === false && canViewOthers(command.viewerRole) === false) {
+    if (isOwner === false && canViewOthers(command.viewerSession) === false) {
       return new ForbiddenError("cannot view this goal", "not_viewable")
     }
 

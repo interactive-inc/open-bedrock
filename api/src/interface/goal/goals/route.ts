@@ -35,7 +35,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isViewingOthers = targetEmployeeId !== session.employeeId
 
-  if (isViewingOthers && canViewOthers(session.role) === false) {
+  if (isViewingOthers && canViewOthers(session) === false) {
     throw new ForbiddenError()
   }
 

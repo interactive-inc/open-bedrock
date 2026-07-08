@@ -55,7 +55,9 @@ export async function updateRoleAction(
 
   revalidatePath("/admin/roles")
 
-  redirect("/admin/roles")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 function toRoleId(value: FormDataEntryValue | null): number | null {

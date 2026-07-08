@@ -41,7 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     from: parsed.data.from ?? null,
     to: parsed.data.to ?? null,
     viewerEmployeeId: session.employeeId,
-    viewerRole: session.role,
+    viewerSession: session,
   })
 
   if (query instanceof ApplicationError) {

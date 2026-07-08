@@ -115,7 +115,6 @@ describe("UpdateReward", () => {
       rewardId,
       name: "更新後の景品",
       pointCost: 80,
-      stock: 3,
       isActive: true,
     })
 
@@ -124,7 +123,8 @@ describe("UpdateReward", () => {
     if (result instanceof ThanksReward) {
       expect(result.name).toBe("更新後の景品")
       expect(result.pointCost).toBe(80)
-      expect(result.stock).toBe(3)
+      // stock は updateWithoutStock で触れないため seed 時の値(5)が残る
+      expect(result.stock).toBe(5)
     }
   })
 
@@ -135,7 +135,6 @@ describe("UpdateReward", () => {
       rewardId: 9999,
       name: "景品",
       pointCost: 50,
-      stock: null,
       isActive: true,
     })
 
@@ -151,7 +150,6 @@ describe("UpdateReward", () => {
       rewardId,
       name: "",
       pointCost: 50,
-      stock: null,
       isActive: true,
     })
 
