@@ -203,6 +203,14 @@ import applicationUpdateHandler from "@/app/application/update/route"
 import applicationWithdrawHandler from "@/app/application/withdraw/route"
 import assetDeleteHandler from "@/app/asset/delete/[asset_code]/route"
 import assetUpdateHandler from "@/app/asset/update/[asset_code]/route"
+import assetDisposeHandler from "@/app/asset/dispose/[asset_code]/route"
+import assetHoldingsHandler from "@/app/asset/holdings/route"
+import stocktakeHandler from "@/app/stocktake/route"
+import stocktakeListHandler from "@/app/stocktake/list/route"
+import stocktakeStartHandler from "@/app/stocktake/start/route"
+import stocktakeShowHandler from "@/app/stocktake/show/[stocktake_id]/route"
+import stocktakeCheckHandler from "@/app/stocktake/check/[stocktake_id]/route"
+import stocktakeCloseHandler from "@/app/stocktake/close/[stocktake_id]/route"
 import careerApplicationShowHandler from "@/app/career/application-show/route"
 import careerApplicationUpdateHandler from "@/app/career/application-update/route"
 import careerApplicationsHandler from "@/app/career/applications/route"
@@ -375,6 +383,15 @@ routes.post("/asset/show/:asset_code?", ...assetShowHandler)
 routes.post("/asset/register", ...assetRegisterHandler)
 routes.post("/asset/lend/:asset_code?", ...assetLendHandler)
 routes.post("/asset/return/:asset_code?", ...assetReturnHandler)
+routes.post("/asset/dispose/:asset_code?", ...assetDisposeHandler)
+routes.post("/asset/holdings", ...assetHoldingsHandler)
+
+routes.post("/stocktake", ...stocktakeHandler)
+routes.post("/stocktake/list", ...stocktakeListHandler)
+routes.post("/stocktake/start", ...stocktakeStartHandler)
+routes.post("/stocktake/show/:stocktake_id?", ...stocktakeShowHandler)
+routes.post("/stocktake/check/:stocktake_id?", ...stocktakeCheckHandler)
+routes.post("/stocktake/close/:stocktake_id?", ...stocktakeCloseHandler)
 
 routes.post("/notify", ...notifyHandler)
 routes.post("/notify/list", ...notifyListHandler)

@@ -143,6 +143,13 @@ commands:
   org dept delete             部署を削除
   asset update <code>         備品情報を更新
   asset delete <code>         備品を削除
+  asset dispose <code>        備品を廃棄 (--reason [--disposed-on])
+  asset holdings              保有状況一覧（誰が何を持っているか）
+  stocktake list              棚卸しセッション一覧 ([--status])
+  stocktake start             棚卸しを開始 (--name --target-date)
+  stocktake show <id>         棚卸しの詳細（確認状況）
+  stocktake check <id>        現物確認を記録 (--asset-code [--location-note])
+  stocktake close <id>        棚卸しを締める
   notify show <id>            通知の詳細
   notify delete <id>          通知を削除
   onboarding uncomplete <id>          オンボーディングタスクを未完了に戻す
