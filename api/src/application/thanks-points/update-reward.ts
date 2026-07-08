@@ -8,12 +8,12 @@ export type Command = {
   rewardId: number
   name: string
   pointCost: number
-  stock: number | null
   isActive: boolean
 }
 
 /**
- * 交換カタログを更新する（管理者向け）。名前・コスト・在庫・有効状態を差し替える。
+ * 交換カタログのメタ情報を更新する（管理者向け）。名前・コスト・有効状態を差し替える。
+ * stock は decrementStock() で原子的に管理するため、ここでは触らない。
  */
 export class UpdateReward {
   constructor(private readonly c: Context) {}
@@ -35,11 +35,11 @@ export class UpdateReward {
       return new UnexpectedError("persisted reward must have an id")
     }
 
-    // 名前・コスト・在庫の不変条件は create と同一なので create で検証し、id と作成日時は既存値を引き継ぐ。
+    // 名前・コストの不変条件は create と同一なので create で検証し、stock は既存値を引き継ぐ。
     const validated = ThanksReward.create({
       name: command.name,
       pointCost: command.pointCost,
-      stock: command.stock,
+      stock: existing.stock,
       createdAt: existing.createdAt,
     })
 
@@ -52,11 +52,13 @@ export class UpdateReward {
       name: validated.name,
       pointCost: validated.pointCost,
       isActive: command.isActive,
-      stock: validated.stock,
+      stock: existing.stock,
       createdAt: existing.createdAt,
     })
 
-    const updated = await rewardRepository.update(next)
+    // stock は decrementStock() で原子的に管理するため、管理画面からは上書きしない。
+    // 並行する交換申請の承認と競合しても消費済み在庫が復活しない。
+    const updated = await rewardRepository.updateWithoutStock(next)
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update reward", { cause: updated })

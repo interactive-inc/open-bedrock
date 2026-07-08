@@ -6,6 +6,7 @@ import {
   CalendarClock,
   CalendarDays,
   ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Coins,
@@ -622,7 +623,7 @@ export function SidebarNav(props: Props) {
                         <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
                           <Icon />
                           <span>{item.label}</span>
-                          <ChevronDown className="ml-auto size-4 transition-transform group-data-[panel-open]/collapsible:rotate-180" />
+                          <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
                         </SidebarMenuButton>
                       }
                     />
@@ -635,6 +636,7 @@ export function SidebarNav(props: Props) {
                               isActive={isSubItemActive(pathname, child.href)}
                               render={<Link href={child.href} />}
                             >
+                              <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
                               <span>{child.label}</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
