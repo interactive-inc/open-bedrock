@@ -55,6 +55,18 @@ export default async function AssetsPage(props: Props) {
               自分の貸与品
             </Button>
 
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/assets/holdings" />}
+            >
+              保有状況
+            </Button>
+
+            <Button variant="outline" nativeButton={false} render={<Link href="/stocktakes" />}>
+              棚卸し
+            </Button>
+
             <Button nativeButton={false} render={<Link href="/assets/new" />}>
               物品を登録
             </Button>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAsset } from "@/lib/api/create-asset"
 import { deleteAsset } from "@/lib/api/delete-asset"
+import { disposeAsset } from "@/lib/api/dispose-asset"
 import { getMe } from "@/lib/api/get-me"
 import { lendAsset } from "@/lib/api/lend-asset"
 import { returnAsset } from "@/lib/api/return-asset"
@@ -32,6 +33,11 @@ export type AssetLendFormState = {
 }
 
 export type AssetReturnFormState = {
+  ok: boolean
+  error: string | null
+}
+
+export type AssetDisposeFormState = {
   ok: boolean
   error: string | null
 }
@@ -184,6 +190,51 @@ export async function returnAssetAction(
   revalidatePath(`/assets/${code}`)
 
   revalidatePath("/assets/lent/me")
+
+  return { ok: true, error: null }
+}
+
+// 物品廃棄の Server Action。code は hidden、廃棄理由と任意の廃棄日を受け取る。
+export async function disposeAssetAction(
+  previousState: AssetDisposeFormState,
+  formData: FormData,
+): Promise<AssetDisposeFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+    return { ok: false, error: "資産を管理する権限がありません" }
+  }
+
+  const codeValue = formData.get("code")
+
+  const code = typeof codeValue === "string" ? codeValue : ""
+
+  if (code === "") {
+    return { ok: false, error: "資産が不正です" }
+  }
+
+  const reasonValue = formData.get("reason")
+
+  const reason = typeof reasonValue === "string" ? reasonValue : ""
+
+  if (reason === "") {
+    return { ok: false, error: "廃棄理由を入力してください" }
+  }
+
+  const disposedOnValue = formData.get("disposed_on")
+
+  const disposedOn =
+    typeof disposedOnValue === "string" && disposedOnValue !== "" ? disposedOnValue : undefined
+
+  const disposed = await disposeAsset(code, reason, disposedOn)
+
+  if (disposed instanceof Error) {
+    return { ok: false, error: disposed.message }
+  }
+
+  revalidatePath("/assets")
+
+  revalidatePath(`/assets/${code}`)
 
   return { ok: true, error: null }
 }
