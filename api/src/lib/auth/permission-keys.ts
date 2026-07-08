@@ -29,6 +29,7 @@ export const PERMISSION_CATALOG = [
   },
   { key: "expense:approve", category: "expense", description: "経費申請を承認・却下する" },
   { key: "expense:read:all", category: "expense", description: "全社の経費申請を横断で閲覧する" },
+  { key: "budget:manage", category: "budget", description: "部署予算を管理する" },
   { key: "leave:approve", category: "leave", description: "休暇申請を承認・却下する" },
   { key: "leave:read:all", category: "leave", description: "全社の休暇申請を横断で閲覧する" },
   { key: "notification:send", category: "notification", description: "通知を送信する" },
