@@ -73,16 +73,14 @@ export class RevokeAccountRole {
       return { reason: "revoked" }
     }
 
-    const revoked = await accountRepository.revokeRole(command.accountId, role.id)
+    const revoked = await accountRepository.revokeRoleAndBumpTokenVersion(
+      command.accountId,
+      role.id,
+      command.now,
+    )
 
     if (revoked instanceof Error) {
       return new UnexpectedError("failed to revoke role", { cause: revoked })
-    }
-
-    const bumped = await accountRepository.bumpTokenVersion(command.accountId, command.now)
-
-    if (bumped instanceof Error) {
-      return new UnexpectedError("failed to revoke sessions", { cause: bumped })
     }
 
     return { reason: "revoked" }

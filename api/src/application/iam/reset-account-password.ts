@@ -3,7 +3,6 @@ import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
-import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 
 const MIN_PASSWORD_LENGTH = 8
@@ -47,18 +46,15 @@ export class ResetAccountPassword {
 
     const hash = await toPasswordHash(command.newPassword)
 
-    const updated = await identityRepository.updateSecret(identityId, hash)
+    const updated = await identityRepository.updateSecretAndBumpTokenVersion(
+      identityId,
+      hash,
+      command.accountId,
+      command.now,
+    )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to reset password", { cause: updated })
-    }
-
-    const accountRepository = new AccountRepository(this.c)
-
-    const bumped = await accountRepository.bumpTokenVersion(command.accountId, command.now)
-
-    if (bumped instanceof Error) {
-      return new UnexpectedError("failed to revoke sessions", { cause: bumped })
     }
 
     return { reason: "reset" }

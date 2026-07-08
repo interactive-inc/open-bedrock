@@ -51,20 +51,15 @@ export class UpdateRole {
       return new NotFoundError("role not found", "role_not_found")
     }
 
-    const metaUpdated = await roleRepository.updateMeta({
+    const updated = await roleRepository.updateMetaAndPermissions({
       roleId: command.roleId,
       name: command.name,
       description: command.description,
+      permissionKeys: command.permissionKeys,
     })
 
-    if (metaUpdated instanceof Error) {
-      return new UnexpectedError("failed to update role", { cause: metaUpdated })
-    }
-
-    const replaced = await roleRepository.replacePermissions(command.roleId, command.permissionKeys)
-
-    if (replaced instanceof Error) {
-      return new UnexpectedError("failed to replace role permissions", { cause: replaced })
+    if (updated instanceof Error) {
+      return new UnexpectedError("failed to update role", { cause: updated })
     }
 
     return { reason: "updated" }
