@@ -36,6 +36,11 @@ export class UpdateSurvey {
       return new NotFoundError("survey not found", "survey_not_found")
     }
 
+    // closed → open の再開は禁止。回答済みデータとの整合性を壊さないための防御。
+    if (current.status === "closed" && command.status === "open") {
+      return new ConflictError("closed survey cannot be reopened", "survey_reopen_forbidden")
+    }
+
     const updated = current.withDetails({
       title: command.title,
       status: command.status,

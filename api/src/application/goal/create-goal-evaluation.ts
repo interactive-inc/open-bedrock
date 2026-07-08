@@ -1,6 +1,6 @@
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
@@ -12,7 +12,7 @@ export type Command = {
   score: number | null
   comment: string | null
   evaluatorId: number
-  viewerRole: string
+  viewerSession: SessionPayload
   createdAt: string
 }
 
@@ -45,7 +45,7 @@ export class CreateGoalEvaluation {
       kind: command.kind,
       goalEmployeeId: goal.employeeId,
       viewerEmployeeId: command.evaluatorId,
-      viewerRole: command.viewerRole,
+      viewerSession: command.viewerSession,
     })
 
     if (permission !== null) {

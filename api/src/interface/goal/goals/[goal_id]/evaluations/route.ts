@@ -40,7 +40,7 @@ export const POST = factory.createHandlers(
       score: json.score ?? null,
       comment: json.comment ?? null,
       evaluatorId: session.employeeId,
-      viewerRole: session.role,
+      viewerSession: session,
       createdAt,
     })
 
