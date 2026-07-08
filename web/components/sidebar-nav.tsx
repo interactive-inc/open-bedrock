@@ -6,6 +6,7 @@ import {
   CalendarClock,
   CalendarDays,
   ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Coins,
@@ -623,6 +624,7 @@ export function SidebarNav(props: Props) {
                               isActive={isSubItemActive(pathname, child.href)}
                               render={<Link href={child.href} />}
                             >
+                              <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
                               <span>{child.label}</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
