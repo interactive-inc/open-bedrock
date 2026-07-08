@@ -25,6 +25,7 @@ import {
   Target,
   TimerReset,
   Users,
+  Wallet,
   Workflow,
   UserCog,
 } from "lucide-react"
@@ -264,6 +265,17 @@ const navGroups: ReadonlyArray<NavGroup> = [
             href: "/expense/admin",
             requiredPermission: "expense:read:all",
           },
+        ],
+      },
+      {
+        label: "予算",
+        href: "/budgets",
+        icon: Wallet,
+        requiredPermission: "budget:manage",
+        children: [
+          { label: "一覧", href: "/budgets", requiredPermission: "budget:manage" },
+          { label: "新規", href: "/budgets/new", requiredPermission: "budget:manage" },
+          { label: "消化状況", href: "/budgets/summary", requiredPermission: "budget:manage" },
         ],
       },
       {
