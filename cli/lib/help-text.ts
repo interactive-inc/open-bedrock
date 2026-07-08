@@ -43,6 +43,12 @@ commands:
   expense mine                自分の経費申請一覧
   expense update <id>         経費申請を変更
   expense delete <id>         経費申請を取り下げ
+  budget list                 部署予算一覧 ([--department-id --fiscal-period])
+  budget show <id>            予算詳細（消化額・残額）
+  budget summary              部署ごとの消化状況 (--fiscal-period)
+  budget create               予算を登録 (--department-id --fiscal-period --period-start --period-end --amount --name [--note])
+  budget update <id>          予算の金額・名称・メモを修正 (--amount --name [--note])
+  budget delete <id>          予算を削除
   attendance clock-in         出勤打刻 ([--note])
   attendance clock-out        退勤打刻 ([--note])
   attendance me               自分の勤怠 ([--from --to])
