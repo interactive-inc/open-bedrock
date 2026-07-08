@@ -41,6 +41,13 @@ import expenseMineHandler from "@/app/expense/mine/route"
 import expenseRejectHandler from "@/app/expense/reject/[expense_id]/route"
 import expenseShowHandler from "@/app/expense/show/[expense_id]/route"
 import expenseSubmitHandler from "@/app/expense/submit/route"
+import budgetHandler from "@/app/budget/route"
+import budgetListHandler from "@/app/budget/list/route"
+import budgetShowHandler from "@/app/budget/show/[budget_id]/route"
+import budgetSummaryHandler from "@/app/budget/summary/route"
+import budgetCreateHandler from "@/app/budget/create/route"
+import budgetUpdateHandler from "@/app/budget/update/[budget_id]/route"
+import budgetDeleteHandler from "@/app/budget/delete/[budget_id]/route"
 import goalCreateHandler from "@/app/goal/create/route"
 import goalEvaluateHandler from "@/app/goal/evaluate/[goal_id]/route"
 import goalHandler from "@/app/goal/route"
@@ -343,6 +350,13 @@ routes.post("/expense/inbox", ...expenseInboxHandler)
 routes.post("/expense/show/:expense_id?", ...expenseShowHandler)
 routes.post("/expense/approve/:expense_id?", ...expenseApproveHandler)
 routes.post("/expense/reject/:expense_id?", ...expenseRejectHandler)
+routes.post("/budget", ...budgetHandler)
+routes.post("/budget/list", ...budgetListHandler)
+routes.post("/budget/summary", ...budgetSummaryHandler)
+routes.post("/budget/create", ...budgetCreateHandler)
+routes.post("/budget/show/:budget_id?", ...budgetShowHandler)
+routes.post("/budget/update/:budget_id?", ...budgetUpdateHandler)
+routes.post("/budget/delete/:budget_id?", ...budgetDeleteHandler)
 
 routes.post("/goal", ...goalHandler)
 routes.post("/goal/list", ...goalListHandler)
