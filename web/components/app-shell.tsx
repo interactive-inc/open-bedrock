@@ -1,6 +1,7 @@
 "use client"
 
 import { LogOut } from "lucide-react"
+import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { SidebarNav } from "@/components/sidebar-nav"
 import {
@@ -61,11 +62,14 @@ export function AppShell(props: Props) {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-border/70 bg-muted/60">
-          <div className="flex flex-col gap-0.5 px-2 py-1">
+          <Link
+            href="/settings"
+            className="flex flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
+          >
             <span className="text-sm font-medium">{props.currentUser.name}</span>
 
             <span className="text-xs text-muted-foreground">{props.currentUser.role}</span>
-          </div>
+          </Link>
 
           <SidebarMenu>
             <SidebarMenuItem>
