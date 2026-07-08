@@ -46,6 +46,13 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/expense/inbox` は承認待ちの経費申請を確認し、承認または却下する画面。
 - `/expense/admin` は全社の経費申請を横断で確認する管理画面(`expense:read:all`)。
 
+## 予算
+
+- `/budgets` は部署と会計期間ごとの予算を一覧で確認する画面(`budget:manage`)。
+- `/budgets/new` は部署、会計期間、期間、金額、名称、メモを入力して予算を登録する画面(`budget:manage`)。
+- `/budgets/[id]` は予算の詳細と、承認済み経費による消化額、残額を確認し、修正や削除を行う画面(`budget:manage`)。
+- `/budgets/summary` は会計期間を指定し、部署ごとの予算、消化額、残額を横断で確認する画面(`budget:manage`)。
+
 ## ナレッジ
 
 - `/knowledge` は社内ナレッジをキーワードやカテゴリで検索する画面。
