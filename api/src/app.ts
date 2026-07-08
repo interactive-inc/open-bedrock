@@ -58,6 +58,9 @@ import * as expenseDetailRoute from "@/interface/expense/[id]/route"
 import * as expenseInboxRoute from "@/interface/expense/inbox/route"
 import * as expenseMeRoute from "@/interface/expense/me/route"
 import * as expenseRejectRoute from "@/interface/expense/[id]/reject/route"
+import * as budgetListRoute from "@/interface/budget/route"
+import * as budgetSummaryRoute from "@/interface/budget/summary/route"
+import * as budgetDetailRoute from "@/interface/budget/[id]/route"
 import * as goalCreateRoute from "@/interface/goal/goals/create-route"
 import * as goalEvaluationCreateRoute from "@/interface/goal/goals/[goal_id]/evaluations/route"
 import * as goalListRoute from "@/interface/goal/goals/route"
@@ -330,6 +333,10 @@ export const app = factory
   .post("/expenses/:id/approve", ...expenseApproveRoute.POST)
   .post("/expenses/:id/reject", ...expenseRejectRoute.POST)
   .post("/expenses", ...expenseCreateRoute.POST)
+  .get("/budgets/summary", ...budgetSummaryRoute.GET)
+  .get("/budgets/:id", ...budgetDetailRoute.GET)
+  .get("/budgets", ...budgetListRoute.GET)
+  .post("/budgets", ...budgetListRoute.POST)
   .get("/training/courses/:code", ...trainingCourseDetailRoute.GET)
   .get("/training/courses", ...trainingCourseListRoute.GET)
   .post("/training/courses", ...trainingCourseCreateRoute.POST)
@@ -417,6 +424,8 @@ export const app = factory
   .delete("/assets/:code", ...assetDetailRoute.DELETE)
   .put("/expenses/:id", ...expenseDetailRoute.PUT)
   .delete("/expenses/:id", ...expenseDetailRoute.DELETE)
+  .patch("/budgets/:id", ...budgetDetailRoute.PATCH)
+  .delete("/budgets/:id", ...budgetDetailRoute.DELETE)
   .put("/training/courses/:code", ...trainingCourseDetailRoute.PUT)
   .delete("/training/courses/:code", ...trainingCourseDetailRoute.DELETE)
   .post("/business-trips", ...businessTripCreateRoute.POST)

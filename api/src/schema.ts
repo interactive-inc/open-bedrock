@@ -533,6 +533,21 @@ export const expenseApprovals = sqliteTable("expense_approvals", {
 
 export type ExpenseApprovalRow = InferSelectModel<typeof expenseApprovals>
 
+// 部署予算（部署・会計期間・金額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する。
+export const budgets = sqliteTable("budgets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  departmentId: integer("department_id").notNull(),
+  fiscalPeriod: text("fiscal_period").notNull(),
+  periodStart: text("period_start").notNull(),
+  periodEnd: text("period_end").notNull(),
+  amount: integer("amount").notNull(),
+  name: text("name").notNull(),
+  note: text("note"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type BudgetRow = InferSelectModel<typeof budgets>
+
 // 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
 // is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
 // 目標（社員ごと・評価期間ごとの目標と重み・状態）
@@ -1045,6 +1060,7 @@ export const schema = {
   careerSheets,
   expenses,
   expenseApprovals,
+  budgets,
   goals,
   goalEvaluations,
   knowledgeArticles,

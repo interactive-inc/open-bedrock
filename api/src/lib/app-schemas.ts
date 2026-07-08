@@ -577,6 +577,85 @@ export const zAppExpenseAdminList = z.object({
 
 export type AppExpenseAdminList = z.infer<typeof zAppExpenseAdminList>
 
+// ===== budget =====
+
+/** 部署予算 1 件のレスポンス。 */
+export const zAppBudget = z.object({
+  id: z.number(),
+  department_id: z.number(),
+  fiscal_period: z.string(),
+  period_start: z.string(),
+  period_end: z.string(),
+  amount: z.number(),
+  name: z.string(),
+  note: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppBudget = z.infer<typeof zAppBudget>
+
+/** 部署予算一覧（GET /budgets）の 1 件。部署名を含む。 */
+export const zAppBudgetListItem = z.object({
+  id: z.number(),
+  department_id: z.number(),
+  department_name: z.string().nullable(),
+  fiscal_period: z.string(),
+  period_start: z.string(),
+  period_end: z.string(),
+  amount: z.number(),
+  name: z.string(),
+  note: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppBudgetListItem = z.infer<typeof zAppBudgetListItem>
+
+/** 部署予算一覧（GET /budgets）のレスポンス。 */
+export const zAppBudgetList = z.object({
+  data: z.array(zAppBudgetListItem),
+  total: z.number(),
+})
+
+export type AppBudgetList = z.infer<typeof zAppBudgetList>
+
+/** 部署予算の詳細（GET /budgets/:id）。承認済み経費の消化額・残額を含む。 */
+export const zAppBudgetDetail = z.object({
+  id: z.number(),
+  department_id: z.number(),
+  department_name: z.string().nullable(),
+  fiscal_period: z.string(),
+  period_start: z.string(),
+  period_end: z.string(),
+  amount: z.number(),
+  name: z.string(),
+  note: z.string().nullable(),
+  consumed_amount: z.number(),
+  remaining_amount: z.number(),
+  created_at: z.string(),
+})
+
+export type AppBudgetDetail = z.infer<typeof zAppBudgetDetail>
+
+/** 消化状況の横断ビュー（GET /budgets/summary）の 1 件。 */
+export const zAppBudgetSummaryItem = z.object({
+  department_id: z.number(),
+  department_name: z.string().nullable(),
+  fiscal_period: z.string(),
+  budget_amount: z.number(),
+  consumed_amount: z.number(),
+  remaining_amount: z.number(),
+})
+
+export type AppBudgetSummaryItem = z.infer<typeof zAppBudgetSummaryItem>
+
+/** 消化状況の横断ビュー（GET /budgets/summary）のレスポンス。 */
+export const zAppBudgetSummary = z.object({
+  fiscal_period: z.string(),
+  data: z.array(zAppBudgetSummaryItem),
+})
+
+export type AppBudgetSummary = z.infer<typeof zAppBudgetSummary>
+
 // ===== family-care-leave =====
 export const zAppFamilyCareLeave = z.object({
   id: z.string(),
