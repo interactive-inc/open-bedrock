@@ -13,12 +13,12 @@ export default async function SettingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="設定" description="表示や操作に関する個人設定を変更できます。" />
 
-      <div className="flex flex-col divide-y">
-        <div className="pb-6">
+      <div className="flex flex-col">
+        <div className="border-b border-border pb-6">
           <ThemeModeField />
         </div>
 
-        <div className="pt-6">
+        <div className="border-b border-border py-6">
           <LocaleField locale={locale} />
         </div>
       </div>
