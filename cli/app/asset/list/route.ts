@@ -10,8 +10,8 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      kind: z.string().optional(),
-      status: z.string().optional(),
+      kind: z.enum(["pc", "monitor", "furniture", "other"]).optional(),
+      status: z.enum(["in_stock", "lent"]).optional(),
     }),
   ),
   async (c) => {
