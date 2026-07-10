@@ -6,8 +6,8 @@ import { DetailField } from "@/components/detail-field"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
@@ -31,7 +31,7 @@ export default async function ExpenseDetailPage(props: Props) {
         actions={<BackButton href="/expense" label="経費一覧に戻る" />}
       />
 
-      <Suspense fallback={<ExpenseDetailSkeleton />}>
+      <Suspense fallback={<DetailSkeleton fields={5} />}>
         <ExpenseDetailView id={params.id} />
       </Suspense>
     </div>
@@ -107,6 +107,3 @@ async function ExpenseDetailView(props: ViewProps) {
   )
 }
 
-function ExpenseDetailSkeleton() {
-  return <Skeleton className="h-64 w-full" />
-}
