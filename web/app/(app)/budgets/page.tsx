@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getBudgetList } from "@/lib/api/get-budget-list"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "予算" }
 
@@ -26,6 +27,8 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
  * 新規登録は /budgets/new、消化状況の横断ビューは /budgets/summary に分離する。
  */
 export default async function BudgetsPage() {
+  await requirePermission("budget:manage")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

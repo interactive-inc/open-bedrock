@@ -7,6 +7,12 @@ import { UsageError } from "@/lib/errors"
 
 export const help = `karte survey survey-update <id> --title <t> --status open|closed [--questions <file>] — アンケートを変更（管理権限）`
 
+const surveyQuestionSchema = z.object({
+  id: z.string(),
+  type: z.enum(["scale", "choice", "text"]),
+  text: z.string(),
+})
+
 export default factory.createHandlers(
   zValidator(
     "json",
@@ -53,12 +59,14 @@ export default factory.createHandlers(
 )
 
 // --questions <file> を設問配列として読む。未指定なら空配列。
-async function toQuestionsJson(filePath: string | undefined): Promise<ReadonlyArray<unknown>> {
+async function toQuestionsJson(
+  filePath: string | undefined,
+): Promise<ReadonlyArray<z.infer<typeof surveyQuestionSchema>>> {
   if (filePath === undefined) {
     return []
   }
 
-  const parsed = z.array(z.unknown()).safeParse(await readJsonFile(filePath))
+  const parsed = z.array(surveyQuestionSchema).safeParse(await readJsonFile(filePath))
 
   if (parsed.success === false) {
     throw new UsageError("--questions の JSON は配列形式である必要があります")

@@ -92,9 +92,11 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
         description="全社の休暇申請を横断で確認します。承認は各申請の詳細から行います。"
         breadcrumbs={[{ label: "休暇", href: "/leave" }, { label: "休暇申請管理" }]}
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
-            承認受信箱
-          </Button>
+          currentUser.permissions.includes("leave:approve") ? (
+            <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
+              承認受信箱
+            </Button>
+          ) : null
         }
       />
 

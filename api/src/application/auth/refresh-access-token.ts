@@ -6,6 +6,7 @@ import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-reposi
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
   refreshToken: string
@@ -30,7 +31,7 @@ export class RefreshAccessToken {
 
     const hashedToken = await refreshTokenHash(command.refreshToken)
 
-    const existing = await refreshTokenRepository.findValidByHash(hashedToken, nowEpoch)
+    const existing = await refreshTokenRepository.findByHash(hashedToken)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find refresh token", { cause: existing })
@@ -40,10 +41,18 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    const revokeResult = await refreshTokenRepository.revoke(existing.id, nowEpoch)
+    if (existing.revokedAt !== null) {
+      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
 
-    if (revokeResult instanceof Error) {
-      return new UnexpectedError("failed to revoke old refresh token", { cause: revokeResult })
+      if (revokeResult instanceof Error) {
+        return new UnexpectedError("failed to revoke reused token family", { cause: revokeResult })
+      }
+
+      return { reason: "invalid_token" }
+    }
+
+    if (existing.expiresAt <= nowEpoch) {
+      return { reason: "invalid_token" }
     }
 
     const accountAuthRepository = new AccountAuthRepository(this.c)
@@ -54,7 +63,34 @@ export class RefreshAccessToken {
       return new UnexpectedError("failed to find account", { cause: account })
     }
 
-    if (account === null || account.status !== "active" || account.employeeId === null) {
+    if (
+      account === null ||
+      account.status !== "active" ||
+      account.employeeId === null ||
+      account.tokenVersion !== existing.tokenVersion
+    ) {
+      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
+
+      if (revokeResult instanceof Error) {
+        return new UnexpectedError("failed to revoke invalid token family", { cause: revokeResult })
+      }
+
+      return { reason: "invalid_token" }
+    }
+
+    const employee = await new EmployeeRepository(this.c).findById(account.employeeId)
+
+    if (employee instanceof Error) {
+      return new UnexpectedError("failed to find employee", { cause: employee })
+    }
+
+    if (employee === null || employee.status === "retired") {
+      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
+
+      if (revokeResult instanceof Error) {
+        return new UnexpectedError("failed to revoke retired token family", { cause: revokeResult })
+      }
+
       return { reason: "invalid_token" }
     }
 
@@ -77,16 +113,25 @@ export class RefreshAccessToken {
 
     const newHashedToken = await refreshTokenHash(newRawRefreshToken)
 
-    const createResult = await refreshTokenRepository.create({
-      accountId: existing.accountId,
+    const rotateResult = await refreshTokenRepository.rotate({
+      tokenId: existing.id,
       tokenHash: newHashedToken,
-      familyId: existing.familyId,
       userAgent: command.userAgent,
       nowEpoch,
     })
 
-    if (createResult instanceof Error) {
-      return new UnexpectedError("failed to create new refresh token", { cause: createResult })
+    if (rotateResult instanceof Error) {
+      return new UnexpectedError("failed to rotate refresh token", { cause: rotateResult })
+    }
+
+    if (rotateResult === "reused") {
+      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
+
+      if (revokeResult instanceof Error) {
+        return new UnexpectedError("failed to revoke reused token family", { cause: revokeResult })
+      }
+
+      return { reason: "invalid_token" }
     }
 
     return { accessToken, refreshToken: newRawRefreshToken }

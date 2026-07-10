@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getOneOnOneList } from "@/lib/api/get-oneonone-list"
+import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "1on1" }
 
@@ -19,11 +20,14 @@ type SearchParams = Promise<{ page?: string }>
  * 1on1 履歴一覧。記録の作成は /oneonone/new に分離。
  */
 export default async function OneOnOnePage(props: { searchParams: SearchParams }) {
-  const searchParams = await props.searchParams
+  const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
 
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
   const offset = (page - 1) * PAGE_SIZE
+
+  const canCreate =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("oneonone:create")
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,10 +35,12 @@ export default async function OneOnOnePage(props: { searchParams: SearchParams }
         title="1on1"
         description="自分の参加した 1on1 の履歴を確認します。"
         actions={
-          <Button nativeButton={false} render={<Link href="/oneonone/new" />}>
-            <Plus />
-            記録を追加
-          </Button>
+          canCreate ? (
+            <Button nativeButton={false} render={<Link href="/oneonone/new" />}>
+              <Plus />
+              記録を追加
+            </Button>
+          ) : null
         }
       />
 

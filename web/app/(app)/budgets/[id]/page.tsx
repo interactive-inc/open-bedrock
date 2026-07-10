@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getBudgetDetail } from "@/lib/api/get-budget-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "予算詳細" }
 
@@ -21,6 +22,8 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 // 予算詳細画面。params.id で対象を取得し、消化状況・編集・削除を描画する RSC。
 export default async function BudgetDetailPage(props: Props) {
+  await requirePermission("budget:manage")
+
   const params = await props.params
 
   return (

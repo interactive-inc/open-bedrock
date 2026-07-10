@@ -4,9 +4,11 @@ import { SurveyAnswerForm } from "@/app/(app)/surveys/[surveyId]/_components/sur
 import { surveyQuestionSchema } from "@/app/(app)/surveys/[surveyId]/_lib/survey-question-schema"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { getMe } from "@/lib/api/get-me"
 import { getSurvey } from "@/lib/api/get-survey"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
+import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 export const metadata = { title: "サーベイ回答" }
 
@@ -26,7 +28,7 @@ export default async function SurveyAnswerPage(props: Props) {
     notFound()
   }
 
-  const survey = await getSurvey(surveyId)
+  const [survey, currentUser] = await Promise.all([getSurvey(surveyId), getMe()])
 
   if (survey instanceof Error) {
     handleDetailError(survey)
@@ -51,14 +53,17 @@ export default async function SurveyAnswerPage(props: Props) {
       <PageHeader
         title={survey.title}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            nativeButton={false}
-            render={<Link href={`/surveys/${survey.id}/summary`} />}
-          >
-            集計を見る
-          </Button>
+          currentUser instanceof Error ||
+          canManageSurveys(currentUser.permissions) === false ? null : (
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href={`/surveys/${survey.id}/summary`} />}
+            >
+              集計を見る
+            </Button>
+          )
         }
       />
 

@@ -11,7 +11,10 @@ export const metadata = { title: "申請テンプレートを作成" }
 export default async function NewApplicationTemplatePage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+  if (
+    currentUser instanceof Error ||
+    canManageApplicationTemplates(currentUser.permissions) === false
+  ) {
     notFound()
   }
 

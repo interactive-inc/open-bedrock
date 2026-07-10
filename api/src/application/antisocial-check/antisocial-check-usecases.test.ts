@@ -59,7 +59,7 @@ describe("GetAntisocialCheck", () => {
 
     const result = await new GetAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 5,
+      session: makeTestSession("member", 5),
     })
 
     expect(result).toBeInstanceOf(AntisocialCheck)
@@ -72,10 +72,23 @@ describe("GetAntisocialCheck", () => {
 
     const result = await new GetAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 6,
+      session: makeTestSession("member", 6),
     })
 
     expectApplicationError(result, ForbiddenError, "not_requester")
+  })
+
+  test("allows a manager to read another request for screening", async () => {
+    const { context } = createTestContext()
+
+    const checkId = await seedCheck(context, 5)
+
+    const result = await new GetAntisocialCheck(context).run({
+      antisocialCheckId: checkId,
+      session: makeTestSession("manager", 6),
+    })
+
+    expect(result).toBeInstanceOf(AntisocialCheck)
   })
 
   test("returns antisocial_check_not_found for an unknown id", async () => {
@@ -83,7 +96,7 @@ describe("GetAntisocialCheck", () => {
 
     const result = await new GetAntisocialCheck(context).run({
       antisocialCheckId: "ffffffff-ffff-ffff-ffff-ffffffffffff",
-      requesterId: 5,
+      session: makeTestSession("member", 5),
     })
 
     expectApplicationError(result, NotFoundError, "antisocial_check_not_found")
@@ -114,18 +127,17 @@ describe("ListMyAntisocialChecks", () => {
 })
 
 describe("UpdateAntisocialCheck", () => {
-  test("updates the details and result for a manager requester", async () => {
+  test("allows a manager to complete another request without changing its details", async () => {
     const { context } = createTestContext()
 
     const checkId = await seedCheck(context, 5)
 
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 5,
-      session: makeTestSession("admin"),
-      partnerName: "Demo Partners LLC",
-      partnerAddress: "4-5-6 Placeholder, Example City",
-      representativeName: "Alex Sample",
+      session: makeTestSession("manager", 6),
+      partnerName: "Example Trading Co.",
+      partnerAddress: "1-2-3 Sample, Example City",
+      representativeName: "Pat Example",
       result: "clear",
     })
 
@@ -135,8 +147,9 @@ describe("UpdateAntisocialCheck", () => {
       throw new Error("update failed")
     }
 
-    expect(result.partnerName).toBe("Demo Partners LLC")
+    expect(result.partnerName).toBe("Example Trading Co.")
     expect(result.result).toBe("clear")
+    expect(result.status).toBe("completed")
   })
 
   test("allows a non-manager requester to update details but ignores result", async () => {
@@ -146,8 +159,7 @@ describe("UpdateAntisocialCheck", () => {
 
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 5,
-      session: makeTestSession("employee"),
+      session: makeTestSession("member", 5),
       partnerName: "Demo Partners LLC",
       partnerAddress: "4-5-6 Placeholder, Example City",
       representativeName: "Alex Sample",
@@ -171,11 +183,27 @@ describe("UpdateAntisocialCheck", () => {
 
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 5,
-      session: makeTestSession("employee"),
+      session: makeTestSession("member", 5),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,
+      result: "clear",
+    })
+
+    expectApplicationError(result, ForbiddenError, "result_forbidden")
+  })
+
+  test("rejects a manager deciding their own request", async () => {
+    const { context } = createTestContext()
+
+    const checkId = await seedCheck(context, 5)
+
+    const result = await new UpdateAntisocialCheck(context).run({
+      antisocialCheckId: checkId,
+      session: makeTestSession("manager", 5),
+      partnerName: "Example Trading Co.",
+      partnerAddress: "1-2-3 Sample, Example City",
+      representativeName: "Pat Example",
       result: "clear",
     })
 
@@ -189,8 +217,7 @@ describe("UpdateAntisocialCheck", () => {
 
     const result = await new UpdateAntisocialCheck(context).run({
       antisocialCheckId: checkId,
-      requesterId: 6,
-      session: makeTestSession("employee"),
+      session: makeTestSession("member", 6),
       partnerName: "Demo Partners LLC",
       partnerAddress: null,
       representativeName: null,

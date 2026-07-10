@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cancelAntisocialCheck } from "@/lib/api/cancel-antisocial-check"
 import { createAntisocialCheck } from "@/lib/api/create-antisocial-check"
 import { updateAntisocialCheck } from "@/lib/api/update-antisocial-check"
+import { getMe } from "@/lib/api/get-me"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type AntisocialCheckActionState = {
@@ -79,6 +80,48 @@ export async function cancelAntisocialCheckAction(
     return { ok: false, error: cancelled.message }
   }
 
+  revalidatePath("/antisocial-checks")
+
+  return { ok: true, error: null }
+}
+
+// 管理者が他者の申請へ判定結果を記録する。本人申請と権限不足は API でも拒否される。
+export async function completeAntisocialCheckAction(
+  previousState: AntisocialCheckActionState,
+  formData: FormData,
+): Promise<AntisocialCheckActionState> {
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    currentUser.permissions.includes("antisocial_check:manage") === false
+  ) {
+    return { ok: false, error: "反社チェックを判定する権限がありません" }
+  }
+
+  const antisocialCheckId = formData.get("antisocial_check_id")
+
+  if (typeof antisocialCheckId !== "string" || antisocialCheckId === "") {
+    return { ok: false, error: "反社チェック申請を特定できませんでした" }
+  }
+
+  const fields = toUpdateFields(formData)
+
+  if (fields instanceof Error) {
+    return { ok: false, error: fields.message }
+  }
+
+  if (fields.result === null) {
+    return { ok: false, error: "判定結果を入力してください" }
+  }
+
+  const updated = await updateAntisocialCheck(antisocialCheckId, fields)
+
+  if (updated instanceof Error) {
+    return { ok: false, error: updated.message }
+  }
+
+  revalidatePath("/antisocial-checks/admin")
   revalidatePath("/antisocial-checks")
 
   return { ok: true, error: null }

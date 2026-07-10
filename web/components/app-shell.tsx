@@ -30,6 +30,13 @@ export function AppShell(props: Props) {
 
   return (
     <SidebarProvider>
+      <a
+        href="#main-content"
+        className="sr-only fixed top-2 left-2 z-50 rounded-md bg-background px-3 py-2 text-sm shadow focus:not-sr-only"
+      >
+        本文へスキップ
+      </a>
+
       <Sidebar collapsible="offcanvas" className="border-none">
         <SidebarHeader>
           <div className="flex flex-col gap-0.5 px-2 py-1">
@@ -55,7 +62,7 @@ export function AppShell(props: Props) {
               <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
 
               <span className="truncate text-xs text-muted-foreground">
-                {props.currentUser.role}
+                {props.currentUser.role_keys.join(", ") || props.currentUser.role}
               </span>
             </Link>
 
@@ -70,7 +77,9 @@ export function AppShell(props: Props) {
       </Sidebar>
 
       <SidebarInset>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{props.children}</main>
+        <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-6" tabIndex={-1}>
+          {props.children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   )

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { getStocktake } from "@/lib/api/get-stocktake"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "棚卸し詳細" }
 
@@ -24,6 +25,8 @@ type Props = {
 
 // 棚卸し詳細画面。RSC で 1 件取得し、対象資産ごとの確認状況と操作を表示する。
 export default async function StocktakeDetailPage(props: Props) {
+  await requirePermission("asset:manage")
+
   const params = await props.params
 
   const stocktake = await getStocktake(params.id)

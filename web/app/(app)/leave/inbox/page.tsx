@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getLeaveInbox, type LeaveInboxSort } from "@/lib/api/get-leave-inbox"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "承認待ちの休暇" }
 
@@ -43,6 +44,8 @@ function toSort(raw: string | undefined): LeaveInboxSort {
 
 // 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
 export default async function LeaveInboxPage(props: { searchParams: SearchParams }) {
+  await requirePermission("leave:approve")
+
   const searchParams = await props.searchParams
 
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)

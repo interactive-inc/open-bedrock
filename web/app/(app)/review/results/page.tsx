@@ -59,7 +59,7 @@ type ResultsProps = {
 async function Results(props: ResultsProps) {
   const currentUser = await getMe()
 
-  const canView = currentUser instanceof Error ? false : canAdministerCycle(currentUser.role)
+  const canView = currentUser instanceof Error ? false : canAdministerCycle(currentUser.permissions)
 
   if (canView === false) {
     return <FetchError message="評価結果を閲覧する権限がありません" />

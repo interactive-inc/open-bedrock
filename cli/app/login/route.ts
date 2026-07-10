@@ -43,6 +43,10 @@ export default factory.createHandlers(
 
     const result = await response.json()
 
+    if ("error" in result) {
+      throw new UsageError(result.error)
+    }
+
     config.token = result.access_token
 
     config.refresh_token = result.refresh_token ?? null

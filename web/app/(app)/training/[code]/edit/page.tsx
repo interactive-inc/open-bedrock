@@ -19,11 +19,9 @@ type Props = {
  * 研修コース編集ページ。管理権限がない場合は notFound() で隠す。
  */
 export default async function EditTrainingCoursePage(props: Props) {
-  const params = await props.params
+  const [params, currentUser] = await Promise.all([props.params, getMe()])
 
-  const currentUser = await getMe()
-
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     notFound()
   }
 

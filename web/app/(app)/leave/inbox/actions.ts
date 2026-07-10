@@ -48,7 +48,7 @@ export async function decideLeaveRequestAction(
 ): Promise<LeaveDecisionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canDecideLeave(currentUser.role) === false) {
+  if (currentUser instanceof Error || canDecideLeave(currentUser.permissions) === false) {
     return { ok: false, error: "休暇申請を承認・却下する権限がありません" }
   }
 

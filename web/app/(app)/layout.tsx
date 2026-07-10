@@ -1,7 +1,8 @@
 import { logoutAction } from "@/app/(app)/actions/logout"
 import { AppShell } from "@/components/app-shell"
 import { AuthProvider } from "@/components/auth-provider"
-import { AuthError, isAuthError } from "@/lib/api/auth-error"
+import { LoginGate } from "@/components/login-gate"
+import { isAuthError } from "@/lib/api/auth-error"
 import { getMe } from "@/lib/api/get-me"
 import { getMyUnreadCount } from "@/lib/api/get-my-unread-count"
 import { getLocale } from "@/lib/i18n/get-locale"
@@ -11,7 +12,7 @@ type Props = {
 }
 
 /**
- * 保護領域共通の layout。`getMe` で本人を取得し、未認証ならログイン画面へ遷移する。
+ * 保護領域共通の layout。`getMe` で本人を取得し、未認証ならログイン画面に差し替える。
  * 取得した本人と未読件数を AppShell に渡し、AuthProvider 経由で配下からも参照できるようにする。
  */
 export default async function AppLayout(props: Props) {
@@ -21,7 +22,7 @@ export default async function AppLayout(props: Props) {
     currentUser = await getMe()
   } catch (error) {
     if (isAuthError(error)) {
-      throw new AuthError()
+      return <LoginGate />
     }
 
     throw error

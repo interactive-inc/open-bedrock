@@ -11,7 +11,7 @@ export const metadata = { title: "サーベイの新規作成" }
 export default async function NewSurveyPage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     notFound()
   }
 

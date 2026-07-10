@@ -35,6 +35,9 @@ export default async function MyExpensesPage() {
   const canViewAll =
     currentUser instanceof Error ? false : canViewAllExpenses(currentUser.permissions)
 
+  const canApprove =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("expense:approve")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -52,10 +55,16 @@ export default async function MyExpensesPage() {
               </Button>
             ) : null}
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
-              <Inbox />
-              承認受信箱
-            </Button>
+            {canApprove ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/expense/inbox" />}
+              >
+                <Inbox />
+                承認受信箱
+              </Button>
+            ) : null}
 
             <Button nativeButton={false} render={<Link href="/expense/new" />}>
               <Plus />

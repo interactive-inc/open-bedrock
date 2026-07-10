@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react"
 import { deleteKnowledgeAction, updateKnowledgeAction } from "@/app/(app)/knowledge/actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -117,14 +118,19 @@ function DeleteKnowledgeButton(props: { articleId: number }) {
   })
 
   return (
-    <form action={formAction} className="flex flex-col gap-1">
-      <input type="hidden" name="article_id" value={props.articleId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title="この記事を削除しますか？"
+        description="記事の内容は元に戻せません。"
+        confirmLabel="記事を削除"
+        pending={pending}
+      >
+        <input type="hidden" name="article_id" value={props.articleId} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-    </form>
+    </div>
   )
 }

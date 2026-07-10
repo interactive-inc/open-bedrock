@@ -10,7 +10,9 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
@@ -45,14 +47,18 @@ export class SetAccountStatus {
 
     const accountRepository = new AccountRepository(this.c)
 
-    const exists = await accountRepository.existsById(command.accountId)
+    const targetAccount = await new AccountAuthRepository(this.c).resolveById(command.accountId)
 
-    if (exists instanceof Error) {
-      return new UnexpectedError("failed to find account", { cause: exists })
+    if (targetAccount instanceof Error) {
+      return new UnexpectedError("failed to find account", { cause: targetAccount })
     }
 
-    if (exists === false) {
+    if (targetAccount === null) {
       return new NotFoundError("account not found", "account_not_found")
+    }
+
+    if (hasPermissionSuperset(command.session, targetAccount.permissions) === false) {
+      return new ForbiddenError("cannot change a higher privilege account", "role_escalation")
     }
 
     // 非アクティブ化で唯一の admin を失う(system lockout)のを防ぐ。

@@ -4,6 +4,8 @@ import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from 
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -30,6 +32,20 @@ export class ResetAccountPassword {
 
     if (command.newPassword.length < MIN_PASSWORD_LENGTH) {
       return new ValidationError("password is too weak", "weak_password")
+    }
+
+    const targetAccount = await new AccountAuthRepository(this.c).resolveById(command.accountId)
+
+    if (targetAccount instanceof Error) {
+      return new UnexpectedError("failed to find account", { cause: targetAccount })
+    }
+
+    if (targetAccount === null) {
+      return new NotFoundError("account not found", "account_not_found")
+    }
+
+    if (hasPermissionSuperset(command.session, targetAccount.permissions) === false) {
+      return new ForbiddenError("cannot reset a higher privilege account", "role_escalation")
     }
 
     const identityRepository = new IdentityRepository(this.c)

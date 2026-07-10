@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteAssetAction } from "@/app/(app)/assets/actions"
 import type { AssetDeleteFormState } from "@/app/(app)/assets/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象の資産コード。hidden フィールドへ埋め込む。
@@ -35,12 +35,15 @@ export function AssetDeleteButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この物品を削除しますか？"
+      description="物品の台帳情報は元に戻せません。貸与中の物品は削除できません。"
+      confirmLabel="物品を削除"
+      pending={isPending}
+    >
       <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={isPending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

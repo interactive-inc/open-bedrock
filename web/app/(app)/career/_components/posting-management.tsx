@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useActionState } from "react"
 import { deleteCareerPostingAction } from "@/app/(app)/career/actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { FieldError } from "@/components/ui/field"
 import type { CareerPosting } from "@/lib/api/types/career-types"
 
@@ -45,14 +46,19 @@ function DeletePostingButton(props: DeleteProps) {
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="posting_id" value={props.postingId ?? ""} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title="この社内公募を削除しますか？"
+        description="公募の記録は元に戻せません。"
+        confirmLabel="公募を削除"
+        pending={pending}
+      >
+        <input type="hidden" name="posting_id" value={props.postingId ?? ""} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-    </form>
+    </div>
   )
 }

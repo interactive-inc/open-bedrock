@@ -1,5 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getOnboardingTemplates } from "@/lib/api/get-onboarding-templates"
 import { AssignForm } from "@/app/(app)/onboarding/_components/assign-form"
 
@@ -11,7 +11,7 @@ export async function AssignFormSection() {
     return <FetchError message="テンプレートの取得に失敗しました" />
   }
 
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  const employeeResult = await getEmployeeDirectory()
 
   const employees =
     employeeResult instanceof Error

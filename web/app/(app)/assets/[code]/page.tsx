@@ -8,8 +8,10 @@ import { DetailField } from "@/components/detail-field"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getAssetByCode } from "@/lib/api/get-asset-by-code"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
+import { getMe } from "@/lib/api/get-me"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 
 export const metadata = { title: "備品詳細" }
 
@@ -21,16 +23,18 @@ type Props = {
 export default async function AssetDetailPage(props: Props) {
   const params = await props.params
 
-  const asset = await getAssetByCode(params.code)
+  const [asset, currentUser] = await Promise.all([getAssetByCode(params.code), getMe()])
 
   if (asset instanceof Error) {
     handleDetailError(asset)
   }
 
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  const canManage = currentUser instanceof Error ? false : canManageAssets(currentUser.permissions)
+
+  const employeeResult = canManage ? await getEmployeeDirectory() : null
 
   const employees =
-    employeeResult instanceof Error
+    employeeResult === null || employeeResult instanceof Error
       ? []
       : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
 
@@ -66,7 +70,7 @@ export default async function AssetDetailPage(props: Props) {
         </dl>
       </Card>
 
-      {asset.status === "disposed" ? null : (
+      {asset.status === "disposed" || canManage === false ? null : (
         <Card className="p-0 gap-0">
           <div className="flex flex-col gap-4 p-6">
             <h2 className="text-lg font-semibold">貸与・返却</h2>
@@ -80,7 +84,7 @@ export default async function AssetDetailPage(props: Props) {
         </Card>
       )}
 
-      {asset.status === "in_stock" ? (
+      {asset.status === "in_stock" && canManage ? (
         <Card className="p-0 gap-0">
           <div className="flex flex-col gap-4 p-6">
             <h2 className="text-lg font-semibold">廃棄</h2>

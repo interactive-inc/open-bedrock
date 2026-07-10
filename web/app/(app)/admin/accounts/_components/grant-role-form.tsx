@@ -39,7 +39,12 @@ export function GrantRoleForm(props: Props) {
     <form action={formAction} className="flex items-center gap-2">
       <input type="hidden" name="account_id" value={props.accountId} />
 
-      <select name="role_key" className={selectClassName} defaultValue="">
+      <select
+        name="role_key"
+        className={selectClassName}
+        defaultValue=""
+        aria-label="付与するロール"
+      >
         <option value="" disabled>
           ロールを選択
         </option>

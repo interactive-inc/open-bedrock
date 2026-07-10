@@ -28,6 +28,12 @@ const budgetDetailSchema = z.object({
   created_at: z.string(),
 })
 
+const budgetSchema = budgetDetailSchema.omit({
+  department_name: true,
+  consumed_amount: true,
+  remaining_amount: true,
+})
+
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
@@ -184,7 +190,7 @@ describe("PATCH /budgets/:id", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const body = budgetSchema.parse(await response.json())
 
     expect(body.amount).toBe(1200000)
     expect(body.name).toBe("Engineering FY2026 (revised)")

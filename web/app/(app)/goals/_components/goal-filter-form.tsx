@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 type Props = {
   period: string | null
   employeeId: string | null
+  canFilterEmployee: boolean
 }
 
 // 一覧の絞り込みフォーム。native な GET フォームで /goals?period=&employee_id= へ遷移する。
@@ -24,18 +25,20 @@ export function GoalFilterForm(props: Props) {
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="filter-employee-id">従業員 ID</Label>
+      {props.canFilterEmployee ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="filter-employee-id">従業員 ID</Label>
 
-        <Input
-          id="filter-employee-id"
-          name="employee_id"
-          inputMode="numeric"
-          placeholder="本人"
-          defaultValue={props.employeeId ?? ""}
-          className="w-40"
-        />
-      </div>
+          <Input
+            id="filter-employee-id"
+            name="employee_id"
+            inputMode="numeric"
+            placeholder="本人"
+            defaultValue={props.employeeId ?? ""}
+            className="w-40"
+          />
+        </div>
+      ) : null}
 
       <Button type="submit" variant="outline">
         絞り込む

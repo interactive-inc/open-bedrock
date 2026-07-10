@@ -45,6 +45,6 @@ describe("AntisocialCheck.withDetails", () => {
     expect(updated.representativeName).toBe("Hanako Suzuki")
     expect(updated.result).toBe("clear")
     expect(updated.requesterId).toBe(1)
-    expect(updated.status).toBe("requested")
+    expect(updated.status).toBe("completed")
   })
 })

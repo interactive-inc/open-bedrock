@@ -10,11 +10,12 @@ import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { canReadEmployees } from "@/lib/employee/can-read-employees"
 
 // 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。
 async function toResponseBody(c: Context, employee: Employee) {
@@ -55,6 +56,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (employee instanceof ApplicationError) {
     throw toHttpException(employee)
+  }
+
+  if (employee.id !== session.employeeId && canReadEmployees(session) === false) {
+    throw new NotFoundError("employee not found")
   }
 
   const body = await toResponseBody(c, employee)

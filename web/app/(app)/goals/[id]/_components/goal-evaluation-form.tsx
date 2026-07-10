@@ -9,9 +9,17 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
 
 type Props = {
   goalId: number
+  allowedKinds: ReadonlyArray<GoalEvaluationKind>
+}
+
+const evaluationKindLabels: Record<GoalEvaluationKind, string> = {
+  self: "自己評価",
+  manager: "上長評価",
+  final: "確定評価",
 }
 
 const initialState: GoalActionState = { ok: false, error: null }
@@ -58,12 +66,14 @@ export function GoalEvaluationForm(props: Props) {
             <select
               id="evaluation-kind"
               name="kind"
-              defaultValue="self"
+              defaultValue={props.allowedKinds.at(0)}
               className="h-8 w-full rounded-2xl border border-transparent bg-input/50 px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             >
-              <option value="self">自己評価</option>
-              <option value="manager">上長評価</option>
-              <option value="final">確定評価</option>
+              {props.allowedKinds.map((kind) => (
+                <option key={kind} value={kind}>
+                  {evaluationKindLabels[kind]}
+                </option>
+              ))}
             </select>
           </Field>
 

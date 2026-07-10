@@ -1,16 +1,18 @@
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
+import type { SessionPayload } from "@/env"
+import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
-  requesterId: number
+  session: SessionPayload
 }
 
 /**
- * 反社チェック申請を1件取得する。本人以外の閲覧を拒否する。
+ * 反社チェック申請を1件取得する。本人または管理権限保持者だけが閲覧できる。
  */
 export class GetAntisocialCheck {
   constructor(private readonly c: Context) {}
@@ -28,7 +30,10 @@ export class GetAntisocialCheck {
       return new NotFoundError("antisocial check not found", "antisocial_check_not_found")
     }
 
-    if (antisocialCheck.requesterId !== command.requesterId) {
+    if (
+      antisocialCheck.requesterId !== command.session.employeeId &&
+      canManageAntisocialChecks(command.session) === false
+    ) {
       return new ForbiddenError("not the requester", "not_requester")
     }
 

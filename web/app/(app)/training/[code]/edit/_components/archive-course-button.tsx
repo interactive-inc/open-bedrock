@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import type { TrainingFormState } from "@/app/(app)/training/actions"
 import { archiveTrainingCourseAction } from "@/app/(app)/training/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   code: string
@@ -33,12 +33,16 @@ export function ArchiveCourseButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={dispatch}>
+    <ConfirmActionDialog
+      action={dispatch}
+      triggerLabel={isPending ? "処理中…" : "アーカイブ"}
+      title="このコースをアーカイブしますか？"
+      description="新しい受講登録ができなくなります。既存の受講履歴は保持されます。"
+      confirmLabel="アーカイブする"
+      pending={isPending}
+      size="default"
+    >
       <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" disabled={isPending}>
-        {isPending ? "処理中..." : "アーカイブ"}
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

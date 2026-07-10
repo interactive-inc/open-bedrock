@@ -23,7 +23,7 @@ export async function createOrgDepartmentAction(
 ): Promise<OrgDepartmentActionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageOrg(currentUser.permissions) === false) {
     return { ok: false, error: "組織を管理する権限がありません" }
   }
 
@@ -72,7 +72,7 @@ export async function updateOrgDepartmentAction(
 ): Promise<OrgDepartmentActionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageOrg(currentUser.permissions) === false) {
     return { ok: false, error: "組織を管理する権限がありません" }
   }
 
@@ -110,7 +110,7 @@ export async function deleteOrgDepartmentAction(
 ): Promise<OrgDepartmentActionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageOrg(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageOrg(currentUser.permissions) === false) {
     return { ok: false, error: "組織を管理する権限がありません" }
   }
 

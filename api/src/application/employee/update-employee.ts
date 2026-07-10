@@ -1,5 +1,5 @@
 import type { Employee } from "@/domain/employee/employee.entity"
-import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
@@ -30,7 +30,7 @@ export class UpdateEmployee {
   async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageEmployees(command.session) === false) {
+    if (canUpdateEmployee(command.session) === false) {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 

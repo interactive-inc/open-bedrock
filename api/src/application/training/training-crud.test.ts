@@ -41,7 +41,7 @@ async function seedEnrollment(
   courseCode: string,
   employeeId: number,
 ): Promise<TrainingEnrollment> {
-  const course = await seedCourse(context, courseCode)
+  await seedCourse(context, courseCode)
 
   await seedD1(db, "employees", [
     {

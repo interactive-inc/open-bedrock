@@ -39,7 +39,7 @@ export default async function EditSurveyPage(props: Props) {
 
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     notFound()
   }
 

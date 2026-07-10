@@ -11,7 +11,7 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -19,6 +19,7 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, or } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
+import { canReadEmployees } from "@/lib/employee/can-read-employees"
 
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -33,6 +34,16 @@ export const GET = factory.createHandlers(
     }),
   ),
   async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    if (canReadEmployees(session) === false) {
+      throw new ForbiddenError()
+    }
+
     const query = c.req.valid("query")
 
     const conditions: Array<SQL> = []
