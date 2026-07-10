@@ -11,7 +11,7 @@ export default factory.createHandlers(
     z.object({
       help: z.string().optional(),
       category: z.string().optional(),
-      status: z.string().optional(),
+      status: z.enum(["active", "archived"]).optional(),
     }),
   ),
   async (c) => {
