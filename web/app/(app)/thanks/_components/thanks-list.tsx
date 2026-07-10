@@ -1,19 +1,20 @@
-import { formatDateTime } from "@/lib/format-datetime"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getThanksList } from "@/lib/api/get-thanks-list"
+import { ThanksTimeline } from "@/app/(app)/thanks/_components/thanks-timeline"
+
+const INITIAL_LIMIT = 20
 
 // 感謝のタイムラインをサーバ側 fetch してカード描画する非同期 RSC。
-// 全従業員に公開された新着順の一覧を送り主・受け手・メッセージで並べる。
+// 初回は最新 20 件を取得し、残りがあれば ThanksTimeline に「もっと読み込む」を委譲する。
 export async function ThanksList() {
-  const thanksList = await getThanksList()
+  const result = await getThanksList({ limit: INITIAL_LIMIT, offset: 0 })
 
-  if (thanksList instanceof Error) {
+  if (result instanceof Error) {
     return <FetchError message="感謝の取得に失敗しました" />
   }
 
-  if (thanksList.length === 0) {
+  if (result.data.length === 0) {
     return (
       <EmptyState
         title="まだ感謝がありません"
@@ -23,25 +24,6 @@ export async function ThanksList() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {thanksList.map((thanks) => (
-        <Card key={thanks.id}>
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              <span>{thanks.sender_name}</span>
-              <span className="text-sm font-normal text-muted-foreground">→</span>
-              <span>{thanks.recipient_name}</span>
-              <span className="text-sm font-normal text-muted-foreground">
-                {formatDateTime(thanks.created_at)}
-              </span>
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="text-sm">
-            <p className="whitespace-pre-wrap">{thanks.message}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <ThanksTimeline initialItems={result.data} total={result.total} pageSize={INITIAL_LIMIT} />
   )
 }

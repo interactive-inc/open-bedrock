@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createReward } from "@/lib/api/create-reward"
 import { getMe } from "@/lib/api/get-me"
+import { getThanksList, type ThanksListResult } from "@/lib/api/get-thanks-list"
 import { requestRedemption } from "@/lib/api/request-redemption"
 import { sendThanks } from "@/lib/api/send-thanks"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
@@ -118,6 +119,18 @@ export async function createRewardAction(
   revalidatePath("/thanks/rewards")
 
   return { ok: true, error: null }
+}
+
+// 感謝タイムラインの追加読み込み Server Action。
+// offset を受け取り、次のページを取得して返す。
+export async function loadMoreThanksAction(offset: number): Promise<ThanksListResult | null> {
+  const result = await getThanksList({ limit: 20, offset })
+
+  if (result instanceof Error) {
+    return null
+  }
+
+  return result
 }
 
 // 交換コストを正の整数に変換する。
