@@ -32,7 +32,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -545,9 +545,75 @@ function isParentActive(pathname: string, item: NavItem): boolean {
   return pathname.startsWith(`${item.href}/`)
 }
 
+const SIDEBAR_EXPANDED_KEY = "sidebar-expanded"
+
+/**
+ * localStorage にアコーディオンの展開状態を保存・復元する。
+ * アクティブな項目は常に展開し、ユーザーが手動で開閉した状態をページ遷移後も維持する。
+ */
+function useExpandedState(pathname: string) {
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+
+      if (stored !== null) {
+        setExpanded(new Set(JSON.parse(stored)))
+      }
+    } catch {
+      // localStorage が使えない場合は空 Set のまま
+    }
+
+    setInitialized(true)
+  }, [])
+
+  const toggle = useCallback(
+    (href: string, open: boolean) => {
+      setExpanded((prev) => {
+        const next = new Set(prev)
+
+        if (open) {
+          next.add(href)
+        } else {
+          next.delete(href)
+        }
+
+        try {
+          localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...next]))
+        } catch {
+          // localStorage が使えない場合は無視
+        }
+
+        return next
+      })
+    },
+    [],
+  )
+
+  const isExpanded = useCallback(
+    (item: NavItem): boolean => {
+      // まだ localStorage を読み込んでいない初期状態ではアクティブなもののみ展開
+      if (!initialized) return isParentActive(pathname, item)
+
+      // アクティブなアイテムは常に展開
+      if (isParentActive(pathname, item)) return true
+
+      // localStorage に保存された状態を使用
+      return expanded.has(item.href)
+    },
+    [expanded, initialized, pathname],
+  )
+
+  return { isExpanded, toggle }
+}
+
 /**
  * オブジェクト軸でグループ化したサイドバーナビ。各オブジェクトの CRUD を Collapsible で展開する。
  * 入力でメニューを絞り込み、現在のパスを含む親は自動で開いた状態にする。
+ * アコーディオンの展開状態は localStorage に保持し、ページ遷移・リロード後も維持される。
  */
 export function SidebarNav(props: Props) {
   const pathname = usePathname()
@@ -555,6 +621,8 @@ export function SidebarNav(props: Props) {
   const [filterQuery, setFilterQuery] = useState("")
 
   const visibleGroups = filterGroups(filterQuery, props.permissions)
+
+  const { isExpanded, toggle } = useExpandedState(pathname)
 
   return (
     <>
@@ -614,8 +682,9 @@ export function SidebarNav(props: Props) {
 
                 return (
                   <Collapsible
-                    key={`${item.href}:${parentActive}`}
-                    defaultOpen={parentActive}
+                    key={item.href}
+                    open={isExpanded(item)}
+                    onOpenChange={(open) => toggle(item.href, open)}
                     render={<SidebarMenuItem />}
                   >
                     <CollapsibleTrigger
