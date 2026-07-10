@@ -5,7 +5,7 @@ import { Suspense } from "react"
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
@@ -13,18 +13,18 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 
 export const metadata = { title: "通知" }
 
-const PAGE_SIZE = 20
-
-type SearchParams = Promise<{ page?: string }>
+type SearchParams = Promise<{ page?: string; size?: string }>
 
 // 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
 // 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
+  const pageSize = parsePageSize(searchParams.size)
+
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const currentUser = await getMe()
 
@@ -46,14 +46,14 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
       />
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
-        <MyNotifications offset={offset} />
+        <MyNotifications offset={offset} pageSize={pageSize} />
       </Suspense>
     </div>
   )
 }
 
-async function MyNotifications(props: { offset: number }) {
-  const result = await getMyNotifications({ limit: PAGE_SIZE, offset: props.offset })
+async function MyNotifications(props: { offset: number; pageSize: number }) {
+  const result = await getMyNotifications({ limit: props.pageSize, offset: props.offset })
 
   if (result instanceof Error) {
     return <FetchError message="通知一覧の取得に失敗しました" />
@@ -66,8 +66,10 @@ async function MyNotifications(props: { offset: number }) {
       <TablePagination
         pathname="/notifications"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
+        extraParams={{ size: String(props.pageSize) }}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

@@ -6,7 +6,7 @@ import { LeaveAdminTable } from "@/app/(app)/leave/admin/_components/leave-admin
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import {
   getLeaveAdminList,
@@ -18,8 +18,6 @@ import type { LeaveStatus, LeaveType } from "@/lib/api/types/leave-types"
 import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
 
 export const metadata = { title: "休暇申請管理" }
-
-const PAGE_SIZE = 20
 
 const SORT_VALUES: ReadonlyArray<LeaveAdminSort> = [
   "created_at_desc",
@@ -51,11 +49,13 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
 
   const to = toSingleValue(params.to)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const sort = toSort(toSingleValue(params.sort))
 
@@ -107,7 +107,7 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <LeaveAdminSection filter={filter} offset={offset} sort={sort} extraParams={extraParams} />
+        <LeaveAdminSection filter={filter} offset={offset} pageSize={pageSize} sort={sort} extraParams={extraParams} />
       </Suspense>
     </div>
   )
@@ -116,11 +116,12 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
 async function LeaveAdminSection(props: {
   filter: LeaveAdminFilter
   offset: number
+  pageSize: number
   sort: LeaveAdminSort
   extraParams: Record<string, string | undefined>
 }) {
   const result = await getLeaveAdminList(props.filter, {
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
     sort: props.sort,
   })
@@ -132,6 +133,7 @@ async function LeaveAdminSection(props: {
   const paginationExtraParams: Record<string, string | undefined> = {
     ...props.extraParams,
     sort: props.sort === "created_at_desc" ? undefined : props.sort,
+    size: String(props.pageSize),
   }
 
   return (
@@ -146,9 +148,10 @@ async function LeaveAdminSection(props: {
       <TablePagination
         pathname="/leave/admin"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={paginationExtraParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

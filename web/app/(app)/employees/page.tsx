@@ -3,6 +3,7 @@ import { EmployeeListSection } from "@/app/(app)/employees/_components/employee-
 import { EmployeeSearchForm } from "@/app/(app)/employees/_components/employee-search-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { parsePageSize } from "@/components/table-pagination"
 import type {
   EmployeeSearchFilter,
   EmployeeStatusFilter,
@@ -21,11 +22,11 @@ export default async function EmployeesPage(props: Props) {
 
   const filter = toFilter(params)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
-
-  const pageSize = 20
 
   const offset = (page - 1) * pageSize
 
