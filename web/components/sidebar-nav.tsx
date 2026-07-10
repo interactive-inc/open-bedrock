@@ -40,7 +40,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useDeferredValue, useState } from "react"
+import { useCallback, useDeferredValue, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -582,9 +582,72 @@ function isParentActive(pathname: string, item: NavItem): boolean {
   return pathname.startsWith(`${item.href}/`)
 }
 
+const SIDEBAR_EXPANDED_KEY = "sidebar-expanded"
+
+/**
+ * localStorage にアコーディオンの展開状態を保存・復元する。
+ * アクティブな項目は常に展開し、ユーザーが手動で開閉した状態をページ遷移後も維持する。
+ */
+function useExpandedState(pathname: string) {
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+
+      if (stored !== null) {
+        setExpanded(new Set(JSON.parse(stored)))
+      }
+    } catch {
+      // localStorage が使えない場合は空 Set のまま
+    }
+
+    setInitialized(true)
+  }, [])
+
+  const toggle = useCallback((href: string, open: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+
+      if (open) {
+        next.add(href)
+      } else {
+        next.delete(href)
+      }
+
+      try {
+        localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...next]))
+      } catch {
+        // localStorage が使えない場合は無視
+      }
+
+      return next
+    })
+  }, [])
+
+  const isExpanded = useCallback(
+    (item: NavItem): boolean => {
+      // まだ localStorage を読み込んでいない初期状態ではアクティブなもののみ展開
+      if (!initialized) return isParentActive(pathname, item)
+
+      // アクティブなアイテムは常に展開
+      if (isParentActive(pathname, item)) return true
+
+      // localStorage に保存された状態を使用
+      return expanded.has(item.href)
+    },
+    [expanded, initialized, pathname],
+  )
+
+  return { isExpanded, toggle }
+}
+
 /**
  * オブジェクト軸でグループ化したサイドバーナビ。各オブジェクトの CRUD を Collapsible で展開する。
  * 入力でメニューを絞り込み、現在のパスを含む親は自動で開いた状態にする。
+ * アコーディオンの展開状態は localStorage に保持し、ページ遷移・リロード後も維持される。
  */
 export function SidebarNav(props: Props) {
   const pathname = usePathname()
@@ -598,6 +661,8 @@ export function SidebarNav(props: Props) {
   const visibleGroups = filterGroups(deferredQuery, props.permissions)
 
   const highlightQuery = deferredQuery.trim().toLowerCase()
+
+  const { isExpanded, toggle } = useExpandedState(pathname)
 
   return (
     <>
@@ -619,87 +684,88 @@ export function SidebarNav(props: Props) {
       </SidebarGroup>
 
       <div className={isStale ? "opacity-60 transition-opacity duration-200" : undefined}>
-      {visibleGroups.map((group) => (
-        <SidebarGroup key={group.heading}>
-          <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
+        {visibleGroups.map((group) => (
+          <SidebarGroup key={group.heading}>
+            <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
 
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {group.items.map((item) => {
-                const Icon = item.icon
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const Icon = item.icon
 
-                const hasChildren = item.children !== undefined && item.children.length > 0
+                  const hasChildren = item.children !== undefined && item.children.length > 0
 
-                const parentActive = isParentActive(pathname, item)
+                  const parentActive = isParentActive(pathname, item)
 
-                if (!hasChildren) {
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        isActive={parentActive}
-                        tooltip={item.label}
-                        render={<Link href={item.href} />}
-                      >
-                        <Icon />
-                        <span>
-                          <HighlightText text={item.label} query={highlightQuery} />
-                        </span>
-
-                        {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
-                          <Badge
-                            className="ml-auto"
-                            aria-label={`未読 ${props.unreadNotificationCount} 件`}
-                          >
-                            {props.unreadNotificationCount}
-                          </Badge>
-                        ) : null}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                }
-
-                return (
-                  <Collapsible
-                    key={`${item.href}:${parentActive}`}
-                    defaultOpen={parentActive}
-                    render={<SidebarMenuItem />}
-                  >
-                    <CollapsibleTrigger
-                      render={
-                        <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
+                  if (!hasChildren) {
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          isActive={parentActive}
+                          tooltip={item.label}
+                          render={<Link href={item.href} />}
+                        >
                           <Icon />
                           <span>
                             <HighlightText text={item.label} query={highlightQuery} />
                           </span>
-                          <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
-                        </SidebarMenuButton>
-                      }
-                    />
 
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {(item.children ?? []).map((child) => (
-                          <SidebarMenuSubItem key={child.href}>
-                            <SidebarMenuSubButton
-                              isActive={isSubItemActive(pathname, child.href)}
-                              render={<Link href={child.href} />}
+                          {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
+                            <Badge
+                              className="ml-auto"
+                              aria-label={`未読 ${props.unreadNotificationCount} 件`}
                             >
-                              <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
-                              <span>
-                                <HighlightText text={child.label} query={highlightQuery} />
-                              </span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
+                              {props.unreadNotificationCount}
+                            </Badge>
+                          ) : null}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  }
+
+                  return (
+                    <Collapsible
+                      key={item.href}
+                      open={isExpanded(item)}
+                      onOpenChange={(open) => toggle(item.href, open)}
+                      render={<SidebarMenuItem />}
+                    >
+                      <CollapsibleTrigger
+                        render={
+                          <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
+                            <Icon />
+                            <span>
+                              <HighlightText text={item.label} query={highlightQuery} />
+                            </span>
+                            <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
+                          </SidebarMenuButton>
+                        }
+                      />
+
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {(item.children ?? []).map((child) => (
+                            <SidebarMenuSubItem key={child.href}>
+                              <SidebarMenuSubButton
+                                isActive={isSubItemActive(pathname, child.href)}
+                                render={<Link href={child.href} />}
+                              >
+                                <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
+                                <span>
+                                  <HighlightText text={child.label} query={highlightQuery} />
+                                </span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </div>
 
       {visibleGroups.length === 0 ? (
