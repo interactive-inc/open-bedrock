@@ -1,6 +1,6 @@
 import { EmployeeTable } from "@/app/(app)/employees/_components/employee-table"
 import { FetchError } from "@/components/fetch-error"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination } from "@/components/table-pagination"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import type { EmployeeSearchFilter } from "@/lib/api/types/employee-search-filter"
 
@@ -22,6 +22,7 @@ export async function EmployeeListSection(props: Props) {
     q: props.filter.q ?? undefined,
     dept: props.filter.dept ?? undefined,
     status: props.filter.status ?? undefined,
+    size: String(props.limit),
   }
 
   return (
@@ -34,6 +35,7 @@ export async function EmployeeListSection(props: Props) {
         limit={props.limit}
         offset={props.offset}
         extraParams={filterParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

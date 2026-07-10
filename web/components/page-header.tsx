@@ -71,7 +71,7 @@ export function PageHeader(props: Props) {
         </div>
 
         {props.actions !== undefined ? (
-          <div className="flex items-center gap-2">{props.actions}</div>
+          <div className="flex flex-wrap items-center gap-2">{props.actions}</div>
         ) : null}
       </div>
     </div>
