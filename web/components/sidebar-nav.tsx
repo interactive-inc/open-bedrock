@@ -1,30 +1,38 @@
 "use client"
 
 import {
+  BookOpen,
   Boxes,
   Briefcase,
   CalendarClock,
   CalendarDays,
+  CalendarOff,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Coins,
+  DoorOpen,
   FileText,
   GitBranch,
   GraduationCap,
+  HandHelping,
   HeartHandshake,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   type LucideIcon,
   MessagesSquare,
   Package,
+  PartyPopper,
   Plane,
+  ScrollText,
   Search,
   ShieldCheck,
   Sparkles,
   Target,
   TimerReset,
+  UserMinus,
   Users,
   Wallet,
   Workflow,
@@ -32,7 +40,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useDeferredValue, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -282,7 +290,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "休暇",
         href: "/leave",
-        icon: Plane,
+        icon: CalendarOff,
         children: [
           { label: "一覧", href: "/leave" },
           { label: "新規", href: "/leave/new" },
@@ -326,7 +334,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ナレッジ",
         href: "/knowledge",
-        icon: FileText,
+        icon: BookOpen,
         children: [
           { label: "一覧", href: "/knowledge" },
           { label: "新規", href: "/knowledge/new" },
@@ -383,7 +391,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "会議室",
         href: "/rooms",
-        icon: CalendarClock,
+        icon: DoorOpen,
         children: [
           { label: "空き状況", href: "/rooms" },
           { label: "自分の予約", href: "/rooms/me" },
@@ -424,7 +432,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "証明書",
         href: "/certificate-requests",
-        icon: FileText,
+        icon: ScrollText,
         children: [
           { label: "自分の依頼", href: "/certificate-requests" },
           { label: "新規依頼", href: "/certificate-requests/new" },
@@ -442,7 +450,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "介護休業",
         href: "/family-care-leaves",
-        icon: HeartHandshake,
+        icon: HandHelping,
         children: [
           { label: "一覧", href: "/family-care-leaves" },
           { label: "新規申請", href: "/family-care-leaves/new" },
@@ -451,7 +459,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ライフイベント",
         href: "/life-events",
-        icon: ClipboardList,
+        icon: PartyPopper,
         children: [
           { label: "一覧", href: "/life-events" },
           { label: "新規登録", href: "/life-events/new" },
@@ -460,7 +468,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "退職届",
         href: "/resignations",
-        icon: FileText,
+        icon: UserMinus,
         children: [
           { label: "一覧", href: "/resignations" },
           { label: "新規申請", href: "/resignations/new" },
@@ -484,7 +492,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ロール管理",
         href: "/admin/roles",
-        icon: ShieldCheck,
+        icon: KeyRound,
         requiredPermission: "iam:manage_roles",
       },
       {
@@ -529,6 +537,35 @@ function filterGroups(query: string, permissions: ReadonlyArray<string>): Readon
   return filtered
 }
 
+/** テキスト中の query にマッチする部分を <mark> で囲んで返す。 */
+function HighlightText(props: { text: string; query: string }) {
+  if (props.query === "") return <>{props.text}</>
+
+  const lowerText = props.text.toLowerCase()
+
+  const lowerQuery = props.query.toLowerCase()
+
+  const index = lowerText.indexOf(lowerQuery)
+
+  if (index === -1) return <>{props.text}</>
+
+  const before = props.text.slice(0, index)
+
+  const match = props.text.slice(index, index + props.query.length)
+
+  const after = props.text.slice(index + props.query.length)
+
+  return (
+    <>
+      {before}
+      <mark className="rounded-sm bg-yellow-200/60 text-inherit dark:bg-yellow-500/30">
+        {match}
+      </mark>
+      {after}
+    </>
+  )
+}
+
 function isSubItemActive(pathname: string, href: string): boolean {
   return pathname === href
 }
@@ -554,7 +591,13 @@ export function SidebarNav(props: Props) {
 
   const [filterQuery, setFilterQuery] = useState("")
 
-  const visibleGroups = filterGroups(filterQuery, props.permissions)
+  const deferredQuery = useDeferredValue(filterQuery)
+
+  const isStale = filterQuery !== deferredQuery
+
+  const visibleGroups = filterGroups(deferredQuery, props.permissions)
+
+  const highlightQuery = deferredQuery.trim().toLowerCase()
 
   return (
     <>
@@ -575,6 +618,7 @@ export function SidebarNav(props: Props) {
         </SidebarGroupContent>
       </SidebarGroup>
 
+      <div className={isStale ? "opacity-60 transition-opacity duration-200" : undefined}>
       {visibleGroups.map((group) => (
         <SidebarGroup key={group.heading}>
           <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
@@ -597,7 +641,9 @@ export function SidebarNav(props: Props) {
                         render={<Link href={item.href} />}
                       >
                         <Icon />
-                        <span>{item.label}</span>
+                        <span>
+                          <HighlightText text={item.label} query={highlightQuery} />
+                        </span>
 
                         {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
                           <Badge
@@ -622,7 +668,9 @@ export function SidebarNav(props: Props) {
                       render={
                         <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
                           <Icon />
-                          <span>{item.label}</span>
+                          <span>
+                            <HighlightText text={item.label} query={highlightQuery} />
+                          </span>
                           <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
                         </SidebarMenuButton>
                       }
@@ -637,7 +685,9 @@ export function SidebarNav(props: Props) {
                               render={<Link href={child.href} />}
                             >
                               <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
-                              <span>{child.label}</span>
+                              <span>
+                                <HighlightText text={child.label} query={highlightQuery} />
+                              </span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -650,6 +700,7 @@ export function SidebarNav(props: Props) {
           </SidebarGroupContent>
         </SidebarGroup>
       ))}
+      </div>
 
       {visibleGroups.length === 0 ? (
         <SidebarGroup>

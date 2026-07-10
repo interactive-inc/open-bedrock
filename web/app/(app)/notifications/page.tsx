@@ -2,6 +2,10 @@ import { FetchError } from "@/components/fetch-error"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { Suspense } from "react"
+import {
+  NotificationFilter,
+  type NotificationFilterValue,
+} from "@/app/(app)/notifications/_components/notification-filter"
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
@@ -13,10 +17,23 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 
 export const metadata = { title: "通知" }
 
-type SearchParams = Promise<{ page?: string; size?: string }>
+type SearchParams = Promise<{ page?: string; size?: string; filter?: string }>
+
+function toFilterValue(raw: string | undefined): NotificationFilterValue {
+  if (raw === "unread") return "unread"
+  if (raw === "read") return "read"
+  return "all"
+}
+
+function filterToIsRead(filter: NotificationFilterValue): boolean | undefined {
+  if (filter === "unread") return false
+  if (filter === "read") return true
+  return undefined
+}
 
 // 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
 // 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
+// ?filter=unread|read で未読/既読の絞り込みができる。
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
@@ -26,9 +43,13 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
 
   const offset = (page - 1) * pageSize
 
+  const filter = toFilterValue(searchParams.filter)
+
   const currentUser = await getMe()
 
   const canCreate = currentUser instanceof Error ? false : canManageNotifications(currentUser.role)
+
+  const suspenseKey = `${filter}:${page}:${pageSize}`
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,18 +66,31 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
         }
       />
 
-      <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
-        <MyNotifications offset={offset} pageSize={pageSize} />
+      <NotificationFilter current={filter} />
+
+      <Suspense key={suspenseKey} fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
+        <MyNotifications offset={offset} pageSize={pageSize} filter={filter} />
       </Suspense>
     </div>
   )
 }
 
-async function MyNotifications(props: { offset: number; pageSize: number }) {
-  const result = await getMyNotifications({ limit: props.pageSize, offset: props.offset })
+async function MyNotifications(props: {
+  offset: number
+  pageSize: number
+  filter: NotificationFilterValue
+}) {
+  const isRead = filterToIsRead(props.filter)
+
+  const result = await getMyNotifications({ limit: props.pageSize, offset: props.offset, isRead })
 
   if (result instanceof Error) {
     return <FetchError message="通知一覧の取得に失敗しました" />
+  }
+
+  const extraParams = {
+    size: String(props.pageSize),
+    ...(props.filter !== "all" ? { filter: props.filter } : {}),
   }
 
   return (
@@ -68,7 +102,7 @@ async function MyNotifications(props: { offset: number; pageSize: number }) {
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}
-        extraParams={{ size: String(props.pageSize) }}
+        extraParams={extraParams}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
