@@ -41,7 +41,10 @@ export class RegisterEmployee {
     }
 
     // employee:assign_role 権限がなければ member 以外のロールを付与できない
-    if (command.employee.role !== "member" && !hasPermission(command.session, "employee:assign_role")) {
+    if (
+      command.employee.role !== "member" &&
+      !hasPermission(command.session, "employee:assign_role")
+    ) {
       return new ForbiddenError(
         "only admin can assign non-member roles",
         "role_escalation_forbidden",
