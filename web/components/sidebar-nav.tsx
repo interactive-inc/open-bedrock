@@ -32,7 +32,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useDeferredValue, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -529,6 +529,35 @@ function filterGroups(query: string, permissions: ReadonlyArray<string>): Readon
   return filtered
 }
 
+/** テキスト中の query にマッチする部分を <mark> で囲んで返す。 */
+function HighlightText(props: { text: string; query: string }) {
+  if (props.query === "") return <>{props.text}</>
+
+  const lowerText = props.text.toLowerCase()
+
+  const lowerQuery = props.query.toLowerCase()
+
+  const index = lowerText.indexOf(lowerQuery)
+
+  if (index === -1) return <>{props.text}</>
+
+  const before = props.text.slice(0, index)
+
+  const match = props.text.slice(index, index + props.query.length)
+
+  const after = props.text.slice(index + props.query.length)
+
+  return (
+    <>
+      {before}
+      <mark className="rounded-sm bg-yellow-200/60 text-inherit dark:bg-yellow-500/30">
+        {match}
+      </mark>
+      {after}
+    </>
+  )
+}
+
 function isSubItemActive(pathname: string, href: string): boolean {
   return pathname === href
 }
@@ -554,7 +583,13 @@ export function SidebarNav(props: Props) {
 
   const [filterQuery, setFilterQuery] = useState("")
 
-  const visibleGroups = filterGroups(filterQuery, props.permissions)
+  const deferredQuery = useDeferredValue(filterQuery)
+
+  const isStale = filterQuery !== deferredQuery
+
+  const visibleGroups = filterGroups(deferredQuery, props.permissions)
+
+  const highlightQuery = deferredQuery.trim().toLowerCase()
 
   return (
     <>
@@ -575,6 +610,7 @@ export function SidebarNav(props: Props) {
         </SidebarGroupContent>
       </SidebarGroup>
 
+      <div className={isStale ? "opacity-60 transition-opacity duration-200" : undefined}>
       {visibleGroups.map((group) => (
         <SidebarGroup key={group.heading}>
           <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
@@ -597,7 +633,9 @@ export function SidebarNav(props: Props) {
                         render={<Link href={item.href} />}
                       >
                         <Icon />
-                        <span>{item.label}</span>
+                        <span>
+                          <HighlightText text={item.label} query={highlightQuery} />
+                        </span>
 
                         {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
                           <Badge
@@ -622,7 +660,9 @@ export function SidebarNav(props: Props) {
                       render={
                         <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
                           <Icon />
-                          <span>{item.label}</span>
+                          <span>
+                            <HighlightText text={item.label} query={highlightQuery} />
+                          </span>
                           <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
                         </SidebarMenuButton>
                       }
@@ -637,7 +677,9 @@ export function SidebarNav(props: Props) {
                               render={<Link href={child.href} />}
                             >
                               <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
-                              <span>{child.label}</span>
+                              <span>
+                                <HighlightText text={child.label} query={highlightQuery} />
+                              </span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -650,6 +692,7 @@ export function SidebarNav(props: Props) {
           </SidebarGroupContent>
         </SidebarGroup>
       ))}
+      </div>
 
       {visibleGroups.length === 0 ? (
         <SidebarGroup>
