@@ -2,7 +2,7 @@ import { FetchError } from "@/components/fetch-error"
 import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
 import { Suspense } from "react"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { InboxDecisionForm } from "@/app/(app)/applications/inbox/_components/inbox-decision-form"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
@@ -24,11 +24,9 @@ import { canViewAllApplications } from "@/lib/application/can-view-all-applicati
 
 export const metadata = { title: "承認待ちの申請" }
 
-const PAGE_SIZE = 20
-
 const SORT_VALUES: ReadonlyArray<ApplicationInboxSort> = ["created_at_desc", "created_at_asc"]
 
-type SearchParams = Promise<{ page?: string; sort?: string }>
+type SearchParams = Promise<{ page?: string; size?: string; sort?: string }>
 
 function toSort(raw: string | undefined): ApplicationInboxSort {
   if (raw !== undefined && (SORT_VALUES as ReadonlyArray<string>).includes(raw)) {
@@ -42,9 +40,11 @@ function toSort(raw: string | undefined): ApplicationInboxSort {
 export default async function ApplicationInboxPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
+  const pageSize = parsePageSize(searchParams.size)
+
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const sort = toSort(searchParams.sort)
 
@@ -79,15 +79,15 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
       />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <InboxTable offset={offset} sort={sort} />
+        <InboxTable offset={offset} pageSize={pageSize} sort={sort} />
       </Suspense>
     </div>
   )
 }
 
-async function InboxTable(props: { offset: number; sort: ApplicationInboxSort }) {
+async function InboxTable(props: { offset: number; pageSize: number; sort: ApplicationInboxSort }) {
   const result = await getApplicationInbox({
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
     sort: props.sort,
   })
@@ -157,9 +157,10 @@ async function InboxTable(props: { offset: number; sort: ApplicationInboxSort })
       <TablePagination
         pathname="/applications/inbox"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
-        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort }}
+        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort, size: String(props.pageSize) }}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

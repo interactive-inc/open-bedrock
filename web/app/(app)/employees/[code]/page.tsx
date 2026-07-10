@@ -1,8 +1,8 @@
 import { Suspense } from "react"
 import { EmployeeDetail } from "@/app/(app)/employees/[code]/_components/employee-detail"
 import { BackButton } from "@/components/back-button"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
 import { notFound } from "next/navigation"
@@ -31,13 +31,9 @@ export default async function EmployeeDetailPage(props: Props) {
         actions={<BackButton href="/employees" label="一覧に戻る" />}
       />
 
-      <Suspense fallback={<EmployeeDetailSkeleton />}>
+      <Suspense fallback={<DetailSkeleton fields={5} />}>
         <EmployeeDetail code={params.code} />
       </Suspense>
     </div>
   )
-}
-
-function EmployeeDetailSkeleton() {
-  return <Skeleton className="h-64 w-full" />
 }

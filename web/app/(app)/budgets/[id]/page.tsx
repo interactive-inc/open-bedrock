@@ -6,8 +6,8 @@ import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getBudgetDetail } from "@/lib/api/get-budget-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { requirePermission } from "@/lib/auth/require-permission"
@@ -33,7 +33,7 @@ export default async function BudgetDetailPage(props: Props) {
         actions={<BackButton href="/budgets" label="予算一覧に戻る" />}
       />
 
-      <Suspense fallback={<BudgetDetailSkeleton />}>
+      <Suspense fallback={<DetailSkeleton fields={6} />}>
         <BudgetDetailView id={params.id} />
       </Suspense>
     </div>
@@ -135,6 +135,3 @@ async function BudgetDetailView(props: ViewProps) {
   )
 }
 
-function BudgetDetailSkeleton() {
-  return <Skeleton className="h-64 w-full" />
-}

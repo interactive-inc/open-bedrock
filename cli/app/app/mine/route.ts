@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte app mine [--status <s>]`
+export const help = `karte app mine [--status pending|approved|rejected]`
 
 const json = () =>
   zValidator(

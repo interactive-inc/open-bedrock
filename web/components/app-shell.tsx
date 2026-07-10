@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { CommandPalette } from "@/components/command-palette"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarUserMenu } from "@/components/sidebar-user-menu"
 import {
@@ -81,6 +82,8 @@ export function AppShell(props: Props) {
           {props.children}
         </main>
       </SidebarInset>
+
+      <CommandPalette permissions={props.currentUser.permissions} />
     </SidebarProvider>
   )
 }

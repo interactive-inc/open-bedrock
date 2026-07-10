@@ -1,6 +1,7 @@
 "use client"
 
-import { useActionState } from "react"
+import { Eye, EyeOff } from "lucide-react"
+import { useActionState, useState } from "react"
 import { loginAction } from "@/lib/auth/login-action"
 import type { LoginState } from "@/lib/auth/login-action"
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,8 @@ export function LoginForm() {
 
   const isPending = action[2]
 
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <form action={formAction}>
       <FieldGroup>
@@ -44,13 +47,27 @@ export function LoginForm() {
         <Field>
           <FieldLabel htmlFor="login-password">{t("パスワード")}</FieldLabel>
 
-          <Input
-            id="login-password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
+          <div className="relative">
+            <Input
+              id="login-password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="pr-10"
+            />
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? t("パスワードを隠す") : t("パスワードを表示")}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </Button>
+          </div>
         </Field>
 
         {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

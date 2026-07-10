@@ -13,7 +13,7 @@ export default factory.createHandlers(
       help: z.string().optional(),
       name: z.string().optional(),
       email: z.string().optional(),
-      role: z.string().optional(),
+      role: z.enum(["admin", "member", "manager", "hr"]).optional(),
       "dept-id": z.coerce.number().int().optional(),
       "dept-name": z.string().optional(),
       position: z.string().optional(),

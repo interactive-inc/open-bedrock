@@ -6,7 +6,7 @@ import { RedemptionAdminTable } from "@/app/(app)/thanks/admin/_components/redem
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import {
@@ -18,8 +18,6 @@ import {
 import { canViewAllRedemptions } from "@/lib/thanks/can-view-all-redemptions"
 
 export const metadata = { title: "交換申請管理" }
-
-const PAGE_SIZE = 20
 
 const SORT_VALUES: ReadonlyArray<RedemptionAdminSort> = ["created_at_desc", "created_at_asc"]
 
@@ -44,11 +42,13 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
 
   const to = toSingleValue(params.to)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const sort = toSort(toSingleValue(params.sort))
 
@@ -109,6 +109,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
         <RedemptionAdminSection
           filter={filter}
           offset={offset}
+          pageSize={pageSize}
           sort={sort}
           extraParams={extraParams}
         />
@@ -120,11 +121,12 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
 async function RedemptionAdminSection(props: {
   filter: RedemptionAdminFilter
   offset: number
+  pageSize: number
   sort: RedemptionAdminSort
   extraParams: Record<string, string | undefined>
 }) {
   const result = await getRedemptionAdminList(props.filter, {
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
     sort: props.sort,
   })
@@ -136,6 +138,7 @@ async function RedemptionAdminSection(props: {
   const paginationExtraParams: Record<string, string | undefined> = {
     ...props.extraParams,
     sort: props.sort === "created_at_desc" ? undefined : props.sort,
+    size: String(props.pageSize),
   }
 
   return (
@@ -150,9 +153,10 @@ async function RedemptionAdminSection(props: {
       <TablePagination
         pathname="/thanks/admin"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={paginationExtraParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )
