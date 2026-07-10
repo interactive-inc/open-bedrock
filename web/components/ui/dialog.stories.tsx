@@ -46,9 +46,7 @@ export const WithoutCloseButton: Story = {
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>重要な確認</DialogTitle>
-          <DialogDescription>
-            この操作は取り消すことができません。続行しますか？
-          </DialogDescription>
+          <DialogDescription>この操作は取り消すことができません。続行しますか？</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>戻る</DialogClose>

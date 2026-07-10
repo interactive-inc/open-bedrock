@@ -46,9 +46,7 @@ export const Default: Story = {
             <TableCell>{emp.department}</TableCell>
             <TableCell>{emp.role}</TableCell>
             <TableCell>
-              <Badge
-                variant={emp.status === "休暇中" ? "secondary" : "default"}
-              >
+              <Badge variant={emp.status === "休暇中" ? "secondary" : "default"}>
                 {emp.status}
               </Badge>
             </TableCell>

@@ -31,9 +31,7 @@ export const Destructive: Story = {
   render: () => (
     <Alert variant="destructive">
       <AlertTitle>エラー</AlertTitle>
-      <AlertDescription>
-        データの保存に失敗しました。再度お試しください。
-      </AlertDescription>
+      <AlertDescription>データの保存に失敗しました。再度お試しください。</AlertDescription>
     </Alert>
   ),
 }
@@ -42,9 +40,7 @@ export const WithAction: Story = {
   render: () => (
     <Alert>
       <AlertTitle>更新があります</AlertTitle>
-      <AlertDescription>
-        システムの更新が利用可能です。
-      </AlertDescription>
+      <AlertDescription>システムの更新が利用可能です。</AlertDescription>
       <AlertAction>
         <Button size="sm">更新する</Button>
       </AlertAction>
@@ -57,9 +53,7 @@ export const InfoAlert: Story = {
     <Alert>
       <Info className="h-4 w-4" />
       <AlertTitle>ヒント</AlertTitle>
-      <AlertDescription>
-        Ctrl + S でいつでも保存できます。
-      </AlertDescription>
+      <AlertDescription>Ctrl + S でいつでも保存できます。</AlertDescription>
     </Alert>
   ),
 }
@@ -69,9 +63,7 @@ export const SuccessAlert: Story = {
     <Alert>
       <CheckCircle2 className="h-4 w-4" />
       <AlertTitle>成功</AlertTitle>
-      <AlertDescription>
-        従業員の情報が正常に保存されました。
-      </AlertDescription>
+      <AlertDescription>従業員の情報が正常に保存されました。</AlertDescription>
     </Alert>
   ),
 }

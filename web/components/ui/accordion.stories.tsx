@@ -33,7 +33,8 @@ export const Default: Story = {
       <AccordionItem value="item-3">
         <AccordionTrigger>サポート体制について</AccordionTrigger>
         <AccordionContent>
-          平日 9:00〜18:00 でチャットサポートをご利用いただけます。メールでのお問い合わせは 24 時間受け付けています。
+          平日 9:00〜18:00 でチャットサポートをご利用いただけます。メールでのお問い合わせは 24
+          時間受け付けています。
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -58,7 +59,8 @@ export const Multiple: Story = {
       <AccordionItem value="item-3">
         <AccordionTrigger>サポート体制について</AccordionTrigger>
         <AccordionContent>
-          平日 9:00〜18:00 でチャットサポートをご利用いただけます。メールでのお問い合わせは 24 時間受け付けています。
+          平日 9:00〜18:00 でチャットサポートをご利用いただけます。メールでのお問い合わせは 24
+          時間受け付けています。
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -97,7 +99,8 @@ export const FAQ: Story = {
       <AccordionItem value="faq-3">
         <AccordionTrigger>休暇申請の承認フローはどうなっていますか？</AccordionTrigger>
         <AccordionContent>
-          申請者 → 直属の上長 → 人事部 の順で承認されます。承認・却下はメールとシステム内通知でお知らせします。
+          申請者 → 直属の上長 → 人事部
+          の順で承認されます。承認・却下はメールとシステム内通知でお知らせします。
         </AccordionContent>
       </AccordionItem>
       <AccordionItem value="faq-4">

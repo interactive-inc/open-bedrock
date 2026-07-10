@@ -46,19 +46,13 @@ export const LineVariant: Story = {
         <TabsTrigger value="evaluation">評価</TabsTrigger>
       </TabsList>
       <TabsContent value="basic" className="mt-4">
-        <p className="text-sm text-muted-foreground">
-          基本情報タブの内容がここに表示されます。
-        </p>
+        <p className="text-sm text-muted-foreground">基本情報タブの内容がここに表示されます。</p>
       </TabsContent>
       <TabsContent value="attendance" className="mt-4">
-        <p className="text-sm text-muted-foreground">
-          勤怠タブの内容がここに表示されます。
-        </p>
+        <p className="text-sm text-muted-foreground">勤怠タブの内容がここに表示されます。</p>
       </TabsContent>
       <TabsContent value="evaluation" className="mt-4">
-        <p className="text-sm text-muted-foreground">
-          評価タブの内容がここに表示されます。
-        </p>
+        <p className="text-sm text-muted-foreground">評価タブの内容がここに表示されます。</p>
       </TabsContent>
     </Tabs>
   ),

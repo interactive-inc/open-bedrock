@@ -1,10 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip"
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { Settings, Plus } from "lucide-react"
 
@@ -27,9 +22,7 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   render: () => (
     <Tooltip>
-      <TooltipTrigger render={<Button variant="outline" />}>
-        ホバーしてください
-      </TooltipTrigger>
+      <TooltipTrigger render={<Button variant="outline" />}>ホバーしてください</TooltipTrigger>
       <TooltipContent>
         <p>ツールチップのテキスト</p>
       </TooltipContent>
@@ -53,9 +46,7 @@ export const OnIconButton: Story = {
 export const LongText: Story = {
   render: () => (
     <Tooltip>
-      <TooltipTrigger render={<Button variant="outline" />}>
-        詳しい説明
-      </TooltipTrigger>
+      <TooltipTrigger render={<Button variant="outline" />}>詳しい説明</TooltipTrigger>
       <TooltipContent>
         <p>この操作は取り消すことができません。実行前に内容をご確認ください。</p>
       </TooltipContent>
