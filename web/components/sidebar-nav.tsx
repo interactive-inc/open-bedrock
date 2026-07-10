@@ -1,30 +1,38 @@
 "use client"
 
 import {
+  BookOpen,
   Boxes,
   Briefcase,
   CalendarClock,
   CalendarDays,
+  CalendarOff,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Coins,
+  DoorOpen,
   FileText,
   GitBranch,
   GraduationCap,
+  HandHelping,
   HeartHandshake,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   type LucideIcon,
   MessagesSquare,
   Package,
+  PartyPopper,
   Plane,
+  ScrollText,
   Search,
   ShieldCheck,
   Sparkles,
   Target,
   TimerReset,
+  UserMinus,
   Users,
   Wallet,
   Workflow,
@@ -282,7 +290,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "休暇",
         href: "/leave",
-        icon: Plane,
+        icon: CalendarOff,
         children: [
           { label: "一覧", href: "/leave" },
           { label: "新規", href: "/leave/new" },
@@ -326,7 +334,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ナレッジ",
         href: "/knowledge",
-        icon: FileText,
+        icon: BookOpen,
         children: [
           { label: "一覧", href: "/knowledge" },
           { label: "新規", href: "/knowledge/new" },
@@ -383,7 +391,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "会議室",
         href: "/rooms",
-        icon: CalendarClock,
+        icon: DoorOpen,
         children: [
           { label: "空き状況", href: "/rooms" },
           { label: "自分の予約", href: "/rooms/me" },
@@ -424,7 +432,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "証明書",
         href: "/certificate-requests",
-        icon: FileText,
+        icon: ScrollText,
         children: [
           { label: "自分の依頼", href: "/certificate-requests" },
           { label: "新規依頼", href: "/certificate-requests/new" },
@@ -442,7 +450,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "介護休業",
         href: "/family-care-leaves",
-        icon: HeartHandshake,
+        icon: HandHelping,
         children: [
           { label: "一覧", href: "/family-care-leaves" },
           { label: "新規申請", href: "/family-care-leaves/new" },
@@ -451,7 +459,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ライフイベント",
         href: "/life-events",
-        icon: ClipboardList,
+        icon: PartyPopper,
         children: [
           { label: "一覧", href: "/life-events" },
           { label: "新規登録", href: "/life-events/new" },
@@ -460,7 +468,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "退職届",
         href: "/resignations",
-        icon: FileText,
+        icon: UserMinus,
         children: [
           { label: "一覧", href: "/resignations" },
           { label: "新規申請", href: "/resignations/new" },
@@ -484,7 +492,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ロール管理",
         href: "/admin/roles",
-        icon: ShieldCheck,
+        icon: KeyRound,
         requiredPermission: "iam:manage_roles",
       },
       {
