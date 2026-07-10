@@ -124,7 +124,7 @@ export function SidebarUserMenu(props: Props) {
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogCancel autoFocus>キャンセル</AlertDialogCancel>
 
             <form action={props.onLogout}>
               <AlertDialogAction type="submit" variant="destructive">
