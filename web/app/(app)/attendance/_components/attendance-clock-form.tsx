@@ -1,5 +1,6 @@
 "use client"
 
+import { CheckCircle, Loader2 } from "lucide-react"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { clockInAction, clockOutAction } from "@/app/(app)/attendance/actions"
@@ -13,10 +14,11 @@ type Props = {
   mode: "clock-in" | "clock-out"
 }
 
-const initialState: AttendanceActionState = { ok: false, error: null }
+const initialState: AttendanceActionState = { ok: false, error: null, clockedAt: null }
 
 // 打刻フォーム。mode に応じて出勤 / 退勤の Server Action を useActionState 経由で呼ぶ。
 // reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+// 打刻成功時はフォーム内にチェックマークと時刻を表示して視覚フィードバックを強化する。
 export function AttendanceClockForm(props: Props) {
   const isClockIn = props.mode === "clock-in"
 
@@ -48,9 +50,25 @@ export function AttendanceClockForm(props: Props) {
 
   const isPending = action[2]
 
+  const borderClass = state.ok
+    ? "border-green-500/50 bg-green-50/50 dark:border-green-500/30 dark:bg-green-950/20"
+    : ""
+
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-2xl border p-4">
-      <h2 className="text-lg font-medium">{label}打刻</h2>
+    <form
+      action={formAction}
+      className={`flex flex-col gap-3 rounded-2xl border p-4 transition-colors duration-300 ${borderClass}`}
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">{label}打刻</h2>
+
+        {state.ok && state.clockedAt !== null ? (
+          <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+            <CheckCircle className="size-4" />
+            <span>{state.clockedAt} 打刻済み</span>
+          </div>
+        ) : null}
+      </div>
 
       <Field>
         <FieldLabel htmlFor={`${props.mode}-note`}>メモ</FieldLabel>
@@ -61,8 +79,24 @@ export function AttendanceClockForm(props: Props) {
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
       <Field orientation="horizontal">
-        <Button type="submit" variant={isClockIn ? "default" : "outline"} disabled={isPending}>
-          {isPending ? `${label}打刻中...` : `${label}を打刻`}
+        <Button
+          type="submit"
+          variant={state.ok ? "secondary" : isClockIn ? "default" : "outline"}
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              {label}打刻中...
+            </>
+          ) : state.ok ? (
+            <>
+              <CheckCircle className="size-4" />
+              {label}済み
+            </>
+          ) : (
+            `${label}を打刻`
+          )}
         </Button>
       </Field>
     </form>
