@@ -9,7 +9,7 @@ import {
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
@@ -17,9 +17,7 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 
 export const metadata = { title: "通知" }
 
-const PAGE_SIZE = 20
-
-type SearchParams = Promise<{ page?: string; filter?: string }>
+type SearchParams = Promise<{ page?: string; size?: string; filter?: string }>
 
 function toFilterValue(raw: string | undefined): NotificationFilterValue {
   if (raw === "unread") return "unread"
@@ -39,9 +37,11 @@ function filterToIsRead(filter: NotificationFilterValue): boolean | undefined {
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
+  const pageSize = parsePageSize(searchParams.size)
+
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const filter = toFilterValue(searchParams.filter)
 
@@ -49,7 +49,7 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
 
   const canCreate = currentUser instanceof Error ? false : canManageNotifications(currentUser.role)
 
-  const suspenseKey = `${filter}:${page}`
+  const suspenseKey = `${filter}:${page}:${pageSize}`
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,27 +68,30 @@ export default async function NotificationsPage(props: { searchParams: SearchPar
 
       <NotificationFilter current={filter} />
 
-      <Suspense
-        key={suspenseKey}
-        fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}
-      >
-        <MyNotifications offset={offset} filter={filter} />
+      <Suspense key={suspenseKey} fallback={<ListSkeleton rows={3} rowClassName="h-20 w-full" />}>
+        <MyNotifications offset={offset} pageSize={pageSize} filter={filter} />
       </Suspense>
     </div>
   )
 }
 
-async function MyNotifications(props: { offset: number; filter: NotificationFilterValue }) {
+async function MyNotifications(props: {
+  offset: number
+  pageSize: number
+  filter: NotificationFilterValue
+}) {
   const isRead = filterToIsRead(props.filter)
 
-  const result = await getMyNotifications({ limit: PAGE_SIZE, offset: props.offset, isRead })
+  const result = await getMyNotifications({ limit: props.pageSize, offset: props.offset, isRead })
 
   if (result instanceof Error) {
     return <FetchError message="通知一覧の取得に失敗しました" />
   }
 
-  const extraParams =
-    props.filter !== "all" ? { filter: props.filter } : undefined
+  const extraParams = {
+    size: String(props.pageSize),
+    ...(props.filter !== "all" ? { filter: props.filter } : {}),
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -97,9 +100,10 @@ async function MyNotifications(props: { offset: number; filter: NotificationFilt
       <TablePagination
         pathname="/notifications"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={extraParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

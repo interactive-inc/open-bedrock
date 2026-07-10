@@ -1,17 +1,16 @@
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination } from "@/components/table-pagination"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getKnowledgeList } from "@/lib/api/get-knowledge-list"
-
-const PAGE_SIZE = 20
 
 type Props = {
   q: string | null
   category: string | null
   offset: number
+  pageSize: number
 }
 
 // 検索条件で GET /knowledge を認証付きに取得し、記事カード一覧を描画する非同期 RSC。
@@ -20,7 +19,7 @@ export async function KnowledgeResultList(props: Props) {
   const result = await getKnowledgeList({
     q: props.q,
     category: props.category,
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
   })
 
@@ -61,12 +60,14 @@ export async function KnowledgeResultList(props: Props) {
       <TablePagination
         pathname="/knowledge"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={{
           q: props.q ?? undefined,
           category: props.category ?? undefined,
+          size: String(props.pageSize),
         }}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

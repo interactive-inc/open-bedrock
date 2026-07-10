@@ -1,11 +1,26 @@
+import { Suspense } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { PageSizeSelect } from "@/components/page-size-select"
 import { Button } from "@/components/ui/button"
+
+export const DEFAULT_PAGE_SIZE = 20
+
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
+
+/** searchParams.size を安全にパースする。許可リスト外の値はデフォルトに戻す */
+export function parsePageSize(raw: string | undefined): number {
+  const size = Number.parseInt(raw ?? "", 10)
+
+  return PAGE_SIZE_OPTIONS.includes(size) ? size : DEFAULT_PAGE_SIZE
+}
 
 /**
  * 一覧画面で使うページ送り。total/limit/offset から件数を計算して、
  * `?page=N` を維持しつつ前後と数ページ分のリンクを描画する。
  * 現在のページ周辺 ±1 だけ表示し、それ以外は省略する単純な実装。
+ *
+ * pageSizeOptions を渡すと件数セレクタ（10/20/50/100 件）を表示する。
  */
 type Props = {
   pathname: string
@@ -14,6 +29,8 @@ type Props = {
   offset: number
   // ?page= と一緒に維持したい他の searchParams（例: sort）
   extraParams?: Record<string, string | undefined>
+  /** 件数セレクタの選択肢。渡すとセレクタを表示する */
+  pageSizeOptions?: number[]
 }
 
 function buildHref(
@@ -70,9 +87,17 @@ export function TablePagination(props: Props) {
       aria-label="ページ送り"
       className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
     >
-      <p className="text-xs text-muted-foreground">
-        {start}–{end} / 全 {props.total} 件
-      </p>
+      <div className="flex items-center gap-3">
+        <p className="text-xs text-muted-foreground">
+          {start}–{end} / 全 {props.total} 件
+        </p>
+
+        {props.pageSizeOptions !== undefined ? (
+          <Suspense>
+            <PageSizeSelect currentSize={props.limit} options={props.pageSizeOptions} />
+          </Suspense>
+        ) : null}
+      </div>
 
       <div className="flex items-center gap-1">
         {canPrev ? (
