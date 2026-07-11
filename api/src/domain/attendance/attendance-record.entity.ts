@@ -1,3 +1,4 @@
+import { toBusinessDate } from "@/lib/to-business-date"
 import type { AttendanceRecordRow } from "@/schema"
 import { z } from "zod"
 
@@ -41,7 +42,7 @@ export class AttendanceRecord implements Props {
     Object.freeze(this)
   }
 
-  /** 出勤打刻で新規の勤怠記録を組み立てる。workDate は打刻時刻の日付部分、初期状態は open。 */
+  /** 出勤打刻で新規の勤怠記録を組み立てる。workDate は打刻時刻を業務 TZ（JST）で日付化した値、初期状態は open。 */
   static create(props: {
     employeeId: number
     clockInAt: string
@@ -50,7 +51,7 @@ export class AttendanceRecord implements Props {
     return new AttendanceRecord({
       id: null,
       employeeId: props.employeeId,
-      workDate: props.clockInAt.slice(0, 10),
+      workDate: toBusinessDate(props.clockInAt),
       clockInAt: props.clockInAt,
       clockOutAt: null,
       workMinutes: null,

@@ -1,5 +1,4 @@
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -8,14 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
+import type { MyShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 
 type Props = {
-  assignments: Array<ShiftAssignmentResponse>
-  patternNameMap: Record<number, string>
+  assignments: Array<MyShiftAssignmentResponse>
 }
 
-// 本人の担当シフト一覧。日付・パターン・備考・公開状態をテーブルで表示する。
+// 本人の担当シフト一覧。日付・パターン・時間帯・備考をテーブルで表示する。
+// GET /shift/assignments/me は公開済みのみ返すため、公開状態列は持たない。
 export function MyShiftAssignments(props: Props) {
   if (props.assignments.length === 0) {
     return <EmptyState title="担当シフトはありません" />
@@ -28,8 +27,8 @@ export function MyShiftAssignments(props: Props) {
           <TableRow>
             <TableHead>日付</TableHead>
             <TableHead>パターン</TableHead>
+            <TableHead>時間帯</TableHead>
             <TableHead>備考</TableHead>
-            <TableHead>状態</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -38,21 +37,15 @@ export function MyShiftAssignments(props: Props) {
             <TableRow key={assignment.id}>
               <TableCell className="font-medium">{assignment.date}</TableCell>
 
-              <TableCell>
-                {assignment.pattern_id !== null
-                  ? (props.patternNameMap[assignment.pattern_id] ?? "-")
+              <TableCell>{assignment.pattern_name ?? "-"}</TableCell>
+
+              <TableCell className="text-muted-foreground">
+                {assignment.pattern_start_time !== null && assignment.pattern_end_time !== null
+                  ? `${assignment.pattern_start_time}–${assignment.pattern_end_time}`
                   : "-"}
               </TableCell>
 
               <TableCell className="text-muted-foreground">{assignment.note ?? "-"}</TableCell>
-
-              <TableCell>
-                {assignment.published_at !== null ? (
-                  <Badge>公開済み</Badge>
-                ) : (
-                  <Badge variant="outline">未公開</Badge>
-                )}
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>

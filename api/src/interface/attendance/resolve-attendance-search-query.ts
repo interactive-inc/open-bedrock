@@ -16,13 +16,19 @@ export type Props = {
 export function resolveAttendanceSearchQuery(
   props: Props,
 ): AttendanceSearchQuery | ApplicationError {
+  const canViewOthers = hasPermission(props.viewerSession, "attendance:read:all")
+
+  // 社員未指定。attendance:read:all 保持者は全社一覧（employeeId: null で route が全件取得）、
+  // 非保持者は自分のレコードのみにフォールバックする。
   if (props.requestedEmployeeId === null) {
-    return { employeeId: props.viewerEmployeeId, from: props.from, to: props.to }
+    return {
+      employeeId: canViewOthers ? null : props.viewerEmployeeId,
+      from: props.from,
+      to: props.to,
+    }
   }
 
   const isViewingOthers = props.requestedEmployeeId !== props.viewerEmployeeId
-
-  const canViewOthers = hasPermission(props.viewerSession, "attendance:read:all")
 
   if (isViewingOthers && !canViewOthers) {
     return new ForbiddenError("cannot view other employee attendance", "forbidden")
