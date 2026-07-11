@@ -23,7 +23,5 @@ export async function ThanksList() {
     )
   }
 
-  return (
-    <ThanksTimeline initialItems={result.data} total={result.total} pageSize={INITIAL_LIMIT} />
-  )
+  return <ThanksTimeline initialItems={result.data} total={result.total} pageSize={INITIAL_LIMIT} />
 }

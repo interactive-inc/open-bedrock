@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getBudgetSummary } from "@/lib/api/get-budget-summary"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "予算の消化状況" }
 
@@ -27,6 +28,8 @@ const amountFormatter = new Intl.NumberFormat("ja-JP")
  * 部署ごとの予算・消化額・残額を横断で見る消化状況ビュー。会計期間を指定して集計する。
  */
 export default async function BudgetSummaryPage(props: Props) {
+  await requirePermission("budget:manage")
+
   const searchParams = await props.searchParams
 
   const fiscalPeriod = searchParams.fiscal_period ?? ""

@@ -54,6 +54,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+new@example.com",
       password: "supersecret",
       jwtSecret,
+      userAgent: null,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -74,6 +75,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+new@example.com",
       password: "wrong",
       jwtSecret,
+      userAgent: null,
     })
 
     expect(result).toEqual({ reason: "invalid_credentials" })
@@ -86,6 +88,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+absent@example.com",
       password: "whatever",
       jwtSecret,
+      userAgent: null,
     })
 
     expect(result).toEqual({ reason: "invalid_credentials" })
@@ -106,6 +109,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+legacy@example.com",
       password: "legacy-password",
       jwtSecret,
+      userAgent: null,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -141,6 +145,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+wrapped@example.com",
       password: "wrapped-password",
       jwtSecret,
+      userAgent: null,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -176,6 +181,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+retired@example.com",
       password: "supersecret",
       jwtSecret,
+      userAgent: null,
     })
 
     // 在籍状態の漏えいを避けるため資格情報エラーと同一レスポンスを返す。
@@ -198,6 +204,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+leave@example.com",
       password: "supersecret",
       jwtSecret,
+      userAgent: null,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -218,6 +225,7 @@ describe("AuthenticateEmployee", () => {
       email: "you+modern@example.com",
       password: "already-modern",
       jwtSecret,
+      userAgent: null,
     })
 
     const repository = new IdentityRepository(context)

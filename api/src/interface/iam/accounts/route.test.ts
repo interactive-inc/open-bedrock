@@ -68,6 +68,8 @@ describe("GET /accounts", () => {
             employee_name: z.string().nullable(),
             status: z.string(),
             role_keys: z.array(z.string()),
+            can_manage: z.boolean(),
+            is_self: z.boolean(),
           }),
         ),
         total: z.number(),
@@ -82,6 +84,8 @@ describe("GET /accounts", () => {
       const adminAccount = parsed.data.data.find((account) => account.role_keys.includes("admin"))
 
       expect(adminAccount).toBeDefined()
+      expect(adminAccount?.can_manage).toBe(true)
+      expect(adminAccount?.is_self).toBe(true)
     }
   })
 

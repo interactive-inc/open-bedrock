@@ -14,7 +14,9 @@ import { getRoles } from "@/lib/api/get-roles"
 import Link from "next/link"
 
 // GET /roles を実行しロール一覧テーブルを描画する非同期 RSC。
-export async function RoleListSection() {
+export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArray<string> }) {
+  const actorPermissionKeys = new Set(props.actorPermissionKeys)
+
   const roles = await getRoles()
 
   if (roles instanceof Error) {
@@ -37,30 +39,44 @@ export async function RoleListSection() {
         </TableHeader>
 
         <TableBody>
-          {roles.map((role) => (
-            <TableRow key={role.id}>
-              <TableCell className="font-mono text-sm">{role.key}</TableCell>
-              <TableCell>{role.name}</TableCell>
-              <TableCell className="text-muted-foreground">{role.description ?? "—"}</TableCell>
-              <TableCell>
-                {role.is_system ? (
-                  <Badge variant="secondary">システム</Badge>
-                ) : (
-                  <Badge variant="outline">動的</Badge>
-                )}
-              </TableCell>
-              <TableCell className="flex gap-2">
-                <Link
-                  href={`/admin/roles/${role.id}/edit`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                >
-                  編集
-                </Link>
+          {roles.map((role) => {
+            const canManage = role.permission_keys.every((permissionKey) =>
+              actorPermissionKeys.has(permissionKey),
+            )
 
-                {role.is_system ? null : <DeleteRoleButton roleId={role.id} roleName={role.name} />}
-              </TableCell>
-            </TableRow>
-          ))}
+            return (
+              <TableRow key={role.id}>
+                <TableCell className="font-mono text-sm">{role.key}</TableCell>
+                <TableCell>{role.name}</TableCell>
+                <TableCell className="text-muted-foreground">{role.description ?? "—"}</TableCell>
+                <TableCell>
+                  {role.is_system ? (
+                    <Badge variant="secondary">システム</Badge>
+                  ) : (
+                    <Badge variant="outline">動的</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="flex gap-2">
+                  {canManage ? (
+                    <>
+                      <Link
+                        href={`/admin/roles/${role.id}/edit`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        編集
+                      </Link>
+
+                      {role.is_system ? null : (
+                        <DeleteRoleButton roleId={role.id} roleName={role.name} />
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">上位ロール</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
     </div>

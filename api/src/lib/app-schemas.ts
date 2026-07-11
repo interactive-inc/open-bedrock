@@ -120,6 +120,18 @@ export const zAppAntisocialCheckList = z.object({
 })
 export type AppAntisocialCheckList = z.infer<typeof zAppAntisocialCheckList>
 
+/** 管理受信箱の反社チェック申請。申請者名を含む。 */
+export const zAppAntisocialCheckAdminItem = zAppAntisocialCheck.extend({
+  requester_name: z.string(),
+})
+
+export const zAppAntisocialCheckAdminList = z.object({
+  data: z.array(zAppAntisocialCheckAdminItem),
+  total: z.number(),
+})
+
+export type AppAntisocialCheckAdminList = z.infer<typeof zAppAntisocialCheckAdminList>
+
 // ===== application =====
 /** 申請への承認/却下アクション 1 件。GET /applications/:id の approvals[] に並ぶ。 */
 export const zAppApplicationApproval = z.object({
@@ -471,6 +483,24 @@ export const zAppEmployeeList = z.object({
 })
 
 export type AppEmployeeList = z.infer<typeof zAppEmployeeList>
+
+/** 全従業員が参照できる社内ディレクトリの行。機微な認証・在籍情報は含めない。 */
+export const zAppEmployeeDirectoryItem = z.object({
+  code: z.string(),
+  name: z.string(),
+  dept_name: z.string().nullable(),
+  position: z.string().nullable(),
+})
+
+export type AppEmployeeDirectoryItem = z.infer<typeof zAppEmployeeDirectoryItem>
+
+/** 在籍中の従業員ディレクトリ一覧。 */
+export const zAppEmployeeDirectoryList = z.object({
+  data: z.array(zAppEmployeeDirectoryItem),
+  total: z.number(),
+})
+
+export type AppEmployeeDirectoryList = z.infer<typeof zAppEmployeeDirectoryList>
 
 // ===== expense =====
 /** 経費 1 件のレスポンス（申請・更新の戻り）。 */
@@ -1633,6 +1663,7 @@ export const zAppRole = z.object({
   name: z.string(),
   description: z.string().nullable(),
   is_system: z.boolean(),
+  permission_keys: z.array(z.string()),
 })
 
 export type AppRole = z.infer<typeof zAppRole>
@@ -1681,6 +1712,8 @@ export const zAppAccount = z.object({
   employee_name: z.string().nullable(),
   status: z.string(),
   role_keys: z.array(z.string()),
+  can_manage: z.boolean(),
+  is_self: z.boolean(),
 })
 
 export type AppAccount = z.infer<typeof zAppAccount>

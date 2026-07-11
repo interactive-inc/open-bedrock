@@ -36,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const antisocialCheck = await new GetAntisocialCheck(c).run({
     antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
-    requesterId: viewer.employeeId,
+    session: viewer,
   })
 
   if (antisocialCheck instanceof ApplicationError) {
@@ -69,7 +69,6 @@ export const PUT = factory.createHandlers(
 
     const antisocialCheck = await new UpdateAntisocialCheck(c).run({
       antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
-      requesterId: viewer.employeeId,
       session: viewer,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,

@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache"
 import { createOneOnOne } from "@/lib/api/create-oneonone"
 import { deleteOneOnOne } from "@/lib/api/delete-oneonone"
-import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
 import { updateOneOnOne } from "@/lib/api/update-oneonone"
 import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
 
@@ -28,14 +27,6 @@ export async function createOneOnOneAction(
     return { ok: false, error: memberCode.message }
   }
 
-  const member = await getEmployeeByCode(memberCode)
-
-  if (member instanceof Error || member === null) {
-    return { ok: false, error: "指定されたメンバーが見つかりません" }
-  }
-
-  const memberEmail = member.email
-
   const topics = toOneOnOneText(formData.get("topics"), "トピック")
 
   if (topics instanceof Error) {
@@ -55,7 +46,7 @@ export async function createOneOnOneAction(
   }
 
   const created = await createOneOnOne({
-    member_email: memberEmail,
+    member_employee_code: memberCode,
     topics,
     manager_note: managerNote,
     next_action: nextAction,

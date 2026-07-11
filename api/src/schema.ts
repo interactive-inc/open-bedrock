@@ -986,6 +986,7 @@ export const refreshTokens = sqliteTable(
     accountId: integer("account_id").notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     familyId: text("family_id").notNull(),
+    tokenVersion: integer("token_version").notNull().default(0),
     expiresAt: integer("expires_at").notNull(),
     revokedAt: integer("revoked_at"),
     userAgent: text("user_agent"),

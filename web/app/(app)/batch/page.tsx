@@ -1,9 +1,8 @@
-import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { BatchJobList } from "@/app/(app)/batch/_components/batch-job-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { getMe } from "@/lib/api/get-me"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "バッチ" }
 
@@ -11,11 +10,8 @@ export const metadata = { title: "バッチ" }
 // データ取得は子の非同期 RSC に委譲し、ここでは Suspense でフォールバックを出す。
 // admin のみアクセス可能（defense-in-depth）。
 export default async function BatchPage() {
-  const me = await getMe()
+  await requirePermission("batch:view")
 
-  if (me instanceof Error || me.role !== "admin") {
-    notFound()
-  }
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

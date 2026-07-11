@@ -7,7 +7,6 @@ import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
-  requesterId: number
   session: SessionPayload
   partnerName: string
   partnerAddress: string | null
@@ -16,8 +15,8 @@ export type Command = {
 }
 
 /**
- * 反社チェック申請の取引先情報と判定結果を変更する。本人以外と、確定済み申請の変更を拒否する。
- * result フィールドの設定・変更は管理者ロール（manager/hr/admin）限定。
+ * 本人は未確定の取引先情報だけ、管理権限保持者は他者の判定結果だけを変更できる。
+ * 自分の申請を自分で判定することと、確定済み申請の再変更を拒否する。
  */
 export class UpdateAntisocialCheck {
   constructor(private readonly c: Context) {}
@@ -35,7 +34,11 @@ export class UpdateAntisocialCheck {
       return new NotFoundError("antisocial check not found", "antisocial_check_not_found")
     }
 
-    if (current.requesterId !== command.requesterId) {
+    const isOwner = current.requesterId === command.session.employeeId
+
+    const canManage = canManageAntisocialChecks(command.session)
+
+    if (isOwner === false && canManage === false) {
       return new ForbiddenError("not the requester", "not_requester")
     }
 
@@ -43,18 +46,26 @@ export class UpdateAntisocialCheck {
       return new ConflictError("antisocial check is not modifiable", "not_modifiable")
     }
 
-    // result フィールドを変更しようとしている場合は管理者ロールが必要。
     const isResultChanged = command.result !== current.result
 
-    if (isResultChanged && !canManageAntisocialChecks(command.session)) {
-      return new ForbiddenError("only managers can set the result", "result_forbidden")
+    if (isResultChanged && (canManage === false || isOwner)) {
+      return new ForbiddenError("cannot decide this antisocial check", "result_forbidden")
+    }
+
+    const isDetailsChanged =
+      command.partnerName !== current.partnerName ||
+      command.partnerAddress !== current.partnerAddress ||
+      command.representativeName !== current.representativeName
+
+    if (isOwner === false && isDetailsChanged) {
+      return new ForbiddenError("only the requester can change details", "details_forbidden")
     }
 
     const updated = current.withDetails({
-      partnerName: command.partnerName,
-      partnerAddress: command.partnerAddress,
-      representativeName: command.representativeName,
-      result: canManageAntisocialChecks(command.session) ? command.result : current.result,
+      partnerName: isOwner ? command.partnerName : current.partnerName,
+      partnerAddress: isOwner ? command.partnerAddress : current.partnerAddress,
+      representativeName: isOwner ? command.representativeName : current.representativeName,
+      result: canManage && isOwner === false ? command.result : current.result,
     })
 
     const result = await antisocialCheckRepository.update(updated)

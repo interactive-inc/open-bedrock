@@ -17,7 +17,7 @@ fail-open は一切採用しない。認可解決失敗・未知 permission キ�
 - **permissions**: id / key(unique, "<domain>:<action>[:<scope>]") / description / category。正はコードの PERMISSION_KEYS、テーブルは UI 用の写し。
 - **rolePermissions**: roleId / permissionId。PK(roleId, permissionId)。
 - **accountRoles**: accountId / roleId / grantedBy(null可) / grantedAt。PK(accountId, roleId)。複数ロール可、実効 permission は和集合。
-- **refreshTokens**: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / expiresAt / revokedAt / userAgent / createdAt。
+- **refreshTokens**: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / tokenVersion / expiresAt / revokedAt / userAgent / createdAt。
 - **auditLogs**(append-only): id / actorAccountId / action / targetType / targetId / metadata(JSON) / ip / createdAt。UPDATE/DELETE はアプリ層で禁止。
 
 ## permission カタログ
@@ -31,6 +31,8 @@ per-template 動的ロール(approver_roles)は permission に正規化せず ro
 ## 認証フロー
 
 複数ログイン方法を identities の多態で吸収。全成功フロー: identity検証 → account取得 → status=active → employees.status が retired でない → access token(短命1時間) + refresh token(長命7日、ローテーション) 発行。
+
+refresh は account の tokenVersion と refresh token 発行時の tokenVersion を照合する。ローテーションは旧トークンの未失効を条件に D1 batch で子トークン作成と旧トークン失効を原子的に行い、同時利用では1リクエストだけを成功させる。使用済みトークンの再利用を検出した場合は同じ familyId のトークンを全て失効する。
 
 JWT claims = `{ accountId, employeeId, tokenVersion }` のみ(email/role/permission は載せない)。permission は verify-bearer が毎回 DB 解決(accountRoles⋈rolePermissions⋈permissions を1クエリ)して session に Set で展開。tokenVersion 不一致なら 401(即時失効)。
 
@@ -50,11 +52,13 @@ OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true
 
 ## セキュリティ要点
 
-権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / 付与できるロールは付与者の部分集合 / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(1時間 + refresh ローテ + tokenVersion)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
+権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / ロール付与・剥奪・編集・削除とアカウント操作は実行者の権限集合の部分集合だけを対象にする / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(1時間 + refresh ローテ + tokenVersion + 再利用時の family 失効)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
+
+社員台帳の一覧と他者詳細は `employee:read` で保護する。社員選択が必要な一般業務画面では、在籍中社員のコード・氏名・部署・役職だけを返す `/directory/employees` を使い、メールアドレス、在籍状態、ロール、内部 ID は公開しない。
 
 ## 実装状況
 
-Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改修由来型エラー 0）。
+Phase 0〜6 を実装・テスト済み。
 
 - Phase 0〜2: permission カタログ・8テーブル・マスタシード・backfill 完了
 - Phase 3: 認証を identities/accounts ベースへカットオーバー（JWT に権限を載せず DB 解決、tokenVersion 失効）
@@ -67,7 +71,7 @@ Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改
   IdentityRepository/AccountRepository で解決。register-employee は identity 払い出し、update-employee は
   台帳更新に縮小（ロール変更は Grant/Revoke AccountRole へ委譲）。dev seed は seeds/iam.sql で IAM を投入。
 
-全8フェーズ完了。api 2016 pass / cli 118 pass / web 改修由来型エラー 0、migrate（drop 含む）→ seed クリーン通過。
+全8フェーズ完了。API・CLI の全テスト、API・Web・CLI の型検査、migrate（drop 含む）→ seed を継続的に確認する。
 
 ## 既知リスク
 

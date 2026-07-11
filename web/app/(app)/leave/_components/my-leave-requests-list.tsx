@@ -8,6 +8,7 @@ import type { LeaveActionState } from "@/app/(app)/leave/actions"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -197,12 +198,15 @@ function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この休暇申請を取り下げますか？"
+      description="取り下げた休暇申請は元に戻せません。"
+      confirmLabel="休暇申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="leave_request_id" value={props.leaveRequestId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

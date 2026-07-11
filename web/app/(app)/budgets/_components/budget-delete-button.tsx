@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteBudgetAction } from "@/app/(app)/budgets/actions"
 import type { BudgetDeleteFormState } from "@/app/(app)/budgets/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象の予算 ID。hidden フィールドへ埋め込む。
@@ -35,12 +35,15 @@ export function BudgetDeleteButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この予算を削除しますか？"
+      description="予算の記録は元に戻せません。承認済み経費の記録は削除されません。"
+      confirmLabel="予算を削除"
+      pending={isPending}
+    >
       <input type="hidden" name="budget_id" value={props.budgetId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={isPending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

@@ -5,6 +5,7 @@ import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
@@ -38,6 +39,16 @@ export class RevokeAccountRole {
 
     if (role === null) {
       return new NotFoundError("role not found", "role_not_found")
+    }
+
+    const rolePermissions = await roleRepository.permissionKeysOf(role.id)
+
+    if (rolePermissions instanceof Error) {
+      return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
+    }
+
+    if (hasPermissionSuperset(command.session, rolePermissions) === false) {
+      return new ForbiddenError("cannot revoke a higher privilege role", "role_escalation")
     }
 
     const accountRepository = new AccountRepository(this.c)

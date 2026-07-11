@@ -159,7 +159,10 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}
-        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort, size: String(props.pageSize) }}
+        extraParams={{
+          sort: props.sort === "created_at_desc" ? undefined : props.sort,
+          size: String(props.pageSize),
+        }}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>

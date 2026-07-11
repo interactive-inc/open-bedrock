@@ -45,6 +45,7 @@ async function seedOneOnOne(context: Context, db: D1Database): Promise<OneOnOne>
   await seedEmployees(db)
 
   const result = await new CreateOneOnOne(context).run({
+    memberCode: null,
     memberEmail: "you+member@example.com",
     managerId: 1,
     heldAt: "2026-03-15T10:00:00.000Z",
@@ -67,6 +68,7 @@ describe("CreateOneOnOne", () => {
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
+      memberCode: null,
       memberEmail: "you+member@example.com",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",
@@ -92,6 +94,7 @@ describe("CreateOneOnOne", () => {
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
+      memberCode: null,
       memberEmail: "you+unknown@example.com",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",
@@ -109,6 +112,7 @@ describe("CreateOneOnOne", () => {
     await seedEmployees(db)
 
     const result = await new CreateOneOnOne(context).run({
+      memberCode: null,
       memberEmail: "you+manager@example.com",
       managerId: 1,
       heldAt: "2026-03-15T10:00:00.000Z",

@@ -1,9 +1,5 @@
-import { ListPendingRedemptions } from "@/application/thanks-points/list-pending-redemptions"
-import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
-import { ApplicationError } from "@/lib/errors"
-import { zAppThanksRedemptionList } from "@/lib/app-schemas"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
@@ -13,8 +9,8 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
-import { thanksRedemptions } from "@/schema"
-import { count, eq } from "drizzle-orm"
+import { employees, thanksRedemptions, thanksRewards } from "@/schema"
+import { and, count, desc, eq, ne } from "drizzle-orm"
 
 // GET /thanks/redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -42,35 +38,52 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const redemptions = await new ListPendingRedemptions(c).run({ limit, offset })
-
-  if (redemptions instanceof ApplicationError) {
-    throw toHttpException(redemptions)
-  }
+  const rows = await c.var.database
+    .select({
+      redemption: thanksRedemptions,
+      employeeName: employees.name,
+      employeeDeptName: employees.deptName,
+      rewardName: thanksRewards.name,
+    })
+    .from(thanksRedemptions)
+    .leftJoin(employees, eq(employees.id, thanksRedemptions.employeeId))
+    .leftJoin(thanksRewards, eq(thanksRewards.id, thanksRedemptions.rewardId))
+    .where(
+      and(
+        eq(thanksRedemptions.status, "pending"),
+        ne(thanksRedemptions.employeeId, session.employeeId),
+      ),
+    )
+    .orderBy(desc(thanksRedemptions.createdAt))
+    .limit(limit)
+    .offset(offset)
 
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(thanksRedemptions)
-    .where(eq(thanksRedemptions.status, "pending"))
+    .where(
+      and(
+        eq(thanksRedemptions.status, "pending"),
+        ne(thanksRedemptions.employeeId, session.employeeId),
+      ),
+    )
 
-  const responseBody = zAppThanksRedemptionList.parse({
-    data: redemptions.map(toRedemptionResponse),
+  const responseBody = zAppThanksRedemptionAdminList.parse({
+    data: rows.map(({ redemption, employeeName, employeeDeptName, rewardName }) => ({
+      id: redemption.id,
+      employee_id: redemption.employeeId,
+      employee_name: employeeName ?? "",
+      employee_dept_name: employeeDeptName,
+      reward_id: redemption.rewardId,
+      reward_name: rewardName ?? "",
+      point_cost: redemption.pointCost,
+      status: redemption.status,
+      created_at: redemption.createdAt,
+      decided_at: redemption.decidedAt,
+      decider_id: redemption.deciderId,
+    })),
     total: totalRows.at(0)?.total ?? 0,
   })
 
   return c.json(responseBody, 200)
 })
-
-// 交換申請集約を snake_case のレスポンスへ写す。
-function toRedemptionResponse(redemption: ThanksRedemption) {
-  return {
-    id: redemption.id,
-    employee_id: redemption.employeeId,
-    reward_id: redemption.rewardId,
-    point_cost: redemption.pointCost,
-    status: redemption.status,
-    created_at: redemption.createdAt,
-    decided_at: redemption.decidedAt,
-    decider_id: redemption.deciderId,
-  }
-}

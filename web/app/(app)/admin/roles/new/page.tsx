@@ -39,6 +39,8 @@ export default async function AdminRoleNewPage() {
     )
   }
 
+  const actorPermissionKeys = new Set(currentUser.permissions)
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -51,7 +53,9 @@ export default async function AdminRoleNewPage() {
         ]}
       />
 
-      <RoleCreateForm permissions={permissions} />
+      <RoleCreateForm
+        permissions={permissions.filter((permission) => actorPermissionKeys.has(permission.key))}
+      />
     </div>
   )
 }

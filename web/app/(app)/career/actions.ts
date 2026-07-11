@@ -167,7 +167,7 @@ export async function createCareerPostingAction(
 ): Promise<CareerPostingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.permissions) === false) {
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 
@@ -229,7 +229,7 @@ export async function updateCareerPostingAction(
 ): Promise<CareerPostingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.permissions) === false) {
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 
@@ -297,7 +297,7 @@ export async function deleteCareerPostingAction(
 ): Promise<CareerPostingFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.permissions) === false) {
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 

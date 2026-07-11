@@ -36,6 +36,45 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
 }
 
+function accountToken(accountId: number): Promise<string> {
+  return createTestToken(jwtSecret, { employeeId: accountId, accountId: accountId })
+}
+
+// 指定アカウントの system role を、必要最小限の permission だけを持つ動的ロールへ差し替える。
+async function assignCustomRole(
+  db: D1Database,
+  accountId: number,
+  roleKey: string,
+  permissionKeys: ReadonlyArray<string>,
+): Promise<number> {
+  const inserted = await db
+    .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?1, 0, 0)")
+    .bind(roleKey)
+    .run()
+
+  const roleId = inserted.meta.last_row_id
+
+  for (const permissionKey of permissionKeys) {
+    await db
+      .prepare(
+        `INSERT INTO role_permissions (role_id, permission_id)
+         SELECT ?1, id FROM permissions WHERE key = ?2`,
+      )
+      .bind(roleId, permissionKey)
+      .run()
+  }
+
+  await db.prepare("DELETE FROM account_roles WHERE account_id = ?1").bind(accountId).run()
+  await db
+    .prepare(
+      "INSERT INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (?1, ?2, NULL, 0)",
+    )
+    .bind(accountId, roleId)
+    .run()
+
+  return roleId
+}
+
 async function request(props: {
   path: string
   method?: string
@@ -101,6 +140,22 @@ describe("DELETE /accounts/:id/roles/:roleKey (ロール剥奪)", () => {
 
     expect(response.status).toBe(409)
   })
+
+  test("iam:assign_roles だけでは自分より高権限のロールを剥奪できない", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "role-operator", ["iam:assign_roles"])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/2/roles/manager",
+      token: await accountToken(5),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(403)
+  })
 })
 
 describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
@@ -125,6 +180,40 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("account:manage だけでは高権限アカウントのパスワードを再設定できない", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "account-operator", ["account:manage"])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/1/reset-password",
+      token: await accountToken(5),
+      method: "POST",
+      body: { new_password: "newsecret123" },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("account:manage で権限を持たない member のパスワードは再設定できる", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "account-operator", ["account:manage"])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/3/reset-password",
+      token: await accountToken(5),
+      method: "POST",
+      body: { new_password: "newsecret123" },
+    })
+
+    expect(response.status).toBe(204)
+  })
 })
 
 describe("POST /accounts/:id/status (停止)", () => {
@@ -144,6 +233,23 @@ describe("POST /accounts/:id/status (停止)", () => {
       path: "/accounts/1/status",
       method: "POST",
       token: await adminToken(),
+      body: { status: "suspended" },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("account:manage だけでは高権限アカウントを停止できない", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "account-operator", ["account:manage"])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/1/status",
+      token: await accountToken(5),
+      method: "POST",
       body: { status: "suspended" },
     })
 
@@ -229,5 +335,47 @@ describe("ロール編集・削除", () => {
     })
 
     expect(response.status).toBe(204)
+  })
+
+  test("iam:manage_roles だけでは高権限ロールを空に変更できない", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "role-editor", ["iam:manage_roles"])
+
+    const manager = await db
+      .prepare("SELECT id FROM roles WHERE key = 'manager'")
+      .first<{ id: number }>()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/roles/${manager?.id}`,
+      token: await accountToken(5),
+      method: "PATCH",
+      body: { name: "Manager", description: null, permission_keys: [] },
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("iam:manage_roles だけでは自分が持たない権限の動的ロールを削除できない", async () => {
+    const db = await createTestDb()
+
+    await assignCustomRole(db, 5, "role-editor", ["iam:manage_roles"])
+
+    const protectedRoleId = await assignCustomRole(db, 4, "protected-role", ["dashboard:view"])
+
+    // 削除可否だけを検証するため、対象ロールを未割当に戻す。
+    await db.prepare("DELETE FROM account_roles WHERE account_id = 4").run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/roles/${protectedRoleId}`,
+      token: await accountToken(5),
+      method: "DELETE",
+    })
+
+    expect(response.status).toBe(403)
   })
 })

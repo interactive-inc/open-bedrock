@@ -2,11 +2,14 @@ import { StocktakeStartForm } from "@/app/(app)/stocktakes/_components/stocktake
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "棚卸しを開始" }
 
 // 棚卸し開始画面。フォームは Client Component に切り出し、Server Action で POST /stocktakes する。
-export default function StocktakeNewPage() {
+export default async function StocktakeNewPage() {
+  await requirePermission("asset:manage")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

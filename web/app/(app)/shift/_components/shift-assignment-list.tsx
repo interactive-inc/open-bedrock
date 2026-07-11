@@ -11,6 +11,7 @@ import {
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -57,8 +58,6 @@ export function ShiftAssignmentList(props: Props) {
     },
     initialState,
   )
-
-  const publishState = publishAction[0]
 
   const publishDispatch = publishAction[1]
 
@@ -193,12 +192,15 @@ function DeleteAssignmentButton(props: { assignmentId: number | null }) {
   const [, formAction, pending] = useActionState(deleteShiftAssignmentAction, initialState)
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="このシフト割当を削除しますか？"
+      description="公開済みの割当を削除すると従業員の表示からも消えます。"
+      confirmLabel="シフト割当を削除"
+      pending={pending}
+    >
       <input type="hidden" name="assignment_id" value={props.assignmentId ?? ""} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

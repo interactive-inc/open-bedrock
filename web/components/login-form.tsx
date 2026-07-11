@@ -34,7 +34,14 @@ export function LoginForm() {
         <Field>
           <FieldLabel htmlFor="login-email">{t("メールアドレス")}</FieldLabel>
 
-          <Input id="login-email" name="email" type="email" autoComplete="email" required />
+          <Input
+            id="login-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            spellCheck={false}
+            required
+          />
         </Field>
 
         <Field>

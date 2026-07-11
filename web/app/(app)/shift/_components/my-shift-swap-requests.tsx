@@ -5,7 +5,7 @@ import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/shift/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Table,
   TableBody,
@@ -82,12 +82,15 @@ function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
   const [, formAction, pending] = useActionState(cancelShiftSwapRequestAction, initialState)
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="このシフト交代申請を取り下げますか？"
+      description="取り下げた交代申請は元に戻せません。"
+      confirmLabel="交代申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="swap_request_id" value={props.swapRequestId ?? undefined} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

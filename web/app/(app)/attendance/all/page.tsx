@@ -5,6 +5,7 @@ import { AttendanceFilterForm } from "@/app/(app)/attendance/_components/attenda
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "勤怠（全体）" }
 
@@ -15,6 +16,8 @@ type Props = {
 // 勤怠一覧（管理者）画面。employee_id / from / to で全体の勤怠を絞り込んで表示する RSC。
 // 権限がない場合は子の RSC 内でエラーメッセージにフォールバックする。
 export default async function AttendanceAllPage(props: Props) {
+  await requirePermission("attendance:read:all")
+
   const searchParams = await props.searchParams
 
   const employeeId = typeof searchParams.employee_id === "string" ? searchParams.employee_id : null

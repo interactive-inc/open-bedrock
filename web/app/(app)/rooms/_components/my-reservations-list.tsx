@@ -6,6 +6,7 @@ import { cancelRoomReservationAction, updateRoomReservationAction } from "@/app/
 import type { RoomReservationActionState } from "@/app/(app)/rooms/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -167,13 +168,16 @@ function CancelReservationButton(props: { reservationId: string }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="キャンセル"
+      title="この会議室予約をキャンセルしますか？"
+      description="キャンセルした予約は元に戻せません。"
+      confirmLabel="予約をキャンセル"
+      pending={pending}
+    >
       <input type="hidden" name="reservation_id" value={props.reservationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        キャンセル
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }
 

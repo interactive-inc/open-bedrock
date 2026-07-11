@@ -10,7 +10,7 @@ import { zAppRole, zAppRoleList } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { z } from "zod"
 
-// GET /roles — ロール一覧（iam:manage_roles が必要）
+// GET /roles — ロール一覧（iam:manage_roles または iam:assign_roles が必要）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -25,12 +25,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const responseBody = zAppRoleList.parse({
-    data: result.map((role) => ({
+    data: result.map(({ role, permissionKeys }) => ({
       id: role.id,
       key: role.key,
       name: role.name,
       description: role.description,
       is_system: role.isSystem === 1,
+      permission_keys: [...permissionKeys],
     })),
     total: result.length,
   })
@@ -78,6 +79,7 @@ export const POST = factory.createHandlers(
       name: created.name,
       description: created.description,
       is_system: created.isSystem === 1,
+      permission_keys: [...json.permission_keys],
     })
 
     return c.json(responseBody, 201)

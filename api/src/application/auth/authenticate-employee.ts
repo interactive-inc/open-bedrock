@@ -104,6 +104,7 @@ export class AuthenticateEmployee {
       accountId: identity.accountId,
       tokenHash: hashedToken,
       familyId: crypto.randomUUID(),
+      tokenVersion: identity.tokenVersion,
       userAgent: command.userAgent,
       nowEpoch,
     })

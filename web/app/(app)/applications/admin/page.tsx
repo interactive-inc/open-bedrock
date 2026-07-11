@@ -116,7 +116,13 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
       </Suspense>
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <AdminListSection filter={filter} offset={offset} pageSize={pageSize} sort={sort} extraParams={extraParams} />
+        <AdminListSection
+          filter={filter}
+          offset={offset}
+          pageSize={pageSize}
+          sort={sort}
+          extraParams={extraParams}
+        />
       </Suspense>
     </div>
   )

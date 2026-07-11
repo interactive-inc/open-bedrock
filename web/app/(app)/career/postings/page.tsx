@@ -11,6 +11,8 @@ import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings
 
 export const metadata = { title: "社内公募" }
 
+const postingSkeletonPlaceholders = [0, 1]
+
 /**
  * 社内公募の一覧。全従業員が閲覧でき、管理ロールは新規作成への導線が出る。
  * 締切の公募は管理ロールのみ表示される。
@@ -18,7 +20,8 @@ export const metadata = { title: "社内公募" }
 export default async function CareerPostingsPage() {
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageCareerPostings(currentUser.role)
+  const canManage =
+    currentUser instanceof Error ? false : canManageCareerPostings(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,11 +50,9 @@ export default async function CareerPostingsPage() {
 }
 
 function PostingsSkeleton() {
-  const placeholders = [0, 1]
-
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {placeholders.map((index) => (
+      {postingSkeletonPlaceholders.map((index) => (
         <Skeleton key={index} className="h-48 w-full" />
       ))}
     </div>

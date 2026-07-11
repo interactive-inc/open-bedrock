@@ -21,7 +21,7 @@ export default factory.createHandlers(
     const client = await createClient()
 
     const response = await client.attendance["clock-out"].$post({
-      json: query.note === undefined ? {} : { note: query.note },
+      json: { note: query.note ?? null },
     })
 
     return c.json(await response.json())

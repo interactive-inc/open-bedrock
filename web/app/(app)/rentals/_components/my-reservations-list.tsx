@@ -8,6 +8,7 @@ import {
 import type { RentalReservationActionState } from "@/app/(app)/rentals/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -180,12 +181,15 @@ function CancelReservationButton(props: { reservationId: string }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="このレンタル予約を取り消しますか？"
+      description="取り消した予約は元に戻せません。"
+      confirmLabel="予約を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="reservation_id" value={props.reservationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

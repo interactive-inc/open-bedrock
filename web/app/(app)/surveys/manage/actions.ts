@@ -57,7 +57,7 @@ export async function createSurveyAction(
 ): Promise<SurveyFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 
@@ -106,7 +106,7 @@ export async function updateSurveyAction(
 ): Promise<SurveyFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 
@@ -164,7 +164,7 @@ export async function deleteSurveyAction(
 ): Promise<SurveyFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageSurveys(me.role)) {
+  if (me instanceof Error || !canManageSurveys(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
 
 const initialState: AccountActionFormState = { ok: false, error: null }
 
@@ -179,14 +180,20 @@ export function ResetPasswordButton(props: ResetProps) {
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="account_id" value={props.accountId} />
 
-          <Input
-            type="password"
-            name="new_password"
-            required
-            minLength={8}
-            maxLength={200}
-            placeholder="新しいパスワード（8文字以上）"
-          />
+          <Field>
+            <FieldLabel htmlFor={`new-password-${props.accountId}`}>新しいパスワード</FieldLabel>
+
+            <Input
+              id={`new-password-${props.accountId}`}
+              type="password"
+              name="new_password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={200}
+              placeholder="8文字以上で入力…"
+            />
+          </Field>
 
           <AlertDialogFooter>
             <AlertDialogCancel>やめる</AlertDialogCancel>

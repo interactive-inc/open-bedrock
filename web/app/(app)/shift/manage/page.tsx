@@ -22,7 +22,7 @@ export const metadata = { title: "シフト管理" }
 export default async function ShiftManagePage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     notFound()
   }
 

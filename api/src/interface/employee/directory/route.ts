@@ -1,0 +1,100 @@
+import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { likeKeyword } from "@/interface/shared/like-keyword"
+import {
+  DEFAULT_LIST_LIMIT,
+  MAX_LIST_LIMIT,
+  MAX_LIST_OFFSET,
+  toBoundedInt,
+} from "@/interface/shared/to-bounded-int"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { zAppEmployeeDirectoryList } from "@/lib/app-schemas"
+import { employees } from "@/schema"
+import { zValidator } from "@hono/zod-validator"
+import type { SQL } from "drizzle-orm"
+import { and, asc, count, eq, or } from "drizzle-orm"
+import { z } from "zod"
+
+// GET /directory/employees — 選択UI向けの在籍者ディレクトリ。
+// 全認証ユーザーが利用できるが、メール・在籍区分・ロール・内部IDは返さない。
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "query",
+    z.object({
+      q: z.string().optional(),
+      dept: z.string().optional(),
+      limit: z.string().optional(),
+      offset: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    if (c.var.session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const query = c.req.valid("query")
+
+    const conditions: Array<SQL> = [eq(employees.status, "active")]
+
+    if (query.q !== undefined) {
+      const keywordMatch = or(
+        likeKeyword(employees.name, query.q),
+        likeKeyword(employees.code, query.q),
+      )
+
+      if (keywordMatch !== undefined) {
+        conditions.push(keywordMatch)
+      }
+    }
+
+    if (query.dept !== undefined) {
+      conditions.push(eq(employees.deptName, query.dept))
+    }
+
+    const limit = toBoundedInt({
+      raw: query.limit,
+      fallback: DEFAULT_LIST_LIMIT,
+      min: 1,
+      max: MAX_LIST_LIMIT,
+    })
+
+    const offset = toBoundedInt({
+      raw: query.offset,
+      fallback: 0,
+      min: 0,
+      max: MAX_LIST_OFFSET,
+    })
+
+    const rows = await c.var.database
+      .select({
+        code: employees.code,
+        name: employees.name,
+        deptName: employees.deptName,
+        position: employees.position,
+      })
+      .from(employees)
+      .where(and(...conditions))
+      .orderBy(asc(employees.code))
+      .limit(limit)
+      .offset(offset)
+
+    const totalRows = await c.var.database
+      .select({ total: count() })
+      .from(employees)
+      .where(and(...conditions))
+
+    return c.json(
+      zAppEmployeeDirectoryList.parse({
+        data: rows.map((row) => ({
+          code: row.code,
+          name: row.name,
+          dept_name: row.deptName,
+          position: row.position,
+        })),
+        total: totalRows.at(0)?.total ?? 0,
+      }),
+      200,
+    )
+  },
+)

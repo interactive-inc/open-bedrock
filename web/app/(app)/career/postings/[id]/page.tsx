@@ -30,7 +30,8 @@ export default async function CareerPostingDetailPage(props: Props) {
 
   const currentUser = await getMe()
 
-  const canManage = currentUser instanceof Error ? false : canManageCareerPostings(currentUser.role)
+  const canManage =
+    currentUser instanceof Error ? false : canManageCareerPostings(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

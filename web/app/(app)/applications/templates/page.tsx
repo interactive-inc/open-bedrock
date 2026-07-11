@@ -14,6 +14,8 @@ import { canManageApplicationTemplates } from "@/lib/application/can-manage-appl
 
 export const metadata = { title: "申請テンプレート" }
 
+const templateSkeletonPlaceholders = [0, 1, 2, 3, 4, 5]
+
 /**
  * 申請テンプレートの一覧。「テンプレート」というオブジェクトに集中させ、
  * 新規作成は /applications/templates/new に分離する。
@@ -22,7 +24,7 @@ export default async function ApplicationTemplatesPage() {
   const currentUser = await getMe()
 
   const canManage =
-    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
+    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,11 +90,9 @@ async function TemplatesGrid() {
 }
 
 function TemplatesSkeleton() {
-  const placeholders = [0, 1, 2, 3, 4, 5]
-
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {placeholders.map((index) => (
+      {templateSkeletonPlaceholders.map((index) => (
         <Skeleton key={index} className="h-32 w-full" />
       ))}
     </div>

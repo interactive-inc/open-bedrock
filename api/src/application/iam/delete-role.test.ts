@@ -1,5 +1,4 @@
 import { DeleteRole } from "@/application/iam/delete-role"
-import type { Context } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"

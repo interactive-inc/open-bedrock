@@ -9,6 +9,7 @@ import type { CareerApplicationActionState } from "@/app/(app)/career/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -172,12 +173,15 @@ function WithdrawApplicationButton(props: { applicationId: number }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この応募を取り下げますか？"
+      description="取り下げた応募は元に戻せません。"
+      confirmLabel="応募を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="application_id" value={props.applicationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

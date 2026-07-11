@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/onboarding/actions"
 import type { TemplateMutationState } from "@/app/(app)/onboarding/actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -130,16 +131,21 @@ function DeleteTemplateButton(props: { code: string }) {
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title="このオンボーディングテンプレートを削除しますか？"
+        description="テンプレートは元に戻せません。既存の割り当ては削除されません。"
+        confirmLabel="テンプレートを削除"
+        pending={pending}
+      >
+        <input type="hidden" name="code" value={props.code} />
+      </ConfirmActionDialog>
 
       {state.message !== null && state.ok === false ? (
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
-    </form>
+    </div>
   )
 }

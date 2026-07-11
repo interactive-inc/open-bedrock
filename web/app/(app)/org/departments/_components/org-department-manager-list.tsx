@@ -7,6 +7,7 @@ import {
   updateOrgDepartmentAction,
 } from "@/app/(app)/org/departments/actions"
 import type { OrgDepartmentActionState } from "@/app/(app)/org/departments/actions"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -178,14 +179,19 @@ function DeleteDepartmentButton(props: { code: string }) {
   })
 
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
-      <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col items-end gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title={`部署 ${props.code} を削除しますか？`}
+        description="部署ノードの削除は元に戻せません。配下の部署がある場合は削除できません。"
+        confirmLabel="部署を削除"
+        pending={pending}
+      >
+        <input type="hidden" name="code" value={props.code} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <p className="text-xs text-destructive">{state.error}</p>}
-    </form>
+    </div>
   )
 }

@@ -24,7 +24,7 @@ function toResponseBody(posting: CareerPosting) {
   })
 }
 
-// GET /career/postings/:posting_id — 公募の詳細（管理ロールのみ）
+// GET /career/postings/:posting_id — 応募に必要な公募の詳細（認証済みユーザー）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -35,7 +35,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const postingId = validateIntParam(c.req.param("posting_id"), "posting")
 
   const posting = await new GetCareerPosting(c).run({
-    session: session,
     postingId: postingId,
   })
 

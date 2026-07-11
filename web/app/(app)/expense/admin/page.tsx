@@ -93,9 +93,11 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
         description="全社の経費申請を横断で確認します。承認は各申請の詳細から行います。"
         breadcrumbs={[{ label: "経費", href: "/expense" }, { label: "経費申請管理" }]}
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
-            承認受信箱
-          </Button>
+          currentUser.permissions.includes("expense:approve") ? (
+            <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
+              承認受信箱
+            </Button>
+          ) : null
         }
       />
 

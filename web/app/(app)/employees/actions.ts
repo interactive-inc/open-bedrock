@@ -7,7 +7,9 @@ import { deleteEmployee } from "@/lib/api/delete-employee"
 import { getMe } from "@/lib/api/get-me"
 import { updateEmployee } from "@/lib/api/update-employee"
 import type { EmployeeRole, EmployeeStatus } from "@/lib/api/types/employee-types"
-import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import { canCreateEmployee } from "@/lib/employee/can-create-employee"
+import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
+import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
 import {
   FORM_CONSTRAINTS,
   isValidEmail,
@@ -73,8 +75,8 @@ export async function createEmployeeAction(
 ): Promise<EmployeeCreateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
-    return { ok: false, error: "従業員を管理する権限がありません" }
+  if (currentUser instanceof Error || canCreateEmployee(currentUser.permissions) === false) {
+    return { ok: false, error: "従業員を登録する権限がありません" }
   }
 
   const errors: Array<string> = []
@@ -181,8 +183,8 @@ export async function updateEmployeeAction(
 ): Promise<EmployeeUpdateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
-    return { ok: false, error: "従業員を管理する権限がありません" }
+  if (currentUser instanceof Error || canUpdateEmployee(currentUser.permissions) === false) {
+    return { ok: false, error: "従業員を更新する権限がありません" }
   }
 
   const code = toRequiredText(formData.get("code"), {
@@ -253,8 +255,8 @@ export async function deleteEmployeeAction(
 ): Promise<EmployeeDeleteFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageEmployees(currentUser.permissions) === false) {
-    return { ok: false, error: "従業員を管理する権限がありません" }
+  if (currentUser instanceof Error || canDeleteEmployee(currentUser.permissions) === false) {
+    return { ok: false, error: "従業員を削除する権限がありません" }
   }
 
   const code = toRequiredText(formData.get("code"), {

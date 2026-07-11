@@ -5,12 +5,15 @@ import { OrgDepartmentManagerSection } from "@/app/(app)/org/departments/_compon
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "部署" }
 
 // 部署管理ページ。部署ノードの一覧・変更・削除を行う（org:manage が必要）。
 // 新規作成は /org/departments/new に分離する。組織図ツリーは /org（概要）で閲覧する。
-export default function OrgDepartmentsPage() {
+export default async function OrgDepartmentsPage() {
+  await requirePermission("org:manage")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

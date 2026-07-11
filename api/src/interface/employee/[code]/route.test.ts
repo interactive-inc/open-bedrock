@@ -119,8 +119,8 @@ async function request(
 }
 
 describe("GET /employees/:code", () => {
-  test("returns 200 with the employee", async () => {
-    const response = await request("/employees/E001", await memberToken())
+  test("returns 200 with another employee for employee:read holder", async () => {
+    const response = await request("/employees/E001", await adminToken())
 
     expect(response.status).toBe(200)
 
@@ -135,7 +135,7 @@ describe("GET /employees/:code", () => {
   })
 
   test("never leaks passwordHash or id", async () => {
-    const response = await request("/employees/E001", await memberToken())
+    const response = await request("/employees/E001", await adminToken())
 
     const parsed = z.record(z.string(), z.unknown()).safeParse(await response.json())
 
@@ -145,6 +145,18 @@ describe("GET /employees/:code", () => {
       expect("passwordHash" in parsed.data).toBe(false)
       expect("id" in parsed.data).toBe(false)
     }
+  })
+
+  test("returns 200 for a member reading their own employee record", async () => {
+    const response = await request("/employees/E005", await memberToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("conceals another employee record from a member without employee:read", async () => {
+    const response = await request("/employees/E001", await memberToken())
+
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for a missing employee", async () => {

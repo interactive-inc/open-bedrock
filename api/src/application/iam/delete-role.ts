@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
@@ -33,6 +34,16 @@ export class DeleteRole {
 
     if (role === null) {
       return new NotFoundError("role not found", "role_not_found")
+    }
+
+    const permissionKeys = await roleRepository.permissionKeysOf(command.roleId)
+
+    if (permissionKeys instanceof Error) {
+      return new UnexpectedError("failed to load role permissions", { cause: permissionKeys })
+    }
+
+    if (hasPermissionSuperset(command.session, permissionKeys) === false) {
+      return new ForbiddenError("cannot delete a higher privilege role", "role_escalation")
     }
 
     if (role.isSystem === 1) {

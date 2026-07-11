@@ -66,7 +66,7 @@ export async function createAssetAction(
 ): Promise<AssetCreateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 
@@ -125,7 +125,7 @@ export async function lendAssetAction(
 ): Promise<AssetLendFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 
@@ -167,7 +167,7 @@ export async function returnAssetAction(
 ): Promise<AssetReturnFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 
@@ -201,7 +201,7 @@ export async function disposeAssetAction(
 ): Promise<AssetDisposeFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 
@@ -247,7 +247,7 @@ export async function updateAssetAction(
 ): Promise<AssetUpdateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 
@@ -307,7 +307,7 @@ export async function deleteAssetAction(
 ): Promise<AssetDeleteFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "資産を管理する権限がありません" }
   }
 

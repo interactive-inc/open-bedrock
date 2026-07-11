@@ -51,6 +51,7 @@ import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
 import * as dashboardRoute from "@/interface/dashboard/route"
 import * as employeeListRoute from "@/interface/employee/route"
+import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
 import * as expenseCreateRoute from "@/interface/expense/route"
@@ -168,6 +169,7 @@ import * as certificateRequestMineRoute from "@/interface/certificate-request/ce
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
+import * as antisocialCheckAdminRoute from "@/interface/antisocial-check/antisocial-checks/admin/route"
 import * as applicationTemplateCreateRoute from "@/interface/application/templates/create-route"
 import * as roomMasterListRoute from "@/interface/room/rooms/route"
 import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
@@ -228,6 +230,7 @@ export const app = factory
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/employees", ...employeeListRoute.GET)
+  .get("/directory/employees", ...employeeDirectoryRoute.GET)
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
@@ -460,6 +463,7 @@ export const app = factory
   .delete("/certificate-requests/:id", ...certificateRequestDetailRoute.DELETE)
   .post("/antisocial-checks", ...antisocialCheckCreateRoute.POST)
   .get("/antisocial-checks/me", ...antisocialCheckMineRoute.GET)
+  .get("/antisocial-checks/admin", ...antisocialCheckAdminRoute.GET)
   .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)
   .put("/antisocial-checks/:id", ...antisocialCheckDetailRoute.PUT)
   .delete("/antisocial-checks/:id", ...antisocialCheckDetailRoute.DELETE)

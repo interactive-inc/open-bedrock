@@ -49,6 +49,14 @@ function adminToken(): Promise<string> {
   })
 }
 
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
 async function request(path: string, token: string | null): Promise<Response> {
   return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
 }
@@ -220,6 +228,12 @@ describe("GET /employees", () => {
     expect(response.status).toBe(401)
   })
 
+  test("returns 403 without employee:read", async () => {
+    const response = await request("/employees", await memberToken())
+
+    expect(response.status).toBe(403)
+  })
+
   test("returns 401 with an invalid bearer token", async () => {
     const response = await request("/employees", "not-a-real-token")
 
@@ -236,5 +250,36 @@ describe("GET /employees", () => {
     const response = await request("/employees/extra", await adminToken())
 
     expect(response.status).toBe(404)
+  })
+})
+
+describe("GET /directory/employees", () => {
+  test("returns only active employees without sensitive fields to a member", async () => {
+    const response = await request("/directory/employees", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(z.record(z.string(), z.unknown())), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(12)
+
+      for (const employee of parsed.data.data) {
+        expect("email" in employee).toBe(false)
+        expect("status" in employee).toBe(false)
+        expect("role" in employee).toBe(false)
+        expect("id" in employee).toBe(false)
+      }
+    }
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request("/directory/employees", null)
+
+    expect(response.status).toBe(401)
   })
 })

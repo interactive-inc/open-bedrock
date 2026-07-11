@@ -82,16 +82,18 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
     <div className="flex flex-col gap-6">
       <PageHeader
         title="交換申請管理"
-        description="全社のサンクス交換申請を横断で確認します。承認は /thanks/rewards/manage から行います。"
+        description="全社のサンクス交換申請を横断で確認します。"
         breadcrumbs={[{ label: "感謝", href: "/thanks" }, { label: "交換申請管理" }]}
         actions={
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/thanks/rewards/manage" />}
-          >
-            景品と交換承認
-          </Button>
+          currentUser.permissions.includes("thanks_reward:manage") ? (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/thanks/rewards/manage" />}
+            >
+              景品の管理
+            </Button>
+          ) : null
         }
       />
 

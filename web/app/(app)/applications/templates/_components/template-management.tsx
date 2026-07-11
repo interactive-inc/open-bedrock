@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/applications/templates/actions"
 import { FormBuilder } from "@/components/form-builder"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -127,14 +128,19 @@ function DeleteTemplateButton(props: { code: string }) {
   })
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title="この申請テンプレートを削除しますか？"
+        description="テンプレートは元に戻せません。既存の申請記録は削除されません。"
+        confirmLabel="テンプレートを削除"
+        pending={pending}
+      >
+        <input type="hidden" name="code" value={props.code} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-    </form>
+    </div>
   )
 }

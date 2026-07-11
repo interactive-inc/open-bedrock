@@ -15,7 +15,7 @@ import {
 
 // 実施中アンケートを取得してテーブル表示する非同期 RSC。
 // 各行から回答画面 (/surveys/:id) と集計画面 (/surveys/:id/summary) へ遷移できる。
-export async function SurveyListTable() {
+export async function SurveyListTable(props: { canViewSummary: boolean }) {
   const surveys = await getSurveyList()
 
   if (surveys instanceof Error) {
@@ -60,14 +60,16 @@ export async function SurveyListTable() {
                   回答
                 </Button>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  nativeButton={false}
-                  render={<Link href={`/surveys/${survey.id}/summary`} />}
-                >
-                  集計
-                </Button>
+                {props.canViewSummary ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    nativeButton={false}
+                    render={<Link href={`/surveys/${survey.id}/summary`} />}
+                  >
+                    集計
+                  </Button>
+                ) : null}
               </TableCell>
             </TableRow>
           ))}

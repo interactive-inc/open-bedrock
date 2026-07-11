@@ -87,6 +87,7 @@ export class AntisocialCheck implements Props {
       partnerAddress: props.partnerAddress,
       representativeName: props.representativeName,
       result: props.result,
+      status: props.result === null ? this.status : "completed",
     })
   }
 }

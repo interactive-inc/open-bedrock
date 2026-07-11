@@ -30,7 +30,7 @@ export const metadata = { title: "会議室マスタ" }
 export default async function RoomManagePage() {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageRooms(me.role)) {
+  if (me instanceof Error || !canManageRooms(me.permissions)) {
     notFound()
   }
 

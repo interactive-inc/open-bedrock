@@ -70,9 +70,7 @@ export function ThanksTimeline(props: Props) {
           </Button>
         </div>
       ) : items.length > props.pageSize ? (
-        <p className="text-center text-xs text-muted-foreground">
-          全 {props.total} 件を表示中
-        </p>
+        <p className="text-center text-xs text-muted-foreground">全 {props.total} 件を表示中</p>
       ) : null}
     </div>
   )

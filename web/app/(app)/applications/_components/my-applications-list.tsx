@@ -2,7 +2,7 @@
 
 import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
-import { useActionState, useState } from "react"
+import { useActionState, useRef, useState } from "react"
 import {
   updateApplicationAction,
   withdrawApplicationAction,
@@ -11,6 +11,7 @@ import type { ApplicationActionState } from "@/app/(app)/applications/actions"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -119,7 +120,7 @@ function UpdateApplicationDialog(props: {
 }) {
   const [open, setOpen] = useState(false)
 
-  const [isDirty, setIsDirty] = useState(false)
+  const isDirty = useRef(false)
 
   const initialPayload = JSON.stringify(props.application.payload, null, 2)
 
@@ -130,7 +131,7 @@ function UpdateApplicationDialog(props: {
     const result = await updateApplicationAction(previousState, formData)
 
     if (result.ok) {
-      setIsDirty(false)
+      isDirty.current = false
       setOpen(false)
     }
 
@@ -143,14 +144,14 @@ function UpdateApplicationDialog(props: {
   })
 
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen && isDirty) {
+    if (!nextOpen && isDirty.current) {
       const ok = window.confirm("編集中の内容は破棄されます。閉じてよろしいですか?")
 
       if (!ok) {
         return
       }
 
-      setIsDirty(false)
+      isDirty.current = false
     }
 
     setOpen(nextOpen)
@@ -179,7 +180,9 @@ function UpdateApplicationDialog(props: {
                 name="payload"
                 rows={8}
                 defaultValue={initialPayload}
-                onChange={(event) => setIsDirty(event.target.value !== initialPayload)}
+                onChange={(event) => {
+                  isDirty.current = event.target.value !== initialPayload
+                }}
               />
             </Field>
           </FieldGroup>
@@ -203,12 +206,15 @@ function WithdrawApplicationButton(props: { applicationId: number }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この申請を取り下げますか？"
+      description="取り下げた申請は承認されません。この操作は元に戻せません。"
+      confirmLabel="申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="application_id" value={props.applicationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

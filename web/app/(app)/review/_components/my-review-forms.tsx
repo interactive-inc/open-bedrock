@@ -40,8 +40,6 @@ export function MyReviewForms(props: Props) {
     initialState,
   )
 
-  const submitState = submitAction[0]
-
   const submitDispatch = submitAction[1]
 
   const isSubmitting = submitAction[2]

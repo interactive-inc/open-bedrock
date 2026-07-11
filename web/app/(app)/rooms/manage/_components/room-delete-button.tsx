@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteRoomAction } from "@/app/(app)/rooms/manage/actions"
 import type { RoomDeleteFormState } from "@/app/(app)/rooms/manage/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象の会議室 id。hidden フィールドへ埋め込む。
@@ -35,12 +35,15 @@ export function RoomDeleteButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この会議室を削除しますか？"
+      description="会議室マスタから削除され、今後は予約できなくなります。"
+      confirmLabel="会議室を削除"
+      pending={isPending}
+    >
       <input type="hidden" name="id" value={props.id} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={isPending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }
