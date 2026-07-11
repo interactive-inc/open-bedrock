@@ -176,4 +176,42 @@ describe("ApplicationTemplateRepository", () => {
 
     expect(found).toBeInstanceOf(ApplicationTemplate)
   })
+
+  test("delete returns null when a decided (approved) application references it", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "expense",
+        name: "経費申請",
+        category: "expense",
+        description: null,
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+
+    await seedD1(db, "applications", [
+      {
+        id: 1,
+        template_id: 1,
+        applicant_id: 1,
+        status: "approved",
+        current_step: null,
+        payload: "{}",
+        created_at: "2024-01-01T00:00:00Z",
+      },
+    ])
+
+    const repository = new ApplicationTemplateRepository(context)
+
+    const deleted = await repository.delete("expense")
+
+    expect(deleted).toBeNull()
+
+    const found = await repository.findByCode("expense")
+
+    expect(found).toBeInstanceOf(ApplicationTemplate)
+  })
 })
