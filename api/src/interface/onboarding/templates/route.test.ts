@@ -205,4 +205,22 @@ describe("GET /onboarding/templates", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("returns 403 for a member without onboarding:manage", async () => {
+    const response = await request({
+      path: "/onboarding/templates",
+      token: await token(5, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 200 for a manager with onboarding:manage", async () => {
+    const response = await request({
+      path: "/onboarding/templates",
+      token: await token(4, "manager"),
+    })
+
+    expect(response.status).toBe(200)
+  })
 })
