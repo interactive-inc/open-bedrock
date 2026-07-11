@@ -1,9 +1,10 @@
 import { CreateOnboardingTemplate } from "@/application/onboarding/create-onboarding-template"
+import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -25,6 +26,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (session === null) {
     throw new UnauthorizedError()
+  }
+
+  if (canManageOnboarding(session) === false) {
+    throw new ForbiddenError()
   }
 
   const parsed = kindQuerySchema.safeParse(c.req.query("kind"))
