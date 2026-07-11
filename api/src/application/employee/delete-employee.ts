@@ -170,6 +170,27 @@ export class DeleteEmployee {
         ...(guardLastAdmin
           ? [abortWhenRemovingLoginEnabledAdminWouldLeaveNone(db, employeeId)]
           : []),
+
+        // --- IAM 系（account を employee_id で引き、その account_id で子を削除） ---
+        // last-admin ガードは accounts / account_roles を参照するため、必ずガードより後に置く。
+        // ガードより前に消すと admin 判定が狂い、最後の admin を誤って削除できてしまう。
+        // account_id 参照の子テーブルを先に消し、最後に accounts 本体を消す。
+        db
+          .prepare(
+            "DELETE FROM identities WHERE account_id IN (SELECT id FROM accounts WHERE employee_id = ?1)",
+          )
+          .bind(employeeId),
+        db
+          .prepare(
+            "DELETE FROM account_roles WHERE account_id IN (SELECT id FROM accounts WHERE employee_id = ?1)",
+          )
+          .bind(employeeId),
+        db
+          .prepare(
+            "DELETE FROM refresh_tokens WHERE account_id IN (SELECT id FROM accounts WHERE employee_id = ?1)",
+          )
+          .bind(employeeId),
+        db.prepare("DELETE FROM accounts WHERE employee_id = ?1").bind(employeeId),
       ])
 
       return null

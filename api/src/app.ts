@@ -218,6 +218,13 @@ export const app = factory
   .use("*", databaseMiddleware)
   .onError((error, c) => {
     if (error instanceof HTTPException) {
+      // toHttpException 経由の例外は res に {error, code} の JSON を積んでいる。
+      // それを尊重して返し、CLI/AI が理由（message）と code を受け取れるようにする。
+      // res 未設定の素の HTTPException（401/413/429 等）は従来どおり {error: message} を返す。
+      if (error.res) {
+        return error.getResponse()
+      }
+
       return c.json({ error: error.message }, error.status)
     }
 

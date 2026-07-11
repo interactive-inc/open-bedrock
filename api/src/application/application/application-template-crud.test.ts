@@ -24,12 +24,16 @@ function seedExpense(db: D1Database): Promise<unknown> {
   ])
 }
 
-function seedPendingApplication(db: D1Database, templateId: number): Promise<void> {
+function seedApplication(
+  db: D1Database,
+  templateId: number,
+  status: "pending" | "approved" | "rejected",
+): Promise<void> {
   return seedD1(db, "applications", [
     {
       template_id: templateId,
       applicant_id: 1,
-      status: "pending",
+      status: status,
       current_step: null,
       payload: "{}",
       created_at: "2026-01-01T00:00:00.000Z",
@@ -199,7 +203,7 @@ describe("DeleteApplicationTemplate", () => {
     const { context, db } = createTestContext()
 
     await seedExpense(db)
-    await seedPendingApplication(db, 1)
+    await seedApplication(db, 1, "pending")
 
     const result = await new DeleteApplicationTemplate(context).run({
       session: makeTestSession("admin"),
@@ -207,5 +211,24 @@ describe("DeleteApplicationTemplate", () => {
     })
 
     expectApplicationError(result, ConflictError, "template_in_use")
+  })
+
+  test("returns template_in_use when a decided (approved) application references it", async () => {
+    const { context, db } = createTestContext()
+
+    await seedExpense(db)
+    await seedApplication(db, 1, "approved")
+
+    const result = await new DeleteApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "expense",
+    })
+
+    expectApplicationError(result, ConflictError, "template_in_use")
+
+    // 監査記録破壊を防ぐため、テンプレートは残存している
+    const found = await new ApplicationTemplateRepository(context).findByCode("expense")
+
+    expect(found).toBeInstanceOf(ApplicationTemplate)
   })
 })

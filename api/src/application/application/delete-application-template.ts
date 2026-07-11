@@ -13,7 +13,7 @@ export type Deleted = { reason: "deleted" }
 
 /**
  * 管理権限を持つ者が申請テンプレートを削除する。
- * pending 申請が存在するテンプレートは削除できない（repository 側で
+ * 参照する申請が存在するテンプレートは削除できない（状態を問わない。repository 側で
  * D1 batch によりアトミックに判定する）。
  */
 export class DeleteApplicationTemplate {
@@ -36,8 +36,8 @@ export class DeleteApplicationTemplate {
       return new NotFoundError("template not found", "template_not_found")
     }
 
-    // D1 batch で pending 申請チェックと削除をアトミックに実行。
-    // null = pending 申請が存在するため削除不可。
+    // D1 batch で申請参照チェックと削除をアトミックに実行。
+    // null = 参照する申請が存在するため削除不可（状態を問わない）。
     const deleted = await templateRepository.delete(command.code)
 
     if (deleted instanceof Error) {
@@ -45,7 +45,7 @@ export class DeleteApplicationTemplate {
     }
 
     if (deleted === null) {
-      return new ConflictError("template is in use by pending applications", "template_in_use")
+      return new ConflictError("template is in use by applications", "template_in_use")
     }
 
     return { reason: "deleted" }

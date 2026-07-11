@@ -710,6 +710,85 @@ describe("DeleteEmployee", () => {
     expect(balanceCount).toBe(0)
   })
 
+  test("deletes IAM records (accounts/identities/account_roles/refresh_tokens) with the employee", async () => {
+    const { context, db } = createTestContext()
+
+    // role 付きで seed すると accounts/identities/account_roles が作られる（account.id = employee.id）
+    const id = await seedEmployee(context, "E920", { role: "member" })
+
+    // refresh_tokens は seed されないため直接挿入する
+    await db
+      .prepare(
+        `INSERT INTO refresh_tokens (id, account_id, token_hash, family_id, token_version, expires_at, created_at)
+         VALUES (1, ?1, 'hash-e920', 'family-e920', 0, 9999999999, 0)`,
+      )
+      .bind(id)
+      .run()
+
+    const result = await new DeleteEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: id + 1000,
+      code: "E920",
+    })
+
+    expect(result).toEqual({ reason: "deleted" })
+
+    const accountCount = await db
+      .prepare("SELECT COUNT(*) as c FROM accounts WHERE employee_id = ?1")
+      .bind(id)
+      .first("c")
+    expect(accountCount).toBe(0)
+
+    const identityCount = await db
+      .prepare("SELECT COUNT(*) as c FROM identities WHERE account_id = ?1")
+      .bind(id)
+      .first("c")
+    expect(identityCount).toBe(0)
+
+    const accountRoleCount = await db
+      .prepare("SELECT COUNT(*) as c FROM account_roles WHERE account_id = ?1")
+      .bind(id)
+      .first("c")
+    expect(accountRoleCount).toBe(0)
+
+    const refreshTokenCount = await db
+      .prepare("SELECT COUNT(*) as c FROM refresh_tokens WHERE account_id = ?1")
+      .bind(id)
+      .first("c")
+    expect(refreshTokenCount).toBe(0)
+  })
+
+  test("allows re-registering the same code after deletion (no orphan account conflict)", async () => {
+    const { context } = createTestContext()
+
+    // 従業員を IAM 付きで登録
+    const registered = await new RegisterEmployee(context).run({
+      session: makeTestSession("admin"),
+      employee: { ...newEmployeeInput, code: "E921", email: "you+e921@example.com" },
+    })
+
+    if (registered instanceof ApplicationError) {
+      throw new Error("register failed")
+    }
+
+    // 削除（viewer は削除対象と別人にする）
+    const deleted = await new DeleteEmployee(context).run({
+      session: makeTestSession("admin"),
+      viewerEmployeeId: registered.id + 1000,
+      code: "E921",
+    })
+
+    expect(deleted).toEqual({ reason: "deleted" })
+
+    // 同じ code で再登録できる（孤児 account による employee_id UNIQUE 衝突が起きない）
+    const reRegistered = await new RegisterEmployee(context).run({
+      session: makeTestSession("admin"),
+      employee: { ...newEmployeeInput, code: "E921", email: "you+e921b@example.com" },
+    })
+
+    expect(reRegistered).toBeInstanceOf(Employee)
+  })
+
   test("nullifies thanks_redemptions.decider_id when the decider employee is deleted", async () => {
     const { context, db } = createTestContext()
 

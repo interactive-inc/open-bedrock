@@ -22,6 +22,7 @@ export type SubmittedApplication = {
   currentStep: string | null
   payload: unknown
   createdAt: string
+  approverRoles: ReadonlyArray<string>
 }
 
 /**
@@ -80,6 +81,7 @@ export class SubmitApplication {
       currentStep: created.currentStep,
       payload: created.payload,
       createdAt: created.createdAt,
+      approverRoles: template.approverRoles,
     }
   }
 }
