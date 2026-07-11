@@ -16,11 +16,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getStocktakeList } from "@/lib/api/get-stocktake-list"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "棚卸し" }
 
 // 棚卸しセッション一覧画面。RSC で取得し、確認進捗と状態を表示する。
-export default function StocktakesPage() {
+export default async function StocktakesPage() {
+  await requirePermission("asset:manage")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

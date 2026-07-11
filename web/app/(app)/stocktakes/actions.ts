@@ -30,7 +30,7 @@ export async function startStocktakeAction(
 ): Promise<StocktakeStartFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "棚卸しを管理する権限がありません" }
   }
 
@@ -68,7 +68,7 @@ export async function checkStocktakeItemAction(
 ): Promise<StocktakeCheckFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "棚卸しを管理する権限がありません" }
   }
 
@@ -109,7 +109,7 @@ export async function closeStocktakeAction(
 ): Promise<StocktakeCloseFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageAssets(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
     return { ok: false, error: "棚卸しを管理する権限がありません" }
   }
 

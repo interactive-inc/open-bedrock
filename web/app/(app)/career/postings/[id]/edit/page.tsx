@@ -28,7 +28,7 @@ export default async function EditCareerPostingPage(props: Props) {
 
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageCareerPostings(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageCareerPostings(currentUser.permissions) === false) {
     notFound()
   }
 

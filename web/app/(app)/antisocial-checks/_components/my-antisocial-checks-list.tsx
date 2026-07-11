@@ -28,9 +28,11 @@ import {
 } from "@/components/ui/table"
 import type { AntisocialCheckResponse } from "@/lib/api/types/antisocial-check-types"
 import { statusLabel } from "@/lib/status-label"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   antisocialChecks: ReadonlyArray<AntisocialCheckResponse>
+  canManageResults: boolean
 }
 
 // 自分の反社チェック申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
@@ -67,11 +69,18 @@ export function MyAntisocialChecksList(props: Props) {
               <TableCell>{statusLabel(antisocialCheck.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
-                  <UpdateAntisocialCheckDialog antisocialCheck={antisocialCheck} />
+                {antisocialCheck.status === "requested" ? (
+                  <div className="flex justify-end gap-2">
+                    <UpdateAntisocialCheckDialog
+                      antisocialCheck={antisocialCheck}
+                      canManageResults={props.canManageResults}
+                    />
 
-                  <CancelAntisocialCheckButton antisocialCheckId={antisocialCheck.id} />
-                </div>
+                    <CancelAntisocialCheckButton antisocialCheckId={antisocialCheck.id} />
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">確定済み</span>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -82,7 +91,10 @@ export function MyAntisocialChecksList(props: Props) {
 }
 
 // 反社チェック申請変更フォームを Dialog で開く。取引先情報と判定結果を編集して送信する。
-function UpdateAntisocialCheckDialog(props: { antisocialCheck: AntisocialCheckResponse }) {
+function UpdateAntisocialCheckDialog(props: {
+  antisocialCheck: AntisocialCheckResponse
+  canManageResults: boolean
+}) {
   const [open, setOpen] = useState(false)
 
   async function reduce(
@@ -111,7 +123,11 @@ function UpdateAntisocialCheckDialog(props: { antisocialCheck: AntisocialCheckRe
         <DialogHeader>
           <DialogTitle>反社チェック申請を変更</DialogTitle>
 
-          <DialogDescription>取引先情報と判定結果を変更します。</DialogDescription>
+          <DialogDescription>
+            {props.canManageResults
+              ? "取引先情報と判定結果を変更します。"
+              : "取引先情報を変更します。"}
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
@@ -148,15 +164,19 @@ function UpdateAntisocialCheckDialog(props: { antisocialCheck: AntisocialCheckRe
               />
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="update_result">判定結果</FieldLabel>
+            {props.canManageResults ? (
+              <Field>
+                <FieldLabel htmlFor="update_result">判定結果</FieldLabel>
 
-              <Input
-                id="update_result"
-                name="result"
-                defaultValue={props.antisocialCheck.result ?? ""}
-              />
-            </Field>
+                <Input
+                  id="update_result"
+                  name="result"
+                  defaultValue={props.antisocialCheck.result ?? ""}
+                />
+              </Field>
+            ) : (
+              <input type="hidden" name="result" value={props.antisocialCheck.result ?? ""} />
+            )}
           </FieldGroup>
 
           {state.error === null ? null : <FieldError>{state.error}</FieldError>}
@@ -178,12 +198,15 @@ function CancelAntisocialCheckButton(props: { antisocialCheckId: string }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="この反社チェック申請を取り消しますか？"
+      description="取り消した申請は変更できません。必要な場合は新しく申請してください。"
+      confirmLabel="申請を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="antisocial_check_id" value={props.antisocialCheckId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

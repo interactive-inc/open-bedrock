@@ -15,7 +15,7 @@ type Props = {
 // ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:manage_roles が必要）。
 // 権限が無いユーザーには 404 を返す。
 export default async function AdminRoleEditPage(props: Props) {
-  const currentUser = await getMe()
+  const [currentUser, params] = await Promise.all([getMe(), props.params])
 
   if (
     currentUser instanceof Error ||
@@ -24,17 +24,13 @@ export default async function AdminRoleEditPage(props: Props) {
     notFound()
   }
 
-  const params = await props.params
-
   const roleId = Number(params.id)
 
   if (Number.isInteger(roleId) === false || roleId <= 0) {
     notFound()
   }
 
-  const role = await getRole(roleId)
-
-  const permissions = await getPermissions()
+  const [role, permissions] = await Promise.all([getRole(roleId), getPermissions()])
 
   if (role instanceof Error || permissions instanceof Error) {
     return (
@@ -54,6 +50,16 @@ export default async function AdminRoleEditPage(props: Props) {
     )
   }
 
+  const actorPermissionKeys = new Set(currentUser.permissions)
+
+  const canManageTarget = role.permission_keys.every((permissionKey) =>
+    actorPermissionKeys.has(permissionKey),
+  )
+
+  if (canManageTarget === false) {
+    notFound()
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -71,7 +77,7 @@ export default async function AdminRoleEditPage(props: Props) {
         name={role.name}
         description={role.description}
         grantedPermissionKeys={role.permission_keys}
-        permissions={permissions}
+        permissions={permissions.filter((permission) => actorPermissionKeys.has(permission.key))}
       />
     </div>
   )

@@ -58,6 +58,17 @@ describe("resolveEvaluationPermission", () => {
     expect(permission).toEqual({ reason: "forbidden" })
   })
 
+  test("manager kind: owner cannot evaluate their own goal", () => {
+    const permission = resolveEvaluationPermission({
+      kind: "manager",
+      goalEmployeeId: 10,
+      viewerEmployeeId: 10,
+      viewerSession: makeSession(["goal:evaluate"]),
+    })
+
+    expect(permission).toEqual({ reason: "forbidden" })
+  })
+
   test("final kind: session with goal:evaluate returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "final",
@@ -75,6 +86,17 @@ describe("resolveEvaluationPermission", () => {
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
       viewerSession: makeSession([]),
+    })
+
+    expect(permission).toEqual({ reason: "forbidden" })
+  })
+
+  test("final kind: owner cannot finalize their own goal", () => {
+    const permission = resolveEvaluationPermission({
+      kind: "final",
+      goalEmployeeId: 10,
+      viewerEmployeeId: 10,
+      viewerSession: makeSession(["goal:evaluate"]),
     })
 
     expect(permission).toEqual({ reason: "forbidden" })

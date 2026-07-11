@@ -82,7 +82,7 @@ export async function createNotificationAction(
 ): Promise<NotificationFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageNotifications(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageNotifications(currentUser.permissions) === false) {
     return { ok: false, error: "通知を送信する権限がありません" }
   }
 

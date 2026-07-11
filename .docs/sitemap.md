@@ -106,6 +106,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/onboarding` はオンボーディングのテンプレート管理と社員への割り当てを行う画面。
 - `/onboarding/me` は自分に割り当てられた未完了タスクを確認する画面。
+- `/onboarding/employees` は閲覧権限を持つ担当者が社員を選び、進行状況へ移動する画面。
 - `/onboarding/employee/[code]` は社員ごとのオンボーディング進行状況を確認する画面。
 - `/onboarding/templates` は入社、退社のオンボーディングテンプレートを管理する画面。
 - `/onboarding/templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
@@ -120,6 +121,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 ## シフト
 
 - `/shift` は自分のシフトと交代申請を管理する画面。
+- `/shift/inbox` は自分が当事者でないシフト交代申請を承認する画面(`shift:manage`)。
 - `/shift/admin` は全社のシフト交代申請を横断で確認する管理画面(`shift_swap:read:all`)。
 - `/shift/manage` は全員のシフト割当を確認し、新しい割当を作成する管理画面。
 - `/shift/patterns` はシフトの定型パターンを一覧する画面。
@@ -141,6 +143,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/thanks` はサンクスポイントの残量と、社内の感謝を見渡す画面。
 - `/thanks/send` は送り先と感謝メッセージを入力し、任意でポイントを添えて送る画面。
 - `/thanks/rewards` は受領残高で交換できる景品を確認し、交換を申請する画面。
+- `/thanks/inbox` は自分以外のサンクス交換申請を承認または却下する画面(`thanks_redemption:approve`)。
 - `/thanks/admin` は全社のサンクス交換申請を横断で確認する管理画面(`thanks_redemption:read:all`)。
 - `/thanks/rewards/manage` は管理者が新しい景品を登録する画面。
 
@@ -160,6 +163,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/certificate-requests/new` は証明書の種類と用途を記入して発行を依頼する画面。
 - `/antisocial-checks` は反社チェック申請と申請状況を確認する画面。
 - `/antisocial-checks/new` は対象者と確認内容を記入して反社チェックを申請する画面。
+- `/antisocial-checks/admin` は管理担当者が自分以外の申請へ確認結果を記録する画面(`antisocial_check:manage`)。
 
 ## システム
 

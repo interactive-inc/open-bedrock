@@ -8,6 +8,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "勤怠" }
 
@@ -18,7 +19,10 @@ type Props = {
 // 勤怠（本人）画面。出勤 / 退勤の打刻、月次サマリ、本人の勤怠一覧を並べる RSC。
 // searchParams（month/from/to）を読むため動的レンダリングになる。
 export default async function AttendancePage(props: Props) {
-  const searchParams = await props.searchParams
+  const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
+
+  const canViewAll =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("attendance:read:all")
 
   const month = typeof searchParams.month === "string" ? searchParams.month : null
 
@@ -32,9 +36,11 @@ export default async function AttendancePage(props: Props) {
         title="勤怠"
         description="出勤・退勤の打刻と、自分の勤怠記録を確認します。"
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/attendance/all" />}>
-            勤怠一覧（管理者）
-          </Button>
+          canViewAll ? (
+            <Button variant="outline" nativeButton={false} render={<Link href="/attendance/all" />}>
+              勤怠一覧（管理者）
+            </Button>
+          ) : null
         }
       />
 

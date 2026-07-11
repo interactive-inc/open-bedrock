@@ -87,7 +87,7 @@ export async function createRewardAction(
 ): Promise<ThanksActionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageRewards(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageRewards(currentUser.permissions) === false) {
     return { ok: false, error: "景品を登録する権限がありません" }
   }
 

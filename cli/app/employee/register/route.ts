@@ -15,7 +15,7 @@ export default factory.createHandlers(
       name: z.string().optional(),
       email: z.string().optional(),
       password: z.string().optional(),
-      role: z.enum(["admin", "member", "manager", "hr"]).optional(),
+      role: z.enum(["member", "manager", "hr", "admin"]).optional(),
       "dept-id": z.coerce.number().int().optional(),
       "dept-name": z.string().optional(),
       position: z.string().optional(),

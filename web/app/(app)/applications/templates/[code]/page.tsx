@@ -31,7 +31,7 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
   const currentUser = await getMe()
 
   const canManage =
-    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.role)
+    currentUser instanceof Error ? false : canManageApplicationTemplates(currentUser.permissions)
 
   const schema = toFormSchema(template.schema_json)
 

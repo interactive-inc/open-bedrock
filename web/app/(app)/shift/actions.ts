@@ -14,6 +14,7 @@ import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { approveShiftSwapRequest } from "@/lib/api/approve-shift-swap-request"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -71,7 +72,7 @@ export async function createShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -129,7 +130,7 @@ export async function publishShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -160,7 +161,7 @@ export async function createShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -232,7 +233,7 @@ export async function updateShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -272,7 +273,7 @@ export async function deleteShiftAssignmentAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -302,7 +303,7 @@ export async function updateShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -338,7 +339,7 @@ export async function deleteShiftPatternAction(
 ): Promise<ShiftFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
@@ -380,6 +381,39 @@ export async function cancelShiftSwapRequestAction(
 
   revalidatePath("/shift")
   revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
+
+  return { ok: true, error: null }
+}
+
+// シフト交代承認。API は承認者が申請当事者でないことも検証する。
+export async function approveShiftSwapRequestAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    currentUser.permissions.includes("shift_swap:approve") === false
+  ) {
+    return { ok: false, error: "シフト交代を承認する権限がありません" }
+  }
+
+  const swapRequestId = toPositiveIntId(formData.get("swap_request_id"))
+
+  if (swapRequestId === null) {
+    return { ok: false, error: "申請 ID が不正です" }
+  }
+
+  const approved = await approveShiftSwapRequest(swapRequestId)
+
+  if (approved instanceof Error) {
+    return { ok: false, error: approved.message }
+  }
+
+  revalidatePath("/shift/inbox")
+  revalidatePath("/shift")
   revalidatePath("/shift/manage")
 
   return { ok: true, error: null }

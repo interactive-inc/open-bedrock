@@ -45,7 +45,10 @@ export async function createApplicationTemplateAction(
 ): Promise<ApplicationTemplateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+  if (
+    currentUser instanceof Error ||
+    canManageApplicationTemplates(currentUser.permissions) === false
+  ) {
     return { ok: false, error: "テンプレートを管理する権限がありません" }
   }
 
@@ -111,7 +114,10 @@ export async function updateApplicationTemplateAction(
 ): Promise<ApplicationTemplateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+  if (
+    currentUser instanceof Error ||
+    canManageApplicationTemplates(currentUser.permissions) === false
+  ) {
     return { ok: false, error: "テンプレートを管理する権限がありません" }
   }
 
@@ -176,7 +182,10 @@ export async function deleteApplicationTemplateAction(
 ): Promise<ApplicationTemplateFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageApplicationTemplates(currentUser.role) === false) {
+  if (
+    currentUser instanceof Error ||
+    canManageApplicationTemplates(currentUser.permissions) === false
+  ) {
     return { ok: false, error: "テンプレートを管理する権限がありません" }
   }
 

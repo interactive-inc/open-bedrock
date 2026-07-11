@@ -1,7 +1,7 @@
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { hasPermission } from "@/lib/auth/has-permission"
 import { Employee } from "@/domain/employee/employee.entity"
-import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import { canCreateEmployee } from "@/lib/employee/can-create-employee"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
@@ -36,7 +36,7 @@ export class RegisterEmployee {
   async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageEmployees(command.session) === false) {
+    if (canCreateEmployee(command.session) === false) {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 

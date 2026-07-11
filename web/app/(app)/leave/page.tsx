@@ -12,6 +12,8 @@ import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
 
 export const metadata = { title: "休暇" }
 
+const leaveBalanceSkeletonPlaceholders = [0, 1, 2]
+
 /**
  * 休暇のメイン画面。残日数と自分の申請一覧に集中させ、申請フォームは /leave/new に分離する。
  */
@@ -20,6 +22,9 @@ export default async function LeavePage() {
 
   const canViewAll =
     currentUser instanceof Error ? false : canViewAllLeaves(currentUser.permissions)
+
+  const canApprove =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("leave:approve")
 
   return (
     <div className="flex flex-col gap-6">
@@ -34,10 +39,12 @@ export default async function LeavePage() {
               </Button>
             ) : null}
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
-              <Inbox />
-              承認受信箱
-            </Button>
+            {canApprove ? (
+              <Button variant="outline" nativeButton={false} render={<Link href="/leave/inbox" />}>
+                <Inbox />
+                承認受信箱
+              </Button>
+            ) : null}
 
             <Button nativeButton={false} render={<Link href="/leave/new" />}>
               <Plus />
@@ -67,11 +74,9 @@ export default async function LeavePage() {
 }
 
 function LeaveBalanceSkeleton() {
-  const placeholders = [0, 1, 2]
-
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {placeholders.map((index) => (
+      {leaveBalanceSkeletonPlaceholders.map((index) => (
         <Skeleton key={index} className="h-28 w-full" />
       ))}
     </div>

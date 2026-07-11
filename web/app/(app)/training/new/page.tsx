@@ -11,7 +11,7 @@ export const metadata = { title: "研修コースの作成" }
 export default async function NewTrainingCoursePage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageTraining(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageTraining(currentUser.permissions) === false) {
     notFound()
   }
 

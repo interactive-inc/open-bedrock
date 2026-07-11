@@ -15,9 +15,9 @@ export type OneOnOne = {
 
 // POST /oneonone のリクエストボディ。
 // api/src/oneonone/one-on-one-create-request-schema.ts と同形。
-// member_email 必須、それ以外は任意（未入力は送らない）。
+// member_employee_code 必須、それ以外は任意（未入力は送らない）。
 export type OneOnOneCreateRequest = {
-  member_email: string
+  member_employee_code: string
   topics: string | null
   manager_note: string | null
   next_action: string | null

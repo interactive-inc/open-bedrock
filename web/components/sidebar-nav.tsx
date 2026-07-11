@@ -91,12 +91,22 @@ function filterByPermission(
     required === undefined || permissions.has(required)
 
   const filteredGroups = groups.map((group) => {
-    const items = group.items
-      .filter((item) => allowed(item.requiredPermission))
-      .map((item) => ({
+    const items = group.items.reduce<Array<NavItem>>((result, item) => {
+      if (allowed(item.requiredPermission) === false) {
+        return result
+      }
+
+      const filteredItem = {
         ...item,
         children: item.children?.filter((child) => allowed(child.requiredPermission)),
-      }))
+      }
+
+      if (filteredItem.children === undefined || filteredItem.children.length > 0) {
+        result.push(filteredItem)
+      }
+
+      return result
+    }, [])
 
     return { ...group, items: items }
   })
@@ -116,7 +126,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
         label: "申請の承認",
         href: "/applications/inbox",
         icon: Inbox,
-        requiredPermission: "application:approve",
       },
       {
         label: "経費の承認",
@@ -140,7 +149,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/employees",
         icon: Users,
         children: [
-          { label: "一覧", href: "/employees" },
+          { label: "一覧", href: "/employees", requiredPermission: "employee:read" },
           { label: "新規登録", href: "/employees/new", requiredPermission: "employee:create" },
         ],
       },
@@ -150,7 +159,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: GitBranch,
         children: [
           { label: "概要", href: "/org" },
-          { label: "部署", href: "/org/departments" },
+          { label: "部署", href: "/org/departments", requiredPermission: "org:manage" },
         ],
       },
       {
@@ -192,6 +201,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: ClipboardList,
         children: [
           { label: "ハブ", href: "/onboarding", requiredPermission: "onboarding:manage" },
+          {
+            label: "社員別の状況",
+            href: "/onboarding/employees",
+            requiredPermission: "onboarding:view:all",
+          },
           {
             label: "テンプレート",
             href: "/onboarding/templates",
@@ -242,7 +256,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
           {
             label: "受信箱",
             href: "/applications/inbox",
-            requiredPermission: "application:approve",
           },
           {
             label: "全社の申請",
@@ -317,7 +330,12 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: CalendarDays,
         children: [
           { label: "自分", href: "/shift" },
-          { label: "パターン", href: "/shift/patterns" },
+          {
+            label: "交代承認",
+            href: "/shift/inbox",
+            requiredPermission: "shift_swap:approve",
+          },
+          { label: "パターン", href: "/shift/patterns", requiredPermission: "shift:manage" },
           { label: "管理", href: "/shift/manage", requiredPermission: "shift:manage" },
           {
             label: "全社の交代",
@@ -360,7 +378,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: CalendarClock,
         children: [
           { label: "履歴", href: "/oneonone" },
-          { label: "記録を追加", href: "/oneonone/new" },
+          { label: "記録を追加", href: "/oneonone/new", requiredPermission: "oneonone:create" },
         ],
       },
       {
@@ -371,6 +389,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "タイムライン", href: "/thanks" },
           { label: "送る", href: "/thanks/send" },
           { label: "景品", href: "/thanks/rewards" },
+          {
+            label: "交換承認",
+            href: "/thanks/inbox",
+            requiredPermission: "thanks_redemption:approve",
+          },
           {
             label: "景品の管理",
             href: "/thanks/rewards/manage",
@@ -481,6 +504,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "一覧", href: "/antisocial-checks" },
           { label: "新規宣誓", href: "/antisocial-checks/new" },
+          {
+            label: "判定受信箱",
+            href: "/antisocial-checks/admin",
+            requiredPermission: "antisocial_check:manage",
+          },
         ],
       },
     ],

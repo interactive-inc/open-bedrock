@@ -13,7 +13,7 @@ export const metadata = { title: "シフトパターンを作成" }
 export default async function ShiftPatternNewPage() {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canManageShift(currentUser.role) === false) {
+  if (currentUser instanceof Error || canManageShift(currentUser.permissions) === false) {
     notFound()
   }
 

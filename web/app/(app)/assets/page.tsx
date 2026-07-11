@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/table"
 import { getAssetList } from "@/lib/api/get-asset-list"
 import type { AssetKind, AssetStatus } from "@/lib/api/types/asset-types"
+import { getMe } from "@/lib/api/get-me"
+import { canManageAssets } from "@/lib/asset/can-manage-assets"
 
 export const metadata = { title: "備品" }
 
@@ -38,11 +40,13 @@ type Props = {
 
 // 物品一覧画面。種別/状態で絞り込み、RSC でサーバ取得してテーブル表示する。
 export default async function AssetsPage(props: Props) {
-  const searchParams = await props.searchParams
+  const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
 
   const kind = toAssetKind(searchParams.kind)
 
   const status = toAssetStatus(searchParams.status)
+
+  const canManage = currentUser instanceof Error ? false : canManageAssets(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,21 +59,25 @@ export default async function AssetsPage(props: Props) {
               自分の貸与品
             </Button>
 
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/assets/holdings" />}
-            >
-              保有状況
-            </Button>
+            {canManage ? (
+              <>
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href="/assets/holdings" />}
+                >
+                  保有状況
+                </Button>
 
-            <Button variant="outline" nativeButton={false} render={<Link href="/stocktakes" />}>
-              棚卸し
-            </Button>
+                <Button variant="outline" nativeButton={false} render={<Link href="/stocktakes" />}>
+                  棚卸し
+                </Button>
 
-            <Button nativeButton={false} render={<Link href="/assets/new" />}>
-              物品を登録
-            </Button>
+                <Button nativeButton={false} render={<Link href="/assets/new" />}>
+                  物品を登録
+                </Button>
+              </>
+            ) : null}
           </>
         }
       />

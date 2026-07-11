@@ -26,7 +26,7 @@ export const seedAntisocialChecks: ReadonlyArray<SeedAntisocialCheck> = [
     partnerName: "Sample Logistics Inc.",
     partnerAddress: null,
     representativeName: null,
-    result: "clear",
+    result: null,
     status: "requested",
     createdAt: "2026-06-01T00:00:00.000Z",
   },

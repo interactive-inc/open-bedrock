@@ -17,7 +17,7 @@ const selectClassName =
 
 // 従業員登録フォーム。コード・氏名・メール・初期パスワード・ロール・在籍状況を native form で送る。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
-export function EmployeeCreateForm() {
+export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
   const router = useRouter()
 
   async function reduce(
@@ -55,6 +55,8 @@ export function EmployeeCreateForm() {
             id="employee-code"
             name="code"
             placeholder="E100"
+            autoComplete="off"
+            spellCheck={false}
             maxLength={FORM_CONSTRAINTS.employee.codeMax}
             required
           />
@@ -80,6 +82,8 @@ export function EmployeeCreateForm() {
             name="email"
             type="email"
             placeholder="you@example.com"
+            autoComplete="off"
+            spellCheck={false}
             maxLength={FORM_CONSTRAINTS.employee.emailMax}
             required
           />
@@ -92,6 +96,7 @@ export function EmployeeCreateForm() {
             id="employee-password"
             name="password"
             type="password"
+            autoComplete="new-password"
             minLength={FORM_CONSTRAINTS.employee.passwordMin}
             maxLength={FORM_CONSTRAINTS.employee.passwordMax}
             required
@@ -101,18 +106,25 @@ export function EmployeeCreateForm() {
         <Field>
           <FieldLabel htmlFor="employee-role">ロール</FieldLabel>
 
-          <select
-            id="employee-role"
-            name="role"
-            defaultValue="member"
-            className={selectClassName}
-            required
-          >
-            <option value="member">メンバー</option>
-            <option value="manager">マネージャー</option>
-            <option value="hr">人事</option>
-            <option value="admin">管理者</option>
-          </select>
+          {props.canAssignRole ? (
+            <select
+              id="employee-role"
+              name="role"
+              defaultValue="member"
+              className={selectClassName}
+              required
+            >
+              <option value="member">メンバー</option>
+              <option value="manager">マネージャー</option>
+              <option value="hr">人事</option>
+              <option value="admin">管理者</option>
+            </select>
+          ) : (
+            <>
+              <Input id="employee-role" value="メンバー" readOnly />
+              <input type="hidden" name="role" value="member" />
+            </>
+          )}
         </Field>
 
         <Field>

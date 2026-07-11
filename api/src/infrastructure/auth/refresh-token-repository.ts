@@ -13,6 +13,7 @@ export class RefreshTokenRepository {
     accountId: number
     tokenHash: string
     familyId: string
+    tokenVersion: number
     userAgent: string | null
     nowEpoch: number
   }): Promise<void | Error> {
@@ -23,6 +24,7 @@ export class RefreshTokenRepository {
         accountId: props.accountId,
         tokenHash: props.tokenHash,
         familyId: props.familyId,
+        tokenVersion: props.tokenVersion,
         expiresAt: props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
         userAgent: props.userAgent,
         createdAt: props.nowEpoch,
@@ -32,14 +34,14 @@ export class RefreshTokenRepository {
     }
   }
 
-  async findValidByHash(
-    tokenHash: string,
-    nowEpoch: number,
-  ): Promise<
+  async findByHash(tokenHash: string): Promise<
     | {
         id: number
         accountId: number
         familyId: string
+        tokenVersion: number
+        expiresAt: number
+        revokedAt: number | null
       }
     | null
     | Error
@@ -52,10 +54,12 @@ export class RefreshTokenRepository {
           id: refreshTokens.id,
           accountId: refreshTokens.accountId,
           familyId: refreshTokens.familyId,
+          tokenVersion: refreshTokens.tokenVersion,
           expiresAt: refreshTokens.expiresAt,
+          revokedAt: refreshTokens.revokedAt,
         })
         .from(refreshTokens)
-        .where(and(eq(refreshTokens.tokenHash, tokenHash), isNull(refreshTokens.revokedAt)))
+        .where(eq(refreshTokens.tokenHash, tokenHash))
         .limit(1)
 
       const row = rows.at(0)
@@ -64,26 +68,59 @@ export class RefreshTokenRepository {
         return null
       }
 
-      if (row.expiresAt <= nowEpoch) {
-        return null
+      return {
+        id: row.id,
+        accountId: row.accountId,
+        familyId: row.familyId,
+        tokenVersion: row.tokenVersion,
+        expiresAt: row.expiresAt,
+        revokedAt: row.revokedAt,
       }
-
-      return { id: row.id, accountId: row.accountId, familyId: row.familyId }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find refresh token")
     }
   }
 
-  async revoke(tokenId: number, nowEpoch: number): Promise<void | Error> {
+  /**
+   * 未使用の旧トークンから後継を作り、旧トークンを失効する。D1 batch 内の条件付き
+   * INSERT/UPDATE により、同じ旧トークンから後継が複数発行されるのを防ぐ。
+   */
+  async rotate(props: {
+    tokenId: number
+    tokenHash: string
+    userAgent: string | null
+    nowEpoch: number
+  }): Promise<"rotated" | "reused" | Error> {
     try {
-      const db = this.c.var.database
+      const db = this.c.env.DB
 
-      await db
-        .update(refreshTokens)
-        .set({ revokedAt: nowEpoch })
-        .where(eq(refreshTokens.id, tokenId))
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO refresh_tokens
+              (account_id, token_hash, family_id, token_version, expires_at, revoked_at, user_agent, created_at)
+             SELECT account_id, ?1, family_id, token_version, ?2, NULL, ?3, ?4
+             FROM refresh_tokens
+             WHERE id = ?5 AND revoked_at IS NULL
+             RETURNING id`,
+          )
+          .bind(
+            props.tokenHash,
+            props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
+            props.userAgent,
+            props.nowEpoch,
+            props.tokenId,
+          ),
+        db
+          .prepare(
+            "UPDATE refresh_tokens SET revoked_at = ?1 WHERE id = ?2 AND revoked_at IS NULL RETURNING id",
+          )
+          .bind(props.nowEpoch, props.tokenId),
+      ])
+
+      return results.at(0)?.results.length === 1 ? "rotated" : "reused"
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to revoke refresh token")
+      return caught instanceof Error ? caught : new Error("failed to rotate refresh token")
     }
   }
 

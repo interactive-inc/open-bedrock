@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteSurveyAction } from "@/app/(app)/surveys/manage/actions"
 import type { SurveyFormState } from "@/app/(app)/surveys/manage/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象のアンケート id。hidden フィールドへ埋め込む。
@@ -35,12 +35,15 @@ export function SurveyDeleteButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="このアンケートを削除しますか？"
+      description="設問と収集済みの回答を含め、アンケートの記録は元に戻せません。"
+      confirmLabel="アンケートを削除"
+      pending={isPending}
+    >
       <input type="hidden" name="id" value={props.id} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={isPending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

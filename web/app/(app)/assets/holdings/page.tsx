@@ -15,11 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getAssetHoldings } from "@/lib/api/get-asset-holdings"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "保有状況" }
 
 // 保有状況一覧画面。現在貸出中の資産を「誰が何を持っているか」で横断表示する。管理者向け。
-export default function AssetHoldingsPage() {
+export default async function AssetHoldingsPage() {
+  await requirePermission("asset:manage")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader

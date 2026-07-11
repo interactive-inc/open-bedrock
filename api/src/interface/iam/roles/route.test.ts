@@ -69,7 +69,13 @@ describe("GET /roles", () => {
 
     const parsed = z
       .object({
-        data: z.array(z.object({ key: z.string(), is_system: z.boolean() })),
+        data: z.array(
+          z.object({
+            key: z.string(),
+            is_system: z.boolean(),
+            permission_keys: z.array(z.string()),
+          }),
+        ),
         total: z.number(),
       })
       .safeParse(await response.json())
@@ -81,6 +87,10 @@ describe("GET /roles", () => {
 
       expect(keys).toContain("admin")
       expect(keys).toContain("member")
+
+      const admin = parsed.data.data.find((role) => role.key === "admin")
+
+      expect(admin?.permission_keys).toContain("iam:manage_roles")
     }
   })
 
@@ -88,6 +98,37 @@ describe("GET /roles", () => {
     const response = await request({ path: "/roles", token: await memberToken() })
 
     expect(response.status).toBe(403)
+  })
+
+  test("returns roles to an account with iam:assign_roles for the assignment UI", async () => {
+    const db = await createTestDb()
+
+    await db
+      .prepare(
+        "INSERT INTO roles (key, name, is_system, created_at) VALUES ('assigner', 'Assigner', 0, 0)",
+      )
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO role_permissions (role_id, permission_id) SELECT r.id, p.id FROM roles r, permissions p WHERE r.key = 'assigner' AND p.key = 'iam:assign_roles'",
+      )
+      .run()
+
+    await db
+      .prepare(
+        "INSERT INTO account_roles (account_id, role_id, granted_at) SELECT a.id, r.id, 0 FROM accounts a, roles r WHERE a.employee_id = 5 AND r.key = 'assigner'",
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/roles",
+      token: await memberToken(),
+    })
+
+    expect(response.status).toBe(200)
   })
 
   test("returns 401 without a bearer token", async () => {
@@ -114,7 +155,7 @@ describe("POST /roles", () => {
     expect(response.status).toBe(201)
 
     const parsed = z
-      .object({ key: z.string(), is_system: z.boolean() })
+      .object({ key: z.string(), is_system: z.boolean(), permission_keys: z.array(z.string()) })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
@@ -122,6 +163,7 @@ describe("POST /roles", () => {
     if (parsed.success) {
       expect(parsed.data.key).toBe("auditor")
       expect(parsed.data.is_system).toBe(false)
+      expect(parsed.data.permission_keys).toEqual(["dashboard:view"])
     }
   })
 

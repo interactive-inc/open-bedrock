@@ -21,7 +21,8 @@ export const metadata = { title: "評価" }
 export default async function ReviewPage() {
   const currentUser = await getMe()
 
-  const canAdminister = currentUser instanceof Error ? false : canAdministerCycle(currentUser.role)
+  const canAdminister =
+    currentUser instanceof Error ? false : canAdministerCycle(currentUser.permissions)
 
   return (
     <div className="flex flex-col gap-6">

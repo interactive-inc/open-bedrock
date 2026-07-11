@@ -5,6 +5,7 @@ import { cancelLifeEventAction, updateLifeEventAction } from "@/app/(app)/life-e
 import type { LifeEventActionState } from "@/app/(app)/life-events/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -166,12 +167,15 @@ function CancelLifeEventButton(props: { lifeEventId: string }) {
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="このライフイベント届出を取り消しますか？"
+      description="取り消した届出は元に戻せません。"
+      confirmLabel="届出を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="life_event_id" value={props.lifeEventId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

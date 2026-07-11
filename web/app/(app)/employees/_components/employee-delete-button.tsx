@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteEmployeeAction } from "@/app/(app)/employees/actions"
 import type { EmployeeDeleteFormState } from "@/app/(app)/employees/actions"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象の従業員コード。hidden フィールドへ埋め込む。
@@ -35,12 +35,15 @@ export function EmployeeDeleteButton(props: Props) {
   const isPending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この従業員を削除しますか？"
+      description="関連する申請・記録も削除される取り消し不能な操作です。退職処理で代替できない場合だけ実行してください。"
+      confirmLabel="従業員を削除"
+      pending={isPending}
+    >
       <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={isPending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

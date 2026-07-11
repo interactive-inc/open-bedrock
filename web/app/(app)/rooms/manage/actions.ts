@@ -47,7 +47,7 @@ export async function createRoomAction(
 ): Promise<RoomCreateFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageRooms(me.role)) {
+  if (me instanceof Error || !canManageRooms(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 
@@ -89,7 +89,7 @@ export async function updateRoomAction(
 ): Promise<RoomUpdateFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageRooms(me.role)) {
+  if (me instanceof Error || !canManageRooms(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 
@@ -137,7 +137,7 @@ export async function deleteRoomAction(
 ): Promise<RoomDeleteFormState> {
   const me = await getMe()
 
-  if (me instanceof Error || !canManageRooms(me.role)) {
+  if (me instanceof Error || !canManageRooms(me.permissions)) {
     return { ok: false, error: "権限がありません" }
   }
 

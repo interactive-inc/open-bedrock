@@ -111,7 +111,7 @@ export async function approveExpenseAction(
 ): Promise<ExpenseDecisionFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canDecideExpense(currentUser.role) === false) {
+  if (currentUser instanceof Error || canDecideExpense(currentUser.permissions) === false) {
     return { ok: false, error: "経費を承認・却下する権限がありません" }
   }
 
@@ -147,7 +147,7 @@ export async function rejectExpenseAction(
 ): Promise<ExpenseDecisionFormState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canDecideExpense(currentUser.role) === false) {
+  if (currentUser instanceof Error || canDecideExpense(currentUser.permissions) === false) {
     return { ok: false, error: "経費を承認・却下する権限がありません" }
   }
 

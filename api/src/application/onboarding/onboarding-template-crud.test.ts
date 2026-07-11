@@ -7,7 +7,7 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
-import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { employees } from "@/schema"

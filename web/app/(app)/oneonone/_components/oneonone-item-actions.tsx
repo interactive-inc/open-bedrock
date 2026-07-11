@@ -6,6 +6,7 @@ import { deleteOneOnOneAction, updateOneOnOneAction } from "@/app/(app)/oneonone
 import type { OneOnOneActionState } from "@/app/(app)/oneonone/actions"
 import type { OneOnOne } from "@/lib/api/types/oneonone-types"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -142,12 +143,15 @@ function DeleteOneOnOneButton(props: { oneOnOneId: string }) {
   const [, formAction, pending] = useActionState(reduce, initialState)
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この1on1記録を削除しますか？"
+      description="共有メモと管理者メモを含む記録は元に戻せません。"
+      confirmLabel="1on1記録を削除"
+      pending={pending}
+    >
       <input type="hidden" name="one_on_one_id" value={props.oneOnOneId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

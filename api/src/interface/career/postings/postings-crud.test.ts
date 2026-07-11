@@ -204,13 +204,13 @@ describe("GET /career/postings/:posting_id", () => {
     expect(response.status).toBe(200)
   })
 
-  test("member is forbidden", async () => {
+  test("member can read a posting to apply", async () => {
     const response = await request({
       path: "/career/postings/1",
       token: await tokenFor(5, "member"),
     })
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(200)
   })
 
   test("returns 404 when the posting does not exist", async () => {

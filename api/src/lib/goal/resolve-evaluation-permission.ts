@@ -18,5 +18,10 @@ export function resolveEvaluationPermission(props: Props): null | Forbidden {
     return isOwner ? null : { reason: "forbidden" }
   }
 
+  // 上長・確定評価は本人による自己承認を禁止する。
+  if (props.goalEmployeeId === props.viewerEmployeeId) {
+    return { reason: "forbidden" }
+  }
+
   return canEvaluateAsManager(props.viewerSession) ? null : { reason: "forbidden" }
 }

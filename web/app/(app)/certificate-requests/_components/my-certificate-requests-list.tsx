@@ -8,6 +8,7 @@ import {
 import type { CertificateRequestActionState } from "@/app/(app)/certificate-requests/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -179,12 +180,15 @@ function CancelCertificateRequestButton(props: { certificateRequestId: string })
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="この証明書発行依頼を取り消しますか？"
+      description="取り消した依頼は元に戻せません。"
+      confirmLabel="発行依頼を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="certificate_request_id" value={props.certificateRequestId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

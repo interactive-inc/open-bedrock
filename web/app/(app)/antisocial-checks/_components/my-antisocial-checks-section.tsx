@@ -10,5 +10,5 @@ export async function MyAntisocialChecksSection() {
     return <FetchError message="反社チェック申請一覧の取得に失敗しました" />
   }
 
-  return <MyAntisocialChecksList antisocialChecks={antisocialChecks} />
+  return <MyAntisocialChecksList antisocialChecks={antisocialChecks} canManageResults={false} />
 }

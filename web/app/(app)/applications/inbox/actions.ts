@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { approveApplication } from "@/lib/api/approve-application"
 import { getMe } from "@/lib/api/get-me"
 import { rejectApplication } from "@/lib/api/reject-application"
@@ -45,7 +44,9 @@ export async function decideApplicationAction(
 ): Promise<DecisionState> {
   const currentUser = await getMe()
 
-  if (currentUser instanceof Error || canDecideApplication(currentUser.role) === false) {
+  // テンプレートごとに承認ロールを設定できるため、ここでは固定 permission で拒否しない。
+  // 対象申請と現在の全ロールを照合する API の判定を正とする。
+  if (currentUser instanceof Error) {
     return { ok: false, error: "申請を承認・却下する権限がありません" }
   }
 

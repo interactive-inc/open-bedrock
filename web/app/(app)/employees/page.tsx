@@ -8,6 +8,7 @@ import type {
   EmployeeSearchFilter,
   EmployeeStatusFilter,
 } from "@/lib/api/types/employee-search-filter"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "従業員" }
 
@@ -18,6 +19,8 @@ type Props = {
 // 従業員一覧画面。searchParams から絞り込み条件を組み立て、
 // フォーム + 非同期テーブルを Suspense 境界で描画する RSC。
 export default async function EmployeesPage(props: Props) {
+  await requirePermission("employee:read")
+
   const params = await props.searchParams
 
   const filter = toFilter(params)
