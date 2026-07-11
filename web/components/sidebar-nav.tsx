@@ -503,7 +503,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: ShieldCheck,
         children: [
           { label: "一覧", href: "/antisocial-checks" },
-          { label: "新規宣誓", href: "/antisocial-checks/new" },
+          { label: "新規申請", href: "/antisocial-checks/new" },
           {
             label: "判定受信箱",
             href: "/antisocial-checks/admin",
