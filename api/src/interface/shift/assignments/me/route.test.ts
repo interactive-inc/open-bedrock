@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
 import { seedShiftAssignments } from "@/infrastructure/seed/seed-shift-assignments"
+import { seedShiftPatterns } from "@/infrastructure/seed/seed-shift-patterns"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -16,6 +17,9 @@ const shiftAssignmentResponseSchema = z.object({
   id: z.number(),
   employee_id: z.number(),
   pattern_id: z.number().nullable(),
+  pattern_name: z.string().nullable(),
+  pattern_start_time: z.string().nullable(),
+  pattern_end_time: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   published_at: z.string().nullable(),
@@ -49,6 +53,19 @@ async function createTestDb(): Promise<D1Database> {
       parent_code: department.parentCode,
       manager_employee_code: department.managerEmployeeCode,
       sort_order: department.order,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "shift_patterns",
+    seedShiftPatterns.map((pattern) => ({
+      id: pattern.id,
+      code: pattern.code,
+      name: pattern.name,
+      start_time: pattern.startTime,
+      end_time: pattern.endTime,
+      break_minutes: pattern.breakMinutes,
     })),
   )
 
@@ -114,6 +131,10 @@ describe("GET /shift/assignments/me", () => {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.data.every((row) => row.employee_id === 5)).toBe(true)
       expect(parsed.data.data.every((row) => row.published_at !== null)).toBe(true)
+      // member はパターン一覧を閲覧できないため、割当にパターン名・時間帯を埋めて返す（patternId=1 = Early）
+      expect(parsed.data.data[0]?.pattern_name).toBe("Early")
+      expect(parsed.data.data[0]?.pattern_start_time).toBe("07:00")
+      expect(parsed.data.data[0]?.pattern_end_time).toBe("16:00")
     }
   })
 

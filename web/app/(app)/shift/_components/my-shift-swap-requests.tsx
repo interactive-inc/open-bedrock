@@ -14,11 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { ShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
+import type { MyShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
 
 type Props = {
-  swapRequests: Array<ShiftSwapRequestResponse>
-  employeeNameMap: Record<number, string>
+  swapRequests: Array<MyShiftSwapRequestResponse>
 }
 
 const initialState: ShiftFormState = { ok: false, error: null }
@@ -48,8 +47,7 @@ export function MyShiftSwapRequests(props: Props) {
               <TableCell className="font-medium">{swapRequest.date}</TableCell>
 
               <TableCell>
-                {props.employeeNameMap[swapRequest.target_employee_id] ??
-                  `#${swapRequest.target_employee_id}`}
+                {swapRequest.target_employee_name ?? `#${swapRequest.target_employee_id}`}
               </TableCell>
 
               <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>

@@ -91,6 +91,40 @@ describe("GET /attendance", () => {
     }
   })
 
+  test("privileged role with no employee_id gets the whole company", async () => {
+    const response = await getRequest("/attendance", await tokenFor(1, "admin"))
+
+    expect(response.status).toBe(200)
+
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // seed は emp5 が2件・emp9 が2件。全社一覧なので4件・複数社員を含む。
+      expect(parsed.data.data.length).toBe(4)
+      expect(parsed.data.total).toBe(4)
+      expect(new Set(parsed.data.data.map((record) => record.employee_id))).toEqual(new Set([5, 9]))
+    }
+  })
+
+  test("member with no employee_id gets only their own records", async () => {
+    const response = await getRequest("/attendance", await tokenFor(5, "member"))
+
+    expect(response.status).toBe(200)
+
+    const parsed = attendanceListResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      // 非権限者は自分のレコードのみにフォールバックする（emp5 の2件）。
+      expect(parsed.data.data.length).toBe(2)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data.every((record) => record.employee_id === 5)).toBe(true)
+    }
+  })
+
   test("member requesting another employee_id is forbidden", async () => {
     const response = await getRequest("/attendance?employee_id=9", await tokenFor(5, "member"))
 

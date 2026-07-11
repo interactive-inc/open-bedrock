@@ -1338,6 +1338,29 @@ export const zAppShiftAssignmentList = z.object({
 
 export type AppShiftAssignmentList = z.infer<typeof zAppShiftAssignmentList>
 
+/** 本人向けシフト割当 1 件のレスポンス。パターン名・時間帯を埋めて返す（member はパターン一覧を閲覧できないため）。 */
+export const zAppMyShiftAssignment = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  pattern_id: z.number().nullable(),
+  pattern_name: z.string().nullable(),
+  pattern_start_time: z.string().nullable(),
+  pattern_end_time: z.string().nullable(),
+  date: z.string(),
+  note: z.string().nullable(),
+  published_at: z.string().nullable(),
+})
+
+export type AppMyShiftAssignment = z.infer<typeof zAppMyShiftAssignment>
+
+/** 本人向けシフト割当一覧のレスポンス。 */
+export const zAppMyShiftAssignmentList = z.object({
+  data: z.array(zAppMyShiftAssignment),
+  total: z.number(),
+})
+
+export type AppMyShiftAssignmentList = z.infer<typeof zAppMyShiftAssignmentList>
+
 /** シフト交代申請 1 件のレスポンス（社員 ID で表現）。 */
 export const zAppShiftSwapRequest = z.object({
   id: z.number(),
@@ -1358,6 +1381,28 @@ export const zAppShiftSwapRequestList = z.object({
 })
 
 export type AppShiftSwapRequestList = z.infer<typeof zAppShiftSwapRequestList>
+
+/** 本人向けシフト交代申請 1 件のレスポンス。交代相手の氏名を埋めて返す（member は社員 ID から氏名を引けないため）。 */
+export const zAppMyShiftSwapRequest = z.object({
+  id: z.number(),
+  requester_employee_id: z.number(),
+  target_employee_id: z.number(),
+  target_employee_name: z.string().nullable(),
+  date: z.string(),
+  note: z.string().nullable(),
+  status: z.string(),
+  approved_at: z.string().nullable(),
+})
+
+export type AppMyShiftSwapRequest = z.infer<typeof zAppMyShiftSwapRequest>
+
+/** 本人向けシフト交代申請一覧のレスポンス。 */
+export const zAppMyShiftSwapRequestList = z.object({
+  data: z.array(zAppMyShiftSwapRequest),
+  total: z.number(),
+})
+
+export type AppMyShiftSwapRequestList = z.infer<typeof zAppMyShiftSwapRequestList>
 
 /** 承認待ちシフト交代申請一覧の要素（社員コードで表現）。 */
 export const zAppShiftSwapRequestPending = z.object({

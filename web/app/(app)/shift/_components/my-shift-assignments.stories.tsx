@@ -17,6 +17,9 @@ export const WithAssignments: Story = {
         id: 1,
         employee_id: 101,
         pattern_id: 1,
+        pattern_name: "早番",
+        pattern_start_time: "07:00",
+        pattern_end_time: "16:00",
         date: "2026-06-12",
         note: null,
         published_at: "2026-06-10T10:00:00Z",
@@ -25,6 +28,9 @@ export const WithAssignments: Story = {
         id: 2,
         employee_id: 101,
         pattern_id: 2,
+        pattern_name: "遅番",
+        pattern_start_time: "13:00",
+        pattern_end_time: "22:00",
         date: "2026-06-13",
         note: "Early shift",
         published_at: "2026-06-10T10:00:00Z",
@@ -32,19 +38,20 @@ export const WithAssignments: Story = {
       {
         id: 3,
         employee_id: 101,
-        pattern_id: 1,
+        pattern_id: null,
+        pattern_name: null,
+        pattern_start_time: null,
+        pattern_end_time: null,
         date: "2026-06-14",
         note: null,
-        published_at: null,
+        published_at: "2026-06-10T10:00:00Z",
       },
     ],
-    patternNameMap: { 1: "早番", 2: "遅番" },
   },
 }
 
 export const Empty: Story = {
   args: {
     assignments: [],
-    patternNameMap: {},
   },
 }

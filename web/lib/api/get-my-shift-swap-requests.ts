@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/api/hc-client"
-import type { ShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
+import type { MyShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
 
 // GET /shift/swap-requests/me。申請者本人が出した交代申請の一覧。
-export async function getMyShiftSwapRequests(): Promise<Array<ShiftSwapRequestResponse> | Error> {
+export async function getMyShiftSwapRequests(): Promise<Array<MyShiftSwapRequestResponse> | Error> {
   const client = await createClient()
 
   const response = await client.shift["swap-requests"].me.$get()

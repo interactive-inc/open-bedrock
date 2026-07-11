@@ -13,7 +13,6 @@ import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { getMyShiftAssignments } from "@/lib/api/get-my-shift-assignments"
 import { getMyShiftSwapRequests } from "@/lib/api/get-my-shift-swap-requests"
-import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 
@@ -104,14 +103,7 @@ async function MyShift() {
     return <FetchError message="自分のシフトの取得に失敗しました" />
   }
 
-  const patterns = await getShiftPatterns()
-
-  const patternNameMap: Record<number, string> =
-    patterns instanceof Error
-      ? {}
-      : Object.fromEntries(patterns.filter((p) => p.id !== null).map((p) => [p.id, p.name]))
-
-  return <MyShiftAssignments assignments={assignments} patternNameMap={patternNameMap} />
+  return <MyShiftAssignments assignments={assignments} />
 }
 
 async function MySwapRequests() {
@@ -121,7 +113,7 @@ async function MySwapRequests() {
     return <FetchError message="交代申請の取得に失敗しました" />
   }
 
-  return <MyShiftSwapRequests swapRequests={swapRequests} employeeNameMap={{}} />
+  return <MyShiftSwapRequests swapRequests={swapRequests} />
 }
 
 async function ShiftSwapSection() {

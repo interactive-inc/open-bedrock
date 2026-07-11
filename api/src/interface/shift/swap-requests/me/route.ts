@@ -1,7 +1,7 @@
 import { ListMyShiftSwapRequests } from "@/application/shift/list-my-shift-swap-requests"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { zAppShiftSwapRequestList } from "@/lib/app-schemas"
+import { zAppMyShiftSwapRequestList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -11,10 +11,11 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
-import { shiftSwapRequests } from "@/schema"
-import { count, eq } from "drizzle-orm"
+import { employees, shiftSwapRequests } from "@/schema"
+import { count, eq, inArray } from "drizzle-orm"
 
-// GET /shift/swap-requests/me — 申請者本人が出したシフト交代申請の一覧
+// GET /shift/swap-requests/me — 申請者本人が出したシフト交代申請の一覧。
+// member は社員 ID から氏名を引けないため、交代相手の氏名を埋めて返す。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -51,11 +52,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(shiftSwapRequests)
     .where(eq(shiftSwapRequests.requesterEmployeeId, session.employeeId))
 
-  const responseBody = zAppShiftSwapRequestList.parse({
+  const targetEmployeeIds = swapRequests.map((swapRequest) => swapRequest.targetEmployeeId)
+
+  const employeeRows =
+    targetEmployeeIds.length === 0
+      ? []
+      : await c.var.database
+          .select({ id: employees.id, name: employees.name })
+          .from(employees)
+          .where(inArray(employees.id, targetEmployeeIds))
+
+  const nameById = new Map(employeeRows.map((employee) => [employee.id, employee.name]))
+
+  const responseBody = zAppMyShiftSwapRequestList.parse({
     data: swapRequests.map((swapRequest) => ({
       id: swapRequest.id,
       requester_employee_id: swapRequest.requesterEmployeeId,
       target_employee_id: swapRequest.targetEmployeeId,
+      target_employee_name: nameById.get(swapRequest.targetEmployeeId) ?? null,
       date: swapRequest.date,
       note: swapRequest.note,
       status: swapRequest.status,

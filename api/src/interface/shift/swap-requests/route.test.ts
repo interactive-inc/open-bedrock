@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedShiftPatterns } from "@/infrastructure/seed/seed-shift-patterns"
 import { seedShiftSwapRequests } from "@/infrastructure/seed/seed-shift-swap-requests"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
@@ -39,6 +40,48 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "shift_patterns",
+    seedShiftPatterns.map((pattern) => ({
+      id: pattern.id,
+      code: pattern.code,
+      name: pattern.name,
+      start_time: pattern.startTime,
+      end_time: pattern.endTime,
+      break_minutes: pattern.breakMinutes,
+    })),
+  )
+
+  // 交代申請の作成は双方が対象日に公開済み割当を持つ必要がある。
+  // 2026-06-10: emp5・emp4 とも公開済み。2026-06-11: emp5 のみ公開済み（emp4 は割当なし）。
+  await seedD1(db, "shift_assignments", [
+    {
+      id: 101,
+      employee_id: 5,
+      pattern_id: 1,
+      date: "2026-06-10",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+    {
+      id: 102,
+      employee_id: 4,
+      pattern_id: 2,
+      date: "2026-06-10",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+    {
+      id: 103,
+      employee_id: 5,
+      pattern_id: 1,
+      date: "2026-06-11",
+      note: null,
+      published_at: "2026-05-20T09:00:00Z",
+    },
+  ])
 
   await seedD1(
     db,
@@ -167,6 +210,31 @@ describe("POST /shift/swap-requests", () => {
       token: await tokenFor(5, "member"),
       method: "POST",
       body: { target_employee_code: "E004", date: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 when the target has no published assignment on the date", async () => {
+    // 2026-06-11 は emp5（申請者）のみ公開済み割当を持ち、emp4（相手）は割当なし。
+    // 承認時に必ず 409 になるため、作成時点で拒否する。
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { target_employee_code: "E004", date: "2026-06-11" },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 when the requester has no published assignment on the date", async () => {
+    // 2026-06-20 はどちらも割当を持たない。申請者側の未割当で拒否される。
+    const response = await request({
+      path: "/shift/swap-requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: { target_employee_code: "E004", date: "2026-06-20" },
     })
 
     expect(response.status).toBe(409)
