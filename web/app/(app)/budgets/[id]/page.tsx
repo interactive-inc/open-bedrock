@@ -134,4 +134,3 @@ async function BudgetDetailView(props: ViewProps) {
     </div>
   )
 }
-

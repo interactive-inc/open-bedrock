@@ -77,7 +77,11 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
 // /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
 // 権限が無い場合は api が 403 を返すため Error として扱う。
 async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: LeaveInboxSort }) {
-  const result = await getLeaveInbox({ limit: props.pageSize, offset: props.offset, sort: props.sort })
+  const result = await getLeaveInbox({
+    limit: props.pageSize,
+    offset: props.offset,
+    sort: props.sort,
+  })
 
   if (result instanceof Error) {
     return <FetchError message="inbox の取得に失敗しました (承認権限が必要です)" />
@@ -149,7 +153,10 @@ async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: 
         total={result.total}
         limit={props.pageSize}
         offset={props.offset}
-        extraParams={{ sort: props.sort === "created_at_desc" ? undefined : props.sort, size: String(props.pageSize) }}
+        extraParams={{
+          sort: props.sort === "created_at_desc" ? undefined : props.sort,
+          size: String(props.pageSize),
+        }}
         pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>

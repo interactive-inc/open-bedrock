@@ -109,7 +109,13 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
       />
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <LeaveAdminSection filter={filter} offset={offset} pageSize={pageSize} sort={sort} extraParams={extraParams} />
+        <LeaveAdminSection
+          filter={filter}
+          offset={offset}
+          pageSize={pageSize}
+          sort={sort}
+          extraParams={extraParams}
+        />
       </Suspense>
     </div>
   )

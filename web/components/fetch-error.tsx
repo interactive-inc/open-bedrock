@@ -63,9 +63,7 @@ export function FetchError(props: Props) {
         <p className={`text-sm ${config.text}`}>{props.message}</p>
       </div>
 
-      {config.hint !== null ? (
-        <p className="text-xs text-muted-foreground">{config.hint}</p>
-      ) : null}
+      {config.hint !== null ? <p className="text-xs text-muted-foreground">{config.hint}</p> : null}
 
       {variant !== "permission" ? (
         <Button variant="outline" size="sm" onClick={() => router.refresh()}>
