@@ -32,7 +32,11 @@ export default async function EmployeeDetailPage(props: Props) {
       />
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>
-        <EmployeeDetail code={params.code} />
+        <EmployeeDetail
+          code={params.code}
+          permissions={currentUser.permissions}
+          currentUserCode={currentUser.code}
+        />
       </Suspense>
     </div>
   )
