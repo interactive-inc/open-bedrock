@@ -16,6 +16,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/employees/new` は新しい従業員を従業員台帳に登録する画面。
 - `/employees/[code]` は従業員の基本情報、所属、状態を確認し編集する画面。
 - `/org` は部署ツリーを閲覧し、部署ノードを管理する画面。
+- `/org/departments` は部署ノードの一覧を確認し、変更や削除を行う管理画面(`org:manage`)。
+- `/org/departments/new` は新しい部署ノードを作成する画面(`org:manage`)。
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 
@@ -124,7 +126,9 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/shift/inbox` は自分が当事者でないシフト交代申請を承認する画面(`shift:manage`)。
 - `/shift/admin` は全社のシフト交代申請を横断で確認する管理画面(`shift_swap:read:all`)。
 - `/shift/manage` は全員のシフト割当を確認し、新しい割当を作成する管理画面。
+- `/shift/manage/new` は対象社員、パターン、対象日を指定してシフト割当を作成する画面(`shift:manage`)。
 - `/shift/patterns` はシフトの定型パターンを一覧する画面。
+- `/shift/patterns/new` はコード、名前、開始と終了の時刻、休憩時間を登録してシフトパターンを作成する画面(`shift:manage`)。
 
 ## 研修
 
@@ -137,6 +141,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 ## 通知
 
 - `/notifications` は自分宛ての通知を確認し、既読にする画面。
+- `/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
 
 ## 感謝
 
@@ -164,6 +169,17 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/antisocial-checks` は反社チェック申請と申請状況を確認する画面。
 - `/antisocial-checks/new` は対象者と確認内容を記入して反社チェックを申請する画面。
 - `/antisocial-checks/admin` は管理担当者が自分以外の申請へ確認結果を記録する画面(`antisocial_check:manage`)。
+
+## アカウントとロール管理
+
+- `/admin/accounts` は従業員に紐づくアカウントの状態と割り当てられたロールを管理する画面(`account:manage`)。
+- `/admin/roles` はロールと割り当てられた権限を一覧し、管理する画面(`iam:manage_roles`)。
+- `/admin/roles/new` は新しいロールを作成し、権限を割り当てる画面(`iam:manage_roles`)。
+- `/admin/roles/[id]/edit` はロールの名前、説明、権限を変更する画面(`iam:manage_roles`)。
+
+## 個人設定
+
+- `/settings` は表示テーマや表示言語など、利用者ごとの表示設定を変更する画面。
 
 ## システム
 
