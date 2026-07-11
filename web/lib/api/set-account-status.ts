@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 // POST /accounts/:id/status。アカウントの状態を変更する（account:manage が必要）。
 export async function setAccountStatus(
@@ -13,7 +14,7 @@ export async function setAccountStatus(
   })
 
   if (response.status >= 400) {
-    return new Error("failed to set account status")
+    return await toApiResponseError(response, "failed to set account status")
   }
 
   return null
