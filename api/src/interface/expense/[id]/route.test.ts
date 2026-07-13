@@ -47,6 +47,10 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(db, "org_memberships", [
+    { department_code: "ENGINEERING", employee_code: "E005", manager_employee_code: "E004" },
+  ])
+
   await seedD1(
     db,
     "expenses",
@@ -122,6 +126,18 @@ describe("GET /expenses/:id", () => {
 
   test("returns 403 for a non owner member", async () => {
     const response = await request({ path: "/expenses/1", token: await tokenFor(9, "member") })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 200 for a manager inside the applicant organization scope", async () => {
+    const response = await request({ path: "/expenses/1", token: await tokenFor(4, "manager") })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("returns 403 for a manager outside the applicant organization scope", async () => {
+    const response = await request({ path: "/expenses/1", token: await tokenFor(2, "manager") })
 
     expect(response.status).toBe(403)
   })
