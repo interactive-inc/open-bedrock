@@ -3,10 +3,15 @@ import { auditLogs } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
+import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationPath = join(import.meta.dir, "../../../migrations/0015_audit_events.sql")
+const auditEventsMigrationPath = join(import.meta.dir, "../../../migrations/0015_audit_events.sql")
+const appendGuardMigrationPath = join(
+  import.meta.dir,
+  "../../../migrations/0016_audit_append_guard.sql",
+)
 
 type LegacyRowOverrides = {
   id?: number
@@ -75,17 +80,88 @@ async function createLegacyDatabase(
   return db
 }
 
-async function applyMigration(db: D1Database): Promise<void> {
-  const migration = readFileSync(migrationPath, "utf8")
+async function applyMigration(db: D1Database, path: string): Promise<void> {
+  const migration = readFileSync(path, "utf8")
 
   await db.exec(migration)
 }
 
+async function applyAuditEventsMigration(db: D1Database): Promise<void> {
+  await applyMigration(db, auditEventsMigrationPath)
+}
+
+async function applyAppendGuardMigration(db: D1Database): Promise<void> {
+  await applyMigration(db, appendGuardMigrationPath)
+}
+
+async function applyMigrations(db: D1Database): Promise<void> {
+  await applyAuditEventsMigration(db)
+  await applyAppendGuardMigration(db)
+}
+
 describe("audit event migration", () => {
+  test("keeps the published 0015 migration byte-for-byte immutable", () => {
+    const migration = readFileSync(auditEventsMigrationPath)
+
+    expect(createHash("sha256").update(migration).digest("hex")).toBe(
+      "a6b699fe5655445dfc97501acdf97c827a219c84498975b63be70963b151bee5",
+    )
+  })
+
+  test("upgrades and guards rows written after 0015 before 0016", async () => {
+    const db = await createLegacyDatabase("legacy note")
+
+    await applyAuditEventsMigration(db)
+
+    expect(
+      await db
+        .prepare(
+          `SELECT name
+           FROM sqlite_master
+           WHERE type = 'table' AND name = 'audit_logs_append_guard'`,
+        )
+        .first<string>("name"),
+    ).toBeNull()
+
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+           (event_id, request_id, action, outcome, client_name, created_at)
+         VALUES ('event-post-0015', 'request-post-0015', 'employee.updated',
+                 'succeeded', 'api', 1700000042)`,
+      )
+      .run()
+
+    await applyAppendGuardMigration(db)
+
+    expect(
+      (
+        await db
+          .prepare(
+            `SELECT audit_id, event_id
+             FROM audit_logs_append_guard
+             ORDER BY audit_id`,
+          )
+          .all<{ audit_id: number; event_id: string }>()
+      ).results,
+    ).toEqual([
+      { audit_id: 41, event_id: "legacy-41" },
+      { audit_id: 42, event_id: "event-post-0015" },
+    ])
+
+    await applyAppendGuardMigration(db)
+
+    expect(
+      await db
+        .prepare("SELECT count(1) AS count FROM audit_logs_append_guard")
+        .first<number>("count"),
+    ).toBe(2)
+  })
+
   test("copies the legacy row into the append-only audit event shape", async () => {
     const db = await createLegacyDatabase("legacy note")
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       await db.prepare("SELECT count(1) AS count FROM audit_logs").first<number>("count"),
@@ -132,7 +208,7 @@ describe("audit event migration", () => {
   test("preserves legacy metadata that is already valid JSON", async () => {
     const db = await createLegacyDatabase('{"source":"legacy"}')
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       await db.prepare("SELECT metadata_json FROM audit_logs").first<string>("metadata_json"),
@@ -145,7 +221,7 @@ describe("audit event migration", () => {
       targetId: null,
     })
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       await db
@@ -157,7 +233,7 @@ describe("audit event migration", () => {
   test("enforces event uniqueness and the outcome and client vocabularies", async () => {
     const db = await createLegacyDatabase("legacy note")
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       db
@@ -191,7 +267,7 @@ describe("audit event migration", () => {
   test("rejects replacement inserts and preserves the existing audit event", async () => {
     const db = await createLegacyDatabase("legacy note")
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       db
@@ -226,7 +302,7 @@ describe("audit event migration", () => {
   test("allows automatic IDs after migrating a negative legacy ID without allowing replacement", async () => {
     const db = await createLegacyDatabase("legacy note", { id: -1 })
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     await db
       .prepare(
@@ -296,7 +372,7 @@ describe("audit event migration", () => {
   test("rejects direct modification of the append-only guard", async () => {
     const db = await createLegacyDatabase("legacy note")
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     expect(
       db
@@ -337,7 +413,7 @@ describe("audit event migration", () => {
   test("adds both audit permissions to the admin system role only", async () => {
     const db = await createLegacyDatabase("legacy note")
 
-    await applyMigration(db)
+    await applyMigrations(db)
 
     const permissions = await db
       .prepare("SELECT key, category FROM permissions WHERE key LIKE 'audit:%' ORDER BY key")
@@ -365,7 +441,7 @@ describe("audit event migration", () => {
 
   test("keeps the Drizzle audit schema synchronized with the migrated table", async () => {
     const db = await createLegacyDatabase("legacy note")
-    await applyMigration(db)
+    await applyMigrations(db)
     const database = drizzle(db, { schema: { auditLogs } })
 
     await database.insert(auditLogs).values({
