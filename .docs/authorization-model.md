@@ -162,11 +162,9 @@ UI のメニュー、コマンドパレット、ボタンの表示制御は補�
 
 この節は、現行コードを監査して確認した目標仕様との差分である。各差分は、関連コードを変更する際に解消状況とともに更新する。
 
-### 経費と休暇の詳細における組織スコープ
+### 経費と休暇の詳細における組織スコープ（解消済み）
 
-現在の経費詳細は `api/src/interface/expense/[id]/route.ts` で、本人でなければ `expense:approve` 相当または全社閲覧権限の有無だけを検査する。休暇詳細も `api/src/application/leave/get-leave-request.ts` で同様に、承認権限または全社閲覧権限だけを検査する。
-
-一方、決定処理は `api/src/application/expense/decide-expense.ts` と `api/src/application/leave/decide-leave-request.ts` で管理連鎖、部署責任者、組織管理権限を検査する。このため、組織スコープ外で決定できない申請でも、機微な詳細を読める経路がある。詳細参照にも決定処理と整合するスコープ束と項目ポリシーが必要である。
+経費詳細と休暇詳細は、本人、全社閲覧権限、組織管理権限、または承認権限と管理連鎖・部署責任者の組み合わせだけを許可する。`api/src/interface/expense/[id]/route.test.ts` と `api/src/interface/leave/requests/[id]/requests-crud.test.ts` は、同じ承認権限を持つ管理者でも対象者が組織スコープの内外にいる場合に結果が分かれることを検証する。
 
 ### ワークフロー候補者のライブ再解決
 
