@@ -10,6 +10,7 @@ export type AuditJsonValue =
 
 const maximumAuditJsonBytes = 65_536
 const maximumAuditJsonDepth = 100
+const maximumArrayLength = 0xffff_ffff
 const redactedValue = "[REDACTED]"
 const exactSensitiveKeys = new Set([
   "password",
@@ -70,15 +71,35 @@ function assertNoAccessorsOrSymbols(value: object): PropertyDescriptorMap {
   return descriptors
 }
 
+function getArrayLength(descriptors: PropertyDescriptorMap): number {
+  const descriptor = descriptors.length
+  if (
+    descriptor === undefined ||
+    !("value" in descriptor) ||
+    typeof descriptor.value !== "number" ||
+    !Number.isSafeInteger(descriptor.value) ||
+    descriptor.value < 0 ||
+    descriptor.value > maximumArrayLength ||
+    typeof descriptor.writable !== "boolean" ||
+    descriptor.enumerable !== false ||
+    descriptor.configurable !== false
+  ) {
+    throw invalidJson()
+  }
+
+  return descriptor.value
+}
+
 function serializeArray(
   value: ReadonlyArray<AuditJsonValue>,
   depth: number,
   ancestors: WeakSet<object>,
 ): string {
   const descriptors = assertNoAccessorsOrSymbols(value)
+  const length = getArrayLength(descriptors)
   const allowedNames = new Set(["length"])
 
-  for (let index = 0; index < value.length; index += 1) {
+  for (let index = 0; index < length; index += 1) {
     const key = String(index)
     if (!Object.hasOwn(descriptors, key)) throw invalidJson()
     allowedNames.add(key)
@@ -91,7 +112,7 @@ function serializeArray(
   ancestors.add(value)
   try {
     const entries: string[] = []
-    for (let index = 0; index < value.length; index += 1) {
+    for (let index = 0; index < length; index += 1) {
       const descriptor = descriptors[String(index)]
       if (descriptor === undefined || !("value" in descriptor)) throw invalidJson()
       entries.push(serializeValue(descriptor.value, depth + 1, ancestors))
