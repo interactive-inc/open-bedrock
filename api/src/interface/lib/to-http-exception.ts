@@ -3,6 +3,8 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  PayloadTooLargeError,
+  UnavailableError,
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
@@ -30,7 +32,7 @@ export function toHttpException(error: ApplicationError): HTTPException {
 /**
  * ApplicationError のクラスから HTTP ステータスを決める
  */
-function toStatus(error: ApplicationError): 400 | 403 | 404 | 409 | 422 | 500 {
+function toStatus(error: ApplicationError): 400 | 403 | 404 | 409 | 413 | 422 | 500 | 503 {
   if (error instanceof NotFoundError) {
     return 404
   }
@@ -49,6 +51,14 @@ function toStatus(error: ApplicationError): 400 | 403 | 404 | 409 | 422 | 500 {
 
   if (error instanceof UnprocessableError) {
     return 422
+  }
+
+  if (error instanceof PayloadTooLargeError) {
+    return 413
+  }
+
+  if (error instanceof UnavailableError) {
+    return 503
   }
 
   return 500
