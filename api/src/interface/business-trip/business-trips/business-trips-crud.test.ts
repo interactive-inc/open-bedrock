@@ -126,6 +126,7 @@ async function request(props: {
     {
       DB: await createTestDb(),
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   )
@@ -224,7 +225,12 @@ describe("GET /business-trips/me", () => {
 
     const token = await travelerToken()
 
-    const bindings = { DB: db, JWT_SECRET: jwtSecret, NOW: "2026-01-01T00:00:00.000Z" }
+    const bindings = {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      NOW: "2026-01-01T00:00:00.000Z",
+    }
 
     const created = await app.request(
       "/business-trips",

@@ -1164,22 +1164,36 @@ export const refreshTokens = sqliteTable(
 
 export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
 
-// IAM: 監査ログ(append-only)。UPDATE/DELETE はアプリ層で禁止。
+// IAM: 監査イベント(append-only)。UPDATE/DELETE は DB trigger でも禁止する。
 export const auditLogs = sqliteTable(
   "audit_logs",
   {
     id: integer("id").primaryKey(),
+    eventId: text("event_id").notNull().unique(),
+    requestId: text("request_id").notNull(),
     actorAccountId: integer("actor_account_id"),
+    actorEmployeeId: integer("actor_employee_id"),
     action: text("action").notNull(),
     targetType: text("target_type"),
-    targetId: integer("target_id"),
-    metadata: text("metadata"),
-    ip: text("ip"),
+    targetId: text("target_id"),
+    outcome: text("outcome").notNull().$type<"succeeded" | "denied" | "failed">(),
+    reasonCode: text("reason_code"),
+    authorizationJson: text("authorization_json"),
+    beforeJson: text("before_json"),
+    afterJson: text("after_json"),
+    metadataJson: text("metadata_json"),
+    clientIp: text("client_ip"),
+    clientName: text("client_name").notNull().$type<"web" | "cli" | "api" | "system">(),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [
-    index("idx_audit_logs_actor").on(table.actorAccountId),
-    index("idx_audit_logs_action").on(table.action),
+    index("idx_audit_logs_request").on(table.requestId),
+    index("idx_audit_logs_actor").on(table.actorAccountId, table.createdAt, table.id),
+    index("idx_audit_logs_actor_employee").on(table.actorEmployeeId, table.createdAt, table.id),
+    index("idx_audit_logs_action").on(table.action, table.createdAt, table.id),
+    index("idx_audit_logs_target").on(table.targetType, table.targetId, table.createdAt, table.id),
+    index("idx_audit_logs_outcome").on(table.outcome, table.createdAt, table.id),
+    index("idx_audit_logs_created").on(table.createdAt, table.id),
   ],
 )
 

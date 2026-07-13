@@ -94,7 +94,12 @@ async function request(
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     },
-    { DB: db, JWT_SECRET: jwtSecret, NOW: now },
+    {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      NOW: now,
+    },
   )
 }
 

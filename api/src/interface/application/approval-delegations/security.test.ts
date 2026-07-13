@@ -71,7 +71,12 @@ async function request(
         ends_at: endsAt,
       }),
     },
-    { DB: db, JWT_SECRET: jwtSecret, NOW: "2026-01-01T00:00:00.000Z" },
+    {
+      DB: db,
+      JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      NOW: "2026-01-01T00:00:00.000Z",
+    },
   )
 }
 
