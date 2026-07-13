@@ -1,15 +1,12 @@
 # open-karte
 
-オープンソースの、社内事務手続きのためのセルフホスト基盤。
-Claude などの AI エージェントから CLI で呼ばれることを前提に設計し、GUI はおまけ。
+オープンソースの、社内事務手続きのためのセルフホスト基盤。Claude などの AI エージェントから CLI で呼ばれることを前提に設計し、人が操作する Web UI も提供する。
 
-従業員台帳を土台に、「人・時間・物・お金・成長」をめぐる申請・承認・記録を束ねる。
-扱うのは事実の記録・更新・検索と、それにまつわる申請ワークフローまで。
-給与・税・労務のような重い計算や法的判定は持たず、外部に委ねる。
+従業員台帳を土台に、「人・時間・物・お金・成長」をめぐる申請・承認・記録を束ねる。五軸は排他的な機能分類ではなく、複数付与できる検索と説明の観点として扱う。事実の記録・更新・検索と、それにまつわる申請ワークフローを対象にし、給与・税・労務のような重い計算や法的判定は外部に委ねる。
 
-TypeScript のモノレポ。同じ業務を CLI と API、どちらからでも実行できる。
+TypeScript のモノレポ。API を業務規則と認可の正本とし、Web と CLI が操作ごとの提供面になる。提供範囲は操作ごとに異なる。
 
-```
+```text
 open-karte/
 ├── api/             # API サーバ (Hono / Cloudflare Workers)
 ├── cli/             # karte コマンド (Hono / bun)
@@ -48,11 +45,10 @@ bun link          # karte コマンドを PATH に通す
 karte --help
 ```
 
-各コマンドは `~/.karte/config.json` のトークンで API を叩く。接続先は
-環境変数 `KARTE_API`（既定 `http://127.0.0.1:8787`）で上書きできる。
+各コマンドは `~/.karte/config.json` のトークンで API を叩く。接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:8787`）で上書きできる。
 
 ```sh
-karte login --email you@example.com --password ****
+karte login --email you@example.com --password your_password_here
 karte whoami
 karte employee search --q プログラマ
 karte app inbox
@@ -69,11 +65,9 @@ bun run dev        # wrangler dev
 bun run deploy     # 本番デプロイ
 ```
 
-URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。
-ルート一覧は `api/src/app.ts` を参照。
+URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。ルート一覧は `api/src/app.ts` を参照。
 
-シードデータ（`api/seeds/`）は開発専用。全ユーザーが同一の既知パスワードのため、
-本番には投入しないこと。詳細は [`api/seeds/README.md`](api/seeds/README.md) を参照。
+シードデータ（`api/seeds/`）は開発専用。全ユーザーが同一の既知パスワードのため、本番には投入しないこと。詳細は [`api/seeds/README.md`](api/seeds/README.md) を参照。
 
 ## Web
 
@@ -95,14 +89,16 @@ cd cli && bun test       # CLI のテスト
 cd web && bunx tsc --noEmit   # Web の型検査
 ```
 
-api のルートを変更したら `cd api && bun run build:types` で型を再生成すると、
-web の型付きクライアント（hc）が追従する。
+api のルートを変更したら `cd api && bun run build:types` で型を再生成すると、web の型付きクライアント（hc）が追従する。
 
 ## ドキュメント
 
 プロダクトの仕様・用語・業務知識は [`.docs/`](.docs/index.md) に集約している。
 
 - `architecture.md` … ワークスペース構成・レイヤ・認証・セキュリティ
+- `company-model.md` … 会社を表現する三層モデルと共通概念
+- `capability-map.md` … 会社能力の網羅分類と現在の実装範囲
+- `authorization-model.md` … システム権限・組織関係・案件割当を合成する認可規範
 - `features.md` … 利用者視点の機能一覧
 - `sitemap.md` / `user-flows.md` … web の画面と導線
 - `glossary.md` / `references/terms/` … 制度用語の定義
