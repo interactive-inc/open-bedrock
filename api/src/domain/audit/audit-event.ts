@@ -79,6 +79,7 @@ const auditEventTimeSchema = z.date()
 export type AuditAction = z.infer<typeof auditActionSchema>
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>
 export type AuditOutcome = z.infer<typeof auditOutcomeSchema>
+export type AuditClientName = z.infer<typeof auditClientNameSchema>
 
 export type AuditEventInput = {
   actorAccountId: number | null
@@ -109,8 +110,32 @@ export type AuditEventRecord = {
   afterJson: string | null
   metadataJson: string | null
   clientIp: string | null
-  clientName: z.infer<typeof auditClientNameSchema>
+  clientName: AuditClientName
   createdAt: number
+}
+
+/** Legacy-tolerant list projection. Managed write vocabulary remains closed in AuditEventRecord. */
+export type AuditEventSummary = {
+  eventId: string
+  requestId: string
+  actorAccountId: number | null
+  actorEmployeeId: number | null
+  action: string
+  targetType: string | null
+  targetId: string | null
+  outcome: AuditOutcome
+  reasonCode: string | null
+  clientName: AuditClientName
+  createdAt: number
+}
+
+/** Full read projection. JSON columns remain immutable database text and are not reserialized. */
+export type AuditEventDetail = AuditEventSummary & {
+  authorizationJson: string | null
+  beforeJson: string | null
+  afterJson: string | null
+  metadataJson: string | null
+  clientIp: string | null
 }
 
 function serializeOptionalProjection(value: unknown): string | null {
