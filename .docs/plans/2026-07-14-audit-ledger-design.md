@@ -178,7 +178,7 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 - `from`
 - `to`
 
-時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は byte descriptor を先に狭く取得し、DB 側の累積 raw-byte guard を通った exact-ID だけを詳細取得する。五万一件目または byte 超過を検出したら追加 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は raw byte と JSON wire byte の descriptor を先に狭く取得し、DB 側の累積 guard を通った exact-ID だけを通常の詳細取得へ渡す。通常の D1 詳細応答は四 MiB 以内とし、引用符などの escaping で wire byte だけが大きくなる単一行は、各 text 列を二百五十六 KiB の BLOB segment として取得して fatal UTF-8 decode する。これにより D1 の各応答を十六 MiB 未満に保ったまま保存原文を復元する。五万一件目または完成 CSV の byte 超過を検出したら追加 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 

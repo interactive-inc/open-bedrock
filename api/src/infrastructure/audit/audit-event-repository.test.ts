@@ -180,6 +180,86 @@ function observeAllReads(context: Context): ObservedAllRead[] {
   return reads
 }
 
+function tamperSegmentRead(
+  context: Context,
+  mode:
+    | "failure"
+    | "missing"
+    | "changed-id"
+    | "changed-created-at"
+    | "invalid-hex"
+    | "invalid-utf8",
+): void {
+  const source = context.env.DB
+  let tampered = false
+  let segmentReadCount = 0
+
+  const wrapStatement = (statement: D1PreparedStatement, sql: string): D1PreparedStatement =>
+    new Proxy(statement, {
+      get(target, property) {
+        if (property === "bind") {
+          return (...values: unknown[]) => wrapStatement(target.bind(...values), sql)
+        }
+        if (property === "all") {
+          return async () => {
+            const result = await target.all()
+            if (!sql.includes("hex(substr")) return result
+            segmentReadCount += 1
+            const tamperAt = mode === "failure" ? 3 : 1
+            if (tampered || segmentReadCount !== tamperAt) return result
+            tampered = true
+
+            if (mode === "failure") return { ...result, success: false }
+            if (mode === "missing") return { ...result, results: [] }
+
+            const [first, ...rest] = result.results
+            if (typeof first !== "object" || first === null) return { ...result, results: [] }
+            const row = first as Record<string, unknown>
+            const chunkHex = row.chunk_hex
+            if (typeof chunkHex !== "string" || chunkHex.length < 2) {
+              return { ...result, results: [] }
+            }
+            if (mode === "changed-id" || mode === "changed-created-at") {
+              const field = mode === "changed-id" ? "id" : "created_at"
+              const value = row[field]
+              return {
+                ...result,
+                results: [
+                  { ...row, [field]: typeof value === "number" ? value + 1 : "changed" },
+                  ...rest,
+                ],
+              }
+            }
+            return {
+              ...result,
+              results: [
+                {
+                  ...row,
+                  chunk_hex: `${mode === "invalid-hex" ? "GG" : "80"}${chunkHex.slice(2)}`,
+                },
+                ...rest,
+              ],
+            }
+          }
+        }
+
+        const value = Reflect.get(target, property, target) as unknown
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+
+  context.env.DB = new Proxy(source, {
+    get(target, property) {
+      if (property === "prepare") {
+        return (sql: string) => wrapStatement(target.prepare(sql), sql)
+      }
+
+      const value = Reflect.get(target, property, target) as unknown
+      return typeof value === "function" ? value.bind(target) : value
+    },
+  })
+}
+
 async function insertBulkRows(db: D1Database, count: number): Promise<void> {
   await db.exec(`
     WITH RECURSIVE sequence(value) AS (
@@ -787,6 +867,67 @@ describe("AuditEventRepository detail and corruption contract", () => {
     ).toBeInstanceOf(PayloadTooLargeError)
   })
 
+  test("keeps every D1 response bounded when a quote-heavy valid JSON row still fits CSV", async () => {
+    const { context, db } = createTestContext()
+    const metadataJson = JSON.stringify('"'.repeat(5_500_000))
+    await insertLegacyRow(db, { eventId: "quote-heavy", metadataJson })
+    const reads = observeAllReads(context)
+    const repository = new AuditEventRepository(context)
+
+    const detail = await repository.findByEventId("quote-heavy")
+    expect(detail?.metadataJson).toBe(metadataJson)
+    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+    reads.length = 0
+
+    const rows = await repository.export({ filters: {} })
+    const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
+    const segmentReads = reads.filter((read) => read.sql.includes("hex(substr"))
+
+    expect(rows[0]?.metadataJson).toBe(metadataJson)
+    expect(csvBytes).toBeGreaterThan(16_500_000)
+    expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
+    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
+    expect(segmentReads).toHaveLength(54)
+    expect(reads.some((read) => read.sql.includes("json_each"))).toBe(false)
+  })
+
+  test.each([
+    "failure",
+    "missing",
+    "changed-id",
+    "changed-created-at",
+    "invalid-hex",
+    "invalid-utf8",
+  ] as const)("maps a segmented %s response to safe 503", async (mode) => {
+    const { context, db } = createTestContext()
+    await insertLegacyRow(db, {
+      eventId: `segment-${mode}`,
+      metadataJson: JSON.stringify('"'.repeat(1_100_000)),
+    })
+    tamperSegmentRead(context, mode)
+
+    await expectAuditUnavailable(new AuditEventRepository(context).export({ filters: {} }))
+  })
+
+  test("keeps normal exact-ID detail batches inside the cumulative wire budget", async () => {
+    const { context, db } = createTestContext()
+    const metadataJson = JSON.stringify('"'.repeat(600_000))
+    await insertLegacyRow(db, { id: 1, eventId: "wire-1", metadataJson, createdAt: 2 })
+    await insertLegacyRow(db, { id: 2, eventId: "wire-2", metadataJson, createdAt: 1 })
+    const reads = observeAllReads(context)
+
+    const rows = await new AuditEventRepository(context).export({ filters: {} })
+    const exactReads = reads.filter((read) => read.sql.includes("json_each"))
+
+    expect(rows.map((row) => row.eventId)).toEqual(["wire-1", "wire-2"])
+    expect(exactReads).toHaveLength(2)
+    expect(Math.max(...exactReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(false)
+  })
+
   test("bounds every detail read before rejecting an oversized multi-row export", async () => {
     const { context, db } = createTestContext()
     const largeJson = JSON.stringify("x".repeat(9 * 1024 * 1024))
@@ -795,14 +936,17 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const reads = observeAllReads(context)
 
     const error = await rejectionOf(new AuditEventRepository(context).export({ filters: {} }))
+    const descriptorReads = reads.filter((read) => read.sql.includes("cumulative_wire_bytes"))
 
     expect(error).toBeInstanceOf(PayloadTooLargeError)
     expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
       AUDIT_CSV_MAX_BYTES,
     )
-    expect(reads).toHaveLength(3)
-    expect(reads.some((read) => read.sql.includes("raw_bytes"))).toBe(true)
-    expect(reads.at(-1)?.sql).toContain("raw_bytes")
+    expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(49)
+    expect(reads).toHaveLength(52)
+    expect(descriptorReads).toHaveLength(2)
+    expect(descriptorReads.at(-1)?.rowCount).toBe(1)
+    expect(reads.at(-1)).toBe(descriptorReads.at(-1))
   })
 
   test("exports in fixed keyset chunks instead of one unbounded query", async () => {
