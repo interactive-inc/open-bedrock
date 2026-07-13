@@ -47,10 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   // --- expenses ---
   const expenseCountQuery = canDecideExpense(session)
-    ? c.var.database
-        .select({ total: count() })
-        .from(expenses)
-        .where(eq(expenses.status, "pending"))
+    ? c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending"))
     : null
 
   // --- leave requests ---
