@@ -38,11 +38,9 @@ RyukyuInteractive/inta:
   - .github/PULL_REQUEST_TEMPLATE.md
   - .github/instructions/ts.instructions.md
 RyukyuInteractive/inta#open-karte:
-  - .claude/agents/backlog-planner.md
   - .claude/agents/debugger.md
   - .claude/agents/developer.md
   - .claude/agents/hacker.md
-  - .claude/agents/issue-planner.md
   - .claude/rules/md.md
   - .claude/rules/ts.md
   - .claude/rules/ts.react.md
