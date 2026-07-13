@@ -17,16 +17,74 @@ const SEARCH_MAX_LIMIT = 100
 const EXPORT_MAX_ROWS = 50_000
 const EXPORT_CHUNK_SIZE = 500
 const EXPORT_DETAIL_RAW_CHUNK_BYTES = 4 * 1024 * 1024
+const EXPORT_DETAIL_WIRE_CHUNK_BYTES = 4 * 1024 * 1024
+const DETAIL_TEXT_SEGMENT_BYTES = 256 * 1024
 
 const SUMMARY_SELECT_COLUMNS = `
   id, event_id, request_id, actor_account_id, actor_employee_id, action,
   target_type, target_id, outcome, reason_code, client_name, created_at
 `
 
-const DETAIL_SELECT_COLUMNS = `
-  id, event_id, request_id, actor_account_id, actor_employee_id, action,
-  target_type, target_id, outcome, reason_code, authorization_json,
-  before_json, after_json, metadata_json, client_ip, client_name, created_at
+const DETAIL_DATABASE_COLUMNS = [
+  "id",
+  "event_id",
+  "request_id",
+  "actor_account_id",
+  "actor_employee_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "authorization_json",
+  "before_json",
+  "after_json",
+  "metadata_json",
+  "client_ip",
+  "client_name",
+  "created_at",
+] as const
+
+const DETAIL_TEXT_COLUMNS = [
+  "event_id",
+  "request_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "authorization_json",
+  "before_json",
+  "after_json",
+  "metadata_json",
+  "client_ip",
+  "client_name",
+] as const
+
+type DetailTextColumn = (typeof DETAIL_TEXT_COLUMNS)[number]
+
+const DETAIL_SELECT_COLUMNS = DETAIL_DATABASE_COLUMNS.join(", ")
+
+// Object braces, commas, and `"column":` prefixes in JSON.stringify(D1Result.results).
+// Deriving this from the projection keeps the wire estimate in sync when columns change.
+const DETAIL_ROW_WIRE_FIXED_BYTES =
+  2 +
+  DETAIL_DATABASE_COLUMNS.reduce(
+    (bytes, column, index) => bytes + column.length + 3 + (index === 0 ? 0 : 1),
+    0,
+  )
+
+const DETAIL_WIRE_BYTES_SQL = `
+  ${DETAIL_ROW_WIRE_FIXED_BYTES} +
+  length(CAST(id AS BLOB)) +
+  ${DETAIL_TEXT_COLUMNS.map((column) => `length(CAST(json_quote(${column}) AS BLOB))`).join(
+    " +\n  ",
+  )} +
+  CASE WHEN actor_account_id IS NULL THEN 4
+       ELSE length(CAST(actor_account_id AS BLOB)) END +
+  CASE WHEN actor_employee_id IS NULL THEN 4
+       ELSE length(CAST(actor_employee_id AS BLOB)) END +
+  length(CAST(created_at AS BLOB))
 `
 
 const DETAIL_RAW_BYTES_SQL = `
@@ -86,9 +144,51 @@ const auditExportDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
   raw_bytes: z.number().int().safe().nonnegative(),
+  wire_bytes: z.number().int().safe().nonnegative(),
 })
 
 type AuditExportDescriptorRow = z.infer<typeof auditExportDescriptorRowSchema>
+
+type AuditSegmentLayoutRow = {
+  id: number
+  actor_account_id: number | null
+  actor_employee_id: number | null
+  created_at: number
+} & Record<`${DetailTextColumn}_bytes`, number | null>
+
+const auditSegmentLayoutRowSchema = z.strictObject({
+  id: z.number().int().safe(),
+  actor_account_id: actorIdSchema,
+  actor_employee_id: actorIdSchema,
+  created_at: validIsoEpochSchema,
+  ...Object.fromEntries(
+    DETAIL_TEXT_COLUMNS.map((column) => [
+      `${column}_bytes`,
+      z.number().int().safe().nonnegative().nullable(),
+    ]),
+  ),
+})
+
+const auditTextSegmentRowSchema = z.strictObject({
+  id: z.number().int().safe(),
+  created_at: validIsoEpochSchema,
+  chunk_hex: z.string(),
+})
+
+const SEGMENT_LAYOUT_SELECT_COLUMNS = [
+  "id",
+  "actor_account_id",
+  "actor_employee_id",
+  "created_at",
+  ...DETAIL_TEXT_COLUMNS.map(
+    (column) =>
+      `CASE WHEN ${column} IS NULL THEN NULL ` +
+      `ELSE length(CAST(${column} AS BLOB)) END AS ${column}_bytes`,
+  ),
+].join(", ")
+
+const UPPER_HEX = /^(?:[0-9A-F]{2})*$/u
+const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true })
 
 const auditFiltersSchema = z.strictObject({
   actorAccountId: z.number().int().safe().optional(),
@@ -199,6 +299,37 @@ function parseExportDescriptorRows(
   })
 }
 
+function parseSegmentLayoutRow(result: unknown): AuditSegmentLayoutRow {
+  const parsed = auditSegmentLayoutRowSchema.safeParse(result)
+  if (!parsed.success) throw unavailable(parsed.error)
+
+  return parsed.data as AuditSegmentLayoutRow
+}
+
+function parseTextSegmentRow(result: unknown): z.infer<typeof auditTextSegmentRowSchema> {
+  const parsed = auditTextSegmentRowSchema.safeParse(result)
+  if (!parsed.success) throw unavailable(parsed.error)
+
+  return parsed.data
+}
+
+function decodeHexInto(
+  chunkHex: string,
+  expectedBytes: number,
+  destination: Uint8Array,
+  destinationOffset: number,
+): void {
+  if (chunkHex.length !== expectedBytes * 2 || !UPPER_HEX.test(chunkHex)) {
+    throw unavailable(new Error("audit text segment is incomplete"))
+  }
+
+  for (let index = 0; index < expectedBytes; index += 1) {
+    const byte = Number.parseInt(chunkHex.slice(index * 2, index * 2 + 2), 16)
+    if (!Number.isInteger(byte)) throw unavailable(new Error("audit text segment is invalid"))
+    destination[destinationOffset + index] = byte
+  }
+}
+
 function toSummary(row: AuditSummaryDatabaseRow): AuditEventSummary {
   return {
     eventId: row.event_id,
@@ -295,28 +426,36 @@ function exportDescriptorSql(
   parts: SqlParts,
   limit: number,
   rawByteBudget: number,
+  wireByteBudget: number,
 ): { sql: string; bindings: ReadonlyArray<string | number> } {
   const limitIndex = parts.bindings.push(limit)
-  const budgetIndex = parts.bindings.push(rawByteBudget)
+  const rawBudgetIndex = parts.bindings.push(rawByteBudget)
+  const wireBudgetIndex = parts.bindings.push(wireByteBudget - 1)
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
 
   return {
     sql: `WITH sized AS (
-            SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes
+            SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
+                   (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes
             FROM audit_logs ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
           ), bounded AS (
-            SELECT id, created_at, raw_bytes,
+            SELECT id, created_at, raw_bytes, wire_bytes,
                    SUM(raw_bytes) OVER (
                      ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
                    ) AS cumulative_raw_bytes,
+                   SUM(wire_bytes + 1) OVER (
+                     ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
+                   ) AS cumulative_wire_bytes,
                    ROW_NUMBER() OVER (ORDER BY created_at DESC, id DESC) AS row_number
             FROM sized
           )
-          SELECT id, created_at, raw_bytes
+          SELECT id, created_at, raw_bytes, wire_bytes
           FROM bounded
-          WHERE cumulative_raw_bytes <= ?${budgetIndex} OR row_number = 1
+          WHERE (cumulative_raw_bytes <= ?${rawBudgetIndex}
+                 AND cumulative_wire_bytes <= ?${wireBudgetIndex})
+             OR row_number = 1
           ORDER BY created_at DESC, id DESC`,
     bindings: parts.bindings,
   }
@@ -341,6 +480,107 @@ function rethrowRepositoryError(error: unknown): never {
 export class AuditEventRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  private async loadExactDetails(
+    descriptors: ReadonlyArray<AuditExportDescriptorRow>,
+  ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
+    const detailResult = await this.c.env.DB.prepare(
+      `SELECT ${DETAIL_SELECT_COLUMNS}
+       FROM audit_logs
+       WHERE id IN (SELECT value FROM json_each(?1))
+       ORDER BY created_at DESC, id DESC`,
+    )
+      .bind(detailIdsJson(descriptors))
+      .all()
+    if (!detailResult.success) throw new Error("audit detail query did not succeed")
+
+    const rows = parseDetailRows(detailResult.results)
+    if (
+      rows.length !== descriptors.length ||
+      rows.some(
+        (row, index) =>
+          row.id !== descriptors[index]?.id || row.created_at !== descriptors[index]?.created_at,
+      )
+    ) {
+      throw new Error("audit detail rows changed during read")
+    }
+
+    return rows
+  }
+
+  private async loadSegmentedDetail(
+    descriptor: AuditExportDescriptorRow,
+  ): Promise<AuditDetailDatabaseRow> {
+    const layoutResult = await this.c.env.DB.prepare(
+      `SELECT ${SEGMENT_LAYOUT_SELECT_COLUMNS}
+       FROM audit_logs WHERE id = ?1 LIMIT 1`,
+    )
+      .bind(descriptor.id)
+      .all()
+    if (!layoutResult.success || layoutResult.results.length !== 1) {
+      throw new Error("audit segmented detail layout did not succeed")
+    }
+
+    const layout = parseSegmentLayoutRow(layoutResult.results[0])
+    if (layout.id !== descriptor.id || layout.created_at !== descriptor.created_at) {
+      throw new Error("audit segmented detail changed during read")
+    }
+
+    const rawBytes =
+      (layout.actor_account_id === null ? 0 : String(layout.actor_account_id).length) +
+      (layout.actor_employee_id === null ? 0 : String(layout.actor_employee_id).length) +
+      String(layout.created_at).length +
+      DETAIL_TEXT_COLUMNS.reduce((total, column) => total + (layout[`${column}_bytes`] ?? 0), 0)
+    if (rawBytes !== descriptor.raw_bytes) {
+      throw new Error("audit segmented detail size changed during read")
+    }
+
+    const text = {} as Record<DetailTextColumn, string | null>
+    for (const column of DETAIL_TEXT_COLUMNS) {
+      const byteLength = layout[`${column}_bytes`]
+      if (byteLength === null) {
+        text[column] = null
+        continue
+      }
+
+      const bytes = new Uint8Array(byteLength)
+      for (let offset = 0; offset < byteLength; offset += DETAIL_TEXT_SEGMENT_BYTES) {
+        const expectedBytes = Math.min(DETAIL_TEXT_SEGMENT_BYTES, byteLength - offset)
+        const segmentResult = await this.c.env.DB.prepare(
+          `SELECT id, created_at,
+                  hex(substr(CAST(${column} AS BLOB), ?2, ${DETAIL_TEXT_SEGMENT_BYTES})) AS chunk_hex
+           FROM audit_logs WHERE id = ?1 LIMIT 1`,
+        )
+          .bind(descriptor.id, offset + 1)
+          .all()
+        if (!segmentResult.success || segmentResult.results.length !== 1) {
+          throw new Error("audit text segment query did not succeed")
+        }
+
+        const segment = parseTextSegmentRow(segmentResult.results[0])
+        if (segment.id !== descriptor.id || segment.created_at !== descriptor.created_at) {
+          throw new Error("audit text segment changed during read")
+        }
+        decodeHexInto(segment.chunk_hex, expectedBytes, bytes, offset)
+      }
+
+      text[column] = FATAL_UTF8_DECODER.decode(bytes)
+    }
+
+    const rows = parseDetailRows([
+      {
+        id: layout.id,
+        actor_account_id: layout.actor_account_id,
+        actor_employee_id: layout.actor_employee_id,
+        created_at: layout.created_at,
+        ...text,
+      },
+    ])
+    const row = rows[0]
+    if (row === undefined) throw new Error("audit segmented detail is missing")
+
+    return row
   }
 
   private prepareInsert(record: AuditEventRecord): D1PreparedStatement {
@@ -430,14 +670,24 @@ export class AuditEventRepository {
   async findByEventId(eventId: string): Promise<AuditEventDetail | null> {
     try {
       const result = await this.c.env.DB.prepare(
-        `SELECT ${DETAIL_SELECT_COLUMNS} FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
+        `SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
+                (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes
+         FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
         .all()
       if (!result.success) throw new Error("audit detail query did not succeed")
 
-      const row = parseDetailRows(result.results).at(0)
-      return row === undefined ? null : toDetail(row)
+      const descriptor = parseExportDescriptorRows(result.results).at(0)
+      if (descriptor === undefined) return null
+
+      const row =
+        descriptor.wire_bytes + 2 > EXPORT_DETAIL_WIRE_CHUNK_BYTES
+          ? await this.loadSegmentedDetail(descriptor)
+          : (await this.loadExactDetails([descriptor]))[0]
+      if (row === undefined) throw new Error("audit detail row is missing")
+
+      return toDetail(row)
     } catch (error) {
       rethrowRepositoryError(error)
     }
@@ -459,6 +709,7 @@ export class AuditEventRepository {
           parts,
           Math.min(EXPORT_CHUNK_SIZE, remainingRows + 1),
           Math.min(sizeGuard.remainingBytes, EXPORT_DETAIL_RAW_CHUNK_BYTES),
+          EXPORT_DETAIL_WIRE_CHUNK_BYTES,
         )
         const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
           .bind(...descriptorStatement.bindings)
@@ -470,26 +721,16 @@ export class AuditEventRepository {
         if (descriptors.length > remainingRows) throw exportTooLarge()
         if ((descriptors[0]?.raw_bytes ?? 0) > sizeGuard.remainingBytes) throw exportTooLarge()
 
-        const detailResult = await this.c.env.DB.prepare(
-          `SELECT ${DETAIL_SELECT_COLUMNS}
-           FROM audit_logs
-           WHERE id IN (SELECT value FROM json_each(?1))
-           ORDER BY created_at DESC, id DESC`,
-        )
-          .bind(detailIdsJson(descriptors))
-          .all()
-        if (!detailResult.success) throw new Error("audit export detail query did not succeed")
-
-        const rows = parseDetailRows(detailResult.results)
-        if (
-          rows.length !== descriptors.length ||
-          rows.some(
-            (row, index) =>
-              row.id !== descriptors[index]?.id ||
-              row.created_at !== descriptors[index]?.created_at,
-          )
-        ) {
-          throw new Error("audit export rows changed during read")
+        const requiresSegmentedRead =
+          (descriptors[0]?.wire_bytes ?? 0) + 2 > EXPORT_DETAIL_WIRE_CHUNK_BYTES
+        let rows: ReadonlyArray<AuditDetailDatabaseRow>
+        if (requiresSegmentedRead) {
+          if (descriptors.length !== 1 || descriptors[0] === undefined) {
+            throw new Error("audit export wire guard did not isolate a large row")
+          }
+          rows = [await this.loadSegmentedDetail(descriptors[0])]
+        } else {
+          rows = await this.loadExactDetails(descriptors)
         }
         for (const row of rows) {
           const detail = toDetail(row)

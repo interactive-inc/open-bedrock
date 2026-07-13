@@ -344,7 +344,7 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 - [ ] CSV は固定列順、RFC 4180、CRLF、UTF-8 BOM なしとし、文字列化後の先頭危険文字へ単一引用符を付ける。
 
-- [ ] 出力は狭い byte descriptor と exact-ID 詳細取得の二段階にする。詳細取得前に DB 側の累積 raw-byte guard を適用し、一回の Worker 詳細 payload を残り十六 MiB 以内へ抑える。取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
+- [ ] 出力は狭い raw/wire byte descriptor と exact-ID 詳細取得の二段階にする。通常の exact-ID 取得は escaping と列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。単一行が通常上限を超えても raw byte が完成 CSV の残量以内なら、allowlist 済みの各 text 列を二百五十六 KiB の BLOB segment で取得し、全 byte の再構築後に fatal UTF-8 decode する。D1 の各応答は十六 MiB 未満とし、取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
 
 - [ ] 対象テストを再実行する。
 
