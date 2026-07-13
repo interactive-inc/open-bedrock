@@ -11,6 +11,8 @@ import * as applicationAdminRoute from "@/interface/application/applications/adm
 import * as applicationApproveRoute from "@/interface/application/applications/[id]/approve/route"
 import * as applicationDetailRoute from "@/interface/application/applications/[id]/route"
 import * as applicationInboxRoute from "@/interface/application/applications/inbox/route"
+import * as applicationWorkflowRepairsRoute from "@/interface/application/applications/workflow-repairs/route"
+import * as applicationReassignWorkflowStepRoute from "@/interface/application/applications/[id]/reassign-workflow-step/route"
 import * as applicationListRoute from "@/interface/application/applications/route"
 import * as applicationRejectRoute from "@/interface/application/applications/[id]/reject/route"
 import * as applicationResubmitRoute from "@/interface/application/applications/[id]/resubmit/route"
@@ -267,6 +269,7 @@ export const app = factory
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
   .get("/applications/admin", ...applicationAdminRoute.GET)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
+  .get("/applications/workflow-repairs", ...applicationWorkflowRepairsRoute.GET)
   .get("/applications/me", ...applicationApplicationsMeRoute.GET)
   .get("/applications/:id", ...applicationDetailRoute.GET)
   .get("/applications", ...applicationListRoute.GET)
@@ -274,6 +277,7 @@ export const app = factory
   .post("/applications/:id/approve", ...applicationApproveRoute.POST)
   .post("/applications/:id/reject", ...applicationRejectRoute.POST)
   .post("/applications/:id/resubmit", ...applicationResubmitRoute.POST)
+  .post("/applications/:id/reassign-workflow-step", ...applicationReassignWorkflowStepRoute.POST)
   .get("/application-templates/:code", ...applicationTemplateDetailRoute.GET)
   .get("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.GET)
   .put("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.PUT)

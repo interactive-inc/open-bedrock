@@ -78,6 +78,14 @@ function memberToken(): Promise<string> {
   })
 }
 
+function tokenFor(employeeId: number): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId,
+    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
+    role: employeeId === 1 ? "admin" : "member",
+  })
+}
+
 async function request(
   path: string,
   token: string | null,
@@ -95,8 +103,8 @@ async function request(
 }
 
 describe("GET /assets", () => {
-  test("returns 200 with all assets in snake_case shape", async () => {
-    const response = await request("/assets", await memberToken())
+  test("asset:manage holder reads sensitive fields for every asset", async () => {
+    const response = await request("/assets", await tokenFor(1))
 
     expect(response.status).toBe(200)
 
@@ -108,7 +116,59 @@ describe("GET /assets", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(6)
+      expect(parsed.data.data.find((asset) => asset.code === "A0002")).toMatchObject({
+        serial: "CN-D27-0002",
+        purchased_on: "2024-04-01",
+        holder_employee_id: 9,
+      })
     }
+  })
+
+  test("current holder reads sensitive fields only for their own held asset", async () => {
+    const response = await request("/assets", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(assetResponseSchema), total: z.number() })
+      .parse(await response.json())
+
+    expect(parsed.data.find((asset) => asset.code === "A0001")).toMatchObject({
+      serial: "PF-X1-0001",
+      purchased_on: "2024-04-01",
+      holder_employee_id: 5,
+    })
+    expect(parsed.data.find((asset) => asset.code === "A0002")).toMatchObject({
+      serial: null,
+      purchased_on: null,
+      holder_employee_id: null,
+    })
+    expect(parsed.data.find((asset) => asset.code === "A0003")).toMatchObject({
+      serial: null,
+      purchased_on: null,
+      holder_employee_id: null,
+    })
+  })
+
+  test("unrelated member receives only catalog fields", async () => {
+    const response = await request("/assets", await tokenFor(6))
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(assetResponseSchema), total: z.number() })
+      .parse(await response.json())
+    const asset = parsed.data.find((candidate) => candidate.code === "A0001")
+
+    expect(asset).toMatchObject({
+      code: "A0001",
+      name: "Standard Laptop 14",
+      kind: "pc",
+      status: "lent",
+      serial: null,
+      purchased_on: null,
+      holder_employee_id: null,
+    })
   })
 
   test("filters by kind", async () => {

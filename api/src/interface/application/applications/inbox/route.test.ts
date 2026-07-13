@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedApplicationTemplates } from "@/infrastructure/seed/seed-application-templates"
 import { seedApplications } from "@/infrastructure/seed/seed-applications"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -67,6 +68,15 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   return db
 }
@@ -96,7 +106,7 @@ async function request(
 
 describe("GET /applications/inbox", () => {
   test("returns 200 with the inbox columns and joined names", async () => {
-    const response = await request("/applications/inbox", await tokenFor(2, "manager"))
+    const response = await request("/applications/inbox", await tokenFor(1, "admin"))
 
     expect(response.status).toBe(200)
 
@@ -138,6 +148,180 @@ describe("GET /applications/inbox", () => {
       expect(parsed.data.data.length).toBe(0)
       expect(parsed.data.total).toBe(0)
     }
+  })
+
+  test("does not list legacy applications outside a manager's organization scope", async () => {
+    const response = await request("/applications/inbox", await tokenFor(2, "manager"))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ data: [], total: 0 })
+  })
+
+  test("does not persist legacy workflow authority when an unrelated user opens the inbox", async () => {
+    const db = await createTestDb()
+    const definition = JSON.stringify({
+      version: 1,
+      steps: [
+        {
+          key: "manager",
+          name: "Manager",
+          approvers: [{ type: "employee", employee_code: "E002" }],
+          approval_mode: "any",
+          condition_mode: "all",
+          conditions: [],
+          due_days: null,
+          escalation_approvers: [],
+          rejection_behavior: "reject",
+          allow_delegation: true,
+        },
+      ],
+    })
+    await seedD1(db, "application_workflow_instances", [
+      {
+        application_id: 1,
+        definition_json: definition,
+        current_step_key: "manager",
+        current_round: 1,
+        started_at: "2026-01-01T00:00:00.000Z",
+        due_at: null,
+      },
+    ])
+    await db.prepare("UPDATE applications SET current_step = 'manager' WHERE id = 1").run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/inbox",
+      token: await tokenFor(99, "member"),
+    })
+
+    expect(response.status).toBe(200)
+    const snapshotCount = await db
+      .prepare("SELECT COUNT(*) AS total FROM application_workflow_step_snapshots")
+      .first<number>("total")
+    expect(snapshotCount).toBe(0)
+  })
+
+  test("paginates a large workflow inbox with a constant number of database queries", async () => {
+    let queryCount = 0
+    const db = createD1TestDatabase(loadSchema(), {
+      onQuery: () => {
+        queryCount += 1
+      },
+    })
+    await seedD1(db, "application_templates", [
+      {
+        id: 100,
+        code: "large_workflow",
+        name: "Large workflow",
+        category: "general",
+        description: null,
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+    await seedIamForEmployees(db, [
+      { id: 2, email: "you+e002@example.com", passwordHash: "hash", role: "manager" },
+      { id: 5, email: "you+e005@example.com", passwordHash: "hash", role: "member" },
+    ])
+    const managerAccountId = await db
+      .prepare("SELECT id FROM accounts WHERE employee_id = 2")
+      .first<number>("id")
+    if (managerAccountId === null) throw new Error("manager account was not seeded")
+
+    const definition = JSON.stringify({
+      version: 1,
+      steps: [
+        {
+          key: "manager",
+          name: "Manager",
+          approvers: [{ type: "employee", employee_code: "E002" }],
+          approval_mode: "any",
+          condition_mode: "all",
+          conditions: [],
+          due_days: null,
+          escalation_approvers: [],
+          rejection_behavior: "reject",
+          allow_delegation: true,
+        },
+      ],
+    })
+    const ids = Array.from({ length: 100 }, (_, index) => index + 1_000)
+    await seedD1(
+      db,
+      "applications",
+      ids.map((id) => ({
+        id,
+        template_id: 100,
+        applicant_id: 5,
+        status: "pending",
+        current_step: "manager",
+        payload: "{}",
+        created_at: `2026-01-01T00:00:${String(id - 1_000).padStart(2, "0")}Z`,
+      })),
+    )
+    await seedD1(
+      db,
+      "application_workflow_instances",
+      ids.map((id) => ({
+        application_id: id,
+        definition_json: definition,
+        current_step_key: "manager",
+        current_round: 1,
+        started_at: "2026-01-01T00:00:00.000Z",
+        due_at: null,
+      })),
+    )
+    await seedD1(
+      db,
+      "application_workflow_step_snapshots",
+      ids.map((id) => ({
+        application_id: id,
+        step_key: "manager",
+        round: 1,
+        required_approvals: 1,
+        activated_at: "2026-01-01T00:00:00.000Z",
+        due_at: null,
+        escalated_at: null,
+        resolution_reason: "activation",
+        resolution_id: `resolution-${id}`,
+      })),
+    )
+    await seedD1(
+      db,
+      "application_workflow_step_candidates",
+      ids.map((id) => ({
+        application_id: id,
+        step_key: "manager",
+        round: 1,
+        candidate_employee_id: 2,
+        candidate_account_id: managerAccountId,
+        source: "primary",
+        selectors_json: "[]",
+        resolution_id: `resolution-${id}`,
+        eligible_from: null,
+        resolved_at: "2026-01-01T00:00:00.000Z",
+      })),
+    )
+
+    queryCount = 0
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/inbox?limit=10",
+      token: await tokenFor(2, "manager"),
+    })
+    const body = z
+      .object({ data: z.array(applicationInboxResponseSchema), total: z.number() })
+      .parse(await response.json())
+
+    expect(response.status).toBe(200)
+    expect([body.data.length, body.total]).toEqual([10, 100])
+    expect(queryCount).toBeLessThanOrEqual(20)
   })
 
   test("returns only templates matching the viewer role in approverRoles", async () => {

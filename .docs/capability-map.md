@@ -573,7 +573,7 @@ ID とアクセス管理（IAM）は、従業員台帳から認証主体と権�
 
 - 状態: 実装済み
 - 提供面: API、Web、CLI、Schema
-- 現状: テンプレート、入力スキーマ、申請、承認、却下、差戻し後の再申請、全体一覧を扱う
+- 現状: テンプレート、入力スキーマ検証、申請、承認、却下、差戻し後の再申請、全体一覧を扱う
 - 提供面の差: テンプレート、本人申請、受信箱、詳細、決定は API、Web、CLI にあり、全社横断一覧は API と Web だけにある
 - 不足または境界: 各専用申請を自動的に汎用申請へ変換しない
 - 実装根拠: `api/src/domain/application`、`web/app/(app)/applications`、`cli/app/app`、`cli/app/application`
@@ -582,7 +582,7 @@ ID とアクセス管理（IAM）は、従業員台帳から認証主体と権�
 
 - 状態: 実装済み
 - 提供面: API、Web、CLI、Schema
-- 現状: 多段、条件分岐、必要人数、全員承認、期限、代替承認者、差戻し、ラウンド、期間付き代理承認を扱う
+- 現状: 多段、条件分岐、必要人数、全員承認、期限、代替承認者、差戻し、ラウンド、期間付き代理承認を扱う。定義は改版と更新者を追記し、並行更新を拒否する。進行中の候補者と定足数を固定し、候補者不足は監査理由付きで修復できる
 - 不足または境界: 外部ワークフローエンジンとの同期は行わない
 - 実装根拠: `api/src/domain/application/application-workflow.ts`、`api/src/interface/application/approval-delegations`、`web/app/(app)/applications/templates/[code]/workflow`
 

@@ -16,7 +16,6 @@ import {
 } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -43,22 +42,30 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (employeeRow === undefined) {
     throw new NotFoundError("employee not found")
   }
-  if (canAdministerCycle(session) === false && employeeRow.id !== session.employeeId) {
-    const authority = await resolveOrganizationAuthority(c, session.employeeId, employeeRow.id)
-    if (authority instanceof Error) throw new InternalError("failed to resolve organization scope")
-    if (authority.managementChain === false && authority.departmentManager === false) {
-      throw new ForbiddenError()
-    }
-  }
-  if (canAdministerCycle(session) === false && cycleRow.status !== "closed") {
-    throw new ForbiddenError()
-  }
   const formRows = await c.var.database
     .select()
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
-  const forms = formRows.map((row) => ReviewForm.fromRow(row))
+  const canAdminister = canAdministerCycle(session)
+  let visibleFormRows = formRows
+
+  if (canAdminister === false) {
+    if (cycleRow.status !== "closed") {
+      throw new ForbiddenError()
+    }
+
+    if (employeeRow.id !== session.employeeId) {
+      visibleFormRows = formRows.filter(
+        (form) => form.reviewerEmployeeId === session.employeeId && form.status === "submitted",
+      )
+
+      if (visibleFormRows.length === 0) {
+        throw new ForbiddenError()
+      }
+    }
+  }
+  const forms = visibleFormRows.map((row) => ReviewForm.fromRow(row))
   const cycle = new ReviewCycle({
     id: cycleRow.id,
     title: cycleRow.title,

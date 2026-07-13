@@ -1,5 +1,7 @@
 import type { Employee } from "@/domain/employee/employee.entity"
 import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
@@ -44,6 +46,26 @@ export class UpdateEmployee {
       return new NotFoundError("employee not found", "employee_not_found")
     }
 
+    const isSelf = employee.id === command.session.employeeId
+
+    if (isSelf === false && hasPermission(command.session, "org:manage") === false) {
+      const authority = await resolveOrganizationAuthority(
+        this.c,
+        command.session.employeeId,
+        employee.id,
+      )
+
+      if (authority instanceof Error) {
+        return new UnexpectedError("failed to resolve organization authority", {
+          cause: authority,
+        })
+      }
+
+      if (authority.managementChain === false && authority.departmentManager === false) {
+        return new ForbiddenError("cannot update employee outside organization scope", "forbidden")
+      }
+    }
+
     const nextEmployee = employee.withProfile(command.profile)
     const updated =
       employee.status !== "retired" && nextEmployee.status === "retired"
@@ -51,7 +73,7 @@ export class UpdateEmployee {
         : await employeeRepository.updateProfile(nextEmployee)
 
     if (updated instanceof LastAdminError) {
-      return new ConflictError("cannot retire the last admin", "last_admin")
+      return new ConflictError("cannot retire the last effective admin", "last_admin")
     }
 
     if (updated instanceof Error) {

@@ -3,6 +3,16 @@ import { accountRoles, permissions, rolePermissions, roles } from "@/schema"
 import type { RoleRow } from "@/schema"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import {
+  abortWhenNoLoginEnabledEffectiveAdmin,
+  isAbortedByLastAdminGuard,
+} from "@/infrastructure/iam/last-admin-guard"
+import {
+  abortWhenActorCannotManageRoleById,
+  isAbortedByLivePermissionGuard,
+  LivePermissionGuardError,
+} from "@/infrastructure/iam/live-permission-guard"
 import { eq, inArray } from "drizzle-orm"
 
 // IAM のロールと、その permission 割当を扱う。動的ロールの CRUD と permission 一括置換を担う。
@@ -221,11 +231,12 @@ export class RoleRepository {
    * 途中失敗でメタだけ変わって権限が旧のままになることを防ぐ。
    */
   async updateMetaAndPermissions(props: {
+    actorAccountId: number
     roleId: number
     name: string
     description: string | null
     permissionKeys: ReadonlyArray<string>
-  }): Promise<null | Error> {
+  }): Promise<null | Error | LastAdminError | LivePermissionGuardError> {
     try {
       const db = this.c.env.DB
 
@@ -239,6 +250,13 @@ export class RoleRepository {
       }
 
       await db.batch([
+        abortWhenActorCannotManageRoleById({
+          db,
+          actorAccountId: props.actorAccountId,
+          targetRoleId: props.roleId,
+          requiredPermissionKeys: ["iam:manage_roles"],
+          additionalProtectedPermissionKeys: props.permissionKeys,
+        }),
         db
           .prepare("UPDATE roles SET name = ?2, description = ?3 WHERE id = ?1")
           .bind(props.roleId, props.name, props.description),
@@ -250,10 +268,19 @@ export class RoleRepository {
             )
             .bind(props.roleId, permissionId),
         ),
+        abortWhenNoLoginEnabledEffectiveAdmin(db),
       ])
 
       return null
     } catch (caught) {
+      if (isAbortedByLivePermissionGuard(caught)) {
+        return new LivePermissionGuardError({ cause: caught })
+      }
+
+      if (isAbortedByLastAdminGuard(caught)) {
+        return new LastAdminError()
+      }
+
       return caught instanceof Error ? caught : new Error("failed to update role")
     }
   }

@@ -11,15 +11,17 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, or } from "drizzle-orm"
+import { and, asc, count, eq, inArray, or } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -47,6 +49,18 @@ export const GET = factory.createHandlers(
     const query = c.req.valid("query")
 
     const conditions: Array<SQL> = []
+
+    if (hasPermission(session, "org:manage") === false) {
+      const managedEmployeeIds = await listManagedEmployeeIds(c, session.employeeId)
+
+      if (managedEmployeeIds instanceof Error) {
+        throw new InternalError("failed to resolve employee organization scope")
+      }
+
+      conditions.push(
+        inArray(employees.id, [...new Set([session.employeeId, ...managedEmployeeIds])]),
+      )
+    }
 
     if (query.q !== undefined) {
       const keywordMatch = or(

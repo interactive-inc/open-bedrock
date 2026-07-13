@@ -1,6 +1,11 @@
 import type { AttendanceSearchQuery } from "@/interface/attendance/attendance-search-query"
+import type { Context } from "@/env"
 import { hasPermission } from "@/lib/auth/has-permission"
-import { ForbiddenError } from "@/lib/errors"
+import {
+  listManagedEmployeeIds,
+  resolveOrganizationAuthority,
+} from "@/lib/org/organization-authority"
+import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { SessionPayload } from "@/env"
 
@@ -13,26 +18,71 @@ export type Props = {
 }
 
 // 検索条件を解決する。他人を指定したのに権限がなければ判別可能な失敗を返す。
-export function resolveAttendanceSearchQuery(
+export async function resolveAttendanceSearchQuery(
+  c: Context,
   props: Props,
-): AttendanceSearchQuery | ApplicationError {
+): Promise<AttendanceSearchQuery | ApplicationError> {
   const canViewOthers = hasPermission(props.viewerSession, "attendance:read:all")
 
-  // 社員未指定。attendance:read:all 保持者は全社一覧（employeeId: null で route が全件取得）、
-  // 非保持者は自分のレコードのみにフォールバックする。
-  if (props.requestedEmployeeId === null) {
+  if (props.requestedEmployeeId === props.viewerEmployeeId) {
     return {
-      employeeId: canViewOthers ? null : props.viewerEmployeeId,
+      employeeIds: [props.viewerEmployeeId],
       from: props.from,
       to: props.to,
     }
   }
 
-  const isViewingOthers = props.requestedEmployeeId !== props.viewerEmployeeId
-
-  if (isViewingOthers && !canViewOthers) {
+  if (props.requestedEmployeeId !== null && canViewOthers === false) {
     return new ForbiddenError("cannot view other employee attendance", "forbidden")
   }
 
-  return { employeeId: props.requestedEmployeeId, from: props.from, to: props.to }
+  if (props.requestedEmployeeId === null && canViewOthers === false) {
+    return {
+      employeeIds: [props.viewerEmployeeId],
+      from: props.from,
+      to: props.to,
+    }
+  }
+
+  if (hasPermission(props.viewerSession, "org:manage")) {
+    return {
+      employeeIds: props.requestedEmployeeId === null ? null : [props.requestedEmployeeId],
+      from: props.from,
+      to: props.to,
+    }
+  }
+
+  if (props.requestedEmployeeId !== null) {
+    const authority = await resolveOrganizationAuthority(
+      c,
+      props.viewerEmployeeId,
+      props.requestedEmployeeId,
+    )
+
+    if (authority instanceof Error) {
+      return new UnexpectedError("failed to resolve organization authority", { cause: authority })
+    }
+
+    if (authority.managementChain === false && authority.departmentManager === false) {
+      return new ForbiddenError("cannot view attendance outside organization scope", "forbidden")
+    }
+
+    return {
+      employeeIds: [props.requestedEmployeeId],
+      from: props.from,
+      to: props.to,
+    }
+  }
+
+  const managedEmployeeIds = await listManagedEmployeeIds(c, props.viewerEmployeeId)
+
+  if (managedEmployeeIds instanceof Error) {
+    return new UnexpectedError("failed to list managed employees", { cause: managedEmployeeIds })
+  }
+
+  return {
+    employeeIds: [...new Set([props.viewerEmployeeId, ...managedEmployeeIds])],
+    from: props.from,
+    to: props.to,
+  }
 }

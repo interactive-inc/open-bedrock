@@ -358,15 +358,24 @@ export const applicationTemplates = sqliteTable("application_templates", {
 export type ApplicationTemplateRow = InferSelectModel<typeof applicationTemplates>
 
 // 申請（テンプレートに紐づく申請者の提出）。payload は JSON 文字列で保存される。
-export const applications = sqliteTable("applications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  templateId: integer("template_id").notNull(),
-  applicantId: integer("applicant_id").notNull(),
-  status: text("status").notNull(),
-  currentStep: text("current_step"),
-  payload: text("payload").notNull(),
-  createdAt: text("created_at").notNull(),
-})
+export const applications = sqliteTable(
+  "applications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    templateId: integer("template_id").notNull(),
+    applicantId: integer("applicant_id").notNull(),
+    status: text("status").notNull(),
+    currentStep: text("current_step"),
+    payload: text("payload").notNull(),
+    createdAt: text("created_at").notNull(),
+    workflowCreationId: text("workflow_creation_id"),
+  },
+  (table) => [
+    uniqueIndex("uq_applications_workflow_creation")
+      .on(table.workflowCreationId)
+      .where(sql`workflow_creation_id IS NOT NULL`),
+  ],
+)
 
 export type ApplicationRow = InferSelectModel<typeof applications>
 
@@ -386,9 +395,25 @@ export const applicationWorkflows = sqliteTable("application_workflows", {
   templateId: integer("template_id").primaryKey(),
   definitionJson: text("definition_json").notNull(),
   updatedAt: text("updated_at").notNull(),
+  revision: integer("revision").notNull().default(1),
+  updatedByAccountId: integer("updated_by_account_id"),
 })
 
 export type ApplicationWorkflowRow = InferSelectModel<typeof applicationWorkflows>
+
+export const applicationWorkflowRevisions = sqliteTable(
+  "application_workflow_revisions",
+  {
+    templateId: integer("template_id").notNull(),
+    revision: integer("revision").notNull(),
+    definitionJson: text("definition_json").notNull(),
+    updatedByAccountId: integer("updated_by_account_id"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.templateId, table.revision] })],
+)
+
+export type ApplicationWorkflowRevisionRow = InferSelectModel<typeof applicationWorkflowRevisions>
 
 export const applicationWorkflowInstances = sqliteTable("application_workflow_instances", {
   applicationId: integer("application_id").primaryKey(),
@@ -401,6 +426,57 @@ export const applicationWorkflowInstances = sqliteTable("application_workflow_in
 
 export type ApplicationWorkflowInstanceRow = InferSelectModel<typeof applicationWorkflowInstances>
 
+export const applicationWorkflowStepSnapshots = sqliteTable(
+  "application_workflow_step_snapshots",
+  {
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    requiredApprovals: integer("required_approvals").notNull(),
+    activatedAt: text("activated_at").notNull(),
+    dueAt: text("due_at"),
+    escalatedAt: text("escalated_at"),
+    resolutionReason: text("resolution_reason").notNull(),
+    resolutionId: text("resolution_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.applicationId, table.stepKey, table.round] })],
+)
+
+export type ApplicationWorkflowStepSnapshotRow = InferSelectModel<
+  typeof applicationWorkflowStepSnapshots
+>
+
+export const applicationWorkflowStepCandidates = sqliteTable(
+  "application_workflow_step_candidates",
+  {
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    candidateEmployeeId: integer("candidate_employee_id").notNull(),
+    candidateAccountId: integer("candidate_account_id").notNull(),
+    source: text("source").notNull(),
+    selectorsJson: text("selectors_json").notNull(),
+    resolutionId: text("resolution_id").notNull(),
+    eligibleFrom: text("eligible_from"),
+    resolvedAt: text("resolved_at").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [
+        table.applicationId,
+        table.stepKey,
+        table.round,
+        table.candidateAccountId,
+        table.source,
+      ],
+    }),
+  ],
+)
+
+export type ApplicationWorkflowStepCandidateRow = InferSelectModel<
+  typeof applicationWorkflowStepCandidates
+>
+
 export const applicationWorkflowApprovals = sqliteTable(
   "application_workflow_approvals",
   {
@@ -409,7 +485,9 @@ export const applicationWorkflowApprovals = sqliteTable(
     stepKey: text("step_key").notNull(),
     round: integer("round").notNull().default(1),
     approverId: integer("approver_id").notNull(),
+    approverAccountId: integer("approver_account_id"),
     representedApproverId: integer("represented_approver_id").notNull(),
+    delegationId: integer("delegation_id"),
     action: text("action").notNull(),
     comment: text("comment"),
     createdAt: text("created_at").notNull(),
@@ -426,6 +504,30 @@ export const applicationWorkflowApprovals = sqliteTable(
 
 export type ApplicationWorkflowApprovalRow = InferSelectModel<typeof applicationWorkflowApprovals>
 
+export const applicationWorkflowEvents = sqliteTable(
+  "application_workflow_events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    eventType: text("event_type").notNull(),
+    actorAccountId: integer("actor_account_id"),
+    occurredAt: text("occurred_at").notNull(),
+    detailsJson: text("details_json").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_application_workflow_event_once").on(
+      table.applicationId,
+      table.stepKey,
+      table.round,
+      table.eventType,
+    ),
+  ],
+)
+
+export type ApplicationWorkflowEventRow = InferSelectModel<typeof applicationWorkflowEvents>
+
 export const approvalDelegations = sqliteTable("approval_delegations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   delegatorEmployeeId: integer("delegator_employee_id").notNull(),
@@ -433,6 +535,8 @@ export const approvalDelegations = sqliteTable("approval_delegations", {
   templateCode: text("template_code"),
   startsAt: text("starts_at").notNull(),
   endsAt: text("ends_at").notNull(),
+  createdByAccountId: integer("created_by_account_id"),
+  cancelledAt: text("cancelled_at"),
   createdAt: text("created_at").notNull(),
 })
 

@@ -2,11 +2,17 @@ import type { Context } from "@/env"
 import type { AccountStatus } from "@/lib/schemas"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import {
-  abortWhenNoLoginEnabledAdmin,
+  abortWhenNoLoginEnabledEffectiveAdmin,
   isAbortedByLastAdminGuard,
 } from "@/infrastructure/iam/last-admin-guard"
+import {
+  abortWhenActorCannotManageAccount,
+  abortWhenActorCannotManageRoleById,
+  isAbortedByLivePermissionGuard,
+  LivePermissionGuardError,
+} from "@/infrastructure/iam/live-permission-guard"
 import { accountRoles, accounts, employees, roles } from "@/schema"
-import { and, count, eq, inArray, ne, sql } from "drizzle-orm"
+import { eq, inArray, sql } from "drizzle-orm"
 
 // IAM のアカウント管理(一覧・取得・状態遷移・ロール割当)を扱う。
 // verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
@@ -124,6 +130,12 @@ export class AccountRepository {
   }): Promise<null | Error> {
     try {
       await this.c.env.DB.batch([
+        abortWhenActorCannotManageRoleById({
+          db: this.c.env.DB,
+          actorAccountId: props.grantedBy,
+          targetRoleId: props.roleId,
+          requiredPermissionKeys: ["iam:assign_roles"],
+        }),
         this.c.env.DB.prepare(
           "INSERT OR IGNORE INTO account_roles (account_id, role_id, granted_by, granted_at) VALUES (?1, ?2, ?3, ?4)",
         ).bind(props.accountId, props.roleId, props.grantedBy, props.now),
@@ -134,47 +146,11 @@ export class AccountRepository {
 
       return null
     } catch (caught) {
+      if (isAbortedByLivePermissionGuard(caught)) {
+        return new LivePermissionGuardError({ cause: caught })
+      }
+
       return caught instanceof Error ? caught : new Error("failed to grant role")
-    }
-  }
-
-  /**
-   * アカウントからロールを剥奪する。
-   */
-  async revokeRole(accountId: number, roleId: number): Promise<null | Error> {
-    try {
-      await this.c.var.database
-        .delete(accountRoles)
-        .where(and(eq(accountRoles.accountId, accountId), eq(accountRoles.roleId, roleId)))
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to revoke role")
-    }
-  }
-
-  /**
-   * ロール剥奪と tokenVersion bump を原子的に行う。
-   * 途中失敗で剥奪済みなのにトークンが旧権限のまま残ることを防ぐ。
-   */
-  async revokeRoleAndBumpTokenVersion(
-    accountId: number,
-    roleId: number,
-    now: number,
-  ): Promise<null | Error> {
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
-        ).bind(accountId, roleId),
-        this.c.env.DB.prepare(
-          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
-        ).bind(accountId, now),
-      ])
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to revoke role")
     }
   }
 
@@ -195,21 +171,27 @@ export class AccountRepository {
   }
 
   /**
-   * ロールを剥奪し tokenVersion を増やす。剥奪の結果 active な admin が 0 件になる場合は
-   * batch ごと rollback して LastAdminError を返す。並行リクエストでも last-admin チェックと
-   * 剥奪を原子的に行い、TOCTOU による全 admin 消失(lockout)を防ぐ。
+   * ロールを剥奪し tokenVersion を増やす。剥奪の結果ログイン可能な実効管理者が 0 件に
+   * なる場合は batch ごと rollback して LastAdminError を返す。
    */
   async revokeRoleGuardingLastAdmin(
     accountId: number,
     roleId: number,
     now: number,
+    actorAccountId: number,
   ): Promise<null | Error | LastAdminError> {
     try {
       await this.c.env.DB.batch([
+        abortWhenActorCannotManageRoleById({
+          db: this.c.env.DB,
+          actorAccountId,
+          targetRoleId: roleId,
+          requiredPermissionKeys: ["iam:assign_roles"],
+        }),
         this.c.env.DB.prepare(
           "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
         ).bind(accountId, roleId),
-        abortWhenNoLoginEnabledAdmin(this.c.env.DB),
+        abortWhenNoLoginEnabledEffectiveAdmin(this.c.env.DB),
         this.c.env.DB.prepare(
           "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
         ).bind(accountId, now),
@@ -217,6 +199,10 @@ export class AccountRepository {
 
       return null
     } catch (caught) {
+      if (isAbortedByLivePermissionGuard(caught)) {
+        return new LivePermissionGuardError({ cause: caught })
+      }
+
       if (isAbortedByLastAdminGuard(caught)) {
         return new LastAdminError()
       }
@@ -226,24 +212,35 @@ export class AccountRepository {
   }
 
   /**
-   * アカウントを非アクティブ化し tokenVersion を増やす。結果 active な admin が 0 件になる
-   * 場合は batch ごと rollback して LastAdminError を返す（TOCTOU 防止）。
+   * アカウントを非アクティブ化し tokenVersion を増やす。結果ログイン可能な実効管理者が
+   * 0 件になる場合は batch ごと rollback して LastAdminError を返す（TOCTOU 防止）。
    */
   async setStatusGuardingLastAdmin(
     accountId: number,
     status: AccountStatus,
     now: number,
+    actorAccountId: number,
   ): Promise<null | Error | LastAdminError> {
     try {
       await this.c.env.DB.batch([
+        abortWhenActorCannotManageAccount({
+          db: this.c.env.DB,
+          actorAccountId,
+          targetAccountId: accountId,
+          requiredPermissionKeys: ["account:manage"],
+        }),
         this.c.env.DB.prepare(
           "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
         ).bind(accountId, status, now),
-        abortWhenNoLoginEnabledAdmin(this.c.env.DB),
+        abortWhenNoLoginEnabledEffectiveAdmin(this.c.env.DB),
       ])
 
       return null
     } catch (caught) {
+      if (isAbortedByLivePermissionGuard(caught)) {
+        return new LivePermissionGuardError({ cause: caught })
+      }
+
       if (isAbortedByLastAdminGuard(caught)) {
         return new LastAdminError()
       }
@@ -319,51 +316,5 @@ export class AccountRepository {
     }
 
     return resolved.get(employeeId) ?? []
-  }
-
-  /**
-   * 指定した system role を保持するログイン可能なアカウント数を数える。
-   * last-admin ガードに使うため、停止・ロック中のアカウントと退職済み従業員は数えない。
-   */
-  async countAccountsWithSystemRole(roleKey: string): Promise<number | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ value: count() })
-        .from(accountRoles)
-        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .innerJoin(accounts, eq(accounts.id, accountRoles.accountId))
-        .innerJoin(employees, eq(employees.id, accounts.employeeId))
-        .where(
-          and(
-            eq(roles.key, roleKey),
-            eq(roles.isSystem, 1),
-            eq(accounts.status, "active"),
-            ne(employees.status, "retired"),
-          ),
-        )
-
-      return rows.at(0)?.value ?? 0
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to count accounts by role")
-    }
-  }
-
-  /**
-   * 指定アカウントが指定の system role を保持しているか。
-   */
-  async accountHasSystemRole(accountId: number, roleKey: string): Promise<boolean | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ value: count() })
-        .from(accountRoles)
-        .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .where(
-          and(eq(accountRoles.accountId, accountId), eq(roles.key, roleKey), eq(roles.isSystem, 1)),
-        )
-
-      return (rows.at(0)?.value ?? 0) > 0
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to check account role")
-    }
   }
 }

@@ -39,7 +39,7 @@ export default async function WorkflowPage(props: { params: Promise<{ code: stri
         description="組織・IAM・条件に基づく多段承認を設定します。変更は新規申請から適用されます。"
         actions={<BackButton href={`/applications/templates/${code}`} label="テンプレートへ戻る" />}
       />
-      <WorkflowEditor code={code} initial={initial} />
+      <WorkflowEditor code={code} initial={initial} revision={result.revision ?? 0} />
     </div>
   )
 }

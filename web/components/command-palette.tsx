@@ -47,6 +47,9 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command"
+import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-repairs"
+import { canShowApplicationInboxCommand } from "@/lib/application/can-show-application-inbox-command"
+import type { InboxCounts } from "@/lib/api/types/inbox-types"
 
 type CommandEntry = {
   label: string
@@ -54,6 +57,8 @@ type CommandEntry = {
   icon: LucideIcon
   group: string
   requiredPermission?: string
+  requiresWorkflowRepairAccess?: boolean
+  workflowApplicationInbox?: boolean
 }
 
 /**
@@ -67,7 +72,7 @@ const commands: ReadonlyArray<CommandEntry> = [
     href: "/applications/inbox",
     icon: Inbox,
     group: "受信箱",
-    requiredPermission: "application:approve",
+    workflowApplicationInbox: true,
   },
   {
     label: "経費の承認",
@@ -159,6 +164,13 @@ const commands: ReadonlyArray<CommandEntry> = [
   { label: "退職届", href: "/resignations", icon: UserMinus, group: "依頼" },
   { label: "反社チェック", href: "/antisocial-checks", icon: ShieldCheck, group: "依頼" },
   {
+    label: "承認フロー修復",
+    href: "/applications/workflow-repairs",
+    icon: Workflow,
+    group: "システム",
+    requiresWorkflowRepairAccess: true,
+  },
+  {
     label: "バッチ",
     href: "/batch",
     icon: Workflow,
@@ -182,6 +194,7 @@ const commands: ReadonlyArray<CommandEntry> = [
 ]
 
 type Props = {
+  inboxCounts: InboxCounts
   permissions: ReadonlyArray<string>
 }
 
@@ -196,12 +209,38 @@ export function CommandPalette(props: Props) {
 
   const permissionSet = new Set(props.permissions)
 
-  const visibleCommands = commands.filter(
-    (cmd) => cmd.requiredPermission === undefined || permissionSet.has(cmd.requiredPermission),
-  )
+  const visibleCommands = commands.filter((command) => {
+    if (
+      command.workflowApplicationInbox === true &&
+      canShowApplicationInboxCommand(props.permissions, props.inboxCounts.applications) === false
+    ) {
+      return false
+    }
 
-  // グループ名の順序を維持しつつ重複排除
-  const groups = [...new Set(visibleCommands.map((cmd) => cmd.group))]
+    if (
+      command.requiresWorkflowRepairAccess === true &&
+      canManageWorkflowRepairs(props.permissions) === false
+    ) {
+      return false
+    }
+
+    return command.requiredPermission === undefined || permissionSet.has(command.requiredPermission)
+  })
+
+  // グループ名とコマンドの順序を維持しつつ、描画時の再フィルタを避ける。
+  const commandsByGroup = new Map<string, Array<CommandEntry>>()
+
+  for (const command of visibleCommands) {
+    const grouped = commandsByGroup.get(command.group)
+
+    if (grouped === undefined) {
+      commandsByGroup.set(command.group, [command])
+    } else {
+      grouped.push(command)
+    }
+  }
+
+  const groups = [...commandsByGroup.keys()]
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -242,18 +281,16 @@ export function CommandPalette(props: Props) {
               {index > 0 ? <CommandSeparator /> : null}
 
               <CommandGroup heading={group}>
-                {visibleCommands
-                  .filter((cmd) => cmd.group === group)
-                  .map((cmd) => {
-                    const Icon = cmd.icon
+                {commandsByGroup.get(group)?.map((command) => {
+                  const Icon = command.icon
 
-                    return (
-                      <CommandItem key={cmd.href} onSelect={() => handleSelect(cmd.href)}>
-                        <Icon className="mr-2 size-4 shrink-0" />
-                        <span>{cmd.label}</span>
-                      </CommandItem>
-                    )
-                  })}
+                  return (
+                    <CommandItem key={command.href} onSelect={() => handleSelect(command.href)}>
+                      <Icon className="mr-2 size-4 shrink-0" />
+                      <span>{command.label}</span>
+                    </CommandItem>
+                  )
+                })}
               </CommandGroup>
             </div>
           ))}

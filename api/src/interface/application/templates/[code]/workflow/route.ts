@@ -1,7 +1,10 @@
 import { zApplicationWorkflow } from "@/domain/application/application-workflow"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import {
+  ApplicationWorkflowRepository,
+  WorkflowRevisionConflictError,
+} from "@/infrastructure/application/application-workflow-repository"
 import {
   ForbiddenError,
   InternalError,
@@ -13,7 +16,10 @@ import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import { factory } from "@/lib/factory"
+import { ConflictError as ApplicationConflictError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
 import type { Context } from "@/env"
 import { employees, roles } from "@/schema"
 
@@ -56,16 +62,29 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const code = validateCodeParam(c.req.param("code"), "template")
   const template = await loadTemplate(c, code)
-  const workflow = await new ApplicationWorkflowRepository(c).findDefinition(template.id ?? 0)
+  const workflow = await new ApplicationWorkflowRepository(c).findDefinitionRecord(template.id ?? 0)
 
   if (workflow instanceof Error) throw new InternalError("failed to load workflow")
 
-  return c.json({ workflow }, 200)
+  return c.json(
+    workflow === null
+      ? { workflow: null, revision: null, updated_at: null }
+      : {
+          workflow: workflow.definition,
+          revision: workflow.revision,
+          updated_at: workflow.updatedAt,
+        },
+    200,
+  )
 })
+
+const zWorkflowUpdateRequest = zApplicationWorkflow.and(
+  z.object({ expected_revision: z.number().int().nonnegative() }),
+)
 
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator("json", zApplicationWorkflow),
+  zValidator("json", zWorkflowUpdateRequest),
   async (c) => {
     const session = c.var.session
 
@@ -74,17 +93,31 @@ export const PUT = factory.createHandlers(
 
     const code = validateCodeParam(c.req.param("code"), "template")
     const template = await loadTemplate(c, code)
-    const workflow = c.req.valid("json")
+    const body = c.req.valid("json")
+    const workflow = zApplicationWorkflow.parse(body)
     await validateReferences(c, workflow)
 
-    const saved = await new ApplicationWorkflowRepository(c).upsertDefinition({
+    const saved = await new ApplicationWorkflowRepository(c).saveDefinition({
       templateId: template.id ?? 0,
       definition: workflow,
+      expectedRevision: body.expected_revision,
+      updatedByAccountId: session.accountId,
       updatedAt: c.env.NOW ?? new Date().toISOString(),
     })
 
+    if (saved instanceof WorkflowRevisionConflictError) {
+      throw toHttpException(
+        new ApplicationConflictError(
+          "workflow definition was updated by another administrator",
+          "workflow_revision_conflict",
+        ),
+      )
+    }
     if (saved instanceof Error) throw new InternalError("failed to save workflow")
 
-    return c.json({ workflow }, 200)
+    return c.json(
+      { workflow: saved.definition, revision: saved.revision, updated_at: saved.updatedAt },
+      200,
+    )
   },
 )

@@ -76,6 +76,9 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedD1(db, "org_memberships", [
+    { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+  ])
 
   return db
 }

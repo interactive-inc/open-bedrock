@@ -181,6 +181,8 @@ import appTemplateCreateHandler from "@/app/app/template-create/route"
 import appTemplateUpdateHandler from "@/app/app/template-update/route"
 import appTemplateDeleteHandler from "@/app/app/template-delete/route"
 import appWorkflowHandler from "@/app/app/workflow/[code]/route"
+import appWorkflowRepairListHandler from "@/app/app/workflow-repair/list/route"
+import appWorkflowRepairReassignHandler from "@/app/app/workflow-repair/reassign/[app_id]/route"
 import appResubmitHandler from "@/app/app/resubmit/[app_id]/route"
 import appDelegationsHandler from "@/app/app/delegations/route"
 import appDelegateHandler from "@/app/app/delegate/route"
@@ -525,6 +527,8 @@ routes.post("/app/template-create", ...appTemplateCreateHandler)
 routes.post("/app/template-update", ...appTemplateUpdateHandler)
 routes.post("/app/template-delete", ...appTemplateDeleteHandler)
 routes.post("/app/workflow/:code?", ...appWorkflowHandler)
+routes.post("/app/workflow-repair/list", ...appWorkflowRepairListHandler)
+routes.post("/app/workflow-repair/reassign/:app_id?", ...appWorkflowRepairReassignHandler)
 routes.post("/app/resubmit/:app_id?", ...appResubmitHandler)
 routes.post("/app/delegations", ...appDelegationsHandler)
 routes.post("/app/delegate", ...appDelegateHandler)

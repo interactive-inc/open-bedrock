@@ -3,8 +3,9 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
+import { ensureOk } from "@/lib/http/ensure-ok"
 
-export const help = `karte app workflow <template_code> [--definition '<json>']`
+export const help = `karte app workflow <template_code> [--definition '<json>' --expected-revision <n>]`
 
 type WorkflowEndpoint = {
   $get(input: { param: { code: string } }): Promise<Response>
@@ -18,6 +19,7 @@ export default factory.createHandlers(
       help: z.string().optional(),
       code: z.string().optional(),
       definition: z.string().optional(),
+      "expected-revision": z.string().optional(),
     }),
   ),
   async (c) => {
@@ -29,15 +31,36 @@ export default factory.createHandlers(
       "application-templates": { ":code": { workflow: WorkflowEndpoint } }
     }
     const endpoint = client["application-templates"][":code"].workflow
-    if (query.definition === undefined)
-      return c.json(await (await endpoint.$get({ param: { code } })).json())
+    if (query.definition === undefined) {
+      const response = await endpoint.$get({ param: { code } })
+      await ensureOk(response)
+      return c.json(await response.json())
+    }
+    const expectedRevisionInput = query["expected-revision"]
+    if (expectedRevisionInput === undefined) {
+      throw new UsageError("--expected-revision が必要です")
+    }
+    if (/^(0|[1-9]\d*)$/.test(expectedRevisionInput) === false) {
+      throw new UsageError("--expected-revision は0以上の整数で指定してください")
+    }
+    const expectedRevision = Number(expectedRevisionInput)
+    if (Number.isSafeInteger(expectedRevision) === false) {
+      throw new UsageError("--expected-revision は0以上の整数で指定してください")
+    }
     let definition: unknown
     try {
       definition = JSON.parse(query.definition)
     } catch {
       throw new UsageError("--definition は正しい JSON が必要です")
     }
-    const response = await endpoint.$put({ param: { code }, json: definition })
+    if (typeof definition !== "object" || definition === null || Array.isArray(definition)) {
+      throw new UsageError("--definition はJSONオブジェクトで指定してください")
+    }
+    const response = await endpoint.$put({
+      param: { code },
+      json: { ...definition, expected_revision: expectedRevision },
+    })
+    await ensureOk(response)
     return c.json(await response.json())
   },
 )

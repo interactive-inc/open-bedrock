@@ -12,11 +12,19 @@ export const PERMISSION_CATALOG = [
   { key: "dashboard:view", category: "general", description: "ダッシュボードを閲覧する" },
   { key: "employee:read", category: "employee", description: "従業員を閲覧する" },
   { key: "employee:create", category: "employee", description: "従業員を登録する" },
-  { key: "employee:update", category: "employee", description: "従業員を更新する" },
+  {
+    key: "employee:update",
+    category: "employee",
+    description: "許可された対象範囲の従業員を更新する",
+  },
   { key: "employee:delete", category: "employee", description: "従業員を削除する" },
   { key: "employee:assign_role", category: "employee", description: "従業員のロールを割り当てる" },
   { key: "org:manage", category: "org", description: "組織・部署を管理する" },
-  { key: "application:approve", category: "application", description: "申請を承認・却下する" },
+  {
+    key: "application:approve",
+    category: "application",
+    description: "組織スコープ内の互換申請を承認・却下する",
+  },
   {
     key: "application:read:all",
     category: "application",
@@ -76,7 +84,11 @@ export const PERMISSION_CATALOG = [
   },
   { key: "goal:read:all", category: "goal", description: "他者の目標を閲覧する" },
   { key: "goal:evaluate", category: "goal", description: "目標を評価する(上長)" },
-  { key: "attendance:read:all", category: "attendance", description: "全従業員の勤怠を閲覧する" },
+  {
+    key: "attendance:read:all",
+    category: "attendance",
+    description: "本人または管理対象の勤怠を閲覧する（org:manage は全社）",
+  },
   { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
   { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {

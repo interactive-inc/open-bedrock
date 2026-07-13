@@ -10,12 +10,14 @@ import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 // 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。
 async function toResponseBody(c: Context, employee: Employee) {
@@ -58,8 +60,22 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw toHttpException(employee)
   }
 
-  if (employee.id !== session.employeeId && canReadEmployees(session) === false) {
-    throw new NotFoundError("employee not found")
+  if (employee.id !== session.employeeId) {
+    if (canReadEmployees(session) === false) {
+      throw new NotFoundError("employee not found")
+    }
+
+    if (hasPermission(session, "org:manage") === false) {
+      const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
+
+      if (authority instanceof Error) {
+        throw new InternalError("failed to resolve employee organization scope")
+      }
+
+      if (authority.managementChain === false && authority.departmentManager === false) {
+        throw new NotFoundError("employee not found")
+      }
+    }
   }
 
   const body = await toResponseBody(c, employee)

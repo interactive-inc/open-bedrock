@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { createEmployeeAction } from "@/app/(app)/employees/actions"
 import type { EmployeeCreateFormState } from "@/app/(app)/employees/actions"
 import { Button } from "@/components/ui/button"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
@@ -104,27 +104,31 @@ export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="employee-role">ロール</FieldLabel>
+          <FieldLabel htmlFor="employee-role">システム権限セット</FieldLabel>
 
           {props.canAssignRole ? (
             <select
+              aria-label="システム権限セット"
               id="employee-role"
               name="role"
               defaultValue="member"
               className={selectClassName}
               required
             >
-              <option value="member">メンバー</option>
-              <option value="manager">マネージャー</option>
-              <option value="hr">人事</option>
-              <option value="admin">管理者</option>
+              <option value="member">標準利用者</option>
+              <option value="manager">業務管理者</option>
+              <option value="hr">人事管理者</option>
+              <option value="admin">システム管理者</option>
             </select>
           ) : (
             <>
-              <Input id="employee-role" value="メンバー" readOnly />
+              <Input id="employee-role" value="標準利用者" readOnly />
               <input type="hidden" name="role" value="member" />
             </>
           )}
+          <FieldDescription>
+            何を操作できるかを設定します。直属上司や部署責任者など、誰に対して操作できるかは組織図で別に管理します。
+          </FieldDescription>
         </Field>
 
         <Field>
@@ -159,6 +163,7 @@ export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
           <FieldLabel htmlFor="employee-status">在籍状況</FieldLabel>
 
           <select
+            aria-label="在籍状況"
             id="employee-status"
             name="status"
             defaultValue="active"
@@ -174,7 +179,7 @@ export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
 
         <Field orientation="horizontal">
           <Button type="submit" disabled={isPending}>
-            {isPending ? "登録中..." : "従業員を登録"}
+            {isPending ? "登録中…" : "従業員を登録"}
           </Button>
         </Field>
       </FieldGroup>

@@ -6,9 +6,17 @@ import {
   saveWorkflowAction,
   type WorkflowFormState,
 } from "@/app/(app)/applications/templates/[code]/workflow/actions"
+import { parseWorkflowDefinitionJson } from "@/app/(app)/applications/templates/[code]/workflow/_lib/workflow-definition"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
@@ -19,7 +27,6 @@ import type {
   WorkflowApproverSelector,
 } from "@/lib/api/types/application-workflow-types"
 
-const initialState: WorkflowFormState = { ok: false, error: null }
 const defaultStep = (index: number): ApplicationWorkflowStep => ({
   key: `approval_${index + 1}`,
   name: `承認ステップ ${index + 1}`,
@@ -33,9 +40,24 @@ const defaultStep = (index: number): ApplicationWorkflowStep => ({
   allow_delegation: true,
 })
 
-export function WorkflowEditor(props: { code: string; initial: ApplicationWorkflow }) {
-  const [workflow, setWorkflow] = useState(props.initial)
-  const [advanced, setAdvanced] = useState(JSON.stringify(props.initial, null, 2))
+function firstAvailableDefaultStep(steps: ReadonlyArray<ApplicationWorkflowStep>) {
+  const usedKeys = new Set(steps.map((step) => step.key))
+  let index = 0
+
+  while (usedKeys.has(`approval_${index + 1}`)) index += 1
+
+  return defaultStep(index)
+}
+
+export function WorkflowEditor(props: {
+  code: string
+  initial: ApplicationWorkflow
+  revision: number
+}) {
+  const [advanced, setAdvanced] = useState(() => JSON.stringify(props.initial, null, 2))
+  const definition = parseWorkflowDefinitionJson(advanced)
+  const workflow = definition.success ? definition.workflow : props.initial
+  const definitionError = definition.success ? null : definition.error
   const [state, action, pending] = useActionState(
     async (previous: WorkflowFormState, data: FormData) => {
       const next = await saveWorkflowAction(previous, data)
@@ -43,11 +65,10 @@ export function WorkflowEditor(props: { code: string; initial: ApplicationWorkfl
       else if (next.error !== null) toast.error(next.error)
       return next
     },
-    initialState,
+    { ok: false, error: null, revision: props.revision },
   )
 
   function commit(next: ApplicationWorkflow) {
-    setWorkflow(next)
     setAdvanced(JSON.stringify(next, null, 2))
   }
 
@@ -59,186 +80,205 @@ export function WorkflowEditor(props: { code: string; initial: ApplicationWorkfl
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="code" value={props.code} />
       <input type="hidden" name="workflow_json" value={advanced} />
+      <input type="hidden" name="expected_revision" value={state.revision} />
 
-      {workflow.steps.map((step, index) => (
-        <Card key={`${step.key}-${index}`}>
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>ステップ {index + 1}</CardTitle>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={index === 0}
-                onClick={() => {
-                  const steps = [...workflow.steps]
-                  ;[steps[index - 1], steps[index]] = [steps[index], steps[index - 1]]
-                  commit({ ...workflow, steps })
-                }}
-              >
-                上へ
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                disabled={workflow.steps.length === 1}
-                onClick={() =>
-                  commit({ ...workflow, steps: workflow.steps.filter((_, i) => i !== index) })
-                }
-              >
-                削除
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <Field>
-              <FieldLabel>表示名</FieldLabel>
-              <Input
-                value={step.name}
-                onChange={(event) => updateStep(index, { ...step, name: event.target.value })}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>ステップキー</FieldLabel>
-              <Input
-                value={step.key}
-                pattern="[A-Za-z0-9_-]+"
-                onChange={(event) => updateStep(index, { ...step, key: event.target.value })}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>完了条件</FieldLabel>
-              <NativeSelect
-                value={step.approval_mode}
-                onChange={(event) =>
-                  updateStep(index, {
-                    ...step,
-                    approval_mode: event.target.value as ApplicationWorkflowStep["approval_mode"],
-                  })
-                }
-              >
-                <NativeSelectOption value="any">いずれか1人</NativeSelectOption>
-                <NativeSelectOption value="all">全員</NativeSelectOption>
-                <NativeSelectOption value="minimum">指定人数</NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            {step.approval_mode === "minimum" ? (
-              <Field>
-                <FieldLabel>必要人数</FieldLabel>
-                <Input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={step.minimum_approvals ?? 1}
-                  onChange={(event) =>
-                    updateStep(index, { ...step, minimum_approvals: Number(event.target.value) })
-                  }
-                />
-              </Field>
-            ) : null}
-            <Field>
-              <FieldLabel>期限（日）</FieldLabel>
-              <Input
-                type="number"
-                min={0}
-                max={365}
-                value={step.due_days ?? ""}
-                placeholder="期限なし"
-                onChange={(event) =>
-                  updateStep(index, {
-                    ...step,
-                    due_days: event.target.value === "" ? null : Number(event.target.value),
-                  })
-                }
-              />
-            </Field>
-            <Field>
-              <FieldLabel>否認時</FieldLabel>
-              <NativeSelect
-                value={step.rejection_behavior}
-                onChange={(event) =>
-                  updateStep(index, {
-                    ...step,
-                    rejection_behavior: event.target.value as "reject" | "return",
-                  })
-                }
-              >
-                <NativeSelectOption value="return">申請者へ差戻し</NativeSelectOption>
-                <NativeSelectOption value="reject">申請を却下</NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <Field orientation="horizontal" className="md:col-span-2">
-              <div>
-                <FieldLabel htmlFor={`delegation-${index}`}>代理承認</FieldLabel>
-                <FieldDescription>期間付き委任をこのステップで利用します。</FieldDescription>
-              </div>
-              <Switch
-                id={`delegation-${index}`}
-                checked={step.allow_delegation}
-                onCheckedChange={(checked) =>
-                  updateStep(index, { ...step, allow_delegation: checked })
-                }
-              />
-            </Field>
-            <Field className="md:col-span-2">
-              <FieldLabel>承認者</FieldLabel>
-              <div className="flex flex-col gap-2">
-                {step.approvers.map((selector, selectorIndex) => (
-                  <ApproverRow
-                    key={selectorIndex}
-                    selector={selector}
-                    onChange={(next) =>
-                      updateStep(index, {
-                        ...step,
-                        approvers: step.approvers.map((item, i) =>
-                          i === selectorIndex ? next : item,
-                        ),
-                      })
-                    }
-                    onDelete={() =>
-                      updateStep(index, {
-                        ...step,
-                        approvers: step.approvers.filter((_, i) => i !== selectorIndex),
-                      })
-                    }
-                    canDelete={step.approvers.length > 1}
-                  />
-                ))}
+      <FieldSet className="gap-4" disabled={definitionError !== null}>
+        <FieldLegend className="sr-only">ワークフロー基本設定</FieldLegend>
+        {workflow.steps.map((step, index) => (
+          <Card key={step.key}>
+            <CardHeader className="flex-row items-center justify-between">
+              <CardTitle>ステップ {index + 1}</CardTitle>
+              <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
+                  disabled={index === 0}
+                  onClick={() => {
+                    const steps = [...workflow.steps]
+                    ;[steps[index - 1], steps[index]] = [steps[index], steps[index - 1]]
+                    commit({ ...workflow, steps })
+                  }}
+                >
+                  上へ
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={workflow.steps.length === 1}
                   onClick={() =>
+                    commit({ ...workflow, steps: workflow.steps.filter((_, i) => i !== index) })
+                  }
+                >
+                  削除
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor={`workflow-step-${index}-name`}>表示名</FieldLabel>
+                <Input
+                  id={`workflow-step-${index}-name`}
+                  value={step.name}
+                  onChange={(event) => updateStep(index, { ...step, name: event.target.value })}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`workflow-step-${index}-key`}>ステップキー</FieldLabel>
+                <Input
+                  id={`workflow-step-${index}-key`}
+                  value={step.key}
+                  pattern="[A-Za-z0-9_-]+"
+                  onChange={(event) => updateStep(index, { ...step, key: event.target.value })}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`workflow-step-${index}-approval-mode`}>完了条件</FieldLabel>
+                <NativeSelect
+                  id={`workflow-step-${index}-approval-mode`}
+                  value={step.approval_mode}
+                  onChange={(event) =>
                     updateStep(index, {
                       ...step,
-                      approvers: [...step.approvers, { type: "direct_manager" }],
+                      approval_mode: event.target.value as ApplicationWorkflowStep["approval_mode"],
                     })
                   }
                 >
-                  承認者を追加
-                </Button>
-              </div>
-            </Field>
-          </CardContent>
-        </Card>
-      ))}
+                  <NativeSelectOption value="any">いずれか1人</NativeSelectOption>
+                  <NativeSelectOption value="all">全員</NativeSelectOption>
+                  <NativeSelectOption value="minimum">指定人数</NativeSelectOption>
+                </NativeSelect>
+              </Field>
+              {step.approval_mode === "minimum" ? (
+                <Field>
+                  <FieldLabel htmlFor={`workflow-step-${index}-minimum-approvals`}>
+                    必要人数
+                  </FieldLabel>
+                  <Input
+                    id={`workflow-step-${index}-minimum-approvals`}
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={step.minimum_approvals ?? 1}
+                    onChange={(event) =>
+                      updateStep(index, { ...step, minimum_approvals: Number(event.target.value) })
+                    }
+                  />
+                </Field>
+              ) : null}
+              <Field>
+                <FieldLabel htmlFor={`workflow-step-${index}-due-days`}>期限（日）</FieldLabel>
+                <Input
+                  id={`workflow-step-${index}-due-days`}
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={step.due_days ?? ""}
+                  placeholder="期限なし"
+                  onChange={(event) =>
+                    updateStep(index, {
+                      ...step,
+                      due_days: event.target.value === "" ? null : Number(event.target.value),
+                    })
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`workflow-step-${index}-rejection-behavior`}>
+                  否認時
+                </FieldLabel>
+                <NativeSelect
+                  id={`workflow-step-${index}-rejection-behavior`}
+                  value={step.rejection_behavior}
+                  onChange={(event) =>
+                    updateStep(index, {
+                      ...step,
+                      rejection_behavior: event.target.value as "reject" | "return",
+                    })
+                  }
+                >
+                  <NativeSelectOption value="return">申請者へ差戻し</NativeSelectOption>
+                  <NativeSelectOption value="reject">申請を却下</NativeSelectOption>
+                </NativeSelect>
+              </Field>
+              <Field orientation="horizontal" className="md:col-span-2">
+                <div>
+                  <FieldLabel htmlFor={`delegation-${index}`}>代理承認</FieldLabel>
+                  <FieldDescription>期間付き委任をこのステップで利用します。</FieldDescription>
+                </div>
+                <Switch
+                  id={`delegation-${index}`}
+                  checked={step.allow_delegation}
+                  onCheckedChange={(checked) =>
+                    updateStep(index, { ...step, allow_delegation: checked })
+                  }
+                />
+              </Field>
+              <Field className="md:col-span-2">
+                <FieldLabel>承認者</FieldLabel>
+                <div className="flex flex-col gap-2">
+                  {step.approvers.map((selector, selectorIndex) => (
+                    <ApproverRow
+                      key={selectorIndex}
+                      selector={selector}
+                      typeInputId={`workflow-step-${index}-approver-${selectorIndex}-type`}
+                      typeInputLabel={`ステップ ${index + 1} 承認者 ${selectorIndex + 1} の種類`}
+                      onChange={(next) =>
+                        updateStep(index, {
+                          ...step,
+                          approvers: step.approvers.map((item, i) =>
+                            i === selectorIndex ? next : item,
+                          ),
+                        })
+                      }
+                      onDelete={() =>
+                        updateStep(index, {
+                          ...step,
+                          approvers: step.approvers.filter((_, i) => i !== selectorIndex),
+                        })
+                      }
+                      canDelete={step.approvers.length > 1}
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      updateStep(index, {
+                        ...step,
+                        approvers: [...step.approvers, { type: "direct_manager" }],
+                      })
+                    }
+                  >
+                    承認者を追加
+                  </Button>
+                </div>
+              </Field>
+            </CardContent>
+          </Card>
+        ))}
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() =>
-          commit({ ...workflow, steps: [...workflow.steps, defaultStep(workflow.steps.length)] })
-        }
-      >
-        ステップを追加
-      </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() =>
+            commit({
+              ...workflow,
+              steps: [...workflow.steps, firstAvailableDefaultStep(workflow.steps)],
+            })
+          }
+        >
+          ステップを追加
+        </Button>
+      </FieldSet>
 
       <details className="rounded-lg border p-4">
         <summary className="cursor-pointer font-medium">
           詳細設定（条件分岐・エスカレーション・JSON）
         </summary>
-        <Field className="mt-4">
+        <Field className="mt-4" data-invalid={definitionError === null ? undefined : true}>
           <FieldLabel htmlFor="workflow-advanced">ワークフロー定義</FieldLabel>
           <FieldDescription>
             payload／申請者属性の条件、期限後の承認者など全項目を編集できます。
@@ -247,14 +287,18 @@ export function WorkflowEditor(props: { code: string; initial: ApplicationWorkfl
             id="workflow-advanced"
             className="min-h-96 font-mono text-xs"
             value={advanced}
+            aria-invalid={definitionError !== null}
             onChange={(event) => setAdvanced(event.target.value)}
           />
+          {definitionError === null ? null : <FieldError>{definitionError}</FieldError>}
         </Field>
       </details>
 
-      {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-      <Button type="submit" disabled={pending}>
-        {pending ? "保存中..." : "承認フローを保存"}
+      <div aria-live="polite">
+        {state.error === null ? null : <FieldError>{state.error}</FieldError>}
+      </div>
+      <Button type="submit" disabled={pending || definitionError !== null}>
+        {pending ? "保存中…" : "承認フローを保存"}
       </Button>
     </form>
   )
@@ -262,6 +306,8 @@ export function WorkflowEditor(props: { code: string; initial: ApplicationWorkfl
 
 function ApproverRow(props: {
   selector: WorkflowApproverSelector
+  typeInputId: string
+  typeInputLabel: string
   onChange: (selector: WorkflowApproverSelector) => void
   onDelete: () => void
   canDelete: boolean
@@ -275,6 +321,8 @@ function ApproverRow(props: {
   return (
     <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
       <NativeSelect
+        id={props.typeInputId}
+        aria-label={props.typeInputLabel}
         value={props.selector.type}
         onChange={(event) => {
           const type = event.target.value as WorkflowApproverSelector["type"]

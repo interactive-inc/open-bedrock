@@ -71,6 +71,11 @@ describe("approval delegation routes", () => {
     expect(((await listed.json()) as { data: Array<unknown> }).data).toHaveLength(1)
     expect((await request(db, 6, "DELETE", `/approval-delegations/${id}`)).status).toBe(403)
     expect((await request(db, 5, "DELETE", `/approval-delegations/${id}`)).status).toBe(204)
+    const cancelledAt = await db
+      .prepare("SELECT cancelled_at FROM approval_delegations WHERE id = ?1")
+      .bind(id)
+      .first<string>("cancelled_at")
+    expect(cancelledAt).toBe("2026-01-01T00:00:00.000Z")
   })
 
   test("rejects self delegation and overlapping periods", async () => {
@@ -85,5 +90,33 @@ describe("approval delegation routes", () => {
     ).toBe(400)
     expect((await request(db, 5, "POST", "/approval-delegations", body)).status).toBe(201)
     expect((await request(db, 5, "POST", "/approval-delegations", body)).status).toBe(409)
+  })
+
+  test("rejects delegation to a retired employee even when an active account remains", async () => {
+    const db = await setup()
+    const response = await request(db, 5, "POST", "/approval-delegations", {
+      ...body,
+      delegate_employee_code: "E018",
+    })
+
+    expect(response.status).toBe(404)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS total FROM approval_delegations").first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("normalizes offset timestamps before comparing and storing periods", async () => {
+    const db = await setup()
+    const response = await request(db, 5, "POST", "/approval-delegations", {
+      ...body,
+      starts_at: "2026-01-01T09:00:00.000+09:00",
+      ends_at: "2026-01-31T09:00:00.000+09:00",
+    })
+
+    expect(response.status).toBe(201)
+    expect(await response.json()).toMatchObject({
+      starts_at: "2026-01-01T00:00:00.000Z",
+      ends_at: "2026-01-31T00:00:00.000Z",
+    })
   })
 })

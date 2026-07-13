@@ -16,10 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getMe } from "@/lib/api/get-me"
 import { getReviewResults } from "@/lib/api/get-review-results"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
 export const metadata = { title: "評価結果" }
 
@@ -27,7 +25,7 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-// 評価結果画面（特権ロール）。cycle_id と employee_code を query で受け取り集計結果を表示する。
+// cycle_id と employee_code を query で受け取り、API が閲覧者向けに投影した結果を表示する。
 export default async function ReviewResultsPage(props: Props) {
   const searchParamsValue = await props.searchParams
 
@@ -55,16 +53,8 @@ type ResultsProps = {
   employeeCode: string
 }
 
-// 結果を認証付きで取得して描画する非同期 RSC。権限・入力をチェックしてから取得する。
+// 結果を認証付きで取得して描画する非同期 RSC。閲覧可否と表示範囲は API を正とする。
 async function Results(props: ResultsProps) {
-  const currentUser = await getMe()
-
-  const canView = currentUser instanceof Error ? false : canAdministerCycle(currentUser.permissions)
-
-  if (canView === false) {
-    return <FetchError message="評価結果を閲覧する権限がありません" />
-  }
-
   if (Number.isInteger(props.cycleId) === false || props.employeeCode === "") {
     return (
       <p className="text-sm text-muted-foreground">サイクル ID と社員コードを指定してください</p>

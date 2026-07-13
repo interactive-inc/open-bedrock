@@ -67,9 +67,10 @@ const newEmployeeInput = {
 describe("RegisterEmployee", () => {
   test("registers an employee for a privileged role", async () => {
     const context = createTestContext().context
+    const adminId = await seedEmployee(context, "E899", { role: "admin" })
 
     const result = await new RegisterEmployee(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("admin", adminId),
       employee: newEmployeeInput,
     })
 
@@ -92,6 +93,23 @@ describe("RegisterEmployee", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+  })
+
+  test("rejects assigning a role whose permissions exceed the actor's permissions", async () => {
+    const context = createTestContext().context
+    const session = {
+      ...makeTestSession("member"),
+      permissions: new Set(["employee:create", "employee:assign_role"]),
+      roleKeys: ["employee-provisioner"],
+      role: "employee-provisioner",
+    }
+
+    const result = await new RegisterEmployee(context).run({
+      session: session,
+      employee: { ...newEmployeeInput, role: "admin" },
+    })
+
+    expectApplicationError(result, ForbiddenError, "role_escalation_forbidden")
   })
 
   test("rejects a duplicate code with employee_code_conflict", async () => {
@@ -760,10 +778,12 @@ describe("DeleteEmployee", () => {
 
   test("allows re-registering the same code after deletion (no orphan account conflict)", async () => {
     const { context } = createTestContext()
+    const adminId = await seedEmployee(context, "E919", { role: "admin" })
+    const adminSession = makeTestSession("admin", adminId)
 
     // 従業員を IAM 付きで登録
     const registered = await new RegisterEmployee(context).run({
-      session: makeTestSession("admin"),
+      session: adminSession,
       employee: { ...newEmployeeInput, code: "E921", email: "you+e921@example.com" },
     })
 
@@ -773,8 +793,8 @@ describe("DeleteEmployee", () => {
 
     // 削除（viewer は削除対象と別人にする）
     const deleted = await new DeleteEmployee(context).run({
-      session: makeTestSession("admin"),
-      viewerEmployeeId: registered.id + 1000,
+      session: adminSession,
+      viewerEmployeeId: adminId,
       code: "E921",
     })
 
@@ -782,7 +802,7 @@ describe("DeleteEmployee", () => {
 
     // 同じ code で再登録できる（孤児 account による employee_id UNIQUE 衝突が起きない）
     const reRegistered = await new RegisterEmployee(context).run({
-      session: makeTestSession("admin"),
+      session: adminSession,
       employee: { ...newEmployeeInput, code: "E921", email: "you+e921b@example.com" },
     })
 

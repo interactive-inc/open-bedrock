@@ -3,7 +3,7 @@ import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { approvalDelegations } from "@/schema"
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -20,11 +20,13 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   if (existing.delegatorEmployeeId !== session.employeeId) throw new ForbiddenError()
 
   await c.var.database
-    .delete(approvalDelegations)
+    .update(approvalDelegations)
+    .set({ cancelledAt: c.env.NOW ?? new Date().toISOString() })
     .where(
       and(
         eq(approvalDelegations.id, id),
         eq(approvalDelegations.delegatorEmployeeId, session.employeeId),
+        isNull(approvalDelegations.cancelledAt),
       ),
     )
 

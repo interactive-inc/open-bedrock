@@ -10,6 +10,8 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { factory } from "@/lib/factory"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
@@ -66,6 +68,28 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(
+    db,
+    "org_departments",
+    seedOrgDepartments.map((department) => ({
+      code: department.code,
+      department_id: department.departmentId,
+      parent_code: department.parentCode,
+      manager_employee_code: department.managerEmployeeCode,
+      sort_order: department.order,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+
   return db
 }
 
@@ -85,11 +109,28 @@ function memberToken(): Promise<string> {
   })
 }
 
+function managerToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 4,
+    email: "you+e004@example.com",
+    role: "manager",
+  })
+}
+
+function organizationManagerWithoutCapabilityToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 9,
+    email: "you+e009@example.com",
+    role: "member",
+  })
+}
+
 async function request(
   path: string,
   token: string | null,
   method?: string,
   body?: unknown,
+  setup?: (db: D1Database) => Promise<void>,
 ): Promise<Response> {
   const headers: Record<string, string> = {}
 
@@ -101,8 +142,14 @@ async function request(
     headers["content-type"] = "application/json"
   }
 
+  const db = await createTestDb()
+
+  if (setup !== undefined) {
+    await setup(db)
+  }
+
   const bindings: Bindings = {
-    DB: await createTestDb(),
+    DB: db,
     JWT_SECRET: jwtSecret,
     NOW: "2026-01-01T00:00:00.000Z",
   }
@@ -151,6 +198,18 @@ describe("GET /employees/:code", () => {
     const response = await request("/employees/E005", await memberToken())
 
     expect(response.status).toBe(200)
+  })
+
+  test("employee:read holder reads a managed employee detail", async () => {
+    const response = await request("/employees/E005", await managerToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("employee:read holder cannot read an employee outside their organization scope", async () => {
+    const response = await request("/employees/E009", await managerToken())
+
+    expect(response.status).toBe(404)
   })
 
   test("conceals another employee record from a member without employee:read", async () => {
@@ -264,6 +323,65 @@ describe("PUT /employees/:code", () => {
     const response = await request("/employees/E004", await memberToken(), "PUT", profile)
 
     expect(response.status).toBe(403)
+  })
+
+  test("manager updates an employee inside their organization scope", async () => {
+    const response = await request("/employees/E005", await managerToken(), "PUT", profile)
+
+    expect(response.status).toBe(200)
+  })
+
+  test("employee:update alone cannot update outside the manager organization scope", async () => {
+    const response = await request("/employees/E009", await managerToken(), "PUT", profile)
+
+    expect(response.status).toBe(403)
+  })
+
+  test("org:manage allows a capability holder to update without an organization relationship", async () => {
+    const token = await createTestToken(jwtSecret, {
+      employeeId: 17,
+      email: "you+e017@example.com",
+      role: "hr",
+    })
+    const response = await request("/employees/E005", token, "PUT", profile, async (db) => {
+      await db
+        .prepare(
+          `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+           SELECT 17, id, NULL, 0 FROM roles WHERE key = 'hr'`,
+        )
+        .run()
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("organization relationship alone cannot update without employee:update", async () => {
+    const response = await request(
+      "/employees/E010",
+      await organizationManagerWithoutCapabilityToken(),
+      "PUT",
+      profile,
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("employee:update holder can update their own employee record", async () => {
+    const response = await request("/employees/E004", await managerToken(), "PUT", profile)
+
+    expect(response.status).toBe(200)
+  })
+
+  test("member cannot update their own employee record without employee:update", async () => {
+    const response = await request("/employees/E005", await memberToken(), "PUT", profile)
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 for update without a bearer token", async () => {
+    const response = await request("/employees/E005", null, "PUT", profile)
+
+    expect(response.status).toBe(401)
   })
 
   test("returns 404 for a missing employee", async () => {
