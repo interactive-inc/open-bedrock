@@ -5,6 +5,8 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export type Command = {
   goalId: number
@@ -41,11 +43,27 @@ export class CreateGoalEvaluation {
       return new ConflictError("goal is already finalized", "goal_finalized")
     }
 
+    const organizationAuthority =
+      command.kind === "self"
+        ? null
+        : await resolveOrganizationAuthority(this.c, command.evaluatorId, goal.employeeId)
+
+    if (organizationAuthority instanceof Error) {
+      return new UnexpectedError("failed to resolve organization authority", {
+        cause: organizationAuthority,
+      })
+    }
+
     const permission = resolveEvaluationPermission({
       kind: command.kind,
       goalEmployeeId: goal.employeeId,
       viewerEmployeeId: command.evaluatorId,
       viewerSession: command.viewerSession,
+      hasOrganizationAuthority:
+        organizationAuthority === null
+          ? false
+          : organizationAuthority.managementChain || organizationAuthority.departmentManager,
+      canBypassOrganizationScope: hasPermission(command.viewerSession, "org:manage"),
     })
 
     if (permission !== null) {

@@ -6,6 +6,10 @@ import { ApplicationRepository } from "@/infrastructure/application/application-
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { decideWorkflowApplication } from "@/application/application/decide-workflow-application"
 
 export type Command = {
   session: SessionPayload
@@ -54,6 +58,49 @@ export class DecideApplication {
       return new UnexpectedError("template not found")
     }
 
+    const workflowInstance = await new ApplicationWorkflowRepository(this.c).findInstance(
+      command.applicationId,
+    )
+
+    if (workflowInstance instanceof Error) {
+      return new UnexpectedError("failed to load workflow instance", { cause: workflowInstance })
+    }
+
+    if (workflowInstance !== null) {
+      if (
+        existing.status !== "pending" ||
+        existing.currentStep !== workflowInstance.currentStepKey
+      ) {
+        return new ConflictError("workflow is not awaiting a decision", "already_decided")
+      }
+
+      const decision = await decideWorkflowApplication({
+        c: this.c,
+        instance: workflowInstance,
+        templateCode: template.code,
+        applicantEmployeeId: existing.applicantId,
+        actorEmployeeId: command.approverId,
+        action: command.action,
+        comment: command.comment,
+        createdAt: command.createdAt,
+      })
+
+      if (decision instanceof Error) return decision
+
+      if (decision.status !== "pending" || command.action === "reject") {
+        await new NotifyApprovalResult(this.c).run({
+          recipientEmployeeId: existing.applicantId,
+          action: command.action,
+          subjectLabel: `申請「${template.name}」`,
+          sourceDomain: "application",
+          sourceId: command.applicationId,
+          createdAt: command.createdAt,
+        })
+      }
+
+      return decision
+    }
+
     // approverRoles が指定されていれば、そのいずれかのロールを持つアカウントのみ承認可能。
     // 複数ロールを持つアカウントは roleKeys のいずれかが一致すればよい。
     if (template.approverRoles.length > 0) {
@@ -68,6 +115,30 @@ export class DecideApplication {
       // approverRoles が空なら従来の canDecideApplication チェック
       if (canDecideApplication(command.session) === false) {
         return new ForbiddenError("cannot decide application", "forbidden")
+      }
+
+      const organizationAuthority = await resolveOrganizationAuthority(
+        this.c,
+        command.approverId,
+        existing.applicantId,
+      )
+
+      if (organizationAuthority instanceof Error) {
+        return new UnexpectedError("failed to resolve organization authority", {
+          cause: organizationAuthority,
+        })
+      }
+
+      const isInScope =
+        organizationAuthority.managementChain ||
+        organizationAuthority.departmentManager ||
+        hasPermission(command.session, "org:manage")
+
+      if (isInScope === false) {
+        return new ForbiddenError(
+          "cannot decide application outside organization scope",
+          "forbidden",
+        )
       }
     }
 

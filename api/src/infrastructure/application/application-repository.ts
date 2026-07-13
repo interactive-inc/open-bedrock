@@ -140,6 +140,12 @@ export class ApplicationRepository {
           applicationId,
         ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(
+          "DELETE FROM application_workflow_approvals WHERE application_id = ?1",
+        ).bind(applicationId),
+        this.c.env.DB.prepare(
+          "DELETE FROM application_workflow_instances WHERE application_id = ?1",
+        ).bind(applicationId),
         this.c.env.DB.prepare("DELETE FROM application_approvals WHERE application_id = ?1").bind(
           applicationId,
         ),

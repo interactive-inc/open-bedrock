@@ -16,16 +16,13 @@ import {
 } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) {
     throw new UnauthorizedError()
   }
-  if (canAdministerCycle(session) === false) {
-    throw new ForbiddenError()
-  }
-
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const cycleRows = await c.var.database
@@ -45,6 +42,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const employeeRow = employeeRows.at(0)
   if (employeeRow === undefined) {
     throw new NotFoundError("employee not found")
+  }
+  if (canAdministerCycle(session) === false && employeeRow.id !== session.employeeId) {
+    const authority = await resolveOrganizationAuthority(c, session.employeeId, employeeRow.id)
+    if (authority instanceof Error) throw new InternalError("failed to resolve organization scope")
+    if (authority.managementChain === false && authority.departmentManager === false) {
+      throw new ForbiddenError()
+    }
+  }
+  if (canAdministerCycle(session) === false && cycleRow.status !== "closed") {
+    throw new ForbiddenError()
   }
   const formRows = await c.var.database
     .select()

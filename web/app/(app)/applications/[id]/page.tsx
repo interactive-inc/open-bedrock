@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle } from "lucide-react"
+import { CheckCircle2, Circle, Clock3, RotateCcw, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
 import { formatDateTime } from "@/lib/format-datetime"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import type { ApplicationApprovalEntry } from "@/lib/api/types/application-types"
+import type { ApplicationWorkflowProgress } from "@/lib/api/types/application-types"
 
 export const metadata = { title: "申請詳細" }
 
@@ -55,7 +56,10 @@ export default async function ApplicationDetailPage(props: Props) {
         actions={<BackButton href="/applications" label="一覧に戻る" />}
       />
 
-      <ApplicationStatusBadge status={application.status} />
+      <ApplicationStatusBadge
+        status={application.status}
+        returned={application.workflow?.returned === true}
+      />
 
       <Card className="p-0 gap-0">
         <dl className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
@@ -100,8 +104,93 @@ export default async function ApplicationDetailPage(props: Props) {
       ) : null}
 
       <ApprovalHistory approvals={application.approvals} />
+
+      {application.workflow === null ? null : <WorkflowProgress workflow={application.workflow} />}
     </div>
   )
+}
+
+function WorkflowProgress(props: { workflow: ApplicationWorkflowProgress }) {
+  return (
+    <Card className="p-0 gap-0">
+      <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-medium">承認フロー</span>
+          <span className="text-xs text-muted-foreground">
+            ラウンド {props.workflow.current_round}
+            {props.workflow.due_at === null
+              ? ""
+              : `・期限 ${formatDateTime(props.workflow.due_at)}`}
+          </span>
+        </div>
+        <ol className="grid gap-3 md:grid-cols-2">
+          {props.workflow.steps.map((step, index) => {
+            const Icon =
+              step.status === "approved"
+                ? CheckCircle2
+                : step.status === "returned"
+                  ? RotateCcw
+                  : step.status === "rejected"
+                    ? XCircle
+                    : step.status === "pending"
+                      ? Clock3
+                      : Circle
+            return (
+              <li key={step.key} className="flex items-center gap-3 rounded-lg border p-3">
+                <Icon className="size-4 shrink-0" aria-hidden />
+                <div>
+                  <div className="text-xs text-muted-foreground">ステップ {index + 1}</div>
+                  <div className="text-sm font-medium">{step.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {workflowStatusLabel(step.status)}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+        {props.workflow.approvals.length === 0 ? null : (
+          <ol className="flex flex-col gap-2 border-t pt-4">
+            {props.workflow.approvals.map((approval) => (
+              <li key={approval.id} className="text-sm">
+                <span className="font-medium">{approval.approver_name}</span>
+                {approval.approver_name === approval.represented_approver_name ? null : (
+                  <span className="text-muted-foreground">
+                    （{approval.represented_approver_name} の代理）
+                  </span>
+                )}
+                <span className="text-muted-foreground">
+                  {" "}
+                  が{" "}
+                  {approval.action === "approve"
+                    ? "承認"
+                    : approval.action === "return"
+                      ? "差戻し"
+                      : "却下"}
+                  ・ラウンド {approval.round}・{formatDateTime(approval.created_at)}
+                </span>
+                {approval.comment === null ? null : (
+                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+                    {approval.comment}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function workflowStatusLabel(status: ApplicationWorkflowProgress["steps"][number]["status"]) {
+  return {
+    waiting: "待機中",
+    pending: "承認待ち",
+    approved: "承認済み",
+    rejected: "却下",
+    returned: "差戻し",
+  }[status]
 }
 
 // 申請への承認/却下アクションの履歴。古い順に並べる。

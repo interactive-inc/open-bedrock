@@ -7,6 +7,7 @@ import { ForbiddenError } from "@/lib/errors"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 async function seedTemplate(
@@ -104,7 +105,15 @@ describe("DecideApplication", () => {
   })
 
   test("falls back to canDecideApplication when approverRoles is empty", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+    ])
 
     const templateRepository = new ApplicationTemplateRepository(context)
     const applicationRepository = new ApplicationRepository(context)

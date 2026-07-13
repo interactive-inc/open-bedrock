@@ -150,6 +150,13 @@ export const reviewForms = sqliteTable("review_forms", {
 
 export type ReviewFormRow = InferSelectModel<typeof reviewForms>
 
+export const reviewCyclePolicies = sqliteTable("review_cycle_policies", {
+  cycleId: integer("cycle_id").primaryKey(),
+  policyJson: text("policy_json").notNull(),
+})
+
+export type ReviewCyclePolicyRow = InferSelectModel<typeof reviewCyclePolicies>
+
 // 給与明細（社員ごと・期間ごとの支給/控除/差引支給額）
 export const payslips = sqliteTable(
   "payslips",
@@ -374,6 +381,62 @@ export const applicationApprovals = sqliteTable("application_approvals", {
 })
 
 export type ApplicationApprovalRow = InferSelectModel<typeof applicationApprovals>
+
+export const applicationWorkflows = sqliteTable("application_workflows", {
+  templateId: integer("template_id").primaryKey(),
+  definitionJson: text("definition_json").notNull(),
+  updatedAt: text("updated_at").notNull(),
+})
+
+export type ApplicationWorkflowRow = InferSelectModel<typeof applicationWorkflows>
+
+export const applicationWorkflowInstances = sqliteTable("application_workflow_instances", {
+  applicationId: integer("application_id").primaryKey(),
+  definitionJson: text("definition_json").notNull(),
+  currentStepKey: text("current_step_key").notNull(),
+  currentRound: integer("current_round").notNull().default(1),
+  startedAt: text("started_at").notNull(),
+  dueAt: text("due_at"),
+})
+
+export type ApplicationWorkflowInstanceRow = InferSelectModel<typeof applicationWorkflowInstances>
+
+export const applicationWorkflowApprovals = sqliteTable(
+  "application_workflow_approvals",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull().default(1),
+    approverId: integer("approver_id").notNull(),
+    representedApproverId: integer("represented_approver_id").notNull(),
+    action: text("action").notNull(),
+    comment: text("comment"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_workflow_approval_actor_step").on(
+      table.applicationId,
+      table.stepKey,
+      table.round,
+      table.approverId,
+    ),
+  ],
+)
+
+export type ApplicationWorkflowApprovalRow = InferSelectModel<typeof applicationWorkflowApprovals>
+
+export const approvalDelegations = sqliteTable("approval_delegations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  delegatorEmployeeId: integer("delegator_employee_id").notNull(),
+  delegateEmployeeId: integer("delegate_employee_id").notNull(),
+  templateCode: text("template_code"),
+  startsAt: text("starts_at").notNull(),
+  endsAt: text("ends_at").notNull(),
+  createdAt: text("created_at").notNull(),
+})
+
+export type ApprovalDelegationRow = InferSelectModel<typeof approvalDelegations>
 
 // 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。
 export const assets = sqliteTable("assets", {

@@ -115,6 +115,10 @@ export class ApplicationTemplateRepository {
              )`,
         ).bind(code),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(
+          `DELETE FROM application_workflows
+           WHERE template_id NOT IN (SELECT id FROM application_templates)`,
+        ),
       ])
 
       return true

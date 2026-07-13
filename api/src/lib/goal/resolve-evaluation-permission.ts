@@ -8,6 +8,8 @@ export type Props = {
   goalEmployeeId: number
   viewerEmployeeId: number
   viewerSession: SessionPayload
+  hasOrganizationAuthority?: boolean
+  canBypassOrganizationScope?: boolean
 }
 
 /** self は本人のみ、manager/final は特権ロールのみ許可する。 */
@@ -23,5 +25,9 @@ export function resolveEvaluationPermission(props: Props): null | Forbidden {
     return { reason: "forbidden" }
   }
 
-  return canEvaluateAsManager(props.viewerSession) ? null : { reason: "forbidden" }
+  const hasCapability = canEvaluateAsManager(props.viewerSession)
+
+  const isInScope = props.hasOrganizationAuthority || props.canBypassOrganizationScope
+
+  return hasCapability && isInScope ? null : { reason: "forbidden" }
 }

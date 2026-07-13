@@ -180,6 +180,12 @@ import antisocialCheckCancelHandler from "@/app/antisocial-check/cancel/route"
 import appTemplateCreateHandler from "@/app/app/template-create/route"
 import appTemplateUpdateHandler from "@/app/app/template-update/route"
 import appTemplateDeleteHandler from "@/app/app/template-delete/route"
+import appWorkflowHandler from "@/app/app/workflow/[code]/route"
+import appResubmitHandler from "@/app/app/resubmit/[app_id]/route"
+import appDelegationsHandler from "@/app/app/delegations/route"
+import appDelegateHandler from "@/app/app/delegate/route"
+import appDelegationDeleteHandler from "@/app/app/delegation-delete/[id]/route"
+import reviewCyclePolicyHandler from "@/app/review/cycle/policy/route"
 import roomsListHandler from "@/app/rooms/list/route"
 import roomsShowHandler from "@/app/rooms/show/[room_id]/route"
 import roomsCreateHandler from "@/app/rooms/create/route"
@@ -518,6 +524,12 @@ routes.post("/antisocial-check/cancel", ...antisocialCheckCancelHandler)
 routes.post("/app/template-create", ...appTemplateCreateHandler)
 routes.post("/app/template-update", ...appTemplateUpdateHandler)
 routes.post("/app/template-delete", ...appTemplateDeleteHandler)
+routes.post("/app/workflow/:code?", ...appWorkflowHandler)
+routes.post("/app/resubmit/:app_id?", ...appResubmitHandler)
+routes.post("/app/delegations", ...appDelegationsHandler)
+routes.post("/app/delegate", ...appDelegateHandler)
+routes.post("/app/delegation-delete/:id?", ...appDelegationDeleteHandler)
+routes.post("/review/cycle/policy", ...reviewCyclePolicyHandler)
 routes.post("/rooms/list", ...roomsListHandler)
 routes.post("/rooms/create", ...roomsCreateHandler)
 routes.post("/rooms/show/:room_id?", ...roomsShowHandler)

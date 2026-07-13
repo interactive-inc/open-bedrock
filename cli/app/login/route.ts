@@ -48,10 +48,6 @@ export default factory.createHandlers(
       })
       .parse(await response.json())
 
-    if ("error" in result) {
-      throw new UsageError(result.error)
-    }
-
     config.token = result.access_token
 
     config.refresh_token = result.refresh_token ?? null

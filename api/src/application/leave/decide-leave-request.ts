@@ -12,6 +12,8 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export type Command = {
   session: SessionPayload
@@ -48,6 +50,30 @@ export class DecideLeaveRequest {
 
     if (existing.employeeId === command.approverId) {
       return new ForbiddenError("cannot decide own leave request", "self_approval")
+    }
+
+    const organizationAuthority = await resolveOrganizationAuthority(
+      this.c,
+      command.approverId,
+      existing.employeeId,
+    )
+
+    if (organizationAuthority instanceof Error) {
+      return new UnexpectedError("failed to resolve organization authority", {
+        cause: organizationAuthority,
+      })
+    }
+
+    const isInScope =
+      organizationAuthority.managementChain ||
+      organizationAuthority.departmentManager ||
+      hasPermission(command.session, "org:manage")
+
+    if (isInScope === false) {
+      return new ForbiddenError(
+        "cannot decide leave request outside organization scope",
+        "forbidden",
+      )
     }
 
     const fiscalYear = toFiscalYear(existing.startDate)

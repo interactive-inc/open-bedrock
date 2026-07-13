@@ -3,6 +3,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 
 export type Command = {
   applicationId: number
@@ -35,6 +36,19 @@ export class UpdateApplication {
 
     if (current.status !== "pending") {
       return new ConflictError("application is already decided", "not_pending")
+    }
+
+    const workflow = await new ApplicationWorkflowRepository(this.c).findInstance(
+      command.applicationId,
+    )
+    if (workflow instanceof Error) {
+      return new UnexpectedError("failed to find workflow instance", { cause: workflow })
+    }
+    if (workflow !== null) {
+      return new ConflictError(
+        "workflow application can only be edited when resubmitting a return",
+        "workflow_locked",
+      )
     }
 
     const updated = await applicationRepository.updatePayload(current.withPayload(command.payload))

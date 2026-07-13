@@ -1,8 +1,15 @@
 import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
+import {
+  resolveRepresentedApprover,
+  resolveWorkflowApproverIds,
+} from "@/lib/application/resolve-workflow-approvers"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { hasPermission } from "@/lib/auth/has-permission"
 import { factory } from "@/lib/factory"
 import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
@@ -60,12 +67,58 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const isOwner = row.application.applicantId === session.employeeId
+  const workflowRepository = new ApplicationWorkflowRepository(c)
+  const workflowInstance = await workflowRepository.findInstance(applicationId)
+
+  if (workflowInstance instanceof Error) {
+    throw new InternalError("failed to load workflow")
+  }
 
   if (isOwner === false) {
-    const canApprove =
-      template !== null && template.approverRoles.length > 0
-        ? session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
-        : canDecideApplication(session)
+    let canApprove = false
+
+    if (workflowInstance !== null && template !== null) {
+      const step = workflowInstance.definition.steps.find(
+        (candidate) => candidate.key === workflowInstance.currentStepKey,
+      )
+      if (step !== undefined) {
+        const now = c.env.NOW ?? new Date().toISOString()
+        const selectors =
+          workflowInstance.dueAt !== null && workflowInstance.dueAt < now
+            ? [...step.approvers, ...step.escalation_approvers]
+            : step.approvers
+        const candidates = await resolveWorkflowApproverIds({
+          c,
+          applicantEmployeeId: row.application.applicantId,
+          selectors,
+        })
+        if (candidates instanceof Error) throw new InternalError("failed to resolve approvers")
+        const represented = await resolveRepresentedApprover({
+          c,
+          actorEmployeeId: session.employeeId,
+          candidateEmployeeIds: candidates,
+          templateCode: template.code,
+          now,
+          allowDelegation: step.allow_delegation,
+        })
+        if (represented instanceof Error) throw new InternalError("failed to resolve delegation")
+        canApprove = represented !== null
+      }
+    } else if (template !== null && template.approverRoles.length > 0) {
+      canApprove = session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
+    } else if (canDecideApplication(session)) {
+      const authority = await resolveOrganizationAuthority(
+        c,
+        session.employeeId,
+        row.application.applicantId,
+      )
+      if (authority instanceof Error)
+        throw new InternalError("failed to resolve organization scope")
+      canApprove =
+        hasPermission(session, "org:manage") ||
+        authority.managementChain ||
+        authority.departmentManager
+    }
 
     if (canApprove === false && canViewAllApplications(session) === false) {
       throw new ForbiddenError()
@@ -93,6 +146,27 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(eq(applicationApprovals.applicationId, applicationId))
     .orderBy(asc(applicationApprovals.createdAt))
 
+  const workflowApprovals =
+    workflowInstance === null ? [] : await workflowRepository.listApprovals(applicationId)
+  if (workflowApprovals instanceof Error) {
+    throw new InternalError("failed to load workflow approvals")
+  }
+  const employeeNames = new Map(
+    (await c.var.database.select({ id: employees.id, name: employees.name }).from(employees)).map(
+      (employee) => [employee.id, employee.name] as const,
+    ),
+  )
+  const currentWorkflowIndex =
+    workflowInstance?.definition.steps.findIndex(
+      (step) => step.key === workflowInstance.currentStepKey,
+    ) ?? -1
+  const returned = row.application.currentStep?.startsWith("returned:") ?? false
+  const currentActions = workflowApprovals.filter(
+    (approval) =>
+      approval.stepKey === workflowInstance?.currentStepKey &&
+      approval.round === workflowInstance?.currentRound,
+  )
+
   const responseBody = zAppApplication.parse({
     id: row.application.id,
     template_code: row.templateCode ?? "",
@@ -110,6 +184,41 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       created_at: approval.createdAt,
     })),
     approver_roles: template?.approverRoles ?? [],
+    workflow:
+      workflowInstance === null
+        ? null
+        : {
+            current_step_key: workflowInstance.currentStepKey,
+            current_round: workflowInstance.currentRound,
+            started_at: workflowInstance.startedAt,
+            due_at: workflowInstance.dueAt,
+            returned,
+            steps: workflowInstance.definition.steps.map((step, index) => ({
+              key: step.key,
+              name: step.name,
+              status:
+                index < currentWorkflowIndex || row.application.status === "approved"
+                  ? "approved"
+                  : index > currentWorkflowIndex
+                    ? "waiting"
+                    : returned
+                      ? "returned"
+                      : currentActions.some((approval) => approval.action === "reject")
+                        ? "rejected"
+                        : "pending",
+            })),
+            approvals: workflowApprovals.map((approval) => ({
+              id: approval.id,
+              step_key: approval.stepKey,
+              round: approval.round,
+              approver_name: employeeNames.get(approval.approverId) ?? "(削除済みの社員)",
+              represented_approver_name:
+                employeeNames.get(approval.representedApproverId) ?? "(削除済みの社員)",
+              action: approval.action,
+              comment: approval.comment,
+              created_at: approval.createdAt,
+            })),
+          },
   })
 
   return c.json(responseBody, 200)

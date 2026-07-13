@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useActionState, useRef, useState } from "react"
 import {
   updateApplicationAction,
+  resubmitApplicationAction,
   withdrawApplicationAction,
 } from "@/app/(app)/applications/actions"
 import type { ApplicationActionState } from "@/app/(app)/applications/actions"
@@ -73,7 +74,10 @@ export function MyApplicationsList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <ApplicationStatusBadge status={application.status} />
+                <ApplicationStatusBadge
+                  status={application.status}
+                  returned={application.current_step?.startsWith("returned:") === true}
+                />
               </TableCell>
 
               <TableCell className="text-muted-foreground">
@@ -105,7 +109,13 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
 
   return (
     <div className="flex justify-end gap-2">
-      <UpdateApplicationDialog application={props.application} applicationId={applicationId} />
+      {props.application.current_step?.startsWith("returned:") ? (
+        <UpdateApplicationDialog
+          application={props.application}
+          applicationId={applicationId}
+          resubmit
+        />
+      ) : null}
 
       <WithdrawApplicationButton applicationId={applicationId} />
     </div>
@@ -117,6 +127,7 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
 function UpdateApplicationDialog(props: {
   application: ApplicationListItem
   applicationId: number
+  resubmit?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -128,7 +139,9 @@ function UpdateApplicationDialog(props: {
     previousState: ApplicationActionState,
     formData: FormData,
   ): Promise<ApplicationActionState> {
-    const result = await updateApplicationAction(previousState, formData)
+    const result = props.resubmit
+      ? await resubmitApplicationAction(previousState, formData)
+      : await updateApplicationAction(previousState, formData)
 
     if (result.ok) {
       isDirty.current = false
@@ -159,11 +172,15 @@ function UpdateApplicationDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        {props.resubmit ? "修正して再申請" : "変更"}
+      </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>申請内容を変更</DialogTitle>
+          <DialogTitle>
+            {props.resubmit ? "差戻し内容を修正して再申請" : "申請内容を変更"}
+          </DialogTitle>
 
           <DialogDescription>申請内容を編集して保存してください。</DialogDescription>
         </DialogHeader>
@@ -190,7 +207,7 @@ function UpdateApplicationDialog(props: {
           {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
-            変更を保存
+            {props.resubmit ? "再申請する" : "変更を保存"}
           </Button>
         </form>
       </DialogContent>
