@@ -1,78 +1,82 @@
-# IAM 認証・認可システム 設計
+# IAM 認証・認可システムの移行履歴
 
-複数アカウント認証 + 動的ロール(IAM) + 機能別権限 + 権限ベースサイドバーの実装青写真。
-3つの設計観点(security-first / pragmatic / clean-iam)を統合して確定したもの。
+この文書は、従業員台帳に同居していた認証・ロール情報を独立した IAM 基盤へ移した、完了済みの移行履歴である。現在および将来の認可判断は [認可モデル](./authorization-model.md) を正本とし、この文書を新しい認可経路の設計根拠として使わない。
 
-## 統合方針
+## 文書の位置づけ
 
-security-first(JWT に権限を載せずサーバ側 DB 解決一本化・refresh ローテ + tokenVersion 失効・OAuth は sub 固定)を骨格に、pragmatic(can-\* シグネチャ温存・migration 連番・SSOT permission-keys・KV 活用)と clean-iam(accounts/identities/roles/permissions/role_permissions/account_roles 完全分離)を統合。
+移行時の目的、採用したデータモデル、カットオーバーの順序を、実装の来歴として残す。Phase 表記は当時の作業単位を識別するための名称であり、現在の開発フェーズや認可仕様の優先順位を示さない。
 
-fail-open は一切採用しない。認可解決失敗・未知 permission キーは常に deny(fail-closed)。最終的に employees.email/password_hash/role の3列を撤去し employees は純台帳に戻す。D1/SQLite では FK 制約を張らず論理参照 + unique/部分 index で担保。
+移行後に確認された組織スコープ、案件限定権限、候補者スナップショット、委任、監査、履歴保持などの要件は、この文書ではなく [認可モデル](./authorization-model.md) で管理する。
 
-## データモデル(新規8テーブル)
+## 移行前の状態
 
-- **accounts**: id / employeeId(論理FK, null可) / status(active|suspended|locked) / tokenVersion(default 0) / createdAt / updatedAt。部分 uniqueIndex(employeeId) where NOT NULL で 1従業員=1アカウント。
-- **identities**: id / accountId / provider(password|google|github|oidc) / subject(password=正規化email, OAuth=sub) / secret(PBKDF2のみ, null可) / email(null可) / emailVerified(default 0) / lastUsedAt / createdAt。uniqueIndex(provider, subject)。
-- **roles**: id / key(unique, 不変) / name / description / isSystem(default 0) / createdAt。
-- **permissions**: id / key(unique, "<domain>:<action>[:<scope>]") / description / category。正はコードの PERMISSION_KEYS、テーブルは UI 用の写し。
-- **rolePermissions**: roleId / permissionId。PK(roleId, permissionId)。
-- **accountRoles**: accountId / roleId / grantedBy(null可) / grantedAt。PK(accountId, roleId)。複数ロール可、実効 permission は和集合。
-- **refreshTokens**: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / tokenVersion / expiresAt / revokedAt / userAgent / createdAt。
-- **auditLogs**(append-only): id / actorAccountId / action / targetType / targetId / metadata(JSON) / ip / createdAt。UPDATE/DELETE はアプリ層で禁止。
+移行前は、従業員台帳がメールアドレス、パスワードハッシュ、単一ロールを持ち、認証主体、台帳上の人物、認可ロールの責務が同じレコードに混在していた。認可は固定ロールと個別の `can` ヘルパーへ分散し、複数ロール、即時失効、外部 ID 連携、権限カタログの管理が難しかった。
 
-## permission カタログ
+移行では次を目的とした。
 
-粒度 `<domain>:<action>[:<scope>]`。約40-50 permission。self スコープは permission に載せず所有者判定としてコードに残す(最小権限)。28 can-\* + goal-access 2 + インライン2 ≒ 32ゲートを起点に正規化。
+- 従業員台帳を人物と在籍事実の記録へ戻す
+- 認証主体、ログイン方法、ロール、権限を分離する
+- JWT にロールや権限を載せず、実効権限をサーバー側で解決する
+- アカウント停止と権限変更を既存トークンへ反映する
+- 複数ロールの権限を和集合として扱う
+- IAM の管理 API と Web 管理画面、CLI の一覧参照を同じデータモデルへ揃える
 
-system role 4値の再現: member=self中心(permission なし) / manager=担当組織内の承認と評価 / hr=manager + 全社設定、org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:\* + account:manage。manager は全社の評価サイクルと申請テンプレートを変更しない。
+## 採用したデータモデル
 
-per-template 動的ロール(approver_roles)は permission に正規化せず roleKey 参照として残す。
+移行で次のテーブルを導入した。
 
-## 認証フロー
+- `accounts` は認証可能な主体の状態、従業員との関連、トークン版を保持する
+- `identities` はパスワードや外部 ID プロバイダーごとの識別子と認証情報を保持する
+- `roles` は不変のロールキーと表示用メタデータを保持する
+- `permissions` はコード上の権限カタログを管理 UI 向けに写す
+- `role_permissions` はロールと権限の対応を保持する
+- `account_roles` はアカウントへの複数ロール付与と付与者を保持する
+- `refresh_tokens` はローテーション、ファミリー単位の失効、再利用検出に必要な情報を保持する
+- `audit_logs` は監査記録の保存先として作成した
 
-複数ログイン方法を identities の多態で吸収。全成功フロー: identity検証 → account取得 → status=active → employees.status が retired でない → access token(短命1時間) + refresh token(長命7日、ローテーション) 発行。
+D1 と SQLite の運用に合わせ、参照整合性の一部は外部キーではなくアプリケーションと一意制約で担保した。`permissions` のキー集合はコード側のカタログを正とし、データベースは実効権限の割当と表示に利用する構成とした。
 
-refresh は account の tokenVersion と refresh token 発行時の tokenVersion を照合する。ローテーションは旧トークンの未失効を条件に D1 batch で子トークン作成と旧トークン失効を原子的に行い、同時利用では1リクエストだけを成功させる。使用済みトークンの再利用を検出した場合は同じ familyId のトークンを全て失効する。
+`audit_logs` のテーブル作成は移行に含まれるが、業務処理からの追記と履歴保持まで完了したことを意味しない。監査の現在の規範と実装差分は [認可モデル](./authorization-model.md) に記載する。
 
-JWT claims = `{ accountId, employeeId, tokenVersion }` のみ(email/role/permission は載せない)。permission は verify-bearer が毎回 DB 解決(accountRoles⋈rolePermissions⋈permissions を1クエリ)して session に Set で展開。tokenVersion 不一致なら 401(即時失効)。
+## 認証基盤へのカットオーバー
 
-OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true かつ既存 password identity と email 一致時のみ自動リンク。
+認証成功時は identity の検証後に account を取得し、アカウント状態と従業員の在籍状態を確認する。アクセストークンの主要なクレームはアカウント識別子、従業員識別子、トークン版に限定し、ロールと権限を埋め込まない構成へ移した。
 
-## 実装フェーズ
+API は bearer 検証時に、`account_roles`、`roles`、`role_permissions`、`permissions` をたどってロールキーと実効権限を解決する。アカウントのトークン版が JWT と一致しない場合は認証を拒否し、ロール変更やアカウント操作で版を進めることにより既存トークンを失効させる。
 
-- **Phase 0**: PERMISSION_KEYS 定義、system role 許可集合確定、schema 追加(z.enum)、seed の role 乖離解消、subset チェック。
-- **Phase 1**: 新8テーブルの migration + schema.ts 同期(無害、既存無変更)。
-- **Phase 2**: backfill(各 employee に accounts/identities/account_roles を 1:1 生成、roles/permissions/role_permissions シード)。冪等。
-- **Phase 3**: 認証カットオーバー(AuthenticateWithPassword、JWT claims 変更、verify-bearer 改修、refresh token)。
-- **Phase 4**: 認可 permission 化(has-permission.ts、can-\* を canX(session) へ、Command.viewerRole→session)。
-- **Phase 4.5**: per-template 動的ロール正規化(approver_roles/owner_role を roleKey 参照へ)。
-- **Phase 5**: IAM/アカウント管理 API・画面・cli(/accounts, /roles, /permissions、escalation guard、last-admin 不変条件)。
-- **Phase 6**: 権限ベースサイドバー(/me に permissions/role_keys、sidebar-nav に requiredPermission)。
-- **Phase 7**: クリーンアップ(employees.email/password_hash/role drop、role 単一参照撤去)。
+リフレッシュトークンはハッシュだけを保存し、利用時に旧トークンの失効と新トークンの発行を同じ原子的境界で行う。使用済みトークンの再利用を検出した場合は、同じファミリーを失効させる構成とした。
 
-## セキュリティ要点
+`identities` は外部 ID プロバイダーを表現できる拡張点を持つが、現在の認証ルートはパスワードログインとトークン更新だけを提供する。外部主体の固定識別子、state、Proof Key for Code Exchange（PKCE）を使う連携は移行時の設計候補であり、実装済みの認証経路ではない。
 
-権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / ロール付与・剥奪・編集・削除とアカウント操作は実行者の権限集合の部分集合だけを対象にする / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(1時間 + refresh ローテ + tokenVersion + 再利用時の family 失効)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
+## 完了した移行フェーズ
 
-社員台帳の一覧と他者詳細は `employee:read` で保護する。社員選択が必要な一般業務画面では、在籍中社員のコード・氏名・部署・役職だけを返す `/directory/employees` を使い、メールアドレス、在籍状態、ロール、内部 ID は公開しない。
+- Phase 0 では、権限キーのカタログとシステムロールの初期権限集合をコードへ定義した。
+- Phase 1 では、IAM 用テーブルを追加し、既存の従業員認証を残したまま新しい保存先を用意した。
+- Phase 2 では、既存従業員から account、password identity、account role を冪等に移行した。
+- Phase 3 では、ログイン、JWT、bearer 検証、リフレッシュトークンを IAM 基盤へ切り替えた。
+- Phase 4 では、固定ロール検査を権限検査へ置き換え、セッションへ実効権限と複数ロールキーを載せる構成へ移した。
+- Phase 4.5 では、申請テンプレートの複数承認ロールをロールキー参照として扱えるようにした。
+- Phase 5 では、ロール、アカウント、ロール割当を管理する API と Web 画面、権限カタログ API、ロールとアカウントを一覧参照する CLI を追加した。
+- Phase 6 では、`/me` の権限情報を利用してサイドバーを補助的に絞り込むようにした。
+- Phase 7 では、従業員台帳からメールアドレス、パスワードハッシュ、単一ロールの列を削除し、認証情報を `identities`、認可割当を `account_roles` へ一本化した。
 
-## 実装状況
+これらのフェーズはすべて完了している。移行後の認証は IAM テーブル、従業員情報は台帳、ロール割当は `account_roles` が事実の保存先である。
 
-Phase 0〜6 を実装・テスト済み。
+## 移行で導入した安全策
 
-- Phase 0〜2: permission カタログ・8テーブル・マスタシード・backfill 完了
-- Phase 3: 認証を identities/accounts ベースへカットオーバー（JWT に権限を載せず DB 解決、tokenVersion 失効）
-- Phase 4/4.5: 全 can-\* を permission ベースへ、承認の動的ロールを roleKeys 複数対応へ
-- Phase 5: ロール管理 API（GET/POST /roles）、権限カタログ API（GET /permissions）、アカウント一覧 API（GET /accounts）、アカウントへのロール割当 API（POST /accounts/:id/roles、escalation guard・自己付与禁止・tokenVersion 失効）、/me の permissions/role_keys 返却、Web 管理画面（/admin/roles・/admin/accounts）、cli（karte roles・karte accounts）
-- Phase 6: 権限ベースのサイドバー出し分け（filterByPermission）
+移行では、未知の権限キーや認可解決の失敗を許可に倒さない方針を採用した。自分へのロール付与を拒否し、付与または編集できる権限を実行者自身の権限集合の範囲へ制限し、ロール変更時に対象アカウントのトークン版を進める処理を導入した。
 
-- Phase 7: employees から email/password_hash/role を物理 drop（0006 migration）して純台帳化。完了。
-  認証は identities、認可は account_roles、メールは identities.subject が正。employee API の email/role は
-  IdentityRepository/AccountRepository で解決。register-employee は identity 払い出し、update-employee は
-  台帳更新に縮小（ロール変更は Grant/Revoke AccountRole へ委譲）。dev seed は seeds/iam.sql で IAM を投入。
+ログイン可能な最後の `admin` ロール保持者を失う操作を拒否するガードも導入した。ただし、現在のロール権限はデータベースで編集できるため、ロールキーの保持だけでは最後の実効管理者を保証できない。この差分は [認可モデル](./authorization-model.md) の「最後の実効管理者」に記録している。
 
-全8フェーズ完了。API・CLI の全テスト、API・Web・CLI の型検査、migrate（drop 含む）→ seed を継続的に確認する。
+従業員選択を必要とする一般業務向けには、メールアドレス、在籍状態、ロール、内部 ID を含めず、在籍中の従業員コード、氏名、部署、役職へ限定したディレクトリ API を分けた。個別ルートの項目範囲については、認可モデルのデータ分類を適用する。
 
-## 既知リスク
+## 移行後に残る互換経路
 
-D1 に FK 無し(孤児行はアプリ層 + index + 監査)、permission 二重定義の同期ズレ(起動時 subset チェック)、二重正期間(Phase2-6)の整合、approver_roles の未知キー突合、admin 全許可固定の硬直、毎リクエスト join のレイテンシ、OR 結合は deny を表現できない、access token 1時間 + refresh token 7日。POST /auth/refresh でローテーション更新。
+申請テンプレートの `approver_roles` は、移行中の互換性を保つために残された。これは IAM 移行が未完了であることを意味しないが、案件限定権限とは異なる認可経路である。今後の収束先と現行差分は [認可モデル](./authorization-model.md) の「互換用の approver_roles」に記載する。
+
+UI の権限による表示制御も移行で導入した補助機能であり、認可の正本ではない。API がすべての操作で認可を行うという恒久的な境界は [認可モデル](./authorization-model.md) に従う。
+
+## 関連文書
+
+- [認可モデル](./authorization-model.md)
+- [アーキテクチャ](./architecture.md)
