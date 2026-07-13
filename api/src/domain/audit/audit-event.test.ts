@@ -116,6 +116,86 @@ describe("audit event vocabulary", () => {
 })
 
 describe("createAuditEvent", () => {
+  test("rejects an unmanaged action with a stable application error", () => {
+    const unsafeInput = {
+      ...makeInput(),
+      action: "free.form.action",
+    } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject an unmanaged action")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_action")
+      expect((error as ValidationError).message).toBe("audit event action is invalid")
+    }
+  })
+
+  test("rejects an unmanaged target type with a stable application error", () => {
+    const unsafeInput = {
+      ...makeInput(),
+      target: { type: "free_form_target", id: "target-1" },
+    } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject an unmanaged target type")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_target_type")
+      expect((error as ValidationError).message).toBe("audit event target type is invalid")
+    }
+  })
+
+  test("rejects an unmanaged outcome with a stable application error", () => {
+    const unsafeInput = {
+      ...makeInput(),
+      outcome: "unknown",
+    } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject an unmanaged outcome")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_outcome")
+      expect((error as ValidationError).message).toBe("audit event outcome is invalid")
+    }
+  })
+
+  test("rejects a non-UUID request ID with a stable application error", () => {
+    const unsafeContext = {
+      ...context,
+      requestId: "external-request-7",
+    } as RequestAuditContext
+
+    try {
+      createAuditEvent(makeInput(), unsafeContext)
+      throw new Error("expected createAuditEvent to reject a non-UUID request ID")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_context")
+      expect((error as ValidationError).message).toBe("audit request context is invalid")
+    }
+  })
+
+  test("rejects an unmanaged client name with a stable application error", () => {
+    const unsafeContext = {
+      ...context,
+      clientName: "browser",
+    } as unknown as RequestAuditContext
+
+    try {
+      createAuditEvent(makeInput(), unsafeContext)
+      throw new Error("expected createAuditEvent to reject an unmanaged client name")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_context")
+      expect((error as ValidationError).message).toBe("audit request context is invalid")
+    }
+  })
+
   test("creates a flattened Drizzle-compatible record", () => {
     const record = createAuditEvent(makeInput(), context)
 

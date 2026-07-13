@@ -164,6 +164,19 @@ describe("toStableAuditJson", () => {
     expect(getterCalls).toBe(0)
   })
 
+  test("serializes an array Proxy without executing its get trap", () => {
+    let getCalls = 0
+    const value = new Proxy(["first", { safe: true }], {
+      get(target, property, receiver) {
+        getCalls += 1
+        return Reflect.get(target, property, receiver)
+      },
+    })
+
+    expect(toStableAuditJson(value)).toBe('["first",{"safe":true}]')
+    expect(getCalls).toBe(0)
+  })
+
   test("rejects sparse arrays", () => {
     const sparse: unknown[] = []
     sparse.length = 2

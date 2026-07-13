@@ -44,6 +44,13 @@ export const auditTargetTypeSchema = z.enum([
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
 
+export const auditClientNameSchema = z.enum(["web", "cli", "api", "system"])
+
+export const auditRequestContextSchema = z.object({
+  requestId: z.string().uuid(),
+  clientName: auditClientNameSchema,
+})
+
 export type AuditAction = z.infer<typeof auditActionSchema>
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>
 export type AuditOutcome = z.infer<typeof auditOutcomeSchema>
@@ -77,7 +84,7 @@ export type AuditEventRecord = {
   afterJson: string | null
   metadataJson: string | null
   clientIp: string | null
-  clientName: RequestAuditContext["clientName"]
+  clientName: z.infer<typeof auditClientNameSchema>
   createdAt: number
 }
 
@@ -85,11 +92,49 @@ function serializeOptionalProjection(value: AuditJsonValue | undefined): string 
   return value === undefined ? null : toStableAuditJson(value)
 }
 
+function parseManagedValue<Output>(
+  schema: z.ZodType<Output>,
+  value: unknown,
+  message: string,
+  code: string,
+): Output {
+  const parsed = schema.safeParse(value)
+  if (!parsed.success) {
+    throw new ValidationError(message, code, { cause: parsed.error })
+  }
+
+  return parsed.data
+}
+
 /** Creates the immutable, database-ready projection for one managed audit event. */
 export function createAuditEvent(
   input: AuditEventInput,
   context: RequestAuditContext,
 ): AuditEventRecord {
+  const action = parseManagedValue(
+    auditActionSchema,
+    input.action,
+    "audit event action is invalid",
+    "audit_invalid_action",
+  )
+  const targetType = parseManagedValue(
+    auditTargetTypeSchema,
+    input.target.type,
+    "audit event target type is invalid",
+    "audit_invalid_target_type",
+  )
+  const outcome = parseManagedValue(
+    auditOutcomeSchema,
+    input.outcome,
+    "audit event outcome is invalid",
+    "audit_invalid_outcome",
+  )
+  const auditContext = parseManagedValue(
+    auditRequestContextSchema,
+    context,
+    "audit request context is invalid",
+    "audit_invalid_context",
+  )
   const timestamp = input.now.getTime()
   if (!Number.isFinite(timestamp)) {
     throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
@@ -97,20 +142,20 @@ export function createAuditEvent(
 
   return {
     eventId: crypto.randomUUID(),
-    requestId: context.requestId,
+    requestId: auditContext.requestId,
     actorAccountId: input.actorAccountId,
     actorEmployeeId: input.actorEmployeeId,
-    action: input.action,
-    targetType: input.target.type,
+    action,
+    targetType,
     targetId: input.target.id,
-    outcome: input.outcome,
+    outcome,
     reasonCode: input.reasonCode,
     authorizationJson: serializeOptionalProjection(input.authorization),
     beforeJson: serializeOptionalProjection(input.before),
     afterJson: serializeOptionalProjection(input.after),
     metadataJson: serializeOptionalProjection(input.metadata),
     clientIp: context.clientIp,
-    clientName: context.clientName,
+    clientName: auditContext.clientName,
     createdAt: Math.floor(timestamp / 1_000),
   }
 }
