@@ -36,12 +36,13 @@ describe("resolveEvaluationPermission", () => {
     expect(permission).toEqual({ reason: "forbidden" })
   })
 
-  test("manager kind: session with goal:evaluate returns null", () => {
+  test("manager kind: capability and organization authority returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
       viewerSession: makeSession(["goal:evaluate"]),
+      hasOrganizationAuthority: true,
     })
 
     expect(permission).toBe(null)
@@ -53,6 +54,7 @@ describe("resolveEvaluationPermission", () => {
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
       viewerSession: makeSession([]),
+      hasOrganizationAuthority: true,
     })
 
     expect(permission).toEqual({ reason: "forbidden" })
@@ -64,17 +66,19 @@ describe("resolveEvaluationPermission", () => {
       goalEmployeeId: 10,
       viewerEmployeeId: 10,
       viewerSession: makeSession(["goal:evaluate"]),
+      hasOrganizationAuthority: true,
     })
 
     expect(permission).toEqual({ reason: "forbidden" })
   })
 
-  test("final kind: session with goal:evaluate returns null", () => {
+  test("final kind: organization scope bypass returns null", () => {
     const permission = resolveEvaluationPermission({
       kind: "final",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
       viewerSession: makeSession(["goal:evaluate"]),
+      canBypassOrganizationScope: true,
     })
 
     expect(permission).toBe(null)
@@ -86,6 +90,7 @@ describe("resolveEvaluationPermission", () => {
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
       viewerSession: makeSession([]),
+      hasOrganizationAuthority: true,
     })
 
     expect(permission).toEqual({ reason: "forbidden" })
@@ -96,6 +101,18 @@ describe("resolveEvaluationPermission", () => {
       kind: "final",
       goalEmployeeId: 10,
       viewerEmployeeId: 10,
+      viewerSession: makeSession(["goal:evaluate"]),
+      hasOrganizationAuthority: true,
+    })
+
+    expect(permission).toEqual({ reason: "forbidden" })
+  })
+
+  test("manager kind: capability without organization authority returns forbidden", () => {
+    const permission = resolveEvaluationPermission({
+      kind: "manager",
+      goalEmployeeId: 10,
+      viewerEmployeeId: 20,
       viewerSession: makeSession(["goal:evaluate"]),
     })
 

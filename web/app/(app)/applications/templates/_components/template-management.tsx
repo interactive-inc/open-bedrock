@@ -19,6 +19,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { toFormSchema } from "@/lib/application/form-schema"
+import Link from "next/link"
 
 type ManagedTemplate = {
   code: string
@@ -39,6 +40,14 @@ type Props = {
 export function TemplateManagement(props: Props) {
   return (
     <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        nativeButton={false}
+        render={<Link href={`/applications/templates/${props.template.code}/workflow`} />}
+      >
+        承認フロー
+      </Button>
       <UpdateTemplateDialog template={props.template} />
 
       <DeleteTemplateButton code={props.template.code} />

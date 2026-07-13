@@ -3,8 +3,8 @@ import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canAdministerCycle", () => {
-  test("manager can administer", () => {
-    expect(canAdministerCycle(makeTestSession("manager"))).toBe(true)
+  test("manager cannot administer company-wide cycles", () => {
+    expect(canAdministerCycle(makeTestSession("manager"))).toBe(false)
   })
 
   test("hr can administer", () => {

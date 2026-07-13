@@ -11,7 +11,9 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { hasPermission } from "@/lib/auth/has-permission"
 
 // GET /goals — 本人の目標一覧。特権ロールは employee_id 指定で他者を閲覧できる
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -37,6 +39,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   if (isViewingOthers && canViewOthers(session) === false) {
     throw new ForbiddenError()
+  }
+
+  if (isViewingOthers && hasPermission(session, "org:manage") === false) {
+    const authority = await resolveOrganizationAuthority(c, session.employeeId, targetEmployeeId)
+    if (authority instanceof Error) throw new InternalError("failed to resolve organization scope")
+    if (authority.managementChain === false && authority.departmentManager === false) {
+      throw new ForbiddenError()
+    }
   }
 
   const conditions: Array<SQL> = [eq(goals.employeeId, targetEmployeeId)]

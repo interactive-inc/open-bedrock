@@ -9,8 +9,10 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { employees, expenses } from "@/schema"
-import { count, desc, eq } from "drizzle-orm"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 
 // GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -23,6 +25,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (canDecideExpense(session) === false) {
     throw new ForbiddenError()
   }
+
+  const managedEmployeeIds = hasPermission(session, "org:manage")
+    ? null
+    : await listManagedEmployeeIds(c, session.employeeId)
+
+  if (managedEmployeeIds instanceof Error) {
+    throw new InternalError("failed to resolve organization scope")
+  }
+
+  const pendingInScope =
+    managedEmployeeIds === null
+      ? eq(expenses.status, "pending")
+      : managedEmployeeIds.length === 0
+        ? and(eq(expenses.status, "pending"), sql`0 = 1`)
+        : and(eq(expenses.status, "pending"), inArray(expenses.employeeId, [...managedEmployeeIds]))
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
@@ -43,11 +60,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .select({ expense: expenses, applicantName: employees.name })
       .from(expenses)
       .leftJoin(employees, eq(employees.id, expenses.employeeId))
-      .where(eq(expenses.status, "pending"))
+      .where(pendingInScope)
       .orderBy(desc(expenses.id))
       .limit(limit)
       .offset(offset),
-    c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending")),
+    c.var.database.select({ total: count() }).from(expenses).where(pendingInScope),
   ])
 
   const responseBody = zAppExpenseInboxList.parse({

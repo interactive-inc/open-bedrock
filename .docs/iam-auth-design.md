@@ -24,7 +24,7 @@ fail-open は一切採用しない。認可解決失敗・未知 permission キ�
 
 粒度 `<domain>:<action>[:<scope>]`。約40-50 permission。self スコープは permission に載せず所有者判定としてコードに残す(最小権限)。28 can-\* + goal-access 2 + インライン2 ≒ 32ゲートを起点に正規化。
 
-system role 4値の再現: member=self中心(permission なし) / manager=承認 + 大半の管理 / hr=manager + org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:\* + account:manage。
+system role 4値の再現: member=self中心(permission なし) / manager=担当組織内の承認と評価 / hr=manager + 全社設定、org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:\* + account:manage。manager は全社の評価サイクルと申請テンプレートを変更しない。
 
 per-template 動的ロール(approver_roles)は permission に正規化せず roleKey 参照として残す。
 

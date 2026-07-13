@@ -5,6 +5,8 @@ import type { Context, SessionPayload } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export type Command = {
   session: SessionPayload
@@ -47,6 +49,27 @@ export class DecideExpense {
 
     if (existing.employeeId === command.approverId) {
       return new ForbiddenError("cannot decide own expense", "forbidden")
+    }
+
+    const organizationAuthority = await resolveOrganizationAuthority(
+      this.c,
+      command.approverId,
+      existing.employeeId,
+    )
+
+    if (organizationAuthority instanceof Error) {
+      return new UnexpectedError("failed to resolve organization authority", {
+        cause: organizationAuthority,
+      })
+    }
+
+    const isInScope =
+      organizationAuthority.managementChain ||
+      organizationAuthority.departmentManager ||
+      hasPermission(command.session, "org:manage")
+
+    if (isInScope === false) {
+      return new ForbiddenError("cannot decide expense outside organization scope", "forbidden")
     }
 
     if (existing.status !== "pending") {

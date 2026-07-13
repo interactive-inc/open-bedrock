@@ -4,12 +4,18 @@ import type { Context, SessionPayload } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
+import {
+  defaultReviewCyclePolicy,
+  type ReviewCyclePolicy,
+} from "@/domain/review/review-cycle-policy"
+import { ReviewCyclePolicyRepository } from "@/infrastructure/review/review-cycle-policy-repository"
 
 export type Input = {
   session: SessionPayload
   title: string
   period: string
   dueDate: string | null
+  policy?: ReviewCyclePolicy
 }
 
 /**
@@ -33,6 +39,20 @@ export class CreateReviewCycle {
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create review cycle", { cause: created })
+    }
+
+    if (created.id === null) {
+      return new UnexpectedError("review cycle id is not assigned")
+    }
+
+    const savedPolicy = await new ReviewCyclePolicyRepository(this.c).upsert(
+      created.id,
+      input.policy ?? defaultReviewCyclePolicy,
+    )
+
+    if (savedPolicy instanceof Error) {
+      await new ReviewCycleRepository(this.c).delete(created.id)
+      return new UnexpectedError("failed to save review cycle policy", { cause: savedPolicy })
     }
 
     return created

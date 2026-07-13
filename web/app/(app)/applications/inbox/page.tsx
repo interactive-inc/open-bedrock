@@ -61,6 +61,13 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
         breadcrumbs={[{ label: "申請", href: "/applications" }, { label: "承認 inbox" }]}
         actions={
           <>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/applications/delegations" />}
+            >
+              代理承認
+            </Button>
             {canViewAll ? (
               <Button
                 variant="outline"

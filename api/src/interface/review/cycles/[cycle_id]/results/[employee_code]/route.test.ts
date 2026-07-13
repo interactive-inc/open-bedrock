@@ -91,10 +91,10 @@ function adminToken(): Promise<string> {
   })
 }
 
-function memberToken(): Promise<string> {
+function memberToken(employeeId = 5): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: 5,
-    email: "you+e005@example.com",
+    employeeId,
+    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
     role: "member",
   })
 }
@@ -127,8 +127,14 @@ describe("GET /review-cycles/:cycle_id/results/:employee_code", () => {
     }
   })
 
-  test("member is forbidden", async () => {
+  test("member can read own results after the cycle is closed", async () => {
     const response = await request("/review-cycles/2/results/E005", await memberToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("unrelated member cannot read another employee results", async () => {
+    const response = await request("/review-cycles/2/results/E005", await memberToken(6))
 
     expect(response.status).toBe(403)
   })

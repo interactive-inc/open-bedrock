@@ -144,6 +144,33 @@ export const zAppApplicationApproval = z.object({
 
 export type AppApplicationApproval = z.infer<typeof zAppApplicationApproval>
 
+export const zAppApplicationWorkflowApproval = z.object({
+  id: z.number(),
+  step_key: z.string(),
+  round: z.number(),
+  approver_name: z.string(),
+  represented_approver_name: z.string(),
+  action: z.enum(["approve", "reject", "return"]),
+  comment: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export const zAppApplicationWorkflowProgress = z.object({
+  current_step_key: z.string(),
+  current_round: z.number(),
+  started_at: z.string(),
+  due_at: z.string().nullable(),
+  returned: z.boolean(),
+  steps: z.array(
+    z.object({
+      key: z.string(),
+      name: z.string(),
+      status: z.enum(["waiting", "pending", "approved", "rejected", "returned"]),
+    }),
+  ),
+  approvals: z.array(zAppApplicationWorkflowApproval),
+})
+
 /** 申請 1 件（詳細・作成のレスポンス）。GET /applications/:id と POST /applications で使う。 */
 export const zAppApplication = z.object({
   id: z.number(),
@@ -158,6 +185,7 @@ export const zAppApplication = z.object({
   approvals: z.array(zAppApplicationApproval).default([]),
   /** テンプレートの承認可能ロール（空配列なら application:approve 権限保持者）。 */
   approver_roles: z.array(z.string()).default([]),
+  workflow: zAppApplicationWorkflowProgress.nullable().default(null),
 })
 
 export type AppApplication = z.infer<typeof zAppApplication>

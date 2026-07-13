@@ -59,7 +59,28 @@ export async function createReviewCycleAction(
     return { ok: false, error: dueDate.message }
   }
 
-  const created = await createReviewCycle({ title: title, period: period, dueDate: dueDate })
+  const peerCount = toOptionalIntInRange(formData.get("peer_count"), {
+    label: "同僚評価者数",
+    min: 0,
+    max: 20,
+  })
+
+  if (peerCount instanceof Error) {
+    return { ok: false, error: peerCount.message }
+  }
+
+  const created = await createReviewCycle({
+    title,
+    period,
+    dueDate,
+    policy: {
+      include_self: formData.get("include_self") === "on",
+      include_manager: formData.get("include_manager") === "on",
+      include_peers: formData.get("include_peers") === "on",
+      include_subordinates: formData.get("include_subordinates") === "on",
+      peer_count: peerCount ?? 0,
+    },
+  })
 
   if (created instanceof Error) {
     return { ok: false, error: created.message }

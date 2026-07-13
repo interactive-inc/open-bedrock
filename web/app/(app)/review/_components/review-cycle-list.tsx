@@ -167,41 +167,43 @@ export function ReviewCycleList(props: Props) {
                   </DialogContent>
                 </Dialog>
 
-                <AlertDialog>
-                  <AlertDialogTrigger
-                    render={
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        data-icon="trash"
-                        disabled={isDeleting}
-                      />
-                    }
-                  >
-                    削除
-                  </AlertDialogTrigger>
+                {cycle.status === "draft" ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          data-icon="trash"
+                          disabled={isDeleting}
+                        />
+                      }
+                    >
+                      削除
+                    </AlertDialogTrigger>
 
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>評価サイクルを削除しますか？</AlertDialogTitle>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>評価サイクルを削除しますか？</AlertDialogTitle>
 
-                      <AlertDialogDescription>
-                        この操作は取り消せません。サイクル「{cycle.title}」を削除します。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
+                        <AlertDialogDescription>
+                          この操作は取り消せません。サイクル「{cycle.title}」を削除します。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
 
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
 
-                      <form action={deleteDispatch}>
-                        <input type="hidden" name="cycle_id" value={cycle.id} />
+                        <form action={deleteDispatch}>
+                          <input type="hidden" name="cycle_id" value={cycle.id} />
 
-                        <AlertDialogAction type="submit">削除する</AlertDialogAction>
-                      </form>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                          <AlertDialogAction type="submit">削除する</AlertDialogAction>
+                        </form>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : null}
               </div>
             ) : null}
           </CardContent>

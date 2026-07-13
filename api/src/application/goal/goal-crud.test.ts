@@ -13,6 +13,7 @@ import { expectApplicationError } from "@/interface/shared/test/expect-applicati
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import type { Context } from "@/env"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
 
 async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
   const result = await new CreateGoal(context).run({
@@ -387,7 +388,14 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("creates a manager evaluation for a privileged role", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+    await seedD1(db, "employees", [
+      { id: 1, code: "E001", name: "Member", status: "active" },
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "TEAM", employee_code: "E001", manager_employee_code: "E002" },
+    ])
     const goal = await seedGoal(context, 1)
 
     if (goal.id === null) {

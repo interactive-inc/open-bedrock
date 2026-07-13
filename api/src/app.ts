@@ -13,8 +13,12 @@ import * as applicationDetailRoute from "@/interface/application/applications/[i
 import * as applicationInboxRoute from "@/interface/application/applications/inbox/route"
 import * as applicationListRoute from "@/interface/application/applications/route"
 import * as applicationRejectRoute from "@/interface/application/applications/[id]/reject/route"
+import * as applicationResubmitRoute from "@/interface/application/applications/[id]/resubmit/route"
 import * as applicationSubmitRoute from "@/interface/application/applications/submit-route"
 import * as applicationTemplateDetailRoute from "@/interface/application/templates/[code]/route"
+import * as applicationTemplateWorkflowRoute from "@/interface/application/templates/[code]/workflow/route"
+import * as approvalDelegationsRoute from "@/interface/application/approval-delegations/route"
+import * as approvalDelegationDetailRoute from "@/interface/application/approval-delegations/[id]/route"
 import * as applicationTemplateListRoute from "@/interface/application/templates/route"
 import * as assetDetailRoute from "@/interface/asset/[code]/route"
 import * as assetDisposeRoute from "@/interface/asset/[code]/dispose/route"
@@ -104,6 +108,7 @@ import * as reviewCycleCreateRoute from "@/interface/review/cycles-create/route"
 import * as reviewCycleListRoute from "@/interface/review/cycles/route"
 import * as reviewCycleOpenRoute from "@/interface/review/cycles/[cycle_id]/open/route"
 import * as reviewCycleResultsRoute from "@/interface/review/cycles/[cycle_id]/results/[employee_code]/route"
+import * as reviewCyclePolicyRoute from "@/interface/review/cycles/[cycle_id]/policy/route"
 import * as reviewFormMeRoute from "@/interface/review/forms/me/route"
 import * as reviewFormSubmitRoute from "@/interface/review/forms/[form_id]/submit/route"
 import * as roomAvailabilityRoute from "@/interface/room/availability/route"
@@ -266,7 +271,13 @@ export const app = factory
   .post("/applications", ...applicationSubmitRoute.POST)
   .post("/applications/:id/approve", ...applicationApproveRoute.POST)
   .post("/applications/:id/reject", ...applicationRejectRoute.POST)
+  .post("/applications/:id/resubmit", ...applicationResubmitRoute.POST)
   .get("/application-templates/:code", ...applicationTemplateDetailRoute.GET)
+  .get("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.GET)
+  .put("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.PUT)
+  .get("/approval-delegations", ...approvalDelegationsRoute.GET)
+  .post("/approval-delegations", ...approvalDelegationsRoute.POST)
+  .delete("/approval-delegations/:id", ...approvalDelegationDetailRoute.DELETE)
   .get("/application-templates", ...applicationTemplateListRoute.GET)
   .get("/knowledge/:id", ...knowledgeDetailRoute.GET)
   .get("/knowledge", ...knowledgeListRoute.GET)
@@ -374,6 +385,8 @@ export const app = factory
   .post("/review-cycles/:cycle_id/close", ...reviewCycleCloseRoute.POST)
   .post("/review-cycles/:cycle_id/open", ...reviewCycleOpenRoute.POST)
   .get("/review-cycles/:cycle_id/results/:employee_code", ...reviewCycleResultsRoute.GET)
+  .get("/review-cycles/:cycle_id/policy", ...reviewCyclePolicyRoute.GET)
+  .put("/review-cycles/:cycle_id/policy", ...reviewCyclePolicyRoute.PUT)
   .post("/review-forms/:form_id/submit", ...reviewFormSubmitRoute.POST)
   .get("/review-forms/me", ...reviewFormMeRoute.GET)
   .put("/applications/:id", ...applicationDetailRoute.PUT)

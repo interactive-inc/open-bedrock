@@ -7,10 +7,12 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees, leaveRequests } from "@/schema"
-import { asc, count, desc, eq } from "drizzle-orm"
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 
 // 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。
 const SORT_OPTIONS = {
@@ -34,6 +36,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
+  const managedEmployeeIds = hasPermission(session, "org:manage")
+    ? null
+    : await listManagedEmployeeIds(c, session.employeeId)
+
+  if (managedEmployeeIds instanceof Error) {
+    throw new InternalError("failed to resolve organization scope")
+  }
+
+  const pendingInScope =
+    managedEmployeeIds === null
+      ? eq(leaveRequests.status, "pending")
+      : managedEmployeeIds.length === 0
+        ? and(eq(leaveRequests.status, "pending"), sql`0 = 1`)
+        : and(
+            eq(leaveRequests.status, "pending"),
+            inArray(leaveRequests.employeeId, [...managedEmployeeIds]),
+          )
+
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
     fallback: DEFAULT_LIST_LIMIT,
@@ -56,7 +76,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select({ leaveRequest: leaveRequests, applicantName: employees.name })
     .from(leaveRequests)
     .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
-    .where(eq(leaveRequests.status, "pending"))
+    .where(pendingInScope)
     .orderBy(SORT_OPTIONS[sortKey])
     .limit(limit)
     .offset(offset)
@@ -64,7 +84,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(leaveRequests)
-    .where(eq(leaveRequests.status, "pending"))
+    .where(pendingInScope)
 
   const responseBody = zAppLeaveRequestInboxList.parse({
     data: rows.map((row) => ({

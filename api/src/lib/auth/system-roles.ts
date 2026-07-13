@@ -11,12 +11,10 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "employee:create",
   "employee:update",
   "application:approve",
-  "application_template:manage",
   "expense:approve",
   "leave:approve",
   "notification:send",
   "oneonone:create",
-  "review:administer",
   "career_posting:manage",
   "room:manage",
   "asset:manage",
@@ -35,6 +33,8 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 
 // hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。
 const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  "application_template:manage",
+  "review:administer",
   "org:manage",
   "employee:delete",
   "thanks_reward:manage",

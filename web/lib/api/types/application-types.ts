@@ -77,6 +77,30 @@ export type ApplicationDetailResponse = {
   approvals: ReadonlyArray<ApplicationApprovalEntry>
   // テンプレートの承認可能ロール（空配列なら application:approve 権限保持者が承認可）。
   approver_roles: ReadonlyArray<string>
+  workflow: ApplicationWorkflowProgress | null
+}
+
+export type ApplicationWorkflowProgress = {
+  current_step_key: string
+  current_round: number
+  started_at: string
+  due_at: string | null
+  returned: boolean
+  steps: ReadonlyArray<{
+    key: string
+    name: string
+    status: "waiting" | "pending" | "approved" | "rejected" | "returned"
+  }>
+  approvals: ReadonlyArray<{
+    id: number
+    step_key: string
+    round: number
+    approver_name: string
+    represented_approver_name: string
+    action: "approve" | "reject" | "return"
+    comment: string | null
+    created_at: string
+  }>
 }
 
 // POST /applications/:id/approve|reject のレスポンス。
