@@ -414,4 +414,24 @@ describe("createAuditEvent", () => {
       expect((error as ValidationError).code).toBe("audit_invalid_timestamp")
     }
   })
+
+  test("rejects a Date whose timestamp becomes invalid during parsing", () => {
+    class StatefulDate extends Date {
+      private reads = 0
+
+      override getTime(): number {
+        this.reads += 1
+        return this.reads === 1 ? 1_000 : Number.NaN
+      }
+    }
+
+    try {
+      createAuditEvent(makeInput({ now: new StatefulDate(1_000) }), context)
+      throw new Error("expected createAuditEvent to reject an unstable date")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_timestamp")
+      expect((error as ValidationError).message).toBe("audit event time is invalid")
+    }
+  })
 })

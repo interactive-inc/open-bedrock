@@ -184,6 +184,9 @@ export function createAuditEvent(
     "audit_invalid_timestamp",
   )
   const timestamp = Date.prototype.getTime.call(eventTime)
+  if (!Number.isFinite(timestamp)) {
+    throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
+  }
 
   return {
     eventId: crypto.randomUUID(),
