@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/sidebar"
 
 type Props = {
+  inboxCounts: import("@/lib/api/types/inbox-types").InboxCounts
   unreadNotificationCount: number
   // 本人が持つ permission キー。これに含まれる requiredPermission の項目だけ表示する。
   permissions: ReadonlyArray<string>
@@ -692,6 +693,15 @@ export function SidebarNav(props: Props) {
 
   const { isExpanded, toggle } = useExpandedState(pathname)
 
+  // 受信箱パスごとの未処理件数マップ。0 の項目にはバッジを表示しない。
+  const inboxBadgeMap: Record<string, number> = {
+    "/applications/inbox": props.inboxCounts.applications,
+    "/expense/inbox": props.inboxCounts.expenses,
+    "/leave/inbox": props.inboxCounts.leaves,
+    "/shift/inbox": props.inboxCounts.shifts,
+    "/thanks/inbox": props.inboxCounts.thanks,
+  }
+
   return (
     <>
       <SidebarGroup>
@@ -746,6 +756,16 @@ export function SidebarNav(props: Props) {
                               {props.unreadNotificationCount}
                             </Badge>
                           ) : null}
+
+                          {inboxBadgeMap[item.href] != null && inboxBadgeMap[item.href] > 0 ? (
+                            <Badge
+                              variant="secondary"
+                              className="ml-auto"
+                              aria-label={`未処理 ${inboxBadgeMap[item.href]} 件`}
+                            >
+                              {inboxBadgeMap[item.href]}
+                            </Badge>
+                          ) : null}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )
@@ -782,6 +802,16 @@ export function SidebarNav(props: Props) {
                                 <span>
                                   <HighlightText text={child.label} query={highlightQuery} />
                                 </span>
+
+                                {inboxBadgeMap[child.href] != null && inboxBadgeMap[child.href] > 0 ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-auto"
+                                    aria-label={`未処理 ${inboxBadgeMap[child.href]} 件`}
+                                  >
+                                    {inboxBadgeMap[child.href]}
+                                  </Badge>
+                                ) : null}
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
