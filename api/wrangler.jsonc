@@ -13,7 +13,8 @@
       "migrations_dir": "migrations",
     },
   ],
-  // JWT_SECRET は secret として登録する: `wrangler secret put JWT_SECRET`
+  // secret は個別に登録する: `wrangler secret put JWT_SECRET`
+  // 監査イベント署名用: `wrangler secret put AUDIT_HMAC_SECRET`
   "kv_namespaces": [
     {
       "binding": "RATE_LIMIT",

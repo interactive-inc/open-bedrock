@@ -89,6 +89,8 @@ export const PERMISSION_CATALOG = [
     category: "attendance",
     description: "本人または管理対象の勤怠を閲覧する（org:manage は全社）",
   },
+  { key: "audit:read", category: "audit", description: "監査イベントを閲覧する" },
+  { key: "audit:export", category: "audit", description: "監査イベントを CSV 出力する" },
   { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
   { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {

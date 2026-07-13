@@ -48,8 +48,12 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "budget:manage",
 ]
 
-// admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
-const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [...EFFECTIVE_ADMIN_PERMISSION_KEYS]
+// admin が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。
+const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  ...EFFECTIVE_ADMIN_PERMISSION_KEYS,
+  "audit:read",
+  "audit:export",
+]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...MANAGER_PERMISSIONS,

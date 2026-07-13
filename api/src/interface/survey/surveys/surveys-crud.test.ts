@@ -128,6 +128,7 @@ async function request(props: {
   const bindings: Bindings = {
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
+    AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 
@@ -366,6 +367,7 @@ describe("DELETE /surveys/:survey_id", () => {
     const bindings: Bindings = {
       DB: db,
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
