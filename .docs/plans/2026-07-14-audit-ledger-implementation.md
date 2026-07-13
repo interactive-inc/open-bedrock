@@ -12,7 +12,7 @@
 
 - 正本の設計は `.docs/plans/2026-07-14-audit-ledger-design.md` とする。
 - ユーザーの明示指示により `main` で作業し、各完成単位を直接コミットする。
-- 既存 migration は変更せず、`api/migrations/0015_audit_events.sql` だけを追加する。
+- 既存 migration は変更しない。監査構造は公開済みの `api/migrations/0015_audit_events.sql` と、適用済み環境へ追記専用 guard を届ける forward-only の `api/migrations/0016_audit_append_guard.sql` で追加する。
 - Web と CLI は `api/app` から実行時値を import せず、`AppType` と `ApiClient` だけを type-only import する。
 - `X-Open-Karte-Client` は `web`、`cli`、`api`、`system` の記録にだけ使い、認証、認可、職務分離の根拠にしない。
 - 新規監査イベントは型付き生成器だけで作り、production code から任意の action、target type、JSON を直接 INSERT しない。
@@ -35,6 +35,7 @@
 API の新規ファイル:
 
 - `api/migrations/0015_audit_events.sql`: 旧行を保持する新構造への移行、索引、追記専用 trigger、権限 seed。
+- `api/migrations/0016_audit_append_guard.sql`: 適用済み環境を含め、過去 ID と event ID の置換を防ぐ追記専用 guard。
 - `api/src/domain/audit/audit-event.ts`: action、target type、outcome、reason code、入力と投影の型。
 - `api/src/lib/audit/stable-json.ts`: 再帰的秘密値除去、キー順安定化、六十四 KiB 制限。
 - `api/src/lib/audit/hash-identifier.ts`: Web Crypto による HMAC-SHA-256。
@@ -85,6 +86,7 @@ CLI の新規ファイル:
 ファイル:
 
 - 作成: `api/migrations/0015_audit_events.sql`
+- 作成: `api/migrations/0016_audit_append_guard.sql`
 - 作成: `api/src/interface/shared/request-context-middleware.ts`
 - 作成: `api/src/interface/shared/request-context-middleware.test.ts`
 - 変更: `api/src/schema.ts`
@@ -105,7 +107,7 @@ CLI の新規ファイル:
 - 生成: permission `audit:read` と `audit:export`
 - 消費: Hono のすべての後続 route が `c.var.auditContext` を利用する。
 
-- [ ] 旧構造を作って `0015_audit_events.sql` だけを適用する移行テストを `api/src/infrastructure/audit/audit-migration.test.ts` に追加する。
+- [ ] 旧構造を作って `0015_audit_events.sql` と `0016_audit_append_guard.sql` を順に適用する移行テストを `api/src/infrastructure/audit/audit-migration.test.ts` に追加する。`0015` 適用後に追加された行、legacy の負 ID、`0016` 二重適用も検証する。
 
 ```ts
 expect(await db.prepare("SELECT count(1) AS count FROM audit_logs").first("count")).toBe(1)
@@ -190,7 +192,7 @@ export const requestContextMiddleware = factory.createMiddleware(async (c, next)
 - [ ] 変更をコミットする。
 
 ```bash
-git add api/migrations/0015_audit_events.sql api/src/schema.ts api/src/env.ts api/src/app.ts api/src/interface/shared api/src/lib/auth api/.dev.vars.example api/wrangler.jsonc
+git add api/migrations/0015_audit_events.sql api/migrations/0016_audit_append_guard.sql api/src/schema.ts api/src/env.ts api/src/app.ts api/src/interface/shared api/src/lib/auth api/.dev.vars.example api/wrangler.jsonc
 git commit -m "feat(api): add append-only audit storage"
 ```
 
