@@ -300,7 +300,7 @@ git commit -m "feat(api): create typed audit events"
 
 インターフェース:
 
-- 生成: `AuditEventRepository.insertStatement(record): D1PreparedStatement`。
+- 生成: `AuditEventRepository.prepareAppend(record): readonly [D1PreparedStatement, D1PreparedStatement]`。通常の `INSERT` と直前変更件数 guard を不可分の batch fragment として返し、裸の INSERT は公開しない。
 - 生成: `AuditEventRepository.append(record): Promise<void>`。
 - 生成: `AuditEventRepository.search(query): Promise<AuditEventPage>`。
 - 生成: `AuditEventRepository.findByEventId(eventId): Promise<AuditEventDetail | null>`。
@@ -311,7 +311,7 @@ git commit -m "feat(api): create typed audit events"
 - [ ] repository の insert、型変換、半開区間、同秒 ID 順、actor/action/target/outcome filter のテストを書く。
 
 ```ts
-const page = await repository.search({ limit: 2, direction: "next", cursor: null, filters: {} })
+const page = await repository.search({ limit: 2, cursor: null, filters: {} })
 expect(page.items.map((item) => item.eventId)).toEqual(["event-3", "event-2"])
 expect(page.nextCursor).not.toBeNull()
 expect(page.previousCursor).toBeNull()
@@ -336,13 +336,15 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 実行: `cd api && bun test src/infrastructure/audit src/lib/audit/audit-cursor.test.ts src/lib/audit/audit-csv.test.ts`
 
-- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件で次頁有無を判定する。
+- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件で次頁有無を判定する。一覧 SQL は内部 ID と要約列だけを投影し、JSON 四列と client IP を取得しない。
+
+- [ ] 詳細と CSV 出力は非 null の JSON 四列を構文検証し、scalar と旧 JSON-string wrapper は再直列化せず受理する。壊れた JSON は `audit_unavailable` とし、一覧要約では詳細列を検証しない。
 
 - [ ] cursor は version、direction、createdAt、id の JSON を base64url 化し、Zod で検証する。秘密情報を含めないため署名は付けず、不正値は `ValidationError` で拒否する。
 
 - [ ] CSV は固定列順、RFC 4180、CRLF、UTF-8 BOM なしとし、文字列化後の先頭危険文字へ単一引用符を付ける。
 
-- [ ] 取得件数五万一件目を検査し、五万件超過を `audit_export_too_large` として返せる契約を実装する。
+- [ ] 出力は狭い byte descriptor と exact-ID 詳細取得の二段階にする。詳細取得前に DB 側の累積 raw-byte guard を適用し、一回の Worker 詳細 payload を残り十六 MiB 以内へ抑える。取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
 
 - [ ] 対象テストを再実行する。
 
@@ -373,7 +375,7 @@ git commit -m "feat(api): add audit search and export repository"
 インターフェース:
 
 - 生成: `GET /audit-events` は `{ data, next_cursor, previous_cursor }` を返す。
-- 生成: `GET /audit-events/:event_id` は JSON 列を正規化済み文字列として返し、legacy text も内容を失わない。
+- 生成: `GET /audit-events/:event_id` は構文検証済み JSON 列を保存時の文字列のまま返し、scalar と legacy wrapper も内容を失わない。
 - 生成: `POST /audit-event-exports` は `text/csv; charset=utf-8` を返す。
 - 一覧要約の `created_at` と詳細の時刻は ISO 8601。
 - actor 表示の正本は `actor_account_id` と `actor_employee_id` で、現在の氏名を join しない。
@@ -466,7 +468,7 @@ git commit -m "feat(api): expose authorized audit events"
 
 インターフェース:
 
-- 消費: `createAuditEvent`、`hashAuditIdentifier`、`AuditEventRepository.insertStatement`。
+- 消費: `createAuditEvent`、`hashAuditIdentifier`、`AuditEventRepository.prepareAppend`。
 - 生成: login success、login denied、refresh、reuse detected の四操作を記録する。
 - 既存 login/refresh 成功 body と既存認証失敗メッセージは変更しない。
 
@@ -521,7 +523,7 @@ git commit -m "feat(api): audit authentication lifecycle"
 
 インターフェース:
 
-- 消費: typed event と `insertStatement`。
+- 消費: typed event と `prepareAppend` の二文 batch fragment。
 - 生成: IAM、account、employee の設計書 action を成功、拒否、失敗の結果付きで記録する。
 - 保証: live permission guard、権限部分集合、last effective admin guard と監査 INSERT は一つの原子的 batch 内で再検査する。
 

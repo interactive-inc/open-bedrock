@@ -9,17 +9,43 @@ import type { Context } from "@/env"
 import { decodeAuditCursor, encodeAuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorPosition } from "@/lib/audit/audit-cursor"
 import { AuditCsvByteCounter } from "@/lib/audit/audit-csv"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
 const SEARCH_MAX_LIMIT = 100
 const EXPORT_MAX_ROWS = 50_000
 const EXPORT_CHUNK_SIZE = 500
+const EXPORT_DETAIL_RAW_CHUNK_BYTES = 4 * 1024 * 1024
 
-const SELECT_COLUMNS = `
+const SUMMARY_SELECT_COLUMNS = `
+  id, event_id, request_id, actor_account_id, actor_employee_id, action,
+  target_type, target_id, outcome, reason_code, client_name, created_at
+`
+
+const DETAIL_SELECT_COLUMNS = `
   id, event_id, request_id, actor_account_id, actor_employee_id, action,
   target_type, target_id, outcome, reason_code, authorization_json,
   before_json, after_json, metadata_json, client_ip, client_name, created_at
+`
+
+const DETAIL_RAW_BYTES_SQL = `
+  length(CAST(COALESCE(event_id, '') AS BLOB)) +
+  length(CAST(COALESCE(request_id, '') AS BLOB)) +
+  length(CAST(COALESCE(actor_account_id, '') AS BLOB)) +
+  length(CAST(COALESCE(actor_employee_id, '') AS BLOB)) +
+  length(CAST(COALESCE(action, '') AS BLOB)) +
+  length(CAST(COALESCE(target_type, '') AS BLOB)) +
+  length(CAST(COALESCE(target_id, '') AS BLOB)) +
+  length(CAST(COALESCE(outcome, '') AS BLOB)) +
+  length(CAST(COALESCE(reason_code, '') AS BLOB)) +
+  length(CAST(COALESCE(authorization_json, '') AS BLOB)) +
+  length(CAST(COALESCE(before_json, '') AS BLOB)) +
+  length(CAST(COALESCE(after_json, '') AS BLOB)) +
+  length(CAST(COALESCE(metadata_json, '') AS BLOB)) +
+  length(CAST(COALESCE(client_ip, '') AS BLOB)) +
+  length(CAST(COALESCE(client_name, '') AS BLOB)) +
+  length(CAST(COALESCE(created_at, '') AS BLOB))
 `
 
 const validIsoEpochSchema = z
@@ -30,7 +56,7 @@ const validIsoEpochSchema = z
 
 const actorIdSchema = z.number().int().safe().nullable()
 
-const auditDatabaseRowSchema = z.strictObject({
+const auditSummaryDatabaseRowSchema = z.strictObject({
   id: z.number().int().safe(),
   event_id: z.string(),
   request_id: z.string(),
@@ -41,16 +67,28 @@ const auditDatabaseRowSchema = z.strictObject({
   target_id: z.string().nullable(),
   outcome: auditOutcomeSchema,
   reason_code: z.string().nullable(),
+  client_name: auditClientNameSchema,
+  created_at: validIsoEpochSchema,
+})
+
+const auditDetailDatabaseRowSchema = auditSummaryDatabaseRowSchema.extend({
   authorization_json: z.string().nullable(),
   before_json: z.string().nullable(),
   after_json: z.string().nullable(),
   metadata_json: z.string().nullable(),
   client_ip: z.string().nullable(),
-  client_name: auditClientNameSchema,
-  created_at: validIsoEpochSchema,
 })
 
-type AuditDatabaseRow = z.infer<typeof auditDatabaseRowSchema>
+type AuditSummaryDatabaseRow = z.infer<typeof auditSummaryDatabaseRowSchema>
+type AuditDetailDatabaseRow = z.infer<typeof auditDetailDatabaseRowSchema>
+
+const auditExportDescriptorRowSchema = z.strictObject({
+  id: z.number().int().safe(),
+  created_at: validIsoEpochSchema,
+  raw_bytes: z.number().int().safe().nonnegative(),
+})
+
+type AuditExportDescriptorRow = z.infer<typeof auditExportDescriptorRowSchema>
 
 const auditFiltersSchema = z.strictObject({
   actorAccountId: z.number().int().safe().optional(),
@@ -118,16 +156,50 @@ function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
   }
 }
 
-function parseRows(results: ReadonlyArray<unknown>): ReadonlyArray<AuditDatabaseRow> {
+function parseSummaryRows(results: ReadonlyArray<unknown>): ReadonlyArray<AuditSummaryDatabaseRow> {
   return results.map((row) => {
-    const parsed = auditDatabaseRowSchema.safeParse(row)
+    const parsed = auditSummaryDatabaseRowSchema.safeParse(row)
     if (!parsed.success) throw unavailable(parsed.error)
 
     return parsed.data
   })
 }
 
-function toSummary(row: AuditDatabaseRow): AuditEventSummary {
+function parseDetailRows(results: ReadonlyArray<unknown>): ReadonlyArray<AuditDetailDatabaseRow> {
+  return results.map((row) => {
+    const parsed = auditDetailDatabaseRowSchema.safeParse(row)
+    if (!parsed.success) throw unavailable(parsed.error)
+
+    for (const json of [
+      parsed.data.authorization_json,
+      parsed.data.before_json,
+      parsed.data.after_json,
+      parsed.data.metadata_json,
+    ]) {
+      if (json === null) continue
+      try {
+        JSON.parse(json)
+      } catch (error) {
+        throw unavailable(error)
+      }
+    }
+
+    return parsed.data
+  })
+}
+
+function parseExportDescriptorRows(
+  results: ReadonlyArray<unknown>,
+): ReadonlyArray<AuditExportDescriptorRow> {
+  return results.map((row) => {
+    const parsed = auditExportDescriptorRowSchema.safeParse(row)
+    if (!parsed.success) throw unavailable(parsed.error)
+
+    return parsed.data
+  })
+}
+
+function toSummary(row: AuditSummaryDatabaseRow): AuditEventSummary {
   return {
     eventId: row.event_id,
     requestId: row.request_id,
@@ -143,7 +215,7 @@ function toSummary(row: AuditDatabaseRow): AuditEventSummary {
   }
 }
 
-function toDetail(row: AuditDatabaseRow): AuditEventDetail {
+function toDetail(row: AuditDetailDatabaseRow): AuditEventDetail {
   return {
     ...toSummary(row),
     authorizationJson: row.authorization_json,
@@ -154,7 +226,10 @@ function toDetail(row: AuditDatabaseRow): AuditEventDetail {
   }
 }
 
-function cursorFor(row: AuditDatabaseRow, direction: AuditCursorPosition["direction"]): string {
+function cursorFor(
+  row: AuditSummaryDatabaseRow,
+  direction: AuditCursorPosition["direction"],
+): string {
   return encodeAuditCursor({ version: 1, direction, createdAt: row.created_at, id: row.id })
 }
 
@@ -200,6 +275,7 @@ function selectSql(
   parts: SqlParts,
   ascending: boolean,
   limit: number,
+  columns: string,
 ): {
   sql: string
   bindings: ReadonlyArray<string | number>
@@ -209,10 +285,45 @@ function selectSql(
   const order = ascending ? "ASC" : "DESC"
 
   return {
-    sql: `SELECT ${SELECT_COLUMNS} FROM audit_logs ${where}
+    sql: `SELECT ${columns} FROM audit_logs ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
   }
+}
+
+function exportDescriptorSql(
+  parts: SqlParts,
+  limit: number,
+  rawByteBudget: number,
+): { sql: string; bindings: ReadonlyArray<string | number> } {
+  const limitIndex = parts.bindings.push(limit)
+  const budgetIndex = parts.bindings.push(rawByteBudget)
+  const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
+
+  return {
+    sql: `WITH sized AS (
+            SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes
+            FROM audit_logs ${where}
+            ORDER BY created_at DESC, id DESC
+            LIMIT ?${limitIndex}
+          ), bounded AS (
+            SELECT id, created_at, raw_bytes,
+                   SUM(raw_bytes) OVER (
+                     ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
+                   ) AS cumulative_raw_bytes,
+                   ROW_NUMBER() OVER (ORDER BY created_at DESC, id DESC) AS row_number
+            FROM sized
+          )
+          SELECT id, created_at, raw_bytes
+          FROM bounded
+          WHERE cumulative_raw_bytes <= ?${budgetIndex} OR row_number = 1
+          ORDER BY created_at DESC, id DESC`,
+    bindings: parts.bindings,
+  }
+}
+
+function detailIdsJson(rows: ReadonlyArray<AuditExportDescriptorRow>): string {
+  return JSON.stringify(rows.map((row) => row.id))
 }
 
 function rethrowRepositoryError(error: unknown): never {
@@ -232,8 +343,7 @@ export class AuditEventRepository {
     Object.freeze(this)
   }
 
-  /** Returns the fixed ordinary INSERT suitable for the end of a D1 business batch. */
-  insertStatement(record: AuditEventRecord): D1PreparedStatement {
+  private prepareInsert(record: AuditEventRecord): D1PreparedStatement {
     return this.c.env.DB.prepare(
       `INSERT INTO audit_logs
          (event_id, request_id, actor_account_id, actor_employee_id, action,
@@ -260,10 +370,20 @@ export class AuditEventRepository {
     )
   }
 
+  /** Returns the audit INSERT and its mandatory changed-row guard as one batch fragment. */
+  prepareAppend(record: AuditEventRecord): readonly [D1PreparedStatement, D1PreparedStatement] {
+    return Object.freeze([
+      this.prepareInsert(record),
+      abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+    ] as const)
+  }
+
   async append(record: AuditEventRecord): Promise<void> {
     try {
-      const result = await this.insertStatement(record).run()
-      if (!result.success) throw new Error("audit insert did not succeed")
+      const results = await this.c.env.DB.batch([...this.prepareAppend(record)])
+      if (results.length !== 2 || results.some((result) => !result.success)) {
+        throw new Error("audit append did not succeed")
+      }
     } catch (error) {
       rethrowRepositoryError(error)
     }
@@ -277,13 +397,13 @@ export class AuditEventRepository {
       const parts = filterSql(parsed.filters)
       if (cursor !== null) addCursorClause(parts, cursor)
       const ascending = cursor?.direction === "previous"
-      const statement = selectSql(parts, ascending, parsed.limit + 1)
+      const statement = selectSql(parts, ascending, parsed.limit + 1, SUMMARY_SELECT_COLUMNS)
       const result = await this.c.env.DB.prepare(statement.sql)
         .bind(...statement.bindings)
         .all()
       if (!result.success) throw new Error("audit search did not succeed")
 
-      const queried = parseRows(result.results)
+      const queried = parseSummaryRows(result.results)
       const hasMore = queried.length > parsed.limit
       const nearby = queried.slice(0, parsed.limit)
       const pageRows = ascending ? [...nearby].reverse() : nearby
@@ -310,13 +430,13 @@ export class AuditEventRepository {
   async findByEventId(eventId: string): Promise<AuditEventDetail | null> {
     try {
       const result = await this.c.env.DB.prepare(
-        `SELECT ${SELECT_COLUMNS} FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
+        `SELECT ${DETAIL_SELECT_COLUMNS} FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
         .all()
       if (!result.success) throw new Error("audit detail query did not succeed")
 
-      const row = parseRows(result.results).at(0)
+      const row = parseDetailRows(result.results).at(0)
       return row === undefined ? null : toDetail(row)
     } catch (error) {
       rethrowRepositoryError(error)
@@ -332,26 +452,52 @@ export class AuditEventRepository {
       let position: AuditCursorPosition | null = null
 
       while (true) {
+        const remainingRows = EXPORT_MAX_ROWS - exported.length
         const parts = filterSql(parsed.filters)
         if (position !== null) addCursorClause(parts, position)
-        const statement = selectSql(parts, false, EXPORT_CHUNK_SIZE)
-        const result = await this.c.env.DB.prepare(statement.sql)
-          .bind(...statement.bindings)
+        const descriptorStatement = exportDescriptorSql(
+          parts,
+          Math.min(EXPORT_CHUNK_SIZE, remainingRows + 1),
+          Math.min(sizeGuard.remainingBytes, EXPORT_DETAIL_RAW_CHUNK_BYTES),
+        )
+        const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
+          .bind(...descriptorStatement.bindings)
           .all()
-        if (!result.success) throw new Error("audit export query did not succeed")
+        if (!descriptorResult.success) throw new Error("audit export size query did not succeed")
 
-        const rows = parseRows(result.results)
+        const descriptors = parseExportDescriptorRows(descriptorResult.results)
+        if (descriptors.length === 0) break
+        if (descriptors.length > remainingRows) throw exportTooLarge()
+        if ((descriptors[0]?.raw_bytes ?? 0) > sizeGuard.remainingBytes) throw exportTooLarge()
+
+        const detailResult = await this.c.env.DB.prepare(
+          `SELECT ${DETAIL_SELECT_COLUMNS}
+           FROM audit_logs
+           WHERE id IN (SELECT value FROM json_each(?1))
+           ORDER BY created_at DESC, id DESC`,
+        )
+          .bind(detailIdsJson(descriptors))
+          .all()
+        if (!detailResult.success) throw new Error("audit export detail query did not succeed")
+
+        const rows = parseDetailRows(detailResult.results)
+        if (
+          rows.length !== descriptors.length ||
+          rows.some(
+            (row, index) =>
+              row.id !== descriptors[index]?.id ||
+              row.created_at !== descriptors[index]?.created_at,
+          )
+        ) {
+          throw new Error("audit export rows changed during read")
+        }
         for (const row of rows) {
-          if (exported.length >= EXPORT_MAX_ROWS) throw exportTooLarge()
-
           const detail = toDetail(row)
           sizeGuard.add(detail)
           exported.push(detail)
         }
 
-        if (rows.length < EXPORT_CHUNK_SIZE) break
-
-        const last = rows.at(-1)
+        const last = descriptors.at(-1)
         if (last === undefined) break
         position = { version: 1, direction: "next", createdAt: last.created_at, id: last.id }
       }

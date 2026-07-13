@@ -28,7 +28,7 @@
 
 ## 採用方式
 
-各ルートが任意の JSON を直接 INSERT する方式は採用しない。型付きの監査イベント生成器を共通化し、成功する変更では業務更新と監査 INSERT の両方を同じ D1 batch に含める。
+各ルートが任意の JSON を直接 INSERT する方式は採用しない。型付きの監査イベント生成器を共通化し、成功する変更では業務更新と監査 INSERT、その直後の changed-row guard を同じ D1 batch に含める。監査 repository はこの二文を不可分の batch fragment として公開し、裸の INSERT statement は公開しない。
 
 イベントソーシングは採用しない。業務テーブルを現在状態の正本とし、監査イベントはその操作と判断の証跡を表す。監査イベントから業務状態を復元することを完成条件にしない。
 
@@ -178,11 +178,11 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 - `from`
 - `to`
 
-時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件とする。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は byte descriptor を先に狭く取得し、DB 側の累積 raw-byte guard を通った exact-ID だけを詳細取得する。五万一件目または byte 超過を検出したら追加 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 
-一覧は要約投影だけを返し、`before_json`、`after_json`、`authorization_json`、`metadata_json` は詳細だけで返す。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
+一覧は SQL 自体で要約列だけを取得し、`before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
 
 ## Web
 

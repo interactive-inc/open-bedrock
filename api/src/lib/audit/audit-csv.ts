@@ -69,6 +69,10 @@ function encodeRow(row: AuditEventDetail): string {
 export class AuditCsvByteCounter {
   private byteLength = UTF8_ENCODER.encode(HEADER).byteLength
 
+  get remainingBytes(): number {
+    return AUDIT_CSV_MAX_BYTES - this.byteLength
+  }
+
   add(row: AuditEventDetail): void {
     this.byteLength += UTF8_ENCODER.encode(encodeRow(row)).byteLength
     if (this.byteLength > AUDIT_CSV_MAX_BYTES) throw exportTooLarge()

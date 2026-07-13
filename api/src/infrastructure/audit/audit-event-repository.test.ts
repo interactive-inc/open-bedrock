@@ -132,6 +132,54 @@ function createCountingContext(): {
   return { context, db, queryCount: () => count }
 }
 
+type ObservedAllRead = {
+  sql: string
+  rowCount: number
+  payloadBytes: number
+}
+
+function observeAllReads(context: Context): ObservedAllRead[] {
+  const reads: ObservedAllRead[] = []
+  const source = context.env.DB
+  const encoder = new TextEncoder()
+
+  const wrapStatement = (statement: D1PreparedStatement, sql: string): D1PreparedStatement =>
+    new Proxy(statement, {
+      get(target, property) {
+        if (property === "bind") {
+          return (...values: unknown[]) => wrapStatement(target.bind(...values), sql)
+        }
+        if (property === "all") {
+          return async () => {
+            const result = await target.all()
+            reads.push({
+              sql,
+              rowCount: result.results.length,
+              payloadBytes: encoder.encode(JSON.stringify(result.results)).byteLength,
+            })
+            return result
+          }
+        }
+
+        const value = Reflect.get(target, property, target) as unknown
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+
+  context.env.DB = new Proxy(source, {
+    get(target, property) {
+      if (property === "prepare") {
+        return (sql: string) => wrapStatement(target.prepare(sql), sql)
+      }
+
+      const value = Reflect.get(target, property, target) as unknown
+      return typeof value === "function" ? value.bind(target) : value
+    },
+  })
+
+  return reads
+}
+
 async function insertBulkRows(db: D1Database, count: number): Promise<void> {
   await db.exec(`
     WITH RECURSIVE sequence(value) AS (
@@ -148,11 +196,26 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
 }
 
 describe("AuditEventRepository write contract", () => {
-  test("insertStatement binds all sixteen external columns without an internal id", async () => {
+  test("prepareAppend returns the inseparable insert and changed-row guard pair", async () => {
     const { context, db } = createTestContext()
     const repository = new AuditEventRepository(context)
 
-    await db.batch([repository.insertStatement(record())])
+    const statements = repository.prepareAppend(record())
+    expect(statements).toHaveLength(2)
+    await db.batch([...statements])
+
+    expect(
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE event_id = 'event-1'")
+        .first<number>("count"),
+    ).toBe(1)
+  })
+
+  test("prepareAppend binds all sixteen external columns without an internal id", async () => {
+    const { context, db } = createTestContext()
+    const repository = new AuditEventRepository(context)
+
+    await db.batch([...repository.prepareAppend(record())])
 
     expect(
       await db
@@ -222,6 +285,21 @@ describe("AuditEventRepository write contract", () => {
     await expectAuditUnavailable(repository.append(record({ eventId: "forced-trigger" })))
   })
 
+  test("maps a trigger that silently ignores the audit insert to a safe 503 error", async () => {
+    const { context, db } = createTestContext()
+    const repository = new AuditEventRepository(context)
+    await db.exec(`
+      CREATE TRIGGER audit_logs_silent_ignore
+      BEFORE INSERT ON audit_logs
+      WHEN NEW.event_id = 'silently-ignored'
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    `)
+
+    await expectAuditUnavailable(repository.append(record({ eventId: "silently-ignored" })))
+  })
+
   test("maps a prepare failure during append without leaking database details", async () => {
     const { context } = createTestContext()
     context.env.DB = {
@@ -244,7 +322,7 @@ describe("AuditEventRepository write contract", () => {
           db
             .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
             .bind("atomic-role", "Atomic role"),
-          repository.insertStatement(record()),
+          ...repository.prepareAppend(record()),
         ]),
       ),
     ).toBeInstanceOf(Error)
@@ -252,6 +330,35 @@ describe("AuditEventRepository write contract", () => {
     expect(
       await db
         .prepare("SELECT COUNT(*) AS count FROM roles WHERE key = 'atomic-role'")
+        .first<number>("count"),
+    ).toBe(0)
+  })
+
+  test("rolls back the business write when the audit insert is silently ignored", async () => {
+    const { context, db } = createTestContext()
+    const repository = new AuditEventRepository(context)
+    await db.exec(`
+      CREATE TRIGGER audit_logs_batch_silent_ignore
+      BEFORE INSERT ON audit_logs
+      WHEN NEW.event_id = 'silently-ignored-in-batch'
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    `)
+
+    expect(
+      await rejectionOf(
+        db.batch([
+          db
+            .prepare("INSERT INTO roles (key, name, is_system, created_at) VALUES (?1, ?2, 0, 0)")
+            .bind("ignored-audit-role", "Ignored audit role"),
+          ...repository.prepareAppend(record({ eventId: "silently-ignored-in-batch" })),
+        ]),
+      ),
+    ).toBeInstanceOf(Error)
+    expect(
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM roles WHERE key = 'ignored-audit-role'")
         .first<number>("count"),
     ).toBe(0)
   })
@@ -266,7 +373,7 @@ describe("AuditEventRepository write contract", () => {
           db.prepare(
             "INSERT INTO roles (key, name, is_system, created_at) VALUES ('admin', 'x', 0, 0)",
           ),
-          repository.insertStatement(record({ eventId: "must-not-remain" })),
+          ...repository.prepareAppend(record({ eventId: "must-not-remain" })),
         ]),
       ),
     ).toBeInstanceOf(Error)
@@ -315,6 +422,37 @@ describe("AuditEventRepository search contract", () => {
     })
     expect(next.items.map((item) => item.eventId)).toEqual(["event-1"])
     expect(previous.items.map((item) => item.eventId)).toEqual(["event-3", "event-2"])
+  })
+
+  test("does not select detail-only columns for a summary search", async () => {
+    const { context } = createTestContext()
+    const repository = new AuditEventRepository(context)
+    await repository.append(record())
+
+    const source = context.env.DB
+    const preparedSql: string[] = []
+    context.env.DB = new Proxy(source, {
+      get(target, property) {
+        if (property === "prepare") {
+          return (sql: string) => {
+            preparedSql.push(sql)
+            return target.prepare(sql)
+          }
+        }
+
+        const value = Reflect.get(target, property, target) as unknown
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+
+    await repository.search({ limit: 50, cursor: null, filters: {} })
+
+    expect(preparedSql).toHaveLength(1)
+    expect(preparedSql[0]).not.toContain("authorization_json")
+    expect(preparedSql[0]).not.toContain("before_json")
+    expect(preparedSql[0]).not.toContain("after_json")
+    expect(preparedSql[0]).not.toContain("metadata_json")
+    expect(preparedSql[0]).not.toContain("client_ip")
   })
 
   test("navigates first, next, previous, and last pages without an off-by-one", async () => {
@@ -530,6 +668,57 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.findByEventId("missing")).toBeNull()
   })
 
+  test.each([
+    ["authorization_json", { authorizationJson: "{" }],
+    ["before_json", { beforeJson: "{" }],
+    ["after_json", { afterJson: "{" }],
+    ["metadata_json", { metadataJson: "{" }],
+  ] as const)(
+    "maps malformed %s to safe 503 errors for detail and export",
+    async (_, overrides) => {
+      const { context, db } = createTestContext()
+      const repository = new AuditEventRepository(context)
+      await insertLegacyRow(db, { eventId: "malformed-json", ...overrides })
+
+      expect(
+        (await repository.search({ limit: 50, cursor: null, filters: {} })).items.map(
+          (item) => item.eventId,
+        ),
+      ).toEqual(["malformed-json"])
+
+      const reads = await Promise.allSettled([
+        repository.findByEventId("malformed-json"),
+        repository.export({ filters: {} }),
+      ])
+      expect(reads.map((result) => result.status)).toEqual(["rejected", "rejected"])
+      for (const result of reads) {
+        if (result.status !== "rejected") continue
+        expect(result.reason).toBeInstanceOf(UnavailableError)
+        expect((result.reason as UnavailableError).code).toBe("audit_unavailable")
+      }
+    },
+  )
+
+  test("accepts JSON scalars and a legacy JSON-string wrapper without reserializing them", async () => {
+    const { context, db } = createTestContext()
+    const repository = new AuditEventRepository(context)
+    const legacyWrapper = JSON.stringify('{"legacy":true}')
+    await insertLegacyRow(db, {
+      eventId: "legacy-json-shapes",
+      authorizationJson: "true",
+      beforeJson: "42",
+      afterJson: "null",
+      metadataJson: legacyWrapper,
+    })
+
+    const detail = await repository.findByEventId("legacy-json-shapes")
+    expect(detail?.authorizationJson).toBe("true")
+    expect(detail?.beforeJson).toBe("42")
+    expect(detail?.afterJson).toBe("null")
+    expect(detail?.metadataJson).toBe(legacyWrapper)
+    expect((await repository.export({ filters: {} }))[0]?.metadataJson).toBe(legacyWrapper)
+  })
+
   test("maps corrupted rows to safe 503 errors for search, detail, and export", async () => {
     const { context, db } = createTestContext()
     const repository = new AuditEventRepository(context)
@@ -574,7 +763,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
       authorizationJson: '{"scope":"legacy"}',
       beforeJson: '{"state":"before"}',
       afterJson: '{"state":"after"}',
-      metadataJson: "",
+      metadataJson: '""',
       clientIp: "198.51.100.7",
       clientName: "api",
       createdAt: 1_700_000_000,
@@ -583,17 +772,37 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const exactMetadataLength = AUDIT_CSV_MAX_BYTES - baseBytes
 
     const exact = createTestContext()
-    await insertLegacyRow(exact.db, { metadataJson: "x".repeat(exactMetadataLength) })
+    await insertLegacyRow(exact.db, {
+      metadataJson: JSON.stringify("x".repeat(exactMetadataLength)),
+    })
     const exactRows = await new AuditEventRepository(exact.context).export({ filters: {} })
     expect(new TextEncoder().encode(toAuditCsv(exactRows)).byteLength).toBe(AUDIT_CSV_MAX_BYTES)
 
     const overflow = createTestContext()
     await insertLegacyRow(overflow.db, {
-      metadataJson: "x".repeat(exactMetadataLength + 1),
+      metadataJson: JSON.stringify("x".repeat(exactMetadataLength + 1)),
     })
     expect(
       await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
     ).toBeInstanceOf(PayloadTooLargeError)
+  })
+
+  test("bounds every detail read before rejecting an oversized multi-row export", async () => {
+    const { context, db } = createTestContext()
+    const largeJson = JSON.stringify("x".repeat(9 * 1024 * 1024))
+    await insertLegacyRow(db, { id: 1, eventId: "large-1", metadataJson: largeJson, createdAt: 2 })
+    await insertLegacyRow(db, { id: 2, eventId: "large-2", metadataJson: largeJson, createdAt: 1 })
+    const reads = observeAllReads(context)
+
+    const error = await rejectionOf(new AuditEventRepository(context).export({ filters: {} }))
+
+    expect(error).toBeInstanceOf(PayloadTooLargeError)
+    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
+      AUDIT_CSV_MAX_BYTES,
+    )
+    expect(reads).toHaveLength(3)
+    expect(reads.some((read) => read.sql.includes("raw_bytes"))).toBe(true)
+    expect(reads.at(-1)?.sql).toContain("raw_bytes")
   })
 
   test("exports in fixed keyset chunks instead of one unbounded query", async () => {
@@ -622,9 +831,17 @@ describe("AuditEventRepository detail and corruption contract", () => {
                  'legacy.bulk', 'succeeded', 'api', 50001)`,
       )
       .run()
+    const observedReads = observeAllReads(context)
     expect(await rejectionOf(repository.export({ filters: {} }))).toBeInstanceOf(
       PayloadTooLargeError,
     )
+    const descriptorReads = observedReads.filter((read) =>
+      read.sql.includes("cumulative_raw_bytes"),
+    )
+    expect(descriptorReads.reduce((total, read) => total + read.rowCount, 0)).toBe(50_001)
+    expect(descriptorReads.at(-1)?.rowCount).toBe(1)
+    expect(observedReads).toHaveLength(201)
+    expect(observedReads.at(-1)).toBe(descriptorReads.at(-1))
 
     await db
       .prepare(
