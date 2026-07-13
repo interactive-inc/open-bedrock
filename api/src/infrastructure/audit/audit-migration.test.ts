@@ -8,7 +8,16 @@ import { join } from "node:path"
 
 const migrationPath = join(import.meta.dir, "../../../migrations/0015_audit_events.sql")
 
-async function createLegacyDatabase(metadata: string): Promise<D1Database> {
+type LegacyRowOverrides = {
+  id?: number
+  targetType?: string | null
+  targetId?: number | null
+}
+
+async function createLegacyDatabase(
+  metadata: string,
+  overrides: LegacyRowOverrides = {},
+): Promise<D1Database> {
   const db = createD1TestDatabase(`
     CREATE TABLE roles (
       id INTEGER PRIMARY KEY,
@@ -53,9 +62,14 @@ async function createLegacyDatabase(metadata: string): Promise<D1Database> {
     .prepare(
       `INSERT INTO audit_logs
          (id, actor_account_id, action, target_type, target_id, metadata, ip, created_at)
-       VALUES (41, 7, 'employee.updated', 'employee', 101, ?1, '192.0.2.41', 1700000041)`,
+       VALUES (?1, 7, 'employee.updated', ?2, ?3, ?4, '192.0.2.41', 1700000041)`,
     )
-    .bind(metadata)
+    .bind(
+      overrides.id ?? 41,
+      overrides.targetType === undefined ? "employee" : overrides.targetType,
+      overrides.targetId === undefined ? 101 : overrides.targetId,
+      metadata,
+    )
     .run()
 
   return db
@@ -125,6 +139,21 @@ describe("audit event migration", () => {
     ).toBe('{"source":"legacy"}')
   })
 
+  test("preserves nullable legacy target fields", async () => {
+    const db = await createLegacyDatabase("legacy note", {
+      targetType: null,
+      targetId: null,
+    })
+
+    await applyMigration(db)
+
+    expect(
+      await db
+        .prepare("SELECT target_type, target_id FROM audit_logs WHERE id = 41")
+        .first<{ target_type: string | null; target_id: string | null }>(),
+    ).toEqual({ target_type: null, target_id: null })
+  })
+
   test("enforces event uniqueness and the outcome and client vocabularies", async () => {
     const db = await createLegacyDatabase("legacy note")
 
@@ -184,7 +213,6 @@ describe("audit event migration", () => {
         )
         .run(),
     ).rejects.toThrow()
-
     expect(
       await db
         .prepare("SELECT event_id, action FROM audit_logs WHERE id = 41")
@@ -193,6 +221,117 @@ describe("audit event migration", () => {
     expect(
       await db.prepare("SELECT count(1) AS count FROM audit_logs").first<number>("count"),
     ).toBe(1)
+  })
+
+  test("allows automatic IDs after migrating a negative legacy ID without allowing replacement", async () => {
+    const db = await createLegacyDatabase("legacy note", { id: -1 })
+
+    await applyMigration(db)
+
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+           (event_id, request_id, action, outcome, client_name, created_at)
+         VALUES ('event-auto', 'request-auto', 'employee.updated',
+                 'succeeded', 'api', 1700000042)`,
+      )
+      .run()
+
+    expect(
+      db
+        .prepare(
+          `INSERT OR REPLACE INTO audit_logs
+             (id, event_id, request_id, action, outcome, client_name, created_at)
+           VALUES (-1, 'replacement-by-id', 'replacement-request', 'replaced',
+                   'succeeded', 'api', 2)`,
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          `INSERT OR REPLACE INTO audit_logs
+             (id, event_id, request_id, action, outcome, client_name, created_at)
+           VALUES (50, 'legacy--1', 'replacement-request', 'replaced',
+                   'succeeded', 'api', 2)`,
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          `INSERT OR REPLACE INTO audit_logs
+             (id, event_id, request_id, action, outcome, client_name, created_at)
+           VALUES (50, 'event-auto', 'replacement-request', 'replaced',
+                   'succeeded', 'api', 2)`,
+        )
+        .run(),
+    ).rejects.toThrow()
+
+    expect(
+      await db
+        .prepare("SELECT event_id, action FROM audit_logs WHERE id = -1")
+        .first<{ event_id: string; action: string }>(),
+    ).toEqual({ event_id: "legacy--1", action: "employee.updated" })
+    expect(
+      await db.prepare("SELECT count(1) AS count FROM audit_logs").first<number>("count"),
+    ).toBe(2)
+    expect(
+      await db
+        .prepare(
+          `SELECT g.event_id
+           FROM audit_logs_append_guard g
+           JOIN audit_logs a ON a.id = g.audit_id AND a.event_id = g.event_id
+           WHERE g.event_id = 'event-auto'`,
+        )
+        .first<string>("event_id"),
+    ).toBe("event-auto")
+    expect(
+      await db
+        .prepare("SELECT count(1) AS count FROM audit_logs_append_guard")
+        .first<number>("count"),
+    ).toBe(2)
+  })
+
+  test("rejects direct modification of the append-only guard", async () => {
+    const db = await createLegacyDatabase("legacy note")
+
+    await applyMigration(db)
+
+    expect(
+      db
+        .prepare(
+          `INSERT INTO audit_logs_append_guard (audit_id, event_id)
+           VALUES (99, 'fabricated-event')`,
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          `INSERT OR REPLACE INTO audit_logs_append_guard (audit_id, event_id)
+           VALUES (41, 'replacement-event')`,
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          `UPDATE audit_logs_append_guard
+           SET event_id = 'replacement-event'
+           WHERE audit_id = 41`,
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db.prepare("DELETE FROM audit_logs_append_guard WHERE audit_id = 41").run(),
+    ).rejects.toThrow()
+
+    expect(
+      await db
+        .prepare("SELECT audit_id, event_id FROM audit_logs_append_guard")
+        .first<{ audit_id: number; event_id: string }>(),
+    ).toEqual({ audit_id: 41, event_id: "legacy-41" })
   })
 
   test("adds both audit permissions to the admin system role only", async () => {
