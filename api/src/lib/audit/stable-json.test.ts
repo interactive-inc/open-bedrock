@@ -23,6 +23,15 @@ function expectPayloadTooLarge(value: AuditJsonValue): void {
   }
 }
 
+function makeSharedDag(depth: number, leaf: AuditJsonValue): AuditJsonValue {
+  let value = leaf
+  for (let index = 0; index < depth; index += 1) {
+    value = { left: value, right: value }
+  }
+
+  return value
+}
+
 describe("toStableAuditJson", () => {
   test("serializes primitives, arrays, and nested null without changing their meaning", () => {
     expect(toStableAuditJson([null, true, false, 12.5, "text"])).toBe(
@@ -177,6 +186,26 @@ describe("toStableAuditJson", () => {
     expect(getCalls).toBe(0)
   })
 
+  test("uses one descriptor snapshot when a stateful Proxy hides an unsupported key later", () => {
+    let ownKeysCalls = 0
+    let getCalls = 0
+    const target = { safe: true, bad: undefined }
+    const value = new Proxy(target, {
+      ownKeys() {
+        ownKeysCalls += 1
+        return ownKeysCalls === 1 ? ["safe", "bad"] : ["safe"]
+      },
+      get(targetValue, property, receiver) {
+        getCalls += 1
+        return Reflect.get(targetValue, property, receiver)
+      },
+    })
+
+    expectInvalidJson(value)
+    expect(ownKeysCalls).toBe(1)
+    expect(getCalls).toBe(0)
+  })
+
   test("rejects sparse arrays", () => {
     const sparse: unknown[] = []
     sparse.length = 2
@@ -213,6 +242,84 @@ describe("toStableAuditJson", () => {
     }
 
     expectInvalidJson(root)
+  })
+
+  test.each([18, 99])(
+    "rejects a depth-%i shared DAG at the output budget without repeated validation",
+    (depth) => {
+      let ownKeysCalls = 0
+      const leaf = new Proxy(
+        { value: "leaf" },
+        {
+          ownKeys(target) {
+            ownKeysCalls += 1
+            if (ownKeysCalls > 32) throw new Error("descriptor snapshot repeated")
+            return Reflect.ownKeys(target)
+          },
+        },
+      )
+
+      expectPayloadTooLarge(makeSharedDag(depth, leaf))
+      expect(ownKeysCalls).toBe(1)
+    },
+  )
+
+  test("validates a redacted shared DAG once without generating its discarded projection", () => {
+    let ownKeysCalls = 0
+    const leaf = new Proxy(
+      { value: "leaf" },
+      {
+        ownKeys(target) {
+          ownKeysCalls += 1
+          if (ownKeysCalls > 32) throw new Error("descriptor snapshot repeated")
+          return Reflect.ownKeys(target)
+        },
+      },
+    )
+
+    // The sensitive property adds one edge; 98 shared wrappers plus the leaf object
+    // stay at the existing maximum depth of 100.
+    expect(toStableAuditJson({ password: makeSharedDag(98, leaf) })).toBe(
+      '{"password":"[REDACTED]"}',
+    )
+    expect(ownKeysCalls).toBe(1)
+  })
+
+  test("fails closed when validation work exceeds its bounded budget", () => {
+    const values = Array.from({ length: 100_001 }, () => null)
+
+    expectPayloadTooLarge({ password: values })
+  })
+
+  test("rejects an object whose key lower bound exceeds the budget before sorting", () => {
+    const value: Record<string, AuditJsonValue> = {}
+    for (let index = 0; index < 10_000; index += 1) {
+      value[`key_${String(index).padStart(5, "0")}`] = 0
+    }
+
+    const originalDescriptor = Object.getOwnPropertyDescriptor(String.prototype, "codePointAt")
+    if (originalDescriptor === undefined || typeof originalDescriptor.value !== "function") {
+      throw new Error("String.prototype.codePointAt must be available")
+    }
+    const originalCodePointAt = originalDescriptor.value as (
+      this: string,
+      position?: number,
+    ) => number | undefined
+    let codePointComparisons = 0
+    Object.defineProperty(String.prototype, "codePointAt", {
+      ...originalDescriptor,
+      value: function (this: string, position?: number): number | undefined {
+        codePointComparisons += 1
+        return Reflect.apply(originalCodePointAt, this, [position])
+      },
+    })
+    try {
+      expectPayloadTooLarge(value)
+    } finally {
+      Object.defineProperty(String.prototype, "codePointAt", originalDescriptor)
+    }
+
+    expect(codePointComparisons).toBe(0)
   })
 
   test("allows exactly 65,536 UTF-8 bytes", () => {
