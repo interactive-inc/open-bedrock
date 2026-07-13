@@ -31,10 +31,7 @@ export default async function AppLayout(props: Props) {
 
   // 未読数・受信箱件数バッジは補助情報なので、取得失敗時はページ描画を止めず 0 にフォールバックする
   // （意図的なグレースフルデグレード）。
-  const [unreadCount, inboxCountsResult] = await Promise.all([
-    getMyUnreadCount(),
-    getInboxCounts(),
-  ])
+  const [unreadCount, inboxCountsResult] = await Promise.all([getMyUnreadCount(), getInboxCounts()])
 
   const unreadNotificationCount = unreadCount instanceof Error ? 0 : unreadCount.count
 

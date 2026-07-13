@@ -803,7 +803,8 @@ export function SidebarNav(props: Props) {
                                   <HighlightText text={child.label} query={highlightQuery} />
                                 </span>
 
-                                {inboxBadgeMap[child.href] != null && inboxBadgeMap[child.href] > 0 ? (
+                                {inboxBadgeMap[child.href] != null &&
+                                inboxBadgeMap[child.href] > 0 ? (
                                   <Badge
                                     variant="secondary"
                                     className="ml-auto"
