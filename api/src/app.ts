@@ -50,6 +50,7 @@ import * as careerPostingListRoute from "@/interface/career/postings/route"
 import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
 import * as dashboardRoute from "@/interface/dashboard/route"
+import * as inboxCountsRoute from "@/interface/inbox/counts/route"
 import * as employeeListRoute from "@/interface/employee/route"
 import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
@@ -250,6 +251,7 @@ export const app = factory
   .post("/accounts/:id/status", ...iamAccountStatusRoute.POST)
   .post("/accounts/:id/reset-password", ...iamAccountResetPasswordRoute.POST)
   .get("/dashboard", ...dashboardRoute.GET)
+  .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
   .get("/org/tree", ...orgTreeRoute.GET)

@@ -13,11 +13,13 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { InboxCounts } from "@/lib/api/types/inbox-types"
 import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
+  inboxCounts: InboxCounts
   locale: Locale
   onLogout: () => void
   unreadNotificationCount: number
@@ -49,6 +51,7 @@ export function AppShell(props: Props) {
 
         <SidebarContent>
           <SidebarNav
+            inboxCounts={props.inboxCounts}
             unreadNotificationCount={props.unreadNotificationCount}
             permissions={props.currentUser.permissions}
           />
