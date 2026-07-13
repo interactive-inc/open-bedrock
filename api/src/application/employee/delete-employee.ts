@@ -1,7 +1,7 @@
 import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
 import type { Context, SessionPayload } from "@/env"
 import {
-  abortWhenRemovingLoginEnabledAdminWouldLeaveNone,
+  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
   isAbortedByLastAdminGuard,
 } from "@/infrastructure/iam/last-admin-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -61,7 +61,7 @@ export class DeleteEmployee {
    * 従業員に紐づく全関連レコードと従業員本体を単一の D1 batch で一括削除する。
    * 子テーブル（goal_evaluations, onboarding_tasks 等）はサブクエリで先に削除する。
    * nullable な外部キー（assets.holder_employee_id 等）は NULL に更新する。
-   * 従業員本体の DELETE と last-admin ガードを batch 末尾側に含めてアトミック性を保証する。
+   * 従業員本体の DELETE と実効管理者ガードを batch 末尾側に含めてアトミック性を保証する。
    */
   private async deleteRelatedRecords(
     employeeId: number,
@@ -165,15 +165,15 @@ export class DeleteEmployee {
           .prepare("UPDATE thanks_redemptions SET decider_id = NULL WHERE decider_id = ?1")
           .bind(employeeId),
 
-        // --- 従業員本体を削除し、必要なら last-admin ガードで batch 全体を中断 ---
+        // --- 従業員本体を削除し、必要なら実効管理者ガードで batch 全体を中断 ---
         db.prepare("DELETE FROM employees WHERE code = ?1").bind(employeeCode),
         ...(guardLastAdmin
-          ? [abortWhenRemovingLoginEnabledAdminWouldLeaveNone(db, employeeId)]
+          ? [abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(db, employeeId)]
           : []),
 
         // --- IAM 系（account を employee_id で引き、その account_id で子を削除） ---
-        // last-admin ガードは accounts / account_roles を参照するため、必ずガードより後に置く。
-        // ガードより前に消すと admin 判定が狂い、最後の admin を誤って削除できてしまう。
+        // 実効管理者ガードは accounts / account_roles を参照するため、必ずガードより後に置く。
+        // ガードより前に消すと権限判定が狂い、最後の実効管理者を誤って削除できてしまう。
         // account_id 参照の子テーブルを先に消し、最後に accounts 本体を消す。
         db
           .prepare(
@@ -196,7 +196,7 @@ export class DeleteEmployee {
       return null
     } catch (error) {
       if (isAbortedByLastAdminGuard(error)) {
-        return new ConflictError("cannot delete the last admin", "last_admin")
+        return new ConflictError("cannot delete the last effective admin", "last_admin")
       }
 
       return error instanceof Error

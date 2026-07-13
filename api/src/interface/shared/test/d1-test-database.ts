@@ -3,13 +3,16 @@ import { Database } from "bun:sqlite"
 // テスト用: bun:sqlite を D1Database 互換インターフェースで包む。
 // 本番は Cloudflare D1。テストはこのインメモリ SQLite を env.DB に注入する。
 // D1 の型（abstract class）を別実装で満たす境界アダプタのため、最小限の型アサーションを使う。
-export function createD1TestDatabase(schema: string): D1Database {
+export function createD1TestDatabase(
+  schema: string,
+  options?: { onQuery?: () => void },
+): D1Database {
   const sqlite = new Database(":memory:")
 
   sqlite.exec(schema)
 
   const database = {
-    prepare: (query: string) => toPreparedStatement(sqlite, query, []),
+    prepare: (query: string) => toPreparedStatement(sqlite, query, [], options?.onQuery),
     batch: async (statements: Array<D1PreparedStatement>) => {
       const transaction = sqlite.transaction((transactionStatements: Array<D1PreparedStatement>) =>
         transactionStatements.map((statement) => toPreparedStatementSync(statement).all()),
@@ -18,6 +21,7 @@ export function createD1TestDatabase(schema: string): D1Database {
       return transaction(statements)
     },
     exec: async (query: string) => {
+      options?.onQuery?.()
       sqlite.exec(query)
 
       return { count: 0, duration: 0 }
@@ -35,13 +39,18 @@ function toPreparedStatement(
   sqlite: Database,
   query: string,
   values: ReadonlyArray<unknown>,
+  onQuery?: () => void,
 ): D1PreparedStatement {
   const bindings = (): Array<SqliteBinding> => values.map(toSqliteBinding)
 
   const statement = {
-    __openKarteAllSync: () => toResult(sqlite.query(query).all(...bindings())),
-    bind: (...next: Array<unknown>) => toPreparedStatement(sqlite, query, next),
+    __openKarteAllSync: () => {
+      onQuery?.()
+      return toResult(sqlite.query(query).all(...bindings()))
+    },
+    bind: (...next: Array<unknown>) => toPreparedStatement(sqlite, query, next, onQuery),
     first: async (column?: string) => {
+      onQuery?.()
       const row = sqlite
         .query<Record<string, unknown>, Array<SqliteBinding>>(query)
         .get(...bindings())
@@ -53,6 +62,7 @@ function toPreparedStatement(
       return column === undefined ? row : (row[column] ?? null)
     },
     run: async () => {
+      onQuery?.()
       const result = sqlite.query(query).run(...bindings())
       return {
         results: [],
@@ -68,8 +78,14 @@ function toPreparedStatement(
         },
       }
     },
-    all: async () => toResult(sqlite.query(query).all(...bindings())),
-    raw: async () => sqlite.query(query).values(...bindings()),
+    all: async () => {
+      onQuery?.()
+      return toResult(sqlite.query(query).all(...bindings()))
+    },
+    raw: async () => {
+      onQuery?.()
+      return sqlite.query(query).values(...bindings())
+    },
   }
 
   return castToD1PreparedStatement(statement)

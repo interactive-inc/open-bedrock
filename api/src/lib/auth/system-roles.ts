@@ -1,4 +1,5 @@
 import type { PermissionKey } from "@/lib/auth/permission-keys"
+import { EFFECTIVE_ADMIN_PERMISSION_KEYS } from "@/lib/auth/effective-admin-permissions"
 
 // 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現する。
 // 移行で権限が広がらないことをテストで担保するための基準。backfill の role_permissions シードに使う。
@@ -48,12 +49,7 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
-const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
-  "employee:assign_role",
-  "iam:manage_roles",
-  "iam:assign_roles",
-  "account:manage",
-]
+const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [...EFFECTIVE_ADMIN_PERMISSION_KEYS]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...MANAGER_PERMISSIONS,
@@ -74,8 +70,8 @@ export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{
   name: string
   permissions: ReadonlyArray<PermissionKey>
 }> = [
-  { key: "member", name: "メンバー", permissions: [] },
-  { key: "manager", name: "マネージャー", permissions: MANAGER_PERMISSIONS },
-  { key: "hr", name: "人事", permissions: HR_PERMISSIONS },
-  { key: "admin", name: "管理者", permissions: ADMIN_PERMISSIONS },
+  { key: "member", name: "標準利用者", permissions: [] },
+  { key: "manager", name: "業務管理者", permissions: MANAGER_PERMISSIONS },
+  { key: "hr", name: "人事管理者", permissions: HR_PERMISSIONS },
+  { key: "admin", name: "システム管理者", permissions: ADMIN_PERMISSIONS },
 ]

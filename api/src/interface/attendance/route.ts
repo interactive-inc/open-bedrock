@@ -13,7 +13,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, gte, lte } from "drizzle-orm"
+import { and, asc, count, gte, inArray, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 
 // GET /attendance — 勤怠検索（他人の閲覧は権限ロールのみ）
@@ -36,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     return Number.isInteger(parsed2) ? parsed2 : null
   })()
 
-  const query = resolveAttendanceSearchQuery({
+  const query = await resolveAttendanceSearchQuery(c, {
     requestedEmployeeId,
     from: parsed.data.from ?? null,
     to: parsed.data.to ?? null,
@@ -50,8 +50,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const conditions: Array<SQL> = []
 
-  if (query.employeeId !== null) {
-    conditions.push(eq(attendanceRecords.employeeId, query.employeeId))
+  if (query.employeeIds !== null) {
+    conditions.push(inArray(attendanceRecords.employeeId, query.employeeIds))
   }
 
   if (query.from !== null) {

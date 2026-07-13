@@ -5,7 +5,12 @@ import { canCreateEmployee } from "@/lib/employee/can-create-employee"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
+import {
+  AccountProvisioner,
+  RoleAssignmentGuardError,
+} from "@/infrastructure/iam/account-provisioner"
+import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -47,6 +52,30 @@ export class RegisterEmployee {
     ) {
       return new ForbiddenError(
         "only admin can assign non-member roles",
+        "role_escalation_forbidden",
+      )
+    }
+
+    const roleRepository = new RoleRepository(this.c)
+    const role = await roleRepository.findByKey(command.employee.role)
+
+    if (role instanceof Error) {
+      return new UnexpectedError("failed to find role", { cause: role })
+    }
+
+    if (role === null) {
+      return new ValidationError("role not found", "role_not_found")
+    }
+
+    const rolePermissions = await roleRepository.permissionKeysOf(role.id)
+
+    if (rolePermissions instanceof Error) {
+      return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
+    }
+
+    if (hasPermissionSuperset(command.session, rolePermissions) === false) {
+      return new ForbiddenError(
+        "cannot assign a role with permissions you do not hold",
         "role_escalation_forbidden",
       )
     }
@@ -103,10 +132,18 @@ export class RegisterEmployee {
       email: command.employee.email,
       passwordHash: passwordHash,
       roleKey: command.employee.role,
+      grantedByAccountId: command.session.accountId,
       now: Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW)),
     })
 
     if (result instanceof Error) {
+      if (result instanceof RoleAssignmentGuardError) {
+        return new ForbiddenError(
+          "role changed or exceeds the permissions you hold",
+          "role_escalation_forbidden",
+        )
+      }
+
       if (result.message.includes("UNIQUE constraint")) {
         return new ConflictError("employee code already exists", "employee_code_conflict")
       }

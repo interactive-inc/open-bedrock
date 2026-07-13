@@ -10,6 +10,9 @@ usage:
   karte app mine [--status <s>]           自分の申請一覧
   karte app show <id>                     申請の詳細
   karte app approve <id> [--comment <c>]  申請を承認
-  karte app reject <id> --comment <c>     申請を却下`
+  karte app reject <id> --comment <c>     申請を却下
+  karte app workflow-repair list          修復が必要な承認フロー一覧
+  karte app workflow-repair reassign <id> --candidates <ids> --reason <text>
+                                          承認候補を再割当`
 
 export default factory.createHandlers((c) => c.text(help))

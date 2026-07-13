@@ -1,9 +1,10 @@
 import type { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import type { Context, SessionPayload } from "@/env"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { findUnknownApproverRoles } from "@/lib/application/validate-approver-roles"
 
 export type Command = {
   session: SessionPayload
@@ -26,6 +27,16 @@ export class UpdateApplicationTemplate {
 
     if (canManageApplicationTemplates(command.session) === false) {
       return new ForbiddenError("cannot manage application templates", "forbidden")
+    }
+
+    const unknownApproverRoles = await findUnknownApproverRoles(this.c, command.approverRoles)
+    if (unknownApproverRoles instanceof Error) {
+      return new UnexpectedError("failed to validate approver roles", {
+        cause: unknownApproverRoles,
+      })
+    }
+    if (unknownApproverRoles.length > 0) {
+      return new UnprocessableError("unknown approver role", "unknown_approver_role")
     }
 
     const current = await templateRepository.findByCode(command.code)

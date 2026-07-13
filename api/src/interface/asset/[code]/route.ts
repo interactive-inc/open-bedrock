@@ -1,6 +1,7 @@
 import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { factory } from "@/lib/factory"
+import { toAssetResponse } from "@/lib/asset/to-asset-response"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { assets } from "@/schema"
@@ -30,15 +31,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("asset not found")
   }
 
-  const responseBody = zAppAsset.parse({
-    code: row.code,
-    name: row.name,
-    kind: row.kind,
-    serial: row.serial,
-    purchased_on: row.purchasedOn,
-    status: row.status,
-    holder_employee_id: row.holderEmployeeId,
-  })
+  const responseBody = zAppAsset.parse(toAssetResponse(row, session))
 
   return c.json(responseBody, 200)
 })

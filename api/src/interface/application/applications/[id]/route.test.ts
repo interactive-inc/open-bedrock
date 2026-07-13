@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedApplicationTemplates } from "@/infrastructure/seed/seed-application-templates"
 import { seedApplications } from "@/infrastructure/seed/seed-applications"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -69,6 +70,15 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
 
   return db
 }
@@ -94,6 +104,62 @@ async function request(
     method: init?.method,
     body: init?.body,
   })
+}
+
+async function seedCompletedWorkflow(db: D1Database): Promise<void> {
+  await db
+    .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+    .run()
+  await seedD1(db, "application_workflow_instances", [
+    {
+      application_id: 1,
+      definition_json: JSON.stringify({
+        version: 1,
+        steps: [
+          {
+            key: "manager",
+            name: "Manager",
+            approvers: [{ type: "employee", employee_code: "E002" }],
+            approval_mode: "any",
+            condition_mode: "all",
+            conditions: [],
+            due_days: null,
+            escalation_approvers: [],
+            rejection_behavior: "reject",
+            allow_delegation: true,
+          },
+        ],
+      }),
+      current_step_key: "manager",
+      current_round: 1,
+      started_at: "2026-01-01T00:00:00.000Z",
+      due_at: null,
+    },
+  ])
+  await seedD1(db, "application_workflow_step_snapshots", [
+    {
+      application_id: 1,
+      step_key: "manager",
+      round: 1,
+      required_approvals: 1,
+      activated_at: "2026-01-01T00:00:00.000Z",
+      resolution_reason: "activation",
+      resolution_id: "completed-workflow",
+    },
+  ])
+  await seedD1(db, "application_workflow_step_candidates", [
+    {
+      application_id: 1,
+      step_key: "manager",
+      round: 1,
+      candidate_employee_id: 2,
+      candidate_account_id: 2,
+      source: "primary",
+      selectors_json: "[]",
+      resolution_id: "completed-workflow",
+      resolved_at: "2026-01-01T00:00:00.000Z",
+    },
+  ])
 }
 
 describe("GET /applications/:id", () => {
@@ -138,7 +204,7 @@ describe("GET /applications/:id", () => {
   })
 
   test("returns 200 for a privileged non-owner (approver can view)", async () => {
-    const response = await request("/applications/1", await tokenFor(2, "manager"))
+    const response = await request("/applications/1", await tokenFor(4, "manager"))
 
     expect(response.status).toBe(200)
   })
@@ -202,6 +268,9 @@ describe("GET /applications/:id", () => {
       { id: 5, email: "you+e005@example.com", passwordHash: "hash", role: "member" },
       { id: 200, email: "you+e200@example.com", passwordHash: "hash", role: "hr" },
     ])
+    await db
+      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .run()
 
     const response = await requestWithContext({
       db,
@@ -211,5 +280,193 @@ describe("GET /applications/:id", () => {
     })
 
     expect(response.status).toBe(200)
+  })
+
+  for (const status of ["approved", "rejected"] as const) {
+    test(`does not grant ${status} instance-less legacy history to a manager assigned later`, async () => {
+      const db = await createTestDb()
+      await db
+        .prepare("UPDATE applications SET status = ?2, current_step = NULL WHERE id = ?1")
+        .bind(1, status)
+        .run()
+      await db
+        .prepare(
+          "UPDATE org_memberships SET manager_employee_code = 'E002' WHERE employee_code = 'E005'",
+        )
+        .run()
+
+      expect(
+        await db
+          .prepare(
+            "SELECT COUNT(*) AS total FROM application_workflow_instances WHERE application_id = 1",
+          )
+          .first<number>("total"),
+      ).toBe(0)
+
+      const response = await requestWithContext({
+        db,
+        jwtSecret,
+        path: "/applications/1",
+        token: await tokenFor(2, "manager"),
+      })
+
+      expect(response.status).toBe(403)
+    })
+  }
+
+  test("keeps completed instance-less legacy history visible to its persisted participant", async () => {
+    const db = await createTestDb()
+    await db
+      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .run()
+    await seedD1(db, "application_approvals", [
+      {
+        id: 100,
+        application_id: 1,
+        approver_id: 3,
+        action: "approve",
+        comment: "recorded before the organization changed",
+        created_at: "2026-01-02T00:00:00.000Z",
+      },
+    ])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1",
+      token: await tokenFor(3, "member"),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      id: 1,
+      status: "approved",
+      payload: { start_date: "2026-06-10" },
+      approvals: [{ id: 100, action: "approve" }],
+      workflow: null,
+    })
+  })
+
+  test("does not grant completed legacy history to a manager assigned after completion", async () => {
+    const db = await createTestDb()
+    await db
+      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .run()
+    await db
+      .prepare(
+        "UPDATE org_memberships SET manager_employee_code = 'E003' WHERE employee_code = 'E005'",
+      )
+      .run()
+    await seedD1(db, "application_workflow_instances", [
+      {
+        application_id: 1,
+        definition_json: JSON.stringify({
+          version: 1,
+          steps: [
+            {
+              key: "manager",
+              name: "Manager",
+              approvers: [{ type: "direct_manager" }],
+              approval_mode: "any",
+              condition_mode: "all",
+              conditions: [],
+              due_days: null,
+              escalation_approvers: [],
+              rejection_behavior: "reject",
+              allow_delegation: true,
+            },
+          ],
+        }),
+        current_step_key: "manager",
+        current_round: 1,
+        started_at: "2026-01-01T00:00:00.000Z",
+        due_at: null,
+      },
+    ])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1",
+      token: await tokenFor(3, "manager"),
+    })
+
+    expect(response.status).toBe(403)
+    const snapshotCount = await db
+      .prepare("SELECT COUNT(*) AS total FROM application_workflow_step_snapshots")
+      .first<number>("total")
+    expect(snapshotCount).toBe(0)
+  })
+
+  test("does not grant completed workflow history through a delegation created later", async () => {
+    const db = await createTestDb()
+    await seedCompletedWorkflow(db)
+    await seedD1(db, "approval_delegations", [
+      {
+        id: 20,
+        delegator_employee_id: 2,
+        delegate_employee_id: 6,
+        template_code: "paid_leave",
+        starts_at: "2026-07-01T00:00:00.000Z",
+        ends_at: "2026-08-01T00:00:00.000Z",
+        created_at: "2026-07-01T00:00:00.000Z",
+        created_by_account_id: 2,
+      },
+    ])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1",
+      token: await tokenFor(6, "member"),
+      now: "2026-07-14T00:00:00.000Z",
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("keeps completed history visible to the delegate who actually decided", async () => {
+    const db = await createTestDb()
+    await seedCompletedWorkflow(db)
+    await seedD1(db, "approval_delegations", [
+      {
+        id: 21,
+        delegator_employee_id: 2,
+        delegate_employee_id: 6,
+        template_code: "paid_leave",
+        starts_at: "2026-01-01T00:00:00.000Z",
+        ends_at: "2026-01-03T00:00:00.000Z",
+        created_at: "2026-01-01T00:00:00.000Z",
+        created_by_account_id: 2,
+      },
+    ])
+    await seedD1(db, "application_workflow_approvals", [
+      {
+        application_id: 1,
+        step_key: "manager",
+        round: 1,
+        approver_id: 6,
+        approver_account_id: 6,
+        represented_approver_id: 2,
+        delegation_id: 21,
+        action: "approve",
+        comment: null,
+        created_at: "2026-01-02T00:00:00.000Z",
+      },
+    ])
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/applications/1",
+      token: await tokenFor(6, "member"),
+      now: "2026-07-14T00:00:00.000Z",
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      approver_roles: [],
+      workflow: { current_round: 1 },
+    })
   })
 })

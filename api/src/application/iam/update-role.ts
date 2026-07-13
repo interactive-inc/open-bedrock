@@ -1,9 +1,17 @@
 import { canManageRoles } from "@/lib/iam/can-manage-roles"
 import { permissionKeySchema } from "@/lib/auth/permission-keys"
-import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
 import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
@@ -66,11 +74,20 @@ export class UpdateRole {
     }
 
     const updated = await roleRepository.updateMetaAndPermissions({
+      actorAccountId: command.session.accountId,
       roleId: command.roleId,
       name: command.name,
       description: command.description,
       permissionKeys: command.permissionKeys,
     })
+
+    if (updated instanceof LastAdminError) {
+      return new ConflictError("cannot remove the last effective admin", "last_admin")
+    }
+
+    if (updated instanceof LivePermissionGuardError) {
+      return new ForbiddenError("cannot edit a higher privilege role", "role_escalation")
+    }
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update role", { cause: updated })

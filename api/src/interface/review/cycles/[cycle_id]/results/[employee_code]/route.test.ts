@@ -64,10 +64,8 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(
-    db,
-    "review_forms",
-    seedReviewForms.map((form) => ({
+  await seedD1(db, "review_forms", [
+    ...seedReviewForms.map((form) => ({
       id: form.id,
       cycle_id: form.cycleId,
       subject_employee_id: form.subjectEmployeeId,
@@ -78,7 +76,47 @@ async function createTestDb(): Promise<D1Database> {
       status: form.status,
       submitted_at: form.submittedAt,
     })),
-  )
+    {
+      id: 4,
+      cycle_id: 2,
+      subject_employee_id: 5,
+      reviewer_employee_id: 10,
+      reviewer_type: "peer",
+      answers: JSON.stringify(["Private peer answer"]),
+      score: 70,
+      status: "submitted",
+      submitted_at: "2025-12-21T00:00:00Z",
+    },
+    {
+      id: 5,
+      cycle_id: 2,
+      subject_employee_id: 5,
+      reviewer_employee_id: 9,
+      reviewer_type: "subordinate",
+      answers: JSON.stringify(["Private subordinate answer"]),
+      score: 90,
+      status: "submitted",
+      submitted_at: "2025-12-22T00:00:00Z",
+    },
+    {
+      id: 6,
+      cycle_id: 2,
+      subject_employee_id: 5,
+      reviewer_employee_id: 2,
+      reviewer_type: "peer",
+      answers: "[]",
+      score: null,
+      status: "pending",
+      submitted_at: null,
+    },
+  ])
+
+  // E004 was the saved reviewer. The current reporting line has since changed to E006.
+  await seedD1(db, "org_memberships", [
+    { department_code: "D003", employee_code: "E004", manager_employee_code: "E001" },
+    { department_code: "D003", employee_code: "E005", manager_employee_code: "E006" },
+    { department_code: "D003", employee_code: "E006", manager_employee_code: "E001" },
+  ])
 
   return db
 }
@@ -121,9 +159,10 @@ describe("GET /review-cycles/:cycle_id/results/:employee_code", () => {
     if (parsed.success) {
       expect(parsed.data.cycle_id).toBe(2)
       expect(parsed.data.subject_employee_id).toBe(5)
-      expect(parsed.data.form_count).toBe(1)
-      expect(parsed.data.submitted_count).toBe(1)
+      expect(parsed.data.form_count).toBe(4)
+      expect(parsed.data.submitted_count).toBe(3)
       expect(parsed.data.average_score).toBe(80)
+      expect(parsed.data.forms.map((form) => form.id)).toEqual([3, 4, 5, 6])
     }
   })
 
@@ -131,10 +170,66 @@ describe("GET /review-cycles/:cycle_id/results/:employee_code", () => {
     const response = await request("/review-cycles/2/results/E005", await memberToken())
 
     expect(response.status).toBe(200)
+
+    const parsed = reviewResultResponseSchema.parse(await response.json())
+    expect(parsed.form_count).toBe(4)
+    expect(parsed.forms.map((form) => form.id)).toEqual([3, 4, 5, 6])
+  })
+
+  test("saved reviewer receives only their own submitted form after the reporting line changes", async () => {
+    const response = await request("/review-cycles/2/results/E005", await memberToken(4))
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewResultResponseSchema.parse(await response.json())
+    expect(parsed).toMatchObject({
+      form_count: 1,
+      submitted_count: 1,
+      average_score: 80,
+      forms: [
+        {
+          id: 3,
+          reviewer_employee_id: 4,
+          answers: ["Strong collaboration"],
+          score: 80,
+        },
+      ],
+    })
+    expect(JSON.stringify(parsed)).not.toContain("Private peer answer")
+    expect(JSON.stringify(parsed)).not.toContain("Private subordinate answer")
+  })
+
+  test("saved peer reviewer cannot see another saved reviewer's form or aggregate", async () => {
+    const response = await request("/review-cycles/2/results/E005", await memberToken(10))
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewResultResponseSchema.parse(await response.json())
+    expect(parsed.form_count).toBe(1)
+    expect(parsed.submitted_count).toBe(1)
+    expect(parsed.average_score).toBe(70)
+    expect(parsed.forms).toHaveLength(1)
+    expect(parsed.forms[0]).toMatchObject({
+      id: 4,
+      reviewer_employee_id: 10,
+      answers: ["Private peer answer"],
+    })
+  })
+
+  test("saved reviewer with no submitted form cannot read the result", async () => {
+    const response = await request("/review-cycles/2/results/E005", await memberToken(2))
+
+    expect(response.status).toBe(403)
+  })
+
+  test("new current manager cannot read historical results they did not review", async () => {
+    const response = await request("/review-cycles/2/results/E005", await memberToken(6))
+
+    expect(response.status).toBe(403)
   })
 
   test("unrelated member cannot read another employee results", async () => {
-    const response = await request("/review-cycles/2/results/E005", await memberToken(6))
+    const response = await request("/review-cycles/2/results/E005", await memberToken(3))
 
     expect(response.status).toBe(403)
   })

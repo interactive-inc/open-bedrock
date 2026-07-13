@@ -27,6 +27,24 @@ export type FormSchema = z.infer<typeof formSchemaSchema>
 
 const emptySchema: FormSchema = { fields: [] }
 
+const legacyPropertySchema = z
+  .object({
+    type: z.enum(["string", "number", "integer"]),
+    format: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    enum: z.array(z.string()).optional(),
+  })
+  .passthrough()
+
+const legacyObjectSchema = z
+  .object({
+    type: z.literal("object"),
+    properties: z.record(z.string(), legacyPropertySchema),
+    required: z.array(z.string()).optional(),
+  })
+  .passthrough()
+
 /**
  * 任意の値（旧 schema_json から読み込んだ unknown）を FormSchema に正規化する。
  * 失敗時は空スキーマを返す（旧データとの互換のため throw しない）。
@@ -36,6 +54,35 @@ export function toFormSchema(raw: unknown): FormSchema {
 
   if (parsed.success) {
     return parsed.data
+  }
+
+  const legacy = legacyObjectSchema.safeParse(raw)
+
+  if (legacy.success) {
+    const required = new Set(legacy.data.required ?? [])
+
+    return {
+      fields: Object.entries(legacy.data.properties).map(([id, property]) => {
+        const options = property.enum ?? null
+        const type: FormFieldType =
+          options !== null
+            ? "select"
+            : property.type === "number" || property.type === "integer"
+              ? "number"
+              : property.format === "date"
+                ? "date"
+                : "text"
+
+        return {
+          id,
+          label: property.title?.trim() || id,
+          type,
+          required: required.has(id),
+          description: property.description ?? null,
+          options: type === "select" ? options : null,
+        }
+      }),
+    }
   }
 
   return emptySchema

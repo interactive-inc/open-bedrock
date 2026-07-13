@@ -6,6 +6,8 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { z } from "zod"
 
 const jwtSecret = "employee-route-test-secret"
@@ -38,6 +40,27 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(
+    db,
+    "org_departments",
+    seedOrgDepartments.map((department) => ({
+      code: department.code,
+      department_id: department.departmentId,
+      parent_code: department.parentCode,
+      manager_employee_code: department.managerEmployeeCode,
+      sort_order: department.order,
+    })),
+  )
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+
   return db
 }
 
@@ -54,6 +77,14 @@ function memberToken(): Promise<string> {
     employeeId: 5,
     email: "you+e005@example.com",
     role: "member",
+  })
+}
+
+function managerToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 4,
+    email: "you+e004@example.com",
+    role: "manager",
   })
 }
 
@@ -232,6 +263,18 @@ describe("GET /employees", () => {
     const response = await request("/employees", await memberToken())
 
     expect(response.status).toBe(403)
+  })
+
+  test("employee:read lists only self and managed employees without org:manage", async () => {
+    const response = await request("/employees", await managerToken())
+
+    expect(response.status).toBe(200)
+    const body = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .parse(await response.json())
+
+    expect(new Set(body.data.map((employee) => employee.code))).toEqual(new Set(["E004", "E005"]))
+    expect(body.total).toBe(2)
   })
 
   test("returns 401 with an invalid bearer token", async () => {

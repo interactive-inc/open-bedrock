@@ -12,6 +12,7 @@ import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
 import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
@@ -61,39 +62,21 @@ export class SetAccountStatus {
       return new ForbiddenError("cannot change a higher privilege account", "role_escalation")
     }
 
-    // 非アクティブ化で唯一の admin を失う(system lockout)のを防ぐ。
-    // 事前チェックは親切なエラー用、最終防御は原子的 batch の LastAdminError(TOCTOU 防止)。
-    if (parsedStatus.data !== "active") {
-      const targetIsAdmin = await accountRepository.accountHasSystemRole(command.accountId, "admin")
-
-      if (targetIsAdmin instanceof Error) {
-        return new UnexpectedError("failed to check account role", { cause: targetIsAdmin })
-      }
-
-      if (targetIsAdmin === true) {
-        const updated = await accountRepository.setStatusGuardingLastAdmin(
-          command.accountId,
-          parsedStatus.data,
-          command.now,
-        )
-
-        if (updated instanceof LastAdminError) {
-          return new ConflictError("cannot deactivate the last admin", "last_admin")
-        }
-
-        if (updated instanceof Error) {
-          return new UnexpectedError("failed to set account status", { cause: updated })
-        }
-
-        return { reason: "updated" }
-      }
-    }
-
-    const updated = await accountRepository.setStatus(
+    // live permission・状態変更・実効管理者検査を同じ batch で確定する。
+    const updated = await accountRepository.setStatusGuardingLastAdmin(
       command.accountId,
       parsedStatus.data,
       command.now,
+      command.session.accountId,
     )
+
+    if (updated instanceof LastAdminError) {
+      return new ConflictError("cannot deactivate the last effective admin", "last_admin")
+    }
+
+    if (updated instanceof LivePermissionGuardError) {
+      return new ForbiddenError("cannot change a higher privilege account", "role_escalation")
+    }
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to set account status", { cause: updated })

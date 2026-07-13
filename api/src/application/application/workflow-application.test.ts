@@ -1,13 +1,18 @@
 import { DecideApplication } from "@/application/application/decide-application"
 import { ResubmitApplication } from "@/application/application/resubmit-application"
-import { Application } from "@/domain/application/application.entity"
+import { ReassignWorkflowStep } from "@/application/application/reassign-workflow-step"
+import { SubmitApplication } from "@/application/application/submit-application"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
-import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import {
+  ApplicationWorkflowRepository,
+  conditionalWorkflowStepSnapshotInsertStatements,
+  workflowStepSnapshotInsertStatements,
+} from "@/infrastructure/application/application-workflow-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
@@ -54,25 +59,23 @@ async function setup(workflow: ApplicationWorkflow) {
   )
   if (template instanceof Error || template.id === null) throw template
 
-  const application = await new ApplicationRepository(context).create(
-    Application.create({
-      templateId: template.id,
-      applicantId: 5,
-      currentStep: workflow.steps[0]?.key ?? null,
-      payload: { amount: 100 },
-      createdAt: "2026-01-01T00:00:00.000Z",
-    }),
-  )
-  if (application instanceof Error || application.id === null) throw application
-
-  const initialized = await new ApplicationWorkflowRepository(context).createInstance({
-    applicationId: application.id,
+  const workflowRepository = new ApplicationWorkflowRepository(context)
+  const saved = await workflowRepository.saveDefinition({
+    templateId: template.id,
     definition: workflow,
-    currentStepKey: workflow.steps[0]?.key ?? "",
-    startedAt: "2026-01-01T00:00:00.000Z",
-    dueAt: null,
+    expectedRevision: 0,
+    updatedByAccountId: 1,
+    updatedAt: "2026-01-01T00:00:00.000Z",
   })
-  if (initialized instanceof Error) throw initialized
+  if (saved instanceof Error) throw saved
+
+  const application = await new SubmitApplication(context).run({
+    applicantId: 5,
+    templateCode: "workflow_test",
+    payload: { amount: 100 },
+    createdAt: "2026-01-01T00:00:00.000Z",
+  })
+  if (application instanceof Error || application.id === null) throw application
 
   return { context, db, applicationId: application.id }
 }
@@ -81,6 +84,7 @@ function approve(
   context: Awaited<ReturnType<typeof setup>>["context"],
   applicationId: number,
   employeeId: number,
+  createdAt = "2026-01-02T00:00:00.000Z",
 ) {
   return new DecideApplication(context).run({
     session: makeTestSession("member", employeeId),
@@ -88,11 +92,90 @@ function approve(
     approverId: employeeId,
     action: "approve",
     comment: null,
-    createdAt: "2026-01-02T00:00:00.000Z",
+    createdAt,
+  })
+}
+
+function pauseMatchingAllQueriesUntilBothArrive(db: D1Database, pattern: string): D1Database {
+  let arrivals = 0
+  let release: (() => void) | undefined
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+
+  const wrapStatement = (statement: D1PreparedStatement, query: string): D1PreparedStatement =>
+    new Proxy(statement, {
+      get(target, property, receiver) {
+        if (property === "bind") {
+          return (...values: Array<unknown>) => wrapStatement(target.bind(...values), query)
+        }
+        if (property === "all" && query.includes(pattern)) {
+          return async () => {
+            arrivals += 1
+            if (arrivals === 2) release?.()
+            await gate
+            return target.all()
+          }
+        }
+
+        return Reflect.get(target, property, receiver)
+      },
+    })
+
+  return new Proxy(db, {
+    get(target, property, receiver) {
+      if (property === "prepare") {
+        return (query: string) => wrapStatement(target.prepare(query), query)
+      }
+
+      return Reflect.get(target, property, receiver)
+    },
   })
 }
 
 describe("configured application workflow", () => {
+  test("chunks large candidate snapshots below the D1 statement limit", () => {
+    const { db } = createTestContext()
+    const snapshot = {
+      requiredApprovals: 1,
+      activatedAt: "2026-01-01T00:00:00.000Z",
+      dueAt: null,
+      escalatedAt: null,
+      resolutionReason: "activation" as const,
+      resolutionId: "large-resolution",
+      candidates: Array.from({ length: 100 }, (_, index) => ({
+        employeeId: index + 1,
+        accountId: index + 1,
+        source: "primary" as const,
+        selectorsJson: "[]",
+        eligibleFrom: null,
+        resolvedAt: "2026-01-01T00:00:00.000Z",
+      })),
+    }
+
+    expect(
+      workflowStepSnapshotInsertStatements({
+        db,
+        applicationId: 1,
+        stepKey: "large",
+        round: 1,
+        snapshot,
+      }).length,
+    ).toBeLessThanOrEqual(8)
+    expect(
+      conditionalWorkflowStepSnapshotInsertStatements({
+        db,
+        applicationId: 1,
+        stepKey: "large",
+        round: 1,
+        snapshot,
+        currentStepKey: "current",
+        currentRound: 1,
+        requiredApprovals: 1,
+      }).length,
+    ).toBeLessThanOrEqual(10)
+  })
+
   test("advances sequential organization-based steps", async () => {
     const workflow: ApplicationWorkflow = {
       version: 1,
@@ -176,6 +259,85 @@ describe("configured application workflow", () => {
     ])
   })
 
+  test("uses a fresh round when a later step is reached again after return and resubmit", async () => {
+    const secondStep = {
+      ...firstStep,
+      key: "finance",
+      name: "Finance approval",
+      approvers: [
+        { type: "employee" as const, employee_code: "E003" },
+        { type: "employee" as const, employee_code: "E004" },
+      ],
+      approval_mode: "minimum" as const,
+      minimum_approvals: 2,
+      rejection_behavior: "return" as const,
+    }
+    const setupResult = await setup({ version: 1, steps: [firstStep, secondStep] })
+
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 2, "2026-01-02T00:00:00.000Z"),
+    ).toEqual({ status: "pending" })
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 3, "2026-01-02T01:00:00.000Z"),
+    ).toEqual({ status: "pending" })
+    expect(
+      await new DecideApplication(setupResult.context).run({
+        session: makeTestSession("member", 4),
+        applicationId: setupResult.applicationId,
+        approverId: 4,
+        action: "reject",
+        comment: "Please revise",
+        createdAt: "2026-01-02T02:00:00.000Z",
+      }),
+    ).toEqual({ status: "pending" })
+
+    expect(
+      await new ResubmitApplication(setupResult.context).run({
+        applicationId: setupResult.applicationId,
+        applicantId: 5,
+        payload: { amount: 100 },
+        resubmittedAt: "2026-01-03T00:00:00.000Z",
+      }),
+    ).toMatchObject({ status: "pending", currentStep: "manager" })
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 2, "2026-01-04T00:00:00.000Z"),
+    ).toEqual({ status: "pending" })
+
+    const instance = await new ApplicationWorkflowRepository(setupResult.context).findInstance(
+      setupResult.applicationId,
+    )
+    if (instance === null || instance instanceof Error) throw instance
+    expect(instance).toMatchObject({ currentStepKey: "finance", currentRound: 2 })
+
+    const financeSnapshots = await setupResult.db
+      .prepare(
+        `SELECT round, resolution_id FROM application_workflow_step_snapshots
+         WHERE application_id = ?1 AND step_key = 'finance' ORDER BY round`,
+      )
+      .bind(setupResult.applicationId)
+      .all<{ round: number; resolution_id: string }>()
+    expect(financeSnapshots.results.map((snapshot) => snapshot.round)).toEqual([1, 2])
+    expect(new Set(financeSnapshots.results.map((snapshot) => snapshot.resolution_id)).size).toBe(2)
+
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 4, "2026-01-04T01:00:00.000Z"),
+    ).toEqual({ status: "pending" })
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 3, "2026-01-04T02:00:00.000Z"),
+    ).toEqual({ status: "approved" })
+
+    const financeApprovals = await new ApplicationWorkflowRepository(
+      setupResult.context,
+    ).listApprovals(setupResult.applicationId, "finance")
+    if (financeApprovals instanceof Error) throw financeApprovals
+    expect(financeApprovals.map((approval) => [approval.round, approval.action])).toEqual([
+      [1, "approve"],
+      [1, "return"],
+      [2, "approve"],
+      [2, "approve"],
+    ])
+  })
+
   test("allows an active period-scoped delegate", async () => {
     const setupResult = await setup({ version: 1, steps: [firstStep] })
     await seedD1(setupResult.db, "approval_delegations", [
@@ -196,6 +358,719 @@ describe("configured application workflow", () => {
       setupResult.applicationId,
     )
     if (approvals instanceof Error) throw approvals
-    expect(approvals[0]?.representedApproverId).toBe(2)
+    expect(approvals[0]).toMatchObject({
+      approverId: 4,
+      approverAccountId: 4,
+      representedApproverId: 2,
+      delegationId: 1,
+    })
+  })
+
+  test("retains the deciding account for a direct approval", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "approved",
+    })
+
+    const approvals = await new ApplicationWorkflowRepository(setupResult.context).listApprovals(
+      setupResult.applicationId,
+    )
+    if (approvals instanceof Error) throw approvals
+    expect(approvals[0]).toMatchObject({
+      approverId: 2,
+      approverAccountId: 2,
+      representedApproverId: 2,
+      delegationId: null,
+    })
+  })
+
+  test("uses an unrepresented delegator when one delegate covers multiple candidates", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approval_mode: "minimum",
+          minimum_approvals: 2,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+    await seedD1(setupResult.db, "approval_delegations", [
+      {
+        id: 10,
+        delegator_employee_id: 2,
+        delegate_employee_id: 4,
+        template_code: "workflow_test",
+        starts_at: "2026-01-01T00:00:00.000Z",
+        ends_at: "2026-01-31T00:00:00.000Z",
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+      {
+        id: 11,
+        delegator_employee_id: 3,
+        delegate_employee_id: 4,
+        template_code: "workflow_test",
+        starts_at: "2026-01-01T00:00:00.000Z",
+        ends_at: "2026-01-31T00:00:00.000Z",
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+    ])
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "pending",
+    })
+    expect(await approve(setupResult.context, setupResult.applicationId, 4)).toEqual({
+      status: "approved",
+    })
+
+    const approvals = await new ApplicationWorkflowRepository(setupResult.context).listApprovals(
+      setupResult.applicationId,
+    )
+    if (approvals instanceof Error) throw approvals
+    expect(approvals.at(-1)).toMatchObject({
+      approverId: 4,
+      representedApproverId: 3,
+      delegationId: 11,
+    })
+  })
+
+  test("stores only the selector and evidence that resolved each candidate", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+
+    const candidates = await setupResult.db
+      .prepare(
+        `SELECT candidate_employee_id, selectors_json
+           FROM application_workflow_step_candidates
+           WHERE application_id = ?1
+           ORDER BY candidate_employee_id`,
+      )
+      .bind(setupResult.applicationId)
+      .all<{ candidate_employee_id: number; selectors_json: string }>()
+
+    expect(
+      candidates.results.map((candidate) => [
+        candidate.candidate_employee_id,
+        JSON.parse(candidate.selectors_json),
+      ]),
+    ).toEqual([
+      [
+        2,
+        [
+          {
+            selector_index: 0,
+            selector: { type: "employee", employee_code: "E002" },
+            evidence: { type: "employee_code", employee_code: "E002" },
+          },
+        ],
+      ],
+      [
+        3,
+        [
+          {
+            selector_index: 1,
+            selector: { type: "employee", employee_code: "E003" },
+            evidence: { type: "employee_code", employee_code: "E003" },
+          },
+        ],
+      ],
+    ])
+  })
+
+  test("keeps the activated step approver after the reporting line changes", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+
+    await setupResult.db
+      .prepare(
+        "UPDATE org_memberships SET manager_employee_code = 'E003' WHERE employee_code = 'E005'",
+      )
+      .run()
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "approved",
+    })
+  })
+
+  test("records escalation as an idempotent state transition before granting authority", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          due_days: 1,
+          escalation_approvers: [{ type: "employee", employee_code: "E003" }],
+        },
+      ],
+    })
+
+    const beforeDeadline = await approve(
+      setupResult.context,
+      setupResult.applicationId,
+      3,
+      "2026-01-01T23:59:59.999Z",
+    )
+    expect(beforeDeadline).toMatchObject({ code: "forbidden" })
+
+    expect(
+      await approve(setupResult.context, setupResult.applicationId, 3, "2026-01-02T00:00:00.000Z"),
+    ).toEqual({ status: "approved" })
+
+    const snapshot = await setupResult.db
+      .prepare(
+        "SELECT escalated_at FROM application_workflow_step_snapshots WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<string>("escalated_at")
+    const eventCount = await setupResult.db
+      .prepare(
+        `SELECT COUNT(*) AS total FROM application_workflow_events
+         WHERE application_id = ?1 AND event_type = 'escalated'`,
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+
+    expect(snapshot).toBe("2026-01-02T00:00:00.000Z")
+    expect(eventCount).toBe(1)
+  })
+
+  test("does not escalate a snapshot after its application is no longer on that round", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          due_days: 1,
+          escalation_approvers: [{ type: "employee", employee_code: "E003" }],
+        },
+      ],
+    })
+    const snapshot = await new ApplicationWorkflowRepository(setupResult.context).findStepSnapshot(
+      setupResult.applicationId,
+      "manager",
+      1,
+    )
+    if (snapshot === null || snapshot instanceof Error) throw snapshot
+    await setupResult.db
+      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+
+    const result = await ensureWorkflowStepEscalation({
+      c: setupResult.context,
+      snapshot,
+      now: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(result).toMatchObject({ escalatedAt: null })
+    expect(
+      await setupResult.db
+        .prepare(
+          `SELECT COUNT(*) AS total FROM application_workflow_events
+           WHERE application_id = ?1 AND event_type = 'escalated'`,
+        )
+        .bind(setupResult.applicationId)
+        .first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("completes a minimum quorum when the final approvals arrive concurrently", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approval_mode: "minimum",
+          minimum_approvals: 2,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+
+    setupResult.context.env.DB = pauseMatchingAllQueriesUntilBothArrive(
+      setupResult.context.env.DB,
+      "SELECT DISTINCT approval.represented_approver_id",
+    )
+
+    const results = await Promise.all([
+      approve(setupResult.context, setupResult.applicationId, 2),
+      approve(setupResult.context, setupResult.applicationId, 3),
+    ])
+
+    expect(
+      results.some((result) => !(result instanceof Error) && result.status === "approved"),
+    ).toBe(true)
+
+    const status = await setupResult.db
+      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .bind(setupResult.applicationId)
+      .first<string>("status")
+
+    expect(status).toBe("approved")
+  })
+
+  test("backfills a candidate snapshot for an active workflow created before the migration", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_candidates WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_snapshots WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "approved",
+    })
+
+    const reason = await setupResult.db
+      .prepare(
+        "SELECT resolution_reason FROM application_workflow_step_snapshots WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<string>("resolution_reason")
+
+    expect(reason).toBe("legacy_backfill")
+  })
+
+  test("does not attach a workflow instance to an application that is no longer pending", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_candidates WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_snapshots WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_instances WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+
+    const result = await new ApplicationWorkflowRepository(setupResult.context).createInstance({
+      applicationId: setupResult.applicationId,
+      definition: { version: 1, steps: [firstStep] },
+      currentStepKey: firstStep.key,
+      startedAt: "2026-01-02T00:00:00.000Z",
+      dueAt: null,
+      stepSnapshot: {
+        requiredApprovals: 1,
+        activatedAt: "2026-01-02T00:00:00.000Z",
+        dueAt: null,
+        escalatedAt: null,
+        resolutionReason: "legacy_backfill",
+        resolutionId: "late-instance",
+        candidates: [
+          {
+            employeeId: 2,
+            accountId: 2,
+            source: "primary",
+            selectorsJson: "[]",
+            eligibleFrom: null,
+            resolvedAt: "2026-01-02T00:00:00.000Z",
+          },
+        ],
+      },
+    })
+
+    expect(result).toBeInstanceOf(Error)
+    const instanceCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM application_workflow_instances WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+    const snapshotCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM application_workflow_step_snapshots WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+    expect([instanceCount, snapshotCount]).toEqual([0, 0])
+  })
+
+  test("repairs an unresolvable active step by starting an audited round", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_candidates WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_snapshots WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare(
+        "UPDATE org_memberships SET manager_employee_code = NULL WHERE employee_code = 'E005'",
+      )
+      .run()
+
+    const repaired = await new ReassignWorkflowStep(setupResult.context).run({
+      session: makeTestSession("hr", 99),
+      applicationId: setupResult.applicationId,
+      candidateEmployeeIds: [3],
+      reason: "Current manager account is unavailable",
+      reassignedAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(repaired).toEqual({
+      status: "pending",
+      stepKey: "manager",
+      round: 2,
+      candidateEmployeeIds: [3],
+    })
+    expect(await approve(setupResult.context, setupResult.applicationId, 3)).toEqual({
+      status: "approved",
+    })
+    const event = await setupResult.db
+      .prepare(
+        `SELECT actor_account_id, details_json FROM application_workflow_events
+         WHERE application_id = ?1 AND event_type = 'reassigned'`,
+      )
+      .bind(setupResult.applicationId)
+      .first<{ actor_account_id: number; details_json: string }>()
+    expect(event?.actor_account_id).toBe(99)
+    expect(JSON.parse(event?.details_json ?? "{}")).toMatchObject({
+      candidate_employee_ids: [3],
+      previous_round: 1,
+    })
+  })
+
+  test("does not repair a workflow step that can still reach quorum", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+
+    const repaired = await new ReassignWorkflowStep(setupResult.context).run({
+      session: makeTestSession("hr", 99),
+      applicationId: setupResult.applicationId,
+      candidateEmployeeIds: [3],
+      reason: "Unnecessary override",
+      reassignedAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(repaired).toMatchObject({ code: "workflow_not_repairable" })
+    expect(
+      await setupResult.db
+        .prepare(
+          "SELECT current_round FROM application_workflow_instances WHERE application_id = ?1",
+        )
+        .bind(setupResult.applicationId)
+        .first<number>("current_round"),
+    ).toBe(1)
+  })
+
+  test("keeps the original quorum and forbids self-assignment during repair", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approval_mode: "minimum",
+          minimum_approvals: 2,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+    await setupResult.db.prepare("UPDATE employees SET status = 'retired' WHERE id = 2").run()
+
+    const tooFew = await new ReassignWorkflowStep(setupResult.context).run({
+      session: makeTestSession("hr", 99),
+      applicationId: setupResult.applicationId,
+      candidateEmployeeIds: [4],
+      reason: "Incomplete replacement set",
+      reassignedAt: "2026-01-02T00:00:00.000Z",
+    })
+    expect(tooFew).toMatchObject({ code: "workflow_unresolvable" })
+
+    const selfAssigned = await new ReassignWorkflowStep(setupResult.context).run({
+      session: makeTestSession("hr", 3),
+      applicationId: setupResult.applicationId,
+      candidateEmployeeIds: [3, 4],
+      reason: "Self assignment",
+      reassignedAt: "2026-01-02T00:00:00.000Z",
+    })
+    expect(selfAssigned).toMatchObject({ code: "invalid_candidate" })
+
+    const repaired = await new ReassignWorkflowStep(setupResult.context).run({
+      session: makeTestSession("hr", 99),
+      applicationId: setupResult.applicationId,
+      candidateEmployeeIds: [3, 4],
+      reason: "Complete replacement set",
+      reassignedAt: "2026-01-02T00:00:00.000Z",
+    })
+    expect(repaired).toMatchObject({ candidateEmployeeIds: [3, 4], round: 2 })
+    expect(
+      await setupResult.db
+        .prepare(
+          `SELECT required_approvals FROM application_workflow_step_snapshots
+           WHERE application_id = ?1 AND round = 2`,
+        )
+        .bind(setupResult.applicationId)
+        .first<number>("required_approvals"),
+    ).toBe(2)
+  })
+
+  test("does not persist the deciding approval when the next step cannot be activated", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approvers: [{ type: "employee", employee_code: "E002" }],
+        },
+        {
+          ...firstStep,
+          key: "second",
+          name: "Second approval",
+        },
+      ],
+    })
+
+    await setupResult.db
+      .prepare(
+        "UPDATE org_memberships SET manager_employee_code = NULL WHERE employee_code = 'E005'",
+      )
+      .run()
+
+    const result = await approve(setupResult.context, setupResult.applicationId, 2)
+
+    expect(result).toBeInstanceOf(Error)
+
+    const approvalCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM application_workflow_approvals WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+
+    expect(approvalCount).toBe(0)
+  })
+
+  test("records non-final quorum votes before resolving the next step", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approval_mode: "minimum",
+          minimum_approvals: 2,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+        {
+          ...firstStep,
+          key: "missing",
+          approvers: [{ type: "employee", employee_code: "MISSING" }],
+        },
+      ],
+    })
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "pending",
+    })
+
+    const finalVote = await approve(setupResult.context, setupResult.applicationId, 3)
+    expect(finalVote).toMatchObject({ code: "workflow_unresolvable" })
+
+    const approvals = await new ApplicationWorkflowRepository(setupResult.context).listApprovals(
+      setupResult.applicationId,
+    )
+    if (approvals instanceof Error) throw approvals
+    expect(approvals.map((approval) => approval.approverId)).toEqual([2])
+  })
+
+  test("does not activate a step whose only approver is retired", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        firstStep,
+        {
+          ...firstStep,
+          key: "retired",
+          approvers: [{ type: "employee", employee_code: "E003" }],
+        },
+      ],
+    })
+    await setupResult.db.prepare("UPDATE employees SET status = 'retired' WHERE id = 3").run()
+
+    const result = await approve(setupResult.context, setupResult.applicationId, 2)
+
+    expect(result).toMatchObject({ code: "workflow_unresolvable" })
+    const approvalCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM application_workflow_approvals WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+    expect(approvalCount).toBe(0)
+  })
+
+  test("does not merge candidates from a losing concurrent snapshot resolution", async () => {
+    const setupResult = await setup({ version: 1, steps: [firstStep] })
+
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_candidates WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_snapshots WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+
+    const snapshot = (employeeId: number) => ({
+      requiredApprovals: 1,
+      activatedAt: "2026-01-01T00:00:00.000Z",
+      dueAt: null,
+      escalatedAt: null,
+      resolutionReason: "legacy_backfill" as const,
+      resolutionId: `resolution-${employeeId}`,
+      candidates: [
+        {
+          employeeId,
+          accountId: employeeId,
+          source: "primary" as const,
+          selectorsJson: "[]",
+          eligibleFrom: null,
+          resolvedAt: "2026-01-02T00:00:00.000Z",
+        },
+      ],
+    })
+
+    for (const candidateEmployeeId of [2, 3]) {
+      await setupResult.db.batch([
+        ...workflowStepSnapshotInsertStatements({
+          db: setupResult.db,
+          applicationId: setupResult.applicationId,
+          stepKey: "manager",
+          round: 1,
+          snapshot: snapshot(candidateEmployeeId),
+          ignoreConflicts: true,
+        }),
+      ])
+    }
+
+    const candidates = await setupResult.db
+      .prepare(
+        "SELECT candidate_employee_id FROM application_workflow_step_candidates WHERE application_id = ?1 ORDER BY candidate_employee_id",
+      )
+      .bind(setupResult.applicationId)
+      .all<{ candidate_employee_id: number }>()
+
+    expect(candidates.results.map((candidate) => candidate.candidate_employee_id)).toEqual([2])
+  })
+
+  test("does not count a legacy approval outside the backfilled candidate snapshot", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approval_mode: "minimum",
+          minimum_approvals: 2,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_candidates WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await setupResult.db
+      .prepare("DELETE FROM application_workflow_step_snapshots WHERE application_id = ?1")
+      .bind(setupResult.applicationId)
+      .run()
+    await seedD1(setupResult.db, "application_workflow_approvals", [
+      {
+        application_id: setupResult.applicationId,
+        step_key: "manager",
+        round: 1,
+        approver_id: 4,
+        represented_approver_id: 4,
+        action: "approve",
+        comment: null,
+        created_at: "2026-01-01T12:00:00.000Z",
+      },
+    ])
+
+    expect(await approve(setupResult.context, setupResult.applicationId, 2)).toEqual({
+      status: "pending",
+    })
+
+    const status = await setupResult.db
+      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .bind(setupResult.applicationId)
+      .first<string>("status")
+
+    expect(status).toBe("pending")
+  })
+
+  test("notifies only the winning approver when final approvals race", async () => {
+    const setupResult = await setup({
+      version: 1,
+      steps: [
+        {
+          ...firstStep,
+          approvers: [
+            { type: "employee", employee_code: "E002" },
+            { type: "employee", employee_code: "E003" },
+          ],
+        },
+      ],
+    })
+
+    const results = await Promise.all([
+      approve(setupResult.context, setupResult.applicationId, 2),
+      approve(setupResult.context, setupResult.applicationId, 3),
+    ])
+
+    expect(results.filter((result) => result instanceof Error)).toHaveLength(1)
+
+    const approvalCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM application_workflow_approvals WHERE application_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+    const notificationCount = await setupResult.db
+      .prepare(
+        "SELECT COUNT(*) AS total FROM notifications WHERE source_domain = 'application' AND source_id = ?1",
+      )
+      .bind(setupResult.applicationId)
+      .first<number>("total")
+
+    expect(approvalCount).toBe(1)
+    expect(notificationCount).toBe(1)
   })
 })

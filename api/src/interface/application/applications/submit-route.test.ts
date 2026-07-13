@@ -100,7 +100,10 @@ describe("POST /applications", () => {
   test("returns 201 with applicant resolved from the token", async () => {
     const response = await request("/applications", await tokenFor(5, "member"), {
       method: "POST",
-      body: { template_code: "paid_leave", payload: { start_date: "2026-08-01" } },
+      body: {
+        template_code: "paid_leave",
+        payload: { start_date: "2026-08-01", end_date: "2026-08-01" },
+      },
     })
 
     expect(response.status).toBe(201)
@@ -124,6 +127,19 @@ describe("POST /applications", () => {
     })
 
     expect(response.status).toBe(404)
+  })
+
+  test.each([
+    ["missing required field", { amount: 12_000 }],
+    ["wrong field type", { amount: "12000", category: "travel" }],
+  ])("returns 422 for an invalid template payload: %s", async (_, payload) => {
+    const response = await request("/applications", await tokenFor(5, "member"), {
+      method: "POST",
+      body: { template_code: "expense", payload },
+    })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ code: "invalid_payload" })
   })
 
   test("returns 400 when template_code is missing", async () => {

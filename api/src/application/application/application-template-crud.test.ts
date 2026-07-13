@@ -2,7 +2,7 @@ import { CreateApplicationTemplate } from "@/application/application/create-appl
 import { DeleteApplicationTemplate } from "@/application/application/delete-application-template"
 import { UpdateApplicationTemplate } from "@/application/application/update-application-template"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
-import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnprocessableError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
@@ -91,6 +91,22 @@ describe("CreateApplicationTemplate", () => {
 
     expectApplicationError(result, ConflictError, "template_code_conflict")
   })
+
+  test("rejects an unknown legacy approver role", async () => {
+    const { context } = createTestContext()
+
+    const result = await new CreateApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "unknown_role",
+      name: "Unknown role",
+      category: "general",
+      description: null,
+      schemaJson: {},
+      approverRoles: ["missing_role"],
+    })
+
+    expectApplicationError(result, UnprocessableError, "unknown_approver_role")
+  })
 })
 
 describe("UpdateApplicationTemplate", () => {
@@ -148,6 +164,26 @@ describe("UpdateApplicationTemplate", () => {
     })
 
     expectApplicationError(result, NotFoundError, "template_not_found")
+  })
+
+  test("rejects an unknown legacy approver role without changing the template", async () => {
+    const { context, db } = createTestContext()
+    await seedExpense(db)
+
+    const result = await new UpdateApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "expense",
+      name: "Changed",
+      category: "expense",
+      description: null,
+      schemaJson: {},
+      approverRoles: ["missing_role"],
+    })
+
+    expectApplicationError(result, UnprocessableError, "unknown_approver_role")
+    expect((await new ApplicationTemplateRepository(context).findByCode("expense"))?.name).toBe(
+      "経費申請",
+    )
   })
 })
 

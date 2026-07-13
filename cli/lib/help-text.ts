@@ -21,6 +21,8 @@ commands:
   app show <id>               申請の詳細
   app approve <id>            申請を承認 (--comment)
   app reject <id>             申請を却下 (--comment)
+  app workflow-repair list    修復が必要な承認フロー一覧
+  app workflow-repair reassign <id>  承認候補を再割当 (--candidates <id,id,...> --reason <text>)
   application mine            申請一覧
   application show <id>       申請の詳細
   application update <id>     申請を更新

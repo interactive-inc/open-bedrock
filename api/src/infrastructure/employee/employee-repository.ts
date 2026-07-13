@@ -2,7 +2,7 @@ import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import {
-  abortWhenRemovingLoginEnabledAdminWouldLeaveNone,
+  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
   isAbortedByLastAdminGuard,
 } from "@/infrastructure/iam/last-admin-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
@@ -103,7 +103,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・部署・役職・在籍状況を更新し、最後のログイン可能 admin 退職なら batch ごと戻す。
+  // 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。
   async updateProfileGuardingLastAdmin(
     employee: Employee,
   ): Promise<Employee | null | Error | LastAdminError> {
@@ -129,7 +129,7 @@ export class EmployeeRepository {
             employee.position,
             employee.status,
           ),
-        abortWhenRemovingLoginEnabledAdminWouldLeaveNone(db, employee.id),
+        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(db, employee.id),
       ])
 
       return await this.findByCode(employee.code)

@@ -86,7 +86,7 @@ export function AppShell(props: Props) {
         </main>
       </SidebarInset>
 
-      <CommandPalette permissions={props.currentUser.permissions} />
+      <CommandPalette inboxCounts={props.inboxCounts} permissions={props.currentUser.permissions} />
     </SidebarProvider>
   )
 }

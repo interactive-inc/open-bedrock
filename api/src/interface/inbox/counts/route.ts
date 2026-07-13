@@ -1,9 +1,8 @@
-import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import {
@@ -14,7 +13,8 @@ import {
   shiftSwapRequests,
   thanksRedemptions,
 } from "@/schema"
-import { and, count, eq, like, ne, or } from "drizzle-orm"
+import { and, count, eq, ne } from "drizzle-orm"
+import { resolveApplicationInboxCondition } from "@/lib/application/resolve-application-inbox-condition"
 
 // GET /inbox/counts — 受信箱ごとの未処理件数を一括取得する。
 // ユーザーの権限に応じて各カウントを返す（権限がない inbox は 0）。
@@ -26,18 +26,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   // --- applications ---
-  // applicationTemplates.approverRoles に自分のロールが含まれるか、
-  // approverRoles が空で canDecideApplication を満たす場合にカウントする。
-  const roleMatches = session.roleKeys.map((roleKey) =>
-    like(applicationTemplates.approverRoles, `%"${roleKey}"%`),
-  )
-
-  const isPrivileged = canDecideApplication(session)
-
-  const pendingWithRole = and(
-    eq(applications.status, "pending"),
-    or(isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined, ...roleMatches),
-  )
+  // 一覧と同じ案件候補者・委任・組織スコープ条件を使い、件数から非公開案件を推測させない。
+  const pendingWithRole = await resolveApplicationInboxCondition({
+    c,
+    session,
+    now: c.env.NOW ?? new Date().toISOString(),
+  })
+  if (pendingWithRole instanceof Error) {
+    throw new InternalError("failed to resolve application inbox scope")
+  }
 
   const applicationCountQuery = c.var.database
     .select({ total: count() })

@@ -1,5 +1,13 @@
 import type { Context } from "@/env"
 import { accountRoles, accounts, identities, roles } from "@/schema"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
+import {
+  abortWhenActorCannotManageRoleByKey,
+  isAbortedByLivePermissionGuard,
+} from "@/infrastructure/iam/live-permission-guard"
 import { eq } from "drizzle-orm"
 
 // 従業員に対応する account / password identity / 初期ロールを作成する。
@@ -26,7 +34,16 @@ export type ProvisionWithEmployeeInput = {
   email: string
   passwordHash: string
   roleKey: string
+  grantedByAccountId: number
   now: number
+}
+
+/** requested role が存在しないか、付与者の実効権限を超えたため batch を中止した。 */
+export class RoleAssignmentGuardError extends Error {
+  constructor(options?: ErrorOptions) {
+    super("role assignment was rejected", options)
+    this.name = "RoleAssignmentGuardError"
+  }
 }
 
 /**
@@ -136,17 +153,31 @@ export class AccountProvisioner {
             input.now,
           ),
 
-        // 4. account_role を作成する（role が存在する場合のみ挿入されるよう INSERT ... SELECT で制御）
+        // 4. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
+        abortWhenActorCannotManageRoleByKey({
+          db,
+          actorAccountId: input.grantedByAccountId,
+          targetRoleKey: input.roleKey,
+          requiredPermissionKeys:
+            input.roleKey === "member"
+              ? ["employee:create"]
+              : ["employee:create", "employee:assign_role"],
+        }),
+
+        // 5. account_role を作成する。role 不在・live 権限不足は直前の guard が中止する。
         db
           .prepare(
             `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
-           SELECT a.id, r.id, NULL, ?3
-           FROM accounts a
-           JOIN employees e ON e.id = a.employee_id
-           JOIN roles r ON r.key = ?2
-           WHERE e.code = ?1`,
+             SELECT a.id, r.id, ?3, ?4
+             FROM accounts a
+             JOIN employees e ON e.id = a.employee_id
+             JOIN roles r ON r.key = ?2
+             WHERE e.code = ?1`,
           )
-          .bind(input.employee.code, input.roleKey, input.now),
+          .bind(input.employee.code, input.roleKey, input.grantedByAccountId, input.now),
+
+        // role 不在・権限超過なら直前 INSERT は 0 行。孤立した employee/account/identity も rollback する。
+        abortWhenPreviousStatementChangedNoRows(db),
       ]
 
       const results = await db.batch(statements)
@@ -160,6 +191,10 @@ export class AccountProvisioner {
 
       return employeeId
     } catch (caught) {
+      if (isAbortedByLivePermissionGuard(caught) || isAbortedByGuard(caught)) {
+        return new RoleAssignmentGuardError({ cause: caught })
+      }
+
       return caught instanceof Error
         ? caught
         : new Error("failed to provision employee with account")

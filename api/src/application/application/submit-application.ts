@@ -6,8 +6,12 @@ import { ApplicationRepository } from "@/infrastructure/application/application-
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { applicableWorkflowSteps, dueAt } from "@/lib/application/evaluate-workflow"
-import { resolveWorkflowApproverIds } from "@/lib/application/resolve-workflow-approvers"
+import { applicableWorkflowSteps } from "@/lib/application/evaluate-workflow"
+import {
+  resolveWorkflowStepSnapshot,
+  UnresolvableWorkflowStepError,
+} from "@/lib/application/resolve-workflow-step-snapshot"
+import { validateAndNormalizeApplicationPayload } from "@/lib/application/validate-application-payload"
 
 export type Command = {
   applicantId: number
@@ -55,21 +59,15 @@ export class SubmitApplication {
       return new UnexpectedError("template id is not assigned")
     }
 
-    const created = await applicationRepository.create(
-      Application.create({
-        templateId: template.id,
-        applicantId: command.applicantId,
-        currentStep: "manager_approval",
-        payload: command.payload,
-        createdAt: command.createdAt,
-      }),
-    )
+    const payload = validateAndNormalizeApplicationPayload(template.schemaJson, command.payload)
 
-    if (created instanceof Error) {
-      return new UnexpectedError("failed to create application", { cause: created })
+    if (payload instanceof Error) {
+      return new UnprocessableError("payload does not match template schema", "invalid_payload", {
+        cause: payload,
+      })
     }
 
-    const applicant = await employeeRepository.findById(created.applicantId)
+    const applicant = await employeeRepository.findById(command.applicantId)
 
     if (applicant instanceof Error) {
       return new UnexpectedError("failed to find applicant", { cause: applicant })
@@ -88,10 +86,22 @@ export class SubmitApplication {
       })
     }
 
-    if (configuredWorkflow !== null && created.id !== null) {
+    let created: Application | Error
+
+    if (configuredWorkflow === null) {
+      created = await applicationRepository.create(
+        Application.create({
+          templateId: template.id,
+          applicantId: command.applicantId,
+          currentStep: "manager_approval",
+          payload,
+          createdAt: command.createdAt,
+        }),
+      )
+    } else {
       const steps = applicableWorkflowSteps({
         workflow: configuredWorkflow,
-        payload: command.payload,
+        payload,
         applicant: {
           id: applicant.id,
           code: applicant.code,
@@ -103,59 +113,48 @@ export class SubmitApplication {
       })
 
       if (steps.length === 0) {
-        await applicationRepository.delete(created.id)
         return new UnexpectedError("application workflow has no applicable steps")
       }
 
-      for (const step of steps) {
-        const candidates = await resolveWorkflowApproverIds({
-          c: this.c,
-          applicantEmployeeId: command.applicantId,
-          selectors: step.approvers,
-        })
-        if (candidates instanceof Error) {
-          await applicationRepository.delete(created.id)
-          return new UnexpectedError("failed to resolve workflow approvers", {
-            cause: candidates,
-          })
-        }
-        const required =
-          step.approval_mode === "all"
-            ? candidates.length
-            : step.approval_mode === "minimum"
-              ? (step.minimum_approvals ?? 1)
-              : 1
-        if (candidates.length === 0 || required > candidates.length) {
-          await applicationRepository.delete(created.id)
-          return new UnprocessableError(
-            `workflow step has insufficient approvers: ${step.key}`,
-            "workflow_unresolvable",
-          )
-        }
-      }
-
-      const snapshot = { ...configuredWorkflow, steps: [...steps] }
       const firstStep = steps[0]
 
       if (firstStep === undefined) {
-        await applicationRepository.delete(created.id)
         return new UnexpectedError("application workflow has no first step")
       }
 
-      const initialized = await workflowRepository.createInstance({
-        applicationId: created.id,
-        definition: snapshot,
-        currentStepKey: firstStep.key,
-        startedAt: command.createdAt,
-        dueAt: dueAt(command.createdAt, firstStep.due_days),
+      const firstStepSnapshot = await resolveWorkflowStepSnapshot({
+        c: this.c,
+        applicantEmployeeId: command.applicantId,
+        step: firstStep,
+        activatedAt: command.createdAt,
       })
 
-      if (initialized instanceof Error) {
-        await applicationRepository.delete(created.id)
-        return new UnexpectedError("failed to initialize application workflow", {
-          cause: initialized,
-        })
+      if (firstStepSnapshot instanceof Error) {
+        return firstStepSnapshot instanceof UnresolvableWorkflowStepError
+          ? new UnprocessableError(firstStepSnapshot.message, "workflow_unresolvable")
+          : new UnexpectedError("failed to resolve workflow approvers", {
+              cause: firstStepSnapshot,
+            })
       }
+
+      created = await workflowRepository.createApplicationWithInstance({
+        application: Application.create({
+          templateId: template.id,
+          applicantId: command.applicantId,
+          currentStep: firstStep.key,
+          payload,
+          createdAt: command.createdAt,
+        }),
+        definition: configuredWorkflow,
+        currentStepKey: firstStep.key,
+        startedAt: command.createdAt,
+        dueAt: firstStepSnapshot.dueAt,
+        stepSnapshot: firstStepSnapshot,
+      })
+    }
+
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create application", { cause: created })
     }
 
     return {
@@ -164,21 +163,7 @@ export class SubmitApplication {
       templateName: template.name,
       applicantName: applicant.name,
       status: created.status,
-      currentStep:
-        configuredWorkflow === null
-          ? created.currentStep
-          : (applicableWorkflowSteps({
-              workflow: configuredWorkflow,
-              payload: command.payload,
-              applicant: {
-                id: applicant.id,
-                code: applicant.code,
-                dept_id: applicant.deptId,
-                dept_name: applicant.deptName,
-                position: applicant.position,
-                status: applicant.status,
-              },
-            }).at(0)?.key ?? created.currentStep),
+      currentStep: created.currentStep,
       payload: created.payload,
       createdAt: created.createdAt,
       approverRoles: template.approverRoles,

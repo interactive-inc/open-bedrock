@@ -4,6 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
 
 export type Command = {
   session: SessionPayload
@@ -76,6 +77,10 @@ export class GrantAccountRole {
       grantedBy: command.session.accountId,
       now: command.now,
     })
+
+    if (granted instanceof LivePermissionGuardError) {
+      return new ForbiddenError("cannot grant a permission you do not hold", "role_escalation")
+    }
 
     if (granted instanceof Error) {
       return new UnexpectedError("failed to grant role", { cause: granted })

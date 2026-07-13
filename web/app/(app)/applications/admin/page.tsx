@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/get-application-admin-list"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
+import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-repairs"
 import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 export const metadata = { title: "申請管理" }
@@ -33,6 +34,8 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
   if (currentUser instanceof Error || canViewAllApplications(currentUser.permissions) === false) {
     notFound()
   }
+
+  const canRepairWorkflows = canManageWorkflowRepairs(currentUser.permissions)
 
   const params = await props.searchParams
 
@@ -93,13 +96,24 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
         description="全社の申請を横断で確認します。承認操作は各申請の詳細から行います。"
         breadcrumbs={[{ label: "申請", href: "/applications" }, { label: "申請管理" }]}
         actions={
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/applications/inbox" />}
-          >
-            承認 inbox
-          </Button>
+          <>
+            {canRepairWorkflows ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/applications/workflow-repairs" />}
+              >
+                承認フロー修復
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/applications/inbox" />}
+            >
+              承認 inbox
+            </Button>
+          </>
         }
       />
 

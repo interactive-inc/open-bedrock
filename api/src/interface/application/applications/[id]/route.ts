@@ -2,25 +2,23 @@ import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { canDecideApplication } from "@/lib/application/can-decide-application"
+import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
 import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
-import {
-  resolveRepresentedApprover,
-  resolveWorkflowApproverIds,
-} from "@/lib/application/resolve-workflow-approvers"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
-import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveRepresentedApprover } from "@/lib/application/resolve-workflow-approvers"
+import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-workflow-step-snapshot"
+import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
 import { factory } from "@/lib/factory"
 import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { asc, eq } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
   ForbiddenError,
+  ConflictError,
   InternalError,
   NotFoundError,
   UnauthorizedError,
@@ -56,9 +54,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("application not found")
   }
 
-  // 申請者本人・承認できるロール・全社閲覧権限保持者のみ閲覧できる。ID 走査による他者申請の漏えいを防ぐ。
-  // 承認可否は decide-application と同じ二分岐: テンプレートに approverRoles があれば
-  // そのロール保持者、無ければ application:approve 権限保持者。
+  // 申請者本人・全社閲覧権限保持者・申請に参加した承認者のみ閲覧できる。
+  // 未完了の旧形式申請だけは現在の組織/ロール上の承認者も許可するが、完了後は保存済み履歴を正とする。
   // application:read:all は監査目的の横断閲覧で、/applications/admin の一覧と対称にする。
   const template = await new ApplicationTemplateRepository(c).findById(row.application.templateId)
 
@@ -83,41 +80,100 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       )
       if (step !== undefined) {
         const now = c.env.NOW ?? new Date().toISOString()
-        const selectors =
-          workflowInstance.dueAt !== null && workflowInstance.dueAt < now
-            ? [...step.approvers, ...step.escalation_approvers]
-            : step.approvers
-        const candidates = await resolveWorkflowApproverIds({
-          c,
-          applicantEmployeeId: row.application.applicantId,
-          selectors,
-        })
-        if (candidates instanceof Error) throw new InternalError("failed to resolve approvers")
-        const represented = await resolveRepresentedApprover({
-          c,
-          actorEmployeeId: session.employeeId,
-          candidateEmployeeIds: candidates,
-          templateCode: template.code,
-          now,
-          allowDelegation: step.allow_delegation,
-        })
-        if (represented instanceof Error) throw new InternalError("failed to resolve delegation")
-        canApprove = represented !== null
+        const isCurrentPendingStep =
+          row.application.status === "pending" &&
+          row.application.currentStep === workflowInstance.currentStepKey
+        if (isCurrentPendingStep) {
+          const loadedSnapshot = await loadOrResolveWorkflowStepSnapshot({
+            c,
+            instance: workflowInstance,
+            applicantEmployeeId: row.application.applicantId,
+            step,
+            now,
+          })
+          if (loadedSnapshot instanceof Error) throw new ConflictError("workflow_unresolvable")
+
+          const snapshot = loadedSnapshot.persisted
+            ? await ensureWorkflowStepEscalation({
+                c,
+                snapshot: loadedSnapshot.snapshot,
+                now,
+              })
+            : loadedSnapshot.snapshot
+          if (snapshot instanceof Error) {
+            throw new InternalError("failed to activate workflow escalation")
+          }
+          const eligibleCandidates = snapshot.candidates.filter(
+            (candidate) => candidate.source === "primary" || snapshot.escalatedAt !== null,
+          )
+          const represented = await resolveRepresentedApprover({
+            c,
+            actorEmployeeId: session.employeeId,
+            actorAccountId: session.accountId,
+            candidateAccounts: eligibleCandidates.map((candidate) => ({
+              employeeId: candidate.employeeId,
+              accountId: candidate.accountId,
+            })),
+            templateCode: template.code,
+            now,
+            allowDelegation: step.allow_delegation,
+          })
+          if (represented instanceof Error) {
+            throw new InternalError("failed to resolve delegation")
+          }
+          canApprove = represented !== null
+        } else {
+          const snapshot = await workflowRepository.findStepSnapshot(
+            workflowInstance.applicationId,
+            workflowInstance.currentStepKey,
+            workflowInstance.currentRound,
+          )
+          if (snapshot instanceof Error) {
+            throw new InternalError("failed to load workflow step snapshot")
+          }
+          const recordedApprovals = await workflowRepository.listApprovals(applicationId)
+          if (recordedApprovals instanceof Error) {
+            throw new InternalError("failed to load workflow approvals")
+          }
+          const wasFrozenCandidate =
+            snapshot?.candidates.some(
+              (candidate) =>
+                candidate.employeeId === session.employeeId &&
+                candidate.accountId === session.accountId,
+            ) ?? false
+          const wasRecordedParticipant = recordedApprovals.some(
+            (approval) =>
+              approval.approverId === session.employeeId ||
+              approval.representedApproverId === session.employeeId,
+          )
+          canApprove = wasFrozenCandidate || wasRecordedParticipant
+        }
       }
-    } else if (template !== null && template.approverRoles.length > 0) {
-      canApprove = session.roleKeys.some((roleKey) => template.approverRoles.includes(roleKey))
-    } else if (canDecideApplication(session)) {
-      const authority = await resolveOrganizationAuthority(
-        c,
-        session.employeeId,
-        row.application.applicantId,
-      )
-      if (authority instanceof Error)
-        throw new InternalError("failed to resolve organization scope")
-      canApprove =
-        hasPermission(session, "org:manage") ||
-        authority.managementChain ||
-        authority.departmentManager
+    } else if (template !== null) {
+      if (row.application.status === "pending") {
+        const legacyAuthority = await canDecideLegacyApplication({
+          c,
+          session,
+          applicantEmployeeId: row.application.applicantId,
+          approverRoles: template.approverRoles,
+        })
+        if (legacyAuthority instanceof Error) {
+          throw new InternalError("failed to resolve organization scope")
+        }
+        canApprove = legacyAuthority
+      } else {
+        const persistedParticipation = await c.var.database
+          .select({ id: applicationApprovals.id })
+          .from(applicationApprovals)
+          .where(
+            and(
+              eq(applicationApprovals.applicationId, applicationId),
+              eq(applicationApprovals.approverId, session.employeeId),
+            ),
+          )
+          .limit(1)
+        canApprove = persistedParticipation.length > 0
+      }
     }
 
     if (canApprove === false && canViewAllApplications(session) === false) {
@@ -183,7 +239,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       comment: approval.comment,
       created_at: approval.createdAt,
     })),
-    approver_roles: template?.approverRoles ?? [],
+    approver_roles: workflowInstance === null ? (template?.approverRoles ?? []) : [],
     workflow:
       workflowInstance === null
         ? null

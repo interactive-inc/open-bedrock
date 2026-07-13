@@ -119,6 +119,16 @@ describe("PUT /applications/:id", () => {
     expect(response.status).toBe(403)
   })
 
+  test("returns 422 when the updated payload does not match the template schema", async () => {
+    const response = await request("/applications/1", await tokenFor(5, "member"), {
+      method: "PUT",
+      body: { payload: { start_date: "2026-08-01" } },
+    })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ code: "invalid_payload" })
+  })
+
   test("returns 409 when the application is already decided", async () => {
     const response = await request("/applications/3", await tokenFor(10, "member"), {
       method: "PUT",
