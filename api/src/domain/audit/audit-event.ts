@@ -46,10 +46,35 @@ export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
 
 export const auditClientNameSchema = z.enum(["web", "cli", "api", "system"])
 
-export const auditRequestContextSchema = z.object({
+export const auditRequestContextSchema = z.strictObject({
   requestId: z.string().uuid(),
   clientName: auditClientNameSchema,
+  clientIp: z.string().nullable(),
+  externalRequestId: z.string().nullable(),
 })
+
+const auditActorIdSchema = z.number().int().safe().positive().nullable()
+
+const auditEventEnvelopeSchema = z.strictObject({
+  actorAccountId: auditActorIdSchema,
+  actorEmployeeId: auditActorIdSchema,
+  action: z.unknown(),
+  target: z.unknown(),
+  outcome: z.unknown(),
+  reasonCode: z.string().nullable(),
+  authorization: z.unknown().optional(),
+  before: z.unknown().optional(),
+  after: z.unknown().optional(),
+  metadata: z.unknown().optional(),
+  now: z.unknown(),
+})
+
+const auditTargetShapeSchema = z.strictObject({
+  type: z.string().min(1),
+  id: z.string().min(1).nullable(),
+})
+
+const auditEventTimeSchema = z.date()
 
 export type AuditAction = z.infer<typeof auditActionSchema>
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>
@@ -88,8 +113,8 @@ export type AuditEventRecord = {
   createdAt: number
 }
 
-function serializeOptionalProjection(value: AuditJsonValue | undefined): string | null {
-  return value === undefined ? null : toStableAuditJson(value)
+function serializeOptionalProjection(value: unknown): string | null {
+  return value === undefined ? null : toStableAuditJson(value as AuditJsonValue)
 }
 
 function parseManagedValue<Output>(
@@ -98,7 +123,12 @@ function parseManagedValue<Output>(
   message: string,
   code: string,
 ): Output {
-  const parsed = schema.safeParse(value)
+  let parsed: z.SafeParseReturnType<unknown, Output>
+  try {
+    parsed = schema.safeParse(value)
+  } catch (error) {
+    throw new ValidationError(message, code, { cause: error })
+  }
   if (!parsed.success) {
     throw new ValidationError(message, code, { cause: parsed.error })
   }
@@ -111,21 +141,33 @@ export function createAuditEvent(
   input: AuditEventInput,
   context: RequestAuditContext,
 ): AuditEventRecord {
+  const eventInput = parseManagedValue(
+    auditEventEnvelopeSchema,
+    input,
+    "audit event input is invalid",
+    "audit_invalid_event",
+  )
   const action = parseManagedValue(
     auditActionSchema,
-    input.action,
+    eventInput.action,
     "audit event action is invalid",
     "audit_invalid_action",
   )
+  const target = parseManagedValue(
+    auditTargetShapeSchema,
+    eventInput.target,
+    "audit event target is invalid",
+    "audit_invalid_target",
+  )
   const targetType = parseManagedValue(
     auditTargetTypeSchema,
-    input.target.type,
+    target.type,
     "audit event target type is invalid",
     "audit_invalid_target_type",
   )
   const outcome = parseManagedValue(
     auditOutcomeSchema,
-    input.outcome,
+    eventInput.outcome,
     "audit event outcome is invalid",
     "audit_invalid_outcome",
   )
@@ -135,26 +177,29 @@ export function createAuditEvent(
     "audit request context is invalid",
     "audit_invalid_context",
   )
-  const timestamp = input.now.getTime()
-  if (!Number.isFinite(timestamp)) {
-    throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
-  }
+  const eventTime = parseManagedValue(
+    auditEventTimeSchema,
+    eventInput.now,
+    "audit event time is invalid",
+    "audit_invalid_timestamp",
+  )
+  const timestamp = Date.prototype.getTime.call(eventTime)
 
   return {
     eventId: crypto.randomUUID(),
     requestId: auditContext.requestId,
-    actorAccountId: input.actorAccountId,
-    actorEmployeeId: input.actorEmployeeId,
+    actorAccountId: eventInput.actorAccountId,
+    actorEmployeeId: eventInput.actorEmployeeId,
     action,
     targetType,
-    targetId: input.target.id,
+    targetId: target.id,
     outcome,
-    reasonCode: input.reasonCode,
-    authorizationJson: serializeOptionalProjection(input.authorization),
-    beforeJson: serializeOptionalProjection(input.before),
-    afterJson: serializeOptionalProjection(input.after),
-    metadataJson: serializeOptionalProjection(input.metadata),
-    clientIp: context.clientIp,
+    reasonCode: eventInput.reasonCode,
+    authorizationJson: serializeOptionalProjection(eventInput.authorization),
+    beforeJson: serializeOptionalProjection(eventInput.before),
+    afterJson: serializeOptionalProjection(eventInput.after),
+    metadataJson: serializeOptionalProjection(eventInput.metadata),
+    clientIp: auditContext.clientIp,
     clientName: auditContext.clientName,
     createdAt: Math.floor(timestamp / 1_000),
   }

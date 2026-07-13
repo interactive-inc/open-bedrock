@@ -116,6 +116,97 @@ describe("audit event vocabulary", () => {
 })
 
 describe("createAuditEvent", () => {
+  test.each([
+    ["null", null],
+    ["a primitive", "invalid"],
+    ["an array", []],
+  ])("rejects %s event envelope with a stable application error", (_name, value) => {
+    try {
+      createAuditEvent(value as unknown as AuditEventInput, context)
+      throw new Error("expected createAuditEvent to reject an invalid event envelope")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_event")
+      expect((error as ValidationError).message).toBe("audit event input is invalid")
+    }
+  })
+
+  test.each([
+    ["a missing target", undefined],
+    ["a null target", null],
+    ["an array target", []],
+    ["a missing target ID", { type: "role" }],
+    ["an empty target ID", { type: "role", id: "" }],
+    ["a non-string target ID", { type: "role", id: 42 }],
+    ["an extra target property", { type: "role", id: "target-1", extra: true }],
+  ])("rejects %s with a stable target error", (_name, target) => {
+    const unsafeInput = { ...makeInput(), target } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject an invalid target")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_target")
+      expect((error as ValidationError).message).toBe("audit event target is invalid")
+    }
+  })
+
+  test("normalizes a throwing target accessor to the stable target error", () => {
+    const target = Object.create(null) as Record<string, unknown>
+    Object.defineProperty(target, "type", {
+      enumerable: true,
+      get() {
+        throw new TypeError("target accessor must stay internal")
+      },
+    })
+    target.id = "target-1"
+
+    try {
+      createAuditEvent({ ...makeInput(), target } as unknown as AuditEventInput, context)
+      throw new Error("expected createAuditEvent to reject a throwing target accessor")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_target")
+      expect((error as ValidationError).message).toBe("audit event target is invalid")
+    }
+  })
+
+  test.each([
+    ["a zero account actor", { actorAccountId: 0 }],
+    ["a fractional employee actor", { actorEmployeeId: 2.5 }],
+    ["an unsafe account actor", { actorAccountId: Number.MAX_SAFE_INTEGER + 1 }],
+    ["an undefined reason", { reasonCode: undefined }],
+    ["a non-string reason", { reasonCode: 42 }],
+  ])("rejects %s instead of returning a non-database-ready record", (_name, overrides) => {
+    const unsafeInput = { ...makeInput(), ...overrides } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject invalid core input")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_event")
+      expect((error as ValidationError).message).toBe("audit event input is invalid")
+    }
+  })
+
+  test("rejects a non-Date event time with the timestamp error contract", () => {
+    const unsafeInput = {
+      ...makeInput(),
+      now: "2026-07-14T12:34:56.987Z",
+    } as unknown as AuditEventInput
+
+    try {
+      createAuditEvent(unsafeInput, context)
+      throw new Error("expected createAuditEvent to reject a non-Date event time")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_timestamp")
+      expect((error as ValidationError).message).toBe("audit event time is invalid")
+    }
+  })
+
   test("rejects an unmanaged action with a stable application error", () => {
     const unsafeInput = {
       ...makeInput(),
@@ -189,6 +280,22 @@ describe("createAuditEvent", () => {
     try {
       createAuditEvent(makeInput(), unsafeContext)
       throw new Error("expected createAuditEvent to reject an unmanaged client name")
+    } catch (error) {
+      expect(error).toBeInstanceOf(ValidationError)
+      expect((error as ValidationError).code).toBe("audit_invalid_context")
+      expect((error as ValidationError).message).toBe("audit request context is invalid")
+    }
+  })
+
+  test.each([
+    ["an undefined client IP", { clientIp: undefined }],
+    ["a non-string external request ID", { externalRequestId: 42 }],
+  ])("rejects %s in request context without copying it to the record", (_name, overrides) => {
+    const unsafeContext = { ...context, ...overrides } as unknown as RequestAuditContext
+
+    try {
+      createAuditEvent(makeInput(), unsafeContext)
+      throw new Error("expected createAuditEvent to reject an invalid request context")
     } catch (error) {
       expect(error).toBeInstanceOf(ValidationError)
       expect((error as ValidationError).code).toBe("audit_invalid_context")
