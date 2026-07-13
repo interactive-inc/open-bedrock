@@ -2,6 +2,7 @@
 /.claude/scheduled_tasks.lock
 /.claude/agent-memory-local
 /.claude/worktrees
+/.superpowers/
 
 # Env
 .env.local
