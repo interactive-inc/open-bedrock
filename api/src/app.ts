@@ -8,6 +8,10 @@ import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { rateLimitMiddleware } from "@/interface/shared/rate-limit-middleware"
 import { requestContextMiddleware } from "@/interface/shared/request-context-middleware"
 import { factory } from "@/lib/factory"
+import { auditNoStore } from "@/interface/audit/audit-route-contract"
+import * as auditEventExportsRoute from "@/interface/audit/audit-event-exports/route"
+import * as auditEventDetailRoute from "@/interface/audit/audit-events/[event_id]/route"
+import * as auditEventsRoute from "@/interface/audit/audit-events/route"
 import * as applicationAdminRoute from "@/interface/application/applications/admin/route"
 import * as applicationApproveRoute from "@/interface/application/applications/[id]/approve/route"
 import * as applicationDetailRoute from "@/interface/application/applications/[id]/route"
@@ -212,19 +216,31 @@ function resolveAllowedOrigin(origin: string, allowList: string | undefined): st
   return allowed.includes(origin) ? origin : null
 }
 
+const globalBodyLimit = bodyLimit({ maxSize: 1_000_000 })
+
+const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next) => {
+  if (c.req.path === "/audit-event-exports") {
+    await next()
+    return
+  }
+
+  await globalBodyLimit(c, next)
+})
+
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
 export const app = factory
   .createApp()
   .use("*", requestContextMiddleware)
+  .use("*", auditNoStore)
   .use(
     "*",
     cors({
       origin: (origin, c) => resolveAllowedOrigin(origin, c.env.CORS_ORIGIN),
-      exposeHeaders: ["X-Request-ID"],
+      exposeHeaders: ["X-Request-ID", "Content-Disposition"],
     }),
   )
-  .use("*", bodyLimit({ maxSize: 1_000_000 }))
+  .use("*", globalBodyLimitExceptAuditExport)
   .use("*", rateLimitMiddleware)
   // nosniff / HSTS / X-Frame-Options 等のセキュリティヘッダを付与する。
   // COOP/CORP は別オリジンの正規クライアント（web/cli）からの利用を阻害しうるため無効化する
@@ -252,6 +268,9 @@ export const app = factory
   .post("/auth/login", ...authLoginRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
+  .get("/audit-events", ...auditEventsRoute.GET)
+  .get("/audit-events/:event_id", ...auditEventDetailRoute.GET)
+  .post("/audit-event-exports", ...auditEventExportsRoute.POST)
   .get("/employees", ...employeeListRoute.GET)
   .get("/directory/employees", ...employeeDirectoryRoute.GET)
   .get("/roles", ...iamRolesRoute.GET)
