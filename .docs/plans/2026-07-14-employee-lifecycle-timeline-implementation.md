@@ -608,7 +608,7 @@ cd cli && bun test && bun run check
 - [ ] Web 対象テストと型検査を実行する。
 
 ```text
-cd web && bun test app/'(app)'/employees lib/api/get-employee-lifecycle-events.test.ts && bunx tsc --noEmit
+cd web && bun run test -- app/'(app)'/employees lib/api/get-employee-lifecycle-events.test.ts && bunx tsc --noEmit
 ```
 
 - [ ] `feat(web): show employee lifecycle timeline` でコミットする。
@@ -671,7 +671,7 @@ cd web && bun test app/'(app)'/employees lib/api/get-employee-lifecycle-events.t
 - [ ] Web 全テスト、型検査、React Doctor を実行し、重大度 error をゼロにする。
 
 ```text
-cd web && bun test && bunx tsc --noEmit
+cd web && bun run test && bunx tsc --noEmit
 bunx react-doctor@latest web --verbose
 ```
 
@@ -704,7 +704,7 @@ cd ../cli && bun run check
 
 ```text
 cd api && bun test
-cd ../web && bun test
+cd ../web && bun run test
 cd ../cli && bun test
 cd .. && vp check
 ```
@@ -729,7 +729,7 @@ cd .. && vp check
 
 ```text
 cd api && bun test
-cd ../web && bun test
+cd ../web && bun run test
 cd ../cli && bun test
 cd .. && bun run typecheck
 vp check
