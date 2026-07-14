@@ -4,6 +4,13 @@ import { describe, expect, test } from "bun:test"
 
 const auditPermissions = ["audit:read", "audit:export"] as const
 
+const lifecyclePermissions = [
+  "employee:lifecycle:request",
+  "employee:lifecycle:apply",
+  "employee:lifecycle:read:all",
+  "employee:archive",
+] as const
+
 describe("system role audit permissions", () => {
   test("includes both audit permissions in the permission catalog", () => {
     for (const permission of auditPermissions) {
@@ -15,6 +22,27 @@ describe("system role audit permissions", () => {
     for (const role of SYSTEM_ROLE_PERMISSIONS) {
       for (const permission of auditPermissions) {
         expect(role.permissions.includes(permission)).toBe(role.key === "admin")
+      }
+    }
+  })
+})
+
+describe("system role lifecycle permissions", () => {
+  test("includes every lifecycle permission in the permission catalog", () => {
+    for (const permission of lifecyclePermissions) {
+      expect(PERMISSION_KEYS).toContain(permission)
+    }
+  })
+
+  test("grants request only to manager and every lifecycle permission to hr and admin", () => {
+    for (const role of SYSTEM_ROLE_PERMISSIONS) {
+      for (const permission of lifecyclePermissions) {
+        const expected =
+          role.key === "hr" ||
+          role.key === "admin" ||
+          (role.key === "manager" && permission === "employee:lifecycle:request")
+
+        expect(role.permissions.includes(permission)).toBe(expected)
       }
     }
   })

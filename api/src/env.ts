@@ -8,6 +8,8 @@ export type Bindings = {
   JWT_SECRET: string
   // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
   AUDIT_HMAC_SECRET: string
+  // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。
+  COMPANY_TIME_ZONE?: string
   // CORS で許可する Origin をカンマ区切りで指定する（例: "https://app.example.com,https://admin.example.com"）。
   // 未設定時はローカル開発用 Origin のみ許可。本番では必ず設定する。
   CORS_ORIGIN?: string
