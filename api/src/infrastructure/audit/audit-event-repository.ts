@@ -8,7 +8,7 @@ import { auditClientNameSchema, auditOutcomeSchema } from "@/domain/audit/audit-
 import type { Context } from "@/env"
 import { decodeAuditCursor, encodeAuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"
-import { AuditCsvByteCounter } from "@/lib/audit/audit-csv"
+import { AUDIT_CSV_MAX_BYTES, AuditCsvByteCounter } from "@/lib/audit/audit-csv"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
@@ -19,6 +19,9 @@ const EXPORT_MAX_ROWS = 50_000
 const EXPORT_CHUNK_SIZE = 5_000
 const EXPORT_DETAIL_WIRE_CHUNK_BYTES = 4 * 1024 * 1024
 const D1_MAX_HEX_SOURCE_BYTES = 999_000
+const D1_MAX_RESULT_VALUE_BYTES = 2_000_000
+const D1_SEGMENT_QUERY_SOURCE_BYTES = D1_MAX_HEX_SOURCE_BYTES * 2
+const EXPORT_MAX_SEGMENT_QUERIES = Math.ceil(AUDIT_CSV_MAX_BYTES / D1_SEGMENT_QUERY_SOURCE_BYTES)
 
 const SUMMARY_TEXT_COLUMNS = [
   "event_id",
@@ -162,6 +165,55 @@ const DETAIL_WIRE_BYTES_SQL = `
   length(CAST(created_at AS BLOB))
 `
 
+function compactLayoutLengthSql(column: DetailTextColumn): string {
+  return (
+    `CASE typeof(${column}) WHEN 'text' THEN length(CAST(${column} AS BLOB)) ` +
+    `WHEN 'null' THEN -1 ELSE -2 END`
+  )
+}
+
+const DETAIL_COMPACT_LAYOUT_COLUMNS = DETAIL_TEXT_COLUMNS.map(
+  (column) => `${compactLayoutLengthSql(column)} AS ${column}_layout_bytes`,
+).join(", ")
+
+const DETAIL_COMPACT_TEXT_BYTES_SQL = DETAIL_TEXT_COLUMNS.map(
+  (column) => `CASE WHEN ${column}_layout_bytes >= 0 THEN ${column}_layout_bytes ELSE 0 END`,
+).join(" + ")
+
+const DETAIL_COMPACT_MAX_TEXT_BYTES_SQL = `max(0, ${DETAIL_TEXT_COLUMNS.map(
+  (column) => `${column}_layout_bytes`,
+).join(", ")})`
+
+const DETAIL_COMPACT_STORAGE_OK_SQL = `
+  typeof(id) = 'integer' AND
+  typeof(created_at) = 'integer' AND
+  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_layout_bytes >= -1`).join(" AND\n  ")}
+`
+
+// One compact raw row has 32 positional fields. This expression counts JSON array framing,
+// decimal integers, length sentinels and a transport margin; exact HEX bytes are added below.
+const DETAIL_COMPACT_BASE_WIRE_BYTES_SQL = `
+  ${2 + 31 + 4 + 1 + 64} +
+  length(CAST(id AS BLOB)) +
+  length(CAST(created_at AS BLOB)) +
+  CASE WHEN actor_account_id IS NULL THEN 4
+       ELSE length(CAST(actor_account_id AS BLOB)) END +
+  CASE WHEN actor_employee_id IS NULL THEN 4
+       ELSE length(CAST(actor_employee_id AS BLOB)) END +
+  ${DETAIL_TEXT_COLUMNS.map((column) => `length(CAST(${column}_layout_bytes AS BLOB))`).join(
+    " +\n  ",
+  )}
+`
+
+const DETAIL_COMPACT_EXACT_VALUE_BYTES_SQL = DETAIL_TEXT_COLUMNS.map(
+  (column) =>
+    `CASE WHEN ${column}_layout_bytes < 0 THEN 4 ` + `ELSE 2 + 2 * ${column}_layout_bytes END`,
+).join(" +\n  ")
+
+const DETAIL_COMPACT_DESCRIPTOR_VALUE_BYTES = DETAIL_TEXT_COLUMNS.length * 4
+
 const validIsoEpochSchema = z
   .number()
   .int()
@@ -244,6 +296,30 @@ const auditExportDescriptorRowSchema = z.strictObject({
 type AuditExportDescriptorRow = z.infer<typeof auditExportDescriptorRowSchema> &
   Record<`${DetailTextColumn}_bytes`, number | null> &
   Record<`${DetailTextColumn}_type`, "text" | "null">
+
+type AuditExportReadDescriptor = {
+  ordinal: number
+  id: number
+  createdAt: number
+  actorAccountId: number | null
+  actorEmployeeId: number | null
+  byteLengths: ReadonlyArray<number | null>
+  exactHex: ReadonlyArray<string | null> | null
+  rawBytes: number
+}
+
+type AuditExportSegmentPlanItem = {
+  planOrdinal: number
+  descriptorOrdinal: number
+  id: number
+  createdAt: number
+  actorAccountId: number | null
+  actorEmployeeId: number | null
+  columnIndex: number
+  offset: number
+  expectedBytes: number
+  columnBytes: number
+}
 
 const UPPER_HEX = /^(?:[0-9A-F]{2})*$/u
 const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
@@ -449,6 +525,103 @@ function parseExportDescriptorRows(
   })
 }
 
+function parseExportReadRows(
+  results: ReadonlyArray<unknown>,
+): ReadonlyArray<AuditExportReadDescriptor> {
+  const descriptors: AuditExportReadDescriptor[] = []
+  const ids = new Set<number>()
+
+  for (const [index, result] of results.entries()) {
+    if (!Array.isArray(result) || result.length !== 6 + DETAIL_TEXT_COLUMNS.length * 2) {
+      throw unavailable(new Error("audit compact export projection is invalid"))
+    }
+
+    const base = z
+      .tuple([
+        z.number().int().min(1).max(EXPORT_CHUNK_SIZE),
+        z.number().int().safe(),
+        validIsoEpochSchema,
+        actorIdSchema,
+        actorIdSchema,
+        z.number().int().min(0).max(1),
+      ])
+      .safeParse(result.slice(0, 6))
+    if (!base.success || base.data[0] !== index + 1) {
+      throw unavailable(new Error("audit compact export order is invalid"))
+    }
+
+    const [ordinal, id, createdAt, actorAccountId, actorEmployeeId, exactFlag] = base.data
+    if (ids.has(id)) throw unavailable(new Error("audit compact export id is duplicated"))
+    ids.add(id)
+
+    const byteLengths = result.slice(6, 6 + DETAIL_TEXT_COLUMNS.length).map((value) => {
+      if (typeof value !== "number" || !Number.isSafeInteger(value) || value < -1) {
+        throw unavailable(new Error("audit compact export text layout is invalid"))
+      }
+      return value === -1 ? null : value
+    })
+    const exactValues = result.slice(6 + DETAIL_TEXT_COLUMNS.length)
+    const isExact = exactFlag === 1
+
+    for (const [columnIndex, byteLength] of byteLengths.entries()) {
+      const value = exactValues[columnIndex]
+      if (!isExact) {
+        if (value !== null) {
+          throw unavailable(new Error("audit segmented export leaked an exact value"))
+        }
+        continue
+      }
+      if (byteLength === null) {
+        if (value !== null) throw unavailable(new Error("audit compact null text changed"))
+        continue
+      }
+      if (
+        byteLength > D1_MAX_HEX_SOURCE_BYTES ||
+        typeof value !== "string" ||
+        value.length !== byteLength * 2 ||
+        !UPPER_HEX.test(value)
+      ) {
+        throw unavailable(new Error("audit compact export hex is invalid"))
+      }
+    }
+
+    // Compact rows contain only ASCII numbers, nulls and uppercase HEX, so string length is bytes.
+    if (isExact && JSON.stringify(result).length >= D1_MAX_RESULT_VALUE_BYTES) {
+      throw unavailable(new Error("audit compact export row exceeds the D1 result limit"))
+    }
+
+    const rawBytes =
+      byteLengths.reduce<number>((total, byteLength) => total + (byteLength ?? 0), 0) +
+      (actorAccountId === null ? 0 : String(actorAccountId).length) +
+      (actorEmployeeId === null ? 0 : String(actorEmployeeId).length) +
+      String(createdAt).length
+
+    descriptors.push({
+      ordinal,
+      id,
+      createdAt,
+      actorAccountId,
+      actorEmployeeId,
+      byteLengths,
+      exactHex: isExact ? (exactValues as ReadonlyArray<string | null>) : null,
+      rawBytes,
+    })
+  }
+
+  for (let index = 1; index < descriptors.length; index += 1) {
+    const previous = descriptors[index - 1] as AuditExportReadDescriptor
+    const current = descriptors[index] as AuditExportReadDescriptor
+    if (
+      current.createdAt > previous.createdAt ||
+      (current.createdAt === previous.createdAt && current.id >= previous.id)
+    ) {
+      throw unavailable(new Error("audit compact export rows are not strictly ordered"))
+    }
+  }
+
+  return descriptors
+}
+
 function decodeHexInto(
   chunkHex: string,
   expectedBytes: number,
@@ -473,6 +646,64 @@ function decodeHexText(value: unknown): string {
   const bytes = new Uint8Array(value.length / 2)
   decodeHexInto(value, bytes.byteLength, bytes, 0)
   return FATAL_UTF8_DECODER.decode(bytes)
+}
+
+function validateExactProjectionLayout(
+  results: ReadonlyArray<unknown>,
+  descriptors: ReadonlyArray<{
+    id: number
+    created_at: number
+    actor_account_id: number | null
+    actor_employee_id: number | null
+  }>,
+  columns: ReadonlyArray<string>,
+): void {
+  if (results.length !== descriptors.length) {
+    throw unavailable(new Error("audit exact projection row count changed"))
+  }
+  for (const [index, result] of results.entries()) {
+    const descriptor = descriptors[index]
+    if (
+      descriptor === undefined ||
+      typeof result !== "object" ||
+      result === null ||
+      Array.isArray(result)
+    ) {
+      throw unavailable(new Error("audit exact projection is invalid"))
+    }
+    const row = result as Record<string, unknown>
+    const layout = descriptor as unknown as Record<string, unknown>
+    if (
+      row.id !== descriptor.id ||
+      row.created_at !== descriptor.created_at ||
+      row.actor_account_id !== descriptor.actor_account_id ||
+      row.actor_employee_id !== descriptor.actor_employee_id
+    ) {
+      throw unavailable(new Error("audit exact projection identity changed"))
+    }
+
+    for (const column of columns) {
+      const expectedType = layout[`${column}_type`]
+      const expectedBytes = layout[`${column}_bytes`]
+      const observedType = row[`${column}_type`]
+      const value = row[`${column}_value`]
+      if (observedType !== expectedType) {
+        throw unavailable(new Error("audit exact projection storage changed"))
+      }
+      if (expectedType === "null") {
+        if (expectedBytes !== null || value !== null) {
+          throw unavailable(new Error("audit exact projection null layout changed"))
+        }
+      } else if (
+        typeof expectedBytes !== "number" ||
+        typeof value !== "string" ||
+        value.length !== expectedBytes * 2 ||
+        !UPPER_HEX.test(value)
+      ) {
+        throw unavailable(new Error("audit exact projection byte length changed"))
+      }
+    }
+  }
 }
 
 function decodeTextProjection(
@@ -534,6 +765,26 @@ function parseEncodedDetailRows(
       },
     ])[0] as AuditDetailDatabaseRow
   })
+}
+
+function parseExactExportDescriptor(descriptor: AuditExportReadDescriptor): AuditDetailDatabaseRow {
+  if (descriptor.exactHex === null) {
+    throw unavailable(new Error("audit compact exact payload is missing"))
+  }
+  const projection: Record<string, unknown> = {
+    id: descriptor.id,
+    actor_account_id: descriptor.actorAccountId,
+    actor_employee_id: descriptor.actorEmployeeId,
+    created_at: descriptor.createdAt,
+  }
+  for (const [columnIndex, column] of DETAIL_TEXT_COLUMNS.entries()) {
+    const byteLength = descriptor.byteLengths[columnIndex]
+    projection[`${column}_type`] = byteLength === null ? "null" : "text"
+    projection[`${column}_value`] = descriptor.exactHex[columnIndex]
+  }
+  const parsed = parseEncodedDetailRows([projection])[0]
+  if (parsed === undefined) throw unavailable(new Error("audit compact detail row is missing"))
+  return parsed
 }
 
 function toSummary(row: AuditSummaryDatabaseRow): AuditEventSummary {
@@ -785,38 +1036,60 @@ function exportDescriptorSql(
   wireByteBudget: number,
 ): { sql: string; bindings: ReadonlyArray<string | number> } {
   const limitIndex = parts.bindings.push(limit)
-  const wireBudgetIndex = parts.bindings.push(wireByteBudget - 1)
+  const wireBudgetIndex = parts.bindings.push(wireByteBudget - 2)
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
 
   return {
-    sql: `WITH sized AS (
-            SELECT id, created_at, ${DETAIL_DESCRIPTOR_LAYOUT_COLUMNS},
-                   (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
-                   (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
-                   (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
-                   (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
+    sql: `WITH layout AS (
+            SELECT id, created_at, actor_account_id, actor_employee_id,
+                   ${DETAIL_TEXT_COLUMNS.join(", ")}, ${DETAIL_COMPACT_LAYOUT_COLUMNS}
             FROM audit_logs ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
+          ), measured AS (
+            SELECT *, (${DETAIL_COMPACT_TEXT_BYTES_SQL}) AS text_bytes,
+                   (${DETAIL_COMPACT_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
+                   (${DETAIL_COMPACT_STORAGE_OK_SQL}) AS storage_ok,
+                   (${DETAIL_COMPACT_BASE_WIRE_BYTES_SQL}) AS compact_base_bytes
+            FROM layout
+          ), sized AS (
+            SELECT *,
+                   text_bytes +
+                     CASE WHEN actor_account_id IS NULL THEN 0
+                          ELSE length(CAST(actor_account_id AS BLOB)) END +
+                     CASE WHEN actor_employee_id IS NULL THEN 0
+                          ELSE length(CAST(actor_employee_id AS BLOB)) END +
+                     length(CAST(created_at AS BLOB)) AS raw_bytes,
+                   compact_base_bytes + (${DETAIL_COMPACT_EXACT_VALUE_BYTES_SQL})
+                     AS exact_wire_bytes,
+                   compact_base_bytes + ${DETAIL_COMPACT_DESCRIPTOR_VALUE_BYTES}
+                     AS descriptor_wire_bytes
+            FROM measured
+          ), projected AS (
+            SELECT *,
+                   CASE WHEN storage_ok = 1
+                              AND max_text_bytes <= ${D1_MAX_HEX_SOURCE_BYTES}
+                              AND exact_wire_bytes < ${D1_MAX_RESULT_VALUE_BYTES}
+                        THEN 1 ELSE 0 END AS is_exact
+            FROM sized
           ), bounded AS (
-            SELECT id, created_at, actor_account_id, actor_employee_id,
-                   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_bytes`).join(", ")},
-                   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_type`).join(", ")},
-                   raw_bytes, wire_bytes, max_text_bytes, storage_ok,
-                   SUM(CASE WHEN max_text_bytes > ${D1_MAX_HEX_SOURCE_BYTES}
-                            THEN 256 ELSE wire_bytes + 1 END) OVER (
+            SELECT *,
+                   SUM((CASE WHEN is_exact = 1 THEN exact_wire_bytes
+                             ELSE descriptor_wire_bytes END) + 1) OVER (
                      ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
                    ) AS cumulative_wire_bytes,
                    ROW_NUMBER() OVER (ORDER BY created_at DESC, id DESC) AS row_number
-            FROM sized
+            FROM projected
           )
-          SELECT id, created_at, actor_account_id, actor_employee_id,
-                 ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_bytes`).join(", ")},
-                 ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_type`).join(", ")},
-                 raw_bytes, wire_bytes, max_text_bytes, storage_ok
+          SELECT row_number, id, created_at, actor_account_id, actor_employee_id, is_exact,
+                 ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_layout_bytes`).join(", ")},
+                 ${DETAIL_TEXT_COLUMNS.map(
+                   (column) =>
+                     `CASE WHEN is_exact = 1 AND ${column}_layout_bytes >= 0 ` +
+                     `THEN hex(CAST(${column} AS BLOB)) ELSE NULL END`,
+                 ).join(", ")}
           FROM bounded
           WHERE cumulative_wire_bytes <= ?${wireBudgetIndex}
-             OR row_number = 1
           ORDER BY created_at DESC, id DESC`,
     bindings: parts.bindings,
   }
@@ -829,6 +1102,120 @@ function detailIdsJson(rows: ReadonlyArray<AuditExportDescriptorRow>): string {
 function summaryIdsJson(rows: ReadonlyArray<AuditSummaryDescriptorRow>): string {
   return JSON.stringify(rows.map((row) => row.id))
 }
+
+function exportSegmentPlanGroups(
+  descriptors: ReadonlyArray<AuditExportReadDescriptor>,
+): ReadonlyArray<ReadonlyArray<AuditExportSegmentPlanItem>> {
+  const groups: AuditExportSegmentPlanItem[][] = []
+  let group: AuditExportSegmentPlanItem[] = []
+  let groupRemaining = D1_SEGMENT_QUERY_SOURCE_BYTES
+  let planOrdinal = 0
+  let totalSourceBytes = 0
+
+  for (const [descriptorOrdinal, descriptor] of descriptors.entries()) {
+    if (descriptor.exactHex !== null) continue
+    for (const [columnIndex, byteLength] of descriptor.byteLengths.entries()) {
+      if (byteLength === null || byteLength === 0) continue
+      totalSourceBytes += byteLength
+      let offset = 0
+      while (offset < byteLength) {
+        const expectedBytes = Math.min(byteLength - offset, D1_MAX_HEX_SOURCE_BYTES, groupRemaining)
+        if (expectedBytes <= 0) {
+          throw unavailable(new Error("audit segment planner made no progress"))
+        }
+        group.push({
+          planOrdinal,
+          descriptorOrdinal,
+          id: descriptor.id,
+          createdAt: descriptor.createdAt,
+          actorAccountId: descriptor.actorAccountId,
+          actorEmployeeId: descriptor.actorEmployeeId,
+          columnIndex,
+          offset,
+          expectedBytes,
+          columnBytes: byteLength,
+        })
+        planOrdinal += 1
+        offset += expectedBytes
+        groupRemaining -= expectedBytes
+
+        if (groupRemaining === 0) {
+          groups.push(group)
+          group = []
+          groupRemaining = D1_SEGMENT_QUERY_SOURCE_BYTES
+        }
+      }
+    }
+  }
+  if (group.length > 0) groups.push(group)
+
+  // The planner fills each group exactly except the last. Since accepted exports have at most
+  // 16 MiB of raw source text, ceil(16 MiB / 1,998,000) = 9 segment queries is a hard maximum.
+  const exactGroupCount = Math.ceil(totalSourceBytes / D1_SEGMENT_QUERY_SOURCE_BYTES)
+  if (groups.length !== exactGroupCount || groups.length > EXPORT_MAX_SEGMENT_QUERIES) {
+    throw unavailable(new Error("audit segment query budget invariant failed"))
+  }
+  return groups
+}
+
+function exportSegmentPlanJson(group: ReadonlyArray<AuditExportSegmentPlanItem>): string {
+  return JSON.stringify(
+    group.map((item) => [
+      item.planOrdinal,
+      item.descriptorOrdinal,
+      item.id,
+      item.createdAt,
+      item.actorAccountId,
+      item.actorEmployeeId,
+      item.columnIndex,
+      item.offset,
+      item.expectedBytes,
+      item.columnBytes,
+    ]),
+  )
+}
+
+function segmentColumnCase(expression: (column: DetailTextColumn) => string): string {
+  return (
+    `CASE p.column_index ` +
+    DETAIL_TEXT_COLUMNS.map((column, index) => `WHEN ${index} THEN ${expression(column)}`).join(
+      " ",
+    ) +
+    ` ELSE NULL END`
+  )
+}
+
+const EXPORT_SEGMENT_SQL = `
+  WITH plan AS (
+    SELECT CAST(json_extract(value, '$[0]') AS INTEGER) AS plan_ordinal,
+           CAST(json_extract(value, '$[1]') AS INTEGER) AS descriptor_ordinal,
+           CAST(json_extract(value, '$[2]') AS INTEGER) AS id,
+           CAST(json_extract(value, '$[3]') AS INTEGER) AS created_at,
+           CAST(json_extract(value, '$[4]') AS INTEGER) AS actor_account_id,
+           CAST(json_extract(value, '$[5]') AS INTEGER) AS actor_employee_id,
+           CAST(json_extract(value, '$[6]') AS INTEGER) AS column_index,
+           CAST(json_extract(value, '$[7]') AS INTEGER) AS byte_offset,
+           CAST(json_extract(value, '$[8]') AS INTEGER) AS expected_bytes,
+           CAST(json_extract(value, '$[9]') AS INTEGER) AS column_bytes
+    FROM json_each(?1)
+  )
+  SELECT p.plan_ordinal, p.descriptor_ordinal,
+         a.id, a.created_at, a.actor_account_id, a.actor_employee_id,
+         p.column_index, p.byte_offset, p.expected_bytes,
+         ${segmentColumnCase((column) => `typeof(a.${column})`)},
+         ${segmentColumnCase(
+           (column) =>
+             `CASE WHEN a.${column} IS NULL THEN NULL ` +
+             `ELSE length(CAST(a.${column} AS BLOB)) END`,
+         )},
+         ${segmentColumnCase(
+           (column) =>
+             `hex(substr(CAST(a.${column} AS BLOB), ` + `p.byte_offset + 1, p.expected_bytes))`,
+         )}
+  FROM plan p
+  JOIN audit_logs a ON a.id = p.id
+  ORDER BY p.plan_ordinal
+`
 
 function rethrowRepositoryError(error: unknown): never {
   if (
@@ -870,6 +1257,7 @@ export class AuditEventRepository {
         .bind(summaryIdsJson(hexDescriptors))
         .all()
       if (!summaryResult.success) throw new Error("audit summary query did not succeed")
+      validateExactProjectionLayout(summaryResult.results, hexDescriptors, SUMMARY_TEXT_COLUMNS)
       rows.push(...parseEncodedSummaryRows(summaryResult.results))
     }
 
@@ -906,6 +1294,7 @@ export class AuditEventRepository {
       .all()
     if (!detailResult.success) throw new Error("audit detail query did not succeed")
 
+    validateExactProjectionLayout(detailResult.results, descriptors, DETAIL_TEXT_COLUMNS)
     const rows = parseEncodedDetailRows(detailResult.results)
     if (
       rows.length !== descriptors.length ||
@@ -947,6 +1336,95 @@ export class AuditEventRepository {
     return ordered as AuditDetailDatabaseRow[]
   }
 
+  private async loadSegmentedExportDetails(
+    descriptors: ReadonlyArray<AuditExportReadDescriptor>,
+  ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
+    const rows: Array<AuditDetailDatabaseRow | undefined> = Array.from({
+      length: descriptors.length,
+    })
+    const buffers: Array<ReadonlyArray<Uint8Array | null> | undefined> = Array.from({
+      length: descriptors.length,
+    })
+
+    for (const [descriptorOrdinal, descriptor] of descriptors.entries()) {
+      if (descriptor.exactHex !== null) {
+        throw new Error("audit exact descriptor reached the segmented loader")
+      }
+
+      buffers[descriptorOrdinal] = descriptor.byteLengths.map((byteLength) =>
+        byteLength === null ? null : new Uint8Array(byteLength),
+      )
+    }
+
+    // The production no-update/no-delete triggers are the trust boundary between segment groups.
+    // Identity/layout checks fail closed, but a same-length valid rewrite is intentionally not hashed.
+    for (const group of exportSegmentPlanGroups(descriptors)) {
+      const raw = (await this.c.env.DB.prepare(EXPORT_SEGMENT_SQL)
+        .bind(exportSegmentPlanJson(group))
+        .raw()) as ReadonlyArray<unknown>
+      if (raw.length !== group.length) {
+        throw new Error("audit segment query returned missing or duplicate rows")
+      }
+
+      for (const [index, result] of raw.entries()) {
+        const expected = group[index]
+        if (expected === undefined || !Array.isArray(result) || result.length !== 12) {
+          throw new Error("audit segment projection is invalid")
+        }
+        const expectedPrefix: ReadonlyArray<unknown> = [
+          expected.planOrdinal,
+          expected.descriptorOrdinal,
+          expected.id,
+          expected.createdAt,
+          expected.actorAccountId,
+          expected.actorEmployeeId,
+          expected.columnIndex,
+          expected.offset,
+          expected.expectedBytes,
+        ]
+        if (expectedPrefix.some((value, field) => result[field] !== value)) {
+          throw new Error("audit segment identity or order changed during read")
+        }
+        if (result[9] !== "text" || result[10] !== expected.columnBytes) {
+          throw new Error("audit segment storage or length changed during read")
+        }
+
+        const descriptorBuffers = buffers[expected.descriptorOrdinal]
+        const destination = descriptorBuffers?.[expected.columnIndex]
+        if (destination === undefined || destination === null || typeof result[11] !== "string") {
+          throw new Error("audit segment buffer is missing")
+        }
+        decodeHexInto(result[11], expected.expectedBytes, destination, expected.offset)
+      }
+    }
+
+    for (const [descriptorOrdinal, descriptor] of descriptors.entries()) {
+      const descriptorBuffers = buffers[descriptorOrdinal]
+      if (descriptorBuffers === undefined) throw new Error("audit segment buffers are missing")
+      const text: Record<string, string | null> = {}
+      for (const [columnIndex, column] of DETAIL_TEXT_COLUMNS.entries()) {
+        const bytes = descriptorBuffers[columnIndex]
+        text[column] = bytes === null ? null : FATAL_UTF8_DECODER.decode(bytes)
+      }
+      const parsed = parseDetailRows([
+        {
+          id: descriptor.id,
+          actor_account_id: descriptor.actorAccountId,
+          actor_employee_id: descriptor.actorEmployeeId,
+          created_at: descriptor.createdAt,
+          ...text,
+        },
+      ])[0]
+      if (parsed === undefined) throw new Error("audit segmented export row is missing")
+      rows[descriptorOrdinal] = parsed
+    }
+
+    if (rows.some((row) => row === undefined)) {
+      throw new Error("audit export row reconstruction is incomplete")
+    }
+    return rows as AuditDetailDatabaseRow[]
+  }
+
   private async loadSegmentedText(
     descriptor: {
       id: number
@@ -956,6 +1434,7 @@ export class AuditEventRepository {
     } & Record<string, unknown>,
     columns: ReadonlyArray<string>,
   ): Promise<Record<string, string | null>> {
+    // As above, immutable audit_logs triggers rule out same-length content changes between reads.
     const buffers = new Map<string, Uint8Array>()
     const offsets = new Map<string, number>()
     const text: Record<string, string | null> = {}
@@ -986,7 +1465,7 @@ export class AuditEventRepository {
         offset: number
         expectedBytes: number
       }> = []
-      const projections: string[] = ["id", "created_at"]
+      const projections: string[] = ["id", "created_at", "actor_account_id", "actor_employee_id"]
       for (const column of columns) {
         const bytes = buffers.get(column)
         if (bytes === undefined || sourceBudget === 0) continue
@@ -996,6 +1475,10 @@ export class AuditEventRepository {
         const offsetIndex = bindings.push(offset + 1)
         const lengthIndex = bindings.push(expectedBytes)
         projections.push(`typeof(${column}) AS ${column}_type`)
+        projections.push(
+          `CASE WHEN ${column} IS NULL THEN NULL ` +
+            `ELSE length(CAST(${column} AS BLOB)) END AS ${column}_bytes`,
+        )
         projections.push(
           `hex(substr(CAST(${column} AS BLOB), ?${offsetIndex}, ?${lengthIndex})) ` +
             `AS ${column}_chunk_hex`,
@@ -1018,11 +1501,19 @@ export class AuditEventRepository {
         throw new Error("audit text segment is invalid")
       }
       const row = result as Record<string, unknown>
-      if (row.id !== descriptor.id || row.created_at !== descriptor.created_at) {
+      if (
+        row.id !== descriptor.id ||
+        row.created_at !== descriptor.created_at ||
+        row.actor_account_id !== descriptor.actor_account_id ||
+        row.actor_employee_id !== descriptor.actor_employee_id
+      ) {
         throw new Error("audit text segment changed during read")
       }
       for (const selection of selections) {
-        if (row[`${selection.column}_type`] !== "text") {
+        if (
+          row[`${selection.column}_type`] !== "text" ||
+          row[`${selection.column}_bytes`] !== descriptor[`${selection.column}_bytes`]
+        ) {
           throw new Error("audit text segment storage changed during read")
         }
         const chunkHex = row[`${selection.column}_chunk_hex`]
@@ -1319,9 +1810,13 @@ export class AuditEventRepository {
     const parsed = parseQuery(auditExportQuerySchema, query)
 
     try {
-      const exported: AuditEventDetail[] = []
+      const exported: Array<AuditEventDetail | undefined> = []
+      const segmentedDescriptors: AuditExportReadDescriptor[] = []
+      const segmentedSlots: number[] = []
       const sizeGuard = new AuditCsvByteCounter()
       let position: KeysetPosition | null = null
+      let cumulativeRawBytes = 0
+      let previous: Pick<AuditExportReadDescriptor, "createdAt" | "id"> | undefined
 
       while (true) {
         const remainingRows = EXPORT_MAX_ROWS - exported.length
@@ -1332,33 +1827,54 @@ export class AuditEventRepository {
           Math.min(EXPORT_CHUNK_SIZE, remainingRows + 1),
           EXPORT_DETAIL_WIRE_CHUNK_BYTES,
         )
-        const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
+        const raw = (await this.c.env.DB.prepare(descriptorStatement.sql)
           .bind(...descriptorStatement.bindings)
-          .all()
-        if (!descriptorResult.success) throw new Error("audit export size query did not succeed")
+          .raw()) as ReadonlyArray<unknown>
 
-        const descriptors = parseExportDescriptorRows(descriptorResult.results)
-        if (descriptors.length === 0) break
-        if (descriptors.length > remainingRows) throw exportTooLarge()
-        let cumulativeRawBytes = 0
-        for (const descriptor of descriptors) {
-          cumulativeRawBytes += descriptor.raw_bytes
+        const page = parseExportReadRows(raw)
+        if (page.length === 0) break
+        if (page.length > remainingRows) throw exportTooLarge()
+        const first = page[0]
+        if (
+          previous !== undefined &&
+          first !== undefined &&
+          (first.createdAt > previous.createdAt ||
+            (first.createdAt === previous.createdAt && first.id >= previous.id))
+        ) {
+          throw new Error("audit export pages are not strictly ordered")
+        }
+        for (const descriptor of page) {
+          cumulativeRawBytes += descriptor.rawBytes
           if (cumulativeRawBytes > sizeGuard.remainingBytes) throw exportTooLarge()
+          const slot = exported.length
+          if (descriptor.exactHex === null) {
+            segmentedDescriptors.push(descriptor)
+            segmentedSlots.push(slot)
+            exported.push(undefined)
+          } else {
+            exported.push(toDetail(parseExactExportDescriptor(descriptor)))
+          }
+          previous = descriptor
         }
 
-        const rows = await this.loadDescriptorDetails(descriptors)
-        for (const row of rows) {
-          const detail = toDetail(row)
-          sizeGuard.add(detail)
-          exported.push(detail)
-        }
-
-        const last = descriptors.at(-1)
+        const last = page.at(-1)
         if (last === undefined) break
-        position = { direction: "next", createdAt: last.created_at, id: last.id }
+        position = { direction: "next", createdAt: last.createdAt, id: last.id }
       }
 
-      return exported
+      const segmentedRows = await this.loadSegmentedExportDetails(segmentedDescriptors)
+      for (const [index, row] of segmentedRows.entries()) {
+        const slot = segmentedSlots[index]
+        if (slot === undefined || exported[slot] !== undefined) {
+          throw new Error("audit segmented export slot is invalid")
+        }
+        exported[slot] = toDetail(row)
+      }
+      if (exported.some((detail) => detail === undefined)) {
+        throw new Error("audit export result is incomplete")
+      }
+      for (const detail of exported) sizeGuard.add(detail as AuditEventDetail)
+      return exported as AuditEventDetail[]
     } catch (error) {
       rethrowRepositoryError(error)
     }

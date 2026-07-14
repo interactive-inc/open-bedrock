@@ -178,11 +178,15 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 - `from`
 - `to`
 
-時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は各 text 列の SQLite storage class と byte length を含む狭い descriptor を最大五千件ずつ取得する。text または許可された null 以外の storage class、型と null/length の不整合、無効 UTF-8、取得中の ID・時刻・長さ変更は `503 audit_unavailable` として fail closed にする。
+時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は各 text 列の SQLite storage class と byte length を含む狭い descriptor を最大五千件ずつ取得する。text または許可された null 以外の storage class、型と null/length の不整合、無効 UTF-8、取得中の ID・時刻・actor・storage class・長さ変更、欠落、重複、順序変更は `503 audit_unavailable` として fail closed にする。
 
-通常読取は text を直接受け取らず、保存 byte の `hex(CAST(column AS BLOB))` を四 MiB の累積 wire budget 内で取得する。一列が九十九万九千 byte を超える場合は、D1 の computed string 二百万 byte 上限へ達する前に、複数列合計で一 query 九十九万九千 source byte 以下となる `hex(substr(...))` segment へ切り替える。各 segment 応答は二百万 byte 未満で、全 byte の再構築後に `fatal: true, ignoreBOM: true` で一度だけ UTF-8 decode するため、先頭 BOM と保存原文を保持し、replacement decode を許さない。
+export の通常行は descriptor CTE の同一 statement から compact positional `.raw()` と保存 byte の `hex(CAST(column AS BLOB))` を返し、descriptor と payload の二重 query を行わない。SQL は各 computed HEX value と結果 row を二百万 byte 未満、全 response を四 MiB 以下に収める行だけを exact とする。それ以外は、十三列を固定した `CASE` と一 bind の JSON plan により `hex(substr(...))` segment を全 export 行でまとめて取得する。各 chunk は source 九十九万九千 byte 以下、各 query の source 合計は百九十九万八千 byte 以下とし、computed value と結果 row は二百万 byte 未満、response は四 MiB 以下に保つ。全 byte の再構築後に `fatal: true, ignoreBOM: true` で各列を一度だけ UTF-8 decode するため、先頭 BOM と保存原文を保持し、replacement decode を許さない。
 
-export の descriptor window は通常 exact-ID batch を四 MiB 以内へ保ち、大きい segment 行は軽量 descriptor cost として同じ window にまとめる。五万件成功は repository 二十三 query、五万一件目の拒否は二十一 query、remote D1 上限内の約一・八 MB 行八件は十八 queryで、D1 Free の一 invocation 五十 query を下回り、repository 自身は二十五 query 以下を維持する。五万一件目または完成 CSV の byte 超過を descriptor で検出した後は詳細 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+完成 CSV が十六 MiB 以下なら segment の総 source text も十六 MiB 以下なので、segment query は `ceil(16 MiB / 1,998,000) = 9` 回以下となる。五万件成功と五万一件目拒否は repository 十一 query、remote-valid 約一・八 MB 行八件は十 query、一・〇 MB 行十六件と一・九九八 MB 行八件は各十一 query、segment 十四件と tiny 四万六千件の混在は十九 queryであり、全形状で repository 二十五 query 以下を維持する。各行二百万 byte 未満の九行で完成 CSV ちょうど十六 MiB と一 byte 超過も検査する。五万一件目または raw byte 超過を descriptor 走査で検出した場合は segment query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+
+export は exact 行を各五千件の raw window 内で即時 decode して最終出力 slot へ置き、HEX と layout 配列を次の window 前に破棄する。全走査後まで保持する descriptor は segment 対象だけで、segment buffer の source byte 合計は十六 MiB 以下である。五万件 tiny fixture が保持する JS heap と ArrayBuffer の増分は 40,119,788 byte で、六十四 MiB 未満を回帰テストにする。これにより公開契約上必要な最終行配列に加え、全五万件分の descriptor/HEX を重ねて保持しない。
+
+複数 segment query 間の同一長・妥当 UTF-8 への書換えは payload digest を永続化しない限り検出できないため、production の `audit_logs_prevent_update` / `audit_logs_prevent_delete` trigger を trust boundary とする。migration test は両操作の拒否を固定し、repository はその上で ID、時刻、actor、storage class、全長、chunk 長を各応答で再検証する。
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 
