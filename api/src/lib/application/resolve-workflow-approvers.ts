@@ -1,8 +1,13 @@
 import type { WorkflowApproverSelector } from "@/domain/application/application-workflow"
 import type { Context } from "@/env"
+import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { ApplicationError } from "@/lib/errors"
+import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 import { accounts, accountRoles, employees, orgDepartments, orgMemberships, roles } from "@/schema"
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lte, or } from "drizzle-orm"
 import { approvalDelegations } from "@/schema"
+import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
 
 export type WorkflowApproverProvenance = {
   selector_index: number
@@ -14,6 +19,129 @@ export type WorkflowApproverMatch = {
   employeeId: number
   accountId: number | null
   provenance: WorkflowApproverProvenance
+}
+
+type OrganizationMembership = {
+  employeeCode: string
+  departmentCode: string
+  managerEmployeeCode: string | null
+  evidence: Readonly<Record<string, unknown>>
+}
+
+type DepartmentManager = {
+  code: string
+  managerEmployeeCode: string
+  evidence: Readonly<Record<string, unknown>>
+}
+
+async function loadWorkflowOrganization(props: {
+  c: Context
+  employeeRows: ReadonlyArray<{ id: number; code: string }>
+}): Promise<
+  | {
+      memberships: ReadonlyArray<OrganizationMembership>
+      departments: ReadonlyArray<DepartmentManager>
+    }
+  | Error
+> {
+  const migrationStatus = await new EmployeeLifecycleRepository(props.c).migrationStatus()
+  if (migrationStatus instanceof ApplicationError) return migrationStatus
+
+  if (migrationStatus !== "verified") {
+    const [memberships, departments] = await Promise.all([
+      props.c.var.database.select().from(orgMemberships),
+      props.c.var.database.select().from(orgDepartments),
+    ])
+    return {
+      memberships: memberships.map((membership) => ({
+        employeeCode: membership.employeeCode,
+        departmentCode: membership.departmentCode,
+        managerEmployeeCode: membership.managerEmployeeCode,
+        evidence: {
+          type: "org_membership",
+          department_code: membership.departmentCode,
+          employee_code: membership.employeeCode,
+          manager_employee_code: membership.managerEmployeeCode,
+        },
+      })),
+      departments: departments.flatMap((department) =>
+        department.managerEmployeeCode === null
+          ? []
+          : [
+              {
+                code: department.code,
+                managerEmployeeCode: department.managerEmployeeCode,
+                evidence: {
+                  type: "department_manager",
+                  department_code: department.code,
+                  manager_employee_code: department.managerEmployeeCode,
+                },
+              },
+            ],
+      ),
+    }
+  }
+
+  const businessDate = resolveCompanyBusinessDate({
+    now: props.c.env.NOW ?? new Date().toISOString(),
+    timeZone: props.c.env.COMPANY_TIME_ZONE,
+  })
+  if (typeof businessDate !== "string") return businessDate
+  const states = await new EmployeeLifecycleReadRepository(props.c).findStatesAt(
+    props.employeeRows.map((employee) => employee.id),
+    businessDate,
+  )
+  if (states instanceof ApplicationError) return states
+  const activeDepartmentRows = await props.c.var.database
+    .select({ code: orgDepartments.code })
+    .from(orgDepartments)
+    .where(isNull(orgDepartments.archivedAt))
+  const activeDepartments = new Set(activeDepartmentRows.map((department) => department.code))
+  const activeStates = [...states.values()].filter(
+    (state) => !state.archived && (state.status === "active" || state.status === "leave"),
+  )
+  const activeCodes = new Set(activeStates.map((state) => state.employeeCode))
+
+  return {
+    memberships: activeStates.flatMap((state) =>
+      [
+        ...(state.primaryAssignment === null ? [] : [state.primaryAssignment]),
+        ...state.concurrentAssignments,
+      ]
+        .filter((assignment) => activeDepartments.has(assignment.departmentCode))
+        .map((assignment) => ({
+          employeeCode: state.employeeCode,
+          departmentCode: assignment.departmentCode,
+          managerEmployeeCode:
+            assignment.managerEmployeeCode !== null &&
+            activeCodes.has(assignment.managerEmployeeCode)
+              ? assignment.managerEmployeeCode
+              : null,
+          evidence: {
+            type: "lifecycle_assignment",
+            assignment_period_id: assignment.periodId,
+            department_code: assignment.departmentCode,
+            employee_code: state.employeeCode,
+            manager_employee_code: assignment.managerEmployeeCode,
+            as_of: businessDate,
+          },
+        })),
+    ),
+    departments: activeStates.flatMap((state) =>
+      state.responsibilityDepartmentCodes
+        .filter((code) => activeDepartments.has(code))
+        .map((code) => ({
+          code,
+          managerEmployeeCode: state.employeeCode,
+          evidence: {
+            type: "lifecycle_responsibility",
+            department_code: code,
+            manager_employee_code: state.employeeCode,
+            as_of: businessDate,
+          },
+        })),
+    ),
+  }
 }
 
 export async function resolveWorkflowApproverMatches(props: {
@@ -35,10 +163,9 @@ export async function resolveWorkflowApproverMatches(props: {
     const idByCode = new Map(employeeRows.map((employee) => [employee.code, employee.id] as const))
     const result: Array<WorkflowApproverMatch> = []
 
-    const [memberships, departments] = await Promise.all([
-      props.c.var.database.select().from(orgMemberships),
-      props.c.var.database.select().from(orgDepartments),
-    ])
+    const organization = await loadWorkflowOrganization({ c: props.c, employeeRows })
+    if (organization instanceof Error) return organization
+    const { memberships, departments } = organization
 
     const applicantMemberships = memberships.filter(
       (membership) => membership.employeeCode === applicantCode,
@@ -112,12 +239,7 @@ export async function resolveWorkflowApproverMatches(props: {
               provenance: {
                 selector_index: selectorIndex,
                 selector,
-                evidence: {
-                  type: "org_membership",
-                  department_code: membership.departmentCode,
-                  employee_code: applicantCode,
-                  manager_employee_code: membership.managerEmployeeCode,
-                },
+                evidence: membership.evidence,
               },
             })
           }
@@ -139,11 +261,7 @@ export async function resolveWorkflowApproverMatches(props: {
                 provenance: {
                   selector_index: selectorIndex,
                   selector,
-                  evidence: {
-                    type: "department_manager",
-                    department_code: department.code,
-                    manager_employee_code: department.managerEmployeeCode,
-                  },
+                  evidence: department.evidence,
                 },
               })
             }
@@ -154,7 +272,11 @@ export async function resolveWorkflowApproverMatches(props: {
 
       const managersByEmployee = new Map<
         string,
-        Array<{ departmentCode: string; managerEmployeeCode: string }>
+        Array<{
+          departmentCode: string
+          managerEmployeeCode: string
+          evidence: Readonly<Record<string, unknown>>
+        }>
       >()
       for (const membership of memberships) {
         if (membership.managerEmployeeCode === null) continue
@@ -162,19 +284,14 @@ export async function resolveWorkflowApproverMatches(props: {
         managerEdges.push({
           departmentCode: membership.departmentCode,
           managerEmployeeCode: membership.managerEmployeeCode,
+          evidence: membership.evidence,
         })
         managersByEmployee.set(membership.employeeCode, managerEdges)
       }
 
       const pending = (managersByEmployee.get(applicantCode) ?? []).map((edge) => ({
         code: edge.managerEmployeeCode,
-        path: [
-          {
-            department_code: edge.departmentCode,
-            employee_code: applicantCode,
-            manager_employee_code: edge.managerEmployeeCode,
-          },
-        ],
+        path: [edge.evidence],
       }))
       const visited = new Set<string>([applicantCode])
       while (pending.length > 0) {
@@ -196,14 +313,7 @@ export async function resolveWorkflowApproverMatches(props: {
         pending.push(
           ...(managersByEmployee.get(current.code) ?? []).map((edge) => ({
             code: edge.managerEmployeeCode,
-            path: [
-              ...current.path,
-              {
-                department_code: edge.departmentCode,
-                employee_code: current.code,
-                manager_employee_code: edge.managerEmployeeCode,
-              },
-            ],
+            path: [...current.path, edge.evidence],
           })),
         )
       }
@@ -283,26 +393,5 @@ async function loadActiveCandidateAccounts(props: {
   c: Context
   candidateAccounts: ReadonlyArray<{ employeeId: number; accountId: number }>
 }): Promise<ReadonlyArray<{ employeeId: number; accountId: number }> | Error> {
-  if (props.candidateAccounts.length === 0) return []
-
-  try {
-    const rows = await props.c.env.DB.prepare(
-      `SELECT DISTINCT account.employee_id AS employee_id, account.id AS account_id
-       FROM json_each(?1) candidate_json
-       INNER JOIN accounts account
-         ON account.id = json_extract(candidate_json.value, '$.accountId')
-        AND account.employee_id = json_extract(candidate_json.value, '$.employeeId')
-       INNER JOIN employees employee ON employee.id = account.employee_id
-       WHERE account.status = 'active' AND employee.status <> 'retired'`,
-    )
-      .bind(JSON.stringify(props.candidateAccounts))
-      .all<{ employee_id: number; account_id: number }>()
-
-    return rows.results.map((row) => ({
-      employeeId: row.employee_id,
-      accountId: row.account_id,
-    }))
-  } catch (error) {
-    return error instanceof Error ? error : new Error("failed to resolve active candidate accounts")
-  }
+  return filterLiveWorkflowAccounts(props.c, props.candidateAccounts)
 }

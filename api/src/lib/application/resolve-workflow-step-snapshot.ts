@@ -1,8 +1,9 @@
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
 import type { Context } from "@/env"
-import { accounts, employees } from "@/schema"
-import { and, eq, isNotNull, ne } from "drizzle-orm"
+import { accounts } from "@/schema"
+import { eq } from "drizzle-orm"
 import { dueAt } from "@/lib/application/evaluate-workflow"
+import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
 import {
   resolveWorkflowApproverMatches,
   type WorkflowApproverMatch,
@@ -67,22 +68,23 @@ export async function resolveWorkflowStepSnapshot(props: {
     const accountRows = await props.c.var.database
       .select({ id: accounts.id, employeeId: accounts.employeeId })
       .from(accounts)
-      .innerJoin(employees, eq(employees.id, accounts.employeeId))
-      .where(
-        and(
-          eq(accounts.status, "active"),
-          isNotNull(accounts.employeeId),
-          ne(employees.status, "retired"),
-        ),
-      )
+      .where(eq(accounts.status, "active"))
+
+    const liveAccounts = await filterLiveWorkflowAccounts(
+      props.c,
+      accountRows.flatMap((account) =>
+        account.employeeId === null
+          ? []
+          : [{ employeeId: account.employeeId, accountId: account.id }],
+      ),
+    )
+    if (liveAccounts instanceof Error) return liveAccounts
 
     const activeAccountsByEmployee = new Map<number, Array<number>>()
 
-    for (const account of accountRows) {
-      if (account.employeeId === null) continue
-
+    for (const account of liveAccounts) {
       const accountIds = activeAccountsByEmployee.get(account.employeeId) ?? []
-      accountIds.push(account.id)
+      accountIds.push(account.accountId)
       activeAccountsByEmployee.set(account.employeeId, accountIds)
     }
 

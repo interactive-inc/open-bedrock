@@ -4,11 +4,14 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
 import { accounts, approvalDelegations, applicationTemplates, employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, eq, ne, or } from "drizzle-orm"
+import { and, asc, eq, or } from "drizzle-orm"
 import { z } from "zod"
 
 const zDelegation = z.object({
@@ -76,10 +79,13 @@ export const POST = factory.createHandlers(
         accounts,
         and(eq(accounts.employeeId, employees.id), eq(accounts.status, "active")),
       )
-      .where(and(eq(employees.code, body.delegate_employee_code), ne(employees.status, "retired")))
+      .where(eq(employees.code, body.delegate_employee_code))
       .limit(1)
       .then((rows) => rows.at(0))
     if (delegate === undefined) throw new NotFoundError("active delegate employee not found")
+    const delegateAccess = await resolveLiveEmployeeAccess(c, delegate.id)
+    if (delegateAccess instanceof ApplicationError) throw toHttpException(delegateAccess)
+    if (delegateAccess === null) throw new NotFoundError("active delegate employee not found")
     if (delegate.id === session.employeeId) {
       throw new BadRequestError("cannot delegate approval to yourself")
     }

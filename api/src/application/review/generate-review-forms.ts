@@ -1,5 +1,9 @@
 import type { ReviewCyclePolicy } from "@/domain/review/review-cycle-policy"
 import type { Context } from "@/env"
+import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { ApplicationError } from "@/lib/errors"
+import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 import { employees, orgMemberships } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 
@@ -9,20 +13,80 @@ type Assignment = {
   reviewerType: "self" | "manager" | "peer" | "subordinate"
 }
 
+type ReviewEmployee = { id: number; code: string }
+
+type ReviewMembership = {
+  employeeCode: string
+  departmentCode: string
+  managerEmployeeCode: string | null
+}
+
+async function loadReviewPopulation(c: Context): Promise<{
+  employeeRows: ReadonlyArray<ReviewEmployee>
+  membershipRows: ReadonlyArray<ReviewMembership>
+}> {
+  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+  if (migrationStatus instanceof ApplicationError) throw migrationStatus
+
+  if (migrationStatus !== "verified") {
+    const [employeeRows, membershipRows] = await Promise.all([
+      c.var.database
+        .select({ id: employees.id, code: employees.code })
+        .from(employees)
+        .where(eq(employees.status, "active"))
+        .orderBy(asc(employees.id)),
+      c.var.database.select().from(orgMemberships),
+    ])
+    return { employeeRows, membershipRows }
+  }
+
+  const businessDate = resolveCompanyBusinessDate({
+    now: c.env.NOW ?? new Date().toISOString(),
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (typeof businessDate !== "string") throw businessDate
+
+  const allEmployees = await c.var.database
+    .select({ id: employees.id, code: employees.code })
+    .from(employees)
+    .orderBy(asc(employees.id))
+  const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
+    allEmployees.map((employee) => employee.id),
+    businessDate,
+  )
+  if (states instanceof ApplicationError) throw states
+
+  const employeeRows = allEmployees.filter((employee) => {
+    const state = states.get(employee.id)
+    return state?.status === "active" && state.archived === false
+  })
+  const activeCodes = new Set(employeeRows.map((employee) => employee.code))
+  const membershipRows = employeeRows.flatMap((employee) => {
+    const state = states.get(employee.id)
+    if (state === undefined) return []
+    return [
+      ...(state.primaryAssignment === null ? [] : [state.primaryAssignment]),
+      ...state.concurrentAssignments,
+    ].map((assignment) => ({
+      employeeCode: employee.code,
+      departmentCode: assignment.departmentCode,
+      managerEmployeeCode:
+        assignment.managerEmployeeCode !== null && activeCodes.has(assignment.managerEmployeeCode)
+          ? assignment.managerEmployeeCode
+          : null,
+    }))
+  })
+
+  return { employeeRows, membershipRows }
+}
+
 export async function generateReviewForms(props: {
   c: Context
   cycleId: number
   policy: ReviewCyclePolicy
 }): Promise<number | Error> {
   try {
-    const [employeeRows, membershipRows] = await Promise.all([
-      props.c.var.database
-        .select({ id: employees.id, code: employees.code })
-        .from(employees)
-        .where(eq(employees.status, "active"))
-        .orderBy(asc(employees.id)),
-      props.c.var.database.select().from(orgMemberships),
-    ])
+    const { employeeRows, membershipRows } = await loadReviewPopulation(props.c)
 
     const idByCode = new Map(employeeRows.map((employee) => [employee.code, employee.id] as const))
     const membershipsByEmployee = new Map<string, Array<(typeof membershipRows)[number]>>()

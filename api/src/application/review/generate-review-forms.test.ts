@@ -67,4 +67,71 @@ describe("generateReviewForms", () => {
       .first<{ total: number }>()
     expect(afterRetry?.total).toBe(9)
   })
+
+  test("uses effective-dated lifecycle assignments after migration is verified", async () => {
+    const { context, db } = createTestContext()
+    await db.exec(`
+      INSERT INTO departments (id, name) VALUES (1, 'Product');
+      INSERT INTO org_departments
+        (code, department_id, parent_code, manager_employee_code, sort_order)
+      VALUES ('D001', 1, NULL, NULL, 1);
+      INSERT INTO employees (id, code, name, status) VALUES
+        (2, 'E002', 'Current Manager', 'retired'),
+        (5, 'E005', 'Member A', 'active'),
+        (6, 'E006', 'Member B', 'active'),
+        (9, 'E009', 'Future Employee', 'active');
+      INSERT INTO org_memberships
+        (department_code, employee_code, manager_employee_code) VALUES
+        ('D001', 'E005', 'E009'), ('D001', 'E006', 'E009');
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at) VALUES
+        ('employment-2', 1, 2, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-5', 1, 5, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-6', 1, 6, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-9', 1, 9, '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+        ('status-2', 1, 'employment-2', 2, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-6', 1, 'employment-6', 6, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-9', 1, 'employment-9', 9, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at) VALUES
+        ('assignment-2', 1, 'employment-2', 2, 'D001', 'primary', 'Manager', NULL, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-5', 1, 'employment-5', 5, 'D001', 'primary', 'Member', 2, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-6', 1, 'employment-6', 6, 'D001', 'primary', 'Member', 2, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-9', 1, 'employment-9', 9, 'D001', 'primary', 'Member', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO review_cycles
+        (id, title, period, status, due_date) VALUES (1, 'Review', '2026-H1', 'draft', NULL);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+
+    const generated = await generateReviewForms({
+      c: context,
+      cycleId: 1,
+      policy: {
+        include_self: true,
+        include_manager: true,
+        include_peers: false,
+        include_subordinates: false,
+        peer_count: 0,
+      },
+    })
+
+    expect(generated).toBe(5)
+    const rows = await db.prepare("SELECT * FROM review_forms ORDER BY id").all()
+    expect(rows.results).toContainEqual(
+      expect.objectContaining({
+        subject_employee_id: 5,
+        reviewer_employee_id: 2,
+        reviewer_type: "manager",
+      }),
+    )
+    expect(rows.results.some((row) => row.subject_employee_id === 9)).toBe(false)
+    expect(rows.results.some((row) => row.reviewer_employee_id === 9)).toBe(false)
+  })
 })

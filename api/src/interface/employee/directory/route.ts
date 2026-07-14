@@ -8,7 +8,12 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { ApplicationError, UnavailableError } from "@/lib/errors"
 import { zAppEmployeeDirectoryList } from "@/lib/app-schemas"
+import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 import { employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
@@ -35,7 +40,7 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const conditions: Array<SQL> = [eq(employees.status, "active")]
+    const conditions: Array<SQL> = []
 
     if (query.q !== undefined) {
       const keywordMatch = or(
@@ -46,10 +51,6 @@ export const GET = factory.createHandlers(
       if (keywordMatch !== undefined) {
         conditions.push(keywordMatch)
       }
-    }
-
-    if (query.dept !== undefined) {
-      conditions.push(eq(employees.deptName, query.dept))
     }
 
     const limit = toBoundedInt({
@@ -65,6 +66,65 @@ export const GET = factory.createHandlers(
       min: 0,
       max: MAX_LIST_OFFSET,
     })
+
+    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+
+    if (migrationStatus === "verified") {
+      const businessDate = resolveCompanyBusinessDate({
+        now: c.env.NOW ?? new Date().toISOString(),
+        timeZone: c.env.COMPANY_TIME_ZONE,
+      })
+      if (typeof businessDate !== "string") {
+        throw toHttpException(
+          new UnavailableError(
+            "failed to resolve company business date",
+            "company_timezone_unavailable",
+            { cause: businessDate },
+          ),
+        )
+      }
+
+      const candidates = await c.var.database
+        .select({ id: employees.id, code: employees.code, name: employees.name })
+        .from(employees)
+        .where(conditions.length === 0 ? undefined : and(...conditions))
+        .orderBy(asc(employees.code))
+      const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
+        candidates.map((employee) => employee.id),
+        businessDate,
+      )
+      if (states instanceof ApplicationError) throw toHttpException(states)
+
+      const active = candidates.flatMap((employee) => {
+        const state = states.get(employee.id)
+        if (state === undefined || state.archived || state.status !== "active") return []
+        const assignment = state.primaryAssignment
+        if (query.dept !== undefined && assignment?.departmentName !== query.dept) return []
+        return [
+          {
+            code: employee.code,
+            name: employee.name,
+            dept_name: assignment?.departmentName ?? null,
+            position: assignment?.positionTitle ?? null,
+          },
+        ]
+      })
+
+      return c.json(
+        zAppEmployeeDirectoryList.parse({
+          data: active.slice(offset, offset + limit),
+          total: active.length,
+        }),
+        200,
+      )
+    }
+
+    conditions.push(eq(employees.status, "active"))
+
+    if (query.dept !== undefined) {
+      conditions.push(eq(employees.deptName, query.dept))
+    }
 
     const rows = await c.var.database
       .select({
