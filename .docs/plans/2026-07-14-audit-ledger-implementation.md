@@ -336,7 +336,7 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 実行: `cd api && bun test src/infrastructure/audit src/lib/audit/audit-cursor.test.ts src/lib/audit/audit-csv.test.ts`
 
-- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件で次頁有無を判定する。一覧 SQL は内部 ID と要約列だけを投影し、JSON 四列と client IP を取得しない。
+- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件の狭い `(id, created_at, wire_bytes)` descriptor を先に取得し、指定 `limit` または保守的な四 MiB 累積要約 wire budget の早い方までを exact-ID 要約取得する。byte budget で短縮したページも前後 cursor を返し、単一要約行の超過は `audit_unavailable` とする。一覧 SQL は内部 ID と要約列だけを投影し、JSON 四列と client IP を取得しない。
 
 - [ ] 詳細と CSV 出力は非 null の JSON 四列を構文検証し、scalar と旧 JSON-string wrapper は再直列化せず受理する。壊れた JSON は `audit_unavailable` とし、一覧要約では詳細列を検証しない。
 
@@ -344,7 +344,7 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 - [ ] CSV は固定列順、RFC 4180、CRLF、UTF-8 BOM なしとし、文字列化後の先頭危険文字へ単一引用符を付ける。
 
-- [ ] 出力は狭い raw/wire byte descriptor と exact-ID 詳細取得の二段階にする。通常の exact-ID 取得は escaping と列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。単一行が通常上限を超えても raw byte が完成 CSV の残量以内なら、allowlist 済みの各 text 列を二百五十六 KiB の BLOB segment で取得し、全 byte の再構築後に fatal UTF-8 decode する。D1 の各応答は十六 MiB 未満とし、取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
+- [ ] 出力は狭い raw/wire byte descriptor と exact-ID 詳細取得の二段階にする。通常の exact-ID 取得は escaping と列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。単一行が通常上限を超えても raw byte が完成 CSV の残量以内なら、allowlist 済みの各 text 列を二百五十六 KiB の BLOB segment で取得し、全 byte の再構築後に先頭 BOM を原文の一部として保持する fatal UTF-8 decode を行う。D1 の各応答は十六 MiB 未満とし、取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
 
 - [ ] 対象テストを再実行する。
 
