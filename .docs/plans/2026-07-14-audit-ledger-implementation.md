@@ -358,7 +358,7 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 - [ ] CSV は固定列順、RFC 4180、CRLF、UTF-8 BOM なしとし、文字列化後の先頭危険文字へ単一引用符を付ける。
 
-- [ ] 出力は最大五千件の狭い descriptor window と bounded detail 取得の二段階にする。descriptor は全 text 列の `typeof` と BLOB byte length を検査し、text/null 以外、null/length 不整合、サイズ変更を fail closed にする。通常の exact-ID 取得は保存 byte を hex で読み、列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。一列が九十九万九千 byte を超える場合は computed string 二百万 byte 上限へ届く前に、複数列合計九十九万九千 source byte 以下の `hex(substr(CAST(column AS BLOB), ...))` segment へ切り替える。全 byte の再構築後に `fatal: true, ignoreBOM: true` で一度だけ decode し、先頭 BOM を原文として保持する。segment 応答を二百万 byte 未満、repository query を一要求二十五回以下とし、五万一件目または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
+- [ ] 出力は最大五千件の compact positional `.raw()` descriptor window と bounded detail 取得にする。全 text 列は storage class を length sentinel へ畳み、text/null 以外、null/length 不整合、ID・時刻・actor・storage class・全長・順序の変更、欠落、重複を fail closed にする。通常行は同じ descriptor statement で保存 byte の HEX まで返して二重 query をなくし、computed value と結果 row を二百万 byte 未満、response を四 MiB 以下にする。segment 行は十三列固定 `CASE` と一 bind JSON plan で全 descriptor を横断してまとめ、各 chunk を九十九万九千 source byte 以下、各 query を百九十九万八千 source byte 以下にする。全 byte の再構築後に `fatal: true, ignoreBOM: true` で各列を一度だけ decode し、先頭 BOM を原文として保持する。完成 CSV 十六 MiB から segment query は最大九回となり、descriptor と合わせて一要求二十五回以下とする。exact 行は各 window 内で即 decode して HEX/layout を破棄し、全体保持を最終行配列、segment descriptor、最大十六 MiB の segment buffer に限定する。五万一件目または完成 CSV 十六 MiB の超過は `audit_export_too_large` とする。同一長の妥当な書換え防止は production の append-only update/delete trigger を trust boundary とし、migration test で固定する。
 
 - [ ] 対象テストを再実行する。
 

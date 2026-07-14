@@ -9,8 +9,8 @@ bytes exactly, and keep every export within Cloudflare D1 Free invocation limits
 
 **Architecture:** A canonical v2 cursor binds snapshot, limit, filters, and bounded source/target
 ranges. Read projections validate SQLite storage classes and decode allowlisted text from BLOB bytes
-with fatal UTF-8. Export uses large narrow descriptor windows and byte-bounded exact detail chunks,
-so row count does not multiply D1 calls.
+with fatal UTF-8. Export combines compact descriptor and normal HEX payloads in one positional raw
+query, then globally batches all segmented chunks with a fixed one-bind plan.
 
 **Tech Stack:** TypeScript, Bun test, Hono, Cloudflare Workers/D1, SQLite, Zod.
 
@@ -18,7 +18,7 @@ so row count does not multiply D1 calls.
 
 - D1 Free permits at most 50 queries per Worker invocation; repository export targets at most 25.
 - D1 strings, BLOBs, and rows are at most 2,000,000 bytes.
-- Remote D1 returns BLOBs as `number[]`; the local test adapter returns `Uint8Array`.
+- Text payloads cross the D1 boundary only as uppercase HEX; no runtime-specific BLOB shape is used.
 - Cursor state is bounded, canonical, position-only, and never authorization data.
 - Immediate opposite navigation restores the exact source range. Deeper reverse navigation may
   regroup pages but must remain contiguous without skips or overlap; Task 8 keeps the browser stack
@@ -88,4 +88,15 @@ so row count does not multiply D1 calls.
       chunk safety.
 - [x] Replace decisive over-2MB fixtures with per-row values below 2,000,000 bytes and retain any
       larger local-only stress with an explicit label.
+- [x] Add formal RED fixtures for 1,000,002-byte metadata times sixteen, 1,998,002-byte metadata
+      times eight, and fourteen segmented rows mixed with 46,000 tiny rows; record 34/26/49 calls.
+- [x] Return normal HEX in the compact descriptor statement and batch segment plans globally at
+      1,998,000 source bytes per query with one JSON bind and fixed allowlisted column cases.
+- [x] Validate ordinal, identity, actor, storage class, full/chunk length, missing, duplicate,
+      reordered, invalid HEX and same-length invalid UTF-8 responses; retain append-only triggers as
+      the documented trust boundary for a same-length valid rewrite between segment queries.
+- [x] Prove query counts 11/11/19 for the three formal fixtures, 11 for 50,000 rows and row 50,001,
+      and exact 16 MiB/+1 byte behavior using nine remote-compatible rows below 2 MB each.
+- [x] Decode exact rows inside each 5,000-row window and discard HEX/layout immediately; retain only
+      final rows and segmented state, with the 50,000-row retained-memory delta below 64 MiB.
 - [ ] Run focused tests, full API tests, API typecheck, `vp check`, diff/hygiene, then commit and push.
