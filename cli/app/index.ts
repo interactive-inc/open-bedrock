@@ -203,6 +203,8 @@ import careerPostingDeleteHandler from "@/app/career/posting-delete/route"
 import onboardingTemplateCreateHandler from "@/app/onboarding/template-create/route"
 import onboardingTemplateUpdateHandler from "@/app/onboarding/template-update/route"
 import onboardingTemplateDeleteHandler from "@/app/onboarding/template-delete/route"
+import onboardingTemplateBindLifecycleHandler from "@/app/onboarding/template-bind-lifecycle/[template_code]/route"
+import onboardingTemplateUnbindLifecycleHandler from "@/app/onboarding/template-unbind-lifecycle/[template_code]/route"
 import onboardingTemplateShowHandler from "@/app/onboarding/template/[code]/route"
 import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
 import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
@@ -235,6 +237,17 @@ import employeeDeleteHandler from "@/app/employee/delete/[employee_code]/route"
 import employeeRegisterHandler from "@/app/employee/register/route"
 import employeeShowHandler from "@/app/employee/show/[employee_code]/route"
 import employeeUpdateHandler from "@/app/employee/update/[employee_code]/route"
+import employeeTimelineHandler from "@/app/employee/timeline/route"
+import employeeStateHandler from "@/app/employee/state/route"
+import employeeArchiveHandler from "@/app/employee/archive/route"
+import personnelActionRequestHandler from "@/app/personnel-action/request/route"
+import personnelActionApplyHandler from "@/app/personnel-action/apply/route"
+import personnelActionCorrectHandler from "@/app/personnel-action/correct/route"
+import lifecyclePreflightHandler from "@/app/batch/employee-lifecycle/preflight/route"
+import lifecycleBackfillHandler from "@/app/batch/employee-lifecycle/backfill/route"
+import lifecycleVerifyHandler from "@/app/batch/employee-lifecycle/verify/route"
+import lifecycleRebuildHandler from "@/app/batch/employee-lifecycle/rebuild-projections/route"
+import lifecycleOutboxHandler from "@/app/batch/employee-lifecycle/process-outbox/route"
 import expenseDeleteHandler from "@/app/expense/delete/[expense_id]/route"
 import expenseUpdateHandler from "@/app/expense/update/[expense_id]/route"
 import goalDeleteHandler from "@/app/goal/delete/route"
@@ -549,6 +562,14 @@ routes.post("/career/posting/:posting_id?", ...careerPostingShowHandler)
 routes.post("/onboarding/template-create", ...onboardingTemplateCreateHandler)
 routes.post("/onboarding/template-update", ...onboardingTemplateUpdateHandler)
 routes.post("/onboarding/template-delete", ...onboardingTemplateDeleteHandler)
+routes.post(
+  "/onboarding/template-bind-lifecycle/:template_code?",
+  ...onboardingTemplateBindLifecycleHandler,
+)
+routes.post(
+  "/onboarding/template-unbind-lifecycle/:template_code?",
+  ...onboardingTemplateUnbindLifecycleHandler,
+)
 routes.post("/onboarding/template/:code?", ...onboardingTemplateShowHandler)
 routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
 routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
@@ -575,6 +596,17 @@ routes.post("/employee/delete/:employee_code?", ...employeeDeleteHandler)
 routes.post("/employee/register", ...employeeRegisterHandler)
 routes.post("/employee/show/:employee_code?", ...employeeShowHandler)
 routes.post("/employee/update/:employee_code?", ...employeeUpdateHandler)
+routes.post("/employee/timeline", ...employeeTimelineHandler)
+routes.post("/employee/state", ...employeeStateHandler)
+routes.post("/employee/archive", ...employeeArchiveHandler)
+routes.post("/personnel-action/request", ...personnelActionRequestHandler)
+routes.post("/personnel-action/apply", ...personnelActionApplyHandler)
+routes.post("/personnel-action/correct", ...personnelActionCorrectHandler)
+routes.post("/batch/employee-lifecycle/preflight", ...lifecyclePreflightHandler)
+routes.post("/batch/employee-lifecycle/backfill", ...lifecycleBackfillHandler)
+routes.post("/batch/employee-lifecycle/verify", ...lifecycleVerifyHandler)
+routes.post("/batch/employee-lifecycle/rebuild-projections", ...lifecycleRebuildHandler)
+routes.post("/batch/employee-lifecycle/process-outbox", ...lifecycleOutboxHandler)
 routes.post("/expense/delete/:expense_id?", ...expenseDeleteHandler)
 routes.post("/expense/update/:expense_id?", ...expenseUpdateHandler)
 routes.post("/goal/delete", ...goalDeleteHandler)

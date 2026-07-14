@@ -1,9 +1,11 @@
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
 import type { Context, SessionPayload } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { lifecycleEffectTemplateBindings } from "@/schema"
+import { eq } from "drizzle-orm"
 
 export type Command = {
   session: SessionPayload
@@ -36,6 +38,25 @@ export class UpdateOnboardingTemplate {
       return new NotFoundError("template not found", "template_not_found")
     }
 
+    if (current.kind !== command.kind) {
+      try {
+        const bindings = await this.c.var.database
+          .select({ effectType: lifecycleEffectTemplateBindings.effectType })
+          .from(lifecycleEffectTemplateBindings)
+          .where(eq(lifecycleEffectTemplateBindings.templateCode, command.code))
+          .limit(1)
+
+        if (bindings.length > 0) {
+          return new ValidationError(
+            "cannot change the kind of a lifecycle-bound onboarding template",
+            "lifecycle_binding_kind_conflict",
+          )
+        }
+      } catch (cause) {
+        return new UnexpectedError("failed to inspect lifecycle template binding", { cause })
+      }
+    }
+
     const updated = await templateRepository.update(
       current.withDetails({
         name: command.name,
@@ -46,6 +67,13 @@ export class UpdateOnboardingTemplate {
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update template", { cause: updated })
+    }
+
+    if (updated === null) {
+      return new ValidationError(
+        "cannot change the kind of a lifecycle-bound onboarding template",
+        "lifecycle_binding_kind_conflict",
+      )
     }
 
     return updated

@@ -15,7 +15,7 @@ import {
 import { describe, expect, test } from "bun:test"
 
 describe("employee mutations preserve an effective administrator", () => {
-  test("requires a personnel action instead of retiring through the legacy profile mutation", async () => {
+  test("a name-only ledger update cannot retire an effective administrator", async () => {
     const { context } = createTestContext()
     const employeeId = await seedIamTestAccount(context, "E977")
 
@@ -27,22 +27,17 @@ describe("employee mutations preserve an effective administrator", () => {
       session: makeTestSession("admin", 999),
       viewerEmployeeId: 999,
       code: "E977",
-      profile: {
-        name: "Sam Rivers",
-        deptId: 3,
-        deptName: "Engineering",
-        position: "Engineer",
-        status: "retired",
-      },
+      name: "Sam Rivers Updated",
     })
 
-    expectApplicationError(result, ConflictError, "lifecycle_action_required")
+    expect(result).toBeInstanceOf(Employee)
 
     const employee = await new EmployeeRepository(context).findByCode("E977")
 
     expect(employee).toBeInstanceOf(Employee)
 
     if (employee instanceof Employee) {
+      expect(employee.name).toBe("Sam Rivers Updated")
       expect(employee.status).toBe("active")
     }
   })

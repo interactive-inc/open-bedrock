@@ -20,6 +20,7 @@ export default factory.createHandlers(
 
     const response = await client.employees[":code"].$get({
       param: { code: employeeCode },
+      query: {},
     })
 
     return c.json(await response.json())

@@ -218,7 +218,7 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
+    z.strictObject({
       code: codeSchema,
       name: z.string().min(1).max(200),
       email: z.string().email().max(254),

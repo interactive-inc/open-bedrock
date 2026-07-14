@@ -17,6 +17,7 @@ const onboardingTemplateResponseSchema = z.object({
   kind: z.enum(["join", "leave"]),
   description: z.string().nullable(),
   task_count: z.number(),
+  lifecycle_effect: z.enum(["hire", "retired"]).nullable(),
 })
 
 const jwtSecret = "onboarding-templates-route-test-secret"
@@ -95,6 +96,15 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
+  await seedD1(db, "lifecycle_effect_template_bindings", [
+    {
+      effect_type: "hire",
+      template_code: "engineer_join",
+      updated_at: 1,
+      updated_by_account_id: 1,
+    },
+  ])
+
   return db
 }
 
@@ -143,6 +153,10 @@ describe("GET /onboarding/templates", () => {
       const engineerJoin = parsed.data.data.find((template) => template.code === "engineer_join")
 
       expect(engineerJoin?.task_count).toBe(2)
+      expect(engineerJoin?.lifecycle_effect).toBe("hire")
+
+      const commonLeave = parsed.data.data.find((template) => template.code === "common_leave")
+      expect(commonLeave?.lifecycle_effect).toBeNull()
     }
   })
 
@@ -222,5 +236,45 @@ describe("GET /onboarding/templates", () => {
     })
 
     expect(response.status).toBe(200)
+  })
+})
+
+describe("/onboarding/templates/:code/lifecycle-binding", () => {
+  test("sets and removes a compatible lifecycle binding", async () => {
+    const updated = await request({
+      path: "/onboarding/templates/common_leave/lifecycle-binding",
+      token: await token(1, "admin"),
+      method: "PUT",
+      body: { effect_type: "retired" },
+    })
+    expect(updated.status).toBe(200)
+    expect(await updated.json()).toEqual({
+      effect_type: "retired",
+      template_code: "common_leave",
+    })
+
+    const removed = await request({
+      path: "/onboarding/templates/engineer_join/lifecycle-binding",
+      token: await token(1, "admin"),
+      method: "DELETE",
+    })
+    expect(removed.status).toBe(204)
+  })
+
+  test("rejects incompatible kinds and callers without management permission", async () => {
+    const incompatible = await request({
+      path: "/onboarding/templates/common_leave/lifecycle-binding",
+      token: await token(1, "admin"),
+      method: "PUT",
+      body: { effect_type: "hire" },
+    })
+    expect(incompatible.status).toBe(400)
+
+    const forbidden = await request({
+      path: "/onboarding/templates/engineer_join/lifecycle-binding",
+      token: await token(5, "member"),
+      method: "DELETE",
+    })
+    expect(forbidden.status).toBe(403)
   })
 })

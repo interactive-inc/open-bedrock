@@ -77,11 +77,23 @@ function projectionMatches(
     if ((primary?.positionTitle ?? null) !== employee.position) return false
     if ((expectedDepartment?.name ?? null) !== employee.deptName) return false
 
-    const expectedMemberships = snapshot.memberships
-      .filter((membership) => membership.employeeCode === employee.code)
-      .map((membership) => `${membership.departmentCode}:${membership.managerEmployeeCode ?? ""}`)
-      .sort()
-    const actualMemberships = schedule.assignments
+    const employeeMemberships = snapshot.memberships.filter(
+      (membership) => membership.employeeCode === employee.code,
+    )
+    const primaryMembership = employeeMemberships.find(
+      (membership) => membership.departmentCode === expectedDepartment?.code,
+    )
+    const expectedAssignments = [
+      ...(expectedDepartment === undefined
+        ? []
+        : [`${expectedDepartment.code}:${primaryMembership?.managerEmployeeCode ?? ""}`]),
+      ...employeeMemberships
+        .filter((membership) => membership.departmentCode !== expectedDepartment?.code)
+        .map(
+          (membership) => `${membership.departmentCode}:${membership.managerEmployeeCode ?? ""}`,
+        ),
+    ].sort()
+    const actualAssignments = schedule.assignments
       .filter((assignment) => containsDate(assignment, baselineOn))
       .map((assignment) => {
         const managerCode =
@@ -92,7 +104,7 @@ function projectionMatches(
         return `${assignment.departmentCode}:${managerCode ?? ""}`
       })
       .sort()
-    if (JSON.stringify(expectedMemberships) !== JSON.stringify(actualMemberships)) return false
+    if (JSON.stringify(expectedAssignments) !== JSON.stringify(actualAssignments)) return false
   }
 
   return true

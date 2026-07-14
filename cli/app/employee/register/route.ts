@@ -3,8 +3,11 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
+import { readSecretStdin } from "@/lib/input/read-secret-stdin"
 
-export const help = `karte employee register --code <c> --name <n> --email <e> --password <p> --role <r> --status active|leave|retired [--dept-id <n>] [--dept-name <d>] [--position <p>]`
+export const help = `karte employee register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-title <p>] [--manager-employee-code <c>]
+
+初期パスワードはコマンド引数に含めず、標準入力から渡してください。`
 
 export default factory.createHandlers(
   zValidator(
@@ -14,12 +17,15 @@ export default factory.createHandlers(
       code: z.string().optional(),
       name: z.string().optional(),
       email: z.string().optional(),
-      password: z.string().optional(),
+      "password-stdin": z.string().optional(),
       role: z.enum(["member", "manager", "hr", "admin"]).optional(),
-      "dept-id": z.coerce.number().int().optional(),
-      "dept-name": z.string().optional(),
-      position: z.string().optional(),
-      status: z.enum(["active", "leave", "retired"]).optional(),
+      "hire-on": z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+      "department-code": z.string().optional(),
+      "position-title": z.string().optional(),
+      "manager-employee-code": z.string().optional(),
     }),
   ),
   async (c) => {
@@ -31,22 +37,26 @@ export default factory.createHandlers(
       !query.code ||
       !query.name ||
       !query.email ||
-      !query.password ||
       !query.role ||
-      !query.status
+      !query["hire-on"] ||
+      !query["password-stdin"]
     )
-      throw new UsageError("--code, --name, --email, --password, --role, --status が必要です")
+      throw new UsageError(
+        "--code, --name, --hire-on, --email, --role, --password-stdin が必要です",
+      )
+
+    const password = await readSecretStdin()
 
     const payload = {
       code: query.code,
       name: query.name,
       email: query.email,
-      password: query.password,
+      password,
       role: query.role,
-      dept_id: query["dept-id"] ?? null,
-      dept_name: query["dept-name"] ?? null,
-      position: query.position ?? null,
-      status: query.status,
+      hire_on: query["hire-on"],
+      department_code: query["department-code"] ?? null,
+      position_title: query["position-title"] ?? null,
+      manager_employee_code: query["manager-employee-code"] ?? null,
     }
 
     const client = await createClient()

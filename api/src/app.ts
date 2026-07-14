@@ -71,6 +71,7 @@ import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
 import * as employeeLifecycleEventsRoute from "@/interface/employee/[code]/lifecycle-events/route"
 import * as employeeLifecycleStateRoute from "@/interface/employee/[code]/lifecycle-state/route"
 import * as employeeArchiveRoute from "@/interface/employee/[code]/archive/route"
+import * as lifecycleOutboxRoute from "@/interface/batch/employee-lifecycle/process-outbox/route"
 import * as personnelActionsRoute from "@/interface/employee/personnel-actions/route"
 import * as personnelActionCorrectionRoute from "@/interface/employee/personnel-actions/[id]/correct/route"
 import * as personnelActionRequestsRoute from "@/interface/employee/personnel-action-requests/route"
@@ -200,6 +201,7 @@ import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
 import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
 import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
 import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates/[code]/route"
+import * as onboardingLifecycleBindingRoute from "@/interface/onboarding/templates/[code]/lifecycle-binding/route"
 import * as iamRolesRoute from "@/interface/iam/roles/route"
 import * as iamPermissionsRoute from "@/interface/iam/permissions/route"
 import * as iamAccountsRoute from "@/interface/iam/accounts/route"
@@ -287,6 +289,7 @@ export const app = factory
   .get("/employees/:code/lifecycle-events", ...employeeLifecycleEventsRoute.GET)
   .get("/employees/:code/lifecycle-state", ...employeeLifecycleStateRoute.GET)
   .post("/employees/:code/archive", ...employeeArchiveRoute.POST)
+  .post("/batch/employee-lifecycle/process-outbox", ...lifecycleOutboxRoute.POST)
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
@@ -559,6 +562,11 @@ export const app = factory
   .get("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.GET)
   .put("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.PUT)
   .delete("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.DELETE)
+  .put("/onboarding/templates/:code/lifecycle-binding", ...onboardingLifecycleBindingRoute.PUT)
+  .delete(
+    "/onboarding/templates/:code/lifecycle-binding",
+    ...onboardingLifecycleBindingRoute.DELETE,
+  )
   .put("/review-cycles/:cycle_id", ...reviewCycleEditRoute.PUT)
   .delete("/review-cycles/:cycle_id", ...reviewCycleEditRoute.DELETE)
 

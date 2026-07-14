@@ -15,7 +15,7 @@ export type Command = {
   session: SessionPayload
   code: string
   parentCode: string | null
-  managerEmployeeCode: string | null
+  managerEmployeeCode?: string | null
   order: number
 }
 
@@ -47,6 +47,16 @@ export class UpdateOrgDepartment {
       return new NotFoundError("department not found", "department_not_found")
     }
 
+    if (
+      command.managerEmployeeCode !== undefined &&
+      command.managerEmployeeCode !== current.managerEmployeeCode
+    ) {
+      return new ConflictError(
+        "department responsibility must be changed with a personnel action",
+        "lifecycle_action_required",
+      )
+    }
+
     const parentChecked = await this.ensureParentExists(command.parentCode)
 
     if (parentChecked !== null) {
@@ -74,10 +84,7 @@ export class UpdateOrgDepartment {
       }
     }
 
-    const updated = current
-      .withParent(command.parentCode)
-      .updateManager(command.managerEmployeeCode)
-      .updateOrder(command.order)
+    const updated = current.withParent(command.parentCode).updateOrder(command.order)
 
     const saved = await departmentRepository.update(updated)
 

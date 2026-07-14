@@ -454,7 +454,7 @@ starts_on <= business_date AND business_date < ends_on
 
 直接発令と訂正は成功時 `201`、同一冪等再送は `200` と既存発令を返す。発令の PUT と DELETE は提供しない。
 
-既存 `PUT /employees/:code` は氏名など人物台帳の項目だけを更新する。部署、役職、状態が現在値と異なる場合は `409 lifecycle_action_required` を返し、人事発令 API の利用を求める。古い API から履歴なしの上書きを継続しない。
+既存 `PUT /employees/:code` は氏名だけを更新する strict な入力にする。部署、役職、状態を含む旧入力は `400` で拒否し、人事発令 API の利用を求める。古い API から履歴なしの上書きを継続しない。
 
 既存従業員一覧、詳細、組織図、部署メンバー、reporting line は基準日現在の期間事実へ切り替える。一覧データと総件数に同じ認可と基準日を使う。
 

@@ -109,21 +109,11 @@ export const GET = factory.createHandlers(
   },
 )
 
-// PUT /employees/:code — 従業員台帳の氏名・部署・役職・在籍状況を変更（権限が必要）。
-// email は identity(認証)、role は account_roles(認可)が正で、ここでは扱わない。
-// メール変更はアカウント管理、ロール変更は /admin/accounts のロール付与・剥奪で行う。
+// PUT /employees/:code — 人物台帳の氏名だけを変更（権限が必要）。
+// IAM はアカウント管理、所属・役職・在籍状態は人事発令で変更する。
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator(
-    "json",
-    z.object({
-      name: z.string().min(1).max(200),
-      dept_id: z.number().int().nullable().optional(),
-      dept_name: z.string().max(200).nullable().optional(),
-      position: z.string().max(200).nullable().optional(),
-      status: z.enum(["active", "leave", "retired"]),
-    }),
-  ),
+  zValidator("json", z.strictObject({ name: z.string().min(1).max(200) })),
   async (c) => {
     const session = c.var.session
 
@@ -133,18 +123,11 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    // email/role の認証・認可情報は IAM が正。台帳更新は name/dept/position/status のみ。
     const updated = await new UpdateEmployee(c).run({
       session: session,
       viewerEmployeeId: session.employeeId,
       code: validateCodeParam(c.req.param("code"), "employee"),
-      profile: {
-        name: json.name,
-        deptId: json.dept_id ?? null,
-        deptName: json.dept_name ?? null,
-        position: json.position ?? null,
-        status: json.status,
-      },
+      name: json.name,
     })
 
     if (updated instanceof ApplicationError) {
@@ -161,7 +144,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
-// DELETE /employees/:code — 従業員を台帳から削除（権限が必要、自分自身は不可）
+// DELETE /employees/:code — 互換用。物理削除は禁止し、履歴保持アーカイブへ誘導する。
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

@@ -12,7 +12,11 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
-import { onboardingTemplates, onboardingTemplateTasks } from "@/schema"
+import {
+  lifecycleEffectTemplateBindings,
+  onboardingTemplates,
+  onboardingTemplateTasks,
+} from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, eq, inArray } from "drizzle-orm"
 import { z } from "zod"
@@ -74,6 +78,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const taskCountMap = new Map(taskCountRows.map((row) => [row.templateCode, row.total]))
 
+  const bindingRows =
+    templateCodes.length === 0
+      ? []
+      : await c.var.database
+          .select({
+            templateCode: lifecycleEffectTemplateBindings.templateCode,
+            effectType: lifecycleEffectTemplateBindings.effectType,
+          })
+          .from(lifecycleEffectTemplateBindings)
+          .where(inArray(lifecycleEffectTemplateBindings.templateCode, templateCodes))
+
+  const lifecycleEffectMap = new Map(
+    bindingRows.map((row) => [row.templateCode, row.effectType] as const),
+  )
+
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(onboardingTemplates)
@@ -85,6 +104,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     kind: template.kind,
     description: template.description,
     task_count: taskCountMap.get(template.code) ?? 0,
+    lifecycle_effect: lifecycleEffectMap.get(template.code) ?? null,
   }))
 
   const responseBody = zAppOnboardingTemplateList.parse({

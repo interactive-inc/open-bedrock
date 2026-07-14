@@ -22,17 +22,13 @@ export type EmployeeCreateRequest = {
   email: string
   password: string
   role: "member" | "manager" | "hr" | "admin"
-  dept_id?: number | null
-  dept_name?: string | null
-  position?: string | null
-  status: EmployeeStatus
+  hire_on: string
+  department_code?: string | null
+  position_title?: string | null
+  manager_employee_code?: string | null
 }
 
-// PUT /employees/:code のリクエストボディ。email/role は IAM(identities/account_roles)が正で台帳更新では扱わない。
+// PUT /employees/:code のリクエストボディ。所属・役職・在籍状態は人事発令で扱う。
 export type EmployeeUpdateRequest = {
   name: string
-  dept_id?: number | null
-  dept_name?: string | null
-  position?: string | null
-  status: EmployeeStatus
 }

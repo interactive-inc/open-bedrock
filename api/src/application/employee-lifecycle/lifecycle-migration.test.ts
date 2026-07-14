@@ -23,7 +23,6 @@ async function legacyFixture(): Promise<{ context: Context; db: D1Database }> {
       (3, 'E003', 'Fixture Three', NULL, NULL, NULL, 'retired');
     INSERT INTO org_memberships
       (department_code, employee_code, manager_employee_code) VALUES
-      ('D001', 'E001', NULL),
       ('D001', 'E002', 'E001'),
       ('D002', 'E002', NULL);
   `)
@@ -171,7 +170,7 @@ describe("employee lifecycle migration", () => {
     expect(result).toEqual({
       businessDate: "2026-06-01",
       employeesChanged: 1,
-      membershipsChanged: 2,
+      membershipsChanged: 3,
     })
     expect(
       await db.prepare("SELECT dept_name FROM employees WHERE id = 2").first<string>("dept_name"),

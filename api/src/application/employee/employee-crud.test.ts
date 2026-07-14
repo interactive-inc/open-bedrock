@@ -159,47 +159,18 @@ describe("GetEmployee", () => {
 })
 
 describe("UpdateEmployee", () => {
-  const currentProfile = {
-    name: "Renamed",
-    deptId: 3,
-    deptName: "Engineering",
-    position: "Engineer",
-    status: "active" as const,
-  }
-
-  test("updates only the ledger name when lifecycle compatibility fields are unchanged", async () => {
+  test("updates only the ledger name and preserves lifecycle compatibility fields", async () => {
     const { context } = createTestContext()
     await seedEmployee(context, "E902")
     const result = await new UpdateEmployee(context).run({
       session: makeTestSession("admin"),
       viewerEmployeeId: 0,
       code: "E902",
-      profile: currentProfile,
+      name: "Renamed",
     })
     expect(result).toBeInstanceOf(Employee)
     if (result instanceof ApplicationError) throw result
     expect(result).toMatchObject({ name: "Renamed", status: "active", position: "Engineer" })
-  })
-
-  test("requires personnel actions for department, position, and status changes", async () => {
-    const { context } = createTestContext()
-    await seedEmployee(context, "E903")
-    for (const profile of [
-      { ...currentProfile, deptId: 4, deptName: "Sales" },
-      { ...currentProfile, position: "Lead" },
-      { ...currentProfile, status: "leave" as const },
-    ]) {
-      expectApplicationError(
-        await new UpdateEmployee(context).run({
-          session: makeTestSession("admin"),
-          viewerEmployeeId: 0,
-          code: "E903",
-          profile,
-        }),
-        ConflictError,
-        "lifecycle_action_required",
-      )
-    }
   })
 
   test("enforces permission and existence", async () => {
@@ -210,7 +181,7 @@ describe("UpdateEmployee", () => {
         session: makeTestSession("member"),
         viewerEmployeeId: 0,
         code: "E904",
-        profile: currentProfile,
+        name: "Renamed",
       }),
       ForbiddenError,
       "forbidden",
@@ -220,7 +191,7 @@ describe("UpdateEmployee", () => {
         session: makeTestSession("admin"),
         viewerEmployeeId: 0,
         code: "E999",
-        profile: currentProfile,
+        name: "Renamed",
       }),
       NotFoundError,
       "employee_not_found",
