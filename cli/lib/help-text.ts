@@ -12,7 +12,12 @@ commands:
   employee register           社員を登録
   employee show <code>        社員の詳細
   employee update <code>      社員情報を更新
-  employee delete <code>      社員を削除
+  employee timeline           入社・配属・異動・退職の履歴
+  employee state              基準日現在の人事状態
+  employee archive            退職者を履歴保持してアーカイブ
+  personnel-action request    人事変更を承認申請
+  personnel-action apply      人事発令を直接確定
+  personnel-action correct    確定済み発令を追記訂正
   app templates               申請テンプレート一覧 (--category)
   app template <code>         申請テンプレート詳細
   app submit <code>           申請を提出 (--data <file>)
@@ -164,6 +169,8 @@ commands:
   onboarding assignment show <id>     オンボーディング割当の詳細
   onboarding assignment update <id>   オンボーディング割当を更新
   onboarding assignment cancel <id>   オンボーディング割当を取り消し
+  onboarding template-bind-lifecycle <code>  入退社イベントのテンプレートを設定 (--effect hire|retired)
+  onboarding template-unbind-lifecycle <code>  入退社イベントのテンプレート連携を解除
   business-trip request       出張申請 (--destination --start --end --purpose [--cost])
   business-trip mine          自分の出張申請一覧
   business-trip show          出張申請の詳細 (--id)
@@ -200,6 +207,11 @@ commands:
   antisocial-check update     反社チェック申請を変更 (--id --partner [--address --representative --result])
   antisocial-check cancel     反社チェック申請を取り下げ (--id)
   batch                       バッチ状況
+  batch employee-lifecycle preflight  人事履歴移行を事前検査
+  batch employee-lifecycle backfill   旧台帳を人事履歴へ移行
+  batch employee-lifecycle verify     移行結果を検証して正本化
+  batch employee-lifecycle rebuild-projections  互換投影を再構築
+  batch employee-lifecycle process-outbox       入退社手続きを展開
   roles                       ロール一覧（iam:manage_roles）
   accounts                    アカウント一覧（account:manage）
   dashboard                   ダッシュボード集計

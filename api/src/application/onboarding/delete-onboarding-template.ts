@@ -4,6 +4,8 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
+import { lifecycleEffectTemplateBindings } from "@/schema"
+import { eq } from "drizzle-orm"
 
 export type Command = {
   session: SessionPayload
@@ -44,6 +46,20 @@ export class DeleteOnboardingTemplate {
 
     if (activeCount > 0) {
       return new ConflictError("template is in use", "template_in_use")
+    }
+
+    try {
+      const bindings = await this.c.var.database
+        .select({ effectType: lifecycleEffectTemplateBindings.effectType })
+        .from(lifecycleEffectTemplateBindings)
+        .where(eq(lifecycleEffectTemplateBindings.templateCode, command.code))
+        .limit(1)
+
+      if (bindings.length > 0) {
+        return new ConflictError("template is in use", "template_in_use")
+      }
+    } catch (cause) {
+      return new UnexpectedError("failed to inspect lifecycle template binding", { cause })
     }
 
     const deleted = await templateRepository.delete(command.code)

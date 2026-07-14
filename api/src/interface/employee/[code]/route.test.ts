@@ -317,29 +317,24 @@ describe("POST /employees", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("rejects unknown fields instead of silently accepting lifecycle compatibility updates", async () => {
+    const response = await request("/employees", await adminToken(), "POST", {
+      ...newEmployee,
+      code: "E901",
+      status: "retired",
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
 
 describe("PUT /employees/:code", () => {
-  const profileE4 = {
-    name: "Drew Sato",
-    email: "you+e004@example.com",
-    role: "manager",
-    dept_id: 3,
-    dept_name: "Engineering",
-    position: "Engineering Manager",
-    status: "active",
-  }
-  const profileE5 = {
-    ...profileE4,
-    name: "Emery Lane",
-    email: "you+e005@example.com",
-    role: "member",
-    position: "Senior Engineer",
-  }
+  const profileE4 = { name: "Drew Sato" }
+  const profileE5 = { name: "Emery Lane" }
 
   test("admin updates an employee name without bypassing lifecycle data and gets 200", async () => {
     const response = await request("/employees/E004", await adminToken(), "PUT", {
-      ...profileE4,
       name: "Drew Sato Updated",
     })
 
@@ -427,16 +422,13 @@ describe("PUT /employees/:code", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 409 when retiring the last admin", async () => {
+  test("rejects lifecycle and IAM fields instead of silently mutating them", async () => {
     const response = await request("/employees/E001", await adminToken(), "PUT", {
       name: "Alex Carter",
-      dept_id: 1,
-      dept_name: "Corporate Planning",
-      position: "CTO",
       status: "retired",
     })
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(400)
   })
 })
 

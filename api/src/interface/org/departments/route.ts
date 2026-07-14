@@ -61,11 +61,10 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
+    z.strictObject({
       code: codeSchema,
       department_id: z.number().int(),
       parent_code: codeSchema.nullable().optional(),
-      manager_employee_code: codeSchema.nullable().optional(),
       order: z.number().int(),
     }),
   ),
@@ -84,7 +83,7 @@ export const POST = factory.createHandlers(
         code: json.code,
         departmentId: json.department_id,
         parentCode: json.parent_code ?? null,
-        managerEmployeeCode: json.manager_employee_code ?? null,
+        managerEmployeeCode: null,
         order: json.order,
       },
     })

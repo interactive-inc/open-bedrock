@@ -13,8 +13,9 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 ## 社員と組織
 
 - `/employees` は従業員台帳を検索し、従業員一覧を確認する画面。
-- `/employees/new` は新しい従業員を従業員台帳に登録する画面。
-- `/employees/[code]` は従業員の基本情報、所属、状態を確認し編集する画面。
+- `/employees/new` は人物台帳、入社発令、初期アカウントを一括登録する画面。
+- `/employees/[code]` は基本情報、現在の人事状態、人材タイムライン、承認待ちの人事変更を確認し、人事変更を申請または確定する画面。
+- `/employees/[code]/timeline` は従業員の人事発令履歴をカーソルで継続表示する画面。
 - `/org` は部署ツリーを閲覧し、部署ノードを管理する画面。
 - `/org/departments` は部署ノードの一覧を確認し、変更や削除を行う管理画面(`org:manage`)。
 - `/org/departments/new` は新しい部署ノードを作成する画面(`org:manage`)。
@@ -112,7 +113,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/onboarding/me` は自分に割り当てられた未完了タスクを確認する画面。
 - `/onboarding/employees` は閲覧権限を持つ担当者が社員を選び、進行状況へ移動する画面。
 - `/onboarding/employee/[code]` は社員ごとのオンボーディング進行状況を確認する画面。
-- `/onboarding/templates` は入社、退社のオンボーディングテンプレートを管理する画面。
+- `/onboarding/templates` は入社、退社のオンボーディングテンプレートと人事発令からの自動割当を管理する画面。
 - `/onboarding/templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
 - `/onboarding/assignments/new` は社員コードとテンプレートを指定して割り当てを作成する画面。
 

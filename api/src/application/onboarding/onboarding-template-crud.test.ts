@@ -7,7 +7,7 @@ import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.enti
 import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
-import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { employees } from "@/schema"
@@ -196,6 +196,26 @@ describe("UpdateOnboardingTemplate", () => {
 
     expectApplicationError(updated, NotFoundError, "template_not_found")
   })
+
+  test("does not change the kind of a lifecycle-bound template", async () => {
+    const { context } = createTestContext()
+    await seedTemplate(context)
+    await context.env.DB.prepare(
+      `INSERT INTO lifecycle_effect_template_bindings
+         (effect_type, template_code, updated_at, updated_by_account_id)
+       VALUES ('hire', 'join-default', 1, NULL)`,
+    ).run()
+
+    const updated = await new UpdateOnboardingTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "join-default",
+      name: "変更後",
+      kind: "leave",
+      description: null,
+    })
+
+    expectApplicationError(updated, ValidationError, "lifecycle_binding_kind_conflict")
+  })
 })
 
 describe("DeleteOnboardingTemplate", () => {
@@ -231,6 +251,23 @@ describe("DeleteOnboardingTemplate", () => {
     })
 
     expectApplicationError(result, NotFoundError, "template_not_found")
+  })
+
+  test("does not delete a lifecycle-bound template", async () => {
+    const { context } = createTestContext()
+    await seedTemplate(context)
+    await context.env.DB.prepare(
+      `INSERT INTO lifecycle_effect_template_bindings
+         (effect_type, template_code, updated_at, updated_by_account_id)
+       VALUES ('hire', 'join-default', 1, NULL)`,
+    ).run()
+
+    const result = await new DeleteOnboardingTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "join-default",
+    })
+
+    expectApplicationError(result, ConflictError, "template_in_use")
   })
 
   test("a non-privileged role is forbidden", async () => {

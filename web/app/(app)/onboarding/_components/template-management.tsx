@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react"
 import {
+  bindLifecycleTemplateAction,
   deleteOnboardingTemplateAction,
   updateOnboardingTemplateAction,
 } from "@/app/(app)/onboarding/actions"
@@ -29,7 +30,9 @@ type Props = {
 // テンプレート行の管理操作（変更 Dialog と削除）。管理権限にのみ表示する。
 export function TemplateManagement(props: Props) {
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <LifecycleBindingButton template={props.template} />
+
       <UpdateTemplateDialog template={props.template} />
 
       <DeleteTemplateButton code={props.template.code} />
@@ -88,15 +91,26 @@ function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
             <Field>
               <FieldLabel htmlFor="update-template-kind">種別</FieldLabel>
 
+              {props.template.lifecycle_effect !== null ? (
+                <input type="hidden" name="kind" value={props.template.kind} />
+              ) : null}
+
               <NativeSelect
                 id="update-template-kind"
-                name="kind"
+                name={props.template.lifecycle_effect === null ? "kind" : undefined}
                 defaultValue={props.template.kind === "leave" ? "leave" : "join"}
+                disabled={props.template.lifecycle_effect !== null}
               >
                 <NativeSelectOption value="join">入社</NativeSelectOption>
 
                 <NativeSelectOption value="leave">退社</NativeSelectOption>
               </NativeSelect>
+
+              {props.template.lifecycle_effect !== null ? (
+                <p className="text-xs text-muted-foreground">
+                  入退社イベントとの連携中は種別を変更できません。
+                </p>
+              ) : null}
             </Field>
 
             <Field>
@@ -120,6 +134,42 @@ function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function LifecycleBindingButton(props: { template: OnboardingTemplate }) {
+  const [state, formAction, pending] = useActionState(bindLifecycleTemplateAction, {
+    ok: false,
+    message: null,
+  })
+  const effect = props.template.kind === "leave" ? "retired" : "hire"
+  const label = effect === "hire" ? "入社" : "退職"
+  const isCurrent = props.template.lifecycle_effect === effect
+
+  return (
+    <form action={formAction} className="flex flex-col items-end gap-1">
+      <input type="hidden" name="code" value={props.template.code} />
+      <input type="hidden" name="effect" value={effect} />
+      <input type="hidden" name="operation" value={isCurrent ? "remove" : "bind"} />
+
+      <Button
+        type="submit"
+        variant={isCurrent ? "outline" : "secondary"}
+        size="sm"
+        disabled={pending}
+      >
+        {isCurrent ? `${label}連携を解除` : `${label}連携に設定`}
+      </Button>
+
+      {state.message !== null ? (
+        <p
+          aria-live="polite"
+          className={state.ok ? "text-xs text-muted-foreground" : "text-xs text-destructive"}
+        >
+          {state.message}
+        </p>
+      ) : null}
+    </form>
   )
 }
 

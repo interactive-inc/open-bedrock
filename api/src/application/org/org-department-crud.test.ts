@@ -96,6 +96,21 @@ describe("CreateOrgDepartment", () => {
     expectApplicationError(result, ConflictError, "department_code_conflict")
   })
 
+  test("requires a personnel action for the initial department responsibility", async () => {
+    const { context } = createTestContext()
+    const result = await new CreateOrgDepartment(context).run({
+      session: makeTestSession("admin"),
+      department: {
+        code: "DEV",
+        departmentId: 1,
+        parentCode: null,
+        managerEmployeeCode: "E001",
+        order: 1,
+      },
+    })
+    expectApplicationError(result, ConflictError, "lifecycle_action_required")
+  })
+
   test("creates a child department with a parent", async () => {
     const { context } = createTestContext()
 
@@ -137,7 +152,7 @@ describe("GetOrgDepartment", () => {
 })
 
 describe("UpdateOrgDepartment", () => {
-  test("updates the department for an admin", async () => {
+  test("updates department hierarchy metadata for an admin", async () => {
     const { context } = createTestContext()
 
     await seedDepartment(context, "DEV")
@@ -146,7 +161,7 @@ describe("UpdateOrgDepartment", () => {
       session: makeTestSession("admin"),
       code: "DEV",
       parentCode: null,
-      managerEmployeeCode: "E001",
+      managerEmployeeCode: undefined,
       order: 5,
     })
 
@@ -156,8 +171,21 @@ describe("UpdateOrgDepartment", () => {
       throw new Error("update failed")
     }
 
-    expect(result.managerEmployeeCode).toBe("E001")
+    expect(result.managerEmployeeCode).toBeNull()
     expect(result.order).toBe(5)
+  })
+
+  test("requires a personnel action to change the department responsibility", async () => {
+    const { context } = createTestContext()
+    await seedDepartment(context, "DEV")
+    const result = await new UpdateOrgDepartment(context).run({
+      session: makeTestSession("admin"),
+      code: "DEV",
+      parentCode: null,
+      managerEmployeeCode: "E001",
+      order: 1,
+    })
+    expectApplicationError(result, ConflictError, "lifecycle_action_required")
   })
 
   test("rejects non-admin with forbidden", async () => {
@@ -208,17 +236,42 @@ describe("UpdateOrgDepartment", () => {
 })
 
 describe("DeleteOrgDepartment", () => {
-  test("deletes a leaf department for an admin", async () => {
-    const { context } = createTestContext()
+  test("archives an unused leaf department for an admin and preserves the row", async () => {
+    const { context, db } = createTestContext()
 
     await seedDepartment(context, "DEV")
+    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
 
     const result = await new DeleteOrgDepartment(context).run({
       session: makeTestSession("admin"),
       code: "DEV",
     })
 
-    expect(result).toEqual({ reason: "deleted" })
+    expect(result).toEqual({ reason: "archived" })
+    expect(
+      await db
+        .prepare("SELECT archived_at IS NOT NULL FROM org_departments WHERE code = 'DEV'")
+        .first<number>("archived_at IS NOT NULL"),
+    ).toBe(1)
+  })
+
+  test("rejects a department with a current or future lifecycle assignment", async () => {
+    const { context, db } = createTestContext()
+    await seedDepartment(context, "DEV")
+    await db.exec(`
+      INSERT INTO org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at)
+      VALUES ('fixture-assignment', 1, 'fixture-employment', 1, 'DEV', 'primary',
+              NULL, NULL, '2025-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+    const result = await new DeleteOrgDepartment(context).run({
+      session: makeTestSession("admin"),
+      code: "DEV",
+    })
+    expectApplicationError(result, ConflictError, "department_in_use")
   })
 
   test("rejects non-admin with forbidden", async () => {

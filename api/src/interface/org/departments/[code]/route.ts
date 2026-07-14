@@ -56,9 +56,8 @@ export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
+    z.strictObject({
       parent_code: codeSchema.nullable().optional(),
-      manager_employee_code: codeSchema.nullable().optional(),
       order: z.number().int(),
     }),
   ),
@@ -75,7 +74,7 @@ export const PUT = factory.createHandlers(
       session: session,
       code: validateCodeParam(c.req.param("code"), "department"),
       parentCode: json.parent_code ?? null,
-      managerEmployeeCode: json.manager_employee_code ?? null,
+      managerEmployeeCode: undefined,
       order: json.order,
     })
 

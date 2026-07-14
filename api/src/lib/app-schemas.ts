@@ -1008,6 +1008,7 @@ export const zAppOnboardingTemplateListItem = z.object({
   kind: z.string(),
   description: z.string().nullable(),
   task_count: z.number(),
+  lifecycle_effect: z.enum(["hire", "retired"]).nullable(),
 })
 
 export type AppOnboardingTemplateListItem = z.infer<typeof zAppOnboardingTemplateListItem>

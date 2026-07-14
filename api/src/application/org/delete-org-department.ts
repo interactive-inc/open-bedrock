@@ -1,20 +1,30 @@
 import { canManageOrg } from "@/lib/org/can-manage-org"
-import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+} from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
+import {
+  abortWhenPreviousStatementChangedNoRows,
+  isAbortedByGuard,
+} from "@/lib/d1/batch-abort-guard"
+import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 
 export type Command = {
   session: SessionPayload
   code: string
 }
 
-export type Deleted = { reason: "deleted" }
+export type Deleted = { reason: "archived" }
 
 /**
- * 権限を確認し、子ノードと所属メンバーを持たない部署ノードを削除する。
- * 子や所属が残っている場合はデータを孤立させないため拒否する。
- * チェックと削除は D1 batch でアトミックに行い TOCTOU を防ぐ。
+ * 部署は物理削除せず、現在・未来の所属と責任がない場合だけアーカイブする。
+ * 過去の人事履歴と参照整合性は保持する。
  */
 export class DeleteOrgDepartment {
   constructor(private readonly c: Context) {}
@@ -36,16 +46,68 @@ export class DeleteOrgDepartment {
       return new NotFoundError("department not found", "department_not_found")
     }
 
-    const deleted = await departmentRepository.delete(command.code)
-
-    if (deleted instanceof Error) {
-      return new UnexpectedError("failed to delete department", { cause: deleted })
+    const migrationStatus = await new EmployeeLifecycleRepository(this.c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) return migrationStatus
+    if (migrationStatus !== "verified") {
+      return new ConflictError("employee lifecycle migration is incomplete", "department_in_use")
     }
-
-    if (deleted === null) {
-      return new ConflictError("department has children or members", "department_in_use")
+    const businessDate = resolveCompanyBusinessDate({
+      now: this.c.env.NOW ?? new Date().toISOString(),
+      timeZone: this.c.env.COMPANY_TIME_ZONE,
+    })
+    if (typeof businessDate !== "string") {
+      return new UnexpectedError("failed to resolve company business date", {
+        cause: businessDate,
+      })
     }
-
-    return { reason: "deleted" }
+    const archivedAt = Math.floor(Date.parse(this.c.env.NOW ?? new Date().toISOString()) / 1_000)
+    const db = this.c.env.DB
+    try {
+      await db.batch([
+        db
+          .prepare(
+            `UPDATE org_departments
+             SET archived_at = ?2, archived_by_account_id = ?3
+             WHERE code = ?1 AND archived_at IS NULL
+               AND NOT EXISTS (
+                 SELECT 1 FROM org_departments child
+                 WHERE child.parent_code = ?1 AND child.archived_at IS NULL
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM org_assignment_period_versions assignment
+                 WHERE assignment.department_code = ?1
+                   AND assignment.is_void = 0
+                   AND assignment.revision = (
+                     SELECT MAX(candidate.revision)
+                     FROM org_assignment_period_versions candidate
+                     WHERE candidate.period_id = assignment.period_id
+                   )
+                   AND (assignment.ends_on IS NULL OR assignment.ends_on > ?4)
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM org_responsibility_period_versions responsibility
+                 WHERE responsibility.department_code = ?1
+                   AND responsibility.is_void = 0
+                   AND responsibility.revision = (
+                     SELECT MAX(candidate.revision)
+                     FROM org_responsibility_period_versions candidate
+                     WHERE candidate.period_id = responsibility.period_id
+                   )
+                   AND (responsibility.ends_on IS NULL OR responsibility.ends_on > ?4)
+               )
+             RETURNING code`,
+          )
+          .bind(command.code, archivedAt, command.session.accountId, businessDate),
+        abortWhenPreviousStatementChangedNoRows(db),
+      ])
+      return { reason: "archived" }
+    } catch (cause) {
+      return isAbortedByGuard(cause)
+        ? new ConflictError(
+            "department has current or future organization facts or child departments",
+            "department_in_use",
+          )
+        : new UnexpectedError("failed to archive department", { cause })
+    }
   }
 }

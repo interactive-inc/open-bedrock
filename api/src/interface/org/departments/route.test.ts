@@ -137,7 +137,6 @@ describe("POST /org/departments", () => {
         code: "D900",
         department_id: 1,
         parent_code: "D001",
-        manager_employee_code: null,
         order: 9,
       },
     })
@@ -152,6 +151,22 @@ describe("POST /org/departments", () => {
       expect(parsed.data.code).toBe("D900")
       expect(parsed.data.parent_code).toBe("D001")
     }
+  })
+
+  test("rejects direct department responsibility changes", async () => {
+    const response = await request({
+      path: "/org/departments",
+      token: await adminToken(),
+      method: "POST",
+      body: {
+        code: "D900",
+        department_id: 1,
+        manager_employee_code: "E005",
+        order: 9,
+      },
+    })
+
+    expect(response.status).toBe(400)
   })
 
   test("returns 403 for a non-privileged role", async () => {
