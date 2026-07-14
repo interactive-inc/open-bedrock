@@ -325,4 +325,48 @@ describe("GET /directory/employees", () => {
 
     expect(response.status).toBe(401)
   })
+
+  test("uses current lifecycle state for visibility, department filters, and position", async () => {
+    const db = await createTestDb()
+    await db.exec(`
+      INSERT INTO departments (id, name) VALUES (4, 'Sales');
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at) VALUES
+        ('employment-5', 1, 5, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-6', 1, 6, '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+        ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-6', 1, 'employment-6', 6, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at) VALUES
+        ('assignment-5', 1, 'employment-5', 5, 'D004', 'primary', 'Account Lead', NULL, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-6', 1, 'employment-6', 6, 'D003', 'primary', 'Engineer', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/directory/employees?dept=Sales",
+      token: await memberToken(),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      data: [
+        {
+          code: "E005",
+          name: "Emery Lane",
+          dept_name: "Sales",
+          position: "Account Lead",
+        },
+      ],
+      total: 1,
+    })
+  })
 })

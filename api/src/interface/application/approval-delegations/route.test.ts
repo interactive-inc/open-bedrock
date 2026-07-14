@@ -54,6 +54,7 @@ async function request(
       DB: db,
       JWT_SECRET: jwtSecret,
       AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   )
@@ -103,6 +104,30 @@ describe("approval delegation routes", () => {
       ...body,
       delegate_employee_code: "E018",
     })
+
+    expect(response.status).toBe(404)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS total FROM approval_delegations").first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("rejects delegation to an employee who is not active in the verified lifecycle", async () => {
+    const db = await setup()
+    await db.exec(`
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at) VALUES
+        ('employment-5', 1, 5, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-6', 1, 6, '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+        ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-6', 1, 'employment-6', 6, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+
+    const response = await request(db, 5, "POST", "/approval-delegations", body)
 
     expect(response.status).toBe(404)
     expect(
