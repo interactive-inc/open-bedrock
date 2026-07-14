@@ -642,7 +642,8 @@ export class ApplyPersonnelAction {
     session: SessionPayload
     employeeId: number | null
     input: PersonnelActionInput
-    sourceApplicationId: number
+    sourceApplicationId: number | null
+    idempotencyKey?: string
     requestedByEmployeeId: number
     expectedEmployeeRevision: number
     expectedOrganizationRevision: number | null
@@ -667,7 +668,13 @@ export class ApplyPersonnelAction {
     if (fingerprint !== command.expectedPayloadFingerprint) {
       return new ConflictError("申請内容の整合性を確認できません", "idempotency_conflict")
     }
-    const operationId = `application:${command.sourceApplicationId}`
+    const operationId =
+      command.sourceApplicationId === null
+        ? command.idempotencyKey
+        : `application:${command.sourceApplicationId}`
+    if (operationId === undefined) {
+      return new ValidationError("冪等キーが必要です", "idempotency_conflict")
+    }
     const actionRepository = new PersonnelActionRepository(this.c)
     const existing = await actionRepository.findByOperationId(operationId)
     if (existing instanceof ApplicationError) return existing
@@ -792,7 +799,7 @@ export class ApplyPersonnelAction {
       recordedAt,
       recordedByAccountId: command.session.accountId,
       requestedByEmployeeId: command.requestedByEmployeeId,
-      sourceType: "application",
+      sourceType: command.sourceApplicationId === null ? "direct" : "application",
       sourceApplicationId: command.sourceApplicationId,
       correctsActionId: command.input.kind === "corrected" ? command.input.correctsActionId : null,
       operationId,
@@ -825,6 +832,29 @@ export class ApplyPersonnelAction {
             : undefined,
       }),
     }
+  }
+
+  async prepareDirectProspectiveHire(command: {
+    session: SessionPayload
+    input: Extract<PersonnelActionInput, { kind: "hire" }>
+    idempotencyKey: string
+    expectedOrganizationRevision: number
+  }): Promise<PreparedPersonnelActionCompletion | ApplicationError> {
+    const fingerprint = await fingerprintPersonnelAction(
+      `prospective:${command.input.employeeCode}`,
+      command.input,
+    )
+    return this.prepareApplicationCompletion({
+      session: command.session,
+      employeeId: null,
+      input: command.input,
+      sourceApplicationId: null,
+      idempotencyKey: command.idempotencyKey,
+      requestedByEmployeeId: command.session.employeeId,
+      expectedEmployeeRevision: 0,
+      expectedOrganizationRevision: command.expectedOrganizationRevision,
+      expectedPayloadFingerprint: fingerprint,
+    })
   }
 
   private classifyReplay(

@@ -36,6 +36,7 @@ const actions = [
   "employee.lifecycle.denied",
   "employee.lifecycle.requested",
   "employee.lifecycle.request_withdrawn",
+  "employee.archived",
   "employee.lifecycle.projections_rebuilt",
   "application.workflow.updated",
   "application.workflow.repaired",
@@ -98,7 +99,7 @@ function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
 }
 
 describe("audit event vocabulary", () => {
-  test("accepts exactly the 31 managed actions", () => {
+  test("accepts exactly the 32 managed actions", () => {
     expect(auditActionSchema.options).toEqual([...actions])
     for (const action of actions) {
       expect(auditActionSchema.parse(action)).toBe(action)

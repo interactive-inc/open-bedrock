@@ -70,6 +70,7 @@ import * as employeeListRoute from "@/interface/employee/route"
 import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
 import * as employeeLifecycleEventsRoute from "@/interface/employee/[code]/lifecycle-events/route"
 import * as employeeLifecycleStateRoute from "@/interface/employee/[code]/lifecycle-state/route"
+import * as employeeArchiveRoute from "@/interface/employee/[code]/archive/route"
 import * as personnelActionsRoute from "@/interface/employee/personnel-actions/route"
 import * as personnelActionCorrectionRoute from "@/interface/employee/personnel-actions/[id]/correct/route"
 import * as personnelActionRequestsRoute from "@/interface/employee/personnel-action-requests/route"
@@ -285,6 +286,7 @@ export const app = factory
   .get("/directory/employees", ...employeeDirectoryRoute.GET)
   .get("/employees/:code/lifecycle-events", ...employeeLifecycleEventsRoute.GET)
   .get("/employees/:code/lifecycle-state", ...employeeLifecycleStateRoute.GET)
+  .post("/employees/:code/archive", ...employeeArchiveRoute.POST)
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)

@@ -90,7 +90,7 @@ describe("GET /application-templates", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.length).toBe(4)
+      expect(parsed.data.data.length).toBe(5)
 
       const paidLeave = parsed.data.data.find((item) => item.code === "paid_leave")
 
