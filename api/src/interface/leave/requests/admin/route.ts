@@ -15,6 +15,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { z } from "zod"
+import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { InternalError } from "@/interface/lib/errors"
 
 const SORT_OPTIONS = {
   created_at_desc: desc(leaveRequests.createdAt),
@@ -129,12 +131,23 @@ export const GET = factory.createHandlers(
       .from(leaveRequests)
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.employeeId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppLeaveRequestAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         applicant_id: row.employeeId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name: row.applicantDeptName,
+        applicant_dept_name:
+          currentDepartments.source === "lifecycle"
+            ? (currentDepartments.names.get(row.employeeId) ?? null)
+            : row.applicantDeptName,
         leave_type: row.leaveType,
         start_date: row.startDate,
         end_date: row.endDate,

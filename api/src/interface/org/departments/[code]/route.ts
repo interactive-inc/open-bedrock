@@ -1,7 +1,6 @@
 import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
-import { GetOrgDepartment } from "@/application/org/get-org-department"
 import { UpdateOrgDepartment } from "@/application/org/update-org-department"
-import type { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -12,6 +11,8 @@ import { zAppOrgDepartment } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { InternalError, NotFoundError } from "@/interface/lib/errors"
 
 // 部署ノードをレスポンス用の snake_case に整形する。
 function toResponseBody(department: OrgDepartment) {
@@ -32,13 +33,18 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const department = await new GetOrgDepartment(c).run({
-    code: validateCodeParam(c.req.param("code"), "department"),
+  const code = validateCodeParam(c.req.param("code"), "department")
+  const organization = await loadCurrentOrganization(c)
+  if (organization instanceof Error) throw new InternalError("failed to load organization")
+  const current = organization.departments.find((department) => department.code === code)
+  if (current === undefined) throw new NotFoundError("department not found")
+  const department = new OrgDepartment({
+    code: current.code,
+    departmentId: current.departmentId,
+    parentCode: current.parentCode,
+    managerEmployeeCode: organization.managerByDepartmentCode.get(current.code) ?? null,
+    order: current.order,
   })
-
-  if (department instanceof ApplicationError) {
-    throw toHttpException(department)
-  }
 
   const responseBody = zAppOrgDepartment.parse(toResponseBody(department))
 

@@ -134,4 +134,41 @@ describe("GET /me", () => {
 
     expect(response.status).toBe(200)
   })
+
+  test("returns the effective lifecycle department and position after verification", async () => {
+    const db = await createTestDb()
+    await db.exec(`
+      INSERT INTO departments (id, name) VALUES (4, 'Sales');
+      INSERT INTO org_departments
+        (code, department_id, parent_code, manager_employee_code, sort_order)
+      VALUES ('D004', 4, NULL, NULL, 1);
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at)
+      VALUES ('employment-1', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at)
+      VALUES ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at)
+      VALUES ('assignment-1', 1, 'employment-1', 1, 'D004', 'primary', 'Sales Director', NULL,
+              '2025-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/me",
+      token: await adminToken(),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ dept_name: "Sales", position: "Sales Director" }),
+    )
+  })
 })
