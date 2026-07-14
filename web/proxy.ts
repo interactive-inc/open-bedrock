@@ -13,6 +13,9 @@ export const config = {
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const isLoginPage = request.nextUrl.pathname === "/login"
+  // CSV proxy is an HTTP endpoint, not a page. Its Route Handler must preserve the API's
+  // 401 JSON/no-store contract instead of turning failures into an HTML login redirect.
+  const isAuditExportRoute = request.nextUrl.pathname === "/admin/audit-events/export"
 
   const sessionCookie = request.cookies.get("session")
 
@@ -23,7 +26,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (refreshTokenCookie === undefined) {
-    return isLoginPage ? NextResponse.next() : NextResponse.redirect(new URL("/login", request.url))
+    return isLoginPage || isAuditExportRoute
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/login", request.url))
   }
 
   if (isLoginPage) {
@@ -52,7 +57,9 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const refreshed = await postRefreshToken(refreshTokenCookie.value)
 
   if (refreshed instanceof Error) {
-    const response = NextResponse.redirect(new URL("/login", request.url))
+    const response = isAuditExportRoute
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/login", request.url))
 
     response.cookies.delete("session")
     response.cookies.delete("refresh_token")
