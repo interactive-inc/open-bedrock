@@ -224,6 +224,82 @@ function observeAllReads(context: Context): ObservedAllRead[] {
   return reads
 }
 
+function enforceD1ReadResultLimits(context: Context): ObservedAllRead[] {
+  const reads: ObservedAllRead[] = []
+  const source = context.env.DB
+  const encoder = new TextEncoder()
+
+  const observe = (sql: string, rows: ReadonlyArray<unknown>, bindings: ReadonlyArray<unknown>) => {
+    const read = {
+      sql,
+      rowCount: rows.length,
+      payloadBytes: encoder.encode(JSON.stringify(rows)).byteLength,
+      maxRowPayloadBytes: Math.max(
+        0,
+        ...rows.map((row) => encoder.encode(JSON.stringify(row)).byteLength),
+      ),
+      bindingCount: bindings.length,
+      maxBindingBytes: Math.max(
+        0,
+        ...bindings.map(
+          (value) =>
+            encoder.encode(typeof value === "string" ? value : JSON.stringify(value)).byteLength,
+        ),
+      ),
+    }
+    reads.push(read)
+    if (read.maxRowPayloadBytes >= 2_000_000) {
+      throw new Error("simulated D1 result row limit")
+    }
+    if (read.payloadBytes > 4 * 1024 * 1024) {
+      throw new Error("simulated D1 result payload limit")
+    }
+  }
+
+  const wrapStatement = (
+    statement: D1PreparedStatement,
+    sql: string,
+    bindings: ReadonlyArray<unknown> = [],
+  ): D1PreparedStatement =>
+    new Proxy(statement, {
+      get(target, property) {
+        if (property === "bind") {
+          return (...values: unknown[]) => wrapStatement(target.bind(...values), sql, values)
+        }
+        if (property === "all") {
+          return async () => {
+            const result = await target.all()
+            observe(sql, result.results, bindings)
+            return result
+          }
+        }
+        if (property === "raw") {
+          return async () => {
+            const result = await target.raw()
+            observe(sql, result, bindings)
+            return result
+          }
+        }
+
+        const value = Reflect.get(target, property, target) as unknown
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+
+  context.env.DB = new Proxy(source, {
+    get(target, property) {
+      if (property === "prepare") {
+        return (sql: string) => wrapStatement(target.prepare(sql), sql)
+      }
+
+      const value = Reflect.get(target, property, target) as unknown
+      return typeof value === "function" ? value.bind(target) : value
+    },
+  })
+
+  return reads
+}
+
 function tamperSegmentRead(
   context: Context,
   mode:
@@ -534,6 +610,40 @@ const AUDIT_SUMMARY_TEXT_COLUMNS = new Set<AuditTextColumn>([
   "reason_code",
   "client_name",
 ])
+
+async function readStoredAuditRowMetrics(
+  db: D1Database,
+  eventId: string,
+): Promise<{ storedBytes: number; maxTextBytes: number; exactHexPayloadBytes: number }> {
+  const textByteExpressions = AUDIT_TEXT_COLUMNS.map(
+    (column) => `CASE WHEN ${column} IS NULL THEN 0 ELSE length(CAST(${column} AS BLOB)) END`,
+  )
+  const result = await db
+    .prepare(
+      `SELECT (${textByteExpressions.join(" + ")} +
+                length(CAST(id AS BLOB)) +
+                CASE WHEN actor_account_id IS NULL THEN 0
+                     ELSE length(CAST(actor_account_id AS BLOB)) END +
+                CASE WHEN actor_employee_id IS NULL THEN 0
+                     ELSE length(CAST(actor_employee_id AS BLOB)) END +
+                length(CAST(created_at AS BLOB))) AS stored_bytes,
+              max(${textByteExpressions.join(", ")}) AS max_text_bytes,
+              2 * (${textByteExpressions.join(" + ")}) AS exact_hex_payload_bytes
+       FROM audit_logs WHERE event_id = ?1`,
+    )
+    .bind(eventId)
+    .first<{
+      stored_bytes: number
+      max_text_bytes: number
+      exact_hex_payload_bytes: number
+    }>()
+  if (result === null) throw new Error("audit fixture row is missing")
+  return {
+    storedBytes: result.stored_bytes,
+    maxTextBytes: result.max_text_bytes,
+    exactHexPayloadBytes: result.exact_hex_payload_bytes,
+  }
+}
 
 async function insertCorruptTextColumn(
   db: D1Database,
@@ -954,6 +1064,87 @@ describe("AuditEventRepository search contract", () => {
     expect(exactReads.length).toBeGreaterThan(1)
   })
 
+  test("segments a remote-valid summary whose combined exact HEX row exceeds the D1 row limit", async () => {
+    const { context, db } = createTestContext()
+    const targetId = "x".repeat(600_000)
+    const reasonCode = "y".repeat(600_000)
+    await insertLegacyRow(db, { eventId: "combined-summary", targetId, reasonCode })
+    const metrics = await readStoredAuditRowMetrics(db, "combined-summary")
+    expect(metrics.storedBytes).toBeLessThan(2_000_000)
+    expect(metrics.maxTextBytes).toBeLessThanOrEqual(999_000)
+    expect(metrics.exactHexPayloadBytes).toBeGreaterThanOrEqual(2_000_000)
+    const reads = enforceD1ReadResultLimits(context)
+
+    const page = await new AuditEventRepository(context).search({
+      limit: 50,
+      cursor: null,
+      filters: {},
+    })
+
+    expect(page.items).toHaveLength(1)
+    expect(page.items[0]?.targetId).toBe(targetId)
+    expect(page.items[0]?.reasonCode).toBe(reasonCode)
+    expect(new TextEncoder().encode(JSON.stringify(page)).byteLength).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(reads.length).toBeLessThanOrEqual(25)
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+  })
+
+  test("keeps a near-limit summary exact and segments the first unsafe combined HEX row", async () => {
+    const { context, db } = createTestContext()
+    const exactTargetId = "x".repeat(499_700)
+    const exactReasonCode = "y".repeat(499_700)
+    const segmentedTargetId = "x".repeat(500_000)
+    const segmentedReasonCode = "y".repeat(500_000)
+    await insertLegacyRow(db, {
+      id: 1,
+      eventId: "near-summary-exact",
+      targetId: exactTargetId,
+      reasonCode: exactReasonCode,
+      createdAt: 2,
+    })
+    await insertLegacyRow(db, {
+      id: 2,
+      eventId: "near-summary-segmented",
+      targetId: segmentedTargetId,
+      reasonCode: segmentedReasonCode,
+      createdAt: 1,
+    })
+    const exactMetrics = await readStoredAuditRowMetrics(db, "near-summary-exact")
+    const segmentedMetrics = await readStoredAuditRowMetrics(db, "near-summary-segmented")
+    expect(exactMetrics.exactHexPayloadBytes).toBeLessThan(2_000_000)
+    expect(segmentedMetrics.storedBytes).toBeLessThan(2_000_000)
+    expect(segmentedMetrics.maxTextBytes).toBeLessThanOrEqual(999_000)
+    expect(segmentedMetrics.exactHexPayloadBytes).toBeGreaterThanOrEqual(2_000_000)
+    const reads = enforceD1ReadResultLimits(context)
+
+    const page = await new AuditEventRepository(context).search({
+      limit: 50,
+      cursor: null,
+      filters: {},
+    })
+
+    expect(page.items.map((item) => item.eventId)).toEqual([
+      "near-summary-exact",
+      "near-summary-segmented",
+    ])
+    expect(page.items[0]?.targetId).toBe(exactTargetId)
+    expect(page.items[1]?.targetId).toBe(segmentedTargetId)
+    expect(new TextEncoder().encode(JSON.stringify(page)).byteLength).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(
+      reads.filter((read) => read.sql.includes("WHERE id IN (SELECT value FROM json_each(?1))")),
+    ).toHaveLength(1)
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+    expect(reads.length).toBeLessThanOrEqual(25)
+  })
+
   test("fails closed from a narrow descriptor without fetching one oversized summary row", async () => {
     const { context, db } = createTestContext()
     await insertLegacyRow(db, {
@@ -1227,6 +1418,83 @@ describe("AuditEventRepository detail and corruption contract", () => {
         ? repository.search({ limit: 50, cursor: null, filters: {} })
         : repository.findByEventId("exact-layout"),
     )
+  })
+
+  test("segments a remote-valid detail whose combined exact HEX row exceeds the D1 row limit", async () => {
+    const { context, db } = createTestContext()
+    const authorizationJson = JSON.stringify("x".repeat(600_000))
+    const metadataJson = JSON.stringify("y".repeat(600_000))
+    await insertLegacyRow(db, {
+      eventId: "combined-detail",
+      authorizationJson,
+      metadataJson,
+    })
+    const metrics = await readStoredAuditRowMetrics(db, "combined-detail")
+    expect(metrics.storedBytes).toBeLessThan(2_000_000)
+    expect(metrics.maxTextBytes).toBeLessThanOrEqual(999_000)
+    expect(metrics.exactHexPayloadBytes).toBeGreaterThanOrEqual(2_000_000)
+    const reads = enforceD1ReadResultLimits(context)
+
+    const detail = await new AuditEventRepository(context).findByEventId("combined-detail")
+
+    expect(detail?.authorizationJson).toBe(authorizationJson)
+    expect(detail?.metadataJson).toBe(metadataJson)
+    expect(new TextEncoder().encode(JSON.stringify(detail)).byteLength).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(reads.length).toBeLessThanOrEqual(25)
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+  })
+
+  test("keeps a near-limit detail exact and segments the first unsafe combined HEX row", async () => {
+    const { context, db } = createTestContext()
+    const exactAuthorizationJson = JSON.stringify("x".repeat(499_300))
+    const exactMetadataJson = JSON.stringify("y".repeat(499_300))
+    const segmentedAuthorizationJson = JSON.stringify("x".repeat(500_000))
+    const segmentedMetadataJson = JSON.stringify("y".repeat(500_000))
+    await insertLegacyRow(db, {
+      id: 1,
+      eventId: "near-detail-exact",
+      authorizationJson: exactAuthorizationJson,
+      metadataJson: exactMetadataJson,
+      createdAt: 2,
+    })
+    await insertLegacyRow(db, {
+      id: 2,
+      eventId: "near-detail-segmented",
+      authorizationJson: segmentedAuthorizationJson,
+      metadataJson: segmentedMetadataJson,
+      createdAt: 1,
+    })
+    const exactMetrics = await readStoredAuditRowMetrics(db, "near-detail-exact")
+    const segmentedMetrics = await readStoredAuditRowMetrics(db, "near-detail-segmented")
+    expect(exactMetrics.exactHexPayloadBytes).toBeLessThan(2_000_000)
+    expect(segmentedMetrics.storedBytes).toBeLessThan(2_000_000)
+    expect(segmentedMetrics.maxTextBytes).toBeLessThanOrEqual(999_000)
+    expect(segmentedMetrics.exactHexPayloadBytes).toBeGreaterThanOrEqual(2_000_000)
+    const reads = enforceD1ReadResultLimits(context)
+    const repository = new AuditEventRepository(context)
+
+    const exact = await repository.findByEventId("near-detail-exact")
+    const segmented = await repository.findByEventId("near-detail-segmented")
+
+    expect(exact?.metadataJson).toBe(exactMetadataJson)
+    expect(segmented?.metadataJson).toBe(segmentedMetadataJson)
+    expect(new TextEncoder().encode(JSON.stringify(exact)).byteLength).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(new TextEncoder().encode(JSON.stringify(segmented)).byteLength).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(
+      reads.filter((read) => read.sql.includes("WHERE id IN (SELECT value FROM json_each(?1))")),
+    ).toHaveLength(1)
+    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+    expect(reads.length).toBeLessThanOrEqual(25)
   })
 
   test("returns legacy unknown vocabulary, nullable target, JSON text, and IP unchanged", async () => {

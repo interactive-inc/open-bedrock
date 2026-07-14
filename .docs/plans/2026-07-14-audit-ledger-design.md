@@ -190,7 +190,7 @@ export は exact 行を各五千件の raw window 内で即時 decode して最�
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 
-一覧は最初に最大 `limit + 1` 件の要約 descriptor を取得し、hex 投影の列名・envelopeを含む保守的な四 MiB 累積上限または指定 `limit` の早い方までを byte-faithful 要約取得へ渡す。上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも version 2 cursor を返す。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
+一覧は最初に最大 `limit + 1` 件の要約 descriptor を取得し、hex 投影の列名・envelopeを含む保守的な四 MiB 累積上限または指定 `limit` の早い方までを byte-faithful 要約取得へ渡す。上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも version 2 cursor を返す。要約と詳細の一括 HEX 取得は、単一列が九十九万九千 source byte 以下で、全 text 列と固定 envelope を合算した exact 結果行の保守的推定が二百万 byte 未満の場合だけ選ぶ。個々の列が上限内でも合算結果行が上限へ達する場合は bounded segment 取得へ切り替え、各結果行を二百万 byte 未満、response を四 MiB 以下に保つ。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
 
 ## Web
 

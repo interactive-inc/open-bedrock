@@ -350,7 +350,7 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 実行: `cd api && bun test src/infrastructure/audit src/lib/audit/audit-cursor.test.ts src/lib/audit/audit-csv.test.ts`
 
-- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件の狭い descriptor を先に取得し、指定 `limit` または保守的な四 MiB 累積要約 wire budget の早い方までを byte-faithful 要約取得する。byte budget で短縮したページも前後 cursor を返し、単一要約行の超過は `audit_unavailable` とする。一覧 SQL は内部 ID と要約列の storage class、byte length だけを投影し、JSON 四列と client IP を取得しない。
+- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件の狭い descriptor を先に取得し、指定 `limit` または保守的な四 MiB 累積要約 wire budget の早い方までを byte-faithful 要約取得する。byte budget で短縮したページも前後 cursor を返し、単一要約行の超過は `audit_unavailable` とする。一覧 SQL は内部 ID と要約列の storage class、byte length だけを投影し、JSON 四列と client IP を取得しない。要約と詳細の exact HEX 取得は、最大 text 列が九十九万九千 source byte 以下かつ全 text 列を合算した exact 結果行推定が二百万 byte 未満の場合だけ使い、それ以外は bounded segment 取得にする。
 
 - [ ] 詳細と CSV 出力は非 null の JSON 四列を構文検証し、scalar と旧 JSON-string wrapper は再直列化せず受理する。壊れた JSON は `audit_unavailable` とし、一覧要約では詳細列を検証しない。
 

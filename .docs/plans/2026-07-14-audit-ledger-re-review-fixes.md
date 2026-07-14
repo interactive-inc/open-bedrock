@@ -99,4 +99,7 @@ query, then globally batches all segmented chunks with a fixed one-bind plan.
       and exact 16 MiB/+1 byte behavior using nine remote-compatible rows below 2 MB each.
 - [x] Decode exact rows inside each 5,000-row window and discard HEX/layout immediately; retain only
       final rows and segmented state, with the 50,000-row retained-memory delta below 64 MiB.
+- [x] Gate summary/detail exact HEX reads by the conservative full result-row estimate as well as
+      the 999,000-byte per-column limit, so combined medium text columns switch to bounded segments
+      before the D1 2,000,000-byte row ceiling.
 - [ ] Run focused tests, full API tests, API typecheck, `vp check`, diff/hygiene, then commit and push.
