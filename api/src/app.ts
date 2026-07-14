@@ -68,6 +68,10 @@ import * as dashboardRoute from "@/interface/dashboard/route"
 import * as inboxCountsRoute from "@/interface/inbox/counts/route"
 import * as employeeListRoute from "@/interface/employee/route"
 import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
+import * as employeeLifecycleEventsRoute from "@/interface/employee/[code]/lifecycle-events/route"
+import * as employeeLifecycleStateRoute from "@/interface/employee/[code]/lifecycle-state/route"
+import * as personnelActionsRoute from "@/interface/employee/personnel-actions/route"
+import * as personnelActionCorrectionRoute from "@/interface/employee/personnel-actions/[id]/correct/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
 import * as expenseCreateRoute from "@/interface/expense/route"
@@ -277,6 +281,8 @@ export const app = factory
   .post("/audit-event-exports", ...auditEventExportsRoute.POST)
   .get("/employees", ...employeeListRoute.GET)
   .get("/directory/employees", ...employeeDirectoryRoute.GET)
+  .get("/employees/:code/lifecycle-events", ...employeeLifecycleEventsRoute.GET)
+  .get("/employees/:code/lifecycle-state", ...employeeLifecycleStateRoute.GET)
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
@@ -438,6 +444,8 @@ export const app = factory
   .delete("/career/applications/:id", ...careerApplicationsIdRoute.DELETE)
   .delete("/career/sheet/me", ...careerSheetMeRoute.DELETE)
   .post("/employees", ...employeeListRoute.POST)
+  .post("/personnel-actions", ...personnelActionsRoute.POST)
+  .post("/personnel-actions/:id/correct", ...personnelActionCorrectionRoute.POST)
   .get("/employees/:code", ...employeeCodeRoute.GET)
   .put("/employees/:code", ...employeeCodeRoute.PUT)
   .delete("/employees/:code", ...employeeCodeRoute.DELETE)
