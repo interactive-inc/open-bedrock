@@ -162,6 +162,80 @@ async function auditRows(db: D1Database) {
 }
 
 describe("RefreshAccessToken", () => {
+  test("fails closed before every denial branch when the audit HMAC secret is absent or blank", async () => {
+    const scenarios: Array<{
+      name: string
+      options: SetupOptions
+      addActiveDescendant?: boolean
+    }> = [
+      { name: "missing", options: { includeToken: false } },
+      { name: "expired", options: { expiresAt: nowEpoch } },
+      {
+        name: "revoked",
+        options: { revokedAt: nowEpoch - 10 },
+        addActiveDescendant: true,
+      },
+      { name: "account-state", options: { accountStatus: "suspended" } },
+    ]
+    const secretStates = [
+      { name: "absent", value: undefined },
+      { name: "blank", value: "   " },
+    ] as const
+    const results: Array<{
+      scenario: string
+      secret: string
+      error: { name: string; message: string; code: string } | null
+    }> = []
+
+    for (const scenario of scenarios) {
+      for (const secret of secretStates) {
+        const rawToken = `${scenario.name}-${secret.name}-hmac-token`
+        const { context, db } = await setupRefreshToken(rawToken, scenario.options)
+        if (scenario.addActiveDescendant) {
+          await insertRefreshToken(db, {
+            id: 2,
+            rawToken: `${rawToken}-active-descendant`,
+          })
+        }
+        const activeBefore = await activeFamilyCount(db)
+        if (secret.value === undefined) {
+          delete (context.env as Partial<Context["env"]>).AUDIT_HMAC_SECRET
+        } else {
+          context.env.AUDIT_HMAC_SECRET = secret.value
+        }
+
+        const result = await new RefreshAccessToken(context).run(command(rawToken))
+
+        results.push({
+          scenario: scenario.name,
+          secret: secret.name,
+          error:
+            result instanceof UnavailableError
+              ? { name: result.name, message: result.message, code: result.code }
+              : null,
+        })
+        expect(result).not.toHaveProperty("accessToken")
+        expect(result).not.toHaveProperty("refreshToken")
+        expect(await auditRows(db)).toEqual([])
+        expect(await activeFamilyCount(db)).toBe(activeBefore)
+      }
+    }
+
+    expect(results).toEqual(
+      scenarios.flatMap((scenario) =>
+        secretStates.map((secret) => ({
+          scenario: scenario.name,
+          secret: secret.name,
+          error: {
+            name: "UnavailableError",
+            message: "invalid or expired refresh token",
+            code: "audit_unavailable",
+          },
+        })),
+      ),
+    )
+  })
+
   test("records a successful refresh and a later reuse with the same family HMAC", async () => {
     const rawToken = "old-refresh-token"
     const { context, db } = await setupRefreshToken(rawToken)

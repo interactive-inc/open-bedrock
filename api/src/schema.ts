@@ -1167,7 +1167,12 @@ export const refreshTokens = sqliteTable(
     userAgent: text("user_agent"),
     createdAt: integer("created_at").notNull(),
   },
-  (table) => [index("idx_refresh_tokens_account").on(table.accountId)],
+  (table) => [
+    index("idx_refresh_tokens_account").on(table.accountId),
+    index("idx_refresh_tokens_active_family")
+      .on(table.familyId)
+      .where(sql`revoked_at IS NULL`),
+  ],
 )
 
 export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>

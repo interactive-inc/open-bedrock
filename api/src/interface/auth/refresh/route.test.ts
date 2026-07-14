@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/app"
+import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
@@ -128,6 +129,31 @@ function postRefresh(
   })
 }
 
+function postRefreshWithAuditSecret(
+  db: D1Database,
+  refreshToken: string,
+  auditSecret: string | undefined,
+): Promise<Response> {
+  const bindings: Partial<Bindings> = {
+    DB: db,
+    JWT_SECRET: jwtSecret,
+    NOW: "2026-01-01T00:00:00.000Z",
+  }
+  if (auditSecret !== undefined) bindings.AUDIT_HMAC_SECRET = auditSecret
+
+  return Promise.resolve(
+    app.request(
+      "/auth/refresh",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      },
+      bindings as Bindings,
+    ),
+  )
+}
+
 function postMalformedRefresh(db: D1Database): Promise<Response> {
   return Promise.resolve(
     app.request(
@@ -161,6 +187,54 @@ async function auditCount(db: D1Database): Promise<number | null> {
 }
 
 describe("POST /auth/refresh", () => {
+  test("returns the same safe 503 before every denial branch when audit HMAC is absent or blank", async () => {
+    const scenarios: Scenario[] = ["missing", "expired", "revoked", "inactive_account"]
+    const secretStates = [
+      { name: "absent", value: undefined },
+      { name: "blank", value: "   " },
+    ] as const
+    const responses: Array<{
+      scenario: Scenario
+      secret: string
+      status: number
+      body: unknown
+    }> = []
+
+    for (const scenario of scenarios) {
+      for (const secret of secretStates) {
+        const { db, refreshToken } = await createScenario(scenario)
+        const activeBefore = await activeFamilyCount(db)
+        const response = await postRefreshWithAuditSecret(db, refreshToken, secret.value)
+        const body = await response.json()
+
+        responses.push({
+          scenario,
+          secret: secret.name,
+          status: response.status,
+          body,
+        })
+        expect(body).not.toHaveProperty("access_token")
+        expect(body).not.toHaveProperty("refresh_token")
+        expect(await auditCount(db)).toBe(0)
+        expect(await activeFamilyCount(db)).toBe(activeBefore)
+      }
+    }
+
+    expect(responses).toEqual(
+      scenarios.flatMap((scenario) =>
+        secretStates.map((secret) => ({
+          scenario,
+          secret: secret.name,
+          status: 503,
+          body: {
+            error: "invalid or expired refresh token",
+            code: "audit_unavailable",
+          },
+        })),
+      ),
+    )
+  })
+
   test("returns only tokens and records the exact successful refresh event", async () => {
     const { db, refreshToken } = await createScenario("active")
     const incomingRequestId = "external-refresh-request-41"
