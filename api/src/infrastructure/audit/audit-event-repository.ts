@@ -14,15 +14,62 @@ import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/e
 import { z } from "zod"
 
 const SEARCH_MAX_LIMIT = 100
+const SEARCH_SUMMARY_WIRE_BUDGET_BYTES = 4 * 1024 * 1024
 const EXPORT_MAX_ROWS = 50_000
 const EXPORT_CHUNK_SIZE = 500
 const EXPORT_DETAIL_RAW_CHUNK_BYTES = 4 * 1024 * 1024
 const EXPORT_DETAIL_WIRE_CHUNK_BYTES = 4 * 1024 * 1024
 const DETAIL_TEXT_SEGMENT_BYTES = 256 * 1024
 
-const SUMMARY_SELECT_COLUMNS = `
-  id, event_id, request_id, actor_account_id, actor_employee_id, action,
-  target_type, target_id, outcome, reason_code, client_name, created_at
+const SUMMARY_DATABASE_COLUMNS = [
+  "id",
+  "event_id",
+  "request_id",
+  "actor_account_id",
+  "actor_employee_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "client_name",
+  "created_at",
+] as const
+
+const SUMMARY_TEXT_COLUMNS = [
+  "event_id",
+  "request_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "client_name",
+] as const
+
+const SUMMARY_SELECT_COLUMNS = SUMMARY_DATABASE_COLUMNS.join(", ")
+
+// Object braces, commas, and `"column":` prefixes, plus a small per-row margin for the
+// transport envelope. JSON string lengths come from SQLite's own json_quote below.
+const SUMMARY_ROW_WIRE_FIXED_BYTES =
+  2 +
+  SUMMARY_DATABASE_COLUMNS.reduce(
+    (bytes, column, index) => bytes + column.length + 3 + (index === 0 ? 0 : 1),
+    0,
+  ) +
+  64
+
+const SUMMARY_WIRE_BYTES_SQL = `
+  ${SUMMARY_ROW_WIRE_FIXED_BYTES} +
+  length(CAST(id AS BLOB)) +
+  ${SUMMARY_TEXT_COLUMNS.map((column) => `length(CAST(json_quote(${column}) AS BLOB))`).join(
+    " +\n  ",
+  )} +
+  CASE WHEN actor_account_id IS NULL THEN 4
+       ELSE length(CAST(actor_account_id AS BLOB)) END +
+  CASE WHEN actor_employee_id IS NULL THEN 4
+       ELSE length(CAST(actor_employee_id AS BLOB)) END +
+  length(CAST(created_at AS BLOB))
 `
 
 const DETAIL_DATABASE_COLUMNS = [
@@ -140,6 +187,14 @@ const auditDetailDatabaseRowSchema = auditSummaryDatabaseRowSchema.extend({
 type AuditSummaryDatabaseRow = z.infer<typeof auditSummaryDatabaseRowSchema>
 type AuditDetailDatabaseRow = z.infer<typeof auditDetailDatabaseRowSchema>
 
+const auditSummaryDescriptorRowSchema = z.strictObject({
+  id: z.number().int().safe(),
+  created_at: validIsoEpochSchema,
+  wire_bytes: z.number().int().safe().nonnegative(),
+})
+
+type AuditSummaryDescriptorRow = z.infer<typeof auditSummaryDescriptorRowSchema>
+
 const auditExportDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
@@ -188,7 +243,7 @@ const SEGMENT_LAYOUT_SELECT_COLUMNS = [
 ].join(", ")
 
 const UPPER_HEX = /^(?:[0-9A-F]{2})*$/u
-const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true })
+const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
 
 const auditFiltersSchema = z.strictObject({
   actorAccountId: z.number().int().safe().optional(),
@@ -283,6 +338,17 @@ function parseDetailRows(results: ReadonlyArray<unknown>): ReadonlyArray<AuditDe
         throw unavailable(error)
       }
     }
+
+    return parsed.data
+  })
+}
+
+function parseSummaryDescriptorRows(
+  results: ReadonlyArray<unknown>,
+): ReadonlyArray<AuditSummaryDescriptorRow> {
+  return results.map((row) => {
+    const parsed = auditSummaryDescriptorRowSchema.safeParse(row)
+    if (!parsed.success) throw unavailable(parsed.error)
 
     return parsed.data
   })
@@ -402,11 +468,10 @@ function addCursorClause(parts: SqlParts, cursor: AuditCursorPosition): void {
   )
 }
 
-function selectSql(
+function summaryDescriptorSql(
   parts: SqlParts,
   ascending: boolean,
   limit: number,
-  columns: string,
 ): {
   sql: string
   bindings: ReadonlyArray<string | number>
@@ -416,10 +481,40 @@ function selectSql(
   const order = ascending ? "ASC" : "DESC"
 
   return {
-    sql: `SELECT ${columns} FROM audit_logs ${where}
+    sql: `SELECT id, created_at, (${SUMMARY_WIRE_BYTES_SQL}) AS wire_bytes
+          FROM audit_logs ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
   }
+}
+
+function admitSummaryDescriptors(
+  descriptors: ReadonlyArray<AuditSummaryDescriptorRow>,
+  limit: number,
+): ReadonlyArray<AuditSummaryDescriptorRow> {
+  const first = descriptors[0]
+  if (first !== undefined && first.wire_bytes + 2 > SEARCH_SUMMARY_WIRE_BUDGET_BYTES) {
+    throw unavailable(new Error("audit summary row exceeds the response budget"))
+  }
+
+  const admitted: AuditSummaryDescriptorRow[] = []
+  let estimatedArrayBytes = 2
+  for (const descriptor of descriptors) {
+    if (admitted.length >= limit) break
+
+    const separatorBytes = admitted.length === 0 ? 0 : 1
+    if (
+      estimatedArrayBytes + separatorBytes + descriptor.wire_bytes >
+      SEARCH_SUMMARY_WIRE_BUDGET_BYTES
+    ) {
+      break
+    }
+
+    admitted.push(descriptor)
+    estimatedArrayBytes += separatorBytes + descriptor.wire_bytes
+  }
+
+  return admitted
 }
 
 function exportDescriptorSql(
@@ -465,6 +560,10 @@ function detailIdsJson(rows: ReadonlyArray<AuditExportDescriptorRow>): string {
   return JSON.stringify(rows.map((row) => row.id))
 }
 
+function summaryIdsJson(rows: ReadonlyArray<AuditSummaryDescriptorRow>): string {
+  return JSON.stringify(rows.map((row) => row.id))
+}
+
 function rethrowRepositoryError(error: unknown): never {
   if (
     error instanceof ValidationError ||
@@ -480,6 +579,35 @@ function rethrowRepositoryError(error: unknown): never {
 export class AuditEventRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  private async loadExactSummaries(
+    descriptors: ReadonlyArray<AuditSummaryDescriptorRow>,
+    ascending: boolean,
+  ): Promise<ReadonlyArray<AuditSummaryDatabaseRow>> {
+    const order = ascending ? "ASC" : "DESC"
+    const summaryResult = await this.c.env.DB.prepare(
+      `SELECT ${SUMMARY_SELECT_COLUMNS}
+       FROM audit_logs
+       WHERE id IN (SELECT value FROM json_each(?1))
+       ORDER BY created_at ${order}, id ${order}`,
+    )
+      .bind(summaryIdsJson(descriptors))
+      .all()
+    if (!summaryResult.success) throw new Error("audit summary query did not succeed")
+
+    const rows = parseSummaryRows(summaryResult.results)
+    if (
+      rows.length !== descriptors.length ||
+      rows.some(
+        (row, index) =>
+          row.id !== descriptors[index]?.id || row.created_at !== descriptors[index]?.created_at,
+      )
+    ) {
+      throw new Error("audit summary rows changed during read")
+    }
+
+    return rows
   }
 
   private async loadExactDetails(
@@ -637,16 +765,22 @@ export class AuditEventRepository {
       const parts = filterSql(parsed.filters)
       if (cursor !== null) addCursorClause(parts, cursor)
       const ascending = cursor?.direction === "previous"
-      const statement = selectSql(parts, ascending, parsed.limit + 1, SUMMARY_SELECT_COLUMNS)
-      const result = await this.c.env.DB.prepare(statement.sql)
-        .bind(...statement.bindings)
+      const descriptorStatement = summaryDescriptorSql(parts, ascending, parsed.limit + 1)
+      const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
+        .bind(...descriptorStatement.bindings)
         .all()
-      if (!result.success) throw new Error("audit search did not succeed")
+      if (!descriptorResult.success)
+        throw new Error("audit summary descriptor query did not succeed")
 
-      const queried = parseSummaryRows(result.results)
-      const hasMore = queried.length > parsed.limit
-      const nearby = queried.slice(0, parsed.limit)
-      const pageRows = ascending ? [...nearby].reverse() : nearby
+      const descriptors = parseSummaryDescriptorRows(descriptorResult.results)
+      const admitted = admitSummaryDescriptors(descriptors, parsed.limit)
+      if (admitted.length === 0) {
+        return { items: [], nextCursor: null, previousCursor: null }
+      }
+
+      const queried = await this.loadExactSummaries(admitted, ascending)
+      const hasMore = descriptors.length > admitted.length
+      const pageRows = ascending ? [...queried].reverse() : queried
       const first = pageRows.at(0)
       const last = pageRows.at(-1)
 

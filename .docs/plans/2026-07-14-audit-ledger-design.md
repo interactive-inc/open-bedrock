@@ -182,7 +182,7 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 
-一覧は SQL 自体で要約列だけを取得し、`before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
+一覧は最初に `id`、`created_at` と要約 JSON wire byte のみを最大 `limit + 1` 件取得し、四 MiB の累積上限または指定 `limit` の早い方までを exact-ID 要約取得へ渡す。wire byte は `json_quote`、列名、JSON envelope を含めて保守的に見積もり、上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも前後 cursor を返す。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。segment の fatal UTF-8 decode は先頭 BOM も保存原文として保持する。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
 
 ## Web
 

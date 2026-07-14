@@ -275,6 +275,30 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
   `)
 }
 
+async function insertWideSummaryRows(
+  db: D1Database,
+  count: number,
+  targetIdBytes: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `WITH RECURSIVE sequence(value) AS (
+         SELECT 1
+         UNION ALL
+         SELECT value + 1 FROM sequence WHERE value < ?1
+       )
+       INSERT INTO audit_logs
+         (id, event_id, request_id, action, target_type, target_id,
+          outcome, client_name, created_at)
+       SELECT value, 'wide-' || value, 'wide-request-' || value,
+              'legacy.wide', 'legacy_target', lower(hex(zeroblob(?2))),
+              'succeeded', 'api', 100
+       FROM sequence`,
+    )
+    .bind(count, Math.ceil(targetIdBytes / 2))
+    .run()
+}
+
 describe("AuditEventRepository write contract", () => {
   test("prepareAppend returns the inseparable insert and changed-row guard pair", async () => {
     const { context, db } = createTestContext()
@@ -527,12 +551,79 @@ describe("AuditEventRepository search contract", () => {
 
     await repository.search({ limit: 50, cursor: null, filters: {} })
 
-    expect(preparedSql).toHaveLength(1)
-    expect(preparedSql[0]).not.toContain("authorization_json")
-    expect(preparedSql[0]).not.toContain("before_json")
-    expect(preparedSql[0]).not.toContain("after_json")
-    expect(preparedSql[0]).not.toContain("metadata_json")
-    expect(preparedSql[0]).not.toContain("client_ip")
+    expect(preparedSql).toHaveLength(2)
+    for (const sql of preparedSql) {
+      expect(sql).not.toContain("authorization_json")
+      expect(sql).not.toContain("before_json")
+      expect(sql).not.toContain("after_json")
+      expect(sql).not.toContain("metadata_json")
+      expect(sql).not.toContain("client_ip")
+    }
+    expect(preparedSql.some((sql) => sql.includes("wire_bytes"))).toBe(true)
+    expect(preparedSql.some((sql) => sql.includes("json_each"))).toBe(true)
+  })
+
+  test("bounds wide summary reads and traverses every shortened same-second page once", async () => {
+    const { context, db } = createTestContext()
+    await insertWideSummaryRows(db, 101, 200_000)
+    const reads = observeAllReads(context)
+    const repository = new AuditEventRepository(context)
+
+    const first = await repository.search({ limit: 100, cursor: null, filters: {} })
+    expect(reads[0]?.payloadBytes).toBeLessThan(16 * 1024 * 1024)
+    expect(first.items.length).toBeGreaterThan(0)
+    expect(first.items.length).toBeLessThan(100)
+    expect(first.nextCursor).not.toBeNull()
+
+    const second = await repository.search({ limit: 100, cursor: first.nextCursor, filters: {} })
+    expect(second.previousCursor).not.toBeNull()
+    const backToFirst = await repository.search({
+      limit: 100,
+      cursor: second.previousCursor,
+      filters: {},
+    })
+    expect(backToFirst.items.map((item) => item.eventId)).toEqual(
+      first.items.map((item) => item.eventId),
+    )
+
+    const eventIds = first.items.map((item) => item.eventId)
+    let page = second
+    while (true) {
+      eventIds.push(...page.items.map((item) => item.eventId))
+      if (page.nextCursor === null) break
+      page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
+    }
+
+    expect(eventIds).toEqual(Array.from({ length: 101 }, (_, index) => `wide-${101 - index}`))
+    expect(new Set(eventIds).size).toBe(101)
+    const descriptorReads = reads.filter((read) => read.sql.includes("wire_bytes"))
+    const exactReads = reads.filter((read) => read.sql.includes("json_each"))
+    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(16 * 1024 * 1024)
+    expect(Math.max(...descriptorReads.map((read) => read.payloadBytes))).toBeLessThan(64 * 1024)
+    expect(Math.max(...exactReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
+      4 * 1024 * 1024,
+    )
+    expect(descriptorReads.length).toBeGreaterThan(1)
+    expect(exactReads.length).toBeGreaterThan(1)
+  })
+
+  test("fails closed from a narrow descriptor without fetching one oversized summary row", async () => {
+    const { context, db } = createTestContext()
+    await insertLegacyRow(db, {
+      eventId: "oversized-summary",
+      targetId: "x".repeat(4 * 1024 * 1024),
+    })
+    const reads = observeAllReads(context)
+
+    await expectAuditUnavailable(
+      new AuditEventRepository(context).search({ limit: 100, cursor: null, filters: {} }),
+    )
+
+    expect(reads).toHaveLength(1)
+    expect(reads[0]?.rowCount).toBe(1)
+    expect(reads[0]?.payloadBytes).toBeLessThan(1_024)
+    expect(reads[0]?.sql).toContain("wire_bytes")
+    expect(reads[0]?.sql).not.toContain("json_each")
   })
 
   test("navigates first, next, previous, and last pages without an off-by-one", async () => {
@@ -746,6 +837,81 @@ describe("AuditEventRepository detail and corruption contract", () => {
       createdAt: 1_700_000_000,
     })
     expect(await repository.findByEventId("missing")).toBeNull()
+  })
+
+  test("preserves leading BOM text fields with a large segmented event ID on find and export", async () => {
+    const { context, db } = createTestContext()
+    const bom = "\uFEFF"
+    const eventId = "e".repeat(4 * 1024 * 1024)
+    const requestId = `${bom}legacy-request`
+    const action = `${bom}legacy.action`
+    const targetType = `${bom}legacy_target`
+    const targetId = `${bom}legacy-target`
+    const reasonCode = `${bom}legacy_reason`
+    const authorizationJson = JSON.stringify(`${bom}authorization`)
+    const beforeJson = JSON.stringify(`${bom}before`)
+    const afterJson = JSON.stringify(`${bom}after`)
+    const metadataJson = JSON.stringify(`${bom}metadata`)
+    const clientIp = `${bom}198.51.100.7`
+    const bomText = "CAST(X'EFBBBF' AS TEXT)"
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+           (id, event_id, request_id, actor_account_id, actor_employee_id, action,
+            target_type, target_id, outcome, reason_code, authorization_json,
+            before_json, after_json, metadata_json, client_ip, client_name, created_at)
+         VALUES (-1, ?1, ${bomText} || 'legacy-request', 7, 11,
+                 ${bomText} || 'legacy.action', ${bomText} || 'legacy_target',
+                 ${bomText} || 'legacy-target', 'succeeded',
+                 ${bomText} || 'legacy_reason', ?2, ?3, ?4, ?5,
+                 ${bomText} || '198.51.100.7', 'api', 1700000000)`,
+      )
+      .bind("e".repeat(4 * 1024 * 1024), authorizationJson, beforeJson, afterJson, metadataJson)
+      .run()
+    const expected: AuditEventDetail = {
+      eventId,
+      requestId,
+      actorAccountId: 7,
+      actorEmployeeId: 11,
+      action,
+      targetType,
+      targetId,
+      outcome: "succeeded",
+      reasonCode,
+      authorizationJson,
+      beforeJson,
+      afterJson,
+      metadataJson,
+      clientIp,
+      clientName: "api",
+      createdAt: 1_700_000_000,
+    }
+    const repository = new AuditEventRepository(context)
+
+    expect(await repository.findByEventId(eventId)).toEqual(expected)
+    expect(await repository.export({ filters: {} })).toEqual([expected])
+  })
+
+  test("rejects BOM-prefixed malformed metadata after a segmented find and export", async () => {
+    const { context, db } = createTestContext()
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+           (id, event_id, request_id, actor_account_id, actor_employee_id, action,
+            target_type, target_id, outcome, reason_code, authorization_json,
+            before_json, after_json, metadata_json, client_ip, client_name, created_at)
+         VALUES (-1, 'bom-invalid-json', 'legacy-request--1', 7, 11,
+                 'legacy.unknown.action', 'legacy_target', 'legacy--1', 'succeeded',
+                 'legacy_reason', '{"scope":"legacy"}', '{"state":"before"}',
+                 '{"state":"after"}', CAST(X'EFBBBF' AS TEXT) || ?1,
+                 '198.51.100.7', 'api', 1700000000)`,
+      )
+      .bind(JSON.stringify("x".repeat(4 * 1024 * 1024)))
+      .run()
+    const repository = new AuditEventRepository(context)
+
+    await expectAuditUnavailable(repository.findByEventId("bom-invalid-json"))
+    await expectAuditUnavailable(repository.export({ filters: {} }))
   })
 
   test.each([
