@@ -29,6 +29,11 @@ export type PersonnelActionRecord = {
   summary: PersonnelActionSummary
 }
 
+export type PersonnelActionListRecord = PersonnelActionRecord & {
+  rowId: number
+  corrected: boolean
+}
+
 type PersonnelActionRow = {
   id: string
   employee_id: number
@@ -43,6 +48,11 @@ type PersonnelActionRow = {
   operation_id: string
   payload_fingerprint: string
   summary_json: string
+}
+
+type PersonnelActionListRow = PersonnelActionRow & {
+  action_row_id: number
+  is_corrected: number
 }
 
 type BaseVersionRow = {
@@ -181,6 +191,84 @@ export class PersonnelActionRepository {
 
   async findById(id: string): Promise<PersonnelActionRecord | null | ApplicationError> {
     return this.findWhere("id", id)
+  }
+
+  async maxRowIdForEmployee(props: {
+    employeeId: number
+    from: string | null
+    to: string | null
+  }): Promise<number | ApplicationError> {
+    try {
+      return (
+        (await this.c.env.DB.prepare(
+          `SELECT COALESCE(MAX(rowid), 0) AS max_row_id
+             FROM personnel_actions
+             WHERE employee_id = ?1
+               AND (?2 IS NULL OR event_on >= ?2)
+               AND (?3 IS NULL OR event_on <= ?3)`,
+        )
+          .bind(props.employeeId, props.from, props.to)
+          .first<number>("max_row_id")) ?? 0
+      )
+    } catch (cause) {
+      return repositoryError(cause)
+    }
+  }
+
+  async listForEmployee(props: {
+    employeeId: number
+    from: string | null
+    to: string | null
+    anchorRowId: number
+    position: { eventOn: string; recordedAt: number; id: string } | null
+    limit: number
+  }): Promise<ReadonlyArray<PersonnelActionListRecord> | ApplicationError> {
+    try {
+      const rows = await this.c.env.DB.prepare(
+        `SELECT action.rowid AS action_row_id, ${actionColumns
+          .split(",")
+          .map((column) => `action.${column.trim()}`)
+          .join(", ")},
+                EXISTS (
+                  SELECT 1 FROM personnel_actions AS correction
+                  WHERE correction.corrects_action_id = action.id
+                    AND correction.rowid <= ?4
+                ) AS is_corrected
+           FROM personnel_actions AS action
+           WHERE action.employee_id = ?1
+             AND (?2 IS NULL OR action.event_on >= ?2)
+             AND (?3 IS NULL OR action.event_on <= ?3)
+             AND action.rowid <= ?4
+             AND (
+               ?5 IS NULL
+               OR action.event_on < ?5
+               OR (action.event_on = ?5 AND action.recorded_at < ?6)
+               OR (action.event_on = ?5 AND action.recorded_at = ?6 AND action.id < ?7)
+             )
+           ORDER BY action.event_on DESC, action.recorded_at DESC, action.id DESC
+           LIMIT ?8`,
+      )
+        .bind(
+          props.employeeId,
+          props.from,
+          props.to,
+          props.anchorRowId,
+          props.position?.eventOn ?? null,
+          props.position?.recordedAt ?? null,
+          props.position?.id ?? null,
+          props.limit,
+        )
+        .all<PersonnelActionListRow>()
+      const result: Array<PersonnelActionListRecord> = []
+      for (const row of rows.results) {
+        const action = toAction(row)
+        if (action instanceof ApplicationError) return action
+        result.push({ ...action, rowId: row.action_row_id, corrected: row.is_corrected === 1 })
+      }
+      return result
+    } catch (cause) {
+      return repositoryError(cause)
+    }
   }
 
   private async findWhere(
