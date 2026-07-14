@@ -95,6 +95,14 @@ export const PUT = factory.createHandlers(
     const template = await loadTemplate(c, code)
     const body = c.req.valid("json")
     const workflow = zApplicationWorkflow.parse(body)
+    if (
+      template.systemBinding === "personnel_action" &&
+      workflow.steps.some((step) => step.rejection_behavior === "return")
+    ) {
+      throw new UnprocessableEntityError(
+        "personnel action workflows must reject immutable requests instead of returning them",
+      )
+    }
     await validateReferences(c, workflow)
 
     const saved = await new ApplicationWorkflowRepository(c).saveDefinition({

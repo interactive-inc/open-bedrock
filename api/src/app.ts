@@ -72,6 +72,8 @@ import * as employeeLifecycleEventsRoute from "@/interface/employee/[code]/lifec
 import * as employeeLifecycleStateRoute from "@/interface/employee/[code]/lifecycle-state/route"
 import * as personnelActionsRoute from "@/interface/employee/personnel-actions/route"
 import * as personnelActionCorrectionRoute from "@/interface/employee/personnel-actions/[id]/correct/route"
+import * as personnelActionRequestsRoute from "@/interface/employee/personnel-action-requests/route"
+import * as personnelActionRequestDetailRoute from "@/interface/employee/personnel-action-requests/[id]/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
 import * as expenseCreateRoute from "@/interface/expense/route"
@@ -446,6 +448,10 @@ export const app = factory
   .post("/employees", ...employeeListRoute.POST)
   .post("/personnel-actions", ...personnelActionsRoute.POST)
   .post("/personnel-actions/:id/correct", ...personnelActionCorrectionRoute.POST)
+  .post("/personnel-action-requests", ...personnelActionRequestsRoute.POST)
+  .get("/personnel-action-requests", ...personnelActionRequestsRoute.GET)
+  .get("/personnel-action-requests/:id", ...personnelActionRequestDetailRoute.GET)
+  .delete("/personnel-action-requests/:id", ...personnelActionRequestDetailRoute.DELETE)
   .get("/employees/:code", ...employeeCodeRoute.GET)
   .put("/employees/:code", ...employeeCodeRoute.PUT)
   .delete("/employees/:code", ...employeeCodeRoute.DELETE)

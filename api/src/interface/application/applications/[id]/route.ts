@@ -54,6 +54,70 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("application not found")
   }
 
+  const subjectRow = await c.env.DB.prepare(
+    `SELECT subject.subject_type, subject.subject_employee_id,
+            subject.subject_snapshot_json, subject.target_department_code,
+            employee.code AS employee_code, employee.name AS employee_name,
+            department.name AS target_department_name
+     FROM application_subjects subject
+     LEFT JOIN employees employee ON employee.id = subject.subject_employee_id
+     LEFT JOIN org_departments organization
+       ON organization.code = subject.target_department_code
+     LEFT JOIN departments department ON department.id = organization.department_id
+     WHERE subject.application_id = ?1`,
+  )
+    .bind(applicationId)
+    .first<{
+      subject_type: "employee" | "prospective_employee"
+      subject_employee_id: number | null
+      subject_snapshot_json: string | null
+      target_department_code: string | null
+      employee_code: string | null
+      employee_name: string | null
+      target_department_name: string | null
+    }>()
+
+  let subject: {
+    type: "employee" | "prospective_employee"
+    employee_code: string
+    employee_name: string
+  } | null = null
+  if (subjectRow !== null) {
+    if (
+      subjectRow.subject_type === "employee" &&
+      subjectRow.employee_code !== null &&
+      subjectRow.employee_name !== null
+    ) {
+      subject = {
+        type: "employee",
+        employee_code: subjectRow.employee_code,
+        employee_name: subjectRow.employee_name,
+      }
+    } else if (
+      subjectRow.subject_type === "prospective_employee" &&
+      subjectRow.subject_snapshot_json !== null
+    ) {
+      try {
+        const snapshot = JSON.parse(subjectRow.subject_snapshot_json) as Record<string, unknown>
+        if (
+          typeof snapshot.employeeCode !== "string" ||
+          typeof snapshot.employeeName !== "string"
+        ) {
+          throw new Error("invalid prospective employee snapshot")
+        }
+        subject = {
+          type: "prospective_employee",
+          employee_code: snapshot.employeeCode,
+          employee_name: snapshot.employeeName,
+        }
+      } catch {
+        throw new InternalError("invalid application subject")
+      }
+    } else {
+      throw new InternalError("invalid application subject")
+    }
+  }
+
   // 申請者本人・全社閲覧権限保持者・申請に参加した承認者のみ閲覧できる。
   // 未完了の旧形式申請だけは現在の組織/ロール上の承認者も許可するが、完了後は保存済み履歴を正とする。
   // application:read:all は監査目的の横断閲覧で、/applications/admin の一覧と対称にする。
@@ -74,7 +138,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (isOwner === false) {
     let canApprove = false
 
-    if (workflowInstance !== null && template !== null) {
+    if (subjectRow !== null) {
+      canApprove =
+        (await c.env.DB.prepare(
+          `SELECT 1 AS found
+           WHERE EXISTS (
+             SELECT 1 FROM application_workflow_step_candidates
+             WHERE application_id = ?1 AND candidate_employee_id = ?2
+           ) OR EXISTS (
+             SELECT 1 FROM application_workflow_approvals
+             WHERE application_id = ?1
+               AND (approver_id = ?2 OR represented_approver_id = ?2)
+           )`,
+        )
+          .bind(applicationId, session.employeeId)
+          .first<number>("found")) === 1
+    }
+
+    if (canApprove === false && workflowInstance !== null && template !== null) {
       const step = workflowInstance.definition.steps.find(
         (candidate) => candidate.key === workflowInstance.currentStepKey,
       )
@@ -87,9 +168,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
           const loadedSnapshot = await loadOrResolveWorkflowStepSnapshot({
             c,
             instance: workflowInstance,
-            applicantEmployeeId: row.application.applicantId,
+            applicantEmployeeId:
+              subjectRow?.subject_type === "prospective_employee"
+                ? null
+                : (subjectRow?.subject_employee_id ?? row.application.applicantId),
             step,
             now,
+            excludedEmployeeIds:
+              subjectRow === null
+                ? undefined
+                : new Set(
+                    subjectRow.subject_employee_id === null
+                      ? [row.application.applicantId]
+                      : [row.application.applicantId, subjectRow.subject_employee_id],
+                  ),
+            targetDepartmentCode: subjectRow?.target_department_code ?? null,
           })
           if (loadedSnapshot instanceof Error) throw new ConflictError("workflow_unresolvable")
 
@@ -149,7 +242,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
           canApprove = wasFrozenCandidate || wasRecordedParticipant
         }
       }
-    } else if (template !== null) {
+    } else if (canApprove === false && template !== null) {
       if (row.application.status === "pending") {
         const legacyAuthority = await canDecideLegacyApplication({
           c,
@@ -228,6 +321,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     template_code: row.templateCode ?? "",
     template_name: row.templateName ?? "",
     applicant_name: row.applicantName ?? "",
+    subject,
+    target_department:
+      subjectRow?.target_department_code === null ||
+      subjectRow?.target_department_code === undefined ||
+      subjectRow.target_department_name === null
+        ? null
+        : {
+            code: subjectRow.target_department_code,
+            name: subjectRow.target_department_name,
+          },
     status: row.application.status,
     current_step: row.application.currentStep,
     payload,

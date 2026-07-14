@@ -14,6 +14,7 @@ const workflowApproverSelectorSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("employee"), employee_code: codeSchema }),
   z.object({ type: z.literal("direct_manager") }),
   z.object({ type: z.literal("department_manager") }),
+  z.object({ type: z.literal("target_department_manager") }),
   z.object({ type: z.literal("management_chain") }),
 ])
 

@@ -3,6 +3,7 @@ export type WorkflowApproverSelector =
   | { type: "employee"; employee_code: string }
   | { type: "direct_manager" }
   | { type: "department_manager" }
+  | { type: "target_department_manager" }
   | { type: "management_chain" }
 
 export type WorkflowCondition = {

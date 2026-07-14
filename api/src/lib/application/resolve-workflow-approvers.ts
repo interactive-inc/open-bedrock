@@ -146,8 +146,9 @@ async function loadWorkflowOrganization(props: {
 
 export async function resolveWorkflowApproverMatches(props: {
   c: Context
-  applicantEmployeeId: number
+  applicantEmployeeId: number | null
   selectors: ReadonlyArray<WorkflowApproverSelector>
+  targetDepartmentCode?: string | null
 }): Promise<ReadonlyArray<WorkflowApproverMatch> | Error> {
   try {
     const employeeRows = await props.c.var.database
@@ -158,8 +159,6 @@ export async function resolveWorkflowApproverMatches(props: {
       (employee) => employee.id === props.applicantEmployeeId,
     )?.code
 
-    if (applicantCode === undefined) return []
-
     const idByCode = new Map(employeeRows.map((employee) => [employee.code, employee.id] as const))
     const result: Array<WorkflowApproverMatch> = []
 
@@ -167,9 +166,10 @@ export async function resolveWorkflowApproverMatches(props: {
     if (organization instanceof Error) return organization
     const { memberships, departments } = organization
 
-    const applicantMemberships = memberships.filter(
-      (membership) => membership.employeeCode === applicantCode,
-    )
+    const applicantMemberships =
+      applicantCode === undefined
+        ? []
+        : memberships.filter((membership) => membership.employeeCode === applicantCode)
 
     for (const [selectorIndex, selector] of props.selectors.entries()) {
       if (selector.type === "employee") {
@@ -270,6 +270,29 @@ export async function resolveWorkflowApproverMatches(props: {
         continue
       }
 
+      if (selector.type === "target_department_manager") {
+        for (const department of departments) {
+          if (
+            department.code === props.targetDepartmentCode &&
+            department.managerEmployeeCode !== null
+          ) {
+            const id = idByCode.get(department.managerEmployeeCode)
+            if (id !== undefined) {
+              result.push({
+                employeeId: id,
+                accountId: null,
+                provenance: {
+                  selector_index: selectorIndex,
+                  selector,
+                  evidence: department.evidence,
+                },
+              })
+            }
+          }
+        }
+        continue
+      }
+
       const managersByEmployee = new Map<
         string,
         Array<{
@@ -289,11 +312,13 @@ export async function resolveWorkflowApproverMatches(props: {
         managersByEmployee.set(membership.employeeCode, managerEdges)
       }
 
-      const pending = (managersByEmployee.get(applicantCode) ?? []).map((edge) => ({
+      const pending = (
+        applicantCode === undefined ? [] : (managersByEmployee.get(applicantCode) ?? [])
+      ).map((edge) => ({
         code: edge.managerEmployeeCode,
         path: [edge.evidence],
       }))
-      const visited = new Set<string>([applicantCode])
+      const visited = new Set<string>(applicantCode === undefined ? [] : [applicantCode])
       while (pending.length > 0) {
         const current = pending.shift()
         if (current === undefined || visited.has(current.code)) continue
@@ -319,7 +344,10 @@ export async function resolveWorkflowApproverMatches(props: {
       }
     }
 
-    return result.filter((match) => match.employeeId !== props.applicantEmployeeId)
+    return result.filter(
+      (match) =>
+        props.applicantEmployeeId === null || match.employeeId !== props.applicantEmployeeId,
+    )
   } catch (error) {
     return error instanceof Error ? error : new Error("failed to resolve workflow approvers")
   }

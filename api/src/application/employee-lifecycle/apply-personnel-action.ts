@@ -78,6 +78,18 @@ async function sha256(value: string): Promise<string> {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
 }
 
+export function fingerprintPersonnelAction(
+  employeeId: number | string,
+  input: PersonnelActionInput,
+): Promise<string> {
+  return sha256(stableJson({ employeeId, input }))
+}
+
+export type PreparedPersonnelActionCompletion = {
+  action: PersonnelActionRecord
+  statements: ReadonlyArray<D1PreparedStatement>
+}
+
 function actionEventOn(input: PersonnelActionInput): string {
   return input.kind === "retired" ? input.retirementOn : input.eventOn
 }
@@ -245,6 +257,201 @@ function unexpected(cause: unknown): ApplicationError {
   return new UnexpectedError("人事発令の確定に失敗しました", { cause })
 }
 
+type PersistenceProps = {
+  command: DirectPersonnelActionCommand
+  action: PersonnelActionRecord
+  projection: PersonnelActionProjection
+  scheduleBefore: LifecycleSchedule
+  businessDate: string
+  employeeCodes: ReadonlyMap<number, string>
+  revisions: { employeeRevision: number; organizationRevision: number }
+  prospectiveEmployee?: { code: string; name: string }
+}
+
+function preparePersistenceStatements(c: Context, props: PersistenceProps): D1PreparedStatement[] {
+  const db = c.env.DB
+  const nextEmployeeRevision = props.revisions.employeeRevision + 1
+  const nextOrganizationRevision =
+    props.revisions.organizationRevision + (props.projection.affectsOrganization ? 1 : 0)
+  const before = currentProjection(props.scheduleBefore, props.businessDate, props.employeeCodes)
+  const after = currentProjection(
+    props.projection.schedule,
+    props.businessDate,
+    props.employeeCodes,
+  )
+  const audit = createAuditEvent(
+    {
+      actorAccountId: props.command.session.accountId,
+      actorEmployeeId: props.command.session.employeeId,
+      action:
+        props.action.kind === "corrected"
+          ? "employee.lifecycle.corrected"
+          : "employee.lifecycle.applied",
+      target: { type: "employee", id: String(props.action.employeeId) },
+      outcome: "succeeded",
+      reasonCode: null,
+      authorization:
+        props.action.sourceType === "application"
+          ? { workflowTask: true, applicationId: props.action.sourceApplicationId }
+          : { permission: "employee:lifecycle:apply" },
+      before: toSafeAuditState(
+        before,
+        props.revisions.employeeRevision,
+        props.revisions.organizationRevision,
+      ),
+      after: toSafeAuditState(after, nextEmployeeRevision, nextOrganizationRevision),
+      metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
+      now: new Date(props.action.recordedAt * 1_000),
+    },
+    c.var.auditContext,
+  )
+  const statements: Array<D1PreparedStatement> = []
+
+  if (props.prospectiveEmployee !== undefined) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO employees
+             (id, code, name, dept_id, dept_name, position, status,
+              archived_at, archived_by_account_id)
+           VALUES (?1, ?2, ?3, NULL, NULL, NULL, ?4, NULL, NULL)
+           RETURNING id`,
+        )
+        .bind(
+          props.action.employeeId,
+          props.prospectiveEmployee.code,
+          props.prospectiveEmployee.name,
+          after.status,
+        ),
+      abortWhenPreviousStatementChangedNoRows(db),
+    )
+  }
+
+  statements.push(
+    db
+      .prepare(
+        `INSERT OR IGNORE INTO employee_lifecycle_revisions
+           (employee_id, revision, updated_at) VALUES (?1, 0, ?2)`,
+      )
+      .bind(props.action.employeeId, props.action.recordedAt),
+    db
+      .prepare(
+        `UPDATE employee_lifecycle_revisions
+         SET revision = revision + 1, updated_at = ?1
+         WHERE employee_id = ?2 AND revision = ?3`,
+      )
+      .bind(props.action.recordedAt, props.action.employeeId, props.revisions.employeeRevision),
+    abortWhenPreviousStatementChangedNoRows(db),
+  )
+
+  if (props.projection.affectsOrganization) {
+    statements.push(
+      db
+        .prepare(
+          `UPDATE organization_lifecycle_state
+           SET revision = revision + 1, updated_at = ?1
+           WHERE id = 1 AND revision = ?2`,
+        )
+        .bind(props.action.recordedAt, props.revisions.organizationRevision),
+      abortWhenPreviousStatementChangedNoRows(db),
+    )
+  }
+
+  statements.push(
+    db
+      .prepare(
+        `INSERT INTO personnel_actions
+           (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id,
+            requested_by_employee_id, source_type, source_application_id,
+            corrects_action_id, operation_id, payload_fingerprint, summary_json)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`,
+      )
+      .bind(
+        props.action.id,
+        props.action.employeeId,
+        props.action.kind,
+        props.action.eventOn,
+        props.action.recordedAt,
+        props.action.recordedByAccountId,
+        props.action.requestedByEmployeeId,
+        props.action.sourceType,
+        props.action.sourceApplicationId,
+        props.action.correctsActionId,
+        props.action.operationId,
+        props.action.payloadFingerprint,
+        stableJson(props.action.summary),
+      ),
+    abortWhenPreviousStatementChangedNoRows(db),
+    ...props.projection.mutations.map((mutation) => mutationStatement(db, mutation)),
+    db
+      .prepare(
+        `UPDATE employees
+         SET dept_id = (
+               SELECT organization.department_id FROM org_departments AS organization
+               WHERE organization.code = ?1
+             ),
+             dept_name = (
+               SELECT department.name
+               FROM org_departments AS organization
+               INNER JOIN departments AS department ON department.id = organization.department_id
+               WHERE organization.code = ?1
+             ),
+             position = ?2,
+             status = ?3
+         WHERE id = ?4`,
+      )
+      .bind(after.departmentCode, after.positionTitle, after.status, props.action.employeeId),
+    abortWhenPreviousStatementChangedNoRows(db),
+  )
+
+  if (props.projection.affectsOrganization) {
+    const currentAssignments = props.projection.schedule.assignments.filter((assignment) =>
+      containsDate(assignment, props.businessDate),
+    )
+    const employeeCode = props.employeeCodes.get(props.action.employeeId)
+
+    statements.push(
+      db.prepare("DELETE FROM org_memberships WHERE employee_code = ?1").bind(employeeCode ?? ""),
+      ...currentAssignments.map((assignment) =>
+        db
+          .prepare(
+            `INSERT OR REPLACE INTO org_memberships
+               (department_code, employee_code, manager_employee_code)
+             VALUES (?1, ?2, ?3)`,
+          )
+          .bind(
+            assignment.departmentCode,
+            employeeCode ?? "",
+            assignment.managerEmployeeId === null
+              ? null
+              : (props.employeeCodes.get(assignment.managerEmployeeId) ?? null),
+          ),
+      ),
+    )
+  }
+
+  if (props.action.kind === "hire" || props.action.kind === "retired") {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO lifecycle_outbox
+             (personnel_action_id, effect_type, payload_json, attempt_count,
+              next_attempt_at, processed_at, last_error_code, created_at)
+           VALUES (?1, ?2, ?3, 0, ?4, NULL, NULL, ?4)`,
+        )
+        .bind(
+          props.action.id,
+          props.action.kind,
+          stableJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
+          props.action.recordedAt,
+        ),
+    )
+  }
+
+  statements.push(...new AuditEventRepository(c).prepareAppend(audit))
+  return statements
+}
+
 export class ApplyPersonnelAction {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -271,9 +478,7 @@ export class ApplyPersonnelAction {
       return new ValidationError("人事発令の競合制御入力が不正です", "personnel_action_stale")
     }
 
-    const fingerprint = await sha256(
-      stableJson({ employeeId: command.employeeId, input: command.input }),
-    )
+    const fingerprint = await fingerprintPersonnelAction(command.employeeId, command.input)
     const actionRepository = new PersonnelActionRepository(this.c)
     const existing = await actionRepository.findByOperationId(command.idempotencyKey)
 
@@ -433,6 +638,195 @@ export class ApplyPersonnelAction {
     })
   }
 
+  async prepareApplicationCompletion(command: {
+    session: SessionPayload
+    employeeId: number | null
+    input: PersonnelActionInput
+    sourceApplicationId: number
+    requestedByEmployeeId: number
+    expectedEmployeeRevision: number
+    expectedOrganizationRevision: number | null
+    expectedPayloadFingerprint: string
+  }): Promise<PreparedPersonnelActionCompletion | ApplicationError> {
+    const employeeRevisionResult = revisionSchema.safeParse(command.expectedEmployeeRevision)
+    const organizationRevisionResult = z
+      .union([revisionSchema, z.null()])
+      .safeParse(command.expectedOrganizationRevision)
+    if (!employeeRevisionResult.success || !organizationRevisionResult.success) {
+      return new ValidationError("人事発令の競合制御入力が不正です", "personnel_action_stale")
+    }
+    if (command.employeeId === null && command.input.kind !== "hire") {
+      return new ValidationError("対象従業員が一致しません", "personnel_action_invalid_transition")
+    }
+    const prospectiveKey =
+      command.input.kind === "hire" ? `prospective:${command.input.employeeCode}` : null
+    const fingerprint = await fingerprintPersonnelAction(
+      command.employeeId ?? prospectiveKey ?? "invalid",
+      command.input,
+    )
+    if (fingerprint !== command.expectedPayloadFingerprint) {
+      return new ConflictError("申請内容の整合性を確認できません", "idempotency_conflict")
+    }
+    const operationId = `application:${command.sourceApplicationId}`
+    const actionRepository = new PersonnelActionRepository(this.c)
+    const existing = await actionRepository.findByOperationId(operationId)
+    if (existing instanceof ApplicationError) return existing
+    if (existing !== null) {
+      return new ConflictError("申請はすでに人事発令へ反映されています", "already_decided")
+    }
+
+    const lifecycleRepository = new EmployeeLifecycleRepository(this.c)
+    const migrationStatus = await lifecycleRepository.migrationStatus()
+    if (migrationStatus instanceof ApplicationError) return migrationStatus
+    if (migrationStatus !== "verified") {
+      return new UnavailableError(
+        "人事ライフサイクル移行が完了していません",
+        "lifecycle_migration_incomplete",
+      )
+    }
+    const now = this.c.env.NOW ?? new Date().toISOString()
+    const businessDate = resolveCompanyBusinessDate({
+      now,
+      timeZone: this.c.env.COMPANY_TIME_ZONE,
+    })
+    if (typeof businessDate !== "string") {
+      return new UnavailableError("会社営業日を解決できません", "company_timezone_unavailable", {
+        cause: businessDate,
+      })
+    }
+    const allocatedEmployeeId =
+      command.employeeId ??
+      (await this.c.env.DB.prepare("SELECT COALESCE(MAX(id), 0) + 1 FROM employees").first<number>(
+        "COALESCE(MAX(id), 0) + 1",
+      )) ??
+      1
+    const [schedule, organizationSchedules, references, revisions] = await Promise.all([
+      lifecycleRepository.loadSchedule(allocatedEmployeeId),
+      lifecycleRepository.loadOrganizationSchedules(),
+      lifecycleRepository.loadReferences(),
+      lifecycleRepository.loadRevisions(allocatedEmployeeId),
+    ])
+    for (const result of [schedule, organizationSchedules, references, revisions]) {
+      if (result instanceof ApplicationError) return result
+    }
+    const loadedSchedule = schedule as LifecycleSchedule
+    const loadedOrganizationSchedules = organizationSchedules as ReadonlyArray<LifecycleSchedule>
+    const loadedReferences = references as Exclude<typeof references, ApplicationError>
+    const effectiveReferences =
+      command.employeeId === null && command.input.kind === "hire"
+        ? {
+            ...loadedReferences,
+            employees: [
+              ...loadedReferences.employees,
+              { id: allocatedEmployeeId, code: command.input.employeeCode },
+            ],
+          }
+        : loadedReferences
+    const loadedRevisions = revisions as Exclude<typeof revisions, ApplicationError>
+    if (loadedRevisions.employeeRevision !== command.expectedEmployeeRevision) {
+      return new ConflictError("従業員の人事情報が更新されています", "personnel_action_stale")
+    }
+    const target = effectiveReferences.employees.find(
+      (employee) => employee.id === allocatedEmployeeId,
+    )
+    const commandEmployeeCode =
+      command.input.kind === "corrected"
+        ? command.input.replacementAction.employeeCode
+        : command.input.employeeCode
+    if (target === undefined || target.code !== commandEmployeeCode) {
+      return new ValidationError("対象従業員が一致しません", "personnel_action_invalid_transition")
+    }
+    let correction:
+      | { mutations: ReadonlyArray<LifecycleVersionMutation>; alreadyCorrected: boolean }
+      | undefined
+    if (command.input.kind === "corrected") {
+      const [mutations, alreadyCorrected, original] = await Promise.all([
+        actionRepository.loadMutationsForAction(command.input.correctsActionId),
+        actionRepository.hasCorrection(command.input.correctsActionId),
+        actionRepository.findById(command.input.correctsActionId),
+      ])
+      if (
+        mutations instanceof ApplicationError ||
+        alreadyCorrected instanceof ApplicationError ||
+        original instanceof ApplicationError
+      ) {
+        return [mutations, alreadyCorrected, original].find(
+          (result): result is ApplicationError => result instanceof ApplicationError,
+        ) as ApplicationError
+      }
+      if (original === null || original.employeeId !== allocatedEmployeeId) {
+        return new ValidationError(
+          "訂正対象の人事発令が見つかりません",
+          "personnel_action_invalid_transition",
+        )
+      }
+      correction = { mutations, alreadyCorrected }
+    }
+    const actionId = crypto.randomUUID()
+    const recordedAt = Math.floor(Date.parse(now) / 1_000)
+    const projected = projectPersonnelAction({
+      schedule: loadedSchedule,
+      organizationSchedules: loadedOrganizationSchedules,
+      departments: effectiveReferences.departments,
+      employees: effectiveReferences.employees,
+      command: {
+        actionId,
+        employeeId: allocatedEmployeeId,
+        recordedAt,
+        input: command.input,
+        correction,
+      },
+    })
+    if (projected instanceof ApplicationError) return projected
+    if (
+      projected.affectsOrganization &&
+      command.expectedOrganizationRevision !== loadedRevisions.organizationRevision
+    ) {
+      return new ConflictError("組織情報が更新されています", "personnel_action_stale")
+    }
+    const action: PersonnelActionRecord = {
+      id: actionId,
+      employeeId: allocatedEmployeeId,
+      kind: command.input.kind,
+      eventOn: actionEventOn(command.input),
+      recordedAt,
+      recordedByAccountId: command.session.accountId,
+      requestedByEmployeeId: command.requestedByEmployeeId,
+      sourceType: "application",
+      sourceApplicationId: command.sourceApplicationId,
+      correctsActionId: command.input.kind === "corrected" ? command.input.correctsActionId : null,
+      operationId,
+      payloadFingerprint: fingerprint,
+      summary: projected.summary,
+    }
+    const persistenceCommand: DirectPersonnelActionCommand = {
+      session: command.session,
+      employeeId: allocatedEmployeeId,
+      input: command.input,
+      idempotencyKey: operationId,
+      expectedEmployeeRevision: command.expectedEmployeeRevision,
+      expectedOrganizationRevision: command.expectedOrganizationRevision,
+    }
+    return {
+      action,
+      statements: preparePersistenceStatements(this.c, {
+        command: persistenceCommand,
+        action,
+        projection: projected,
+        scheduleBefore: loadedSchedule,
+        businessDate,
+        employeeCodes: new Map(
+          effectiveReferences.employees.map((employee) => [employee.id, employee.code]),
+        ),
+        revisions: loadedRevisions,
+        prospectiveEmployee:
+          command.employeeId === null && command.input.kind === "hire"
+            ? { code: command.input.employeeCode, name: command.input.employeeName }
+            : undefined,
+      }),
+    }
+  }
+
   private classifyReplay(
     existing: PersonnelActionRecord,
     command: DirectPersonnelActionCommand,
@@ -451,168 +845,11 @@ export class ApplyPersonnelAction {
     return { action: existing, replayed: true }
   }
 
-  private async persist(props: {
-    command: DirectPersonnelActionCommand
-    action: PersonnelActionRecord
-    projection: PersonnelActionProjection
-    scheduleBefore: LifecycleSchedule
-    businessDate: string
-    employeeCodes: ReadonlyMap<number, string>
-    revisions: { employeeRevision: number; organizationRevision: number }
-  }): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
+  private async persist(
+    props: PersistenceProps,
+  ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
     const db = this.c.env.DB
-    const nextEmployeeRevision = props.revisions.employeeRevision + 1
-    const nextOrganizationRevision =
-      props.revisions.organizationRevision + (props.projection.affectsOrganization ? 1 : 0)
-    const before = currentProjection(props.scheduleBefore, props.businessDate, props.employeeCodes)
-    const after = currentProjection(
-      props.projection.schedule,
-      props.businessDate,
-      props.employeeCodes,
-    )
-    const audit = createAuditEvent(
-      {
-        actorAccountId: props.command.session.accountId,
-        actorEmployeeId: props.command.session.employeeId,
-        action:
-          props.action.kind === "corrected"
-            ? "employee.lifecycle.corrected"
-            : "employee.lifecycle.applied",
-        target: { type: "employee", id: String(props.action.employeeId) },
-        outcome: "succeeded",
-        reasonCode: null,
-        authorization: { permission: "employee:lifecycle:apply" },
-        before: toSafeAuditState(
-          before,
-          props.revisions.employeeRevision,
-          props.revisions.organizationRevision,
-        ),
-        after: toSafeAuditState(after, nextEmployeeRevision, nextOrganizationRevision),
-        metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
-        now: new Date(props.action.recordedAt * 1_000),
-      },
-      this.c.var.auditContext,
-    )
-    const statements: Array<D1PreparedStatement> = [
-      db
-        .prepare(
-          `INSERT OR IGNORE INTO employee_lifecycle_revisions
-             (employee_id, revision, updated_at) VALUES (?1, 0, ?2)`,
-        )
-        .bind(props.action.employeeId, props.action.recordedAt),
-      db
-        .prepare(
-          `UPDATE employee_lifecycle_revisions
-           SET revision = revision + 1, updated_at = ?1
-           WHERE employee_id = ?2 AND revision = ?3`,
-        )
-        .bind(props.action.recordedAt, props.action.employeeId, props.revisions.employeeRevision),
-      abortWhenPreviousStatementChangedNoRows(db),
-    ]
-
-    if (props.projection.affectsOrganization) {
-      statements.push(
-        db
-          .prepare(
-            `UPDATE organization_lifecycle_state
-             SET revision = revision + 1, updated_at = ?1
-             WHERE id = 1 AND revision = ?2`,
-          )
-          .bind(props.action.recordedAt, props.revisions.organizationRevision),
-        abortWhenPreviousStatementChangedNoRows(db),
-      )
-    }
-
-    statements.push(
-      db
-        .prepare(
-          `INSERT INTO personnel_actions
-             (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id,
-              requested_by_employee_id, source_type, source_application_id,
-              corrects_action_id, operation_id, payload_fingerprint, summary_json)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'direct', NULL, ?8, ?9, ?10, ?11)`,
-        )
-        .bind(
-          props.action.id,
-          props.action.employeeId,
-          props.action.kind,
-          props.action.eventOn,
-          props.action.recordedAt,
-          props.action.recordedByAccountId,
-          props.action.requestedByEmployeeId,
-          props.action.correctsActionId,
-          props.action.operationId,
-          props.action.payloadFingerprint,
-          stableJson(props.action.summary),
-        ),
-      abortWhenPreviousStatementChangedNoRows(db),
-      ...props.projection.mutations.map((mutation) => mutationStatement(db, mutation)),
-      db
-        .prepare(
-          `UPDATE employees
-           SET dept_id = (
-                 SELECT organization.department_id FROM org_departments AS organization
-                 WHERE organization.code = ?1
-               ),
-               dept_name = (
-                 SELECT department.name
-                 FROM org_departments AS organization
-                 INNER JOIN departments AS department ON department.id = organization.department_id
-                 WHERE organization.code = ?1
-               ),
-               position = ?2,
-               status = ?3
-           WHERE id = ?4`,
-        )
-        .bind(after.departmentCode, after.positionTitle, after.status, props.action.employeeId),
-      abortWhenPreviousStatementChangedNoRows(db),
-    )
-
-    if (props.projection.affectsOrganization) {
-      const currentAssignments = props.projection.schedule.assignments.filter((assignment) =>
-        containsDate(assignment, props.businessDate),
-      )
-      const employeeCode = props.employeeCodes.get(props.action.employeeId)
-
-      statements.push(
-        db.prepare("DELETE FROM org_memberships WHERE employee_code = ?1").bind(employeeCode ?? ""),
-        ...currentAssignments.map((assignment) =>
-          db
-            .prepare(
-              `INSERT OR REPLACE INTO org_memberships
-                 (department_code, employee_code, manager_employee_code)
-               VALUES (?1, ?2, ?3)`,
-            )
-            .bind(
-              assignment.departmentCode,
-              employeeCode ?? "",
-              assignment.managerEmployeeId === null
-                ? null
-                : (props.employeeCodes.get(assignment.managerEmployeeId) ?? null),
-            ),
-        ),
-      )
-    }
-
-    if (props.action.kind === "hire" || props.action.kind === "retired") {
-      statements.push(
-        db
-          .prepare(
-            `INSERT INTO lifecycle_outbox
-               (personnel_action_id, effect_type, payload_json, attempt_count,
-                next_attempt_at, processed_at, last_error_code, created_at)
-             VALUES (?1, ?2, ?3, 0, ?4, NULL, NULL, ?4)`,
-          )
-          .bind(
-            props.action.id,
-            props.action.kind,
-            stableJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
-            props.action.recordedAt,
-          ),
-      )
-    }
-
-    statements.push(...new AuditEventRepository(this.c).prepareAppend(audit))
+    const statements = preparePersistenceStatements(this.c, props)
 
     try {
       const results = await db.batch(statements)

@@ -1,5 +1,6 @@
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
-import type { Context } from "@/env"
+import type { Context, SessionPayload } from "@/env"
+import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"
 import {
   ApplicationWorkflowRepository,
   conditionalWorkflowStepSnapshotInsertStatements,
@@ -40,6 +41,7 @@ export async function decideWorkflowApplication(props: {
   payload: unknown
   actorEmployeeId: number
   actorAccountId: number
+  session: SessionPayload
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
@@ -53,12 +55,23 @@ export async function decideWorkflowApplication(props: {
     return new UnexpectedError("workflow current step is invalid")
   }
 
+  const resolutionContext = await loadWorkflowResolutionContext({
+    c: props.c,
+    applicationId: props.instance.applicationId,
+    applicantEmployeeId: props.applicantEmployeeId,
+  })
+  if (resolutionContext instanceof Error) {
+    return new UnexpectedError("failed to load workflow subject", { cause: resolutionContext })
+  }
+
   const loadedSnapshot = await loadOrResolveWorkflowStepSnapshot({
     c: props.c,
     instance: props.instance,
-    applicantEmployeeId: props.applicantEmployeeId,
+    applicantEmployeeId: resolutionContext.employeeId,
     step,
     now: props.createdAt,
+    excludedEmployeeIds: resolutionContext.excludedEmployeeIds,
+    targetDepartmentCode: resolutionContext.targetDepartmentCode,
   })
 
   if (loadedSnapshot instanceof Error) {
@@ -147,13 +160,66 @@ export async function decideWorkflowApplication(props: {
     delegationId: authorization.delegationId,
     nextStep,
     requiredApprovals: stepSnapshot.requiredApprovals,
+    workflowSubjectEmployeeId: resolutionContext.employeeId,
+    excludedEmployeeIds: resolutionContext.excludedEmployeeIds,
+    targetDepartmentCode: resolutionContext.targetDepartmentCode,
   })
+}
+
+type WorkflowResolutionContext = {
+  employeeId: number | null
+  excludedEmployeeIds: ReadonlySet<number> | undefined
+  targetDepartmentCode: string | null
+}
+
+async function loadWorkflowResolutionContext(props: {
+  c: Context
+  applicationId: number
+  applicantEmployeeId: number
+}): Promise<WorkflowResolutionContext | Error> {
+  try {
+    const subject = await props.c.env.DB.prepare(
+      `SELECT subject_type, subject_employee_id, target_department_code
+       FROM application_subjects WHERE application_id = ?1`,
+    )
+      .bind(props.applicationId)
+      .first<{
+        subject_type: string
+        subject_employee_id: number | null
+        target_department_code: string | null
+      }>()
+
+    if (subject?.subject_type === "prospective_employee") {
+      return {
+        employeeId: null,
+        excludedEmployeeIds: new Set([props.applicantEmployeeId]),
+        targetDepartmentCode: subject.target_department_code,
+      }
+    }
+
+    if (subject?.subject_type !== "employee" || subject.subject_employee_id === null) {
+      return {
+        employeeId: props.applicantEmployeeId,
+        excludedEmployeeIds: undefined,
+        targetDepartmentCode: null,
+      }
+    }
+
+    return {
+      employeeId: subject.subject_employee_id,
+      excludedEmployeeIds: new Set([props.applicantEmployeeId, subject.subject_employee_id]),
+      targetDepartmentCode: subject.target_department_code,
+    }
+  } catch (error) {
+    return error instanceof Error ? error : new Error("failed to load workflow subject")
+  }
 }
 
 async function resolveStepAuthorization(props: {
   c: Context
   actorEmployeeId: number
   actorAccountId: number
+  session: SessionPayload
   templateCode: string
   createdAt: string
   step: ApplicationWorkflowStep
@@ -199,6 +265,7 @@ async function persistApproval(props: {
   applicantEmployeeId: number
   actorEmployeeId: number
   actorAccountId: number
+  session: SessionPayload
   representedApprover: number
   delegationId: number | null
   comment: string | null
@@ -206,17 +273,33 @@ async function persistApproval(props: {
   step: ApplicationWorkflowStep
   nextStep: ApplicationWorkflowStep | undefined
   requiredApprovals: number
+  workflowSubjectEmployeeId: number | null
+  excludedEmployeeIds: ReadonlySet<number> | undefined
+  targetDepartmentCode: string | null
 }): Promise<WorkflowDecision | ApplicationError> {
   const insert = approvalInsert(props, "approve")
+
+  const completion =
+    props.nextStep === undefined
+      ? await prepareApplicationCompletion({
+          c: props.c,
+          applicationId: props.instance.applicationId,
+          session: props.session,
+        })
+      : null
+
+  if (completion instanceof Error) return completion
 
   const nextStepSnapshot =
     props.nextStep === undefined
       ? null
       : await resolveWorkflowStepSnapshot({
           c: props.c,
-          applicantEmployeeId: props.applicantEmployeeId,
+          applicantEmployeeId: props.workflowSubjectEmployeeId,
           step: props.nextStep,
           activatedAt: props.createdAt,
+          excludedEmployeeIds: props.excludedEmployeeIds,
+          targetDepartmentCode: props.targetDepartmentCode,
         })
 
   if (nextStepSnapshot instanceof Error) {
@@ -247,6 +330,10 @@ async function persistApproval(props: {
     const nextStep = props.nextStep
 
     if (nextStep === undefined) {
+      if (completion !== null) {
+        return persistFinalApprovalWithCompletion({ ...props, insert, completion })
+      }
+
       const results = await props.c.env.DB.batch([
         insert,
         abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
@@ -341,6 +428,77 @@ async function persistApproval(props: {
       ? new ConflictError("workflow step already changed", "already_decided")
       : new UnexpectedError("failed to persist workflow approval", { cause: error })
   }
+}
+
+async function persistFinalApprovalWithCompletion(props: {
+  c: Context
+  instance: WorkflowInstance
+  actorEmployeeId: number
+  step: ApplicationWorkflowStep
+  requiredApprovals: number
+  insert: D1PreparedStatement
+  completion: { actionId: string; statements: ReadonlyArray<D1PreparedStatement> }
+}): Promise<WorkflowDecision | ApplicationError> {
+  // A completion batch is attempted first. If this vote does not reach quorum, its
+  // approval insert is rolled back and a second guarded batch stores it as a partial
+  // approval. If another voter reaches quorum between those batches, retry completion.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await props.c.env.DB.batch([
+        props.insert,
+        abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
+        props.c.env.DB.prepare(
+          `UPDATE applications
+               SET status = 'approved', current_step = NULL
+             WHERE id = ?1 AND status = 'pending' AND current_step = ?2
+               AND (${workflowValidApprovalCountSql({
+                 applicationId: "?1",
+                 stepKey: "?2",
+                 round: "?3",
+               })}) >= ?4
+             RETURNING status`,
+        ).bind(
+          props.instance.applicationId,
+          props.step.key,
+          props.instance.currentRound,
+          props.requiredApprovals,
+        ),
+        abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
+        ...props.completion.statements,
+      ])
+      return { status: "approved" }
+    } catch (error) {
+      if (!isAbortedByGuard(error)) {
+        return new UnexpectedError("failed to complete workflow application", { cause: error })
+      }
+    }
+
+    try {
+      await props.c.env.DB.batch([
+        props.insert,
+        abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
+        props.c.env.DB.prepare(
+          `SELECT CASE WHEN (${workflowValidApprovalCountSql({
+            applicationId: "?1",
+            stepKey: "?2",
+            round: "?3",
+          })}) < ?4 THEN 1 ELSE json_extract('', '$') END AS ok`,
+        ).bind(
+          props.instance.applicationId,
+          props.step.key,
+          props.instance.currentRound,
+          props.requiredApprovals,
+        ),
+      ])
+      return { status: "pending" }
+    } catch (error) {
+      if (!isAbortedByGuard(error)) {
+        return new UnexpectedError("failed to persist workflow approval", { cause: error })
+      }
+    }
+  }
+
+  return new ConflictError("workflow step already changed", "already_decided")
 }
 
 async function persistApprovalBeforeUnresolvableNextStep(props: {

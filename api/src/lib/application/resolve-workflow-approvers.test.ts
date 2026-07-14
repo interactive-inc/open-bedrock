@@ -51,7 +51,9 @@ describe("resolveWorkflowApproverMatches", () => {
         { type: "direct_manager" },
         { type: "department_manager" },
         { type: "management_chain" },
+        { type: "target_department_manager" },
       ],
+      targetDepartmentCode: "D001",
     })
 
     expect(matches).not.toBeInstanceOf(Error)
@@ -65,6 +67,7 @@ describe("resolveWorkflowApproverMatches", () => {
       [1, 1],
       [2, 2],
       [2, 1],
+      [3, 1],
     ])
     expect(JSON.stringify(matches)).not.toContain("E009")
   })

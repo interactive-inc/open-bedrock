@@ -337,6 +337,7 @@ function ApproverRow(props: {
       >
         <NativeSelectOption value="direct_manager">直属上司</NativeSelectOption>
         <NativeSelectOption value="department_manager">部門責任者</NativeSelectOption>
+        <NativeSelectOption value="target_department_manager">異動先部門責任者</NativeSelectOption>
         <NativeSelectOption value="management_chain">上位管理職全員</NativeSelectOption>
         <NativeSelectOption value="role">IAMロール</NativeSelectOption>
         <NativeSelectOption value="employee">従業員指定</NativeSelectOption>

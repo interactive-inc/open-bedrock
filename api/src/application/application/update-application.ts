@@ -66,6 +66,12 @@ export class UpdateApplication {
     if (template === null) {
       return new UnexpectedError("application template not found")
     }
+    if (template.systemBinding !== null) {
+      return new ConflictError(
+        "system application must use its dedicated route",
+        "system_template_requires_dedicated_route",
+      )
+    }
 
     const payload = validateAndNormalizeApplicationPayload(template.schemaJson, command.payload)
     if (payload instanceof Error) {

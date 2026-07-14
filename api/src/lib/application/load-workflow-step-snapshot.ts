@@ -18,9 +18,11 @@ export type ResolvedWorkflowStepSnapshot = {
 export async function loadOrResolveWorkflowStepSnapshot(props: {
   c: Context
   instance: WorkflowInstance
-  applicantEmployeeId: number
+  applicantEmployeeId: number | null
   step: ApplicationWorkflowStep
   now: string
+  excludedEmployeeIds?: ReadonlySet<number>
+  targetDepartmentCode?: string | null
 }): Promise<ResolvedWorkflowStepSnapshot | Error> {
   const repository = new ApplicationWorkflowRepository(props.c)
   const existing = await repository.findStepSnapshot(
@@ -39,6 +41,8 @@ export async function loadOrResolveWorkflowStepSnapshot(props: {
     activatedAt: props.instance.startedAt,
     resolvedAt: props.now,
     resolutionReason: "legacy_backfill",
+    excludedEmployeeIds: props.excludedEmployeeIds,
+    targetDepartmentCode: props.targetDepartmentCode,
   })
 
   if (backfill instanceof Error) return backfill
