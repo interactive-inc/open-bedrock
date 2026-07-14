@@ -1103,6 +1103,20 @@ function summaryIdsJson(rows: ReadonlyArray<AuditSummaryDescriptorRow>): string 
   return JSON.stringify(rows.map((row) => row.id))
 }
 
+function canLoadExactHexProjection(descriptor: {
+  max_text_bytes: number
+  wire_bytes: number
+}): boolean {
+  // Each source slice stays at or below 999,000 bytes so its HEX value plus projection
+  // metadata remains strictly below D1's 2,000,000-byte result-row limit. The descriptor's
+  // wire_bytes is the conservative full exact-HEX row estimate, so it also bounds combined
+  // medium-width columns that are individually safe but unsafe when projected together.
+  return (
+    descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES &&
+    descriptor.wire_bytes < D1_MAX_RESULT_VALUE_BYTES
+  )
+}
+
 function exportSegmentPlanGroups(
   descriptors: ReadonlyArray<AuditExportReadDescriptor>,
 ): ReadonlyArray<ReadonlyArray<AuditExportSegmentPlanItem>> {
@@ -1239,11 +1253,9 @@ export class AuditEventRepository {
     ascending: boolean,
   ): Promise<ReadonlyArray<AuditSummaryDatabaseRow>> {
     const order = ascending ? "ASC" : "DESC"
-    const hexDescriptors = descriptors.filter(
-      (descriptor) => descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES,
-    )
+    const hexDescriptors = descriptors.filter(canLoadExactHexProjection)
     const segmentedDescriptors = descriptors.filter(
-      (descriptor) => descriptor.max_text_bytes > D1_MAX_HEX_SOURCE_BYTES,
+      (descriptor) => !canLoadExactHexProjection(descriptor),
     )
     const rows: AuditSummaryDatabaseRow[] = []
 
@@ -1312,13 +1324,11 @@ export class AuditEventRepository {
   private async loadDescriptorDetails(
     descriptors: ReadonlyArray<AuditExportDescriptorRow>,
   ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
-    const hexDescriptors = descriptors.filter(
-      (descriptor) => descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES,
-    )
+    const hexDescriptors = descriptors.filter(canLoadExactHexProjection)
     const rows: AuditDetailDatabaseRow[] = []
     if (hexDescriptors.length > 0) rows.push(...(await this.loadExactDetails(hexDescriptors)))
     for (const descriptor of descriptors) {
-      if (descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES) continue
+      if (canLoadExactHexProjection(descriptor)) continue
       rows.push(await this.loadSegmentedDetail(descriptor))
     }
 
