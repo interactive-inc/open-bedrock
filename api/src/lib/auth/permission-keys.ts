@@ -19,6 +19,22 @@ export const PERMISSION_CATALOG = [
   },
   { key: "employee:delete", category: "employee", description: "従業員を削除する" },
   { key: "employee:assign_role", category: "employee", description: "従業員のロールを割り当てる" },
+  {
+    key: "employee:lifecycle:request",
+    category: "employee",
+    description: "組織スコープ内の人事変更を申請する",
+  },
+  {
+    key: "employee:lifecycle:apply",
+    category: "employee",
+    description: "許可された対象範囲の人事変更を確定する",
+  },
+  {
+    key: "employee:lifecycle:read:all",
+    category: "employee",
+    description: "全社の人事履歴を横断で閲覧する",
+  },
+  { key: "employee:archive", category: "employee", description: "退職済み従業員をアーカイブする" },
   { key: "org:manage", category: "org", description: "組織・部署を管理する" },
   {
     key: "application:approve",
