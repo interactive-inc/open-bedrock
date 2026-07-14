@@ -49,6 +49,10 @@ import * as authMeRoute from "@/interface/auth/me/route"
 import * as authRefreshRoute from "@/interface/auth/refresh/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
 import * as batchRoute from "@/interface/batch/route"
+import * as lifecycleMigrationPreflightRoute from "@/interface/batch/employee-lifecycle/preflight/route"
+import * as lifecycleMigrationBackfillRoute from "@/interface/batch/employee-lifecycle/backfill/route"
+import * as lifecycleMigrationVerifyRoute from "@/interface/batch/employee-lifecycle/verify/route"
+import * as lifecycleProjectionRebuildRoute from "@/interface/batch/employee-lifecycle/rebuild-projections/route"
 import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
 import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
 import * as businessTripMineRoute from "@/interface/business-trip/business-trips/me/route"
@@ -288,6 +292,10 @@ export const app = factory
   .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
+  .post("/batch/employee-lifecycle/preflight", ...lifecycleMigrationPreflightRoute.POST)
+  .post("/batch/employee-lifecycle/backfill", ...lifecycleMigrationBackfillRoute.POST)
+  .post("/batch/employee-lifecycle/verify", ...lifecycleMigrationVerifyRoute.POST)
+  .post("/batch/employee-lifecycle/rebuild-projections", ...lifecycleProjectionRebuildRoute.POST)
   .get("/org/tree", ...orgTreeRoute.GET)
   .get("/org/departments/:code/members", ...orgDepartmentMembersRoute.GET)
   .get("/org/reporting-line/:employee_code", ...orgReportingLineRoute.GET)

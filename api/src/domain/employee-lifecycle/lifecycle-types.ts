@@ -43,6 +43,7 @@ export const LIFECYCLE_ERROR_CODES = [
   "employee_archive_required",
   "employee_not_retired",
   "lifecycle_migration_incomplete",
+  "lifecycle_projection_mismatch",
 ] as const
 
 export const lifecycleErrorCodeSchema = z.enum(LIFECYCLE_ERROR_CODES)

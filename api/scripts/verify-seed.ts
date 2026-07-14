@@ -35,7 +35,7 @@ const schema = readdirSync(migrationsDir)
 db.exec(schema)
 
 // seeds を依存順（employee → org → 残り）に 1 ファイルずつ適用。
-const order = ["employee", "org"]
+const order = ["employee", "org", "employee-lifecycle"]
 
 const seedFiles = readdirSync(seedsDir)
   .filter((file) => file.endsWith(".sql"))
@@ -58,6 +58,28 @@ for (const file of ordered) {
   }
 
   db.exec(sql)
+}
+
+const lifecycleState = db
+  .query("SELECT status, employee_count FROM lifecycle_migration_state WHERE id = 1")
+  .get() as { status: string; employee_count: number }
+const employeeCount = (
+  db.query("SELECT COUNT(*) AS count FROM employees").get() as {
+    count: number
+  }
+).count
+const baselineCount = (
+  db
+    .query("SELECT COUNT(*) AS count FROM personnel_actions WHERE kind = 'legacy_baseline'")
+    .get() as { count: number }
+).count
+
+if (
+  lifecycleState.status !== "verified" ||
+  lifecycleState.employee_count !== employeeCount ||
+  baselineCount !== employeeCount
+) {
+  throw new Error("employee lifecycle seed is incomplete")
 }
 
 const tables = (
