@@ -76,6 +76,12 @@ export class ResubmitApplication {
     if (template === null) {
       return new UnexpectedError("application template not found")
     }
+    if (template.systemBinding !== null) {
+      return new ConflictError(
+        "system application cannot be resubmitted",
+        "system_template_requires_dedicated_route",
+      )
+    }
 
     const payload = validateAndNormalizeApplicationPayload(template.schemaJson, command.payload)
     if (payload instanceof Error) {

@@ -38,17 +38,20 @@ export class UnresolvableWorkflowStepError extends Error {
 
 export async function resolveWorkflowStepSnapshot(props: {
   c: Context
-  applicantEmployeeId: number
+  applicantEmployeeId: number | null
   step: ApplicationWorkflowStep
   activatedAt: string
   resolvedAt?: string
   resolutionReason?: "activation" | "legacy_backfill"
+  excludedEmployeeIds?: ReadonlySet<number>
+  targetDepartmentCode?: string | null
 }): Promise<WorkflowStepSnapshotDraft | Error> {
   const stepDueAt = dueAt(props.activatedAt, props.step.due_days)
   const primaryMatches = await resolveWorkflowApproverMatches({
     c: props.c,
     applicantEmployeeId: props.applicantEmployeeId,
     selectors: props.step.approvers,
+    targetDepartmentCode: props.targetDepartmentCode,
   })
 
   if (primaryMatches instanceof Error) return primaryMatches
@@ -60,6 +63,7 @@ export async function resolveWorkflowStepSnapshot(props: {
           c: props.c,
           applicantEmployeeId: props.applicantEmployeeId,
           selectors: props.step.escalation_approvers,
+          targetDepartmentCode: props.targetDepartmentCode,
         })
 
   if (escalationMatches instanceof Error) return escalationMatches
@@ -94,7 +98,7 @@ export async function resolveWorkflowStepSnapshot(props: {
       source: "primary",
       eligibleFrom: null,
       resolvedAt: props.resolvedAt ?? props.activatedAt,
-    })
+    }).filter((candidate) => props.excludedEmployeeIds?.has(candidate.employeeId) !== true)
     const primaryEmployeeIds = [
       ...new Set(primaryCandidates.map((candidate) => candidate.employeeId)),
     ]
@@ -112,7 +116,7 @@ export async function resolveWorkflowStepSnapshot(props: {
         source: "escalation",
         eligibleFrom: stepDueAt,
         resolvedAt: props.resolvedAt ?? props.activatedAt,
-      }),
+      }).filter((candidate) => props.excludedEmployeeIds?.has(candidate.employeeId) !== true),
     ]
 
     return {

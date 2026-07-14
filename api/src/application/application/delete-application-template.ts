@@ -36,6 +36,10 @@ export class DeleteApplicationTemplate {
       return new NotFoundError("template not found", "template_not_found")
     }
 
+    if (current.systemBinding !== null) {
+      return new ConflictError("system template cannot be deleted", "system_template_locked")
+    }
+
     // D1 batch で申請参照チェックと削除をアトミックに実行。
     // null = 参照する申請が存在するため削除不可（状態を問わない）。
     const deleted = await templateRepository.delete(command.code)

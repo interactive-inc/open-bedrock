@@ -24,6 +24,8 @@ export const auditActionSchema = z.enum([
   "employee.lifecycle.read",
   "employee.lifecycle.read_all",
   "employee.lifecycle.denied",
+  "employee.lifecycle.requested",
+  "employee.lifecycle.request_withdrawn",
   "employee.lifecycle.projections_rebuilt",
   "application.workflow.updated",
   "application.workflow.repaired",

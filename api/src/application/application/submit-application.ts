@@ -59,6 +59,13 @@ export class SubmitApplication {
       return new UnexpectedError("template id is not assigned")
     }
 
+    if (template.systemBinding !== null) {
+      return new UnprocessableError(
+        "system template requires its dedicated request route",
+        "system_template_requires_dedicated_route",
+      )
+    }
+
     const payload = validateAndNormalizeApplicationPayload(template.schemaJson, command.payload)
 
     if (payload instanceof Error) {

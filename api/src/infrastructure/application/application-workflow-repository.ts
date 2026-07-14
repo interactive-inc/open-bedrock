@@ -278,6 +278,124 @@ export class ApplicationWorkflowRepository {
     }
   }
 
+  async createPersonnelActionRequestWithInstance(props: {
+    application: Application
+    definition: ApplicationWorkflow
+    currentStepKey: string
+    startedAt: string
+    dueAt: string | null
+    stepSnapshot: WorkflowStepSnapshotDraft
+    request: {
+      id: string
+      targetEmployeeId: number | null
+      subjectSnapshotJson: string | null
+      kind: string
+      payloadJson: string
+      requestedByEmployeeId: number
+      baseEmployeeRevision: number
+      baseOrganizationRevision: number | null
+      createdAt: number
+      payloadFingerprint: string
+      targetDepartmentCode: string | null
+    }
+    auditStatements: ReadonlyArray<D1PreparedStatement>
+  }): Promise<Application | Error> {
+    const creationId = crypto.randomUUID()
+    try {
+      const results = await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `INSERT INTO applications
+             (template_id, applicant_id, status, current_step, payload, created_at,
+              workflow_creation_id)
+           VALUES (?1, ?2, 'pending', ?3, ?4, ?5, ?6)
+           RETURNING id, template_id AS templateId, applicant_id AS applicantId,
+             status, current_step AS currentStep, payload, created_at AS createdAt`,
+        ).bind(
+          props.application.templateId,
+          props.application.applicantId,
+          props.currentStepKey,
+          JSON.stringify(props.application.payload),
+          props.application.createdAt,
+          creationId,
+        ),
+        this.c.env.DB.prepare(
+          `INSERT INTO application_workflow_instances
+             (application_id, definition_json, current_step_key, started_at, due_at)
+           SELECT id, ?2, ?3, ?4, ?5 FROM applications WHERE workflow_creation_id = ?1`,
+        ).bind(
+          creationId,
+          JSON.stringify(props.definition),
+          props.currentStepKey,
+          props.startedAt,
+          props.dueAt,
+        ),
+        ...workflowStepSnapshotInsertByCreationStatements({
+          db: this.c.env.DB,
+          creationId,
+          stepKey: props.currentStepKey,
+          round: 1,
+          snapshot: props.stepSnapshot,
+        }),
+        this.c.env.DB.prepare(
+          `INSERT INTO personnel_action_requests
+             (id, application_id, target_employee_id, kind, payload_json,
+              requested_by_employee_id, base_employee_revision, base_organization_revision,
+              created_at, applied_action_id)
+           SELECT ?2, id, ?3, ?4, ?5, ?6, ?7, ?8, ?9, NULL
+           FROM applications WHERE workflow_creation_id = ?1`,
+        ).bind(
+          creationId,
+          props.request.id,
+          props.request.targetEmployeeId,
+          props.request.kind,
+          props.request.payloadJson,
+          props.request.requestedByEmployeeId,
+          props.request.baseEmployeeRevision,
+          props.request.baseOrganizationRevision,
+          props.request.createdAt,
+        ),
+        ...props.auditStatements,
+        this.c.env.DB.prepare(
+          `INSERT INTO application_subjects
+             (application_id, subject_type, subject_employee_id, subject_snapshot_json,
+              target_department_code)
+           SELECT id, CASE WHEN ?2 IS NULL THEN 'prospective_employee' ELSE 'employee' END,
+                  ?2, ?3, ?4
+           FROM applications WHERE workflow_creation_id = ?1`,
+        ).bind(
+          creationId,
+          props.request.targetEmployeeId,
+          props.request.subjectSnapshotJson,
+          props.request.targetDepartmentCode,
+        ),
+        this.c.env.DB.prepare(
+          `INSERT INTO application_completion_bindings
+             (application_id, handler_key, resource_id, payload_fingerprint, created_at)
+           SELECT id, 'personnel_action', ?2, ?3, ?4
+           FROM applications WHERE workflow_creation_id = ?1`,
+        ).bind(
+          creationId,
+          props.request.id,
+          props.request.payloadFingerprint,
+          props.request.createdAt,
+        ),
+        this.c.env.DB.prepare(
+          `UPDATE applications SET workflow_creation_id = NULL
+           WHERE workflow_creation_id = ?1 RETURNING id`,
+        ).bind(creationId),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+      ])
+      const row = results.at(0)?.results.at(0) as
+        | Parameters<typeof Application.fromRow>[0]
+        | undefined
+      return row === undefined
+        ? new Error("failed to create personnel action request")
+        : Application.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to create personnel action request")
+    }
+  }
+
   async findNextStepRound(applicationId: number, stepKey: string): Promise<number | Error> {
     try {
       const latestRound = await this.c.env.DB.prepare(

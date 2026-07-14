@@ -185,6 +185,31 @@ describe("UpdateApplicationTemplate", () => {
       "経費申請",
     )
   })
+
+  test("allows display edits but locks system template structure", async () => {
+    const { context } = createTestContext()
+    const displayEdit = await new UpdateApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "personnel_action_request",
+      name: "Employee Lifecycle Change",
+      category: "employee",
+      description: "Updated help text",
+      schemaJson: { additionalProperties: false, type: "object" },
+      approverRoles: ["hr"],
+    })
+    expect(displayEdit).toBeInstanceOf(ApplicationTemplate)
+
+    const structuralEdit = await new UpdateApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "personnel_action_request",
+      name: "Employee Lifecycle Change",
+      category: "general",
+      description: null,
+      schemaJson: {},
+      approverRoles: ["admin"],
+    })
+    expectApplicationError(structuralEdit, UnprocessableError, "system_template_structure_locked")
+  })
 })
 
 describe("DeleteApplicationTemplate", () => {
@@ -266,5 +291,14 @@ describe("DeleteApplicationTemplate", () => {
     const found = await new ApplicationTemplateRepository(context).findByCode("expense")
 
     expect(found).toBeInstanceOf(ApplicationTemplate)
+  })
+
+  test("never deletes a system-bound template", async () => {
+    const { context } = createTestContext()
+    const result = await new DeleteApplicationTemplate(context).run({
+      session: makeTestSession("admin"),
+      code: "personnel_action_request",
+    })
+    expectApplicationError(result, ConflictError, "system_template_locked")
   })
 })

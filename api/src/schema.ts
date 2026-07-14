@@ -624,6 +624,8 @@ export const personnelActionRequests = sqliteTable(
     baseOrganizationRevision: integer("base_organization_revision"),
     createdAt: integer("created_at").notNull(),
     appliedActionId: text("applied_action_id"),
+    withdrawnAt: integer("withdrawn_at"),
+    withdrawnByEmployeeId: integer("withdrawn_by_employee_id"),
   },
   (table) => [
     uniqueIndex("uq_personnel_action_requests_applied_action")

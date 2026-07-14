@@ -101,6 +101,7 @@ export class DecideApplication {
         payload: existing.payload,
         actorEmployeeId: command.approverId,
         actorAccountId: command.session.accountId,
+        session: command.session,
         action: command.action,
         comment: command.comment,
         createdAt: command.createdAt,

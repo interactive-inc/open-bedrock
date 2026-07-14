@@ -29,16 +29,6 @@ export class UpdateApplicationTemplate {
       return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 
-    const unknownApproverRoles = await findUnknownApproverRoles(this.c, command.approverRoles)
-    if (unknownApproverRoles instanceof Error) {
-      return new UnexpectedError("failed to validate approver roles", {
-        cause: unknownApproverRoles,
-      })
-    }
-    if (unknownApproverRoles.length > 0) {
-      return new UnprocessableError("unknown approver role", "unknown_approver_role")
-    }
-
     const current = await templateRepository.findByCode(command.code)
 
     if (current instanceof Error) {
@@ -47,6 +37,28 @@ export class UpdateApplicationTemplate {
 
     if (current === null) {
       return new NotFoundError("template not found", "template_not_found")
+    }
+
+    if (
+      current.systemBinding !== null &&
+      (command.category !== current.category ||
+        stableJson(command.schemaJson) !== stableJson(current.schemaJson) ||
+        stableJson(command.approverRoles) !== stableJson(current.approverRoles))
+    ) {
+      return new UnprocessableError(
+        "system template structure cannot be changed",
+        "system_template_structure_locked",
+      )
+    }
+
+    const unknownApproverRoles = await findUnknownApproverRoles(this.c, command.approverRoles)
+    if (unknownApproverRoles instanceof Error) {
+      return new UnexpectedError("failed to validate approver roles", {
+        cause: unknownApproverRoles,
+      })
+    }
+    if (unknownApproverRoles.length > 0) {
+      return new UnprocessableError("unknown approver role", "unknown_approver_role")
     }
 
     const updated = await templateRepository.update(
@@ -69,4 +81,20 @@ export class UpdateApplicationTemplate {
 
     return updated
   }
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize)
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, child]) => [key, canonicalize(child)]),
+    )
+  }
+  return value
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(canonicalize(value)) ?? "undefined"
 }

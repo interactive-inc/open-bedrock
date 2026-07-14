@@ -177,6 +177,15 @@ export const zAppApplication = z.object({
   template_code: z.string(),
   template_name: z.string(),
   applicant_name: z.string(),
+  subject: z
+    .object({
+      type: z.enum(["employee", "prospective_employee"]),
+      employee_code: z.string(),
+      employee_name: z.string(),
+    })
+    .nullable()
+    .default(null),
+  target_department: z.object({ code: z.string(), name: z.string() }).nullable().default(null),
   status: z.enum(["pending", "approved", "rejected"]),
   current_step: z.string().nullable(),
   payload: z.unknown(),
