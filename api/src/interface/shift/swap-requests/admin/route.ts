@@ -15,6 +15,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { z } from "zod"
+import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { InternalError } from "@/interface/lib/errors"
 
 const SORT_OPTIONS = {
   date_desc: desc(shiftSwapRequests.date),
@@ -137,13 +139,24 @@ export const GET = factory.createHandlers(
       .from(shiftSwapRequests)
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.requesterEmployeeId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppShiftSwapRequestAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         requester_employee_id: row.requesterEmployeeId,
         requester_employee_code: row.requesterCode ?? "",
         requester_name: row.requesterName ?? "",
-        requester_dept_name: row.requesterDeptName,
+        requester_dept_name:
+          currentDepartments.source === "lifecycle"
+            ? (currentDepartments.names.get(row.requesterEmployeeId) ?? null)
+            : row.requesterDeptName,
         target_employee_id: row.targetEmployeeId,
         target_employee_code: row.targetCode ?? "",
         target_name: row.targetName ?? "",

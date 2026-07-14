@@ -1,6 +1,5 @@
 import { CreateOrgDepartment } from "@/application/org/create-org-department"
-import { ListOrgDepartments } from "@/application/org/list-org-departments"
-import type { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/domain/org/org-department.entity"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
@@ -11,6 +10,8 @@ import { zAppOrgDepartment, zAppOrgDepartmentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
+import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { InternalError } from "@/interface/lib/errors"
 
 // 部署ノードをレスポンス用の snake_case に整形する。
 function toResponseBody(department: OrgDepartment) {
@@ -31,17 +32,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const departments = await new ListOrgDepartments(c).run()
+  const organization = await loadCurrentOrganization(c)
+  if (organization instanceof Error) throw new InternalError("failed to load organization")
+  const currentDepartments = organization.departments.map(
+    (department) =>
+      new OrgDepartment({
+        code: department.code,
+        departmentId: department.departmentId,
+        parentCode: department.parentCode,
+        managerEmployeeCode: organization.managerByDepartmentCode.get(department.code) ?? null,
+        order: department.order,
+      }),
+  )
 
-  if (departments instanceof ApplicationError) {
-    throw toHttpException(departments)
-  }
-
-  if (departments.length > MAX_ORG_NODES) {
+  if (currentDepartments.length > MAX_ORG_NODES) {
     console.warn(`[org] department list exceeded ${MAX_ORG_NODES} nodes; response truncated`)
   }
 
-  const bounded = departments.slice(0, MAX_ORG_NODES)
+  const bounded = currentDepartments.slice(0, MAX_ORG_NODES)
 
   const responseBody = zAppOrgDepartmentList.parse(bounded.map(toResponseBody))
 

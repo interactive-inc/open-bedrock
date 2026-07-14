@@ -7,8 +7,8 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { MAX_ORG_NODES } from "@/interface/shared/to-bounded-int"
 import { zAppOrgTreeList } from "@/lib/app-schemas"
 import type { AppOrgTreeNode } from "@/lib/app-schemas"
-import { departments, orgDepartments, orgMemberships } from "@/schema"
-import { count, eq } from "drizzle-orm"
+import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { InternalError } from "@/interface/lib/errors"
 
 function toOrgTreeNode(node: DepartmentTreeNode): AppOrgTreeNode {
   return {
@@ -27,11 +27,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const departmentRows = await c.var.database
-    .select({ orgDepartment: orgDepartments, name: departments.name })
-    .from(orgDepartments)
-    .leftJoin(departments, eq(departments.id, orgDepartments.departmentId))
-    .limit(MAX_ORG_NODES + 1)
+  const organization = await loadCurrentOrganization(c)
+  if (organization instanceof Error) throw new InternalError("failed to load organization")
+  const departmentRows = organization.departments
 
   if (departmentRows.length > MAX_ORG_NODES) {
     console.warn(`[org] department tree exceeded ${MAX_ORG_NODES} nodes; response truncated`)
@@ -39,28 +37,23 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const boundedDepartmentRows = departmentRows.slice(0, MAX_ORG_NODES)
 
-  const countRows = await c.var.database
-    .select({ departmentCode: orgMemberships.departmentCode, total: count() })
-    .from(orgMemberships)
-    .groupBy(orgMemberships.departmentCode)
-
   const namesByCode = new Map<string, string>()
-
   const countsByCode = new Map<string, number>()
-
-  for (const row of countRows) {
-    countsByCode.set(row.departmentCode, row.total)
+  for (const employee of organization.employeesByCode.values()) {
+    for (const departmentCode of employee.departmentCodes) {
+      countsByCode.set(departmentCode, (countsByCode.get(departmentCode) ?? 0) + 1)
+    }
   }
 
   const orgDepartmentEntities = boundedDepartmentRows.map((row) => {
-    namesByCode.set(row.orgDepartment.code, row.name ?? "")
+    namesByCode.set(row.code, row.name)
 
     return new OrgDepartment({
-      code: row.orgDepartment.code,
-      departmentId: row.orgDepartment.departmentId,
-      parentCode: row.orgDepartment.parentCode,
-      managerEmployeeCode: row.orgDepartment.managerEmployeeCode,
-      order: row.orgDepartment.sortOrder,
+      code: row.code,
+      departmentId: row.departmentId,
+      parentCode: row.parentCode,
+      managerEmployeeCode: organization.managerByDepartmentCode.get(row.code) ?? null,
+      order: row.order,
     })
   })
 

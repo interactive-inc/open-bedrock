@@ -11,6 +11,8 @@ import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { factory } from "@/lib/factory"
 import { employees, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, count, desc, eq, ne } from "drizzle-orm"
+import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { InternalError } from "@/interface/lib/errors"
 
 // GET /thanks/redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング）
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -68,12 +70,23 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       ),
     )
 
+  const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+    c,
+    rows.map((row) => row.redemption.employeeId),
+  )
+  if (currentDepartments instanceof Error) {
+    throw new InternalError("failed to load current departments")
+  }
+
   const responseBody = zAppThanksRedemptionAdminList.parse({
     data: rows.map(({ redemption, employeeName, employeeDeptName, rewardName }) => ({
       id: redemption.id,
       employee_id: redemption.employeeId,
       employee_name: employeeName ?? "",
-      employee_dept_name: employeeDeptName,
+      employee_dept_name:
+        currentDepartments.source === "lifecycle"
+          ? (currentDepartments.names.get(redemption.employeeId) ?? null)
+          : employeeDeptName,
       reward_id: redemption.rewardId,
       reward_name: rewardName ?? "",
       point_cost: redemption.pointCost,
