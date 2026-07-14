@@ -7,11 +7,10 @@ import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-reposi
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { assertAuditHmacSecret, hashAuditIdentifier } from "@/lib/audit/hash-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
-import { UnavailableError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 
 export type Command = {
   refreshToken: string
@@ -176,11 +175,9 @@ export class RefreshAccessToken {
       return revokeInvalidFamily()
     }
 
-    const employee = await new EmployeeRepository(this.c).findById(account.employeeId)
-    if (employee instanceof Error) {
-      return new UnexpectedError("failed to find employee", { cause: employee })
-    }
-    if (employee === null || employee.status === "retired") return revokeInvalidFamily()
+    const employeeAccess = await resolveLiveEmployeeAccess(this.c, account.employeeId)
+    if (employeeAccess instanceof ApplicationError) return employeeAccess
+    if (employeeAccess === null) return revokeInvalidFamily()
 
     const accessToken = await new JoseTokenSigner().sign(
       {
@@ -270,6 +267,7 @@ export class RefreshAccessToken {
         tokenVersion: existing.tokenVersion,
         userAgent: command.userAgent,
         nowEpoch,
+        lifecycleAccess: employeeAccess,
       },
       audit,
     )

@@ -6,12 +6,11 @@ import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"
 import { isWrappedLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
-import { UnavailableError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 
@@ -45,8 +44,6 @@ export class AuthenticateEmployee {
   ): Promise<AuthenticatedSession | InvalidCredentials | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
 
-    const employeeRepository = new EmployeeRepository(this.c)
-
     const tokenSigner = new JoseTokenSigner()
 
     const identity = await identityRepository.findPasswordIdentityByEmail(command.email)
@@ -73,15 +70,9 @@ export class AuthenticateEmployee {
       return { reason: "invalid_credentials" }
     }
 
-    const employee = await employeeRepository.findById(identity.employeeId)
-
-    if (employee instanceof Error) {
-      return new UnexpectedError("failed to find employee", { cause: employee })
-    }
-
-    // NOTE: 休職中（leave）のログイン可否は仕様確認待ち（#775）。現状は許可。
-    // 退職者はログイン不可。資格情報エラーと同一レスポンスにして在籍状態の漏えいを避ける。
-    if (employee === null || employee.status === "retired") {
+    const employeeAccess = await resolveLiveEmployeeAccess(this.c, identity.employeeId)
+    if (employeeAccess instanceof ApplicationError) return employeeAccess
+    if (employeeAccess === null) {
       return { reason: "invalid_credentials" }
     }
 
