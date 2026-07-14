@@ -37,7 +37,9 @@ export class Employee implements Props {
     Object.freeze(this)
   }
 
-  static fromRow(row: EmployeeRow): Employee {
+  static fromRow(
+    row: Pick<EmployeeRow, "id" | "code" | "name" | "deptId" | "deptName" | "position" | "status">,
+  ): Employee {
     return new Employee({
       id: row.id,
       code: row.code,

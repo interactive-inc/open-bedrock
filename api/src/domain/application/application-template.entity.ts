@@ -58,7 +58,12 @@ export class ApplicationTemplate implements Props {
     })
   }
 
-  static fromRow(row: ApplicationTemplateRow): ApplicationTemplate | Error {
+  static fromRow(
+    row: Pick<
+      ApplicationTemplateRow,
+      "id" | "code" | "name" | "category" | "description" | "schemaJson" | "approverRoles"
+    >,
+  ): ApplicationTemplate | Error {
     const schemaJson = decodeSchemaJson(row.schemaJson)
 
     if (schemaJson instanceof Error) {
