@@ -230,7 +230,7 @@ describe("GET /audit-events", () => {
 
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ code: "audit_invalid_query" })
-    expect(state.queries()).toBe(6)
+    expect(state.queries()).toBe(7)
     const after = await state.db.prepare("SELECT count(*) AS count FROM audit_logs").first("count")
     expect(after).toBe(before)
   })
@@ -249,7 +249,7 @@ describe("GET /audit-events", () => {
 
       expect(response.status).toBe(400)
       expect(await response.json()).toMatchObject({ code: "invalid_audit_cursor" })
-      expect(state.queries()).toBe(6)
+      expect(state.queries()).toBe(7)
     },
   )
 

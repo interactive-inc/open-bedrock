@@ -38,6 +38,15 @@ export type ProvisionWithEmployeeInput = {
   now: number
 }
 
+export type PreparedProvisionInput = {
+  employeeCode: string
+  email: string
+  passwordHash: string
+  roleKey: string
+  grantedByAccountId: number
+  now: number
+}
+
 /** requested role が存在しないか、付与者の実効権限を超えたため batch を中止した。 */
 export class RoleAssignmentGuardError extends Error {
   constructor(options?: ErrorOptions) {
@@ -102,6 +111,66 @@ export class AccountProvisioner {
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to provision account")
     }
+  }
+
+  prepareProvisionByEmployeeCode(
+    input: PreparedProvisionInput,
+  ): ReadonlyArray<D1PreparedStatement> {
+    const db = this.c.env.DB
+    return [
+      db
+        .prepare(
+          `INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at)
+           SELECT id, 'active', 0, ?2, ?2 FROM employees WHERE code = ?1
+           RETURNING id`,
+        )
+        .bind(input.employeeCode, input.now),
+      abortWhenPreviousStatementChangedNoRows(db),
+      db
+        .prepare(
+          `INSERT INTO identities
+             (account_id, provider, subject, secret, email, email_verified, created_at)
+           SELECT account.id, 'password', ?2, ?3, ?4, 1, ?5
+           FROM accounts account
+           INNER JOIN employees employee ON employee.id = account.employee_id
+           WHERE employee.code = ?1
+           RETURNING account_id`,
+        )
+        .bind(
+          input.employeeCode,
+          input.email.toLowerCase(),
+          input.passwordHash,
+          input.email,
+          input.now,
+        ),
+      abortWhenPreviousStatementChangedNoRows(db),
+      abortWhenActorCannotManageRoleByKey({
+        db,
+        actorAccountId: input.grantedByAccountId,
+        targetRoleKey: input.roleKey,
+        requiredPermissionKeys:
+          input.roleKey === "member"
+            ? ["employee:create", "employee:lifecycle:apply", "account:manage"]
+            : [
+                "employee:create",
+                "employee:lifecycle:apply",
+                "account:manage",
+                "employee:assign_role",
+              ],
+      }),
+      db
+        .prepare(
+          `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+           SELECT account.id, role.id, ?3, ?4
+           FROM accounts account
+           INNER JOIN employees employee ON employee.id = account.employee_id
+           INNER JOIN roles role ON role.key = ?2
+           WHERE employee.code = ?1
+           RETURNING account_id`,
+        )
+        .bind(input.employeeCode, input.roleKey, input.grantedByAccountId, input.now),
+      abortWhenPreviousStatementChangedNoRows(db),
+    ]
   }
 
   /**

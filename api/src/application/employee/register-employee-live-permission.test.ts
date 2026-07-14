@@ -14,12 +14,13 @@ import { describe, expect, test } from "bun:test"
 describe("RegisterEmployee live actor authorization", () => {
   test("fails closed when employee:create is revoked before provisioning", async () => {
     const { context, db } = createTestContext()
+    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E960")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
       actorAccountId,
       "employee-create-race",
-      [["employee:create"]],
+      [["employee:create", "employee:lifecycle:apply", "account:manage"]],
     )
     const session = await sessionFor(context, actorAccountId)
 
@@ -40,12 +41,13 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when employee:assign_role is revoked before assigning a non-member role", async () => {
     const { context, db } = createTestContext()
+    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E962")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
       actorAccountId,
       "employee-assign-race",
-      [["employee:create", "employee:assign_role"]],
+      [["employee:create", "employee:assign_role", "employee:lifecycle:apply", "account:manage"]],
     )
     const targetRole = await createRole(context, "empty-provisioned-role", [])
     const session = await sessionFor(context, actorAccountId)
@@ -67,12 +69,21 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when the actor loses a target-role permission before provisioning", async () => {
     const { context, db } = createTestContext()
+    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E964")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
       actorAccountId,
       "employee-role-superset-race",
-      [["employee:create", "employee:assign_role", "dashboard:view"]],
+      [
+        [
+          "employee:create",
+          "employee:assign_role",
+          "employee:lifecycle:apply",
+          "account:manage",
+          "dashboard:view",
+        ],
+      ],
     )
     const targetRole = await createRole(context, "dashboard-provisioned-role", ["dashboard:view"])
     const session = await sessionFor(context, actorAccountId)
@@ -100,10 +111,10 @@ function employeeInput(code: string, role: string) {
     email: `you+${code.toLowerCase()}@example.com`,
     password: "initial-password",
     role,
-    deptId: 3,
-    deptName: "Engineering",
-    position: "Engineer",
-    status: "active" as const,
+    hireOn: "2026-01-01",
+    departmentCode: null,
+    positionTitle: null,
+    managerEmployeeCode: null,
   }
 }
 

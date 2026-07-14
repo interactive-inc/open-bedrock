@@ -3,6 +3,7 @@ import type { Bindings } from "@/env"
 import * as employeeDetailRoute from "@/interface/employee/[code]/route"
 import * as employeeListRoute from "@/interface/employee/route"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
+import { requestContextMiddleware } from "@/interface/shared/request-context-middleware"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -35,6 +36,7 @@ function buildTestApp() {
     .createApp()
     .use("*", contextStorage())
     .use("*", databaseMiddleware)
+    .use("*", requestContextMiddleware)
     .onError((error, c) => {
       if (error instanceof HTTPException) {
         return c.json({ error: error.message }, error.status)
@@ -91,6 +93,21 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   return db
+}
+
+async function enableVerifiedLifecycleForAdmin(db: D1Database): Promise<void> {
+  await db.exec(`
+    INSERT INTO employment_period_versions
+      (period_id, revision, employee_id, starts_on, ends_on, is_void,
+       recorded_by_action_id, recorded_at)
+    VALUES ('fixture-employment-e001', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO employee_status_period_versions
+      (period_id, revision, employment_period_id, employee_id, status, starts_on,
+       ends_on, is_void, recorded_by_action_id, recorded_at)
+    VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
+            '2025-01-01', NULL, 0, 'fixture', 1);
+    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+  `)
 }
 
 function adminToken(): Promise<string> {
@@ -153,6 +170,7 @@ async function request(
     JWT_SECRET: jwtSecret,
     AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
   }
 
   return buildTestApp().request(
@@ -239,14 +257,20 @@ describe("POST /employees", () => {
     email: "you+e900@example.com",
     password: "initial-password",
     role: "member",
-    dept_id: 3,
-    dept_name: "Engineering",
-    position: "Engineer",
-    status: "active",
+    hire_on: "2026-01-01",
+    department_code: null,
+    position_title: null,
+    manager_employee_code: null,
   }
 
   test("admin creates an employee and gets 201", async () => {
-    const response = await request("/employees", await adminToken(), "POST", newEmployee)
+    const response = await request(
+      "/employees",
+      await adminToken(),
+      "POST",
+      newEmployee,
+      enableVerifiedLifecycleForAdmin,
+    )
 
     expect(response.status).toBe(201)
 
@@ -256,7 +280,8 @@ describe("POST /employees", () => {
 
     if (parsed.success) {
       expect(parsed.data.code).toBe("E900")
-      expect(parsed.data.dept_name).toBe("Engineering")
+      expect(parsed.data.dept_name).toBeNull()
+      expect(parsed.data.status).toBe("active")
     }
   })
 
@@ -275,10 +300,10 @@ describe("POST /employees", () => {
     expect(response.status).toBe(409)
   })
 
-  test("returns 400 when status is outside the allowed set", async () => {
+  test("returns 400 when hire date is invalid", async () => {
     const response = await request("/employees", await adminToken(), "POST", {
       ...newEmployee,
-      status: "unknown",
+      hire_on: "2026-02-30",
     })
 
     expect(response.status).toBe(400)
@@ -295,18 +320,28 @@ describe("POST /employees", () => {
 })
 
 describe("PUT /employees/:code", () => {
-  const profile = {
+  const profileE4 = {
     name: "Drew Sato",
     email: "you+e004@example.com",
     role: "manager",
     dept_id: 3,
     dept_name: "Engineering",
-    position: "Engineering Director",
+    position: "Engineering Manager",
     status: "active",
   }
+  const profileE5 = {
+    ...profileE4,
+    name: "Emery Lane",
+    email: "you+e005@example.com",
+    role: "member",
+    position: "Senior Engineer",
+  }
 
-  test("admin updates an employee and gets 200", async () => {
-    const response = await request("/employees/E004", await adminToken(), "PUT", profile)
+  test("admin updates an employee name without bypassing lifecycle data and gets 200", async () => {
+    const response = await request("/employees/E004", await adminToken(), "PUT", {
+      ...profileE4,
+      name: "Drew Sato Updated",
+    })
 
     expect(response.status).toBe(200)
 
@@ -315,25 +350,26 @@ describe("PUT /employees/:code", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.position).toBe("Engineering Director")
+      expect(parsed.data.name).toBe("Drew Sato Updated")
+      expect(parsed.data.position).toBe("Engineering Manager")
       expect(parsed.data.role).toBe("manager")
     }
   })
 
   test("member cannot update and gets 403", async () => {
-    const response = await request("/employees/E004", await memberToken(), "PUT", profile)
+    const response = await request("/employees/E004", await memberToken(), "PUT", profileE4)
 
     expect(response.status).toBe(403)
   })
 
   test("manager updates an employee inside their organization scope", async () => {
-    const response = await request("/employees/E005", await managerToken(), "PUT", profile)
+    const response = await request("/employees/E005", await managerToken(), "PUT", profileE5)
 
     expect(response.status).toBe(200)
   })
 
   test("employee:update alone cannot update outside the manager organization scope", async () => {
-    const response = await request("/employees/E009", await managerToken(), "PUT", profile)
+    const response = await request("/employees/E009", await managerToken(), "PUT", profileE4)
 
     expect(response.status).toBe(403)
   })
@@ -344,7 +380,7 @@ describe("PUT /employees/:code", () => {
       email: "you+e017@example.com",
       role: "hr",
     })
-    const response = await request("/employees/E005", token, "PUT", profile, async (db) => {
+    const response = await request("/employees/E005", token, "PUT", profileE5, async (db) => {
       await db
         .prepare(
           `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
@@ -361,32 +397,32 @@ describe("PUT /employees/:code", () => {
       "/employees/E010",
       await organizationManagerWithoutCapabilityToken(),
       "PUT",
-      profile,
+      profileE4,
     )
 
     expect(response.status).toBe(403)
   })
 
   test("employee:update holder can update their own employee record", async () => {
-    const response = await request("/employees/E004", await managerToken(), "PUT", profile)
+    const response = await request("/employees/E004", await managerToken(), "PUT", profileE4)
 
     expect(response.status).toBe(200)
   })
 
   test("member cannot update their own employee record without employee:update", async () => {
-    const response = await request("/employees/E005", await memberToken(), "PUT", profile)
+    const response = await request("/employees/E005", await memberToken(), "PUT", profileE5)
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 for update without a bearer token", async () => {
-    const response = await request("/employees/E005", null, "PUT", profile)
+    const response = await request("/employees/E005", null, "PUT", profileE5)
 
     expect(response.status).toBe(401)
   })
 
   test("returns 404 for a missing employee", async () => {
-    const response = await request("/employees/E999", await adminToken(), "PUT", profile)
+    const response = await request("/employees/E999", await adminToken(), "PUT", profileE4)
 
     expect(response.status).toBe(404)
   })
@@ -405,10 +441,10 @@ describe("PUT /employees/:code", () => {
 })
 
 describe("DELETE /employees/:code", () => {
-  test("admin deletes an employee and gets 204", async () => {
+  test("admin is directed to the history-preserving archive operation", async () => {
     const response = await request("/employees/E004", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(204)
+    expect(response.status).toBe(409)
   })
 
   test("member cannot delete and gets 403", async () => {
@@ -417,10 +453,10 @@ describe("DELETE /employees/:code", () => {
     expect(response.status).toBe(403)
   })
 
-  test("admin cannot delete their own account and gets 403", async () => {
+  test("admin cannot physically delete their own account", async () => {
     const response = await request("/employees/E001", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing employee", async () => {

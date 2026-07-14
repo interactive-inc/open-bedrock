@@ -4,9 +4,10 @@ import { hasPermission } from "@/lib/auth/has-permission"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 import type { Context, SessionPayload } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import { ApplicationError } from "@/lib/errors"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 
 export type Command = {
   session: SessionPayload
@@ -66,15 +67,34 @@ export class UpdateEmployee {
       }
     }
 
-    const nextEmployee = employee.withProfile(command.profile)
-    const updated =
-      employee.status !== "retired" && nextEmployee.status === "retired"
-        ? await employeeRepository.updateProfileGuardingLastAdmin(nextEmployee)
-        : await employeeRepository.updateProfile(nextEmployee)
-
-    if (updated instanceof LastAdminError) {
-      return new ConflictError("cannot retire the last effective admin", "last_admin")
+    const migrationStatus = await new EmployeeLifecycleRepository(this.c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) return migrationStatus
+    const state =
+      migrationStatus === "verified"
+        ? await new GetLifecycleState(this.c).run({ employeeId: employee.id })
+        : undefined
+    if (state instanceof ApplicationError) return state
+    const currentProfile = {
+      deptId: employee.deptId,
+      deptName: state?.primaryAssignment?.departmentName ?? employee.deptName,
+      position: state?.primaryAssignment?.positionTitle ?? employee.position,
+      status: state?.status === "prehire" ? employee.status : (state?.status ?? employee.status),
     }
+    if (
+      command.profile.deptId !== currentProfile.deptId ||
+      command.profile.deptName !== currentProfile.deptName ||
+      command.profile.position !== currentProfile.position ||
+      command.profile.status !== currentProfile.status
+    ) {
+      return new ConflictError(
+        "department, position, and status must be changed with a personnel action",
+        "lifecycle_action_required",
+      )
+    }
+
+    const updated = await employeeRepository.updateProfile(
+      employee.withProfile({ name: command.profile.name, ...currentProfile }),
+    )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update employee", { cause: updated })

@@ -26,6 +26,13 @@ const migrationFile = "0019_employee_lifecycle.sql"
 const migrationPath = join(migrationsDirectory, migrationFile)
 const applicationBindingMigrationFile = "application_lifecycle_binding.sql"
 const applicationBindingMigrationPath = join(migrationsDirectory, applicationBindingMigrationFile)
+const personnelActionTemplateMigrationFile = "application_personnel_action_template.sql"
+const personnelActionTemplateMigrationPath = join(
+  migrationsDirectory,
+  personnelActionTemplateMigrationFile,
+)
+const requestStateMigrationFile = "application_personnel_action_request_state.sql"
+const requestStateMigrationPath = join(migrationsDirectory, requestStateMigrationFile)
 
 function migrationFiles(): string[] {
   return readdirSync(migrationsDirectory)
@@ -35,7 +42,13 @@ function migrationFiles(): string[] {
 
 function schemaBeforeLifecycle(): string {
   return migrationFiles()
-    .filter((file) => file !== migrationFile && file !== applicationBindingMigrationFile)
+    .filter(
+      (file) =>
+        file !== migrationFile &&
+        file !== applicationBindingMigrationFile &&
+        file !== personnelActionTemplateMigrationFile &&
+        file !== requestStateMigrationFile,
+    )
     .map((file) => readFileSync(join(migrationsDirectory, file), "utf8"))
     .join("\n")
 }
@@ -43,10 +56,16 @@ function schemaBeforeLifecycle(): string {
 function lifecycleMigrations(): string {
   expect(existsSync(migrationPath)).toBe(true)
   expect(existsSync(applicationBindingMigrationPath)).toBe(true)
-  return `${readFileSync(migrationPath, "utf8")}\n${readFileSync(
+  expect(existsSync(personnelActionTemplateMigrationPath)).toBe(true)
+  expect(existsSync(requestStateMigrationPath)).toBe(true)
+  return [
+    migrationPath,
     applicationBindingMigrationPath,
-    "utf8",
-  )}`
+    personnelActionTemplateMigrationPath,
+    requestStateMigrationPath,
+  ]
+    .map((path) => readFileSync(path, "utf8"))
+    .join("\n")
 }
 
 async function tableNames(db: D1Database): Promise<string[]> {
