@@ -166,7 +166,7 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 - `GET /audit-events/:event_id`: 詳細
 - `POST /audit-event-exports`: フィルターを受け取り CSV を返す限定期間出力
 
-一覧は `created_at DESC, id DESC` の安定順序とし、カーソルへ両値を含める。`limit` は一から百、既定値は五十とする。
+一覧は `created_at DESC, id DESC` の安定順序とする。二百五十六文字以内の version 2 cursor は、初回検索時の最大内部 ID、limit、正規化 filter の fingerprint、移動元ページと必要な場合の復元先ページの先頭・末尾 anchor を保持する。以後は最大内部 ID 以下だけを読むため、途中で追加された行は過去日時でも同じ走査へ混入しない。直後の next→previous と previous→next は元のページ範囲を完全復元し、さらに深い逆方向走査はページ幅が変わっても連続性を保つ。cursor は認可情報ではないため署名しないが、limit または filter が要求と一致しない cursor は `invalid_audit_cursor` として拒否する。`limit` は一から百、既定値は五十とする。
 
 一覧と出力は次のフィルターを共有する。
 
@@ -178,11 +178,15 @@ API ミドルウェアはすべての要求へ内部生成した UUID `request_i
 - `from`
 - `to`
 
-時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は raw byte と JSON wire byte の descriptor を先に狭く取得し、DB 側の累積 guard を通った exact-ID だけを通常の詳細取得へ渡す。通常の D1 詳細応答は四 MiB 以内とし、引用符などの escaping で wire byte だけが大きくなる単一行は、各 text 列を二百五十六 KiB の BLOB segment として取得して fatal UTF-8 decode する。これにより D1 の各応答を十六 MiB 未満に保ったまま保存原文を復元する。五万一件目または完成 CSV の byte 超過を検出したら追加 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は各 text 列の SQLite storage class と byte length を含む狭い descriptor を最大五千件ずつ取得する。text または許可された null 以外の storage class、型と null/length の不整合、無効 UTF-8、取得中の ID・時刻・長さ変更は `503 audit_unavailable` として fail closed にする。
+
+通常読取は text を直接受け取らず、保存 byte の `hex(CAST(column AS BLOB))` を四 MiB の累積 wire budget 内で取得する。一列が九十九万九千 byte を超える場合は、D1 の computed string 二百万 byte 上限へ達する前に、複数列合計で一 query 九十九万九千 source byte 以下となる `hex(substr(...))` segment へ切り替える。各 segment 応答は二百万 byte 未満で、全 byte の再構築後に `fatal: true, ignoreBOM: true` で一度だけ UTF-8 decode するため、先頭 BOM と保存原文を保持し、replacement decode を許さない。
+
+export の descriptor window は通常 exact-ID batch を四 MiB 以内へ保ち、大きい segment 行は軽量 descriptor cost として同じ window にまとめる。五万件成功は repository 二十三 query、五万一件目の拒否は二十一 query、remote D1 上限内の約一・八 MB 行八件は十八 queryで、D1 Free の一 invocation 五十 query を下回り、repository 自身は二十五 query 以下を維持する。五万一件目または完成 CSV の byte 超過を descriptor で検出した後は詳細 query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
 
 CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
 
-一覧は最初に `id`、`created_at` と要約 JSON wire byte のみを最大 `limit + 1` 件取得し、四 MiB の累積上限または指定 `limit` の早い方までを exact-ID 要約取得へ渡す。wire byte は `json_quote`、列名、JSON envelope を含めて保守的に見積もり、上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも前後 cursor を返す。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。segment の fatal UTF-8 decode は先頭 BOM も保存原文として保持する。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
+一覧は最初に最大 `limit + 1` 件の要約 descriptor を取得し、hex 投影の列名・envelopeを含む保守的な四 MiB 累積上限または指定 `limit` の早い方までを byte-faithful 要約取得へ渡す。上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも version 2 cursor を返す。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
 
 ## Web
 

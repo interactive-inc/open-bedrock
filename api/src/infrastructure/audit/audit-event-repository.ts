@@ -7,7 +7,7 @@ import type {
 import { auditClientNameSchema, auditOutcomeSchema } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
 import { decodeAuditCursor, encodeAuditCursor } from "@/lib/audit/audit-cursor"
-import type { AuditCursorPosition } from "@/lib/audit/audit-cursor"
+import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"
 import { AuditCsvByteCounter } from "@/lib/audit/audit-csv"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
@@ -16,25 +16,9 @@ import { z } from "zod"
 const SEARCH_MAX_LIMIT = 100
 const SEARCH_SUMMARY_WIRE_BUDGET_BYTES = 4 * 1024 * 1024
 const EXPORT_MAX_ROWS = 50_000
-const EXPORT_CHUNK_SIZE = 500
-const EXPORT_DETAIL_RAW_CHUNK_BYTES = 4 * 1024 * 1024
+const EXPORT_CHUNK_SIZE = 5_000
 const EXPORT_DETAIL_WIRE_CHUNK_BYTES = 4 * 1024 * 1024
-const DETAIL_TEXT_SEGMENT_BYTES = 256 * 1024
-
-const SUMMARY_DATABASE_COLUMNS = [
-  "id",
-  "event_id",
-  "request_id",
-  "actor_account_id",
-  "actor_employee_id",
-  "action",
-  "target_type",
-  "target_id",
-  "outcome",
-  "reason_code",
-  "client_name",
-  "created_at",
-] as const
+const D1_MAX_HEX_SOURCE_BYTES = 999_000
 
 const SUMMARY_TEXT_COLUMNS = [
   "event_id",
@@ -47,50 +31,55 @@ const SUMMARY_TEXT_COLUMNS = [
   "client_name",
 ] as const
 
-const SUMMARY_SELECT_COLUMNS = SUMMARY_DATABASE_COLUMNS.join(", ")
+function byteProjectionFixedBytes(columns: ReadonlyArray<string>): number {
+  const properties = [
+    "id",
+    "actor_account_id",
+    "actor_employee_id",
+    "created_at",
+    ...columns.flatMap((column) => [`${column}_type`, `${column}_value`]),
+  ]
+  const objectBytes =
+    2 +
+    Math.max(0, properties.length - 1) +
+    properties.reduce((total, property) => total + property.length + 3, 0)
+  // typeof values serialize as six-byte JSON strings; nullable byte values need up to four bytes.
+  const textValueBytes = columns.length * (6 + 4)
+  // Array framing and a transport margin keep the SQL estimate conservative.
+  return objectBytes + textValueBytes + 64
+}
 
-// Object braces, commas, and `"column":` prefixes, plus a small per-row margin for the
-// transport envelope. JSON string lengths come from SQLite's own json_quote below.
-const SUMMARY_ROW_WIRE_FIXED_BYTES =
-  2 +
-  SUMMARY_DATABASE_COLUMNS.reduce(
-    (bytes, column, index) => bytes + column.length + 3 + (index === 0 ? 0 : 1),
-    0,
-  ) +
-  64
+const SUMMARY_ROW_WIRE_FIXED_BYTES = byteProjectionFixedBytes(SUMMARY_TEXT_COLUMNS)
 
+const SUMMARY_TEXT_RAW_BYTES_SQL = SUMMARY_TEXT_COLUMNS.map(
+  (column) => `CASE WHEN ${column} IS NULL THEN 0 ELSE length(CAST(${column} AS BLOB)) END`,
+).join(" +\n  ")
+
+const SUMMARY_MAX_TEXT_BYTES_SQL = `max(${SUMMARY_TEXT_COLUMNS.map(
+  (column) => `CASE WHEN ${column} IS NULL THEN 0 ELSE length(CAST(${column} AS BLOB)) END`,
+).join(", ")})`
+
+const SUMMARY_STORAGE_OK_SQL = `
+  typeof(id) = 'integer' AND
+  ${SUMMARY_TEXT_COLUMNS.map(
+    (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
+  ).join(" AND\n  ")} AND
+  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  typeof(created_at) = 'integer'
+`
+
+// Exact summary reads return uppercase hex strings, so twice the stored text bytes plus a
+// conservative fixed envelope is a byte-faithful upper bound without invoking json_quote.
 const SUMMARY_WIRE_BYTES_SQL = `
-  ${SUMMARY_ROW_WIRE_FIXED_BYTES} +
+  ${SUMMARY_ROW_WIRE_FIXED_BYTES} + 2 * (${SUMMARY_TEXT_RAW_BYTES_SQL}) +
   length(CAST(id AS BLOB)) +
-  ${SUMMARY_TEXT_COLUMNS.map((column) => `length(CAST(json_quote(${column}) AS BLOB))`).join(
-    " +\n  ",
-  )} +
   CASE WHEN actor_account_id IS NULL THEN 4
        ELSE length(CAST(actor_account_id AS BLOB)) END +
   CASE WHEN actor_employee_id IS NULL THEN 4
        ELSE length(CAST(actor_employee_id AS BLOB)) END +
   length(CAST(created_at AS BLOB))
 `
-
-const DETAIL_DATABASE_COLUMNS = [
-  "id",
-  "event_id",
-  "request_id",
-  "actor_account_id",
-  "actor_employee_id",
-  "action",
-  "target_type",
-  "target_id",
-  "outcome",
-  "reason_code",
-  "authorization_json",
-  "before_json",
-  "after_json",
-  "metadata_json",
-  "client_ip",
-  "client_name",
-  "created_at",
-] as const
 
 const DETAIL_TEXT_COLUMNS = [
   "event_id",
@@ -108,49 +97,69 @@ const DETAIL_TEXT_COLUMNS = [
   "client_name",
 ] as const
 
+const DETAIL_ROW_WIRE_FIXED_BYTES = byteProjectionFixedBytes(DETAIL_TEXT_COLUMNS)
+
 type DetailTextColumn = (typeof DETAIL_TEXT_COLUMNS)[number]
+type SummaryTextColumn = (typeof SUMMARY_TEXT_COLUMNS)[number]
 
-const DETAIL_SELECT_COLUMNS = DETAIL_DATABASE_COLUMNS.join(", ")
+const SUMMARY_DESCRIPTOR_LAYOUT_COLUMNS = [
+  "actor_account_id",
+  "actor_employee_id",
+  ...SUMMARY_TEXT_COLUMNS.map(
+    (column) =>
+      `CASE WHEN ${column} IS NULL THEN NULL ` +
+      `ELSE length(CAST(${column} AS BLOB)) END AS ${column}_bytes`,
+  ),
+  ...SUMMARY_TEXT_COLUMNS.map((column) => `typeof(${column}) AS ${column}_type`),
+].join(", ")
 
-// Object braces, commas, and `"column":` prefixes in JSON.stringify(D1Result.results).
-// Deriving this from the projection keeps the wire estimate in sync when columns change.
-const DETAIL_ROW_WIRE_FIXED_BYTES =
-  2 +
-  DETAIL_DATABASE_COLUMNS.reduce(
-    (bytes, column, index) => bytes + column.length + 3 + (index === 0 ? 0 : 1),
-    0,
-  )
+const DETAIL_DESCRIPTOR_LAYOUT_COLUMNS = [
+  "actor_account_id",
+  "actor_employee_id",
+  ...DETAIL_TEXT_COLUMNS.map(
+    (column) =>
+      `CASE WHEN ${column} IS NULL THEN NULL ` +
+      `ELSE length(CAST(${column} AS BLOB)) END AS ${column}_bytes`,
+  ),
+  ...DETAIL_TEXT_COLUMNS.map((column) => `typeof(${column}) AS ${column}_type`),
+].join(", ")
 
+const DETAIL_TEXT_RAW_BYTES_SQL = DETAIL_TEXT_COLUMNS.map(
+  (column) => `CASE WHEN ${column} IS NULL THEN 0 ELSE length(CAST(${column} AS BLOB)) END`,
+).join(" +\n  ")
+
+const DETAIL_MAX_TEXT_BYTES_SQL = `max(${DETAIL_TEXT_COLUMNS.map(
+  (column) => `CASE WHEN ${column} IS NULL THEN 0 ELSE length(CAST(${column} AS BLOB)) END`,
+).join(", ")})`
+
+const DETAIL_STORAGE_OK_SQL = `
+  typeof(id) = 'integer' AND
+  ${DETAIL_TEXT_COLUMNS.map(
+    (column) => `(typeof(${column}) = 'text' OR typeof(${column}) = 'null')`,
+  ).join(" AND\n  ")} AND
+  (typeof(actor_account_id) = 'integer' OR typeof(actor_account_id) = 'null') AND
+  (typeof(actor_employee_id) = 'integer' OR typeof(actor_employee_id) = 'null') AND
+  typeof(created_at) = 'integer'
+`
+
+const DETAIL_RAW_BYTES_SQL = `
+  (${DETAIL_TEXT_RAW_BYTES_SQL}) +
+  CASE WHEN actor_account_id IS NULL THEN 0
+       ELSE length(CAST(actor_account_id AS BLOB)) END +
+  CASE WHEN actor_employee_id IS NULL THEN 0
+       ELSE length(CAST(actor_employee_id AS BLOB)) END +
+  length(CAST(created_at AS BLOB))
+`
+
+// Normal detail reads return hex, whose payload is exactly two ASCII bytes per stored text byte.
 const DETAIL_WIRE_BYTES_SQL = `
-  ${DETAIL_ROW_WIRE_FIXED_BYTES} +
+  ${DETAIL_ROW_WIRE_FIXED_BYTES} + 2 * (${DETAIL_TEXT_RAW_BYTES_SQL}) +
   length(CAST(id AS BLOB)) +
-  ${DETAIL_TEXT_COLUMNS.map((column) => `length(CAST(json_quote(${column}) AS BLOB))`).join(
-    " +\n  ",
-  )} +
   CASE WHEN actor_account_id IS NULL THEN 4
        ELSE length(CAST(actor_account_id AS BLOB)) END +
   CASE WHEN actor_employee_id IS NULL THEN 4
        ELSE length(CAST(actor_employee_id AS BLOB)) END +
   length(CAST(created_at AS BLOB))
-`
-
-const DETAIL_RAW_BYTES_SQL = `
-  length(CAST(COALESCE(event_id, '') AS BLOB)) +
-  length(CAST(COALESCE(request_id, '') AS BLOB)) +
-  length(CAST(COALESCE(actor_account_id, '') AS BLOB)) +
-  length(CAST(COALESCE(actor_employee_id, '') AS BLOB)) +
-  length(CAST(COALESCE(action, '') AS BLOB)) +
-  length(CAST(COALESCE(target_type, '') AS BLOB)) +
-  length(CAST(COALESCE(target_id, '') AS BLOB)) +
-  length(CAST(COALESCE(outcome, '') AS BLOB)) +
-  length(CAST(COALESCE(reason_code, '') AS BLOB)) +
-  length(CAST(COALESCE(authorization_json, '') AS BLOB)) +
-  length(CAST(COALESCE(before_json, '') AS BLOB)) +
-  length(CAST(COALESCE(after_json, '') AS BLOB)) +
-  length(CAST(COALESCE(metadata_json, '') AS BLOB)) +
-  length(CAST(COALESCE(client_ip, '') AS BLOB)) +
-  length(CAST(COALESCE(client_name, '') AS BLOB)) +
-  length(CAST(COALESCE(created_at, '') AS BLOB))
 `
 
 const validIsoEpochSchema = z
@@ -190,60 +199,80 @@ type AuditDetailDatabaseRow = z.infer<typeof auditDetailDatabaseRowSchema>
 const auditSummaryDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
+  actor_account_id: actorIdSchema,
+  actor_employee_id: actorIdSchema,
   wire_bytes: z.number().int().safe().nonnegative(),
+  raw_bytes: z.number().int().safe().nonnegative(),
+  max_text_bytes: z.number().int().safe().nonnegative(),
+  storage_ok: z.number().int().min(0).max(1),
+  snapshot_max_id: z.number().int().safe(),
+  ...Object.fromEntries(
+    SUMMARY_TEXT_COLUMNS.map((column) => [
+      `${column}_bytes`,
+      z.number().int().safe().nonnegative().nullable(),
+    ]),
+  ),
+  ...Object.fromEntries(
+    SUMMARY_TEXT_COLUMNS.map((column) => [`${column}_type`, z.enum(["text", "null"])]),
+  ),
 })
 
-type AuditSummaryDescriptorRow = z.infer<typeof auditSummaryDescriptorRowSchema>
+type AuditSummaryDescriptorRow = z.infer<typeof auditSummaryDescriptorRowSchema> &
+  Record<`${SummaryTextColumn}_bytes`, number | null> &
+  Record<`${SummaryTextColumn}_type`, "text" | "null">
 
 const auditExportDescriptorRowSchema = z.strictObject({
   id: z.number().int().safe(),
   created_at: validIsoEpochSchema,
-  raw_bytes: z.number().int().safe().nonnegative(),
-  wire_bytes: z.number().int().safe().nonnegative(),
-})
-
-type AuditExportDescriptorRow = z.infer<typeof auditExportDescriptorRowSchema>
-
-type AuditSegmentLayoutRow = {
-  id: number
-  actor_account_id: number | null
-  actor_employee_id: number | null
-  created_at: number
-} & Record<`${DetailTextColumn}_bytes`, number | null>
-
-const auditSegmentLayoutRowSchema = z.strictObject({
-  id: z.number().int().safe(),
   actor_account_id: actorIdSchema,
   actor_employee_id: actorIdSchema,
-  created_at: validIsoEpochSchema,
+  raw_bytes: z.number().int().safe().nonnegative(),
+  wire_bytes: z.number().int().safe().nonnegative(),
+  max_text_bytes: z.number().int().safe().nonnegative(),
+  storage_ok: z.number().int().min(0).max(1),
   ...Object.fromEntries(
     DETAIL_TEXT_COLUMNS.map((column) => [
       `${column}_bytes`,
       z.number().int().safe().nonnegative().nullable(),
     ]),
   ),
+  ...Object.fromEntries(
+    DETAIL_TEXT_COLUMNS.map((column) => [`${column}_type`, z.enum(["text", "null"])]),
+  ),
 })
 
-const auditTextSegmentRowSchema = z.strictObject({
-  id: z.number().int().safe(),
-  created_at: validIsoEpochSchema,
-  chunk_hex: z.string(),
-})
+type AuditExportDescriptorRow = z.infer<typeof auditExportDescriptorRowSchema> &
+  Record<`${DetailTextColumn}_bytes`, number | null> &
+  Record<`${DetailTextColumn}_type`, "text" | "null">
 
-const SEGMENT_LAYOUT_SELECT_COLUMNS = [
+const UPPER_HEX = /^(?:[0-9A-F]{2})*$/u
+const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
+
+function textHexReadSelect(columns: ReadonlyArray<string>): string {
+  return columns
+    .flatMap((column) => [
+      `typeof(${column}) AS ${column}_type`,
+      `CASE WHEN ${column} IS NULL THEN NULL ` +
+        `ELSE hex(CAST(${column} AS BLOB)) END AS ${column}_value`,
+    ])
+    .join(", ")
+}
+
+const SUMMARY_HEX_SELECT_COLUMNS = [
   "id",
   "actor_account_id",
   "actor_employee_id",
   "created_at",
-  ...DETAIL_TEXT_COLUMNS.map(
-    (column) =>
-      `CASE WHEN ${column} IS NULL THEN NULL ` +
-      `ELSE length(CAST(${column} AS BLOB)) END AS ${column}_bytes`,
-  ),
+  textHexReadSelect(SUMMARY_TEXT_COLUMNS),
 ].join(", ")
 
-const UPPER_HEX = /^(?:[0-9A-F]{2})*$/u
-const FATAL_UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
+const DETAIL_HEX_SELECT_COLUMNS = [
+  "id",
+  "actor_account_id",
+  "actor_employee_id",
+  "created_at",
+  textHexReadSelect(DETAIL_TEXT_COLUMNS),
+].join(", ")
 
 const auditFiltersSchema = z.strictObject({
   actorAccountId: z.number().int().safe().optional(),
@@ -287,6 +316,19 @@ export type AuditEventPage = {
   previousCursor: string | null
 }
 
+type KeysetPosition = {
+  direction: "next" | "previous"
+  createdAt: number
+  id: number
+}
+
+type PageRange = {
+  first: AuditCursorAnchor
+  last: AuditCursorAnchor
+  hasPrevious: boolean
+  hasNext: boolean
+}
+
 function unavailable(cause: unknown): UnavailableError {
   return new UnavailableError("audit events are unavailable", "audit_unavailable", { cause })
 }
@@ -297,6 +339,10 @@ function exportTooLarge(): PayloadTooLargeError {
 
 function invalidQuery(cause: unknown): ValidationError {
   return new ValidationError("audit query is invalid", "audit_invalid_query", { cause })
+}
+
+function invalidCursorBinding(cause?: unknown): ValidationError {
+  return new ValidationError("audit cursor is invalid", "invalid_audit_cursor", { cause })
 }
 
 function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
@@ -349,8 +395,26 @@ function parseSummaryDescriptorRows(
   return results.map((row) => {
     const parsed = auditSummaryDescriptorRowSchema.safeParse(row)
     if (!parsed.success) throw unavailable(parsed.error)
+    if (parsed.data.storage_ok !== 1) {
+      throw unavailable(new Error("audit summary storage class is invalid"))
+    }
+    const typed = parsed.data as typeof parsed.data &
+      Record<`${SummaryTextColumn}_bytes`, number | null> &
+      Record<`${SummaryTextColumn}_type`, "text" | "null">
+    for (const column of SUMMARY_TEXT_COLUMNS) {
+      if ((typed[`${column}_type`] === "null") !== (typed[`${column}_bytes`] === null)) {
+        throw unavailable(new Error("audit summary text layout is inconsistent"))
+      }
+    }
+    const byteLengths = SUMMARY_TEXT_COLUMNS.map((column) => typed[`${column}_bytes`] ?? 0)
+    if (
+      byteLengths.reduce((total, bytes) => total + bytes, 0) !== typed.raw_bytes ||
+      Math.max(...byteLengths) !== typed.max_text_bytes
+    ) {
+      throw unavailable(new Error("audit summary text sizes are inconsistent"))
+    }
 
-    return parsed.data
+    return parsed.data as AuditSummaryDescriptorRow
   })
 }
 
@@ -360,23 +424,29 @@ function parseExportDescriptorRows(
   return results.map((row) => {
     const parsed = auditExportDescriptorRowSchema.safeParse(row)
     if (!parsed.success) throw unavailable(parsed.error)
+    if (parsed.data.storage_ok !== 1) {
+      throw unavailable(new Error("audit detail storage class is invalid"))
+    }
+    const typed = parsed.data as typeof parsed.data &
+      Record<`${DetailTextColumn}_bytes`, number | null> &
+      Record<`${DetailTextColumn}_type`, "text" | "null">
+    for (const column of DETAIL_TEXT_COLUMNS) {
+      if ((typed[`${column}_type`] === "null") !== (typed[`${column}_bytes`] === null)) {
+        throw unavailable(new Error("audit detail text layout is inconsistent"))
+      }
+    }
+    const byteLengths = DETAIL_TEXT_COLUMNS.map((column) => typed[`${column}_bytes`] ?? 0)
+    const expectedRawBytes =
+      byteLengths.reduce((total, bytes) => total + bytes, 0) +
+      (typed.actor_account_id === null ? 0 : String(typed.actor_account_id).length) +
+      (typed.actor_employee_id === null ? 0 : String(typed.actor_employee_id).length) +
+      String(typed.created_at).length
+    if (expectedRawBytes !== typed.raw_bytes || Math.max(...byteLengths) !== typed.max_text_bytes) {
+      throw unavailable(new Error("audit detail text sizes are inconsistent"))
+    }
 
-    return parsed.data
+    return parsed.data as AuditExportDescriptorRow
   })
-}
-
-function parseSegmentLayoutRow(result: unknown): AuditSegmentLayoutRow {
-  const parsed = auditSegmentLayoutRowSchema.safeParse(result)
-  if (!parsed.success) throw unavailable(parsed.error)
-
-  return parsed.data as AuditSegmentLayoutRow
-}
-
-function parseTextSegmentRow(result: unknown): z.infer<typeof auditTextSegmentRowSchema> {
-  const parsed = auditTextSegmentRowSchema.safeParse(result)
-  if (!parsed.success) throw unavailable(parsed.error)
-
-  return parsed.data
 }
 
 function decodeHexInto(
@@ -394,6 +464,76 @@ function decodeHexInto(
     if (!Number.isInteger(byte)) throw unavailable(new Error("audit text segment is invalid"))
     destination[destinationOffset + index] = byte
   }
+}
+
+function decodeHexText(value: unknown): string {
+  if (typeof value !== "string" || value.length % 2 !== 0 || !UPPER_HEX.test(value)) {
+    throw unavailable(new Error("audit text hex is invalid"))
+  }
+  const bytes = new Uint8Array(value.length / 2)
+  decodeHexInto(value, bytes.byteLength, bytes, 0)
+  return FATAL_UTF8_DECODER.decode(bytes)
+}
+
+function decodeTextProjection(
+  row: Record<string, unknown>,
+  columns: ReadonlyArray<string>,
+): Record<string, string | null> {
+  const decoded: Record<string, string | null> = {}
+  for (const column of columns) {
+    const storageType = row[`${column}_type`]
+    const value = row[`${column}_value`]
+    if (storageType === "null") {
+      if (value !== null) throw unavailable(new Error("audit null text projection changed"))
+      decoded[column] = null
+      continue
+    }
+    if (storageType !== "text") throw unavailable(new Error("audit text storage is invalid"))
+    decoded[column] = decodeHexText(value)
+  }
+  return decoded
+}
+
+function parseEncodedSummaryRows(
+  results: ReadonlyArray<unknown>,
+): ReadonlyArray<AuditSummaryDatabaseRow> {
+  return results.map((result) => {
+    if (typeof result !== "object" || result === null || Array.isArray(result)) {
+      throw unavailable(new Error("audit summary projection is invalid"))
+    }
+    const row = result as Record<string, unknown>
+    const decoded = decodeTextProjection(row, SUMMARY_TEXT_COLUMNS)
+    const parsed = auditSummaryDatabaseRowSchema.safeParse({
+      id: row.id,
+      actor_account_id: row.actor_account_id,
+      actor_employee_id: row.actor_employee_id,
+      created_at: row.created_at,
+      ...decoded,
+    })
+    if (!parsed.success) throw unavailable(parsed.error)
+    return parsed.data
+  })
+}
+
+function parseEncodedDetailRows(
+  results: ReadonlyArray<unknown>,
+): ReadonlyArray<AuditDetailDatabaseRow> {
+  return results.map((result) => {
+    if (typeof result !== "object" || result === null || Array.isArray(result)) {
+      throw unavailable(new Error("audit detail projection is invalid"))
+    }
+    const row = result as Record<string, unknown>
+    const decoded = decodeTextProjection(row, DETAIL_TEXT_COLUMNS)
+    return parseDetailRows([
+      {
+        id: row.id,
+        actor_account_id: row.actor_account_id,
+        actor_employee_id: row.actor_employee_id,
+        created_at: row.created_at,
+        ...decoded,
+      },
+    ])[0] as AuditDetailDatabaseRow
+  })
 }
 
 function toSummary(row: AuditSummaryDatabaseRow): AuditEventSummary {
@@ -423,11 +563,98 @@ function toDetail(row: AuditDetailDatabaseRow): AuditEventDetail {
   }
 }
 
-function cursorFor(
-  row: AuditSummaryDatabaseRow,
+function anchorOf(row: Pick<AuditSummaryDatabaseRow, "created_at" | "id">): AuditCursorAnchor {
+  return [row.created_at, row.id]
+}
+
+function pageRange(
+  rows: ReadonlyArray<Pick<AuditSummaryDatabaseRow, "created_at" | "id">>,
+  hasPrevious: boolean,
+  hasNext: boolean,
+): PageRange {
+  const first = rows.at(0)
+  const last = rows.at(-1)
+  if (first === undefined || last === undefined) {
+    throw unavailable(new Error("audit page range is empty"))
+  }
+
+  return { first: anchorOf(first), last: anchorOf(last), hasPrevious, hasNext }
+}
+
+function cursorForRange(
   direction: AuditCursorPosition["direction"],
+  snapshotMaxId: number,
+  limit: number,
+  filterFingerprint: string,
+  source: PageRange,
+  target: PageRange | null = null,
 ): string {
-  return encodeAuditCursor({ version: 1, direction, createdAt: row.created_at, id: row.id })
+  return encodeAuditCursor({
+    version: 2,
+    direction,
+    snapshotMaxId,
+    limit,
+    filterFingerprint,
+    sourceFirst: source.first,
+    sourceLast: source.last,
+    sourceHasPrevious: source.hasPrevious,
+    sourceHasNext: source.hasNext,
+    targetFirst: target?.first ?? null,
+    targetLast: target?.last ?? null,
+    targetHasPrevious: target?.hasPrevious ?? null,
+    targetHasNext: target?.hasNext ?? null,
+  })
+}
+
+function rangeFromCursor(cursor: AuditCursorPosition, target: boolean): PageRange {
+  if (target) {
+    if (
+      cursor.targetFirst === null ||
+      cursor.targetLast === null ||
+      cursor.targetHasPrevious === null ||
+      cursor.targetHasNext === null
+    ) {
+      throw invalidCursorBinding()
+    }
+    return {
+      first: cursor.targetFirst,
+      last: cursor.targetLast,
+      hasPrevious: cursor.targetHasPrevious,
+      hasNext: cursor.targetHasNext,
+    }
+  }
+
+  return {
+    first: cursor.sourceFirst,
+    last: cursor.sourceLast,
+    hasPrevious: cursor.sourceHasPrevious,
+    hasNext: cursor.sourceHasNext,
+  }
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = ""
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "")
+}
+
+async function auditFilterFingerprint(filters: AuditEventFilters): Promise<string> {
+  const canonical = JSON.stringify({
+    actorAccountId: filters.actorAccountId ?? null,
+    action: filters.action ?? null,
+    targetType: filters.targetType ?? null,
+    targetId: filters.targetId ?? null,
+    outcome: filters.outcome ?? null,
+    fromEpoch: filters.fromEpoch ?? null,
+    toEpoch: filters.toEpoch ?? null,
+  })
+  const digest = new Uint8Array(
+    await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(`open-karte:audit:cursor-filters:v2\0${canonical}`),
+    ),
+  )
+  return bytesToBase64Url(digest.slice(0, 16))
 }
 
 type SqlParts = { clauses: string[]; bindings: Array<string | number> }
@@ -457,7 +684,7 @@ function filterSql(filters: AuditEventFilters): SqlParts {
   return parts
 }
 
-function addCursorClause(parts: SqlParts, cursor: AuditCursorPosition): void {
+function addCursorClause(parts: SqlParts, cursor: KeysetPosition): void {
   const comparison = cursor.direction === "next" ? "<" : ">"
   const createdAtFirst = parts.bindings.push(cursor.createdAt)
   const createdAtSecond = parts.bindings.push(cursor.createdAt)
@@ -468,20 +695,55 @@ function addCursorClause(parts: SqlParts, cursor: AuditCursorPosition): void {
   )
 }
 
+function addSnapshotClause(parts: SqlParts, snapshotMaxId: number): void {
+  addBoundClause(parts, "id", "<=", snapshotMaxId)
+}
+
+function addInclusiveRangeClause(
+  parts: SqlParts,
+  first: AuditCursorAnchor,
+  last: AuditCursorAnchor,
+): void {
+  const firstCreatedAt = parts.bindings.push(first[0])
+  const firstCreatedAtAgain = parts.bindings.push(first[0])
+  const firstId = parts.bindings.push(first[1])
+  const lastCreatedAt = parts.bindings.push(last[0])
+  const lastCreatedAtAgain = parts.bindings.push(last[0])
+  const lastId = parts.bindings.push(last[1])
+  parts.clauses.push(
+    `(created_at < ?${firstCreatedAt} OR ` +
+      `(created_at = ?${firstCreatedAtAgain} AND id <= ?${firstId}))`,
+  )
+  parts.clauses.push(
+    `(created_at > ?${lastCreatedAt} OR ` +
+      `(created_at = ?${lastCreatedAtAgain} AND id >= ?${lastId}))`,
+  )
+}
+
 function summaryDescriptorSql(
   parts: SqlParts,
   ascending: boolean,
   limit: number,
+  snapshotMaxId: number | null,
 ): {
   sql: string
   bindings: ReadonlyArray<string | number>
 } {
   const limitIndex = parts.bindings.push(limit)
+  const snapshotSql =
+    snapshotMaxId === null
+      ? "(SELECT MAX(id) FROM audit_logs)"
+      : `?${parts.bindings.push(snapshotMaxId)}`
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
   const order = ascending ? "ASC" : "DESC"
 
   return {
-    sql: `SELECT id, created_at, (${SUMMARY_WIRE_BYTES_SQL}) AS wire_bytes
+    sql: `SELECT id, created_at, ${SUMMARY_DESCRIPTOR_LAYOUT_COLUMNS},
+                 (${SUMMARY_WIRE_BYTES_SQL}) AS wire_bytes,
+                 (${SUMMARY_TEXT_RAW_BYTES_SQL}) AS raw_bytes,
+                 (${SUMMARY_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
+                 (${SUMMARY_STORAGE_OK_SQL}) AS storage_ok,
+                 ${snapshotSql} AS snapshot_max_id
           FROM audit_logs ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
@@ -520,36 +782,40 @@ function admitSummaryDescriptors(
 function exportDescriptorSql(
   parts: SqlParts,
   limit: number,
-  rawByteBudget: number,
   wireByteBudget: number,
 ): { sql: string; bindings: ReadonlyArray<string | number> } {
   const limitIndex = parts.bindings.push(limit)
-  const rawBudgetIndex = parts.bindings.push(rawByteBudget)
   const wireBudgetIndex = parts.bindings.push(wireByteBudget - 1)
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
 
   return {
     sql: `WITH sized AS (
-            SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
-                   (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes
+            SELECT id, created_at, ${DETAIL_DESCRIPTOR_LAYOUT_COLUMNS},
+                   (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
+                   (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
+                   (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
+                   (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
             FROM audit_logs ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
           ), bounded AS (
-            SELECT id, created_at, raw_bytes, wire_bytes,
-                   SUM(raw_bytes) OVER (
-                     ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
-                   ) AS cumulative_raw_bytes,
-                   SUM(wire_bytes + 1) OVER (
+            SELECT id, created_at, actor_account_id, actor_employee_id,
+                   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_bytes`).join(", ")},
+                   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_type`).join(", ")},
+                   raw_bytes, wire_bytes, max_text_bytes, storage_ok,
+                   SUM(CASE WHEN max_text_bytes > ${D1_MAX_HEX_SOURCE_BYTES}
+                            THEN 256 ELSE wire_bytes + 1 END) OVER (
                      ORDER BY created_at DESC, id DESC ROWS UNBOUNDED PRECEDING
                    ) AS cumulative_wire_bytes,
                    ROW_NUMBER() OVER (ORDER BY created_at DESC, id DESC) AS row_number
             FROM sized
           )
-          SELECT id, created_at, raw_bytes, wire_bytes
+          SELECT id, created_at, actor_account_id, actor_employee_id,
+                 ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_bytes`).join(", ")},
+                 ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_type`).join(", ")},
+                 raw_bytes, wire_bytes, max_text_bytes, storage_ok
           FROM bounded
-          WHERE (cumulative_raw_bytes <= ?${rawBudgetIndex}
-                 AND cumulative_wire_bytes <= ?${wireBudgetIndex})
+          WHERE cumulative_wire_bytes <= ?${wireBudgetIndex}
              OR row_number = 1
           ORDER BY created_at DESC, id DESC`,
     bindings: parts.bindings,
@@ -586,35 +852,52 @@ export class AuditEventRepository {
     ascending: boolean,
   ): Promise<ReadonlyArray<AuditSummaryDatabaseRow>> {
     const order = ascending ? "ASC" : "DESC"
-    const summaryResult = await this.c.env.DB.prepare(
-      `SELECT ${SUMMARY_SELECT_COLUMNS}
-       FROM audit_logs
-       WHERE id IN (SELECT value FROM json_each(?1))
-       ORDER BY created_at ${order}, id ${order}`,
+    const hexDescriptors = descriptors.filter(
+      (descriptor) => descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES,
     )
-      .bind(summaryIdsJson(descriptors))
-      .all()
-    if (!summaryResult.success) throw new Error("audit summary query did not succeed")
+    const segmentedDescriptors = descriptors.filter(
+      (descriptor) => descriptor.max_text_bytes > D1_MAX_HEX_SOURCE_BYTES,
+    )
+    const rows: AuditSummaryDatabaseRow[] = []
 
-    const rows = parseSummaryRows(summaryResult.results)
+    if (hexDescriptors.length > 0) {
+      const summaryResult = await this.c.env.DB.prepare(
+        `SELECT ${SUMMARY_HEX_SELECT_COLUMNS}
+         FROM audit_logs
+         WHERE id IN (SELECT value FROM json_each(?1))
+         ORDER BY created_at ${order}, id ${order}`,
+      )
+        .bind(summaryIdsJson(hexDescriptors))
+        .all()
+      if (!summaryResult.success) throw new Error("audit summary query did not succeed")
+      rows.push(...parseEncodedSummaryRows(summaryResult.results))
+    }
+
+    for (const descriptor of segmentedDescriptors) {
+      rows.push(await this.loadSegmentedSummary(descriptor))
+    }
+
+    const rowsById = new Map(rows.map((row) => [row.id, row]))
+    const ordered = descriptors.map((descriptor) => rowsById.get(descriptor.id))
     if (
+      ordered.some((row) => row === undefined) ||
       rows.length !== descriptors.length ||
-      rows.some(
+      ordered.some(
         (row, index) =>
-          row.id !== descriptors[index]?.id || row.created_at !== descriptors[index]?.created_at,
+          row?.id !== descriptors[index]?.id || row?.created_at !== descriptors[index]?.created_at,
       )
     ) {
       throw new Error("audit summary rows changed during read")
     }
 
-    return rows
+    return ordered as AuditSummaryDatabaseRow[]
   }
 
   private async loadExactDetails(
     descriptors: ReadonlyArray<AuditExportDescriptorRow>,
   ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
     const detailResult = await this.c.env.DB.prepare(
-      `SELECT ${DETAIL_SELECT_COLUMNS}
+      `SELECT ${DETAIL_HEX_SELECT_COLUMNS}
        FROM audit_logs
        WHERE id IN (SELECT value FROM json_each(?1))
        ORDER BY created_at DESC, id DESC`,
@@ -623,7 +906,7 @@ export class AuditEventRepository {
       .all()
     if (!detailResult.success) throw new Error("audit detail query did not succeed")
 
-    const rows = parseDetailRows(detailResult.results)
+    const rows = parseEncodedDetailRows(detailResult.results)
     if (
       rows.length !== descriptors.length ||
       rows.some(
@@ -637,71 +920,153 @@ export class AuditEventRepository {
     return rows
   }
 
-  private async loadSegmentedDetail(
-    descriptor: AuditExportDescriptorRow,
-  ): Promise<AuditDetailDatabaseRow> {
-    const layoutResult = await this.c.env.DB.prepare(
-      `SELECT ${SEGMENT_LAYOUT_SELECT_COLUMNS}
-       FROM audit_logs WHERE id = ?1 LIMIT 1`,
+  private async loadDescriptorDetails(
+    descriptors: ReadonlyArray<AuditExportDescriptorRow>,
+  ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
+    const hexDescriptors = descriptors.filter(
+      (descriptor) => descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES,
     )
-      .bind(descriptor.id)
-      .all()
-    if (!layoutResult.success || layoutResult.results.length !== 1) {
-      throw new Error("audit segmented detail layout did not succeed")
+    const rows: AuditDetailDatabaseRow[] = []
+    if (hexDescriptors.length > 0) rows.push(...(await this.loadExactDetails(hexDescriptors)))
+    for (const descriptor of descriptors) {
+      if (descriptor.max_text_bytes <= D1_MAX_HEX_SOURCE_BYTES) continue
+      rows.push(await this.loadSegmentedDetail(descriptor))
     }
 
-    const layout = parseSegmentLayoutRow(layoutResult.results[0])
-    if (layout.id !== descriptor.id || layout.created_at !== descriptor.created_at) {
-      throw new Error("audit segmented detail changed during read")
+    const rowsById = new Map(rows.map((row) => [row.id, row]))
+    const ordered = descriptors.map((descriptor) => rowsById.get(descriptor.id))
+    if (
+      rows.length !== descriptors.length ||
+      ordered.some(
+        (row, index) =>
+          row?.id !== descriptors[index]?.id || row?.created_at !== descriptors[index]?.created_at,
+      )
+    ) {
+      throw new Error("audit detail rows changed during bounded read")
     }
+    return ordered as AuditDetailDatabaseRow[]
+  }
 
-    const rawBytes =
-      (layout.actor_account_id === null ? 0 : String(layout.actor_account_id).length) +
-      (layout.actor_employee_id === null ? 0 : String(layout.actor_employee_id).length) +
-      String(layout.created_at).length +
-      DETAIL_TEXT_COLUMNS.reduce((total, column) => total + (layout[`${column}_bytes`] ?? 0), 0)
-    if (rawBytes !== descriptor.raw_bytes) {
-      throw new Error("audit segmented detail size changed during read")
-    }
-
-    const text = {} as Record<DetailTextColumn, string | null>
-    for (const column of DETAIL_TEXT_COLUMNS) {
-      const byteLength = layout[`${column}_bytes`]
-      if (byteLength === null) {
+  private async loadSegmentedText(
+    descriptor: {
+      id: number
+      actor_account_id: number | null
+      actor_employee_id: number | null
+      created_at: number
+    } & Record<string, unknown>,
+    columns: ReadonlyArray<string>,
+  ): Promise<Record<string, string | null>> {
+    const buffers = new Map<string, Uint8Array>()
+    const offsets = new Map<string, number>()
+    const text: Record<string, string | null> = {}
+    for (const column of columns) {
+      const byteLength = descriptor[`${column}_bytes`]
+      const storageType = descriptor[`${column}_type`]
+      if (storageType === "null" && byteLength === null) {
         text[column] = null
         continue
       }
-
-      const bytes = new Uint8Array(byteLength)
-      for (let offset = 0; offset < byteLength; offset += DETAIL_TEXT_SEGMENT_BYTES) {
-        const expectedBytes = Math.min(DETAIL_TEXT_SEGMENT_BYTES, byteLength - offset)
-        const segmentResult = await this.c.env.DB.prepare(
-          `SELECT id, created_at,
-                  hex(substr(CAST(${column} AS BLOB), ?2, ${DETAIL_TEXT_SEGMENT_BYTES})) AS chunk_hex
-           FROM audit_logs WHERE id = ?1 LIMIT 1`,
-        )
-          .bind(descriptor.id, offset + 1)
-          .all()
-        if (!segmentResult.success || segmentResult.results.length !== 1) {
-          throw new Error("audit text segment query did not succeed")
-        }
-
-        const segment = parseTextSegmentRow(segmentResult.results[0])
-        if (segment.id !== descriptor.id || segment.created_at !== descriptor.created_at) {
-          throw new Error("audit text segment changed during read")
-        }
-        decodeHexInto(segment.chunk_hex, expectedBytes, bytes, offset)
+      if (
+        storageType !== "text" ||
+        typeof byteLength !== "number" ||
+        !Number.isSafeInteger(byteLength) ||
+        byteLength < 0
+      ) {
+        throw new Error("audit segmented text layout is invalid")
       }
-
-      text[column] = FATAL_UTF8_DECODER.decode(bytes)
+      buffers.set(column, new Uint8Array(byteLength))
+      offsets.set(column, 0)
     }
+
+    while ([...buffers].some(([column, bytes]) => (offsets.get(column) ?? 0) < bytes.length)) {
+      let sourceBudget = D1_MAX_HEX_SOURCE_BYTES
+      const bindings: number[] = [descriptor.id]
+      const selections: Array<{
+        column: string
+        offset: number
+        expectedBytes: number
+      }> = []
+      const projections: string[] = ["id", "created_at"]
+      for (const column of columns) {
+        const bytes = buffers.get(column)
+        if (bytes === undefined || sourceBudget === 0) continue
+        const offset = offsets.get(column) ?? 0
+        const expectedBytes = Math.min(bytes.length - offset, sourceBudget)
+        if (expectedBytes <= 0) continue
+        const offsetIndex = bindings.push(offset + 1)
+        const lengthIndex = bindings.push(expectedBytes)
+        projections.push(`typeof(${column}) AS ${column}_type`)
+        projections.push(
+          `hex(substr(CAST(${column} AS BLOB), ?${offsetIndex}, ?${lengthIndex})) ` +
+            `AS ${column}_chunk_hex`,
+        )
+        selections.push({ column, offset, expectedBytes })
+        sourceBudget -= expectedBytes
+      }
+      if (selections.length === 0) throw new Error("audit segmented text read made no progress")
+
+      const segmentResult = await this.c.env.DB.prepare(
+        `SELECT ${projections.join(", ")} FROM audit_logs WHERE id = ?1 LIMIT 1`,
+      )
+        .bind(...bindings)
+        .all()
+      if (!segmentResult.success || segmentResult.results.length !== 1) {
+        throw new Error("audit text segment query did not succeed")
+      }
+      const result = segmentResult.results[0]
+      if (typeof result !== "object" || result === null || Array.isArray(result)) {
+        throw new Error("audit text segment is invalid")
+      }
+      const row = result as Record<string, unknown>
+      if (row.id !== descriptor.id || row.created_at !== descriptor.created_at) {
+        throw new Error("audit text segment changed during read")
+      }
+      for (const selection of selections) {
+        if (row[`${selection.column}_type`] !== "text") {
+          throw new Error("audit text segment storage changed during read")
+        }
+        const chunkHex = row[`${selection.column}_chunk_hex`]
+        const bytes = buffers.get(selection.column)
+        if (bytes === undefined) throw new Error("audit text segment buffer is missing")
+        if (typeof chunkHex !== "string") throw new Error("audit text segment hex is missing")
+        decodeHexInto(chunkHex, selection.expectedBytes, bytes, selection.offset)
+        offsets.set(selection.column, selection.offset + selection.expectedBytes)
+      }
+    }
+
+    for (const [column, bytes] of buffers) text[column] = FATAL_UTF8_DECODER.decode(bytes)
+    return text
+  }
+
+  private async loadSegmentedSummary(
+    descriptor: AuditSummaryDescriptorRow,
+  ): Promise<AuditSummaryDatabaseRow> {
+    const text = await this.loadSegmentedText(descriptor, SUMMARY_TEXT_COLUMNS)
+    const rows = parseSummaryRows([
+      {
+        id: descriptor.id,
+        actor_account_id: descriptor.actor_account_id,
+        actor_employee_id: descriptor.actor_employee_id,
+        created_at: descriptor.created_at,
+        ...text,
+      },
+    ])
+    const row = rows[0]
+    if (row === undefined) throw new Error("audit segmented summary is missing")
+    return row
+  }
+
+  private async loadSegmentedDetail(
+    descriptor: AuditExportDescriptorRow,
+  ): Promise<AuditDetailDatabaseRow> {
+    const text = await this.loadSegmentedText(descriptor, DETAIL_TEXT_COLUMNS)
 
     const rows = parseDetailRows([
       {
-        id: layout.id,
-        actor_account_id: layout.actor_account_id,
-        actor_employee_id: layout.actor_employee_id,
-        created_at: layout.created_at,
+        id: descriptor.id,
+        actor_account_id: descriptor.actor_account_id,
+        actor_employee_id: descriptor.actor_employee_id,
+        created_at: descriptor.created_at,
         ...text,
       },
     ])
@@ -762,10 +1127,38 @@ export class AuditEventRepository {
     const cursor = parsed.cursor === null ? null : decodeAuditCursor(parsed.cursor)
 
     try {
+      const filterFingerprint = await auditFilterFingerprint(parsed.filters)
+      if (
+        cursor !== null &&
+        (cursor.limit !== parsed.limit || cursor.filterFingerprint !== filterFingerprint)
+      ) {
+        throw invalidCursorBinding()
+      }
+
       const parts = filterSql(parsed.filters)
-      if (cursor !== null) addCursorClause(parts, cursor)
-      const ascending = cursor?.direction === "previous"
-      const descriptorStatement = summaryDescriptorSql(parts, ascending, parsed.limit + 1)
+      const isExactRestore = cursor?.targetFirst !== null && cursor?.targetFirst !== undefined
+      if (cursor !== null) {
+        addSnapshotClause(parts, cursor.snapshotMaxId)
+        if (isExactRestore) {
+          const target = rangeFromCursor(cursor, true)
+          addInclusiveRangeClause(parts, target.first, target.last)
+        } else {
+          const source = rangeFromCursor(cursor, false)
+          const boundary = cursor.direction === "next" ? source.last : source.first
+          addCursorClause(parts, {
+            direction: cursor.direction,
+            createdAt: boundary[0],
+            id: boundary[1],
+          })
+        }
+      }
+      const ascending = !isExactRestore && cursor?.direction === "previous"
+      const descriptorStatement = summaryDescriptorSql(
+        parts,
+        ascending,
+        parsed.limit + 1,
+        cursor?.snapshotMaxId ?? null,
+      )
       const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
         .bind(...descriptorStatement.bindings)
         .all()
@@ -773,13 +1166,40 @@ export class AuditEventRepository {
         throw new Error("audit summary descriptor query did not succeed")
 
       const descriptors = parseSummaryDescriptorRows(descriptorResult.results)
+      const snapshotMaxId = cursor?.snapshotMaxId ?? descriptors[0]?.snapshot_max_id
+      if (
+        snapshotMaxId === undefined ||
+        descriptors.some((descriptor) => descriptor.snapshot_max_id !== snapshotMaxId)
+      ) {
+        if (descriptors.length === 0) {
+          return { items: [], nextCursor: null, previousCursor: null }
+        }
+        throw new Error("audit snapshot changed during read")
+      }
+
       const admitted = admitSummaryDescriptors(descriptors, parsed.limit)
       if (admitted.length === 0) {
         return { items: [], nextCursor: null, previousCursor: null }
       }
 
+      if (isExactRestore) {
+        const target = rangeFromCursor(cursor as AuditCursorPosition, true)
+        const first = descriptors.at(0)
+        const last = descriptors.at(-1)
+        if (
+          descriptors.length > parsed.limit ||
+          admitted.length !== descriptors.length ||
+          first?.created_at !== target.first[0] ||
+          first.id !== target.first[1] ||
+          last?.created_at !== target.last[0] ||
+          last.id !== target.last[1]
+        ) {
+          throw invalidCursorBinding()
+        }
+      }
+
       const queried = await this.loadExactSummaries(admitted, ascending)
-      const hasMore = descriptors.length > admitted.length
+      const hasMore = !isExactRestore && descriptors.length > admitted.length
       const pageRows = ascending ? [...queried].reverse() : queried
       const first = pageRows.at(0)
       const last = pageRows.at(-1)
@@ -788,14 +1208,82 @@ export class AuditEventRepository {
         return { items: [], nextCursor: null, previousCursor: null }
       }
 
-      return {
-        items: pageRows.map(toSummary),
-        nextCursor: cursor?.direction === "previous" || hasMore ? cursorFor(last, "next") : null,
-        previousCursor:
-          cursor?.direction === "next" || (cursor?.direction === "previous" && hasMore)
-            ? cursorFor(first, "previous")
-            : null,
+      let current: PageRange
+      if (isExactRestore && cursor !== null) {
+        current = rangeFromCursor(cursor, true)
+      } else if (cursor?.direction === "next") {
+        current = pageRange(pageRows, true, hasMore)
+      } else if (cursor?.direction === "previous") {
+        current = pageRange(pageRows, hasMore, true)
+      } else {
+        current = pageRange(pageRows, false, hasMore)
       }
+
+      let nextCursor: string | null = null
+      let previousCursor: string | null = null
+      if (isExactRestore && cursor !== null) {
+        const source = rangeFromCursor(cursor, false)
+        if (cursor.direction === "next") {
+          previousCursor = cursorForRange(
+            "previous",
+            snapshotMaxId,
+            parsed.limit,
+            filterFingerprint,
+            current,
+            source,
+          )
+          if (current.hasNext) {
+            nextCursor = cursorForRange(
+              "next",
+              snapshotMaxId,
+              parsed.limit,
+              filterFingerprint,
+              current,
+            )
+          }
+        } else {
+          nextCursor = cursorForRange(
+            "next",
+            snapshotMaxId,
+            parsed.limit,
+            filterFingerprint,
+            current,
+            source,
+          )
+          if (current.hasPrevious) {
+            previousCursor = cursorForRange(
+              "previous",
+              snapshotMaxId,
+              parsed.limit,
+              filterFingerprint,
+              current,
+            )
+          }
+        }
+      } else {
+        if (current.hasNext) {
+          nextCursor = cursorForRange(
+            "next",
+            snapshotMaxId,
+            parsed.limit,
+            filterFingerprint,
+            current,
+            cursor?.direction === "previous" ? rangeFromCursor(cursor, false) : null,
+          )
+        }
+        if (current.hasPrevious) {
+          previousCursor = cursorForRange(
+            "previous",
+            snapshotMaxId,
+            parsed.limit,
+            filterFingerprint,
+            current,
+            cursor?.direction === "next" ? rangeFromCursor(cursor, false) : null,
+          )
+        }
+      }
+
+      return { items: pageRows.map(toSummary), nextCursor, previousCursor }
     } catch (error) {
       rethrowRepositoryError(error)
     }
@@ -804,8 +1292,11 @@ export class AuditEventRepository {
   async findByEventId(eventId: string): Promise<AuditEventDetail | null> {
     try {
       const result = await this.c.env.DB.prepare(
-        `SELECT id, created_at, (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
-                (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes
+        `SELECT id, created_at, ${DETAIL_DESCRIPTOR_LAYOUT_COLUMNS},
+                (${DETAIL_RAW_BYTES_SQL}) AS raw_bytes,
+                (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
+                (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
+                (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
          FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
@@ -815,10 +1306,7 @@ export class AuditEventRepository {
       const descriptor = parseExportDescriptorRows(result.results).at(0)
       if (descriptor === undefined) return null
 
-      const row =
-        descriptor.wire_bytes + 2 > EXPORT_DETAIL_WIRE_CHUNK_BYTES
-          ? await this.loadSegmentedDetail(descriptor)
-          : (await this.loadExactDetails([descriptor]))[0]
+      const row = (await this.loadDescriptorDetails([descriptor]))[0]
       if (row === undefined) throw new Error("audit detail row is missing")
 
       return toDetail(row)
@@ -833,7 +1321,7 @@ export class AuditEventRepository {
     try {
       const exported: AuditEventDetail[] = []
       const sizeGuard = new AuditCsvByteCounter()
-      let position: AuditCursorPosition | null = null
+      let position: KeysetPosition | null = null
 
       while (true) {
         const remainingRows = EXPORT_MAX_ROWS - exported.length
@@ -842,7 +1330,6 @@ export class AuditEventRepository {
         const descriptorStatement = exportDescriptorSql(
           parts,
           Math.min(EXPORT_CHUNK_SIZE, remainingRows + 1),
-          Math.min(sizeGuard.remainingBytes, EXPORT_DETAIL_RAW_CHUNK_BYTES),
           EXPORT_DETAIL_WIRE_CHUNK_BYTES,
         )
         const descriptorResult = await this.c.env.DB.prepare(descriptorStatement.sql)
@@ -853,19 +1340,13 @@ export class AuditEventRepository {
         const descriptors = parseExportDescriptorRows(descriptorResult.results)
         if (descriptors.length === 0) break
         if (descriptors.length > remainingRows) throw exportTooLarge()
-        if ((descriptors[0]?.raw_bytes ?? 0) > sizeGuard.remainingBytes) throw exportTooLarge()
-
-        const requiresSegmentedRead =
-          (descriptors[0]?.wire_bytes ?? 0) + 2 > EXPORT_DETAIL_WIRE_CHUNK_BYTES
-        let rows: ReadonlyArray<AuditDetailDatabaseRow>
-        if (requiresSegmentedRead) {
-          if (descriptors.length !== 1 || descriptors[0] === undefined) {
-            throw new Error("audit export wire guard did not isolate a large row")
-          }
-          rows = [await this.loadSegmentedDetail(descriptors[0])]
-        } else {
-          rows = await this.loadExactDetails(descriptors)
+        let cumulativeRawBytes = 0
+        for (const descriptor of descriptors) {
+          cumulativeRawBytes += descriptor.raw_bytes
+          if (cumulativeRawBytes > sizeGuard.remainingBytes) throw exportTooLarge()
         }
+
+        const rows = await this.loadDescriptorDetails(descriptors)
         for (const row of rows) {
           const detail = toDetail(row)
           sizeGuard.add(detail)
@@ -874,7 +1355,7 @@ export class AuditEventRepository {
 
         const last = descriptors.at(-1)
         if (last === undefined) break
-        position = { version: 1, direction: "next", createdAt: last.created_at, id: last.id }
+        position = { direction: "next", createdAt: last.created_at, id: last.id }
       }
 
       return exported

@@ -320,8 +320,22 @@ expect(page.previousCursor).toBeNull()
 - [ ] cursor 改ざん、方向、境界、未知 version のテストを書く。
 
 ```ts
-const cursor = encodeAuditCursor({ version: 1, direction: "next", createdAt: 100, id: 20 })
-expect(decodeAuditCursor(cursor)).toEqual({ version: 1, direction: "next", createdAt: 100, id: 20 })
+const cursor = encodeAuditCursor({
+  version: 2,
+  direction: "next",
+  snapshotMaxId: 20,
+  limit: 2,
+  filterFingerprint: "AAAAAAAAAAAAAAAAAAAAAA",
+  sourceFirst: [100, 20],
+  sourceLast: [100, 19],
+  sourceHasPrevious: false,
+  sourceHasNext: true,
+  targetFirst: null,
+  targetLast: null,
+  targetHasPrevious: null,
+  targetHasNext: null,
+})
+expect(decodeAuditCursor(cursor).snapshotMaxId).toBe(20)
 expect(() => decodeAuditCursor("not-base64url")).toThrow("invalid_audit_cursor")
 ```
 
@@ -336,15 +350,15 @@ expect(toAuditCsv(rows)).toContain("\r\n")
 
 実行: `cd api && bun test src/infrastructure/audit src/lib/audit/audit-cursor.test.ts src/lib/audit/audit-csv.test.ts`
 
-- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件の狭い `(id, created_at, wire_bytes)` descriptor を先に取得し、指定 `limit` または保守的な四 MiB 累積要約 wire budget の早い方までを exact-ID 要約取得する。byte budget で短縮したページも前後 cursor を返し、単一要約行の超過は `audit_unavailable` とする。一覧 SQL は内部 ID と要約列だけを投影し、JSON 四列と client IP を取得しない。
+- [ ] repository を実装する。next は `(created_at < ? OR created_at = ? AND id < ?)` を降順取得し、previous は逆条件を昇順取得して結果を反転する。`limit + 1` 件の狭い descriptor を先に取得し、指定 `limit` または保守的な四 MiB 累積要約 wire budget の早い方までを byte-faithful 要約取得する。byte budget で短縮したページも前後 cursor を返し、単一要約行の超過は `audit_unavailable` とする。一覧 SQL は内部 ID と要約列の storage class、byte length だけを投影し、JSON 四列と client IP を取得しない。
 
 - [ ] 詳細と CSV 出力は非 null の JSON 四列を構文検証し、scalar と旧 JSON-string wrapper は再直列化せず受理する。壊れた JSON は `audit_unavailable` とし、一覧要約では詳細列を検証しない。
 
-- [ ] cursor は version、direction、createdAt、id の JSON を base64url 化し、Zod で検証する。秘密情報を含めないため署名は付けず、不正値は `ValidationError` で拒否する。
+- [ ] cursor は version 2 とし、direction、初回 snapshot の最大内部 ID、limit、正規化 filter fingerprint、移動元と任意の復元先ページの先頭・末尾 anchor と前後有無を、二百五十六文字以内の canonical base64url へ圧縮する。秘密情報を含めないため署名は付けない。limit/filter の変更、範囲逆転、snapshot 超過、未知 version、非 canonical 値は `ValidationError` で拒否する。snapshot より大きい内部 ID は日時にかかわらず後続ページから除外し、直後の逆方向移動は source/target range で元ページを完全復元する。
 
 - [ ] CSV は固定列順、RFC 4180、CRLF、UTF-8 BOM なしとし、文字列化後の先頭危険文字へ単一引用符を付ける。
 
-- [ ] 出力は狭い raw/wire byte descriptor と exact-ID 詳細取得の二段階にする。通常の exact-ID 取得は escaping と列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。単一行が通常上限を超えても raw byte が完成 CSV の残量以内なら、allowlist 済みの各 text 列を二百五十六 KiB の BLOB segment で取得し、全 byte の再構築後に先頭 BOM を原文の一部として保持する fatal UTF-8 decode を行う。D1 の各応答は十六 MiB 未満とし、取得件数は五万一件目までに止め、五万件または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
+- [ ] 出力は最大五千件の狭い descriptor window と bounded detail 取得の二段階にする。descriptor は全 text 列の `typeof` と BLOB byte length を検査し、text/null 以外、null/length 不整合、サイズ変更を fail closed にする。通常の exact-ID 取得は保存 byte を hex で読み、列名・JSON envelope を含む累積 wire byte を四 MiB 以内へ抑える。一列が九十九万九千 byte を超える場合は computed string 二百万 byte 上限へ届く前に、複数列合計九十九万九千 source byte 以下の `hex(substr(CAST(column AS BLOB), ...))` segment へ切り替える。全 byte の再構築後に `fatal: true, ignoreBOM: true` で一度だけ decode し、先頭 BOM を原文として保持する。segment 応答を二百万 byte 未満、repository query を一要求二十五回以下とし、五万一件目または完成 CSV 十六 MiB の超過を `audit_export_too_large` とする。
 
 - [ ] 対象テストを再実行する。
 

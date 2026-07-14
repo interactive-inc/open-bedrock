@@ -215,7 +215,8 @@ function tamperSegmentRead(
             const [first, ...rest] = result.results
             if (typeof first !== "object" || first === null) return { ...result, results: [] }
             const row = first as Record<string, unknown>
-            const chunkHex = row.chunk_hex
+            const chunkKey = Object.keys(row).find((key) => key.endsWith("_chunk_hex"))
+            const chunkHex = chunkKey === undefined ? undefined : row[chunkKey]
             if (typeof chunkHex !== "string" || chunkHex.length < 2) {
               return { ...result, results: [] }
             }
@@ -235,7 +236,7 @@ function tamperSegmentRead(
               results: [
                 {
                   ...row,
-                  chunk_hex: `${mode === "invalid-hex" ? "GG" : "80"}${chunkHex.slice(2)}`,
+                  [chunkKey as string]: `${mode === "invalid-hex" ? "GG" : "80"}${chunkHex.slice(2)}`,
                 },
                 ...rest,
               ],
@@ -297,6 +298,95 @@ async function insertWideSummaryRows(
     )
     .bind(count, Math.ceil(targetIdBytes / 2))
     .run()
+}
+
+async function insertMixedWidthSameSecondRows(db: D1Database, count: number): Promise<void> {
+  await db
+    .prepare(
+      `WITH RECURSIVE sequence(value) AS (
+         SELECT 1
+         UNION ALL
+         SELECT value + 1 FROM sequence WHERE value < ?1
+       )
+       INSERT INTO audit_logs
+         (id, event_id, request_id, action, target_type, target_id,
+          outcome, client_name, created_at)
+       SELECT value, 'mixed-' || value, 'mixed-request-' || value,
+              'legacy.mixed', 'legacy_target',
+              lower(hex(zeroblob(CASE value % 7
+                WHEN 0 THEN 175000
+                WHEN 1 THEN 250
+                WHEN 2 THEN 90000
+                WHEN 3 THEN 1500
+                WHEN 4 THEN 45000
+                WHEN 5 THEN 8000
+                ELSE 600
+              END))),
+              'succeeded', 'api', 100
+       FROM sequence`,
+    )
+    .bind(count)
+    .run()
+}
+
+const AUDIT_TEXT_COLUMNS = [
+  "event_id",
+  "request_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "authorization_json",
+  "before_json",
+  "after_json",
+  "metadata_json",
+  "client_ip",
+  "client_name",
+] as const
+
+type AuditTextColumn = (typeof AUDIT_TEXT_COLUMNS)[number]
+const AUDIT_SUMMARY_TEXT_COLUMNS = new Set<AuditTextColumn>([
+  "event_id",
+  "request_id",
+  "action",
+  "target_type",
+  "target_id",
+  "outcome",
+  "reason_code",
+  "client_name",
+])
+
+async function insertCorruptTextColumn(
+  db: D1Database,
+  column: AuditTextColumn,
+  corruptExpression: string,
+): Promise<void> {
+  const defaults: Record<AuditTextColumn, string> = {
+    event_id: "'byte-corrupt'",
+    request_id: "'byte-corrupt-request'",
+    action: "'legacy.corrupt'",
+    target_type: "'legacy_target'",
+    target_id: "'legacy-target'",
+    outcome: "'succeeded'",
+    reason_code: "'legacy_reason'",
+    authorization_json: "'{}'",
+    before_json: "'{}'",
+    after_json: "'{}'",
+    metadata_json: "'{}'",
+    client_ip: "'198.51.100.7'",
+    client_name: "'api'",
+  }
+  await db.exec("PRAGMA ignore_check_constraints = ON")
+  await db.exec(`
+    INSERT INTO audit_logs
+      (id, event_id, request_id, action, target_type, target_id, outcome, reason_code,
+       authorization_json, before_json, after_json, metadata_json, client_ip, client_name,
+       created_at)
+    VALUES (-1,
+      ${AUDIT_TEXT_COLUMNS.map((name) => (name === column ? corruptExpression : defaults[name])).join(", ")},
+      1700000000)
+  `)
 }
 
 describe("AuditEventRepository write contract", () => {
@@ -491,6 +581,85 @@ describe("AuditEventRepository write contract", () => {
 })
 
 describe("AuditEventRepository search contract", () => {
+  test("binds a snapshot and restores the exact mixed-width source page after next then previous", async () => {
+    const { context, db } = createTestContext()
+    await insertMixedWidthSameSecondRows(db, 400)
+    const repository = new AuditEventRepository(context)
+    const pages: Array<Awaited<ReturnType<AuditEventRepository["search"]>>> = []
+
+    let cursor: string | null = null
+    for (let index = 0; index < 5; index += 1) {
+      const page = await repository.search({ limit: 100, cursor, filters: {} })
+      pages.push(page)
+      expect(page.items.length).toBeGreaterThan(0)
+      cursor = page.nextCursor
+      expect(cursor).not.toBeNull()
+    }
+
+    const source = pages[3]
+    const target = pages[4]
+    const restored = await repository.search({
+      limit: 100,
+      cursor: target?.previousCursor ?? null,
+      filters: {},
+    })
+    expect(restored.items.map((item) => item.eventId)).toEqual(
+      source?.items.map((item) => item.eventId),
+    )
+
+    await repository.append(record({ eventId: "backdated-new", createdAt: 99 }))
+    const remainingIds: string[] = []
+    let page = target
+    let lastPage = target
+    while (page !== undefined) {
+      remainingIds.push(...page.items.map((item) => item.eventId))
+      lastPage = page
+      if (page.nextCursor === null) break
+      page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
+    }
+    expect(remainingIds).not.toContain("backdated-new")
+    const allForwardIds = [
+      ...pages.slice(0, 4).flatMap((item) => item.items.map((event) => event.eventId)),
+      ...remainingIds,
+    ]
+    expect(allForwardIds).toEqual(Array.from({ length: 400 }, (_, index) => `mixed-${400 - index}`))
+    expect(new Set(allForwardIds).size).toBe(400)
+
+    let backwardPage = lastPage
+    for (let index = 0; index < 3; index += 1) {
+      expect(backwardPage?.previousCursor).not.toBeNull()
+      const newer = await repository.search({
+        limit: 100,
+        cursor: backwardPage?.previousCursor ?? null,
+        filters: {},
+      })
+      const immediateForward = await repository.search({
+        limit: 100,
+        cursor: newer.nextCursor,
+        filters: {},
+      })
+      expect(immediateForward.items.map((item) => item.eventId)).toEqual(
+        backwardPage?.items.map((item) => item.eventId),
+      )
+      backwardPage = newer
+    }
+
+    expect(
+      await rejectionOf(
+        repository.search({ limit: 99, cursor: target?.previousCursor ?? null, filters: {} }),
+      ),
+    ).toBeInstanceOf(ValidationError)
+    expect(
+      await rejectionOf(
+        repository.search({
+          limit: 100,
+          cursor: target?.previousCursor ?? null,
+          filters: { action: "legacy.mixed" },
+        }),
+      ),
+    ).toBeInstanceOf(ValidationError)
+  })
+
   test("returns an empty stable page", async () => {
     const { context } = createTestContext()
     const repository = new AuditEventRepository(context)
@@ -665,7 +834,7 @@ describe("AuditEventRepository search contract", () => {
     const page = await repository.search({ limit: 1, cursor: null, filters: {} })
 
     expect(page.items[0]?.eventId).toBe("legacy--7")
-    expect(decodeAuditCursor(page.nextCursor ?? "").id).toBe(-7)
+    expect(decodeAuditCursor(page.nextCursor ?? "").sourceLast[1]).toBe(-7)
   })
 
   test("does not advertise a next page when exactly limit rows exist", async () => {
@@ -804,6 +973,66 @@ describe("AuditEventRepository search contract", () => {
 })
 
 describe("AuditEventRepository detail and corruption contract", () => {
+  test.each([...AUDIT_TEXT_COLUMNS])(
+    "rejects invalid UTF-8 bytes in stored %s without replacement decoding",
+    async (column) => {
+      const { context, db } = createTestContext()
+      await insertCorruptTextColumn(db, column, "CAST(X'80' AS TEXT)")
+      const repository = new AuditEventRepository(context)
+
+      if (AUDIT_SUMMARY_TEXT_COLUMNS.has(column)) {
+        await expectAuditUnavailable(repository.search({ limit: 50, cursor: null, filters: {} }))
+      } else {
+        expect(
+          (await repository.search({ limit: 50, cursor: null, filters: {} })).items,
+        ).toHaveLength(1)
+      }
+      if (column !== "event_id") {
+        await expectAuditUnavailable(repository.findByEventId("byte-corrupt"))
+      }
+      await expectAuditUnavailable(repository.export({ filters: {} }))
+    },
+  )
+
+  test.each([...AUDIT_TEXT_COLUMNS])(
+    "rejects non-text BLOB storage in %s even when its bytes spell valid text",
+    async (column) => {
+      const { context, db } = createTestContext()
+      await insertCorruptTextColumn(db, column, "CAST('replacement' AS BLOB)")
+      const repository = new AuditEventRepository(context)
+
+      if (AUDIT_SUMMARY_TEXT_COLUMNS.has(column)) {
+        await expectAuditUnavailable(repository.search({ limit: 50, cursor: null, filters: {} }))
+      } else {
+        expect(
+          (await repository.search({ limit: 50, cursor: null, filters: {} })).items,
+        ).toHaveLength(1)
+      }
+      if (column !== "event_id") {
+        await expectAuditUnavailable(repository.findByEventId("byte-corrupt"))
+      }
+      await expectAuditUnavailable(repository.export({ filters: {} }))
+    },
+  )
+
+  test("rejects invalid UTF-8 and non-text storage without replacement on every read family", async () => {
+    for (const corruptionSql of ["CAST(X'80' AS TEXT)", "CAST(X'EFBFBD' AS BLOB)"]) {
+      const { context, db } = createTestContext()
+      await db.exec(`
+        INSERT INTO audit_logs
+          (id, event_id, request_id, action, target_type, target_id,
+           outcome, client_name, created_at)
+        VALUES (-1, 'byte-corrupt', 'byte-corrupt-request', 'legacy.corrupt',
+                'legacy_target', ${corruptionSql}, 'succeeded', 'api', 1700000000)
+      `)
+      const repository = new AuditEventRepository(context)
+
+      await expectAuditUnavailable(repository.search({ limit: 50, cursor: null, filters: {} }))
+      await expectAuditUnavailable(repository.findByEventId("byte-corrupt"))
+      await expectAuditUnavailable(repository.export({ filters: {} }))
+    }
+  })
+
   test("returns legacy unknown vocabulary, nullable target, JSON text, and IP unchanged", async () => {
     const { context, db } = createTestContext()
     const repository = new AuditEventRepository(context)
@@ -839,7 +1068,34 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.findByEventId("missing")).toBeNull()
   })
 
-  test("preserves leading BOM text fields with a large segmented event ID on find and export", async () => {
+  test("preserves remote-valid BOM, Unicode, and JSON bytes in summary, detail, and export", async () => {
+    const { context, db } = createTestContext()
+    const metadataJson = JSON.stringify({ note: "\uFEFF値🔐", lines: "a\r\nb" })
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+           (id, event_id, request_id, action, target_type, target_id, outcome,
+            authorization_json, metadata_json, client_name, created_at)
+         VALUES (-1, 'remote-byte-faithful', 'remote-byte-request', 'legacy.unicode',
+                 'legacy_target', CAST(X'EFBBBF' AS TEXT) || '対象🔐', 'succeeded',
+                 '{"permission":"audit:read"}', ?1, 'api', 1700000000)`,
+      )
+      .bind(metadataJson)
+      .run()
+    const repository = new AuditEventRepository(context)
+
+    const summary = (await repository.search({ limit: 50, cursor: null, filters: {} })).items[0]
+    const detail = await repository.findByEventId("remote-byte-faithful")
+    const exported = (await repository.export({ filters: {} }))[0]
+
+    expect(summary?.targetId).toBe("\uFEFF対象🔐")
+    expect(detail?.targetId).toBe("\uFEFF対象🔐")
+    expect(detail?.metadataJson).toBe(metadataJson)
+    expect(exported?.targetId).toBe("\uFEFF対象🔐")
+    expect(exported?.metadataJson).toBe(metadataJson)
+  })
+
+  test("local-only >2 MB stress preserves leading BOM fields through segmented reads", async () => {
     const { context, db } = createTestContext()
     const bom = "\uFEFF"
     const eventId = "e".repeat(4 * 1024 * 1024)
@@ -892,7 +1148,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.export({ filters: {} })).toEqual([expected])
   })
 
-  test("rejects BOM-prefixed malformed metadata after a segmented find and export", async () => {
+  test("local-only >2 MB stress rejects BOM-prefixed malformed metadata after segmentation", async () => {
     const { context, db } = createTestContext()
     await db
       .prepare(
@@ -995,7 +1251,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.export({ filters: {} })).toEqual([])
   })
 
-  test("accepts exactly sixteen MiB and preserves a one-byte overflow as 413", async () => {
+  test("local-only >2 MB stress accepts exactly sixteen MiB and rejects one-byte overflow", async () => {
     const boundaryDetail: AuditEventDetail = {
       eventId: "legacy--1",
       requestId: "legacy-request--1",
@@ -1033,7 +1289,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     ).toBeInstanceOf(PayloadTooLargeError)
   })
 
-  test("keeps every D1 response bounded when a quote-heavy valid JSON row still fits CSV", async () => {
+  test("local-only >2 MB stress bounds segmented quote-heavy JSON that still fits CSV", async () => {
     const { context, db } = createTestContext()
     const metadataJson = JSON.stringify('"'.repeat(5_500_000))
     await insertLegacyRow(db, { eventId: "quote-heavy", metadataJson })
@@ -1054,7 +1310,8 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(csvBytes).toBeGreaterThan(16_500_000)
     expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
     expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
-    expect(segmentReads).toHaveLength(54)
+    expect(segmentReads).toHaveLength(12)
+    expect(Math.max(...segmentReads.map((read) => read.payloadBytes))).toBeLessThan(2_000_000)
     expect(reads.some((read) => read.sql.includes("json_each"))).toBe(false)
   })
 
@@ -1065,7 +1322,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     "changed-created-at",
     "invalid-hex",
     "invalid-utf8",
-  ] as const)("maps a segmented %s response to safe 503", async (mode) => {
+  ] as const)("local-only >2 MB stress maps a segmented %s response to safe 503", async (mode) => {
     const { context, db } = createTestContext()
     await insertLegacyRow(db, {
       eventId: `segment-${mode}`,
@@ -1076,9 +1333,9 @@ describe("AuditEventRepository detail and corruption contract", () => {
     await expectAuditUnavailable(new AuditEventRepository(context).export({ filters: {} }))
   })
 
-  test("keeps normal exact-ID detail batches inside the cumulative wire budget", async () => {
+  test("keeps byte-faithful hex detail batches inside the cumulative wire budget", async () => {
     const { context, db } = createTestContext()
-    const metadataJson = JSON.stringify('"'.repeat(600_000))
+    const metadataJson = JSON.stringify('"'.repeat(400_000))
     await insertLegacyRow(db, { id: 1, eventId: "wire-1", metadataJson, createdAt: 2 })
     await insertLegacyRow(db, { id: 2, eventId: "wire-2", metadataJson, createdAt: 1 })
     const reads = observeAllReads(context)
@@ -1087,14 +1344,38 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const exactReads = reads.filter((read) => read.sql.includes("json_each"))
 
     expect(rows.map((row) => row.eventId)).toEqual(["wire-1", "wire-2"])
-    expect(exactReads).toHaveLength(2)
+    expect(exactReads).toHaveLength(1)
     expect(Math.max(...exactReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
       4 * 1024 * 1024,
     )
     expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(false)
   })
 
-  test("bounds every detail read before rejecting an oversized multi-row export", async () => {
+  test("keeps remote-valid large segmented rows and export calls below D1 limits", async () => {
+    const { context, db, queryCount } = createCountingContext()
+    const metadataJson = JSON.stringify("値".repeat(600_000))
+    expect(new TextEncoder().encode(metadataJson).byteLength).toBeLessThan(2_000_000)
+    for (let id = 1; id <= 8; id += 1) {
+      await insertLegacyRow(db, {
+        id,
+        eventId: `remote-large-${id}`,
+        metadataJson,
+        createdAt: id,
+      })
+    }
+    const reads = observeAllReads(context)
+    const before = queryCount()
+
+    const rows = await new AuditEventRepository(context).export({ filters: {} })
+
+    expect(rows).toHaveLength(8)
+    expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
+    expect(queryCount() - before).toBe(18)
+    expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(16)
+    expect(reads.every((read) => read.payloadBytes < 2_000_000)).toBe(true)
+  })
+
+  test("local-only >2 MB stress bounds detail reads before rejecting a multi-row export", async () => {
     const { context, db } = createTestContext()
     const largeJson = JSON.stringify("x".repeat(9 * 1024 * 1024))
     await insertLegacyRow(db, { id: 1, eventId: "large-1", metadataJson: largeJson, createdAt: 2 })
@@ -1108,11 +1389,10 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
       AUDIT_CSV_MAX_BYTES,
     )
-    expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(49)
-    expect(reads).toHaveLength(52)
-    expect(descriptorReads).toHaveLength(2)
-    expect(descriptorReads.at(-1)?.rowCount).toBe(1)
-    expect(reads.at(-1)).toBe(descriptorReads.at(-1))
+    expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(0)
+    expect(descriptorReads).toHaveLength(1)
+    expect(descriptorReads[0]?.rowCount).toBe(2)
+    expect(reads).toEqual(descriptorReads)
   })
 
   test("exports in fixed keyset chunks instead of one unbounded query", async () => {
@@ -1126,12 +1406,14 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(queryCount() - before).toBeGreaterThan(1)
   })
 
-  test("allows fifty thousand filtered rows, rejects the next, and counts after filtering", async () => {
-    const { context, db } = createTestContext()
+  test("allows fifty thousand filtered rows within the D1 Free query budget, rejects the next, and counts after filtering", async () => {
+    const { context, db, queryCount } = createCountingContext()
     const repository = new AuditEventRepository(context)
     await insertBulkRows(db, 50_000)
 
+    const beforeSuccess = queryCount()
     expect(await repository.export({ filters: {} })).toHaveLength(50_000)
+    expect(queryCount() - beforeSuccess).toBe(23)
 
     await db
       .prepare(
@@ -1141,16 +1423,18 @@ describe("AuditEventRepository detail and corruption contract", () => {
                  'legacy.bulk', 'succeeded', 'api', 50001)`,
       )
       .run()
+    const beforeOverflow = queryCount()
     const observedReads = observeAllReads(context)
     expect(await rejectionOf(repository.export({ filters: {} }))).toBeInstanceOf(
       PayloadTooLargeError,
     )
     const descriptorReads = observedReads.filter((read) =>
-      read.sql.includes("cumulative_raw_bytes"),
+      read.sql.includes("cumulative_wire_bytes"),
     )
     expect(descriptorReads.reduce((total, read) => total + read.rowCount, 0)).toBe(50_001)
-    expect(descriptorReads.at(-1)?.rowCount).toBe(1)
-    expect(observedReads).toHaveLength(201)
+    expect(descriptorReads.at(-1)?.rowCount).toBeGreaterThan(0)
+    expect(queryCount() - beforeOverflow).toBe(21)
+    expect(observedReads.length).toBeLessThanOrEqual(25)
     expect(observedReads.at(-1)).toBe(descriptorReads.at(-1))
 
     await db
