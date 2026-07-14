@@ -10,12 +10,17 @@ import { Button } from "@/components/ui/button"
 type Props = {
   href: string
   label: string
+  prefetch?: boolean
 }
 
 export function BackButton(props: Props) {
   return (
-    <Button variant="ghost" nativeButton={false} render={<Link href={props.href} />}>
-      <ArrowLeft />
+    <Button
+      variant="ghost"
+      nativeButton={false}
+      render={<Link href={props.href} prefetch={props.prefetch} />}
+    >
+      <ArrowLeft data-icon="inline-start" aria-hidden="true" />
       {props.label}
     </Button>
   )

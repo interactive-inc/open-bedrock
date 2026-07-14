@@ -204,6 +204,13 @@ PageHeader（タイトル + アクションボタン）
 - 0 件時は `EmptyState` を表示
 - ページネーションは `TablePagination` で統一
 
+#### 監査・証跡画面の例外
+
+- read 自体が監査イベントを生む導線は、viewport や hover だけで記録を増やさないよう、すべての `Link` に `prefetch={false}` を指定する
+- opaque cursor は値や方向を解釈せず、`TablePagination` ではなく前後 cursor 専用のナビゲーションを使う
+- CSV は Server Action や RSC の payload に載せず、`Cache-Control: no-store` の Route Handler から API response body を stream する
+- IP や証跡 JSON は専用 permission で保護した詳細画面にだけ表示し、JSON は項目別に初期折り畳みとする
+
 ### 詳細ページ
 
 ```

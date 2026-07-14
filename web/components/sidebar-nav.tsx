@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Coins,
   DoorOpen,
+  FileClock,
   FileText,
   GitBranch,
   GraduationCap,
@@ -67,6 +68,7 @@ type SubItem = {
   label: string
   href: string
   requiredPermission?: string
+  prefetch?: boolean
 }
 
 type NavItem = {
@@ -74,6 +76,7 @@ type NavItem = {
   href: string
   icon: LucideIcon
   requiredPermission?: string
+  prefetch?: boolean
   children?: ReadonlyArray<SubItem>
 }
 
@@ -517,6 +520,13 @@ const navGroups: ReadonlyArray<NavGroup> = [
   {
     heading: "システム",
     items: [
+      {
+        label: "監査ログ",
+        href: "/admin/audit-events",
+        icon: FileClock,
+        requiredPermission: "audit:read",
+        prefetch: false,
+      },
       { label: "バッチ", href: "/batch", icon: Workflow, requiredPermission: "batch:view" },
       {
         label: "ロール管理",
@@ -741,7 +751,7 @@ export function SidebarNav(props: Props) {
                         <SidebarMenuButton
                           isActive={parentActive}
                           tooltip={item.label}
-                          render={<Link href={item.href} />}
+                          render={<Link href={item.href} prefetch={item.prefetch} />}
                         >
                           <Icon />
                           <span>
@@ -796,7 +806,7 @@ export function SidebarNav(props: Props) {
                             <SidebarMenuSubItem key={child.href}>
                               <SidebarMenuSubButton
                                 isActive={isSubItemActive(pathname, child.href)}
-                                render={<Link href={child.href} />}
+                                render={<Link href={child.href} prefetch={child.prefetch} />}
                               >
                                 <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
                                 <span>

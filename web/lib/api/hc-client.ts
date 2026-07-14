@@ -27,7 +27,9 @@ export async function createClient(): Promise<ApiClient> {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787"
 
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = {
+    "X-Open-Karte-Client": "web",
+  }
 
   if (token !== null) {
     headers.Authorization = `Bearer ${token}`

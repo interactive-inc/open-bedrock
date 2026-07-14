@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Coins,
   DoorOpen,
+  FileClock,
   FileText,
   GitBranch,
   GraduationCap,
@@ -164,6 +165,13 @@ const commands: ReadonlyArray<CommandEntry> = [
   { label: "退職届", href: "/resignations", icon: UserMinus, group: "依頼" },
   { label: "反社チェック", href: "/antisocial-checks", icon: ShieldCheck, group: "依頼" },
   {
+    label: "監査ログ",
+    href: "/admin/audit-events",
+    icon: FileClock,
+    group: "システム",
+    requiredPermission: "audit:read",
+  },
+  {
     label: "承認フロー修復",
     href: "/applications/workflow-repairs",
     icon: Workflow,
@@ -286,7 +294,7 @@ export function CommandPalette(props: Props) {
 
                   return (
                     <CommandItem key={command.href} onSelect={() => handleSelect(command.href)}>
-                      <Icon className="mr-2 size-4 shrink-0" />
+                      <Icon aria-hidden="true" />
                       <span>{command.label}</span>
                     </CommandItem>
                   )
