@@ -23,6 +23,17 @@ const D1_MAX_RESULT_VALUE_BYTES = 2_000_000
 const D1_SEGMENT_QUERY_SOURCE_BYTES = D1_MAX_HEX_SOURCE_BYTES * 2
 const EXPORT_MAX_SEGMENT_QUERIES = Math.ceil(AUDIT_CSV_MAX_BYTES / D1_SEGMENT_QUERY_SOURCE_BYTES)
 
+export type AuditDecisionCase<TDecision extends string> = Readonly<{
+  decision: TDecision
+  record: AuditEventRecord
+}>
+
+export type AuditDecisionAppendFragment<TDecision extends string> = Readonly<{
+  decisionId: string
+  decisions: readonly TDecision[]
+  statements: readonly [D1PreparedStatement, ...D1PreparedStatement[]]
+}>
+
 const SUMMARY_TEXT_COLUMNS = [
   "event_id",
   "request_id",
@@ -1602,6 +1613,119 @@ export class AuditEventRepository {
       record.clientName,
       record.createdAt,
     )
+  }
+
+  private prepareConditionalInsert<TDecision extends string>(
+    decisionId: string,
+    decisionCase: AuditDecisionCase<TDecision>,
+  ): D1PreparedStatement {
+    const { record } = decisionCase
+
+    return this.c.env.DB.prepare(
+      `INSERT INTO audit_logs
+         (event_id, request_id, actor_account_id, actor_employee_id, action,
+          target_type, target_id, outcome, reason_code, authorization_json,
+          before_json, after_json, metadata_json, client_ip, client_name, created_at)
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16
+       FROM audit_batch_decisions
+       WHERE decision_id = ?17 AND decision_value = ?18`,
+    ).bind(
+      record.eventId,
+      record.requestId,
+      record.actorAccountId,
+      record.actorEmployeeId,
+      record.action,
+      record.targetType,
+      record.targetId,
+      record.outcome,
+      record.reasonCode,
+      record.authorizationJson,
+      record.beforeJson,
+      record.afterJson,
+      record.metadataJson,
+      record.clientIp,
+      record.clientName,
+      record.createdAt,
+      decisionId,
+      decisionCase.decision,
+    )
+  }
+
+  prepareExclusiveAppend<TDecision extends string>(props: {
+    decisionId: string
+    cases: readonly [
+      AuditDecisionCase<TDecision>,
+      AuditDecisionCase<TDecision>,
+      ...AuditDecisionCase<TDecision>[],
+    ]
+  }): AuditDecisionAppendFragment<TDecision> {
+    const invalid = (cause?: unknown) =>
+      new ValidationError(
+        "audit decision fragment is invalid",
+        "audit_invalid_decision_fragment",
+        cause === undefined ? undefined : { cause },
+      )
+    const decisionIdResult = z.string().uuid().safeParse(props.decisionId)
+    if (!decisionIdResult.success) throw invalid(decisionIdResult.error)
+    if (!Array.isArray(props.cases) || props.cases.length < 2 || props.cases.length > 8) {
+      throw invalid()
+    }
+
+    const encoder = new TextEncoder()
+    const decisions: TDecision[] = []
+    const eventIds: string[] = []
+    for (const decisionCase of props.cases) {
+      if (
+        typeof decisionCase.decision !== "string" ||
+        encoder.encode(decisionCase.decision).byteLength < 1 ||
+        encoder.encode(decisionCase.decision).byteLength > 64 ||
+        typeof decisionCase.record?.eventId !== "string"
+      ) {
+        throw invalid()
+      }
+      decisions.push(decisionCase.decision)
+      eventIds.push(decisionCase.record.eventId)
+    }
+    if (
+      new Set(decisions).size !== decisions.length ||
+      new Set(eventIds).size !== eventIds.length
+    ) {
+      throw invalid()
+    }
+
+    const decisionPlaceholders = decisions.map((_, index) => `?${index + 2}`)
+    const eventIdPlaceholders = eventIds.map((_, index) => `?${decisions.length + index + 2}`)
+    const invariant = this.c.env.DB.prepare(
+      `SELECT CASE WHEN
+         (SELECT COUNT(*)
+            FROM audit_batch_decisions
+           WHERE decision_id = ?1
+             AND decision_value IN (${decisionPlaceholders.join(", ")})) = 1
+         AND
+         (SELECT COUNT(*)
+            FROM audit_logs
+           WHERE event_id IN (${eventIdPlaceholders.join(", ")})) = 1
+       THEN 1 ELSE json_extract('', '$') END AS ok`,
+    ).bind(props.decisionId, ...decisions, ...eventIds)
+    const deleteMarker = this.c.env.DB.prepare(
+      "DELETE FROM audit_batch_decisions WHERE decision_id = ?1",
+    ).bind(props.decisionId)
+    const [firstCase, ...remainingCases] = props.cases
+    const statements: [D1PreparedStatement, ...D1PreparedStatement[]] = [
+      this.prepareConditionalInsert(props.decisionId, firstCase),
+      ...remainingCases.map((decisionCase) =>
+        this.prepareConditionalInsert(props.decisionId, decisionCase),
+      ),
+      invariant,
+      deleteMarker,
+      abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+    ]
+
+    return Object.freeze({
+      decisionId: props.decisionId,
+      decisions: Object.freeze(decisions),
+      statements: Object.freeze(statements),
+    })
   }
 
   /** Returns the audit INSERT and its mandatory changed-row guard as one batch fragment. */

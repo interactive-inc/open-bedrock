@@ -1,12 +1,14 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { createAuditEvent } from "@/domain/audit/audit-event"
 import { decoyPasswordHash } from "@/lib/auth/decoy-password-hash"
 import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"
 import { isWrappedLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
+import { UnavailableError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -18,9 +20,19 @@ export type Command = {
   password: string
   jwtSecret: string
   userAgent: string | null
+  now: Date
 }
 
 export type InvalidCredentials = { reason: "invalid_credentials" }
+
+export type AuthenticatedSession = AccessTokenView & {
+  accountId: number
+  employeeId: number
+}
+
+function auditUnavailable(cause: unknown): UnavailableError {
+  return new UnavailableError("invalid email or password", "audit_unavailable", { cause })
+}
 
 // メールとパスワードを照合し、成功時にアクセストークンを発行する。
 // 認証は identities(provider=password, subject=正規化email) を正とし、account/employee を検証する。
@@ -28,7 +40,9 @@ export type InvalidCredentials = { reason: "invalid_credentials" }
 export class AuthenticateEmployee {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<AccessTokenView | InvalidCredentials | ApplicationError> {
+  async run(
+    command: Command,
+  ): Promise<AuthenticatedSession | InvalidCredentials | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
 
     const employeeRepository = new EmployeeRepository(this.c)
@@ -96,23 +110,47 @@ export class AuthenticateEmployee {
 
     const hashedToken = await refreshTokenHash(rawRefreshToken)
 
-    const refreshTokenRepository = new RefreshTokenRepository(this.c)
-
-    const nowEpoch = Math.floor(Date.now() / 1000)
-
-    const createResult = await refreshTokenRepository.create({
-      accountId: identity.accountId,
-      tokenHash: hashedToken,
-      familyId: crypto.randomUUID(),
-      tokenVersion: identity.tokenVersion,
-      userAgent: command.userAgent,
-      nowEpoch,
-    })
-
-    if (createResult instanceof Error) {
-      return new UnexpectedError("failed to create refresh token", { cause: createResult })
+    const nowEpoch = Math.floor(command.now.getTime() / 1_000)
+    let auditStatements: ReturnType<AuditEventRepository["prepareAppend"]>
+    try {
+      const auditRecord = createAuditEvent(
+        {
+          actorAccountId: identity.accountId,
+          actorEmployeeId: identity.employeeId,
+          action: "auth.session.login_succeeded",
+          target: { type: "account", id: String(identity.accountId) },
+          outcome: "succeeded",
+          reasonCode: null,
+          now: command.now,
+        },
+        this.c.var.auditContext,
+      )
+      auditStatements = new AuditEventRepository(this.c).prepareAppend(auditRecord)
+    } catch (cause) {
+      return auditUnavailable(cause)
     }
 
-    return { accessToken, refreshToken: rawRefreshToken }
+    const createResult = await new RefreshTokenRepository(this.c).createWithAudit(
+      {
+        accountId: identity.accountId,
+        tokenHash: hashedToken,
+        familyId: crypto.randomUUID(),
+        tokenVersion: identity.tokenVersion,
+        userAgent: command.userAgent,
+        nowEpoch,
+      },
+      auditStatements,
+    )
+
+    if (createResult instanceof Error) {
+      return auditUnavailable(createResult)
+    }
+
+    return {
+      accessToken,
+      refreshToken: rawRefreshToken,
+      accountId: identity.accountId,
+      employeeId: identity.employeeId,
+    }
   }
 }

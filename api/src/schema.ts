@@ -12,7 +12,15 @@ import type {
 } from "@/lib/schemas"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core"
 
 // このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
 // api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
@@ -1199,6 +1207,27 @@ export const auditLogs = sqliteTable(
 
 export type AuditLogRow = InferSelectModel<typeof auditLogs>
 
+// 監査付き batch の transaction 内だけで使う排他的 decision marker。
+export const auditBatchDecisions = sqliteTable(
+  "audit_batch_decisions",
+  {
+    decisionId: text("decision_id").primaryKey(),
+    decisionValue: text("decision_value").notNull(),
+  },
+  (table) => [
+    check(
+      "audit_batch_decisions_decision_id_length",
+      sql`length(${table.decisionId}) BETWEEN 1 AND 200`,
+    ),
+    check(
+      "audit_batch_decisions_decision_value_length",
+      sql`length(${table.decisionValue}) BETWEEN 1 AND 64`,
+    ),
+  ],
+)
+
+export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
+
 export const schema = {
   accounts,
   identities,
@@ -1208,6 +1237,7 @@ export const schema = {
   accountRoles,
   refreshTokens,
   auditLogs,
+  auditBatchDecisions,
   employees,
   departments,
   orgDepartments,

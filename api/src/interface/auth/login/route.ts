@@ -1,5 +1,8 @@
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
-import { ApplicationError } from "@/lib/errors"
+import { createAuditEvent } from "@/domain/audit/audit-event"
+import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { ApplicationError, UnavailableError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -50,11 +53,14 @@ export const POST = factory.createHandlers(
       }
     }
 
+    const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
+
     const result = await new AuthenticateEmployee(c).run({
       email,
       password: json.password,
       jwtSecret: c.env.JWT_SECRET,
       userAgent: c.req.header("User-Agent") ?? null,
+      now,
     })
 
     if (result instanceof ApplicationError) {
@@ -68,6 +74,28 @@ export const POST = factory.createHandlers(
       if (kv !== undefined) {
         await recordFailure(kv, ip)
         await recordAccountFailure(kv, email)
+      }
+
+      try {
+        const identifierHash = await hashAuditIdentifier(email, c.env.AUDIT_HMAC_SECRET)
+        const record = createAuditEvent(
+          {
+            actorAccountId: null,
+            actorEmployeeId: null,
+            action: "auth.session.login_denied",
+            target: { type: "session", id: null },
+            outcome: "denied",
+            reasonCode: "invalid_credentials",
+            metadata: { identifier_hash: identifierHash },
+            now,
+          },
+          c.var.auditContext,
+        )
+        await new AuditEventRepository(c).append(record)
+      } catch (cause) {
+        throw toHttpException(
+          new UnavailableError("invalid email or password", "audit_unavailable", { cause }),
+        )
       }
 
       throw new UnauthorizedError("invalid email or password")

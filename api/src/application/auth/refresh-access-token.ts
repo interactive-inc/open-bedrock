@@ -1,36 +1,43 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
-import { UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { UnavailableError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   refreshToken: string
   jwtSecret: string
   userAgent: string | null
+  now: Date
 }
 
 export type InvalidToken = { reason: "invalid_token" }
 
+function auditUnavailable(cause: unknown): UnavailableError {
+  return new UnavailableError("invalid or expired refresh token", "audit_unavailable", { cause })
+}
+
 /**
  * リフレッシュトークンを検証し、新しいアクセストークンとリフレッシュトークンを発行する。
- * 旧リフレッシュトークンは revoke し、同一 familyId で新トークンを発行する（ローテーション）。
- * トークン再利用を検知した場合は family 全体を revoke する。
+ * token mutation と decision に対応する監査イベントは一つの D1 batch で確定する。
  */
 export class RefreshAccessToken {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<AccessTokenView | InvalidToken | ApplicationError> {
     const refreshTokenRepository = new RefreshTokenRepository(this.c)
-
-    const nowEpoch = Math.floor(Date.now() / 1000)
-
+    const auditRepository = new AuditEventRepository(this.c)
+    const nowEpoch = Math.floor(command.now.getTime() / 1_000)
     const hashedToken = await refreshTokenHash(command.refreshToken)
-
     const existing = await refreshTokenRepository.findByHash(hashedToken)
 
     if (existing instanceof Error) {
@@ -38,29 +45,120 @@ export class RefreshAccessToken {
     }
 
     if (existing === null) {
-      return { reason: "invalid_token" }
-    }
-
-    if (existing.revokedAt !== null) {
-      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
-
-      if (revokeResult instanceof Error) {
-        return new UnexpectedError("failed to revoke reused token family", { cause: revokeResult })
+      try {
+        await auditRepository.append(
+          createAuditEvent(
+            {
+              actorAccountId: null,
+              actorEmployeeId: null,
+              action: "auth.session.refreshed",
+              target: { type: "session", id: null },
+              outcome: "denied",
+              reasonCode: "invalid_token",
+              now: command.now,
+            },
+            this.c.var.auditContext,
+          ),
+        )
+      } catch (cause) {
+        return auditUnavailable(cause)
       }
 
       return { reason: "invalid_token" }
     }
 
-    if (existing.expiresAt <= nowEpoch) {
+    const prepareFamilyAudit = async (props: {
+      action: "auth.session.refreshed" | "auth.session.reuse_detected"
+      actorAccountId: number | null
+      actorEmployeeId: number | null
+      outcome: "succeeded" | "denied"
+      reasonCode: "invalid_token" | "refresh_token_reuse" | null
+    }) => {
+      const familyHash = await hashAuditIdentifier(
+        `refresh-family:${existing.familyId}`,
+        this.c.env.AUDIT_HMAC_SECRET,
+      )
+      const record = createAuditEvent(
+        {
+          ...props,
+          target: { type: "account", id: String(existing.accountId) },
+          metadata: { family_id_hash: familyHash },
+          now: command.now,
+        },
+        this.c.var.auditContext,
+      )
+
+      return { familyHash, record }
+    }
+
+    if (existing.revokedAt !== null) {
+      let auditStatements: ReturnType<AuditEventRepository["prepareAppend"]>
+      try {
+        const { record } = await prepareFamilyAudit({
+          action: "auth.session.reuse_detected",
+          actorAccountId: null,
+          actorEmployeeId: null,
+          outcome: "denied",
+          reasonCode: "refresh_token_reuse",
+        })
+        auditStatements = auditRepository.prepareAppend(record)
+      } catch (cause) {
+        return auditUnavailable(cause)
+      }
+      const revokeResult = await refreshTokenRepository.revokeFamilyWithAudit({
+        familyId: existing.familyId,
+        nowEpoch,
+        auditStatements,
+      })
+      if (revokeResult instanceof Error) return auditUnavailable(revokeResult)
+
       return { reason: "invalid_token" }
     }
 
-    const accountAuthRepository = new AccountAuthRepository(this.c)
+    if (existing.expiresAt <= nowEpoch) {
+      try {
+        const { record } = await prepareFamilyAudit({
+          action: "auth.session.refreshed",
+          actorAccountId: null,
+          actorEmployeeId: null,
+          outcome: "denied",
+          reasonCode: "invalid_token",
+        })
+        await auditRepository.append(record)
+      } catch (cause) {
+        return auditUnavailable(cause)
+      }
 
-    const account = await accountAuthRepository.findById(existing.accountId)
+      return { reason: "invalid_token" }
+    }
 
+    const account = await new AccountAuthRepository(this.c).findById(existing.accountId)
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })
+    }
+
+    const revokeInvalidFamily = async (): Promise<InvalidToken | UnavailableError> => {
+      let auditStatements: ReturnType<AuditEventRepository["prepareAppend"]>
+      try {
+        const { record } = await prepareFamilyAudit({
+          action: "auth.session.refreshed",
+          actorAccountId: null,
+          actorEmployeeId: null,
+          outcome: "denied",
+          reasonCode: "invalid_token",
+        })
+        auditStatements = auditRepository.prepareAppend(record)
+      } catch (cause) {
+        return auditUnavailable(cause)
+      }
+      const revokeResult = await refreshTokenRepository.revokeFamilyWithAudit({
+        familyId: existing.familyId,
+        nowEpoch,
+        auditStatements,
+      })
+      if (revokeResult instanceof Error) return auditUnavailable(revokeResult)
+
+      return { reason: "invalid_token" }
     }
 
     if (
@@ -69,34 +167,16 @@ export class RefreshAccessToken {
       account.employeeId === null ||
       account.tokenVersion !== existing.tokenVersion
     ) {
-      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
-
-      if (revokeResult instanceof Error) {
-        return new UnexpectedError("failed to revoke invalid token family", { cause: revokeResult })
-      }
-
-      return { reason: "invalid_token" }
+      return revokeInvalidFamily()
     }
 
     const employee = await new EmployeeRepository(this.c).findById(account.employeeId)
-
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", { cause: employee })
     }
+    if (employee === null || employee.status === "retired") return revokeInvalidFamily()
 
-    if (employee === null || employee.status === "retired") {
-      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
-
-      if (revokeResult instanceof Error) {
-        return new UnexpectedError("failed to revoke retired token family", { cause: revokeResult })
-      }
-
-      return { reason: "invalid_token" }
-    }
-
-    const tokenSigner = new JoseTokenSigner()
-
-    const accessToken = await tokenSigner.sign(
+    const accessToken = await new JoseTokenSigner().sign(
       {
         accountId: existing.accountId,
         employeeId: account.employeeId,
@@ -104,35 +184,91 @@ export class RefreshAccessToken {
       },
       command.jwtSecret,
     )
-
     if (accessToken instanceof Error) {
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
     const newRawRefreshToken = crypto.randomUUID()
-
     const newHashedToken = await refreshTokenHash(newRawRefreshToken)
-
-    const rotateResult = await refreshTokenRepository.rotate({
-      tokenId: existing.id,
-      tokenHash: newHashedToken,
-      userAgent: command.userAgent,
-      nowEpoch,
-    })
-
-    if (rotateResult instanceof Error) {
-      return new UnexpectedError("failed to rotate refresh token", { cause: rotateResult })
+    let audit: AuditDecisionAppendFragment<RotationDecision>
+    try {
+      const familyHash = await hashAuditIdentifier(
+        `refresh-family:${existing.familyId}`,
+        this.c.env.AUDIT_HMAC_SECRET,
+      )
+      audit = auditRepository.prepareExclusiveAppend({
+        decisionId: crypto.randomUUID(),
+        cases: [
+          {
+            decision: "rotated",
+            record: createAuditEvent(
+              {
+                actorAccountId: existing.accountId,
+                actorEmployeeId: account.employeeId,
+                action: "auth.session.refreshed",
+                target: { type: "account", id: String(existing.accountId) },
+                outcome: "succeeded",
+                reasonCode: null,
+                metadata: { family_id_hash: familyHash },
+                now: command.now,
+              },
+              this.c.var.auditContext,
+            ),
+          },
+          {
+            decision: "reused",
+            record: createAuditEvent(
+              {
+                actorAccountId: null,
+                actorEmployeeId: null,
+                action: "auth.session.reuse_detected",
+                target: { type: "account", id: String(existing.accountId) },
+                outcome: "denied",
+                reasonCode: "refresh_token_reuse",
+                metadata: { family_id_hash: familyHash },
+                now: command.now,
+              },
+              this.c.var.auditContext,
+            ),
+          },
+          {
+            decision: "invalid",
+            record: createAuditEvent(
+              {
+                actorAccountId: null,
+                actorEmployeeId: null,
+                action: "auth.session.refreshed",
+                target: { type: "account", id: String(existing.accountId) },
+                outcome: "denied",
+                reasonCode: "invalid_token",
+                metadata: { family_id_hash: familyHash },
+                now: command.now,
+              },
+              this.c.var.auditContext,
+            ),
+          },
+        ],
+      })
+    } catch (cause) {
+      return auditUnavailable(cause)
     }
 
-    if (rotateResult === "reused") {
-      const revokeResult = await refreshTokenRepository.revokeFamily(existing.familyId, nowEpoch)
-
-      if (revokeResult instanceof Error) {
-        return new UnexpectedError("failed to revoke reused token family", { cause: revokeResult })
-      }
-
-      return { reason: "invalid_token" }
-    }
+    const rotateResult = await refreshTokenRepository.rotateWithAudit(
+      {
+        tokenId: existing.id,
+        oldTokenHash: hashedToken,
+        newTokenHash: newHashedToken,
+        accountId: existing.accountId,
+        employeeId: account.employeeId,
+        familyId: existing.familyId,
+        tokenVersion: existing.tokenVersion,
+        userAgent: command.userAgent,
+        nowEpoch,
+      },
+      audit,
+    )
+    if (rotateResult instanceof Error) return auditUnavailable(rotateResult)
+    if (rotateResult !== "rotated") return { reason: "invalid_token" }
 
     return { accessToken, refreshToken: newRawRefreshToken }
   }
