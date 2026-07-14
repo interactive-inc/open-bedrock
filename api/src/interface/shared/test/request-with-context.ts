@@ -10,6 +10,7 @@ export type Props = {
   body?: unknown
   now?: string
   headers?: Record<string, string>
+  companyTimeZone?: string
 }
 
 // テスト用の既定の固定時刻。created_at 等の検証はこの値を期待値にする。
@@ -34,6 +35,7 @@ export function requestWithContext(props: Props): Promise<Response> {
     DB: props.db,
     JWT_SECRET: props.jwtSecret,
     AUDIT_HMAC_SECRET: "request-with-context-audit-hmac-secret",
+    COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",
     NOW: props.now ?? defaultNow,
   }
 

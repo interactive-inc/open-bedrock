@@ -143,6 +143,7 @@ describe("lifecycle vocabulary", () => {
     expect(LIFECYCLE_ERROR_CODES).toContain("manager_cycle")
     expect(LIFECYCLE_ERROR_CODES).toContain("company_timezone_unavailable")
     expect(LIFECYCLE_ERROR_CODES).toContain("lifecycle_migration_incomplete")
+    expect(LIFECYCLE_ERROR_CODES).toContain("lifecycle_projection_mismatch")
   })
 })
 

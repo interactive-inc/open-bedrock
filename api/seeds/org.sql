@@ -24,4 +24,5 @@ INSERT INTO org_memberships (department_code, employee_code, manager_employee_co
   ('D003', 'E005', 'E004'),
   ('D004', 'E009', 'E001'),
   ('D004', 'E010', 'E009'),
-  ('D005', 'E013', 'E009');
+  ('D005', 'E013', 'E009'),
+  ('D006', 'E016', NULL);

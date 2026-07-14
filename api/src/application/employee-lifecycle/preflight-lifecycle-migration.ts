@@ -1,0 +1,42 @@
+import type { Context } from "@/env"
+import {
+  loadLegacyLifecycleSnapshot,
+  validateMigrationInput,
+  type LifecycleMigrationIssue,
+} from "@/application/employee-lifecycle/lifecycle-migration-support"
+import { ApplicationError } from "@/lib/errors"
+
+export type LifecycleMigrationPreflight = {
+  baselineOn: string
+  timeZone: string
+  legacySourceFingerprint: string
+  employeeCount: number
+  departmentCount: number
+  issues: ReadonlyArray<LifecycleMigrationIssue>
+}
+
+export class PreflightLifecycleMigration {
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+
+  async run(props: {
+    baselineOn: string
+    timeZone: string
+  }): Promise<LifecycleMigrationPreflight | ApplicationError> {
+    const inputError = validateMigrationInput(this.c, props)
+    if (inputError !== undefined) return inputError
+
+    const snapshot = await loadLegacyLifecycleSnapshot(this.c)
+    if (snapshot instanceof ApplicationError) return snapshot
+
+    return {
+      baselineOn: props.baselineOn,
+      timeZone: props.timeZone,
+      legacySourceFingerprint: snapshot.fingerprint,
+      employeeCount: snapshot.employees.length,
+      departmentCount: snapshot.departments.length,
+      issues: snapshot.issues,
+    }
+  }
+}

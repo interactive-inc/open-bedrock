@@ -21,6 +21,7 @@ export const auditActionSchema = z.enum([
   "employee.account.deleted",
   "employee.lifecycle.applied",
   "employee.lifecycle.corrected",
+  "employee.lifecycle.projections_rebuilt",
   "application.workflow.updated",
   "application.workflow.repaired",
   "application.delegation.created",
