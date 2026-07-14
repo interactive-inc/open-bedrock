@@ -27,6 +27,10 @@ export type RotateRefreshTokenProps = Readonly<{
   tokenVersion: number
   userAgent: string | null
   nowEpoch: number
+  lifecycleAccess?: Readonly<{
+    source: "lifecycle" | "legacy"
+    businessDate: string | null
+  }>
 }>
 
 type AuditAppendStatements = readonly [D1PreparedStatement, D1PreparedStatement]
@@ -167,7 +171,25 @@ export class RefreshTokenRepository {
                      OR a.token_version <> rt.token_version
                      OR a.token_version <> ?8
                      OR e.id IS NULL
-                     OR e.status = 'retired'
+                     OR (
+                       ?10 = 1 AND (
+                         e.archived_at IS NOT NULL
+                         OR NOT EXISTS (
+                           SELECT 1
+                           FROM employment_period_versions AS employment
+                           WHERE employment.employee_id = e.id
+                             AND employment.revision = (
+                               SELECT MAX(candidate.revision)
+                               FROM employment_period_versions AS candidate
+                               WHERE candidate.period_id = employment.period_id
+                             )
+                             AND employment.is_void = 0
+                             AND employment.starts_on <= ?11
+                             AND (employment.ends_on IS NULL OR ?11 < employment.ends_on)
+                         )
+                       )
+                     )
+                     OR (?10 = 0 AND e.status = 'retired')
                    THEN 'invalid'
                    ELSE 'rotated'
                  END
@@ -194,6 +216,8 @@ export class RefreshTokenRepository {
             props.employeeId,
             props.tokenVersion,
             props.nowEpoch,
+            props.lifecycleAccess?.source === "lifecycle" ? 1 : 0,
+            props.lifecycleAccess?.businessDate ?? "",
           ),
         db
           .prepare(

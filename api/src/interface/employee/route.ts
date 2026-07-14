@@ -22,6 +22,11 @@ import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
 import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { isoDate } from "@/lib/schemas"
+import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { UnavailableError } from "@/lib/errors"
 
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -31,6 +36,7 @@ export const GET = factory.createHandlers(
       q: z.string().optional(),
       dept: z.string().optional(),
       status: z.enum(["active", "leave", "retired"]).optional(),
+      as_of: isoDate.optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
@@ -73,14 +79,6 @@ export const GET = factory.createHandlers(
       }
     }
 
-    if (query.dept !== undefined) {
-      conditions.push(eq(employees.deptName, query.dept))
-    }
-
-    if (query.status !== undefined) {
-      conditions.push(eq(employees.status, query.status))
-    }
-
     const limit = toBoundedInt({
       raw: query.limit,
       fallback: DEFAULT_LIST_LIMIT,
@@ -94,6 +92,79 @@ export const GET = factory.createHandlers(
       min: 0,
       max: MAX_LIST_OFFSET,
     })
+
+    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+
+    if (migrationStatus === "verified") {
+      const resolvedDate =
+        query.as_of ??
+        resolveCompanyBusinessDate({
+          now: c.env.NOW ?? new Date().toISOString(),
+          timeZone: c.env.COMPANY_TIME_ZONE,
+        })
+      if (typeof resolvedDate !== "string") {
+        throw toHttpException(
+          new UnavailableError(
+            "failed to resolve company business date",
+            "company_timezone_unavailable",
+            { cause: resolvedDate },
+          ),
+        )
+      }
+      const candidates = await c.var.database
+        .select({ id: employees.id, code: employees.code, name: employees.name })
+        .from(employees)
+        .where(conditions.length === 0 ? undefined : and(...conditions))
+        .orderBy(asc(employees.code))
+      const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
+        candidates.map((row) => row.id),
+        resolvedDate,
+      )
+      if (states instanceof ApplicationError) throw toHttpException(states)
+      const filtered = candidates.filter((row) => {
+        const state = states.get(row.id)
+        if (state === undefined || state.archived || state.status === "prehire") return false
+        if (query.dept !== undefined && state.primaryAssignment?.departmentName !== query.dept) {
+          return false
+        }
+        return query.status === undefined || state.status === query.status
+      })
+      const page = filtered.slice(offset, offset + limit)
+      const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds(
+        page.map((row) => row.id),
+      )
+      if (emailByEmployeeId instanceof Error) {
+        throw toHttpException(
+          new UnexpectedError("failed to resolve emails", { cause: emailByEmployeeId }),
+        )
+      }
+      return c.json(
+        zAppEmployeeList.parse({
+          data: page.map((row) => {
+            const state = states.get(row.id)
+            return {
+              code: row.code,
+              name: row.name,
+              dept_name: state?.primaryAssignment?.departmentName ?? null,
+              position: state?.primaryAssignment?.positionTitle ?? null,
+              email: emailByEmployeeId.get(row.id) ?? "",
+              status: state?.status ?? "retired",
+            }
+          }),
+          total: filtered.length,
+        }),
+        200,
+      )
+    }
+
+    if (query.dept !== undefined) {
+      conditions.push(eq(employees.deptName, query.dept))
+    }
+
+    if (query.status !== undefined) {
+      conditions.push(eq(employees.status, query.status))
+    }
 
     const rows = await c.var.database
       .select({

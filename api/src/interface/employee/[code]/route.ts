@@ -18,9 +18,13 @@ import { z } from "zod"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
 import { hasPermission } from "@/lib/auth/has-permission"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
+import type { EmployeeLifecycleState } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { isoDate } from "@/lib/schemas"
 
 // 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。
-async function toResponseBody(c: Context, employee: Employee) {
+async function toResponseBody(c: Context, employee: Employee, state?: EmployeeLifecycleState) {
   const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([employee.id])
 
   if (emailByEmployeeId instanceof Error) {
@@ -36,56 +40,74 @@ async function toResponseBody(c: Context, employee: Employee) {
   return zAppEmployee.parse({
     code: employee.code,
     name: employee.name,
-    dept_name: employee.deptName,
-    position: employee.position,
+    dept_name: state?.primaryAssignment?.departmentName ?? employee.deptName,
+    position: state?.primaryAssignment?.positionTitle ?? employee.position,
     email: emailByEmployeeId.get(employee.id) ?? "",
-    status: employee.status,
+    status: state?.status ?? employee.status,
     role: toPrimaryRole(roleKeys),
   })
 }
 
 // GET /employees/:code — 従業員 1 件の詳細
-export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const session = c.var.session
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator("query", z.object({ as_of: isoDate.optional() })),
+  async (c) => {
+    const session = c.var.session
 
-  if (session === null) {
-    throw new UnauthorizedError()
-  }
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
 
-  const employee = await new GetEmployee(c).run({
-    code: validateCodeParam(c.req.param("code"), "employee"),
-  })
+    const employee = await new GetEmployee(c).run({
+      code: validateCodeParam(c.req.param("code"), "employee"),
+    })
 
-  if (employee instanceof ApplicationError) {
-    throw toHttpException(employee)
-  }
+    if (employee instanceof ApplicationError) {
+      throw toHttpException(employee)
+    }
 
-  if (employee.id !== session.employeeId) {
-    if (canReadEmployees(session) === false) {
+    if (employee.id !== session.employeeId) {
+      if (canReadEmployees(session) === false) {
+        throw new NotFoundError("employee not found")
+      }
+
+      if (hasPermission(session, "org:manage") === false) {
+        const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
+
+        if (authority instanceof Error) {
+          throw new InternalError("failed to resolve employee organization scope")
+        }
+
+        if (authority.managementChain === false && authority.departmentManager === false) {
+          throw new NotFoundError("employee not found")
+        }
+      }
+    }
+
+    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+    const state =
+      migrationStatus === "verified"
+        ? await new GetLifecycleState(c).run({
+            employeeId: employee.id,
+            asOf: c.req.valid("query").as_of,
+          })
+        : undefined
+    if (state instanceof ApplicationError) throw toHttpException(state)
+    if (state?.archived || state?.status === "prehire") {
       throw new NotFoundError("employee not found")
     }
 
-    if (hasPermission(session, "org:manage") === false) {
-      const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
+    const body = await toResponseBody(c, employee, state)
 
-      if (authority instanceof Error) {
-        throw new InternalError("failed to resolve employee organization scope")
-      }
-
-      if (authority.managementChain === false && authority.departmentManager === false) {
-        throw new NotFoundError("employee not found")
-      }
+    if (body instanceof ApplicationError) {
+      throw toHttpException(body)
     }
-  }
 
-  const body = await toResponseBody(c, employee)
-
-  if (body instanceof ApplicationError) {
-    throw toHttpException(body)
-  }
-
-  return c.json(body, 200)
-})
+    return c.json(body, 200)
+  },
+)
 
 // PUT /employees/:code — 従業員台帳の氏名・部署・役職・在籍状況を変更（権限が必要）。
 // email は identity(認証)、role は account_roles(認可)が正で、ここでは扱わない。

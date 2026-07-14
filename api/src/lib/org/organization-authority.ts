@@ -1,6 +1,11 @@
 import type { Context } from "@/env"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
 import { inArray } from "drizzle-orm"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import {
+  listLifecycleManagedEmployeeIds,
+  resolveLifecycleOrganizationAuthority,
+} from "@/lib/org/lifecycle-organization-authority"
 
 export type OrganizationAuthority = {
   directManager: boolean
@@ -23,6 +28,12 @@ export async function resolveOrganizationAuthority(
   actorEmployeeId: number,
   targetEmployeeId: number,
 ): Promise<OrganizationAuthority | Error> {
+  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+  if (migrationStatus instanceof Error) return migrationStatus
+  if (migrationStatus === "verified") {
+    return resolveLifecycleOrganizationAuthority(c, actorEmployeeId, targetEmployeeId)
+  }
+
   if (actorEmployeeId === targetEmployeeId) {
     return noAuthority
   }
@@ -90,6 +101,12 @@ export async function listManagedEmployeeIds(
   c: Context,
   actorEmployeeId: number,
 ): Promise<ReadonlyArray<number> | Error> {
+  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+  if (migrationStatus instanceof Error) return migrationStatus
+  if (migrationStatus === "verified") {
+    return listLifecycleManagedEmployeeIds(c, actorEmployeeId)
+  }
+
   try {
     const employeeRows = await c.var.database
       .select({ id: employees.id, code: employees.code })
