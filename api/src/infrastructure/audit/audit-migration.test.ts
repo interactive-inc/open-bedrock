@@ -1,5 +1,5 @@
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
-import { auditLogs } from "@/schema"
+import { auditBatchDecisions, auditLogs } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
@@ -11,6 +11,10 @@ const auditEventsMigrationPath = join(import.meta.dir, "../../../migrations/0015
 const appendGuardMigrationPath = join(
   import.meta.dir,
   "../../../migrations/0016_audit_append_guard.sql",
+)
+const batchDecisionMigrationPath = join(
+  import.meta.dir,
+  "../../../migrations/0017_audit_batch_decisions.sql",
 )
 
 type LegacyRowOverrides = {
@@ -94,9 +98,14 @@ async function applyAppendGuardMigration(db: D1Database): Promise<void> {
   await applyMigration(db, appendGuardMigrationPath)
 }
 
+async function applyBatchDecisionMigration(db: D1Database): Promise<void> {
+  await applyMigration(db, batchDecisionMigrationPath)
+}
+
 async function applyMigrations(db: D1Database): Promise<void> {
   await applyAuditEventsMigration(db)
   await applyAppendGuardMigration(db)
+  await applyBatchDecisionMigration(db)
 }
 
 describe("audit event migration", () => {
@@ -488,5 +497,49 @@ describe("audit event migration", () => {
       clientName: "web",
       createdAt: 1700000042,
     })
+  })
+
+  test("adds a bounded transaction-local audit decision table", async () => {
+    const db = await createLegacyDatabase("legacy note")
+    await applyMigrations(db)
+    const database = drizzle(db, { schema: { auditBatchDecisions } })
+
+    expect(
+      await db
+        .prepare(
+          `SELECT sql
+           FROM sqlite_master
+           WHERE type = 'table' AND name = 'audit_batch_decisions'`,
+        )
+        .first<string>("sql"),
+    ).toContain("WITHOUT ROWID")
+
+    await database.insert(auditBatchDecisions).values({
+      decisionId: "00000000-0000-4000-8000-000000000001",
+      decisionValue: "rotated",
+    })
+    expect(await database.select().from(auditBatchDecisions).get()).toEqual({
+      decisionId: "00000000-0000-4000-8000-000000000001",
+      decisionValue: "rotated",
+    })
+
+    expect(
+      db
+        .prepare(
+          `INSERT INTO audit_batch_decisions (decision_id, decision_value)
+           VALUES (?1, ?2)`,
+        )
+        .bind("x".repeat(201), "rotated")
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          `INSERT INTO audit_batch_decisions (decision_id, decision_value)
+           VALUES (?1, ?2)`,
+        )
+        .bind("00000000-0000-4000-8000-000000000002", "")
+        .run(),
+    ).rejects.toThrow()
   })
 })

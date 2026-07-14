@@ -1,36 +1,95 @@
 import type { Context } from "@/env"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
 import { refreshTokens } from "@/schema"
-import { eq, and, isNull } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
 const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60
+
+export type CreateRefreshTokenProps = Readonly<{
+  accountId: number
+  tokenHash: string
+  familyId: string
+  tokenVersion: number
+  userAgent: string | null
+  nowEpoch: number
+}>
+
+export type RotationDecision = "rotated" | "reused" | "invalid"
+
+export type RotateRefreshTokenProps = Readonly<{
+  tokenId: number
+  oldTokenHash: string
+  newTokenHash: string
+  accountId: number
+  employeeId: number
+  familyId: string
+  tokenVersion: number
+  userAgent: string | null
+  nowEpoch: number
+}>
+
+type AuditAppendStatements = readonly [D1PreparedStatement, D1PreparedStatement]
+
+function toRepositoryError(caught: unknown, message: string): Error {
+  return caught instanceof Error ? caught : new Error(message)
+}
+
+function hasExactRotationDecisions(
+  decisions: readonly string[],
+): decisions is readonly RotationDecision[] {
+  return (
+    decisions.length === 3 &&
+    new Set(decisions).size === 3 &&
+    decisions.includes("rotated") &&
+    decisions.includes("reused") &&
+    decisions.includes("invalid")
+  )
+}
+
+function parseRotationDecision(value: unknown): RotationDecision | null {
+  if (value === "rotated" || value === "reused" || value === "invalid") return value
+  return null
+}
 
 export class RefreshTokenRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
-  async create(props: {
-    accountId: number
-    tokenHash: string
-    familyId: string
-    tokenVersion: number
-    userAgent: string | null
-    nowEpoch: number
-  }): Promise<void | Error> {
+  async createWithAudit(
+    props: CreateRefreshTokenProps,
+    auditStatements: AuditAppendStatements,
+  ): Promise<void | Error> {
     try {
-      const db = this.c.var.database
+      const db = this.c.env.DB
 
-      await db.insert(refreshTokens).values({
-        accountId: props.accountId,
-        tokenHash: props.tokenHash,
-        familyId: props.familyId,
-        tokenVersion: props.tokenVersion,
-        expiresAt: props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
-        userAgent: props.userAgent,
-        createdAt: props.nowEpoch,
-      })
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO refresh_tokens
+               (account_id, token_hash, family_id, token_version, expires_at,
+                revoked_at, user_agent, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)
+             RETURNING id`,
+          )
+          .bind(
+            props.accountId,
+            props.tokenHash,
+            props.familyId,
+            props.tokenVersion,
+            props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
+            props.userAgent,
+            props.nowEpoch,
+          ),
+        abortWhenPreviousStatementChangedNoRows(db),
+        ...auditStatements,
+      ])
+      if (results.length !== 4 || results.some((result) => !result.success)) {
+        throw new Error("audited refresh token creation did not succeed")
+      }
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to create refresh token")
+      return toRepositoryError(caught, "failed to create refresh token with audit")
     }
   }
 
@@ -81,59 +140,192 @@ export class RefreshTokenRepository {
     }
   }
 
-  /**
-   * 未使用の旧トークンから後継を作り、旧トークンを失効する。D1 batch 内の条件付き
-   * INSERT/UPDATE により、同じ旧トークンから後継が複数発行されるのを防ぐ。
-   */
-  async rotate(props: {
-    tokenId: number
-    tokenHash: string
-    userAgent: string | null
+  async rotateWithAudit(
+    props: RotateRefreshTokenProps,
+    audit: AuditDecisionAppendFragment<RotationDecision>,
+  ): Promise<RotationDecision | Error> {
+    try {
+      if (!hasExactRotationDecisions(audit.decisions)) {
+        throw new Error("rotation audit decisions are invalid")
+      }
+
+      const db = this.c.env.DB
+
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO audit_batch_decisions (decision_id, decision_value)
+             VALUES (
+               ?1,
+               COALESCE((
+                 SELECT CASE
+                   WHEN rt.revoked_at IS NOT NULL THEN 'reused'
+                   WHEN a.id IS NULL
+                     OR a.status <> 'active'
+                     OR a.employee_id IS NULL
+                     OR a.employee_id <> ?7
+                     OR a.token_version <> rt.token_version
+                     OR a.token_version <> ?8
+                     OR e.id IS NULL
+                     OR e.status = 'retired'
+                   THEN 'invalid'
+                   ELSE 'rotated'
+                 END
+                 FROM refresh_tokens AS rt
+                 LEFT JOIN accounts AS a ON a.id = rt.account_id
+                 LEFT JOIN employees AS e ON e.id = a.employee_id
+                 WHERE rt.id = ?2
+                   AND rt.token_hash = ?3
+                   AND rt.account_id = ?4
+                   AND rt.family_id = ?5
+                   AND rt.token_version = ?6
+                   AND rt.expires_at > ?9
+               ), 'missing')
+             )
+             RETURNING decision_value`,
+          )
+          .bind(
+            audit.decisionId,
+            props.tokenId,
+            props.oldTokenHash,
+            props.accountId,
+            props.familyId,
+            props.tokenVersion,
+            props.employeeId,
+            props.tokenVersion,
+            props.nowEpoch,
+          ),
+        db
+          .prepare(
+            `UPDATE refresh_tokens
+             SET revoked_at = ?1
+             WHERE id = ?2
+               AND token_hash = ?3
+               AND revoked_at IS NULL
+               AND EXISTS (
+                 SELECT 1 FROM audit_batch_decisions
+                 WHERE decision_id = ?4 AND decision_value = 'rotated'
+               )`,
+          )
+          .bind(props.nowEpoch, props.tokenId, props.oldTokenHash, audit.decisionId),
+        db
+          .prepare(
+            `INSERT INTO refresh_tokens
+               (account_id, token_hash, family_id, token_version, expires_at,
+                revoked_at, user_agent, created_at)
+             SELECT rt.account_id, ?1, rt.family_id, rt.token_version, ?2, NULL, ?3, ?4
+             FROM refresh_tokens AS rt
+             JOIN audit_batch_decisions AS d
+               ON d.decision_id = ?5 AND d.decision_value = 'rotated'
+             WHERE rt.id = ?6
+               AND rt.token_hash = ?7
+               AND rt.revoked_at = ?4`,
+          )
+          .bind(
+            props.newTokenHash,
+            props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
+            props.userAgent,
+            props.nowEpoch,
+            audit.decisionId,
+            props.tokenId,
+            props.oldTokenHash,
+          ),
+        db
+          .prepare(
+            `UPDATE refresh_tokens
+             SET revoked_at = ?1
+             WHERE family_id = ?2
+               AND revoked_at IS NULL
+               AND EXISTS (
+                 SELECT 1 FROM audit_batch_decisions
+                 WHERE decision_id = ?3
+                   AND decision_value IN ('reused', 'invalid')
+               )`,
+          )
+          .bind(props.nowEpoch, props.familyId, audit.decisionId),
+        db
+          .prepare(
+            `SELECT CASE WHEN COALESCE((
+               SELECT CASE d.decision_value
+                 WHEN 'rotated' THEN
+                   (SELECT COUNT(*) FROM refresh_tokens
+                     WHERE id = ?2 AND token_hash = ?3 AND revoked_at = ?4) = 1
+                   AND
+                   (SELECT COUNT(*) FROM refresh_tokens
+                     WHERE family_id = ?5 AND revoked_at IS NULL) = 1
+                   AND
+                   EXISTS (SELECT 1 FROM refresh_tokens
+                     WHERE token_hash = ?6 AND family_id = ?5 AND revoked_at IS NULL)
+                 WHEN 'reused' THEN
+                   NOT EXISTS (SELECT 1 FROM refresh_tokens
+                     WHERE family_id = ?5 AND revoked_at IS NULL)
+                 WHEN 'invalid' THEN
+                   NOT EXISTS (SELECT 1 FROM refresh_tokens
+                     WHERE family_id = ?5 AND revoked_at IS NULL)
+                 ELSE 0
+               END
+               FROM audit_batch_decisions AS d
+               WHERE d.decision_id = ?1
+             ), 0) = 1
+             THEN 1 ELSE json_extract('', '$') END AS ok`,
+          )
+          .bind(
+            audit.decisionId,
+            props.tokenId,
+            props.oldTokenHash,
+            props.nowEpoch,
+            props.familyId,
+            props.newTokenHash,
+          ),
+        ...audit.statements,
+      ])
+
+      if (
+        results.length !== 5 + audit.statements.length ||
+        results.some((result) => !result.success)
+      ) {
+        throw new Error("audited refresh token rotation did not succeed")
+      }
+      const decisionRows = results[0]?.results
+      if (!Array.isArray(decisionRows) || decisionRows.length !== 1) {
+        throw new Error("rotation decision result is invalid")
+      }
+      const row = decisionRows[0]
+      if (typeof row !== "object" || row === null || Array.isArray(row)) {
+        throw new Error("rotation decision row is invalid")
+      }
+      const decision = parseRotationDecision((row as Record<string, unknown>).decision_value)
+      if (decision === null) throw new Error("rotation decision value is invalid")
+
+      return decision
+    } catch (caught) {
+      return toRepositoryError(caught, "failed to rotate refresh token with audit")
+    }
+  }
+
+  async revokeFamilyWithAudit(props: {
+    familyId: string
     nowEpoch: number
-  }): Promise<"rotated" | "reused" | Error> {
+    auditStatements: AuditAppendStatements
+  }): Promise<void | Error> {
     try {
       const db = this.c.env.DB
 
       const results = await db.batch([
         db
           .prepare(
-            `INSERT INTO refresh_tokens
-              (account_id, token_hash, family_id, token_version, expires_at, revoked_at, user_agent, created_at)
-             SELECT account_id, ?1, family_id, token_version, ?2, NULL, ?3, ?4
-             FROM refresh_tokens
-             WHERE id = ?5 AND revoked_at IS NULL
-             RETURNING id`,
+            `UPDATE refresh_tokens
+             SET revoked_at = ?1
+             WHERE family_id = ?2 AND revoked_at IS NULL`,
           )
-          .bind(
-            props.tokenHash,
-            props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
-            props.userAgent,
-            props.nowEpoch,
-            props.tokenId,
-          ),
-        db
-          .prepare(
-            "UPDATE refresh_tokens SET revoked_at = ?1 WHERE id = ?2 AND revoked_at IS NULL RETURNING id",
-          )
-          .bind(props.nowEpoch, props.tokenId),
+          .bind(props.nowEpoch, props.familyId),
+        ...props.auditStatements,
       ])
-
-      return results.at(0)?.results.length === 1 ? "rotated" : "reused"
+      if (results.length !== 3 || results.some((result) => !result.success)) {
+        throw new Error("audited refresh token family revocation did not succeed")
+      }
     } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to rotate refresh token")
-    }
-  }
-
-  async revokeFamily(familyId: string, nowEpoch: number): Promise<void | Error> {
-    try {
-      const db = this.c.var.database
-
-      await db
-        .update(refreshTokens)
-        .set({ revokedAt: nowEpoch })
-        .where(and(eq(refreshTokens.familyId, familyId), isNull(refreshTokens.revokedAt)))
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to revoke token family")
+      return toRepositoryError(caught, "failed to revoke token family with audit")
     }
   }
 }

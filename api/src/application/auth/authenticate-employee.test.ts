@@ -7,8 +7,10 @@ import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { UnavailableError } from "@/lib/errors"
 
 const jwtSecret = "authenticate-employee-test-secret"
+const now = new Date("2026-01-01T00:00:00.000Z")
 
 async function insertEmployee(
   db: D1Database,
@@ -55,6 +57,7 @@ describe("AuthenticateEmployee", () => {
       password: "supersecret",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -62,6 +65,47 @@ describe("AuthenticateEmployee", () => {
     }
 
     expect(result.accessToken.length > 0).toBe(true)
+    expect(result.accountId).toBe(1)
+    expect(result.employeeId).toBe(1)
+    expect(
+      await db
+        .prepare(
+          `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
+                  outcome, reason_code, authorization_json, before_json, after_json,
+                  metadata_json, client_ip, client_name, request_id, created_at
+           FROM audit_logs`,
+        )
+        .first<Record<string, unknown>>(),
+    ).toEqual({
+      actor_account_id: 1,
+      actor_employee_id: 1,
+      action: "auth.session.login_succeeded",
+      target_type: "account",
+      target_id: "1",
+      outcome: "succeeded",
+      reason_code: null,
+      authorization_json: null,
+      before_json: null,
+      after_json: null,
+      metadata_json: null,
+      client_ip: null,
+      client_name: "api",
+      request_id: "00000000-0000-4000-8000-000000000000",
+      created_at: 1_767_225_600,
+    })
+    expect(
+      await db
+        .prepare("SELECT created_at, expires_at FROM refresh_tokens")
+        .first<{ created_at: number; expires_at: number }>(),
+    ).toEqual({ created_at: 1_767_225_600, expires_at: 1_767_830_400 })
+
+    const persistedAudit = JSON.stringify(
+      await db.prepare("SELECT * FROM audit_logs").first<Record<string, unknown>>(),
+    )
+    expect(persistedAudit).not.toContain("you+new@example.com")
+    expect(persistedAudit).not.toContain("supersecret")
+    expect(persistedAudit).not.toContain(result.accessToken)
+    expect(persistedAudit).not.toContain(result.refreshToken)
   })
 
   test("rejects the wrong password with invalid_credentials", async () => {
@@ -76,6 +120,7 @@ describe("AuthenticateEmployee", () => {
       password: "wrong",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     expect(result).toEqual({ reason: "invalid_credentials" })
@@ -89,6 +134,7 @@ describe("AuthenticateEmployee", () => {
       password: "whatever",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     expect(result).toEqual({ reason: "invalid_credentials" })
@@ -110,6 +156,7 @@ describe("AuthenticateEmployee", () => {
       password: "legacy-password",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -146,6 +193,7 @@ describe("AuthenticateEmployee", () => {
       password: "wrapped-password",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -182,6 +230,7 @@ describe("AuthenticateEmployee", () => {
       password: "supersecret",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     // 在籍状態の漏えいを避けるため資格情報エラーと同一レスポンスを返す。
@@ -205,6 +254,7 @@ describe("AuthenticateEmployee", () => {
       password: "supersecret",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     if (result instanceof Error || "reason" in result) {
@@ -226,6 +276,7 @@ describe("AuthenticateEmployee", () => {
       password: "already-modern",
       jwtSecret,
       userAgent: null,
+      now,
     })
 
     const repository = new IdentityRepository(context)
@@ -238,5 +289,36 @@ describe("AuthenticateEmployee", () => {
 
     // 既に新形式なので、ハッシュ値そのものが変化していないこと。
     expect(found.secret).toBe(hash)
+  })
+
+  test("fails closed and rolls the refresh token back when the success audit insert fails", async () => {
+    const { context, db } = createTestContext()
+    const hash = await toPasswordHash("supersecret")
+    await insertEmployee(db, { id: 1, email: "you+audit@example.com", passwordHash: hash })
+    await db.exec(`
+      CREATE TRIGGER reject_test_audit_insert
+      BEFORE INSERT ON audit_logs
+      BEGIN
+        SELECT RAISE(ABORT, 'forced audit insert failure');
+      END;
+    `)
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+audit@example.com",
+      password: "supersecret",
+      jwtSecret,
+      userAgent: "application-test-agent",
+      now,
+    })
+
+    expect(result).toBeInstanceOf(UnavailableError)
+    expect((result as UnavailableError).code).toBe("audit_unavailable")
+    expect((result as UnavailableError).message).toBe("invalid email or password")
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+    ).toBe(0)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+    ).toBe(0)
   })
 })
