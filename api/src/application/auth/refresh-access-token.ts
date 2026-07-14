@@ -8,7 +8,7 @@ import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { assertAuditHmacSecret, hashAuditIdentifier } from "@/lib/audit/hash-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { UnavailableError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -34,6 +34,12 @@ export class RefreshAccessToken {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<AccessTokenView | InvalidToken | ApplicationError> {
+    try {
+      assertAuditHmacSecret(this.c.env.AUDIT_HMAC_SECRET)
+    } catch (cause) {
+      return auditUnavailable(cause)
+    }
+
     const refreshTokenRepository = new RefreshTokenRepository(this.c)
     const auditRepository = new AuditEventRepository(this.c)
     const nowEpoch = Math.floor(command.now.getTime() / 1_000)
