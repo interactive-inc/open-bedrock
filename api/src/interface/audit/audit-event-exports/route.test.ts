@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/app"
+import type { AuditEventDetail } from "@/domain/audit/audit-event"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
@@ -7,6 +8,7 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { AUDIT_CSV_MAX_BYTES, toAuditCsv } from "@/lib/audit/audit-csv"
 
 const jwtSecret = "audit-export-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -187,6 +189,58 @@ async function insertFormalWorstRows(db: D1Database): Promise<void> {
     SELECT value, CAST(value AS TEXT), 'r', 'a', 'succeeded', 'api', value
     FROM sequence
   `)
+}
+
+async function insertOneByteCsvOverflow(db: D1Database): Promise<void> {
+  const rowCount = 9
+  const createdAtBase = 1_767_225_600
+  const emptyRows: AuditEventDetail[] = Array.from({ length: rowCount }, (_, index) => {
+    const id = index + 1
+    return {
+      eventId: `l${id}`,
+      requestId: "r",
+      actorAccountId: null,
+      actorEmployeeId: null,
+      action: "a",
+      targetType: null,
+      targetId: null,
+      outcome: "succeeded",
+      reasonCode: null,
+      authorizationJson: null,
+      beforeJson: null,
+      afterJson: null,
+      metadataJson: JSON.stringify(""),
+      clientIp: null,
+      clientName: "api",
+      createdAt: createdAtBase + id,
+    }
+  })
+  const baseBytes = new TextEncoder().encode(toAuditCsv(emptyRows)).byteLength
+  const contentBytes = AUDIT_CSV_MAX_BYTES - baseBytes
+  const contentLengths = Array.from(
+    { length: rowCount },
+    (_, index) => Math.floor(contentBytes / rowCount) + (index < contentBytes % rowCount ? 1 : 0),
+  )
+  const statement = db.prepare(
+    `INSERT INTO audit_logs
+       (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
+     VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
+  )
+
+  expect(baseBytes + contentLengths.reduce((total, length) => total + length, 0) + 1).toBe(
+    AUDIT_CSV_MAX_BYTES + 1,
+  )
+  for (const [index, contentLength] of contentLengths.entries()) {
+    const id = index + 1
+    await statement
+      .bind(
+        id,
+        `l${id}`,
+        JSON.stringify("x".repeat(contentLength + (index === rowCount - 1 ? 1 : 0))),
+        createdAtBase + id,
+      )
+      .run()
+  }
 }
 
 describe("POST /audit-event-exports", () => {
@@ -395,6 +449,38 @@ describe("POST /audit-event-exports", () => {
     expect(requestQueries).toBe(19)
     expect(requestQueries).toBeLessThanOrEqual(28)
     expect(requestQueries).toBeLessThanOrEqual(33)
+  }, 20_000)
+
+  test("rejects a one-byte CSV overflow without leaking bytes and fails closed on self-audit", async () => {
+    const state = await createTestDb(false)
+    await insertOneByteCsvOverflow(state.db)
+
+    const response = await request(state.db, await token(3))
+    const payload = await response.text()
+    const audit = await latestAudit(state.db)
+
+    expect(response.status).toBe(413)
+    expect(JSON.parse(payload)).toEqual({
+      error: "audit export is too large",
+      code: "audit_export_too_large",
+    })
+    expect(payload).not.toContain("event_id,request_id")
+    expect(response.headers.get("Content-Disposition")).toBeNull()
+    expect(response.headers.get("Content-Type")).toContain("application/json")
+    expect(audit).toMatchObject({
+      action: "audit.event.exported",
+      outcome: "failed",
+      reason_code: "audit_export_too_large",
+    })
+
+    await failSelfAudit(state.db)
+    const unavailable = await request(state.db, await token(3))
+    const unavailablePayload = await unavailable.text()
+
+    expect(unavailable.status).toBe(503)
+    expect(JSON.parse(unavailablePayload)).toMatchObject({ code: "audit_unavailable" })
+    expect(unavailablePayload).not.toContain("event_id,request_id")
+    expect(unavailable.headers.get("Content-Disposition")).toBeNull()
   }, 20_000)
 
   test("keeps 50,000 rows and the formal worst shape within 28 full-request queries", async () => {

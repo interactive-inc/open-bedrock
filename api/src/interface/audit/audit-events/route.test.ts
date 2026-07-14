@@ -235,20 +235,23 @@ describe("GET /audit-events", () => {
     expect(after).toBe(before)
   })
 
-  test("rejects a malformed opaque cursor before repository SQL", async () => {
-    const state = await createTestDb()
-    state.resetQueries()
+  test.each(["", "not-a-version-two-cursor"])(
+    "rejects a malformed opaque cursor before repository SQL: %s",
+    async (cursor) => {
+      const state = await createTestDb()
+      state.resetQueries()
 
-    const response = await request(
-      state.db,
-      "/audit-events?cursor=not-a-version-two-cursor",
-      await token(1),
-    )
+      const response = await request(
+        state.db,
+        `/audit-events?cursor=${encodeURIComponent(cursor)}`,
+        await token(1),
+      )
 
-    expect(response.status).toBe(400)
-    expect(await response.json()).toMatchObject({ code: "invalid_audit_cursor" })
-    expect(state.queries()).toBe(6)
-  })
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ code: "invalid_audit_cursor" })
+      expect(state.queries()).toBe(6)
+    },
+  )
 
   test("does not expose internal, JSON, IP or mutable identity fields", async () => {
     const { db } = await createTestDb()

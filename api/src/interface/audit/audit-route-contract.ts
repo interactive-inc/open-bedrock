@@ -202,7 +202,7 @@ export function parseAuditListQuery(input: string): ParsedAuditListQuery {
     }
     const limit = rawLimit === undefined ? 50 : Number(rawLimit)
     const cursor = values.get("cursor")
-    if (cursor !== undefined && (cursor.length === 0 || cursor.length > AUDIT_CURSOR_MAX_LENGTH)) {
+    if (cursor !== undefined && cursor.length > AUDIT_CURSOR_MAX_LENGTH) {
       throw new Error("audit cursor is outside its length bound")
     }
 
