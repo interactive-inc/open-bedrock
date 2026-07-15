@@ -430,19 +430,19 @@ open-karte は従業員向けの社内基盤であり、顧客接点や商取引
 
 ### 業務知識と制度の根拠
 
-- 状態: 部分実装
-- 提供面: なし
-- 現状: `.docs/notes`、`.docs/references`、`.docs/sources` に手続き、用語、出典付き要約を置く
-- 不足または境界: 製品内ナレッジとの同期、更新期限、出典検証の自動化は行わない
-- 実装根拠: `.docs/index.md`、`.docs/notes`、`.docs/references`、`.docs/sources`
+- 状態: 実装済み
+- 提供面: API、Web、CLI、Schema、Repository Markdown
+- 現状: `.docs/governance` の Markdown を編集上の正本とし、安定 ID、責任ロール、適用対象、参照、手順、統制、見直し期限を製品へ同期する
+- 不足または境界: 法的判断、外部法令データベースとの自動照合、任意文書の意味検索は行わない
+- 実装根拠: `.docs/governance`、`api/src/domain/governance`、`web/app/(app)/governance`、`cli/app/governance`
 
 ### 規程の版管理と同意確認
 
-- 状態: 未実装
-- 提供面: なし
-- 現状: ナレッジ記事とリポジトリ文書を現在内容として保存する
-- 不足または境界: 規程の版、施行日、公開承認、対象者、既読、同意、再同意を記録しない
-- 実装根拠: `api/src/schema.ts` の `knowledgeArticles`、`.docs/notes`
+- 状態: 実装済み
+- 提供面: API、Web、CLI、Schema、Repository Markdown
+- 現状: 不変の公開版、施行期間、組織ロールによる公開承認、部署・組織ロール別の適用対象、内容ハッシュ付き確認記録、変更時の再確認を扱う
+- 不足または境界: 電子署名法上の署名、法的同意の成立判定、原本ファイルへの添付は扱わない
+- 実装根拠: `api/migrations/0020_governance.sql`、`api/src/application/governance`、`web/app/(app)/governance`、`cli/app/governance`
 
 ## リスク・法務・コンプライアンス
 

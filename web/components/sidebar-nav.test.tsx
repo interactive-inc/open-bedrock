@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarProvider } from "@/components/ui/sidebar"
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/admin/audit-events" }))
+vi.mock("next/navigation", () => ({ usePathname: () => "/governance/manage" }))
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => false }))
 vi.mock("next/link", () => ({
   default: ({
@@ -45,8 +45,20 @@ describe("SidebarNav audit entry", () => {
   })
 })
 
-function renderSidebar(permissions: ReadonlyArray<string>): void {
-  render(
+describe("SidebarNav governance entry", () => {
+  test("shows documents to readers and management only to managers", () => {
+    const view = renderSidebar(["governance:read"])
+    expect(screen.getByRole("link", { name: "一覧" }).getAttribute("href")).toBe("/governance")
+    expect(screen.queryByRole("link", { name: "整合性と組織ロール" })).toBeNull()
+    view.unmount()
+
+    renderSidebar(["governance:read", "governance:manage"])
+    expect(screen.getByRole("link", { name: "整合性と組織ロール" })).toBeTruthy()
+  })
+})
+
+function renderSidebar(permissions: ReadonlyArray<string>) {
+  return render(
     <SidebarProvider>
       <SidebarNav inboxCounts={inboxCounts} unreadNotificationCount={0} permissions={permissions} />
     </SidebarProvider>,

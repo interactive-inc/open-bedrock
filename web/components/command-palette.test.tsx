@@ -33,6 +33,23 @@ describe("CommandPalette audit entry", () => {
   })
 })
 
+describe("CommandPalette governance entries", () => {
+  test("filters reader and manager commands by effective permissions", () => {
+    const view = render(
+      <CommandPalette inboxCounts={inboxCounts} permissions={["governance:read"]} />,
+    )
+    openPalette()
+    expect(screen.getByText("規程・手続き")).toBeTruthy()
+    expect(screen.queryByText("規程の整合性と組織ロール")).toBeNull()
+    view.unmount()
+
+    render(<CommandPalette inboxCounts={inboxCounts} permissions={["governance:manage"]} />)
+    openPalette()
+    expect(screen.queryByText("規程・手続き")).toBeNull()
+    expect(screen.getByText("規程の整合性と組織ロール")).toBeTruthy()
+  })
+})
+
 function openPalette(): void {
   fireEvent.keyDown(document, { key: "k", ctrlKey: true })
 }

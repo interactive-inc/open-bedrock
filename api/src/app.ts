@@ -90,6 +90,18 @@ import * as budgetDetailRoute from "@/interface/budget/[id]/route"
 import * as goalCreateRoute from "@/interface/goal/goals/create-route"
 import * as goalEvaluationCreateRoute from "@/interface/goal/goals/[goal_id]/evaluations/route"
 import * as goalListRoute from "@/interface/goal/goals/route"
+import * as governanceCapabilitiesRoute from "@/interface/governance/capabilities/route"
+import * as governanceDocumentDetailRoute from "@/interface/governance/documents/[code]/route"
+import * as governanceDocumentAcknowledgeRoute from "@/interface/governance/documents/[code]/acknowledge/route"
+import * as governanceDocumentPublishRoute from "@/interface/governance/documents/[code]/versions/[version]/publish/route"
+import * as governanceDocumentReviewRoute from "@/interface/governance/documents/[code]/versions/[version]/review/route"
+import * as governanceDocumentSubmitReviewRoute from "@/interface/governance/documents/[code]/versions/[version]/submit-review/route"
+import * as governanceDocumentsRoute from "@/interface/governance/documents/route"
+import * as governanceDocumentSyncRoute from "@/interface/governance/documents/sync/route"
+import * as governanceImpactRoute from "@/interface/governance/impact/route"
+import * as governanceOrgRolesRoute from "@/interface/governance/org-roles/route"
+import * as governanceOrgRoleAssignmentsRoute from "@/interface/governance/org-roles/[code]/assignments/route"
+import * as governanceOrgRoleAssignmentDetailRoute from "@/interface/governance/org-roles/assignments/[id]/route"
 import * as knowledgeDetailRoute from "@/interface/knowledge/[id]/route"
 import * as knowledgeListRoute from "@/interface/knowledge/route"
 import * as leaveBalanceMeRoute from "@/interface/leave/balance/me/route"
@@ -245,9 +257,7 @@ let nowProductionGuardWarned = false
 const nowProductionGuardMiddleware = factory.createMiddleware(async (c, next) => {
   if (!nowProductionGuardWarned && c.env.CORS_ORIGIN !== undefined && c.env.NOW !== undefined) {
     nowProductionGuardWarned = true
-    console.warn(
-      "[SECURITY] NOW override is set in production — this affects all timestamps",
-    )
+    console.warn("[SECURITY] NOW override is set in production — this affects all timestamps")
   }
   await next()
 })
@@ -340,6 +350,27 @@ export const app = factory
   .get("/goals", ...goalListRoute.GET)
   .post("/goals", ...goalCreateRoute.POST)
   .post("/goals/:goal_id/evaluations", ...goalEvaluationCreateRoute.POST)
+  .get("/governance/documents", ...governanceDocumentsRoute.GET)
+  .post("/governance/documents/sync", ...governanceDocumentSyncRoute.POST)
+  .get("/governance/documents/:code", ...governanceDocumentDetailRoute.GET)
+  .post("/governance/documents/:code/acknowledge", ...governanceDocumentAcknowledgeRoute.POST)
+  .post(
+    "/governance/documents/:code/versions/:version/submit-review",
+    ...governanceDocumentSubmitReviewRoute.POST,
+  )
+  .post(
+    "/governance/documents/:code/versions/:version/review",
+    ...governanceDocumentReviewRoute.POST,
+  )
+  .post(
+    "/governance/documents/:code/versions/:version/publish",
+    ...governanceDocumentPublishRoute.POST,
+  )
+  .get("/governance/impact", ...governanceImpactRoute.GET)
+  .get("/governance/capabilities", ...governanceCapabilitiesRoute.GET)
+  .get("/governance/org-roles", ...governanceOrgRolesRoute.GET)
+  .post("/governance/org-roles/:code/assignments", ...governanceOrgRoleAssignmentsRoute.POST)
+  .delete("/governance/org-roles/assignments/:id", ...governanceOrgRoleAssignmentDetailRoute.DELETE)
   .get("/applications/admin", ...applicationAdminRoute.GET)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
   .get("/applications/workflow-repairs", ...applicationWorkflowRepairsRoute.GET)

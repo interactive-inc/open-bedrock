@@ -37,6 +37,17 @@ commands:
   kb add                      ナレッジを作成
   kb edit <id>                ナレッジを更新
   kb delete <id>              ナレッジを削除
+  governance list             規程・手続き一覧
+  governance show <code>      規程・手続き詳細
+  governance sync             .docs/governance の Markdown 原本を同期 ([--path])
+  governance impact           組織変更・参照・期限の矛盾を検査
+  governance submit-review <code>  指定版をレビューへ提出 (--version)
+  governance review <code>    組織ロールとして判断 (--version --org-role --decision)
+  governance publish <code>   指定版を公開 (--version)
+  governance acknowledge <code>  現行版を確認済みにする
+  governance org-roles        組織ロールと現在の担当者
+  governance assign-role <role>  組織ロールを割当
+  governance revoke-role <id> 組織ロール割当を終了
   leave request               休暇申請 (--type --start --end [--reason])
   leave mine                  自分の休暇申請一覧
   leave show <id>             休暇申請の詳細
