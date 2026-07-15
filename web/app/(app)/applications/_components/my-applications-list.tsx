@@ -2,13 +2,13 @@
 
 import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
-import { useActionState, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import {
   updateApplicationAction,
   resubmitApplicationAction,
   withdrawApplicationAction,
 } from "@/app/(app)/applications/actions"
-import type { ApplicationActionState } from "@/app/(app)/applications/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
@@ -135,26 +135,19 @@ function UpdateApplicationDialog(props: {
 
   const initialPayload = JSON.stringify(props.application.payload, null, 2)
 
-  async function reduce(
-    previousState: ApplicationActionState,
-    formData: FormData,
-  ): Promise<ApplicationActionState> {
-    const result = props.resubmit
-      ? await resubmitApplicationAction(previousState, formData)
-      : await updateApplicationAction(previousState, formData)
+  const selectedAction = props.resubmit ? resubmitApplicationAction : updateApplicationAction
 
-    if (result.ok) {
-      isDirty.current = false
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    selectedAction,
+    { ok: false, error: null },
+    props.resubmit ? "申請を再提出しました" : "申請内容を変更しました",
+    {
+      onSuccess: () => {
+        isDirty.current = false
+        setOpen(false)
+      },
+    },
+  )
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen && isDirty.current) {
@@ -217,10 +210,10 @@ function UpdateApplicationDialog(props: {
 
 // 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawApplicationButton(props: { applicationId: number }) {
-  const [_state, formAction, pending] = useActionState(withdrawApplicationAction, {
+  const [_state, formAction, pending] = useFormAction(withdrawApplicationAction, {
     ok: false,
     error: null,
-  })
+  }, "申請を取り下げました")
 
   return (
     <ConfirmActionDialog

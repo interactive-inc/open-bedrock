@@ -1,11 +1,11 @@
 "use client"
 
-import { useActionState } from "react"
 import {
   cancelOnboardingAssignmentAction,
   rescheduleOnboardingAssignmentAction,
 } from "@/app/(app)/onboarding/actions"
 import type { AssignmentMutationState } from "@/app/(app)/onboarding/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +31,17 @@ const initialState: AssignmentMutationState = { ok: false, message: null }
 
 // 割り当ての割当日変更と取り消しを行う操作群。特権ロールの社員画面で使う。
 export function AssignmentActions(props: Props) {
-  const reschedule = useActionState(rescheduleOnboardingAssignmentAction, initialState)
+  const reschedule = useFormAction(
+    rescheduleOnboardingAssignmentAction,
+    initialState,
+    (state) => state.message ?? "割当日を変更しました",
+  )
 
-  const cancel = useActionState(cancelOnboardingAssignmentAction, initialState)
+  const cancel = useFormAction(
+    cancelOnboardingAssignmentAction,
+    initialState,
+    (state) => state.message ?? "割り当てを取り消しました",
+  )
 
   return (
     <div className="flex flex-col gap-3">

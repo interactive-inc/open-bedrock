@@ -1,9 +1,9 @@
 "use client"
 
-import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { createKnowledgeAction } from "@/app/(app)/knowledge/actions"
 import type { KnowledgeActionState } from "@/app/(app)/knowledge/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -17,20 +17,9 @@ const initialState: KnowledgeActionState = { ok: false, error: null }
 export function KnowledgeNewForm() {
   const router = useRouter()
 
-  async function reduce(
-    previousState: KnowledgeActionState,
-    formData: FormData,
-  ): Promise<KnowledgeActionState> {
-    const result = await createKnowledgeAction(previousState, formData)
-
-    if (result.ok) {
-      router.push("/knowledge")
-    }
-
-    return result
-  }
-
-  const action = useActionState(reduce, initialState)
+  const action = useFormAction(createKnowledgeAction, initialState, "ナレッジを作成しました", {
+    onSuccess: () => router.push("/knowledge"),
+  })
 
   const state = action[0]
 

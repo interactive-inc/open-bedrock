@@ -1,11 +1,11 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   cancelAntisocialCheckAction,
   updateAntisocialCheckAction,
 } from "@/app/(app)/antisocial-checks/actions"
-import type { AntisocialCheckActionState } from "@/app/(app)/antisocial-checks/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import {
@@ -97,23 +97,12 @@ function UpdateAntisocialCheckDialog(props: {
 }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: AntisocialCheckActionState,
-    formData: FormData,
-  ): Promise<AntisocialCheckActionState> {
-    const result = await updateAntisocialCheckAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateAntisocialCheckAction,
+    { ok: false, error: null },
+    "反社チェック申請を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -192,10 +181,10 @@ function UpdateAntisocialCheckDialog(props: {
 
 // 反社チェック申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelAntisocialCheckButton(props: { antisocialCheckId: string }) {
-  const [_state, formAction, pending] = useActionState(cancelAntisocialCheckAction, {
+  const [_state, formAction, pending] = useFormAction(cancelAntisocialCheckAction, {
     ok: false,
     error: null,
-  })
+  }, "反社チェック申請を取り消しました")
 
   return (
     <ConfirmActionDialog

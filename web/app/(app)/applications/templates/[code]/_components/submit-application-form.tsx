@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState } from "react"
 import { submitApplicationAction } from "@/app/(app)/applications/templates/[code]/actions"
 import type { SubmitState } from "@/app/(app)/applications/templates/[code]/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { DynamicFormFields } from "@/components/dynamic-form-fields"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
@@ -20,7 +20,7 @@ const initialState: SubmitState = { ok: false, error: null }
  * 入力結果を payload JSON として Server Action に送る。
  */
 export function SubmitApplicationForm(props: Props) {
-  const action = useActionState(submitApplicationAction, initialState)
+  const action = useFormAction(submitApplicationAction, initialState, "申請を提出しました")
 
   const state = action[0]
 

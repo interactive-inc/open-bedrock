@@ -1,8 +1,8 @@
 "use client"
 
 import { FieldError } from "@/components/ui/field"
-import { useActionState } from "react"
 import { removeSkillAction } from "@/app/(app)/skills/me/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
@@ -11,10 +11,10 @@ type Props = {
 
 // 登録スキルの削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
 export function RemoveSkillButton(props: Props) {
-  const [state, formAction, pending] = useActionState(removeSkillAction, {
+  const [state, formAction, pending] = useFormAction(removeSkillAction, {
     ok: false,
     error: null,
-  })
+  }, "スキルを削除しました")
 
   return (
     <div>

@@ -1,11 +1,11 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   updateCareerApplicationAction,
   withdrawCareerApplicationAction,
 } from "@/app/(app)/career/actions"
-import type { CareerApplicationActionState } from "@/app/(app)/career/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -108,23 +108,12 @@ export function MyApplicationsList(props: Props) {
 function UpdateApplicationDialog(props: { applicationId: number; application: CareerApplication }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: CareerApplicationActionState,
-    formData: FormData,
-  ): Promise<CareerApplicationActionState> {
-    const result = await updateCareerApplicationAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateCareerApplicationAction,
+    { ok: false, error: null },
+    "応募内容を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -167,10 +156,10 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
 
 // 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawApplicationButton(props: { applicationId: number }) {
-  const [_state, formAction, pending] = useActionState(withdrawCareerApplicationAction, {
+  const [_state, formAction, pending] = useFormAction(withdrawCareerApplicationAction, {
     ok: false,
     error: null,
-  })
+  }, "応募を取り下げました")
 
   return (
     <ConfirmActionDialog

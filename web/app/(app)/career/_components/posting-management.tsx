@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState } from "react"
 import { deleteCareerPostingAction } from "@/app/(app)/career/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { FieldError } from "@/components/ui/field"
@@ -40,10 +40,10 @@ type DeleteProps = {
 
 // 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeletePostingButton(props: DeleteProps) {
-  const [state, formAction, pending] = useActionState(deleteCareerPostingAction, {
+  const [state, formAction, pending] = useFormAction(deleteCareerPostingAction, {
     ok: false,
     error: null,
-  })
+  }, "公募を削除しました")
 
   return (
     <div className="flex flex-col gap-1">

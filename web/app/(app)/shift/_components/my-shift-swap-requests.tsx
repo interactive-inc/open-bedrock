@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState } from "react"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/shift/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
@@ -77,7 +77,7 @@ export function MyShiftSwapRequests(props: Props) {
 
 // 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。
 function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
-  const [, formAction, pending] = useActionState(cancelShiftSwapRequestAction, initialState)
+  const [, formAction, pending] = useFormAction(cancelShiftSwapRequestAction, initialState, "交代申請を取り下げました")
 
   return (
     <ConfirmActionDialog

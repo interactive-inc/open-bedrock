@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState } from "react"
 import { uncompleteOnboardingTaskAction } from "@/app/(app)/onboarding/actions"
 import type { CompleteState } from "@/app/(app)/onboarding/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 
 type Props = {
@@ -14,7 +14,11 @@ const initialState: CompleteState = { ok: false, message: null }
 // 完了済みタスクの完了を取り消すボタン。taskId を hidden input で Server Action へ送る。
 // 失敗時のみインラインでエラーを出す（成功時はサーバ再検証で行が更新される）。
 export function UncompleteTaskButton(props: Props) {
-  const action = useActionState(uncompleteOnboardingTaskAction, initialState)
+  const action = useFormAction(
+    uncompleteOnboardingTaskAction,
+    initialState,
+    (state) => state.message ?? "タスクの完了を取り消しました",
+  )
 
   const state = action[0]
 
