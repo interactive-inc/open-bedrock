@@ -1,5 +1,7 @@
 # 従業員ライフサイクル履歴と人事発令の実装計画
 
+規範性: 非規範記録。種別は実装計画 snapshot。製品要件と実装済み状態は仕様正本、コード、migration で判定する。
+
 > 実装担当エージェント向け: `superpowers:executing-plans` を使い、この計画をチェックポイント単位で実行する。各機能では `superpowers:test-driven-development`、React 変更後は `react-doctor`、完了宣言前は `superpowers:verification-before-completion` を必ず使う。
 
 目的: 入社、配属、兼務、異動、役職変更、上司変更、部署責任者、休職、復職、退職、再入社、訂正を有効日付きで記録し、従業員詳細、組織関係、認可、承認候補者が同じ正本を参照する状態を完成させる。
@@ -746,7 +748,7 @@ git status --short
 - [ ] 申請中案件と確定発令が分離され、最終承認と発令が原子的である。
 - [ ] 直接発令、申請 completion、訂正、移行、outbox が冪等である。
 - [ ] 退職、employee archive、department archive が業務履歴を物理削除しない。
-- [ ] system role、organization scope、workflow task の三層が API と UI の両方で独立して判定される。
+- [ ] system role、organization scope、workflow task の三要素が API と UI の両方で独立して判定される。
 - [ ] fresh migration と upgrade migration が成功し、旧 Worker 互換と verified 後の正本切替が証明される。
 - [ ] API、Web、CLI、型、lint、React Doctor、ブラウザ権限 matrix、responsive、accessibility、performance の全確認が成功する。
 - [ ] `.docs` と公開 API 型が実装と一致し、`main` と `origin/main` が同じ commit を指す。

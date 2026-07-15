@@ -1,191 +1,403 @@
-# 用語集
+# 製品用語
 
-製品で使う用語と機能名、および open-karte が扱う社内事務手続きの制度用語の索引。意思決定の記録は [[001-python-to-ts-monorepo]] などの decisions ノードを参照する。
+規範性: 補助仕様。中核モデル間で共有する用語の短縮定義を定める。
 
-制度用語のアトミックな定義は references/terms 配下に1用語1ファイルで置き（この用語集が索引を兼ねる）、手続きの流れは [[notes/README|ノート]] の handbook、法令の根拠数値は sources のサマリーにまとめている。
+open-karte の model 名に共通する意味を定義する。各 model 文書が定める型、不変条件、関係が短縮定義より優先する。制度用語、手続き例、外部制度の調査情報はそれぞれ `references`、`notes`、`sources` に置き、製品概念の定義には使用しない。
 
-## 製品用語
+英語の model 名はコードと domain で同じ意味を保持する。画面表示の翻訳は許可するが、型の同一性、関係、不変条件を変更しない。
 
-### 業務能力
+## メタモデル
 
-会社が達成する必要のある成果を、特定の画面や部署から独立して表したもの。実装状態と製品境界は [[capability-map|機能網羅表]] を参照する。
+### Kind
 
-### 五軸
+対象の同一性を与える本質的な型。Person、Organization、BookCopy、ParkingSpace など。
 
-人、時間、物、お金、成長という、画面、検索、説明に使う複数選択可能な観点。一つの記録が複数軸に属するため、データの排他的な所有区分には使わない。
+### Role
 
-### 共通意味モデル
+関係または文脈によって一時的に担う型。Employee、Applicant、Approver、ReservableResource など。Role が変わっても元の対象の同一性は変わらない。
 
-業務領域をまたいで同じ意味で使う、主体、組織関係、時間、資源、金額、文書、手続き、証跡などの概念と関係。詳細は [[company-model|会社モデル]] を参照する。
+### Phase
 
-### 横断統制
+ライフサイクル状態によって一時的に属する型。Active、OnLeave、Retired など。
 
-すべての業務領域へ共通に適用する認証、認可、職務分離、監査、保持、外部連携の規則。
+### Relator
 
-### 従業員
+複数の当事者を特定の意味で結ぶ関係の実体。Employment、Membership、Reservation、Loan、Delegation など。有効期間、根拠、状態、来歴を持つ。
 
-会社との雇用関係を持つ人の台帳レコード。ログイン資格やシステム権限そのものではない。
+### Endurant
 
-### アカウント
+時間を通じて同一性を保つ対象。人、組織、資源、文書など。
 
-ログイン可否、従業員との関連、セッション失効世代を管理する認証主体。一人の従業員台帳と認証情報を分離するために使う。
+### Occurrence
 
-### アイデンティティ
+ある期間に起きる出来事または過程。申請、移動、会議、実行など。
 
-メールアドレスとパスワード、または外部 IdP の識別子など、アカウントを認証する手段。
+### Situation
 
-### 組織単位
+ある時点または期間に成立する状態。
 
-部署、部門、チームなど、組織階層を構成する単位。法人、拠点、役職、職務、原価部門とは意味を分ける。
+### InformationObject
 
-### 所属
+内容と版を持ち、複製可能な情報。規程、申請内容、提案、外部結果、証拠など。
 
-人が組織単位へ参加している関係。直属上司などの指揮命令関係とは別の関係として扱う。
+### 会社共通核
 
-### システムロール
+複数 domain で同じ意味と不変条件を持つ、主体、時間、権限、手続き、資源、記録、来歴などの理論。詳細は [会社メタモデル](./company-model.md) を参照する。
 
-どの操作能力を持つかを権限集合として表す役割。管理者、人事などを例とし、対象者を決める組織関係とは分離する。
+### Domain extension
 
-### 組織ロール
+特定 domain の Kind、Role、Relator、項目、不変条件を追加する型付き拡張。schema namespace、version、validator、migration を持つ。
 
-部門責任者、プロジェクト責任者など、所属、職位、案件の関係の中で担う責任。組織ロールだけではシステムの操作能力を与えず、システム権限と対象範囲の判定へ使う。
+### 能力質問
 
-### 組織関係
+model から答えられなければならない具体的な問い。拡張の意味と完全性を反例とともに検査する。
 
-直属上司、部門責任者、上位管理職など、誰に対して操作できるかを導く関係。組織上の肩書だけでは操作能力を与えない。
+### 保守的拡張
 
-### レポート関係
+新しい概念と公理を追加しても、既存語彙だけで述べられる従来の結論を意図せず変えない拡張。
 
-上司、部下、責任者などを主体または職位の間で結ぶ有効期間付きの組織関係。現在の関係と記録時点の関係を区別する。
+### 可換図式
 
-### 案件割当
+同じ始点と終点を持つ複数の変換経路が、同じ意味と結果になることを表す図式。Web、CLI、AI の経路一致や、承認 payload と実行 payload の一致を検査する。
 
-申請、評価、手続きなどの特定案件に限って、担当者または承認者として操作できる関係。全社的なシステムロールとは別の認可根拠になる。
+## 主体と組織
 
-### スコープ
+### Party
 
-権限を適用できる対象範囲。本人、参加者、担当案件、直属部下、組織単位、配下組織、全社、項目単位などを区別する。
+法的または業務上の当事者になれる Person または Organization。
 
-### karte
+### Person
 
-open-karte の CLI コマンド名。引数をローカルの HTTP リクエストに変換し、内部の Hono ルートを経て api を叩く。[[features|機能一覧]] の各操作を実行する入口。
+自然人。Employee や Approver は Person が文脈で担う Role である。
 
-### 申請ワークフロー
+### Organization
 
-テンプレートに沿って申請を提出し、承認者が承認または却下する一連の流れ。[[features|申請ワークフロー]] を参照。
+法人、社内組織、外部機関など、組織として識別する対象。
 
-### ケース
+### LegalEntity
 
-一つの申請、照会、是正、入退社手続きなど、開始から完了まで追跡する業務案件。
+法域の下で権利義務の主体となる Organization。
 
-### タスク
+### OrgUnit
 
-ケース内で特定の担当者に割り当てられ、期限、状態、完了条件を持つ作業。
+部署、部門、team などの組織単位。
 
-### 案件タスク
+### OrganizationalOffice
 
-特定のケース、ステップ、ラウンド、順序に限って操作を許可するタスク。全社的なシステム権限とは別の案件限定の認可根拠になる。
+一人が有効期間付きで就く責任ある役職。
 
-### 意思決定
+### CollectiveBody
 
-承認、却下、差し戻しなど、権限を持つ主体が案件に対して記録する判断。判断時点の根拠と証跡を保持する。
+構成員、定足数、議決方式、Resolution を持つ合議体。単一の role approval と同一ではない。
 
-### 委任
+### Membership
 
-特定期間に限り、案件内の操作を代理人へ移す関係。操作した本人と代理対象の双方を証跡へ残す。
+Party が Organization、OrgUnit、CollectiveBody に属する期間付き関係。
 
-### 専用申請
+### OfficeAssignment
 
-休暇、経費、シフト交代など、固有の入力項目と状態遷移を持つ申請。汎用申請ワークフローとは別実装の場合があるため、連携の有無を個別に示す。
+Person と OrganizationalOffice を結ぶ就任関係。
 
-### 証跡
+### ReportingRelation
 
-誰が、どの権限根拠で、いつ、どの対象に、何を行ったかを再構成するための記録。業務イベント、認可判断、変更前後、外部連携元などを含む。
+上司、部下、責任者を結ぶ期間付き関係。現在関係と過去 snapshot を区別する。
 
-### 資源
+### Principal
 
-備品、会議室、設備、ライセンスなど、識別、利用可能性、割当、保管、点検を管理する対象。
+システムが認証し、操作主体として識別する対象。HumanPrincipal、AgentPrincipal、ServicePrincipal、ConnectorPrincipal を含む。
+
+### Account
+
+Principal の認証状態、session 失効、credential 関係を管理する技術的対象。Person や Employee と同一ではない。
+
+### Identity
+
+Principal を認証する credential または外部識別子。
+
+### HumanPrincipal
+
+人間本人として認証された Principal。HumanAttestation を作成できる唯一の Principal kind。
+
+### AgentPrincipal
+
+AI エージェントとして認証された Principal。提案と限定実行はできるが、人間本人の承認を生成できない。
+
+### ServicePrincipal
+
+内部 service または batch の Principal。
+
+### ConnectorPrincipal
+
+外部 API credential を使用する専用 Principal。
+
+## 権限と認可
+
+### TechnicalPermission
+
+API operation を呼び出せる技術的能力。会社上の決裁権限を意味しない。
+
+### SystemRole
+
+TechnicalPermission の束。組織上の責任 role と分ける。
+
+### OrganizationalAuthority
+
+会社として特定種類の Decision を行える制度上の権限。API を呼ぶ TechnicalPermission を自動的に与えない。
+
+### CaseAssignment
+
+特定 case、step、round に限って担当または候補者となる関係。
+
+### Scope
+
+permission を適用できる対象集合。self、participant、assigned case、org unit、subtree、organization など。
+
+### FieldPolicy
+
+Principal、purpose、DataCategory、ClassificationLevel に応じ、許可する field と operation を定める policy。
+
+### ClassificationLevel
+
+公開範囲と影響度の軸。public、internal、confidential、restricted。
+
+### DataCategory
+
+情報の意味カテゴリ。directory、hr-sensitive、health、financial、authentication、legal、audit など。機密度と別軸である。
+
+### HumanAttestation
+
+HumanPrincipal が、固定された proposal digest、効果、対象、期限を確認した記録。login 済み、既読、AI の説明とは同義でない。
+
+### ExecutionAuthorization
+
+TechnicalPermission、OrganizationalAuthority、CaseAssignment、状態、scope、必要な attestation を合成した、対象限定で短命な実行許可。
+
+### TaskProxy
+
+特定 case task の操作だけを代理する関係。
+
+### AuthorityDelegation
+
+会社上の決裁権限の限定された一部を移す関係。
+
+### ActingAssignment
+
+不在時に OrganizationalOffice を一時代行する関係。
+
+### ExecutionMandate
+
+人間または組織が AgentPrincipal や ServicePrincipal へ、目的、操作、対象、期間を限定して実行を委ねる関係。
+
+### BreakGlassAccessGrant
+
+障害対応などのため、短期間だけ技術 access を付与する関係。EmergencyBusinessDecision と別である。
+
+## 手続きと判断
+
+### Capability
+
+組織が継続的に達成できる必要がある成果。部署、画面、process、system から独立して識別する。
+
+### ProcedureDefinition
+
+手順、分岐、担当、期限、完了条件を持つ版付き定義。
+
+### ProcedureCase
+
+ProcedureDefinition の特定版から開始した実行案件。
+
+### Task
+
+Case 内で担当、期限、状態、完了条件を持つ作業。
+
+### Proposal
+
+実行前に対象、parameter、差分、効果、revision、期限を固定した変更案。
+
+### DecisionAct
+
+権限を持つ主体が判断した出来事。
+
+### DecisionContent
+
+判断対象、条件、理由、参照資料を表す情報。
+
+### DecisionOutcome
+
+承認、却下、差戻し、棄権などの判断結果。
+
+### CollectiveDecision
+
+合議体の構成員、定足数、議決方式から成立する Decision。
+
+### EmergencyBusinessDecision
+
+通常の決裁経路を待てない条件で行う専用の会社判断。自己承認の例外として扱わず、PostReview を発生させる。
+
+### ControlDefinition
+
+特定 risk を下げる統制の定義。
+
+### ControlRun
+
+ControlDefinition を特定時点、対象について実施した記録。
+
+## 記録と時間
+
+### Event
+
+現実または system で起きた出来事。Record と同一ではない。
+
+### Observation
+
+主体が方法を伴って観測した内容。
+
+### Assertion
+
+主体または system が真であると述べた命題。事実と自動的に同一ではない。
+
+### Assessment
+
+専門家、外部製品、AI などによる評価または算出結果。
+
+### AcceptanceStatus
+
+Assertion を未検証、採用、却下、係争中、訂正済みのどれとして扱うか。
+
+### Evidence
+
+Assertion または Decision を支持、反証する情報。
+
+### Record
+
+Event、Assertion、Decision、Evidence などを保持する版付き InformationObject。
+
+### Provenance
+
+情報の生成、利用、変換、派生、責任主体の連鎖。
+
+### ValidTime
+
+現実世界で関係または状態が成立する時間。
+
+### RecordedTime
+
+system がその record を保持し、知っていた時間。
+
+### PolicyTime
+
+根拠となる policy version が施行中だった時間。
+
+## 資源
+
+### Resource
+
+Endurant または QuantityPool が、組織の目的に利用可能な対象として担う RoleMixin。Resource は identity を与える上位 Kind ではない。MeetingRoom、ParkingSpace、BookCopy などが固有の Kind を保ったまま Resource role を担う。
+
+### ResourceRecord
+
+Resource role の担い手、管理 ID、owner、classification を記録する InformationObject。
+
+### ResourceCapability
+
+資源が提供できる予約、貸出、消費、割当、共有などの能力。
+
+### Reservation
+
+主体、ResourceCapability、時間枠、数量、優先規則を結ぶ関係。単なる利用申出と区別する。
+
+### Allocation
+
+資源能力または数量を主体へ割り当てる関係。
+
+### Loan
+
+貸出者、借受者、資源個体、期間、返却状態を結ぶ関係。
+
+### Custody
+
+資源の保管責任を結ぶ関係。
+
+## 約束、金銭、外部実現
+
+### Commitment
+
+将来の行為、引渡し、支払に関する約束。
+
+### Obligation
+
+規範または Commitment から生じる義務。
+
+### Entitlement
+
+受け取る、利用する、要求する権利。
+
+### MonetaryAmount
+
+currency を伴う金額。会計残高や支払完了を意味しない。
+
+### BudgetEnvelope
+
+目的、期間、責任範囲を持つ上限または計画。総勘定元帳と同一ではない。
+
+### PaymentProposal
+
+支払を行う前の具体的提案。
+
+### PaymentInstruction
+
+権限ある Decision を経て、外部実行主体へ渡す指示。
+
+### SettlementAssertion
+
+外部主体が清算済みと述べた source 付き Assertion。
+
+### ExternalDeterminationRequest
+
+外部専門家または製品へ評価または計算を依頼する不変記録。目的、対象、法域、入力 digest、要求時点、依頼先を持つ。
+
+### ExternalAssessment
+
+外部専門家または製品が判断として作成した Assessment。request、source、資格または契約、rule または model version、実施時点、受領時点、採否を持つ。
+
+### ExternalComputation
+
+外部専門家または製品が計算として作成した Assessment。request、source、資格または契約、rule または model version、実施時点、受領時点、採否、単位を持つ。
+
+### ConnectorContract
+
+外部連携の source of truth、direction、ID、schema、mapping、security、retry、reconciliation を定める版付き契約。
+
+### Outbox
+
+内部 transaction とともに確定し、外部送信を再試行可能にする message record。
+
+### Inbox
+
+外部 message を検証、永続化、重複排除してから domain へ渡す境界。
+
+### Reconciliation
+
+内部 record と外部 Assertion を比較し、採用、係争、訂正を決める過程。
+
+## 実装状態
+
+### 実装済み
+
+利用者が現在の API または提供面から主要な業務を完結できる状態。将来モデルの全不変条件を実装済みという意味ではない。
+
+### 部分実装
+
+主要要素の一部は利用できるが、提供面、状態遷移、認可、外部接続、履歴などに不足がある状態。
 
 ### 台帳のみ
 
-データ構造はあるが、利用者が業務を完結できる API、Web、CLI の操作が提供されていない実装状態。
+schema はあるが、利用者が業務を完結する API、Web、CLI がない状態。
 
-### 提供面
+### 未実装
 
-同じ業務能力へアクセスする API、Web、CLI、またはスキーマだけの入口。提供面が存在することと、全操作が同等であることは区別する。
+会社モデルには存在するが、現在の製品能力として提供しない状態。
 
-### キャリアシート
+### 非対象
 
-社員が自身のキャリア情報を記録する仕組み。[[features|キャリア]] を参照。
-
-### 社内公募
-
-社内の募集ポジションに社員が応募できる仕組み。[[features|キャリア]] を参照。
-
-### MBO
-
-目標による管理の枠組み。目標の作成と自己評価、上長評価、最終評価の登録を行う。[[features|目標管理]] を参照。
-
-### サンクスポイント
-
-同僚への感謝を送り合う仕組み。社員ごとに月次の贈与原資(ポイント)を持ち、送付で消費する。受け取ったポイントは交換カタログの報酬と引き換えに交換申請でき、承認者が承認または却下する。[[features|感謝(サンクス)]] を参照。
-
-## 制度用語（労務）
-
-勤怠・休暇・賃金・社会保険にまつわる制度の用語。手続きの流れは handbook、法令の根拠は [[労働時間と36協定の上限規制]]・[[年次有給休暇の付与日数]]・[[育児・介護休業制度]] を参照。
-
-### 労働時間と残業
-
-- [[36-kyotei|36協定]] … 法定労働時間を超える時間外・休日労働に必要な労使協定。上限規制は [[労働時間と36協定の上限規制]] を参照
-- [[sairyo-rodo-sei|裁量労働制]] … 実労働時間でなく労使で定めた時間働いたとみなす制度
-- [[kanri-kantokusha|管理監督者]] … 労働時間規定の対象外となる立場。深夜割増と年休は適用
-- [[flextime-sei|フレックスタイム制]] … 総労働時間の範囲で始業終業を労働者が決める制度
-- [[minashi-zangyo|みなし残業]] … 一定時間分の残業代を給与に固定的に含める仕組み
-
-### 休暇
-
-- [[nenji-yukyu-kyuka|年次有給休暇]] … 勤続に応じ付与される有給の休暇。年5日取得義務。付与日数は [[年次有給休暇の付与日数]] を参照
-- [[keicho-kyuka|慶弔休暇]] … 結婚・出産・忌引など慶弔事の特別休暇
-- [[furikae-daikyu|振替休日と代休]] … 休日出勤の事前振替と事後付与の違い
-- [[ikuji-kyugyo|育児休業]] … 子を養育するための休業
-- [[kaigo-kyugyo|介護休業]] … 要介護の家族を介護するための休業（通算93日）
-- [[kaigo-kyuka|介護休暇]] … 介護のための短期休暇（年5日／10日）。育児・介護の全体像は [[育児・介護休業制度]] を参照
-
-### 賃金・社会保険
-
-- [[tsukin-teate|通勤手当]] … 通勤費用の手当。非課税限度額がある
-- [[shakai-hoken|社会保険]] … 健康保険・厚生年金・雇用保険・労災の総称
-- [[fuyo|扶養]] … 税法上・社会保険上の扶養。年収要件がある
-- [[shussan-ikuji-ichijikin|出産育児一時金]] … 健康保険から出産時に支給される一時金
-
-### 健康管理
-
-- [[teiki-kenko-shindan|定期健康診断]] … 事業者が年1回実施する義務のある健診。法的根拠は [[定期健康診断の実施義務]] を参照
-
-## 制度用語（税務・経費）
-
-申請・承認・支出・納税にまつわる制度の用語。手続きの流れは [[経費精算と稟議]]・[[年末調整]]、法令の根拠は [[源泉所得税の税率と対象]]・[[インボイス制度と仕入税額控除]] を参照。
-
-### 支出と申請
-
-- [[ringi|稟議]] … 支出・契約を事前に承認者へ回付し承認を得る手続き
-- [[keihi-seisan|経費精算]] … 立替えた業務経費を申請し払い戻しを受ける手続き
-- [[shuccho-ryohi|出張旅費]] … 出張の交通費・宿泊費・日当。手配は [[出張の手配]] を参照
-- [[hansha-check|反社チェック]] … 取引先が反社会的勢力でないか確認する手続き
-
-### 源泉徴収・年末調整
-
-- [[gensen-shotokuzei|源泉所得税]] … 支払者が支払時に差し引き納める所得税。税率は [[源泉所得税の税率と対象]] を参照
-- [[gensen-choshu-gimusha|源泉徴収義務者]] … 源泉徴収して納付する義務を負う支払者
-- [[fukko-tokubetsu-shotokuzei|復興特別所得税]] … 所得税額に上乗せされる税
-- [[nenmatsu-chosei|年末調整]] … 給与の源泉徴収税額の年間過不足を精算する手続き
-- [[kakutei-shinkoku|確定申告]] … 所得と税額を自分で申告・納税する手続き
-
-### 消費税・インボイス
-
-- [[invoice-seido|インボイス制度]] … 適格請求書により仕入税額控除を受ける消費税の仕組み。詳細は [[インボイス制度と仕入税額控除]] を参照
-- [[tekikaku-seikyusho|適格請求書]] … 登録番号・適用税率・税額を記載した請求書
-- [[tekikaku-hakko-jigyosha|適格請求書発行事業者]] … 登録番号を持つ事業者
-- [[shiire-zeigaku-kojo|仕入税額控除]] … 売上消費税から仕入の消費税を差し引く仕組み
-- [[menzei-jigyosha|免税事業者]] … 消費税の納税義務が免除される事業者
-- [[denshi-chobo-hozonho|電子帳簿保存法]] … 帳簿・書類を電子データで保存する要件を定めた法律
+open-karte が最終実行を所有しない状態。会社モデルから除外されたという意味ではなく、外部実現と調整記録を持てる場合がある。

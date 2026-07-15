@@ -70,6 +70,8 @@ controls: []
 
 # Access lifecycle 手続きテンプレート
 
+規範性: 未施行テンプレート。導入組織の手続きまたは実行根拠として使用しない。
+
 この未施行テンプレートは、入社、異動、休職、退職、role change、委託終了などを起点に、Account、TechnicalPermission、OrganizationalAuthority assignment、TaskProxy、Agent mandate、Connector access、貸与物を変更するための定義である。
 
 ## 実行上の注意

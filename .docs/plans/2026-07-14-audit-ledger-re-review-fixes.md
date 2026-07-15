@@ -1,105 +1,85 @@
-# Audit Ledger Re-review Fixes Implementation Plan
+# 監査台帳の再レビュー修正計画
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
-> (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
-> checkbox (`- [ ]`) syntax for tracking.
+規範性: 非規範記録。種別は実装計画 snapshot。製品要件と実装済み状態は仕様正本、コード、migration で判定する。
 
-**Goal:** Make audit pagination reversible without unbounded cursor history, preserve stored UTF-8
-bytes exactly, and keep every export within Cloudflare D1 Free invocation limits.
+この文書は作成時点の実装計画であり、現在の仕様または完了証明ではない。現在の挙動はコードとテストで確認する。
 
-**Architecture:** A canonical v2 cursor binds snapshot, limit, filters, and bounded source/target
-ranges. Read projections validate SQLite storage classes and decode allowlisted text from BLOB bytes
-with fatal UTF-8. Export combines compact descriptor and normal HEX payloads in one positional raw
-query, then globally batches all segmented chunks with a fixed one-bind plan.
+## 目的
 
-**Tech Stack:** TypeScript, Bun test, Hono, Cloudflare Workers/D1, SQLite, Zod.
+- cursor 履歴を無制限に保持せず、監査一覧を逆方向へ移動できるようにする。
+- 保存された Unicode の byte 列を置換せず正確に読む。
+- export の query 数を database の無料枠に収める。
 
-## Global Constraints
+## 設計概要
 
-- D1 Free permits at most 50 queries per Worker invocation; repository export targets at most 25.
-- D1 strings, BLOBs, and rows are at most 2,000,000 bytes.
-- Text payloads cross the D1 boundary only as uppercase HEX; no runtime-specific BLOB shape is used.
-- Cursor state is bounded, canonical, position-only, and never authorization data.
-- Immediate opposite navigation restores the exact source range. Deeper reverse navigation may
-  regroup pages but must remain contiguous without skips or overlap; Task 8 keeps the browser stack
-  for exact historical grouping.
+正規 cursor は snapshot、limit、filter、source range、target range を固定する。read projection は SQLite の storage class を検証し、許可した text を BLOB の byte 列から fatal decode する。export は descriptor と通常の HEX payload を一つの位置 parameter query で取得し、分割 row を固定 bind 数で全体 batch する。
 
----
+## 制約
 
-### Task 1: Cursor v2 and variable-width pagination
+- database の無料枠では Worker invocation 当たりの query 上限があるため、repository export の上限をその半分以下にする。
+- string、BLOB、row の size 上限を超えない。
+- text payload は大文字 HEX で database 境界を越し、runtime 固有の BLOB 表現へ依存しない。
+- cursor は bounded、canonical、position-only とし、認可情報を持たせない。
+- 直前 page への逆移動は元 range を正確に復元する。さらに過去への逆移動は page grouping が変わっても、欠落と重複のない連続 range を保つ。
 
-**Files:**
+## Cursor と可変幅 pagination
 
-- Modify: `api/src/lib/audit/audit-cursor.ts`
-- Modify: `api/src/lib/audit/audit-cursor.test.ts`
-- Modify: `api/src/infrastructure/audit/audit-event-repository.ts`
-- Test: `api/src/infrastructure/audit/audit-event-repository.test.ts`
-- Modify: `.superpowers/sdd/task-4-brief.md`
+対象:
 
-**Interfaces:**
+- `api/src/lib/audit/audit-cursor.ts`
+- `api/src/lib/audit/audit-cursor.test.ts`
+- `api/src/infrastructure/audit/audit-event-repository.ts`
+- `api/src/infrastructure/audit/audit-event-repository.test.ts`
 
-- Consumes: stable `(created_at, id)` ordering and `AuditEventFilters`.
-- Produces: canonical v2 cursor bound to snapshot max ID, limit, filter fingerprint, and bounded
-  source/target ranges.
+契約:
 
-- [x] Add RED tests for the 400-row variable-width fixture, immediate exact previous restoration,
-      deep contiguous navigation, changed filter/limit rejection, and appended-newer exclusion.
-- [x] Run the focused cursor/repository tests and record the expected overlap failures.
-- [x] Implement v2 cursor parsing/encoding and descriptor range verification with bound SQL.
-- [x] Re-run the focused tests until GREEN.
+- 入力は安定した `(created_at, id)` 順序と `AuditEventFilters`。
+- 出力は snapshot 最大 ID、limit、filter fingerprint、source range、target range を固定した canonical cursor。
 
-### Task 2: Byte-faithful UTF-8 reads
+- [x] 可変幅 fixture、直前 page の完全復元、連続した逆移動、filter と limit の変更拒否、snapshot 後の追加除外を失敗 test として追加する。
+- [x] cursor と repository の対象 test で既存の重複 failure を確認する。
+- [x] cursor parse、encode、range 検証を bound SQL で実装する。
+- [x] 対象 test が成功するまで確認する。
 
-**Files:**
+## Byte を保持する Unicode read
 
-- Modify: `api/src/infrastructure/audit/audit-event-repository.ts`
-- Test: `api/src/infrastructure/audit/audit-event-repository.test.ts`
+対象:
 
-**Interfaces:**
+- `api/src/infrastructure/audit/audit-event-repository.ts`
+- `api/src/infrastructure/audit/audit-event-repository.test.ts`
 
-- Consumes: D1 `typeof(column)` and BLOB/HEX projections.
-- Produces: exact stored text or safe `503 audit_unavailable`; never replacement decoding or type
-  coercion.
+契約:
 
-- [x] Add RED fixtures for `CAST(X'80' AS TEXT)`, same-length replacement adversaries, numeric/BLOB
-      storage corruption, BOM, valid Unicode, and malformed JSON across summary/detail families.
-- [x] Run the focused repository tests and record modified-text leakage.
-- [x] Implement storage-class validation and fatal UTF-8 decode for normal and large reads.
-- [x] Re-run the focused tests until GREEN.
+- 入力は database の `typeof(column)` と BLOB または HEX projection。
+- 出力は保存済み text の完全な復元、または安全な `503 audit_unavailable`。置換 decode と型 coercion を行わない。
 
-### Task 3: D1 Free export query budget and remote-valid limits
+- [x] 不正 byte、同じ長さの置換 adversary、数値または BLOB の storage corruption、BOM、正しい Unicode、不正 JSON の fixture を追加する。
+- [x] 変更された text が漏れる既存 failure を確認する。
+- [x] 通常 read と大容量 read に storage class 検証と fatal decode を実装する。
+- [x] 対象 test が成功するまで確認する。
 
-**Files:**
+## Export の query budget と remote 制限
 
-- Modify: `api/src/infrastructure/audit/audit-event-repository.ts`
-- Test: `api/src/infrastructure/audit/audit-event-repository.test.ts`
-- Modify: `.docs/plans/2026-07-14-audit-ledger-design.md`
-- Modify: `.docs/plans/2026-07-14-audit-ledger-implementation.md`
-- Modify: `.superpowers/sdd/task-3-report.md`
+対象:
 
-**Interfaces:**
+- `api/src/infrastructure/audit/audit-event-repository.ts`
+- `api/src/infrastructure/audit/audit-event-repository.test.ts`
+- `.docs/plans/2026-07-14-audit-ledger-design.md`
+- `.docs/plans/2026-07-14-audit-ledger-implementation.md`
 
-- Consumes: descriptor-first export and 16 MiB CSV byte counter.
-- Produces: 50,000-row success and remote-valid stress paths within 25 repository D1 calls.
+契約:
 
-- [x] Add RED query-count assertions for 50,000 rows, row 50,001, and worst remote-valid large rows.
-- [x] Run the focused repository test and record the current 201-query result.
-- [x] Raise the descriptor window to 5,000 while preserving cumulative raw/wire guards and exact-ID
-      chunk safety.
-- [x] Replace decisive over-2MB fixtures with per-row values below 2,000,000 bytes and retain any
-      larger local-only stress with an explicit label.
-- [x] Add formal RED fixtures for 1,000,002-byte metadata times sixteen, 1,998,002-byte metadata
-      times eight, and fourteen segmented rows mixed with 46,000 tiny rows; record 34/26/49 calls.
-- [x] Return normal HEX in the compact descriptor statement and batch segment plans globally at
-      1,998,000 source bytes per query with one JSON bind and fixed allowlisted column cases.
-- [x] Validate ordinal, identity, actor, storage class, full/chunk length, missing, duplicate,
-      reordered, invalid HEX and same-length invalid UTF-8 responses; retain append-only triggers as
-      the documented trust boundary for a same-length valid rewrite between segment queries.
-- [x] Prove query counts 11/11/19 for the three formal fixtures, 11 for 50,000 rows and row 50,001,
-      and exact 16 MiB/+1 byte behavior using nine remote-compatible rows below 2 MB each.
-- [x] Decode exact rows inside each 5,000-row window and discard HEX/layout immediately; retain only
-      final rows and segmented state, with the 50,000-row retained-memory delta below 64 MiB.
-- [x] Gate summary/detail exact HEX reads by the conservative full result-row estimate as well as
-      the 999,000-byte per-column limit, so combined medium text columns switch to bounded segments
-      before the D1 2,000,000-byte row ceiling.
-- [ ] Run focused tests, full API tests, API typecheck, `vp check`, diff/hygiene, then commit and push.
+- 入力は descriptor-first export と CSV byte counter。
+- 出力は最大件数と remote-compatible な stress path を repository の query budget 内で処理した結果。
+
+- [x] 最大件数、その一件超過、remote-compatible な大容量 row の query 数 assertion を追加する。
+- [x] 既存実装の過剰 query 数を対象 test で確認する。
+- [x] 累積 raw size と wire size の guard を保ち、descriptor window を拡張する。
+- [x] database 上限を超える fixture を、上限未満の row を使う検証へ置き換える。
+- [x] 大容量 metadata、分割 row、少量 row を混在させる正式 fixture を追加する。
+- [x] compact descriptor query で通常 HEX を返し、分割計画を一つの JSON bind と許可 column case で全体 batch する。
+- [x] ordinal、identity、actor、storage class、length、欠落、重複、順序、HEX、Unicode を検証する。
+- [x] 最大件数、上限超過、CSV byte 境界で query 数と結果を証明する。
+- [x] window ごとに decode 後の HEX と layout を破棄し、保持 memory の上限を検査する。
+- [x] result row 全体の conservative estimate と column 上限で、通常 read から bounded segment へ切り替える。
+- [ ] 対象 test、API 全 test、typecheck、`vp check`、diff、秘密情報を確認し、必要な変更だけを commit する。
