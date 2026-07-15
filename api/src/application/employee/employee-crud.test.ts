@@ -49,7 +49,7 @@ const newEmployeeInput = {
   code: "E900",
   name: "Sam Rivers",
   email: "you+e900@example.com",
-  password: "initial-password",
+  password: "InitialPassword1",
   role: "member",
   hireOn: "2026-01-01",
   departmentCode: null,

@@ -45,6 +45,13 @@ const actions = [
   "application.delegation.cancelled",
   "application.decision.approved",
   "application.decision.rejected",
+  "governance.document.synced",
+  "governance.review.submitted",
+  "governance.review.decided",
+  "governance.document.published",
+  "governance.document.acknowledged",
+  "governance.org_role.assigned",
+  "governance.org_role.revoked",
   "audit.event.searched",
   "audit.event.read",
   "audit.event.exported",
@@ -58,6 +65,9 @@ const targetTypes = [
   "application_workflow",
   "application",
   "approval_delegation",
+  "governance_document",
+  "governance_version",
+  "governance_org_role",
   "audit_event",
   "audit_export",
 ] as const satisfies readonly AuditTargetType[]
@@ -100,7 +110,7 @@ function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
 }
 
 describe("audit event vocabulary", () => {
-  test("accepts exactly the 33 managed actions", () => {
+  test("accepts exactly the 40 managed actions", () => {
     expect(auditActionSchema.options).toEqual([...actions])
     for (const action of actions) {
       expect(auditActionSchema.parse(action)).toBe(action)
@@ -108,7 +118,7 @@ describe("audit event vocabulary", () => {
     expect(() => auditActionSchema.parse("free.form.action")).toThrow()
   })
 
-  test("accepts exactly the 9 managed target types", () => {
+  test("accepts exactly the 12 managed target types", () => {
     expect(auditTargetTypeSchema.options).toEqual([...targetTypes])
     for (const targetType of targetTypes) {
       expect(auditTargetTypeSchema.parse(targetType)).toBe(targetType)

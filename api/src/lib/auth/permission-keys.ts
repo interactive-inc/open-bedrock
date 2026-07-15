@@ -107,6 +107,36 @@ export const PERMISSION_CATALOG = [
   },
   { key: "audit:read", category: "audit", description: "監査イベントを閲覧する" },
   { key: "audit:export", category: "audit", description: "監査イベントを CSV 出力する" },
+  {
+    key: "governance:read",
+    category: "governance",
+    description: "公開済みの規程・手続き・統制を閲覧する",
+  },
+  {
+    key: "governance:read:restricted",
+    category: "governance",
+    description: "機密又は限定公開の規程を横断閲覧する",
+  },
+  {
+    key: "governance:manage",
+    category: "governance",
+    description: "規程原本、能力、組織ロールと割当を管理する",
+  },
+  {
+    key: "governance:review",
+    category: "governance",
+    description: "候補者となった規程版を審査する",
+  },
+  {
+    key: "governance:publish",
+    category: "governance",
+    description: "審査要件を満たした規程版を公開する",
+  },
+  {
+    key: "governance:acknowledge",
+    category: "governance",
+    description: "適用対象となる規程版の確認を記録する",
+  },
   { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
   { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {

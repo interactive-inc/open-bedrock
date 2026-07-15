@@ -135,6 +135,18 @@ import trainingEnrollmentsHandler from "@/app/training/enrollments/route"
 import trainingHandler from "@/app/training/route"
 import trainingMineHandler from "@/app/training/mine/route"
 import whoamiHandler from "@/app/whoami/route"
+import governanceHandler from "@/app/governance/route"
+import governanceAcknowledgeHandler from "@/app/governance/acknowledge/[code]/route"
+import governanceAssignRoleHandler from "@/app/governance/assign-role/[code]/route"
+import governanceImpactHandler from "@/app/governance/impact/route"
+import governanceListHandler from "@/app/governance/list/route"
+import governanceOrgRolesHandler from "@/app/governance/org-roles/route"
+import governancePublishHandler from "@/app/governance/publish/[code]/route"
+import governanceReviewHandler from "@/app/governance/review/[code]/route"
+import governanceRevokeRoleHandler from "@/app/governance/revoke-role/[assignment_id]/route"
+import governanceShowHandler from "@/app/governance/show/[code]/route"
+import governanceSubmitReviewHandler from "@/app/governance/submit-review/[code]/route"
+import governanceSyncHandler from "@/app/governance/sync/route"
 import businessTripHandler from "@/app/business-trip/route"
 import businessTripRequestHandler from "@/app/business-trip/request/route"
 import businessTripMineHandler from "@/app/business-trip/mine/route"
@@ -332,6 +344,19 @@ const routes = base
 
 routes.post("/login", ...loginHandler)
 routes.post("/whoami", ...whoamiHandler)
+
+routes.post("/governance", ...governanceHandler)
+routes.post("/governance/list", ...governanceListHandler)
+routes.post("/governance/show/:code?", ...governanceShowHandler)
+routes.post("/governance/sync", ...governanceSyncHandler)
+routes.post("/governance/impact", ...governanceImpactHandler)
+routes.post("/governance/submit-review/:code?", ...governanceSubmitReviewHandler)
+routes.post("/governance/review/:code?", ...governanceReviewHandler)
+routes.post("/governance/publish/:code?", ...governancePublishHandler)
+routes.post("/governance/acknowledge/:code?", ...governanceAcknowledgeHandler)
+routes.post("/governance/org-roles", ...governanceOrgRolesHandler)
+routes.post("/governance/assign-role/:code?", ...governanceAssignRoleHandler)
+routes.post("/governance/revoke-role/:assignment_id?", ...governanceRevokeRoleHandler)
 
 routes.post("/employee", ...employeeHandler)
 routes.post("/employee/search", ...employeeSearchHandler)

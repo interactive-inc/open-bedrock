@@ -164,7 +164,7 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
       path: "/accounts/5/reset-password",
       method: "POST",
       token: await adminToken(),
-      body: { new_password: "newsecret123" },
+      body: { new_password: "Newsecret123" },
     })
 
     expect(response.status).toBe(204)
@@ -184,7 +184,11 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
   test("account:manage だけでは高権限アカウントのパスワードを再設定できない", async () => {
     const db = await createTestDb()
 
-    await assignCustomRole(db, 5, "account-operator", ["account:manage"])
+    await assignCustomRole(db, 5, "account-operator", [
+      "account:manage",
+      "governance:read",
+      "governance:acknowledge",
+    ])
 
     const response = await requestWithContext({
       db,
@@ -192,7 +196,7 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
       path: "/accounts/1/reset-password",
       token: await accountToken(5),
       method: "POST",
-      body: { new_password: "newsecret123" },
+      body: { new_password: "Newsecret123" },
     })
 
     expect(response.status).toBe(403)
@@ -201,7 +205,11 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
   test("account:manage で権限を持たない member のパスワードは再設定できる", async () => {
     const db = await createTestDb()
 
-    await assignCustomRole(db, 5, "account-operator", ["account:manage"])
+    await assignCustomRole(db, 5, "account-operator", [
+      "account:manage",
+      "governance:read",
+      "governance:acknowledge",
+    ])
 
     const response = await requestWithContext({
       db,
@@ -209,7 +217,7 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
       path: "/accounts/3/reset-password",
       token: await accountToken(5),
       method: "POST",
-      body: { new_password: "newsecret123" },
+      body: { new_password: "Newsecret123" },
     })
 
     expect(response.status).toBe(204)

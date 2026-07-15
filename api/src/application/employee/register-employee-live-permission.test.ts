@@ -109,7 +109,7 @@ function employeeInput(code: string, role: string) {
     code,
     name: "Sam Rivers",
     email: `you+${code.toLowerCase()}@example.com`,
-    password: "initial-password",
+    password: "InitialPassword1",
     role,
     hireOn: "2026-01-01",
     departmentCode: null,

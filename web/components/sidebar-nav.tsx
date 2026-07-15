@@ -413,6 +413,25 @@ const navGroups: ReadonlyArray<NavGroup> = [
     ],
   },
   {
+    heading: "ガバナンス",
+    items: [
+      {
+        label: "規程・手続き",
+        href: "/governance",
+        icon: ShieldCheck,
+        requiredPermission: "governance:read",
+        children: [
+          { label: "一覧", href: "/governance", requiredPermission: "governance:read" },
+          {
+            label: "整合性と組織ロール",
+            href: "/governance/manage",
+            requiredPermission: "governance:manage",
+          },
+        ],
+      },
+    ],
+  },
+  {
     heading: "リソース",
     items: [
       {
@@ -621,7 +640,8 @@ function isParentActive(pathname: string, item: NavItem): boolean {
   return pathname.startsWith(`${item.href}/`)
 }
 
-const SIDEBAR_EXPANDED_KEY = "sidebar-expanded"
+const SIDEBAR_EXPANDED_KEY = "sidebar-expanded:v1"
+const LEGACY_SIDEBAR_EXPANDED_KEY = "sidebar-expanded"
 
 /**
  * localStorage にアコーディオンの展開状態を保存・復元する。
@@ -634,10 +654,17 @@ function useExpandedState(pathname: string) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+      const current = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+      const legacy = current === null ? localStorage.getItem(LEGACY_SIDEBAR_EXPANDED_KEY) : null
+      const stored = current ?? legacy
 
       if (stored !== null) {
         setExpanded(new Set(JSON.parse(stored)))
+
+        if (legacy !== null) {
+          localStorage.setItem(SIDEBAR_EXPANDED_KEY, legacy)
+          localStorage.removeItem(LEGACY_SIDEBAR_EXPANDED_KEY)
+        }
       }
     } catch {
       // localStorage が使えない場合は空 Set のまま
@@ -645,6 +672,16 @@ function useExpandedState(pathname: string) {
 
     setInitialized(true)
   }, [])
+
+  useEffect(() => {
+    if (!initialized) return
+
+    try {
+      localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...expanded]))
+    } catch {
+      // localStorage が使えない場合は無視
+    }
+  }, [expanded, initialized])
 
   const toggle = useCallback((href: string, open: boolean) => {
     setExpanded((prev) => {
@@ -654,12 +691,6 @@ function useExpandedState(pathname: string) {
         next.add(href)
       } else {
         next.delete(href)
-      }
-
-      try {
-        localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...next]))
-      } catch {
-        // localStorage が使えない場合は無視
       }
 
       return next

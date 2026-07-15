@@ -104,13 +104,13 @@ async function insertAction(
 }
 
 describe("employee lifecycle migration", () => {
-  test("keeps numbered migrations continuous through 0019", () => {
+  test("keeps numbered migrations continuous through 0020", () => {
     const numbered = migrationFiles().filter((file) => /^\d{4}_.+\.sql$/.test(file))
 
     expect(numbered.map((file) => file.slice(0, 4))).toEqual(
-      Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(4, "0")),
+      Array.from({ length: 20 }, (_, index) => String(index + 1).padStart(4, "0")),
     )
-    expect(numbered.at(-1)).toBe(migrationFile)
+    expect(numbered.at(-1)).toBe("0020_governance.sql")
   })
 
   test("creates every lifecycle table in a fresh database", async () => {
