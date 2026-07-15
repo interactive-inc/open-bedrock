@@ -1,6 +1,8 @@
 import type { HonoEnv } from "@/env"
 import { createMiddleware } from "hono/factory"
 
+let rateLimitWarningLogged = false
+
 // IP 単位のグローバルレート制限。Cloudflare Workers の Rate Limiting binding を使う。
 // binding 未設定（ローカル開発・テスト）ではスキップする（login-rate-limit と同方針）。
 // /health は監視・ヘルスチェック用途のため対象外。ログインは別途アカウント単位の
@@ -8,16 +10,26 @@ import { createMiddleware } from "hono/factory"
 export const rateLimitMiddleware = createMiddleware<HonoEnv>(async (c, next) => {
   const limiter = c.env.API_RATE_LIMITER
 
-  if (limiter === undefined || c.req.path === "/health") {
+  if (c.req.path === "/health") {
     await next()
 
     return
   }
 
-  const ip =
-    c.req.header("CF-Connecting-IP") ??
-    c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() ??
-    "unknown"
+  if (limiter === undefined) {
+    if (!rateLimitWarningLogged) {
+      rateLimitWarningLogged = true
+      console.warn("[SECURITY] Rate limiting disabled: API_RATE_LIMITER binding not found")
+    }
+    await next()
+
+    return
+  }
+
+  // Prefer CF-Connecting-IP (trusted, set by Cloudflare). When absent (non-CF
+  // requests), use a fixed key so all non-CF traffic shares one global bucket
+  // instead of trusting the spoofable X-Forwarded-For header.
+  const ip = c.req.header("CF-Connecting-IP") ?? "unknown-ip"
 
   const outcome = await limiter.limit({ key: ip })
 

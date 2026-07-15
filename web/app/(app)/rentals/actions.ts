@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cancelRentalReservation } from "@/lib/api/cancel-rental-reservation"
 import { createRentalReservation } from "@/lib/api/create-rental-reservation"
 import { updateRentalReservation } from "@/lib/api/update-rental-reservation"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type RentalReservationActionState = {
@@ -17,6 +18,8 @@ export async function createRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
 ): Promise<RentalReservationActionState> {
+  await requireAuth()
+
   const itemName = toText(formData.get("item_name"))
 
   if (itemName === null) {
@@ -61,6 +64,8 @@ export async function updateRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
 ): Promise<RentalReservationActionState> {
+  await requireAuth()
+
   const reservationId = toText(formData.get("reservation_id"))
 
   if (reservationId === null) {
@@ -106,6 +111,8 @@ export async function cancelRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
 ): Promise<RentalReservationActionState> {
+  await requireAuth()
+
   const reservationId = toText(formData.get("reservation_id"))
 
   if (reservationId === null) {

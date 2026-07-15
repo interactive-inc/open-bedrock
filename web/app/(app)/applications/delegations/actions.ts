@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { createApprovalDelegation, deleteApprovalDelegation } from "@/lib/api/approval-delegations"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 export type DelegationState = { ok: boolean; error: string | null }
 
@@ -10,6 +11,8 @@ export async function createDelegationAction(
   _previous: DelegationState,
   formData: FormData,
 ): Promise<DelegationState> {
+  await requireAuth()
+
   const delegate = formData.get("delegate_employee_code")
   const template = formData.get("template_code")
   const starts = formData.get("starts_at")
@@ -40,6 +43,8 @@ export async function deleteDelegationAction(
   _previous: DelegationState,
   formData: FormData,
 ): Promise<DelegationState> {
+  await requireAuth()
+
   const id = toPositiveIntId(formData.get("delegation_id"))
   if (id === null) return { ok: false, error: "代理設定を特定できません" }
   const result = await deleteApprovalDelegation(id)

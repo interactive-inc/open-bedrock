@@ -10,6 +10,7 @@ import {
   toRequiredIsoDate,
   toRequiredText,
 } from "@/lib/form/constraints"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type LifeEventActionState = {
@@ -23,6 +24,8 @@ export async function createLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
 ): Promise<LifeEventActionState> {
+  await requireAuth()
+
   const fields = toEventFields(formData)
 
   if (fields instanceof Error) {
@@ -45,6 +48,8 @@ export async function updateLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
 ): Promise<LifeEventActionState> {
+  await requireAuth()
+
   const lifeEventId = formData.get("life_event_id")
 
   if (typeof lifeEventId !== "string" || lifeEventId === "") {
@@ -73,6 +78,8 @@ export async function cancelLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
 ): Promise<LifeEventActionState> {
+  await requireAuth()
+
   const lifeEventId = formData.get("life_event_id")
 
   if (typeof lifeEventId !== "string" || lifeEventId === "") {

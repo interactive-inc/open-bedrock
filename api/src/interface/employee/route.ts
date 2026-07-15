@@ -13,10 +13,10 @@ import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
-import { employees } from "@/schema"
+import { employees, employeeStatusPeriodVersions } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, inArray, or } from "drizzle-orm"
+import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
@@ -112,10 +112,34 @@ export const GET = factory.createHandlers(
           ),
         )
       }
+      // Pre-filter at the DB level: exclude archived employees. When filtering
+      // for "active" or "leave", also apply a subquery on employee_status_period_versions
+      // to narrow candidates before the full lifecycle state computation.
+      conditions.push(isNull(employees.archivedAt))
+      if (query.status === "active" || query.status === "leave") {
+        const spv = employeeStatusPeriodVersions
+        conditions.push(
+          exists(
+            c.var.database
+              .select({ one: sql`1` })
+              .from(spv)
+              .where(
+                and(
+                  eq(spv.employeeId, employees.id),
+                  eq(spv.isVoid, false),
+                  sql`${spv.revision} = (SELECT MAX(c.revision) FROM employee_status_period_versions c WHERE c.period_id = ${spv.periodId})`,
+                  eq(spv.status, query.status),
+                  lte(spv.startsOn, resolvedDate),
+                  or(isNull(spv.endsOn), sql`${spv.endsOn} > ${resolvedDate}`),
+                ),
+              ),
+          ),
+        )
+      }
       const candidates = await c.var.database
         .select({ id: employees.id, code: employees.code, name: employees.name })
         .from(employees)
-        .where(conditions.length === 0 ? undefined : and(...conditions))
+        .where(and(...conditions))
         .orderBy(asc(employees.code))
       const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
         candidates.map((row) => row.id),

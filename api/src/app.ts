@@ -215,16 +215,27 @@ import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/rout
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
 
+let corsWarningLogged = false
+
 // Origin リクエストヘッダを env.CORS_ORIGIN（カンマ区切り）と照合し、許可された Origin のみ返す。
-// 未設定時は defaultAllowedOrigins のみ許可（本番では必ず CORS_ORIGIN を設定する）。
+// 未設定時は defaultAllowedOrigins のみ許可し、セキュリティ警告をログに出す。
+// 本番では必ず CORS_ORIGIN を設定すること。
 function resolveAllowedOrigin(origin: string, allowList: string | undefined): string | null {
-  const allowed =
-    allowList === undefined || allowList.trim() === ""
-      ? defaultAllowedOrigins
-      : allowList
-          .split(",")
-          .map((value) => value.trim())
-          .filter((value) => value.length > 0)
+  if (allowList === undefined || allowList.trim() === "") {
+    if (!corsWarningLogged) {
+      corsWarningLogged = true
+      console.warn(
+        "[SECURITY] CORS_ORIGIN is not set — falling back to localhost origins. " +
+          "Set CORS_ORIGIN in production to restrict cross-origin access.",
+      )
+    }
+    return defaultAllowedOrigins.includes(origin) ? origin : null
+  }
+
+  const allowed = allowList
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0)
 
   return allowed.includes(origin) ? origin : null
 }

@@ -10,6 +10,7 @@ import {
   toRequiredIsoDate,
   toRequiredText,
 } from "@/lib/form/constraints"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type BusinessTripActionState = {
@@ -23,6 +24,8 @@ export async function createBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
 ): Promise<BusinessTripActionState> {
+  await requireAuth()
+
   const fields = toTripFields(formData)
 
   if (fields instanceof Error) {
@@ -45,6 +48,8 @@ export async function updateBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
 ): Promise<BusinessTripActionState> {
+  await requireAuth()
+
   const businessTripId = formData.get("business_trip_id")
 
   if (typeof businessTripId !== "string" || businessTripId === "") {
@@ -73,6 +78,8 @@ export async function cancelBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
 ): Promise<BusinessTripActionState> {
+  await requireAuth()
+
   const businessTripId = formData.get("business_trip_id")
 
   if (typeof businessTripId !== "string" || businessTripId === "") {
