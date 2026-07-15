@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { deleteOneOnOneAction, updateOneOnOneAction } from "@/app/(app)/oneonone/actions"
 import type { OneOnOneActionState } from "@/app/(app)/oneonone/actions"
 import type { OneOnOne } from "@/lib/api/types/oneonone-types"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -28,11 +29,11 @@ const initialState: OneOnOneActionState = { ok: false, error: null }
 // 1on1 カードの操作群。記録内容の変更（Dialog）と削除ボタンを横並びにする client コンポーネント。
 export function OneOnOneItemActions(props: Props) {
   return (
-    <div className="flex justify-end gap-2">
+    <TableRowActions>
       <UpdateOneOnOneDialog oneOnOne={props.oneOnOne} />
 
       <DeleteOneOnOneButton oneOnOneId={props.oneOnOne.id} />
-    </div>
+    </TableRowActions>
   )
 }
 

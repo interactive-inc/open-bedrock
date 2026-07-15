@@ -8,6 +8,7 @@ import {
 import type { RentalReservationActionState } from "@/app/(app)/rentals/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -69,11 +70,11 @@ export function MyReservationsList(props: Props) {
               <TableCell>{statusLabel(reservation.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateReservationDialog reservation={reservation} />
 
                   <CancelReservationButton reservationId={reservation.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
