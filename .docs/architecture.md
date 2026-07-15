@@ -1,63 +1,138 @@
-# アーキテクチャ
+# システムアーキテクチャ仕様
 
-bun workspaces による TypeScript モノレポ。api と cli と web の3ワークスペースで構成する。
+規範性: 補助仕様。中核モデルを実装する配置、依存方向、信頼境界を定める。
 
-## 実行環境
+実装済みの配置、依存方向、信頼境界と、未実装の要求構成を定義する。現行構成の正本は workspace の `package.json`、route、migration、deployment config とする。要求構成は設計制約であり、実装済みであることを意味しない。図は依存関係を定義し、runtime topology の完全な列挙を目的としない。
 
-api は Cloudflare Workers(wrangler)上で動作する。cli は bun で動作する。web は Next.js で動作する。
+## 現在の構成
 
-## レイヤー
-
-api は domain と application と infrastructure と interface の4層で構成する。interface は Next.js App Router 記法(route.ts と動的セグメント [param])でルートを定義し、app.ts が :param に対応づけて登録する。
-
-web の app ディレクトリはルートごとに collocation する。ルート直下には page.tsx と actions.ts(Server Actions)などの規約ファイルだけを置き、画面を構成するコンポーネントは各ルートの \_components 配下、表示用の純関数は \_lib 配下に置く。画面横断の共有コンポーネントは web/components に置き、shadcn 生成物(web/components/ui)は直接編集しない。
-
-## データ
-
-api は Cloudflare D1(SQLite)を Drizzle ORM 経由で読み書きする。データベーススキーマの正本は api/migrations 配下の SQL であり、api/src/schema.ts は Drizzle ORM のクエリと型生成に使う同期ビューである。一意索引と部分索引によって、二重登録と競合する状態遷移をデータベース境界でも防ぐ。
-
-会社全体の意味モデルと現行テーブルの関係は [[company-model|会社モデル]]、実装状態は [[capability-map|機能網羅表]] を参照する。
-
-## データ取得
-
-cli は引数をローカルの HTTP リクエストに変換し、内部の Hono ルートで処理したうえで、api を叩く。接続先は既定で http://127.0.0.1:8787、環境変数 KARTE_API で上書きできる。web は Hono の型付きクライアント(hc)で api を叩く。
-
-## 認証
-
-ログインで取得した JWT トークンを Authorization ヘッダに Bearer トークンとして付与する。cli はトークンを ~/.karte/config.json に保存する。web は httpOnly cookie に保持する。api は jose でトークンを検証する。
-
-アクセストークンの有効期限は発行から 1 時間である。リフレッシュトークンは発行または更新から 7 日間有効で、更新時にローテーションする。使用済みトークンの再利用を検知した場合は同じファミリーを失効させる。アカウント停止、退職、または token_version の変更でも既存セッションを無効化する。
-
-## セキュリティ
-
-パスワードは PBKDF2-SHA256・10 万反復・個別ソルト(crypto.subtle 実装)でハッシュ化する。旧実装(SHA-256 固定ソルト)からの移行はログイン成功時に自動で行うほか、一度もログインしないユーザーの旧ハッシュは管理者バッチ(POST /batch/migrate-password-hashes、karte batch migrate-password-hashes)で pbkdf2-wrapped-legacy 形式へ一括移行できる。
-
-ログインは IP 単位とメールアドレス単位の二重のレート制限を KV で行う。KV 未バインドの開発環境では制限をスキップするため、本番では RATE_LIMIT KV のバインドが必須。
-
-ログイン以外の全エンドポイントには Workers の Rate Limiting binding(API_RATE_LIMITER)を使い、IP 単位のグローバルレート制限(既定で 60 秒あたり 600 リクエスト)をミドルウェアでかける。Workers KV と違い高頻度カウントに耐えるネイティブ機能のため、KV のような書き込み制約を受けない。binding 未設定の環境(ローカル開発・テスト)ではスキップするため、本番では wrangler.jsonc の ratelimits バインドが必要。ヘルスチェック用の /health は対象外。
-
-CORS は env.CORS_ORIGIN で許可オリジンを制限する。ワイルドカードは使わない。
-
-API レスポンスには hono/secure-headers で X-Content-Type-Options: nosniff、Strict-Transport-Security(HSTS)、X-Frame-Options などのセキュリティヘッダを付与する。別オリジンの正規クライアント(web / cli)からの利用を阻害しないよう COOP / CORP は無効化し、クロスオリジンの制御は CORS に委ねる。
-
-リクエストボディは 1 MB を上限とする(Hono bodyLimit ミドルウェア)。フリーテキストフィールドは最大 200〜50,000 字、ID・コード類は最大 200 字のバリデーションを各ルートに設ける。日付フィールドは ISO 8601 形式(YYYY-MM-DD)を強制する。
-
-現在の認可は、本人所有、DB から解決したシステム権限、組織関係、申請案件の担当者をルートごとに組み合わせている。API の判定を正本とし、Web と CLI の表示制御だけでアクセスを許可しない。目標とする合成規則、データ項目の分類、既知の実装差分は [[authorization-model|認可モデル]] を参照する。
-
-状態遷移を伴う操作(休暇申請の承認・却下など)は事前条件チェックを持ち、同一リクエストの二重処理を防ぐ。
-
-## スタイリング
-
-web は Tailwind CSS と shadcn で構成する。
-
-## 構成図
+- `api`: Hono と Cloudflare Workers で動く HTTP API
+- `cli`: 引数を local Hono route で検証し、HTTP API を呼ぶ Bun CLI
+- `web`: Next.js、React、Tailwind、shadcn による Web UI
+- `D1`: SQLite 互換の永続化。migration SQL が schema の正本
 
 ```mermaid
 flowchart LR
-  user[利用者] --> cli[karte]
-  cli -->|HTTP Bearer| api[api Hono on Workers]
-  user --> web[web Next.js]
-  web -->|HTTP Bearer| api
-  api --> db[(Cloudflare D1)]
-  config[~/.karte/config.json] --- cli
+  Human["利用者"] --> Web["web / Next.js"]
+  Human --> CLI["cli / Bun"]
+  Web -->|"Bearer HTTP"| API["api / Hono on Workers"]
+  CLI -->|"Bearer HTTP"| API
+  API --> D1[("Cloudflare D1")]
+  API --> KV[("KV・rate limit bindings")]
 ```
+
+実装されている route の正本は `api/src/app.ts` と `api/src/interface`、データ制約の正本は `api/migrations` である。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。
+
+## API の層
+
+`api/src` は次の依存方向を持つ。
+
+- `domain`: 型、値、不変条件、状態遷移
+- `application`: use case、transaction、policy の調整
+- `infrastructure`: D1、外部 port、repository の実装
+- `interface`: HTTP schema、認証 context、response mapping
+
+依存は interface と infrastructure から application と domain へ向ける。domain は Hono、D1、外部 SDK、Web の型を参照しない。
+
+route は App Router 形式の directory に置き、`app.ts` が Hono path へ登録する。route を追加しただけでは API に公開されないため、登録と型再生成を一つの変更として扱う。
+
+## Web と CLI
+
+Web と CLI は提供面であり、業務規則と認可の正本ではない。
+
+- Web の route 固有 component は `_components`、表示用純関数は `_lib` へ collocate する。
+- `web/components/ui` は shadcn 生成物とし、直接編集しない。
+- Web と CLI は `api/app` の `AppType` を type-only で参照し、それぞれ `hc` client を生成する。
+- API の実行時 module を client bundle へ import しない。
+- CLI route は `cli/app/index.ts` へ登録する。
+- UI の非表示や CLI help は認可ではなく、API が最終判断する。
+
+## 認証と認可
+
+現在は login で発行した token を Bearer として API へ送る。Web は httpOnly cookie、CLI は local config を使う。token の検証、session 失効、account 状態、permission、scope、案件資格は API が評価する。
+
+目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。詳細は [認可モデル](./authorization-model.md) を参照する。
+
+## データと transaction
+
+- 強い不変条件は application の事前検査だけでなく、unique index、check、条件付き更新で DB 境界にも置く。
+- 状態遷移は expected revision を検査する。
+- business result と監査または outbox が片方だけ残らない transaction 境界を作る。
+- 履歴を必要とする関係は物理削除せず、有効期間、取消、archive、訂正で表す。
+- valid time、recorded time、policy version を必要に応じて分ける。
+- retry 可能な command は idempotency key と payload digest を保存する。
+
+## 要求構成
+
+AI 自動化と外部 API を安全に扱うため、API 境界は次の未実装要件を満たす。
+
+```mermaid
+flowchart TB
+  Human["HumanPrincipal"] --> Web["Web"]
+  Human --> CLI["CLI"]
+  Agent["AgentPrincipal"] --> AgentAPI["Agent client / CLI"]
+  Web --> API["Interface"]
+  CLI --> API
+  AgentAPI --> API
+
+  API --> Authn["Principal authentication"]
+  Authn --> Policy["Permission・authority・scope・state policy"]
+  Policy --> Proposal["Proposal・case・human attestation"]
+  Proposal --> Gateway["Execution gateway"]
+  Gateway --> Application["Application services"]
+  Application --> Domain["Enterprise core・domain modules"]
+  Domain --> D1[("D1")]
+  Application --> Audit["Audit・provenance"]
+  Application --> Outbox["Outbox"]
+  Outbox --> Connector["Versioned adapter"]
+  Connector --> External["External product or professional"]
+  External --> Inbox["Signed inbox・deduplication"]
+  Inbox --> Claims["External assertions"]
+  Claims --> Reconcile["Reconciliation"]
+  Reconcile --> Application
+```
+
+## Policy と実行の境界
+
+要求構成では、次を一つの管理者権限へ集中させない。
+
+- Principal と TechnicalPermission の管理
+- OrganizationalAuthority の assignment
+- Proposal の作成
+- HumanAttestation または合議体 decision
+- ExecutionAuthorization の発行
+- connector secret による外部実行
+- audit retention と policy 変更
+
+低リスク環境では同一の人間が複数責務を担える policy も許すが、独立承認や定足数を必要とする policy を表現し、強制できる構造を持つ。
+
+## 外部連携の境界
+
+外部 SDK は infrastructure adapter に閉じ込める。domain は canonical port だけを参照する。外部 callback は interface で署名、replay、schema を検証し、inbox を経て application service へ渡す。
+
+外部との整合は二相 commit に依存せず、outbox、inbox、idempotency、retry、dead-letter 相当の例外案件、reconciliation で回復する。詳細は [外部連携モデル](./integration-model.md) を参照する。
+
+## セキュリティ原則
+
+- CORS は明示した origin に限定する。
+- request body、文字列、ID、日付を interface schema で制限する。
+- rate limit binding が必要な環境では未設定を安全に検出する。
+- response へ安全な header を付与する。
+- secret を source、document、log、prompt、client bundle へ含めない。
+- field policy を response と export の両方へ適用する。
+- 外部 URL、redirect、webhook、file input を信頼境界として扱う。
+- 監査だけで防御したことにせず、認可と DB 制約で side effect を防ぐ。
+
+具体的な反復数、token 寿命、rate limit 値など運用可能な値はコードと deployment config を正とし、この恒久文書へ複製しない。
+
+## 可換性による適合確認
+
+会社モデルから実装への写像が次を保存することを integration test で確認する。
+
+- Web、CLI、Agent の request が同じ application command へ正規化される
+- permit なしの side effect path が存在しない
+- Proposal、HumanAttestation、Execution の digest が一致する
+- retry と一回実行の業務効果が一致する
+- domain event と audit または outbox が同じ transaction outcome を持つ
+- external mapping が ID、単位、時点、source、version を失わない
+- current relationship と historical snapshot を取り違えない

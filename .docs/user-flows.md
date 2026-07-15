@@ -1,6 +1,8 @@
-# ユーザーフロー
+# 実装操作フロー
 
-ここでは利用者の代表的な導線を記載する。karte コマンドと Web の両方に同じドメインがあっても、操作単位の提供範囲は異なる。各能力の API、Web、CLI、Schema の状況は [[capability-map|機能網羅表]] を参照する。
+規範性: 実装写像。実装済み機能の主要な操作順序を要約する。
+
+実装済み機能の主要な操作順序と結果を定義する。各フローは現在の API、CLI、Web の共通提供を意味しない。route と入出力はコード、認可は [認可モデル](./authorization-model.md)、製品責務の境界は [製品目的と境界](./product-purpose.md) を正本とする。本書は導入組織の正式手続きまたは将来計画ではない。
 
 ## 社員導線
 
@@ -24,10 +26,11 @@
 
 ### 規程・手続きを運用する
 
-1. 原本の Markdown で版、適用対象、責任ロール、手順又は公開承認を定義する
-2. `karte governance sync` で原本を同期し、整合性検査で参照と組織責任を確認する
-3. 公開承認が必要な版は組織ロールの担当者がレビューし、公開権限者が施行する
-4. 従業員は自分に適用される公開版を閲覧し、必要な文書は確認済みとして記録する
+1. 導入組織の非公開 source で版、対象、責任、ProcedureDefinition、公開 review を定義する
+2. `karte governance sync` で draft を同期し、参照、role assignment、期限、rule overlap 候補を検査する
+3. 公開 review が必要な版は権限ある人間が review し、公開権限者が承認済み content hash を publish する
+4. 現行実装では published status と audience が一致する文書を従業員が閲覧し、必要な文書は acknowledgement を記録する
+5. 現行実装は施行期間による表示制御、合議体 quorum、review candidate snapshot を持たないため、それらを必要とする正式運用には使わない
 
 ### 会議室を予約する
 

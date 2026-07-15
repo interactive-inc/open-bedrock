@@ -1,6 +1,8 @@
-# サイトマップ
+# Web route 仕様
 
-web のユーザー向け画面一覧。実装ルートは `web/app` 配下を正とし、動的セグメントは `[param]` で表す。機能の概要は [[features|機能一覧]]、主要導線は [[user-flows|ユーザーフロー]] を参照する。
+規範性: 実装写像。Web route と画面責務の実装 snapshot を示す。
+
+実装済み Web route と各 route の操作責務を列挙する。route の正本は `web/app` とし、動的 segment は `[param]` で表す。本書は route snapshot であり、API の提供、認可、業務不変条件を保証しない。未掲載 route と差異がある場合はコードを優先する。
 
 ## 認証
 
@@ -66,8 +68,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 ## 規程・手続き
 
-- `/governance` は権限と適用対象に応じた規程・手続きを検索する画面。
-- `/governance/[code]` は Markdown 本文、版、構造化手順、権限ルール、統制、公開レビュー、確認状態を表示する画面。
+- `/governance` は published status、audience、閲覧権限に応じた規程・手続きを検索する画面。現行実装は施行期間で絞り込まない。
+- `/governance/[code]` は Markdown 本文、版、ProcedureDefinition、authority rule と control の宣言 metadata、公開 review、確認状態を表示する画面。
 - `/governance/manage` は組織ロールの割当と、組織・参照・期限の整合性を検査する管理画面(`governance:manage`)。
 
 ## 会議室と備品
@@ -93,7 +95,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/goals/new` は期間と内容を入力して目標を登録する画面。
 - `/goals/[id]` は目標の内容、評価、状態を確認する詳細画面。
 
-## 1on1 とサーベイ
+## 個別面談とサーベイ
 
 - `/oneonone` は自分が参加した 1on1 の履歴を確認する画面。
 - `/oneonone/new` は日時、相手、メモを入力して 1on1 を記録する画面。
@@ -166,8 +168,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/business-trips` は出張申請と申請状況を確認する画面。
 - `/business-trips/new` は出張先、期間、目的を記入して出張を申請する画面。
-- `/rentals` は自分の貸出予約を確認する画面。
-- `/rentals/new` は備品と利用期間を指定してレンタルを予約する画面。
+- `/rentals` は自分の貸与品利用申出を確認する画面。route 名は現行実装を表し、資源確保済みの Reservation を意味しない。
+- `/rentals/new` は品名と利用期間を指定して貸与品の利用を申し出る画面。備品台帳の個体や在庫は確保しない。
 - `/resignations` は退職申請と申請状況を確認する画面。
 - `/resignations/new` は退職予定日と理由を記入して退職を申請する画面。
 - `/life-events` は結婚、出産などのライフイベント届出を確認する画面。
