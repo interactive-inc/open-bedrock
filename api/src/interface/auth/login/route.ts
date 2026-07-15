@@ -31,16 +31,13 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       email: z.string().max(254),
-      password: z.string().max(200),
+      password: z.string().min(1).max(200),
     }),
   ),
   async (c) => {
     const kv = c.env.RATE_LIMIT
 
-    const ip =
-      c.req.header("CF-Connecting-IP") ??
-      c.req.header("X-Forwarded-For")?.split(",")[0]?.trim() ??
-      "unknown"
+    const ip = c.req.header("CF-Connecting-IP") ?? "unknown-ip"
 
     const json = c.req.valid("json")
     const email = json.email

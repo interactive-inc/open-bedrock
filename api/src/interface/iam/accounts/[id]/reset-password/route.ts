@@ -11,7 +11,19 @@ import { z } from "zod"
 // POST /accounts/:id/reset-password — 管理者がアカウントのパスワードを再設定（account:manage が必要）
 export const POST = factory.createHandlers(
   verifyBearer,
-  zValidator("json", z.object({ new_password: z.string().min(8).max(200) })),
+  zValidator(
+    "json",
+    z.object({
+      new_password: z
+        .string()
+        .min(8)
+        .max(200)
+        .regex(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,200}$/,
+          "パスワードは8文字以上で、大文字・小文字・数字をそれぞれ1つ以上含めてください",
+        ),
+    }),
+  ),
   async (c) => {
     const session = c.var.session
 

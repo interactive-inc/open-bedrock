@@ -18,6 +18,7 @@ const actions = [
   "auth.session.login_succeeded",
   "auth.session.login_denied",
   "auth.session.refreshed",
+  "auth.session.logout",
   "auth.session.reuse_detected",
   "iam.role.created",
   "iam.role.updated",
@@ -99,7 +100,7 @@ function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
 }
 
 describe("audit event vocabulary", () => {
-  test("accepts exactly the 32 managed actions", () => {
+  test("accepts exactly the 33 managed actions", () => {
     expect(auditActionSchema.options).toEqual([...actions])
     for (const action of actions) {
       expect(auditActionSchema.parse(action)).toBe(action)

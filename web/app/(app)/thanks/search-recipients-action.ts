@@ -2,6 +2,7 @@
 
 import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // クライアントの EmployeeCombobox から呼ぶ従業員検索 Server Action。
 // GET /directory/employees（q で name/code 部分一致）をラップし、結果配列のみをクライアントへ渡す。
@@ -10,6 +11,8 @@ import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
 export async function searchRecipientsAction(
   query: string,
 ): Promise<ReadonlyArray<EmployeeListItem>> {
+  await requireAuth()
+
   const trimmedQuery = query.trim()
 
   if (trimmedQuery === "") {

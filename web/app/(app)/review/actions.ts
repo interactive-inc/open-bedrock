@@ -8,6 +8,7 @@ import { getMe } from "@/lib/api/get-me"
 import { openReviewCycle } from "@/lib/api/open-review-cycle"
 import { submitReviewForm } from "@/lib/api/submit-review-form"
 import { updateReviewCycle } from "@/lib/api/update-review-cycle"
+import { requireAuth } from "@/lib/auth/require-auth"
 import {
   FORM_CONSTRAINTS,
   toOptionalIntInRange,
@@ -241,6 +242,8 @@ export async function submitReviewFormAction(
   _previousState: ReviewFormState,
   formData: FormData,
 ): Promise<ReviewFormState> {
+  await requireAuth()
+
   const formId = toPositiveIntId(formData.get("form_id"))
 
   if (formId === null) {

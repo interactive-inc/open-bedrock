@@ -6,6 +6,7 @@ import { getMe } from "@/lib/api/get-me"
 import { getThanksList, type ThanksListResult } from "@/lib/api/get-thanks-list"
 import { requestRedemption } from "@/lib/api/request-redemption"
 import { sendThanks } from "@/lib/api/send-thanks"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
@@ -20,6 +21,8 @@ export async function sendThanksAction(
   previousState: ThanksActionState,
   formData: FormData,
 ): Promise<ThanksActionState> {
+  await requireAuth()
+
   const recipientEmployeeCode = formData.get("recipient_employee_code")
 
   if (typeof recipientEmployeeCode !== "string" || recipientEmployeeCode === "") {
@@ -59,6 +62,8 @@ export async function requestRedemptionAction(
   previousState: ThanksActionState,
   formData: FormData,
 ): Promise<ThanksActionState> {
+  await requireAuth()
+
   const rawRewardId = formData.get("reward_id")
 
   const rewardId = typeof rawRewardId === "string" ? Number(rawRewardId) : Number.NaN
@@ -124,6 +129,8 @@ export async function createRewardAction(
 // 感謝タイムラインの追加読み込み Server Action。
 // offset を受け取り、次のページを取得して返す。
 export async function loadMoreThanksAction(offset: number): Promise<ThanksListResult | null> {
+  await requireAuth()
+
   const result = await getThanksList({ limit: 20, offset })
 
   if (result instanceof Error) {

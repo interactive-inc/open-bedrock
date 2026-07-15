@@ -1,13 +1,12 @@
 import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import { validatePasswordComplexity } from "@/lib/auth/password-policy"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
-
-const MIN_PASSWORD_LENGTH = 8
 
 export type Command = {
   session: SessionPayload
@@ -30,9 +29,8 @@ export class ResetAccountPassword {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 
-    if (command.newPassword.length < MIN_PASSWORD_LENGTH) {
-      return new ValidationError("password is too weak", "weak_password")
-    }
+    const passwordError = validatePasswordComplexity(command.newPassword)
+    if (passwordError !== null) return passwordError
 
     const targetAccount = await new AccountAuthRepository(this.c).resolveById(command.accountId)
 

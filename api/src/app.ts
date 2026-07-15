@@ -45,6 +45,7 @@ import * as attendanceListRoute from "@/interface/attendance/route"
 import * as attendanceMeRoute from "@/interface/attendance/me/route"
 import * as attendanceMeSummaryRoute from "@/interface/attendance/me/summary/route"
 import * as authLoginRoute from "@/interface/auth/login/route"
+import * as authLogoutRoute from "@/interface/auth/logout/route"
 import * as authMeRoute from "@/interface/auth/me/route"
 import * as authRefreshRoute from "@/interface/auth/refresh/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
@@ -240,6 +241,17 @@ function resolveAllowedOrigin(origin: string, allowList: string | undefined): st
   return allowed.includes(origin) ? origin : null
 }
 
+let nowProductionGuardWarned = false
+const nowProductionGuardMiddleware = factory.createMiddleware(async (c, next) => {
+  if (!nowProductionGuardWarned && c.env.CORS_ORIGIN !== undefined && c.env.NOW !== undefined) {
+    nowProductionGuardWarned = true
+    console.warn(
+      "[SECURITY] NOW override is set in production — this affects all timestamps",
+    )
+  }
+  await next()
+})
+
 const globalBodyLimit = bodyLimit({ maxSize: 1_000_000 })
 
 const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next) => {
@@ -271,6 +283,7 @@ export const app = factory
   // （クロスオリジンアクセスの制御は CORS が担う）。
   .use("*", secureHeaders({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: false }))
   .use("*", contextStorage())
+  .use("*", nowProductionGuardMiddleware)
   .use("*", databaseMiddleware)
   .onError((error, c) => {
     if (error instanceof HTTPException) {
@@ -290,6 +303,7 @@ export const app = factory
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
   .post("/auth/login", ...authLoginRoute.POST)
+  .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/audit-events", ...auditEventsRoute.GET)
