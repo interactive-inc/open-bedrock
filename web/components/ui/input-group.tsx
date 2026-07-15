@@ -68,8 +68,8 @@ const inputGroupButtonVariants = cva("flex items-center gap-2 rounded-4xl text-s
     size: {
       xs: "h-6 gap-1 px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
       sm: "",
-      "icon-xs": "size-6 p-0 has-[>svg]:p-0",
-      "icon-sm": "size-8 p-0 has-[>svg]:p-0",
+      "icon-xs": "size-6 p-0 has-[>svg]:p-0 max-md:min-h-11 max-md:min-w-11",
+      "icon-sm": "size-8 p-0 has-[>svg]:p-0 max-md:min-h-11 max-md:min-w-11",
     },
   },
   defaultVariants: {

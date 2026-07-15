@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -43,11 +44,11 @@ export function GoalRowActions(props: Props) {
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <TableRowActions>
       <UpdateGoalDialog goal={props.goal} goalId={goalId} />
 
       <DeleteGoalButton goalId={goalId} />
-    </div>
+    </TableRowActions>
   )
 }
 

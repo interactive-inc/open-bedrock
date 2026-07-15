@@ -1,5 +1,6 @@
 import { DeleteRoleButton } from "@/app/(app)/admin/roles/_components/delete-role-button"
 import { FetchError } from "@/components/fetch-error"
+import { TableRowActions } from "@/components/table-row-actions"
 import {
   Table,
   TableBody,
@@ -56,9 +57,9 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
                     <Badge variant="outline">動的</Badge>
                   )}
                 </TableCell>
-                <TableCell className="flex gap-2">
+                <TableCell>
                   {canManage ? (
-                    <>
+                    <TableRowActions>
                       <Link
                         href={`/admin/roles/${role.id}/edit`}
                         className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -69,7 +70,7 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
                       {role.is_system ? null : (
                         <DeleteRoleButton roleId={role.id} roleName={role.name} />
                       )}
-                    </>
+                    </TableRowActions>
                   ) : (
                     <span className="text-sm text-muted-foreground">上位ロール</span>
                   )}

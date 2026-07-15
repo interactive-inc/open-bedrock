@@ -7,6 +7,7 @@ import { deleteExpenseAction, updateExpenseAction } from "@/app/(app)/expense/ac
 import type { ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
 import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -83,13 +84,13 @@ export function MyExpensesList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {expense.status === "pending" ? <UpdateExpenseDialog expense={expense} /> : null}
 
                   {expense.status === "pending" ? (
                     <DeleteExpenseButton expenseId={expense.id} />
                   ) : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
