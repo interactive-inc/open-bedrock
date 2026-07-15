@@ -8,6 +8,7 @@ export const auditActionSchema = z.enum([
   "auth.session.login_succeeded",
   "auth.session.login_denied",
   "auth.session.refreshed",
+  "auth.session.logout",
   "auth.session.reuse_detected",
   "iam.role.created",
   "iam.role.updated",

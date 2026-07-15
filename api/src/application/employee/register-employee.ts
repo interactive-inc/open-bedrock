@@ -7,6 +7,7 @@ import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
 import { isAbortedByLivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { hasPermission } from "@/lib/auth/has-permission"
+import { validatePasswordComplexity } from "@/lib/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import {
@@ -32,8 +33,6 @@ export type Command = {
     managerEmployeeCode: string | null
   }
 }
-
-const MIN_PASSWORD_LENGTH = 8
 
 export class RegisterEmployee {
   constructor(private readonly c: Context) {}
@@ -74,9 +73,8 @@ export class RegisterEmployee {
         "role_escalation_forbidden",
       )
     }
-    if (command.employee.password.length < MIN_PASSWORD_LENGTH) {
-      return new ValidationError("password is too weak", "weak_password")
-    }
+    const passwordError = validatePasswordComplexity(command.employee.password)
+    if (passwordError !== null) return passwordError
     const [existing, existingByEmail] = await Promise.all([
       new EmployeeRepository(this.c).findByCode(command.employee.code),
       new IdentityRepository(this.c).findEmployeeIdByEmail(command.employee.email),

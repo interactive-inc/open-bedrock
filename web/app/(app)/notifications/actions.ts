@@ -7,6 +7,7 @@ import { getMe } from "@/lib/api/get-me"
 import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
 import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
@@ -21,6 +22,8 @@ export async function markNotificationReadAction(
   _previousState: NotificationFormState,
   formData: FormData,
 ): Promise<NotificationFormState> {
+  await requireAuth()
+
   const notificationId = toPositiveIntId(formData.get("notification_id"))
 
   if (notificationId === null) {
@@ -42,6 +45,8 @@ export async function markNotificationReadAction(
 export async function markAllNotificationsReadAction(
   _previousState: NotificationFormState,
 ): Promise<NotificationFormState> {
+  await requireAuth()
+
   const result = await markAllNotificationsRead()
 
   if (result instanceof Error) {
