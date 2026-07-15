@@ -1,7 +1,8 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import { deleteKnowledgeAction, updateKnowledgeAction } from "@/app/(app)/knowledge/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -36,23 +37,12 @@ export function KnowledgeDetailActions(props: Props) {
 function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: { ok: boolean; error: string | null },
-    formData: FormData,
-  ): Promise<{ ok: boolean; error: string | null }> {
-    const result = await updateKnowledgeAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateKnowledgeAction,
+    { ok: false, error: null },
+    "記事を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -112,10 +102,10 @@ function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
 
 // 記事削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeleteKnowledgeButton(props: { articleId: number }) {
-  const [state, formAction, pending] = useActionState(deleteKnowledgeAction, {
+  const [state, formAction, pending] = useFormAction(deleteKnowledgeAction, {
     ok: false,
     error: null,
-  })
+  }, "記事を削除しました")
 
   return (
     <div className="flex flex-col gap-1">

@@ -1,12 +1,13 @@
 "use client"
 
 import { formatDateTime } from "@/lib/format-datetime"
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   updateSurveyResponseAction,
   withdrawSurveyResponseAction,
 } from "@/app/(app)/surveys/actions"
 import type { MyResponseActionState } from "@/app/(app)/surveys/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import type { SurveyResponseItem } from "@/lib/api/types/survey-types"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
@@ -96,23 +97,12 @@ export function MyResponsesList(props: Props) {
 function UpdateResponseDialog(props: { responseId: number; response: SurveyResponseItem }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: MyResponseActionState,
-    formData: FormData,
-  ): Promise<MyResponseActionState> {
-    const result = await updateSurveyResponseAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateSurveyResponseAction,
+    { ok: false, error: null } satisfies MyResponseActionState,
+    "回答を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   const entries = toAnswerEntries(props.response.answers_json)
 
@@ -158,10 +148,10 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
 
 // 回答取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawResponseButton(props: { responseId: number }) {
-  const [_state, formAction, pending] = useActionState(withdrawSurveyResponseAction, {
+  const [_state, formAction, pending] = useFormAction(withdrawSurveyResponseAction, {
     ok: false,
     error: null,
-  })
+  }, "回答を取り下げました")
 
   return (
     <ConfirmActionDialog

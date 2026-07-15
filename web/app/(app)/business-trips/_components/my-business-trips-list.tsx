@@ -1,11 +1,11 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   cancelBusinessTripAction,
   updateBusinessTripAction,
 } from "@/app/(app)/business-trips/actions"
-import type { BusinessTripActionState } from "@/app/(app)/business-trips/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
@@ -90,23 +90,12 @@ export function MyBusinessTripsList(props: Props) {
 function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: BusinessTripActionState,
-    formData: FormData,
-  ): Promise<BusinessTripActionState> {
-    const result = await updateBusinessTripAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateBusinessTripAction,
+    { ok: false, error: null },
+    "出張申請を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -194,10 +183,10 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
 
 // 出張申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelBusinessTripButton(props: { businessTripId: string }) {
-  const [_state, formAction, pending] = useActionState(cancelBusinessTripAction, {
+  const [_state, formAction, pending] = useFormAction(cancelBusinessTripAction, {
     ok: false,
     error: null,
-  })
+  }, "出張申請を取り消しました")
 
   return (
     <ConfirmActionDialog

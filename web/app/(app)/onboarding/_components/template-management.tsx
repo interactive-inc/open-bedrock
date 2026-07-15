@@ -1,12 +1,13 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   bindLifecycleTemplateAction,
   deleteOnboardingTemplateAction,
   updateOnboardingTemplateAction,
 } from "@/app/(app)/onboarding/actions"
 import type { TemplateMutationState } from "@/app/(app)/onboarding/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -44,23 +45,12 @@ export function TemplateManagement(props: Props) {
 function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: TemplateMutationState,
-    formData: FormData,
-  ): Promise<TemplateMutationState> {
-    const result = await updateOnboardingTemplateAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    message: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateOnboardingTemplateAction,
+    { ok: false, message: null } satisfies TemplateMutationState,
+    (state) => state.message ?? "テンプレートを変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -138,10 +128,11 @@ function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
 }
 
 function LifecycleBindingButton(props: { template: OnboardingTemplate }) {
-  const [state, formAction, pending] = useActionState(bindLifecycleTemplateAction, {
-    ok: false,
-    message: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    bindLifecycleTemplateAction,
+    { ok: false, message: null } satisfies TemplateMutationState,
+    (state) => state.message ?? "連携を変更しました",
+  )
   const effect = props.template.kind === "leave" ? "retired" : "hire"
   const label = effect === "hire" ? "入社" : "退職"
   const isCurrent = props.template.lifecycle_effect === effect
@@ -175,10 +166,11 @@ function LifecycleBindingButton(props: { template: OnboardingTemplate }) {
 
 // テンプレートを削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeleteTemplateButton(props: { code: string }) {
-  const [state, formAction, pending] = useActionState(deleteOnboardingTemplateAction, {
-    ok: false,
-    message: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    deleteOnboardingTemplateAction,
+    { ok: false, message: null } satisfies TemplateMutationState,
+    (state) => state.message ?? "テンプレートを削除しました",
+  )
 
   return (
     <div className="flex flex-col gap-1">
