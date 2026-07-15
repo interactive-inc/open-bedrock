@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { clockInAttendance } from "@/lib/api/clock-in-attendance"
 import { clockOutAttendance } from "@/lib/api/clock-out-attendance"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 // clockedAt は打刻成功時の時刻（HH:mm 形式）。フォーム内での視覚フィードバックに使う。
@@ -18,6 +19,8 @@ export async function clockInAction(
   previousState: AttendanceActionState,
   formData: FormData,
 ): Promise<AttendanceActionState> {
+  await requireAuth()
+
   const note = toNote(formData.get("note"))
 
   const record = await clockInAttendance({ note })
@@ -37,6 +40,8 @@ export async function clockOutAction(
   previousState: AttendanceActionState,
   formData: FormData,
 ): Promise<AttendanceActionState> {
+  await requireAuth()
+
   const note = toNote(formData.get("note"))
 
   const record = await clockOutAttendance({ note })

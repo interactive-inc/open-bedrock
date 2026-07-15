@@ -77,6 +77,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (view instanceof Error) {
     throw new InternalError("internal server error")
   }
+  // 360-degree review confidentiality: when the subject employee views their own
+  // results as a non-admin, strip reviewer identity to keep feedback anonymous.
+  const isSelfView = canAdminister === false && employeeRow.id === session.employeeId
   const responseBody = zAppReviewResult.parse({
     cycle_id: view.cycleId,
     subject_employee_id: view.subjectEmployeeId,
@@ -87,7 +90,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       id: form.id,
       cycle_id: form.cycleId,
       subject_employee_id: form.subjectEmployeeId,
-      reviewer_employee_id: form.reviewerEmployeeId,
+      reviewer_employee_id: isSelfView ? 0 : form.reviewerEmployeeId,
       reviewer_type: form.reviewerType,
       answers: form.answers,
       score: form.score,

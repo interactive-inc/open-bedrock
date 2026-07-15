@@ -13,7 +13,7 @@ import { jsonPayloadSchema } from "@/interface/shared/json-payload-schema"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, inArray } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
@@ -300,11 +300,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (workflowApprovals instanceof Error) {
     throw new InternalError("failed to load workflow approvals")
   }
-  const employeeNames = new Map(
-    (await c.var.database.select({ id: employees.id, name: employees.name }).from(employees)).map(
-      (employee) => [employee.id, employee.name] as const,
+  // Collect only the employee IDs referenced by workflow approvals instead of
+  // loading the entire employees table into memory.
+  const neededEmployeeIds = [
+    ...new Set(
+      workflowApprovals.flatMap((approval) => [
+        approval.approverId,
+        approval.representedApproverId,
+      ]),
     ),
-  )
+  ]
+  const employeeNames = new Map<number, string>()
+  if (neededEmployeeIds.length > 0) {
+    const nameRows = await c.var.database
+      .select({ id: employees.id, name: employees.name })
+      .from(employees)
+      .where(inArray(employees.id, neededEmployeeIds))
+    for (const row of nameRows) {
+      employeeNames.set(row.id, row.name)
+    }
+  }
   const currentWorkflowIndex =
     workflowInstance?.definition.steps.findIndex(
       (step) => step.key === workflowInstance.currentStepKey,

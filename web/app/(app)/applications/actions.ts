@@ -5,6 +5,7 @@ import { updateApplication } from "@/lib/api/update-application"
 import { withdrawApplication } from "@/lib/api/withdraw-application"
 import { resubmitApplication } from "@/lib/api/resubmit-application"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ApplicationActionState = {
@@ -18,6 +19,8 @@ export async function updateApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
 ): Promise<ApplicationActionState> {
+  await requireAuth()
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
@@ -48,6 +51,8 @@ export async function resubmitApplicationAction(
   _previousState: ApplicationActionState,
   formData: FormData,
 ): Promise<ApplicationActionState> {
+  await requireAuth()
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
   if (applicationId === null) return { ok: false, error: "申請を特定できませんでした" }
   const payload = toPayload(formData.get("payload"))
@@ -64,6 +69,8 @@ export async function withdrawApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
 ): Promise<ApplicationActionState> {
+  await requireAuth()
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {

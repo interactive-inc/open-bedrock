@@ -7,6 +7,22 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }
 
+// Mutex for refresh token rotation — prevents concurrent requests from triggering
+// simultaneous refreshes that cause token conflicts and unexpected logouts.
+let inflightRefresh: Promise<Awaited<ReturnType<typeof postRefreshToken>>> | null = null
+
+function deduplicatedRefresh(
+  refreshToken: string,
+): Promise<Awaited<ReturnType<typeof postRefreshToken>>> {
+  if (inflightRefresh !== null) {
+    return inflightRefresh
+  }
+  inflightRefresh = postRefreshToken(refreshToken).finally(() => {
+    inflightRefresh = null
+  })
+  return inflightRefresh
+}
+
 /**
  * 未認証の保護画面アクセスはログイン画面へ送り、access token cookie が無い場合は
  * refresh token を1回だけローテーションしてから元のリクエストを続行する。
@@ -32,7 +48,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   if (isLoginPage) {
-    const refreshed = await postRefreshToken(refreshTokenCookie.value)
+    const refreshed = await deduplicatedRefresh(refreshTokenCookie.value)
 
     if (refreshed instanceof Error) {
       const response = NextResponse.next()
@@ -54,7 +70,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return response
   }
 
-  const refreshed = await postRefreshToken(refreshTokenCookie.value)
+  const refreshed = await deduplicatedRefresh(refreshTokenCookie.value)
 
   if (refreshed instanceof Error) {
     const response = isAuditExportRoute

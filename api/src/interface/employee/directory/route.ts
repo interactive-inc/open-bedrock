@@ -14,10 +14,10 @@ import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle
 import { ApplicationError, UnavailableError } from "@/lib/errors"
 import { zAppEmployeeDirectoryList } from "@/lib/app-schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
-import { employees } from "@/schema"
+import { employees, employeeStatusPeriodVersions } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, or } from "drizzle-orm"
+import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // GET /directory/employees — 選択UI向けの在籍者ディレクトリ。
@@ -85,10 +85,32 @@ export const GET = factory.createHandlers(
         )
       }
 
+      // Pre-filter at the DB level: exclude archived employees and use a subquery
+      // on employee_status_period_versions to select only those with a current
+      // active status period. This avoids loading all employees into memory.
+      conditions.push(isNull(employees.archivedAt))
+      const spv = employeeStatusPeriodVersions
+      conditions.push(
+        exists(
+          c.var.database
+            .select({ one: sql`1` })
+            .from(spv)
+            .where(
+              and(
+                eq(spv.employeeId, employees.id),
+                eq(spv.isVoid, false),
+                sql`${spv.revision} = (SELECT MAX(c.revision) FROM employee_status_period_versions c WHERE c.period_id = ${spv.periodId})`,
+                inArray(spv.status, ["active"]),
+                lte(spv.startsOn, businessDate),
+                or(isNull(spv.endsOn), sql`${spv.endsOn} > ${businessDate}`),
+              ),
+            ),
+        ),
+      )
       const candidates = await c.var.database
         .select({ id: employees.id, code: employees.code, name: employees.name })
         .from(employees)
-        .where(conditions.length === 0 ? undefined : and(...conditions))
+        .where(and(...conditions))
         .orderBy(asc(employees.code))
       const states = await new EmployeeLifecycleReadRepository(c).findStatesAt(
         candidates.map((employee) => employee.id),

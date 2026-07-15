@@ -17,6 +17,14 @@ import {
 } from "@/interface/shared/login-rate-limit"
 import { z } from "zod"
 
+let loginRateLimitWarned = false
+function loginRateLimitWarn() {
+  if (!loginRateLimitWarned) {
+    loginRateLimitWarned = true
+    console.warn("[SECURITY] Login rate limiting disabled: RATE_LIMIT KV binding not found")
+  }
+}
+
 // POST /auth/login — メールとパスワードを照合しアクセストークンを発行する
 export const POST = factory.createHandlers(
   zValidator(
@@ -39,6 +47,9 @@ export const POST = factory.createHandlers(
 
     // KV が設定されている環境のみレート制限を適用する（ローカル dev 等はスキップ）。
     // 本番では wrangler.jsonc の kv_namespaces で RATE_LIMIT を必ずバインドすること。
+    if (kv === undefined) {
+      loginRateLimitWarn()
+    }
     if (kv !== undefined) {
       const ipLimited = await checkRateLimit(kv, ip)
 

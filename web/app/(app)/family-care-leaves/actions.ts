@@ -10,6 +10,7 @@ import {
   toRequiredIsoDate,
   toRequiredText,
 } from "@/lib/form/constraints"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type FamilyCareLeaveActionState = {
@@ -23,6 +24,8 @@ export async function createFamilyCareLeaveAction(
   previousState: FamilyCareLeaveActionState,
   formData: FormData,
 ): Promise<FamilyCareLeaveActionState> {
+  await requireAuth()
+
   const fields = toLeaveFields(formData)
 
   if (fields instanceof Error) {
@@ -45,6 +48,8 @@ export async function updateFamilyCareLeaveAction(
   previousState: FamilyCareLeaveActionState,
   formData: FormData,
 ): Promise<FamilyCareLeaveActionState> {
+  await requireAuth()
+
   const familyCareLeaveId = formData.get("family_care_leave_id")
 
   if (typeof familyCareLeaveId !== "string" || familyCareLeaveId === "") {
@@ -73,6 +78,8 @@ export async function cancelFamilyCareLeaveAction(
   previousState: FamilyCareLeaveActionState,
   formData: FormData,
 ): Promise<FamilyCareLeaveActionState> {
+  await requireAuth()
+
   const familyCareLeaveId = formData.get("family_care_leave_id")
 
   if (typeof familyCareLeaveId !== "string" || familyCareLeaveId === "") {

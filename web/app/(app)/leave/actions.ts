@@ -6,6 +6,7 @@ import { createLeaveRequest } from "@/lib/api/create-leave-request"
 import { updateLeaveRequest } from "@/lib/api/update-leave-request"
 import type { LeaveType } from "@/lib/api/types/leave-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type LeaveActionState = {
@@ -19,6 +20,8 @@ export async function createLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
 ): Promise<LeaveActionState> {
+  await requireAuth()
+
   const leaveType = toLeaveType(formData.get("leave_type"))
 
   if (leaveType === null) {
@@ -68,6 +71,8 @@ export async function updateLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
 ): Promise<LeaveActionState> {
+  await requireAuth()
+
   const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
@@ -123,6 +128,8 @@ export async function cancelLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
 ): Promise<LeaveActionState> {
+  await requireAuth()
+
   const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
