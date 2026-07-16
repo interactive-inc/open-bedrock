@@ -77,7 +77,11 @@ export function MyShiftSwapRequests(props: Props) {
 
 // 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。
 function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
-  const [, formAction, pending] = useFormAction(cancelShiftSwapRequestAction, initialState, "交代申請を取り下げました")
+  const [, formAction, pending] = useFormAction(
+    cancelShiftSwapRequestAction,
+    initialState,
+    "交代申請を取り下げました",
+  )
 
   return (
     <ConfirmActionDialog

@@ -171,9 +171,24 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   )
 }
 
-// 部署ノード削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+// 部署ノード削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteDepartmentButton(props: { code: string }) {
-  const [state, formAction, pending] = useActionState(deleteOrgDepartmentAction, {
+  async function reduce(
+    previousState: OrgDepartmentActionState,
+    formData: FormData,
+  ): Promise<OrgDepartmentActionState> {
+    const result = await deleteOrgDepartmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("部署を削除しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

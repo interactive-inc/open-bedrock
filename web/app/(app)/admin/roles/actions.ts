@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createRole } from "@/lib/api/create-role"
 import { deleteRole } from "@/lib/api/delete-role"
 import { getMe } from "@/lib/api/get-me"
@@ -162,7 +161,9 @@ export async function createRoleAction(
 
   revalidatePath("/admin/roles")
 
-  redirect("/admin/roles")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // 空文字・非文字列を null に潰した文字列を返す。

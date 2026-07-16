@@ -184,10 +184,14 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
 
 // 休業申出取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
-  const [, formAction, pending] = useFormAction(cancelFamilyCareLeaveAction, {
-    ok: false,
-    error: null,
-  }, "休業申出を取り消しました")
+  const [, formAction, pending] = useFormAction(
+    cancelFamilyCareLeaveAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "休業申出を取り消しました",
+  )
 
   return (
     <AlertDialog>

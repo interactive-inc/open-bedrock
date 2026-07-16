@@ -152,10 +152,14 @@ function UpdateReservationDialog(props: { reservation: RoomReservationResponse }
 
 // 予約キャンセルボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelReservationButton(props: { reservationId: string }) {
-  const [_state, formAction, pending] = useFormAction(cancelRoomReservationAction, {
-    ok: false,
-    error: null,
-  }, "予約をキャンセルしました")
+  const [_state, formAction, pending] = useFormAction(
+    cancelRoomReservationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "予約をキャンセルしました",
+  )
 
   return (
     <ConfirmActionDialog

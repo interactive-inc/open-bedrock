@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteAssetAction } from "@/app/(app)/assets/actions"
@@ -13,15 +14,21 @@ type Props = {
 
 const initialState: AssetDeleteFormState = { ok: false, error: null }
 
-// 物品削除ボタン。成功時は Server Action 側で /assets へ遷移する。貸与中は失敗を toast する。
+// 物品削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
 export function AssetDeleteButton(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: AssetDeleteFormState,
     formData: FormData,
   ): Promise<AssetDeleteFormState> {
     const result = await deleteAssetAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("物品を削除しました")
+
+      router.push("/assets")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 
