@@ -6,6 +6,8 @@ type SeedAsset = {
   purchasedOn: string | null
   status: string
   holderEmployeeId: number | null
+  disposedOn: string | null
+  disposalReason: string | null
 }
 
 export const seedAssets: ReadonlyArray<SeedAsset> = [
@@ -17,6 +19,8 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     purchasedOn: "2024-04-01",
     status: "lent",
     holderEmployeeId: 5,
+    disposedOn: null,
+    disposalReason: null,
   },
   {
     code: "A0002",
@@ -26,6 +30,8 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     purchasedOn: "2024-04-01",
     status: "lent",
     holderEmployeeId: 9,
+    disposedOn: null,
+    disposalReason: null,
   },
   {
     code: "A0003",
@@ -35,6 +41,8 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     purchasedOn: "2024-06-15",
     status: "in_stock",
     holderEmployeeId: null,
+    disposedOn: null,
+    disposalReason: null,
   },
   {
     code: "A0004",
@@ -44,6 +52,8 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     purchasedOn: "2024-09-01",
     status: "in_stock",
     holderEmployeeId: null,
+    disposedOn: null,
+    disposalReason: null,
   },
   {
     code: "A0010",
@@ -53,5 +63,18 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
     purchasedOn: null,
     status: "in_stock",
     holderEmployeeId: null,
+    disposedOn: null,
+    disposalReason: null,
+  },
+  {
+    code: "A0011",
+    name: "Old Standard Laptop 13",
+    kind: "pc",
+    serial: "PF-X0-0011",
+    purchasedOn: "2020-04-01",
+    status: "disposed",
+    holderEmployeeId: null,
+    disposedOn: "2026-03-31",
+    disposalReason: "経年劣化のため廃棄",
   },
 ]

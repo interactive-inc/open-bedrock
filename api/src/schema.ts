@@ -13,9 +13,18 @@ import type {
   RingiStatus,
   WorkStyle,
 } from "@/lib/schemas"
+import type { PersonnelActionKind } from "@/domain/employee-lifecycle/lifecycle-types"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core"
 
 // このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
 // api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
@@ -33,6 +42,8 @@ export const employees = sqliteTable("employees", {
   deptName: text("dept_name"),
   position: text("position"),
   status: text("status").notNull().$type<EmployeeStatus>(),
+  archivedAt: integer("archived_at"),
+  archivedByAccountId: integer("archived_by_account_id"),
 })
 
 export type EmployeeRow = InferSelectModel<typeof employees>
@@ -52,6 +63,8 @@ export const orgDepartments = sqliteTable("org_departments", {
   parentCode: text("parent_code"),
   managerEmployeeCode: text("manager_employee_code"),
   sortOrder: integer("sort_order").notNull(),
+  archivedAt: integer("archived_at"),
+  archivedByAccountId: integer("archived_by_account_id"),
 })
 
 export type OrgDepartmentRow = InferSelectModel<typeof orgDepartments>
@@ -154,6 +167,13 @@ export const reviewForms = sqliteTable("review_forms", {
 })
 
 export type ReviewFormRow = InferSelectModel<typeof reviewForms>
+
+export const reviewCyclePolicies = sqliteTable("review_cycle_policies", {
+  cycleId: integer("cycle_id").primaryKey(),
+  policyJson: text("policy_json").notNull(),
+})
+
+export type ReviewCyclePolicyRow = InferSelectModel<typeof reviewCyclePolicies>
 
 // 給与明細（社員ごと・期間ごとの支給/控除/差引支給額）
 export const payslips = sqliteTable(
@@ -343,28 +363,47 @@ export type OnboardingTaskRow = InferSelectModel<typeof onboardingTasks>
 
 // 申請テンプレート（種類・カテゴリ・入力スキーマ・承認ロール）。
 // schema_json と approver_roles は JSON 文字列で保存される。
-export const applicationTemplates = sqliteTable("application_templates", {
-  id: integer("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  description: text("description"),
-  schemaJson: text("schema_json").notNull(),
-  approverRoles: text("approver_roles").notNull(),
-})
+export const applicationTemplates = sqliteTable(
+  "application_templates",
+  {
+    id: integer("id").primaryKey(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    description: text("description"),
+    schemaJson: text("schema_json").notNull(),
+    approverRoles: text("approver_roles").notNull(),
+    systemBinding: text("system_binding"),
+    completionHandlerKey: text("completion_handler_key").$type<"personnel_action">(),
+  },
+  (table) => [
+    uniqueIndex("uq_application_templates_system_binding")
+      .on(table.systemBinding)
+      .where(sql`system_binding IS NOT NULL`),
+  ],
+)
 
 export type ApplicationTemplateRow = InferSelectModel<typeof applicationTemplates>
 
 // 申請（テンプレートに紐づく申請者の提出）。payload は JSON 文字列で保存される。
-export const applications = sqliteTable("applications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  templateId: integer("template_id").notNull(),
-  applicantId: integer("applicant_id").notNull(),
-  status: text("status").notNull(),
-  currentStep: text("current_step"),
-  payload: text("payload").notNull(),
-  createdAt: text("created_at").notNull(),
-})
+export const applications = sqliteTable(
+  "applications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    templateId: integer("template_id").notNull(),
+    applicantId: integer("applicant_id").notNull(),
+    status: text("status").notNull(),
+    currentStep: text("current_step"),
+    payload: text("payload").notNull(),
+    createdAt: text("created_at").notNull(),
+    workflowCreationId: text("workflow_creation_id"),
+  },
+  (table) => [
+    uniqueIndex("uq_applications_workflow_creation")
+      .on(table.workflowCreationId)
+      .where(sql`workflow_creation_id IS NOT NULL`),
+  ],
+)
 
 export type ApplicationRow = InferSelectModel<typeof applications>
 
@@ -380,7 +419,457 @@ export const applicationApprovals = sqliteTable("application_approvals", {
 
 export type ApplicationApprovalRow = InferSelectModel<typeof applicationApprovals>
 
-// 資産台帳（asset ドメイン）。code がPK。在庫/貸出状態と保有者を持つ。
+// 人事アクション台帳。事実は追記のみで、訂正も corrected アクションとして記録する。
+export const personnelActions = sqliteTable(
+  "personnel_actions",
+  {
+    id: text("id").primaryKey(),
+    employeeId: integer("employee_id").notNull(),
+    kind: text("kind").notNull().$type<PersonnelActionKind>(),
+    eventOn: text("event_on").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+    recordedByAccountId: integer("recorded_by_account_id"),
+    requestedByEmployeeId: integer("requested_by_employee_id"),
+    sourceType: text("source_type")
+      .notNull()
+      .$type<"application" | "direct" | "migration" | "system">(),
+    sourceApplicationId: integer("source_application_id"),
+    correctsActionId: text("corrects_action_id"),
+    operationId: text("operation_id").notNull().unique(),
+    payloadFingerprint: text("payload_fingerprint").notNull(),
+    summaryJson: text("summary_json").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_personnel_actions_source_application")
+      .on(table.sourceApplicationId)
+      .where(sql`source_application_id IS NOT NULL`),
+    uniqueIndex("uq_personnel_actions_correction")
+      .on(table.correctsActionId)
+      .where(sql`corrects_action_id IS NOT NULL`),
+    check(
+      "personnel_actions_kind",
+      sql`${table.kind} IN (
+        'hire', 'rehire', 'primary_assignment_started', 'transferred',
+        'concurrent_assignment_started', 'assignment_ended', 'position_changed',
+        'manager_changed', 'department_responsibility_started',
+        'department_responsibility_ended', 'leave_started', 'returned', 'retired',
+        'corrected', 'legacy_baseline'
+      )`,
+    ),
+    check(
+      "personnel_actions_event_on",
+      sql`length(${table.eventOn}) = 10
+          AND substr(${table.eventOn}, 5, 1) = '-'
+          AND substr(${table.eventOn}, 8, 1) = '-'`,
+    ),
+    check(
+      "personnel_actions_source",
+      sql`(${table.sourceType} = 'application' AND ${table.sourceApplicationId} IS NOT NULL)
+          OR (${table.sourceType} != 'application' AND ${table.sourceApplicationId} IS NULL)`,
+    ),
+    check(
+      "personnel_actions_correction_target",
+      sql`${table.correctsActionId} IS NULL OR ${table.correctsActionId} != ${table.id}`,
+    ),
+  ],
+)
+
+export type PersonnelActionRow = InferSelectModel<typeof personnelActions>
+
+// 雇用期間の版。最新 revision の非 void 行を現在有効な期間として読む。
+export const employmentPeriodVersions = sqliteTable(
+  "employment_period_versions",
+  {
+    periodId: text("period_id").notNull(),
+    revision: integer("revision").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    isVoid: integer("is_void", { mode: "boolean" }).notNull().default(false),
+    recordedByActionId: text("recorded_by_action_id").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.periodId, table.revision] }),
+    check("employment_period_versions_revision", sql`${table.revision} > 0`),
+    check(
+      "employment_period_versions_range",
+      sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
+    ),
+  ],
+)
+
+export type EmploymentPeriodVersionRow = InferSelectModel<typeof employmentPeriodVersions>
+
+// 在籍中の状態期間。prehire / retired は雇用期間の有無から導出する。
+export const employeeStatusPeriodVersions = sqliteTable(
+  "employee_status_period_versions",
+  {
+    periodId: text("period_id").notNull(),
+    revision: integer("revision").notNull(),
+    employmentPeriodId: text("employment_period_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    status: text("status").notNull().$type<"active" | "leave">(),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    isVoid: integer("is_void", { mode: "boolean" }).notNull().default(false),
+    recordedByActionId: text("recorded_by_action_id").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.periodId, table.revision] }),
+    check("employee_status_period_versions_revision", sql`${table.revision} > 0`),
+    check("employee_status_period_versions_status", sql`${table.status} IN ('active', 'leave')`),
+    check(
+      "employee_status_period_versions_range",
+      sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
+    ),
+  ],
+)
+
+export type EmployeeStatusPeriodVersionRow = InferSelectModel<typeof employeeStatusPeriodVersions>
+
+// 主務・兼務の所属期間。上長関係は各所属期間に紐付ける。
+export const orgAssignmentPeriodVersions = sqliteTable(
+  "org_assignment_period_versions",
+  {
+    periodId: text("period_id").notNull(),
+    revision: integer("revision").notNull(),
+    employmentPeriodId: text("employment_period_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    departmentCode: text("department_code").notNull(),
+    assignmentType: text("assignment_type").notNull().$type<"primary" | "concurrent">(),
+    positionTitle: text("position_title"),
+    managerEmployeeId: integer("manager_employee_id"),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    isVoid: integer("is_void", { mode: "boolean" }).notNull().default(false),
+    recordedByActionId: text("recorded_by_action_id").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.periodId, table.revision] }),
+    check("org_assignment_period_versions_revision", sql`${table.revision} > 0`),
+    check(
+      "org_assignment_period_versions_type",
+      sql`${table.assignmentType} IN ('primary', 'concurrent')`,
+    ),
+    check(
+      "org_assignment_period_versions_range",
+      sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
+    ),
+    check(
+      "org_assignment_period_versions_manager",
+      sql`${table.managerEmployeeId} IS NULL OR ${table.managerEmployeeId} != ${table.employeeId}`,
+    ),
+  ],
+)
+
+export type OrgAssignmentPeriodVersionRow = InferSelectModel<typeof orgAssignmentPeriodVersions>
+
+// 部門責任者の期間。組織スコープ判定はこの正本から導出する。
+export const orgResponsibilityPeriodVersions = sqliteTable(
+  "org_responsibility_period_versions",
+  {
+    periodId: text("period_id").notNull(),
+    revision: integer("revision").notNull(),
+    departmentCode: text("department_code").notNull(),
+    responsibilityType: text("responsibility_type").notNull().$type<"department_manager">(),
+    employeeId: integer("employee_id").notNull(),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    isVoid: integer("is_void", { mode: "boolean" }).notNull().default(false),
+    recordedByActionId: text("recorded_by_action_id").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.periodId, table.revision] }),
+    check("org_responsibility_period_versions_revision", sql`${table.revision} > 0`),
+    check(
+      "org_responsibility_period_versions_type",
+      sql`${table.responsibilityType} = 'department_manager'`,
+    ),
+    check(
+      "org_responsibility_period_versions_range",
+      sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
+    ),
+  ],
+)
+
+export type OrgResponsibilityPeriodVersionRow = InferSelectModel<
+  typeof orgResponsibilityPeriodVersions
+>
+
+export const employeeLifecycleRevisions = sqliteTable("employee_lifecycle_revisions", {
+  employeeId: integer("employee_id").primaryKey(),
+  revision: integer("revision").notNull().default(0),
+  updatedAt: integer("updated_at").notNull(),
+})
+
+export type EmployeeLifecycleRevisionRow = InferSelectModel<typeof employeeLifecycleRevisions>
+
+export const organizationLifecycleState = sqliteTable("organization_lifecycle_state", {
+  id: integer("id").primaryKey(),
+  revision: integer("revision").notNull().default(0),
+  updatedAt: integer("updated_at").notNull(),
+})
+
+export type OrganizationLifecycleStateRow = InferSelectModel<typeof organizationLifecycleState>
+
+export const personnelActionRequests = sqliteTable(
+  "personnel_action_requests",
+  {
+    id: text("id").primaryKey(),
+    applicationId: integer("application_id").notNull().unique(),
+    targetEmployeeId: integer("target_employee_id"),
+    kind: text("kind").notNull().$type<Exclude<PersonnelActionKind, "legacy_baseline">>(),
+    payloadJson: text("payload_json").notNull(),
+    requestedByEmployeeId: integer("requested_by_employee_id").notNull(),
+    baseEmployeeRevision: integer("base_employee_revision"),
+    baseOrganizationRevision: integer("base_organization_revision"),
+    createdAt: integer("created_at").notNull(),
+    appliedActionId: text("applied_action_id"),
+    withdrawnAt: integer("withdrawn_at"),
+    withdrawnByEmployeeId: integer("withdrawn_by_employee_id"),
+  },
+  (table) => [
+    uniqueIndex("uq_personnel_action_requests_applied_action")
+      .on(table.appliedActionId)
+      .where(sql`applied_action_id IS NOT NULL`),
+  ],
+)
+
+export type PersonnelActionRequestRow = InferSelectModel<typeof personnelActionRequests>
+
+export const applicationSubjects = sqliteTable(
+  "application_subjects",
+  {
+    applicationId: integer("application_id").primaryKey(),
+    subjectType: text("subject_type").notNull().$type<"employee" | "prospective_employee">(),
+    subjectEmployeeId: integer("subject_employee_id"),
+    subjectSnapshotJson: text("subject_snapshot_json"),
+    targetDepartmentCode: text("target_department_code"),
+  },
+  (table) => [
+    check(
+      "application_subjects_target",
+      sql`(${table.subjectType} = 'employee' AND ${table.subjectEmployeeId} IS NOT NULL)
+          OR (${table.subjectType} = 'prospective_employee'
+              AND ${table.subjectEmployeeId} IS NULL
+              AND ${table.subjectSnapshotJson} IS NOT NULL)`,
+    ),
+  ],
+)
+
+export type ApplicationSubjectRow = InferSelectModel<typeof applicationSubjects>
+
+export const applicationCompletionBindings = sqliteTable("application_completion_bindings", {
+  applicationId: integer("application_id").primaryKey(),
+  handlerKey: text("handler_key").notNull().$type<"personnel_action">(),
+  resourceId: text("resource_id").notNull(),
+  payloadFingerprint: text("payload_fingerprint").notNull(),
+  createdAt: integer("created_at").notNull(),
+})
+
+export type ApplicationCompletionBindingRow = InferSelectModel<typeof applicationCompletionBindings>
+
+export const lifecycleMigrationState = sqliteTable("lifecycle_migration_state", {
+  id: integer("id").primaryKey(),
+  status: text("status").notNull().$type<"pending" | "backfilled" | "verified">(),
+  baselineOn: text("baseline_on"),
+  companyTimeZone: text("company_time_zone"),
+  legacySourceFingerprint: text("legacy_source_fingerprint"),
+  employeeCount: integer("employee_count").notNull().default(0),
+  departmentCount: integer("department_count").notNull().default(0),
+  backfilledAt: integer("backfilled_at"),
+  verifiedAt: integer("verified_at"),
+})
+
+export type LifecycleMigrationStateRow = InferSelectModel<typeof lifecycleMigrationState>
+
+export const lifecycleOutbox = sqliteTable(
+  "lifecycle_outbox",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    personnelActionId: text("personnel_action_id").notNull(),
+    effectType: text("effect_type").notNull().$type<"hire" | "retired">(),
+    payloadJson: text("payload_json").notNull(),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at").notNull(),
+    processedAt: integer("processed_at"),
+    lastErrorCode: text("last_error_code"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_lifecycle_outbox_action_effect").on(table.personnelActionId, table.effectType),
+  ],
+)
+
+export type LifecycleOutboxRow = InferSelectModel<typeof lifecycleOutbox>
+
+export const lifecycleEffectTemplateBindings = sqliteTable("lifecycle_effect_template_bindings", {
+  effectType: text("effect_type").primaryKey().$type<"hire" | "retired">(),
+  templateCode: text("template_code").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+  updatedByAccountId: integer("updated_by_account_id"),
+})
+
+export type LifecycleEffectTemplateBindingRow = InferSelectModel<
+  typeof lifecycleEffectTemplateBindings
+>
+
+export const applicationWorkflows = sqliteTable("application_workflows", {
+  templateId: integer("template_id").primaryKey(),
+  definitionJson: text("definition_json").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  revision: integer("revision").notNull().default(1),
+  updatedByAccountId: integer("updated_by_account_id"),
+})
+
+export type ApplicationWorkflowRow = InferSelectModel<typeof applicationWorkflows>
+
+export const applicationWorkflowRevisions = sqliteTable(
+  "application_workflow_revisions",
+  {
+    templateId: integer("template_id").notNull(),
+    revision: integer("revision").notNull(),
+    definitionJson: text("definition_json").notNull(),
+    updatedByAccountId: integer("updated_by_account_id"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.templateId, table.revision] })],
+)
+
+export type ApplicationWorkflowRevisionRow = InferSelectModel<typeof applicationWorkflowRevisions>
+
+export const applicationWorkflowInstances = sqliteTable("application_workflow_instances", {
+  applicationId: integer("application_id").primaryKey(),
+  definitionJson: text("definition_json").notNull(),
+  currentStepKey: text("current_step_key").notNull(),
+  currentRound: integer("current_round").notNull().default(1),
+  startedAt: text("started_at").notNull(),
+  dueAt: text("due_at"),
+})
+
+export type ApplicationWorkflowInstanceRow = InferSelectModel<typeof applicationWorkflowInstances>
+
+export const applicationWorkflowStepSnapshots = sqliteTable(
+  "application_workflow_step_snapshots",
+  {
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    requiredApprovals: integer("required_approvals").notNull(),
+    activatedAt: text("activated_at").notNull(),
+    dueAt: text("due_at"),
+    escalatedAt: text("escalated_at"),
+    resolutionReason: text("resolution_reason").notNull(),
+    resolutionId: text("resolution_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.applicationId, table.stepKey, table.round] })],
+)
+
+export type ApplicationWorkflowStepSnapshotRow = InferSelectModel<
+  typeof applicationWorkflowStepSnapshots
+>
+
+export const applicationWorkflowStepCandidates = sqliteTable(
+  "application_workflow_step_candidates",
+  {
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    candidateEmployeeId: integer("candidate_employee_id").notNull(),
+    candidateAccountId: integer("candidate_account_id").notNull(),
+    source: text("source").notNull(),
+    selectorsJson: text("selectors_json").notNull(),
+    resolutionId: text("resolution_id").notNull(),
+    eligibleFrom: text("eligible_from"),
+    resolvedAt: text("resolved_at").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [
+        table.applicationId,
+        table.stepKey,
+        table.round,
+        table.candidateAccountId,
+        table.source,
+      ],
+    }),
+  ],
+)
+
+export type ApplicationWorkflowStepCandidateRow = InferSelectModel<
+  typeof applicationWorkflowStepCandidates
+>
+
+export const applicationWorkflowApprovals = sqliteTable(
+  "application_workflow_approvals",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull().default(1),
+    approverId: integer("approver_id").notNull(),
+    approverAccountId: integer("approver_account_id"),
+    representedApproverId: integer("represented_approver_id").notNull(),
+    delegationId: integer("delegation_id"),
+    action: text("action").notNull(),
+    comment: text("comment"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_workflow_approval_actor_step").on(
+      table.applicationId,
+      table.stepKey,
+      table.round,
+      table.approverId,
+    ),
+  ],
+)
+
+export type ApplicationWorkflowApprovalRow = InferSelectModel<typeof applicationWorkflowApprovals>
+
+export const applicationWorkflowEvents = sqliteTable(
+  "application_workflow_events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    applicationId: integer("application_id").notNull(),
+    stepKey: text("step_key").notNull(),
+    round: integer("round").notNull(),
+    eventType: text("event_type").notNull(),
+    actorAccountId: integer("actor_account_id"),
+    occurredAt: text("occurred_at").notNull(),
+    detailsJson: text("details_json").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_application_workflow_event_once").on(
+      table.applicationId,
+      table.stepKey,
+      table.round,
+      table.eventType,
+    ),
+  ],
+)
+
+export type ApplicationWorkflowEventRow = InferSelectModel<typeof applicationWorkflowEvents>
+
+export const approvalDelegations = sqliteTable("approval_delegations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  delegatorEmployeeId: integer("delegator_employee_id").notNull(),
+  delegateEmployeeId: integer("delegate_employee_id").notNull(),
+  templateCode: text("template_code"),
+  startsAt: text("starts_at").notNull(),
+  endsAt: text("ends_at").notNull(),
+  createdByAccountId: integer("created_by_account_id"),
+  cancelledAt: text("cancelled_at"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type ApprovalDelegationRow = InferSelectModel<typeof approvalDelegations>
+
+// 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。
 export const assets = sqliteTable("assets", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -389,6 +878,8 @@ export const assets = sqliteTable("assets", {
   purchasedOn: text("purchased_on"),
   status: text("status").notNull(),
   holderEmployeeId: integer("holder_employee_id"),
+  disposedOn: text("disposed_on"),
+  disposalReason: text("disposal_reason"),
 })
 
 export type AssetRow = InferSelectModel<typeof assets>
@@ -403,6 +894,37 @@ export const assetLendings = sqliteTable("asset_lendings", {
 })
 
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>
+
+// 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。
+export const stocktakes = sqliteTable(
+  "stocktakes",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    targetDate: text("target_date").notNull(),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+    closedAt: text("closed_at"),
+  },
+  (table) => [index("idx_stocktakes_status").on(table.status)],
+)
+
+export type StocktakeRow = InferSelectModel<typeof stocktakes>
+
+// 棚卸しセッションでの資産ごとの現物確認記録。checked_at:null は未確認。
+export const stocktakeItems = sqliteTable(
+  "stocktake_items",
+  {
+    stocktakeId: text("stocktake_id").notNull(),
+    assetCode: text("asset_code").notNull(),
+    checkedAt: text("checked_at"),
+    checkerEmployeeId: integer("checker_employee_id"),
+    locationNote: text("location_note"),
+  },
+  (table) => [primaryKey({ columns: [table.stocktakeId, table.assetCode] })],
+)
+
+export type StocktakeItemRow = InferSelectModel<typeof stocktakeItems>
 
 // 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。
 export const attendanceRecords = sqliteTable(
@@ -553,6 +1075,20 @@ export const ringiRequests = sqliteTable("ringi_requests", {
 })
 
 export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
+// 部署予算（部署・会計期間・金額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する。
+export const budgets = sqliteTable("budgets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  departmentId: integer("department_id").notNull(),
+  fiscalPeriod: text("fiscal_period").notNull(),
+  periodStart: text("period_start").notNull(),
+  periodEnd: text("period_end").notNull(),
+  amount: integer("amount").notNull(),
+  name: text("name").notNull(),
+  note: text("note"),
+  createdAt: text("created_at").notNull(),
+})
+
+export type BudgetRow = InferSelectModel<typeof budgets>
 
 // 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
 // is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
@@ -612,6 +1148,162 @@ export const knowledgeArticles = sqliteTable("knowledge_articles", {
 })
 
 export type KnowledgeArticleRow = InferSelectModel<typeof knowledgeArticles>
+
+// 規程・手続き・統制の安定した業務能力。表示名や担当組織の変更で code は変えない。
+export const governanceCapabilities = sqliteTable("governance_capabilities", {
+  code: text("code").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  ownerOrgRoleCode: text("owner_org_role_code"),
+  status: text("status").notNull().$type<"active" | "archived">(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+})
+
+export type GovernanceCapabilityRow = InferSelectModel<typeof governanceCapabilities>
+
+// 組織上の責任。IAM の system role（操作能力）とは分離する。
+export const governanceOrgRoles = sqliteTable("governance_org_roles", {
+  code: text("code").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  assignmentMode: text("assignment_mode").notNull().$type<"manual" | "department_manager">(),
+  cardinality: text("cardinality").notNull().$type<"one" | "per_department" | "many">(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+})
+
+export type GovernanceOrgRoleRow = InferSelectModel<typeof governanceOrgRoles>
+
+export const governanceOrgRoleAssignments = sqliteTable(
+  "governance_org_role_assignments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    orgRoleCode: text("org_role_code").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    departmentCode: text("department_code"),
+    startsOn: text("starts_on").notNull(),
+    endsOn: text("ends_on"),
+    sourceDocumentCode: text("source_document_code"),
+    createdByAccountId: integer("created_by_account_id").notNull(),
+    createdAt: text("created_at").notNull(),
+    revokedByAccountId: integer("revoked_by_account_id"),
+    revokedAt: text("revoked_at"),
+  },
+  (table) => [
+    check(
+      "governance_org_role_assignments_range",
+      sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
+    ),
+  ],
+)
+
+export type GovernanceOrgRoleAssignmentRow = InferSelectModel<typeof governanceOrgRoleAssignments>
+
+export const governanceDocuments = sqliteTable("governance_documents", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  title: text("title").notNull(),
+  kind: text("kind").notNull().$type<"policy" | "procedure" | "guideline" | "control">(),
+  classification: text("classification")
+    .notNull()
+    .$type<"public" | "internal" | "confidential" | "restricted">(),
+  ownerCapabilityCode: text("owner_capability_code").notNull(),
+  stewardOrgRoleCode: text("steward_org_role_code"),
+  status: text("status").notNull().$type<"draft" | "published" | "retired">(),
+  currentVersionId: text("current_version_id"),
+  sourcePath: text("source_path").notNull().unique(),
+  createdByAccountId: integer("created_by_account_id").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+})
+
+export type GovernanceDocumentRow = InferSelectModel<typeof governanceDocuments>
+
+export const governanceDocumentVersions = sqliteTable(
+  "governance_document_versions",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").notNull(),
+    version: text("version").notNull(),
+    bodyMd: text("body_md").notNull(),
+    metadataJson: text("metadata_json").notNull(),
+    procedureJson: text("procedure_json"),
+    contentHash: text("content_hash").notNull(),
+    effectiveFrom: text("effective_from"),
+    effectiveTo: text("effective_to"),
+    reviewDueOn: text("review_due_on"),
+    state: text("state")
+      .notNull()
+      .$type<"draft" | "in_review" | "published" | "superseded" | "rejected">(),
+    createdByAccountId: integer("created_by_account_id").notNull(),
+    createdAt: text("created_at").notNull(),
+    publishedByAccountId: integer("published_by_account_id"),
+    publishedAt: text("published_at"),
+  },
+  (table) => [
+    uniqueIndex("uniq_governance_document_version").on(table.documentId, table.version),
+    check(
+      "governance_document_versions_range",
+      sql`${table.effectiveTo} IS NULL OR ${table.effectiveFrom} IS NULL OR ${table.effectiveFrom} < ${table.effectiveTo}`,
+    ),
+  ],
+)
+
+export type GovernanceDocumentVersionRow = InferSelectModel<typeof governanceDocumentVersions>
+
+export const governanceDocumentReferences = sqliteTable(
+  "governance_document_references",
+  {
+    versionId: text("version_id").notNull(),
+    kind: text("kind")
+      .notNull()
+      .$type<
+        | "capability"
+        | "org_role"
+        | "policy"
+        | "procedure"
+        | "guideline"
+        | "control"
+        | "permission"
+        | "training"
+      >(),
+    code: text("code").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.versionId, table.kind, table.code] })],
+)
+
+export type GovernanceDocumentReferenceRow = InferSelectModel<typeof governanceDocumentReferences>
+
+export const governancePublicationApprovals = sqliteTable(
+  "governance_publication_approvals",
+  {
+    versionId: text("version_id").notNull(),
+    orgRoleCode: text("org_role_code").notNull(),
+    status: text("status").notNull().$type<"pending" | "approved" | "rejected">(),
+    decidedByEmployeeId: integer("decided_by_employee_id"),
+    decidedAt: text("decided_at"),
+    comment: text("comment"),
+  },
+  (table) => [primaryKey({ columns: [table.versionId, table.orgRoleCode] })],
+)
+
+export type GovernancePublicationApprovalRow = InferSelectModel<
+  typeof governancePublicationApprovals
+>
+
+export const governanceAcknowledgements = sqliteTable(
+  "governance_acknowledgements",
+  {
+    versionId: text("version_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    contentHash: text("content_hash").notNull(),
+    acknowledgedAt: text("acknowledged_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.versionId, table.employeeId] })],
+)
+
+export type GovernanceAcknowledgementRow = InferSelectModel<typeof governanceAcknowledgements>
 
 // 1on1 の記録（参加者・実施日時・話題・所感・次アクション）。
 export const oneOnOnes = sqliteTable("one_on_ones", {
@@ -1037,31 +1729,6 @@ export const itIncidents = sqliteTable("it_incidents", {
 
 export type ItIncidentRow = InferSelectModel<typeof itIncidents>
 
-// 予算枠（会計年度・部署ごとの予算の事実記録。金額は整数円）
-export const budgets = sqliteTable("budgets", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  fiscalYear: integer("fiscal_year").notNull(),
-  departmentCode: text("department_code"),
-  title: text("title").notNull(),
-  amount: integer("amount").notNull(),
-  note: text("note"),
-  createdAt: text("created_at").notNull(),
-})
-
-export type BudgetRow = InferSelectModel<typeof budgets>
-
-// 予算枠の消化記録（枠に対する手動の消化記録。稟議・経費との自動連動はしない）
-export const budgetConsumptions = sqliteTable("budget_consumptions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  budgetId: integer("budget_id").notNull(),
-  amount: integer("amount").notNull(),
-  note: text("note"),
-  recordedOn: text("recorded_on").notNull(),
-  createdAt: text("created_at").notNull(),
-})
-
-export type BudgetConsumptionRow = InferSelectModel<typeof budgetConsumptions>
-
 // drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
 // IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
 export const accounts = sqliteTable(
@@ -1161,32 +1828,52 @@ export const refreshTokens = sqliteTable(
     accountId: integer("account_id").notNull(),
     tokenHash: text("token_hash").notNull().unique(),
     familyId: text("family_id").notNull(),
+    tokenVersion: integer("token_version").notNull().default(0),
     expiresAt: integer("expires_at").notNull(),
     revokedAt: integer("revoked_at"),
     userAgent: text("user_agent"),
     createdAt: integer("created_at").notNull(),
   },
-  (table) => [index("idx_refresh_tokens_account").on(table.accountId)],
+  (table) => [
+    index("idx_refresh_tokens_account").on(table.accountId),
+    index("idx_refresh_tokens_active_family")
+      .on(table.familyId)
+      .where(sql`revoked_at IS NULL`),
+  ],
 )
 
 export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
 
-// IAM: 監査ログ(append-only)。UPDATE/DELETE はアプリ層で禁止。
+// IAM: 監査イベント(append-only)。UPDATE/DELETE は DB trigger でも禁止する。
 export const auditLogs = sqliteTable(
   "audit_logs",
   {
     id: integer("id").primaryKey(),
+    eventId: text("event_id").notNull().unique(),
+    requestId: text("request_id").notNull(),
     actorAccountId: integer("actor_account_id"),
+    actorEmployeeId: integer("actor_employee_id"),
     action: text("action").notNull(),
     targetType: text("target_type"),
-    targetId: integer("target_id"),
-    metadata: text("metadata"),
-    ip: text("ip"),
+    targetId: text("target_id"),
+    outcome: text("outcome").notNull().$type<"succeeded" | "denied" | "failed">(),
+    reasonCode: text("reason_code"),
+    authorizationJson: text("authorization_json"),
+    beforeJson: text("before_json"),
+    afterJson: text("after_json"),
+    metadataJson: text("metadata_json"),
+    clientIp: text("client_ip"),
+    clientName: text("client_name").notNull().$type<"web" | "cli" | "api" | "system">(),
     createdAt: integer("created_at").notNull(),
   },
   (table) => [
-    index("idx_audit_logs_actor").on(table.actorAccountId),
-    index("idx_audit_logs_action").on(table.action),
+    index("idx_audit_logs_request").on(table.requestId),
+    index("idx_audit_logs_actor").on(table.actorAccountId, table.createdAt, table.id),
+    index("idx_audit_logs_actor_employee").on(table.actorEmployeeId, table.createdAt, table.id),
+    index("idx_audit_logs_action").on(table.action, table.createdAt, table.id),
+    index("idx_audit_logs_target").on(table.targetType, table.targetId, table.createdAt, table.id),
+    index("idx_audit_logs_outcome").on(table.outcome, table.createdAt, table.id),
+    index("idx_audit_logs_created").on(table.createdAt, table.id),
   ],
 )
 
@@ -1459,6 +2146,26 @@ export const headcountPlans = sqliteTable(
 )
 
 export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
+// 監査付き batch の transaction 内だけで使う排他的 decision marker。
+export const auditBatchDecisions = sqliteTable(
+  "audit_batch_decisions",
+  {
+    decisionId: text("decision_id").primaryKey(),
+    decisionValue: text("decision_value").notNull(),
+  },
+  (table) => [
+    check(
+      "audit_batch_decisions_decision_id_length",
+      sql`length(${table.decisionId}) BETWEEN 1 AND 200`,
+    ),
+    check(
+      "audit_batch_decisions_decision_value_length",
+      sql`length(${table.decisionValue}) BETWEEN 1 AND 64`,
+    ),
+  ],
+)
+
+export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
 
 export const schema = {
   accounts,
@@ -1469,6 +2176,7 @@ export const schema = {
   accountRoles,
   refreshTokens,
   auditLogs,
+  auditBatchDecisions,
   employees,
   departments,
   orgDepartments,
@@ -1492,8 +2200,23 @@ export const schema = {
   applicationTemplates,
   applications,
   applicationApprovals,
+  personnelActions,
+  employmentPeriodVersions,
+  employeeStatusPeriodVersions,
+  orgAssignmentPeriodVersions,
+  orgResponsibilityPeriodVersions,
+  employeeLifecycleRevisions,
+  organizationLifecycleState,
+  personnelActionRequests,
+  applicationSubjects,
+  applicationCompletionBindings,
+  lifecycleMigrationState,
+  lifecycleOutbox,
+  lifecycleEffectTemplateBindings,
   assets,
   assetLendings,
+  stocktakes,
+  stocktakeItems,
   attendanceRecords,
   batchJobs,
   careerPostings,
@@ -1501,9 +2224,18 @@ export const schema = {
   careerSheets,
   expenses,
   expenseApprovals,
+  budgets,
   goals,
   goalEvaluations,
   knowledgeArticles,
+  governanceCapabilities,
+  governanceOrgRoles,
+  governanceOrgRoleAssignments,
+  governanceDocuments,
+  governanceDocumentVersions,
+  governanceDocumentReferences,
+  governancePublicationApprovals,
+  governanceAcknowledgements,
   oneOnOnes,
   thanks,
   thanksPointBudgets,
@@ -1543,6 +2275,4 @@ export const schema = {
   headcountPlans,
   licenses,
   itIncidents,
-  budgets,
-  budgetConsumptions,
 }

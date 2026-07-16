@@ -72,6 +72,7 @@ export class AntisocialCheckRepository {
           partnerAddress: antisocialCheck.partnerAddress,
           representativeName: antisocialCheck.representativeName,
           result: antisocialCheck.result,
+          status: antisocialCheck.status,
         })
         .where(
           and(

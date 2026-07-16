@@ -1,33 +1,29 @@
-import { notFound } from "next/navigation"
 import { BudgetCreateForm } from "@/app/(app)/budgets/_components/budget-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
-import { Card } from "@/components/ui/card"
-import { getMe } from "@/lib/api/get-me"
-import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
+import { Card, CardContent } from "@/components/ui/card"
+import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "予算枠の作成" }
+export const metadata = { title: "予算の新規登録" }
 
-// 予算枠の作成画面。budget:manage が無ければ notFound。
-export default async function BudgetNewPage() {
-  const me = await getMe()
-
-  if (me instanceof Error || canManageBudgets(me.permissions) === false) {
-    notFound()
-  }
+/**
+ * 予算の新規登録。フォーム単機能のページとして、一覧から独立させる。
+ */
+export default async function NewBudgetPage() {
+  await requirePermission("budget:manage")
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="予算枠を作成"
-        description="会計年度・部署ごとの予算枠を登録します。"
+        title="予算を登録"
+        description="部署・会計期間・期間・金額・名称・任意のメモを入力する"
         actions={<BackButton href="/budgets" label="一覧に戻る" />}
       />
 
-      <Card className="max-w-xl p-0 gap-0">
-        <div className="p-6">
+      <Card className="max-w-xl">
+        <CardContent>
           <BudgetCreateForm />
-        </div>
+        </CardContent>
       </Card>
     </div>
   )

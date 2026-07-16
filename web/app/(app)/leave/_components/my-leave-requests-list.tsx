@@ -7,7 +7,9 @@ import { cancelLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/
 import type { LeaveActionState } from "@/app/(app)/leave/actions"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -75,7 +77,7 @@ export function MyLeaveRequestsList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {leaveRequest.status === "pending" ? (
                     <UpdateLeaveRequestDialog leaveRequest={leaveRequest} />
                   ) : null}
@@ -83,7 +85,7 @@ export function MyLeaveRequestsList(props: Props) {
                   {leaveRequest.status === "pending" ? (
                     <CancelLeaveRequestButton leaveRequestId={leaveRequest.id} />
                   ) : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -189,20 +191,38 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
   )
 }
 
-// 休暇申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+// 休暇申請取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
-  const [_state, formAction, pending] = useActionState(cancelLeaveRequestAction, {
+  async function reduce(
+    previousState: LeaveActionState,
+    formData: FormData,
+  ): Promise<LeaveActionState> {
+    const result = await cancelLeaveRequestAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("休暇申請を取り下げました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [_state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この休暇申請を取り下げますか？"
+      description="取り下げた休暇申請は元に戻せません。"
+      confirmLabel="休暇申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="leave_request_id" value={props.leaveRequestId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

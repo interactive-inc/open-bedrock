@@ -232,10 +232,9 @@ describe("POST /goals", () => {
     }
   })
 
-  test("manager (also a review administrator) can create a department goal for another department", async () => {
-    // system role の manager は review:administer も持つため、自部門以外の部門目標も作成できる。
-    // goal:evaluate:reports のみに絞った部門スコープの検証は
-    // can-write-department-goal.test.ts の単体テストで担保する。
+  test("manager cannot create a department goal for another department", async () => {
+    // manager は review:administer を持たないため、自部門(D003)以外の部門目標は作成できない。
+    // review:administer 保持者(hr/admin)による作成は admin のテストで担保する。
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
@@ -250,7 +249,7 @@ describe("POST /goals", () => {
       },
     })
 
-    expect(response.status).toBe(201)
+    expect(response.status).toBe(403)
   })
 
   test("member cannot create a department goal", async () => {

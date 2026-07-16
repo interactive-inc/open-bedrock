@@ -1,11 +1,11 @@
 "use client"
 
-import { useActionState } from "react"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/shift/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Table,
   TableBody,
@@ -14,11 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { ShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
+import type { MyShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
 
 type Props = {
-  swapRequests: Array<ShiftSwapRequestResponse>
-  employeeNameMap: Record<number, string>
+  swapRequests: Array<MyShiftSwapRequestResponse>
 }
 
 const initialState: ShiftFormState = { ok: false, error: null }
@@ -48,8 +47,7 @@ export function MyShiftSwapRequests(props: Props) {
               <TableCell className="font-medium">{swapRequest.date}</TableCell>
 
               <TableCell>
-                {props.employeeNameMap[swapRequest.target_employee_id] ??
-                  `#${swapRequest.target_employee_id}`}
+                {swapRequest.target_employee_name ?? `#${swapRequest.target_employee_id}`}
               </TableCell>
 
               <TableCell className="text-muted-foreground">{swapRequest.note ?? "-"}</TableCell>
@@ -79,15 +77,22 @@ export function MyShiftSwapRequests(props: Props) {
 
 // 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。
 function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
-  const [, formAction, pending] = useActionState(cancelShiftSwapRequestAction, initialState)
+  const [, formAction, pending] = useFormAction(
+    cancelShiftSwapRequestAction,
+    initialState,
+    "交代申請を取り下げました",
+  )
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="このシフト交代申請を取り下げますか？"
+      description="取り下げた交代申請は元に戻せません。"
+      confirmLabel="交代申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="swap_request_id" value={props.swapRequestId ?? undefined} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { cancelShiftSwapRequest } from "@/lib/api/cancel-shift-swap-request"
 import { createShiftAssignment } from "@/lib/api/create-shift-assignment"
 import { createShiftPattern } from "@/lib/api/create-shift-pattern"
@@ -14,6 +13,7 @@ import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { approveShiftSwapRequest } from "@/lib/api/approve-shift-swap-request"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ShiftFormState = {
@@ -119,7 +119,9 @@ export async function createShiftAssignmentAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  redirect("/shift/manage")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。
@@ -222,7 +224,9 @@ export async function createShiftPatternAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  redirect("/shift/patterns")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。
@@ -380,6 +384,39 @@ export async function cancelShiftSwapRequestAction(
 
   revalidatePath("/shift")
   revalidatePath("/shift/patterns")
+  revalidatePath("/shift/manage")
+
+  return { ok: true, error: null }
+}
+
+// シフト交代承認。API は承認者が申請当事者でないことも検証する。
+export async function approveShiftSwapRequestAction(
+  _previousState: ShiftFormState,
+  formData: FormData,
+): Promise<ShiftFormState> {
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    currentUser.permissions.includes("shift_swap:approve") === false
+  ) {
+    return { ok: false, error: "シフト交代を承認する権限がありません" }
+  }
+
+  const swapRequestId = toPositiveIntId(formData.get("swap_request_id"))
+
+  if (swapRequestId === null) {
+    return { ok: false, error: "申請 ID が不正です" }
+  }
+
+  const approved = await approveShiftSwapRequest(swapRequestId)
+
+  if (approved instanceof Error) {
+    return { ok: false, error: approved.message }
+  }
+
+  revalidatePath("/shift/inbox")
+  revalidatePath("/shift")
   revalidatePath("/shift/manage")
 
   return { ok: true, error: null }

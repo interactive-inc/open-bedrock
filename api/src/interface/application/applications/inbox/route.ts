@@ -1,4 +1,3 @@
-import { canDecideApplication } from "@/lib/application/can-decide-application"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -8,7 +7,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { and, asc, count, desc, eq, like, or } from "drizzle-orm"
+import { asc, count, desc, eq } from "drizzle-orm"
 
 // 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。
 const SORT_OPTIONS = {
@@ -19,10 +18,12 @@ const SORT_OPTIONS = {
 type SortKey = keyof typeof SORT_OPTIONS
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppApplicationInboxList } from "@/lib/app-schemas"
+import { InternalError } from "@/interface/lib/errors"
+import { resolveApplicationInboxCondition } from "@/lib/application/resolve-application-inbox-condition"
 
 // GET /applications/inbox — 承認待ちの申請一覧。
-// テンプレートの approverRoles に自分のロールが含まれるか、approverRoles が空で
-// canDecideApplication を満たす場合に表示する。DecideApplication の権限判定と対称にする。
+// 旧テンプレートは application:approve、approverRoles、組織スコープをすべて満たす場合だけ返す。
+// 設定済みワークフローは固定された案件候補者またはその有効な代理人だけを返す。
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -44,20 +45,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  // approverRoles は JSON 配列文字列（例: '["manager","admin"]'）。
-  // viewer の保持ロール（複数）のいずれかがリストに含まれるテンプレートの申請を返す。
-  // approverRoles が空（"[]"）の場合は canDecideApplication で許可されたロールだけ。
-  // DecideApplication の approverRoles チェックと同じ二分岐に合わせる。
-  const roleMatches = session.roleKeys.map((roleKey) =>
-    like(applicationTemplates.approverRoles, `%"${roleKey}"%`),
-  )
-
-  const isPrivileged = canDecideApplication(session)
-
-  const pendingWithRole = and(
-    eq(applications.status, "pending"),
-    or(isPrivileged ? eq(applicationTemplates.approverRoles, "[]") : undefined, ...roleMatches),
-  )
+  const now = c.env.NOW ?? new Date().toISOString()
+  const pendingWithRole = await resolveApplicationInboxCondition({ c, session, now })
+  if (pendingWithRole instanceof Error) {
+    throw new InternalError("failed to resolve application inbox scope")
+  }
 
   const sortQuery = c.req.query("sort") ?? ""
 

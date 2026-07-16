@@ -28,7 +28,11 @@ describe("config", () => {
   })
 
   test("saveConfig creates the directory and writes the file with 0600 perms", async () => {
-    await saveConfig({ base_url: "http://example.test", token: "secret-token" })
+    await saveConfig({
+      base_url: "http://example.test",
+      token: "secret-token",
+      refresh_token: null,
+    })
 
     const fileStat = await stat(join(tempDir, "config.json"))
 
@@ -50,7 +54,11 @@ describe("config", () => {
     await writeFile(file, "{}\n")
     await chmod(file, 0o644)
 
-    await saveConfig({ base_url: "http://example.test", token: "secret-token" })
+    await saveConfig({
+      base_url: "http://example.test",
+      token: "secret-token",
+      refresh_token: null,
+    })
 
     const fileStat = await stat(file)
 

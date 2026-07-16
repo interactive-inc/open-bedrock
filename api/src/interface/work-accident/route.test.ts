@@ -6,8 +6,14 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { z } from "zod"
 
 const jwtSecret = "work-accident-route-test-secret"
+
+const workAccidentListSchema = z.object({
+  data: z.array(z.object({ status: z.string() })),
+  total: z.number(),
+})
 
 // E001=admin(work_accident:manage / read:all), E005=member。
 async function createTestDb(): Promise<D1Database> {
@@ -84,9 +90,13 @@ describe("GET /work-accidents", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = workAccidentListSchema.safeParse(await response.json())
 
-    expect(body.total).toBe(2)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+    }
   })
 
   test("returns 403 for a member (no self-view concept)", async () => {
@@ -109,10 +119,14 @@ describe("GET /work-accidents", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = workAccidentListSchema.safeParse(await response.json())
 
-    expect(body.data.every((item: { status: string }) => item.status === "reported")).toBe(true)
-    expect(body.total).toBe(1)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.every((item) => item.status === "reported")).toBe(true)
+      expect(parsed.data.total).toBe(1)
+    }
   })
 })
 
@@ -127,10 +141,16 @@ describe("POST /work-accidents", () => {
 
     expect(response.status).toBe(201)
 
-    const body = await response.json()
+    const parsed = z
+      .object({ status: z.string(), employee_id: z.number().nullable() })
+      .safeParse(await response.json())
 
-    expect(body.status).toBe("reported")
-    expect(body.employee_id).toBeNull()
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("reported")
+      expect(parsed.data.employee_id).toBeNull()
+    }
   })
 
   test("returns 403 for a member", async () => {
@@ -155,9 +175,13 @@ describe("POST /work-accidents/:id/close", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z.object({ status: z.string() }).safeParse(await response.json())
 
-    expect(body.status).toBe("closed")
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("closed")
+    }
   })
 
   test("returns 409 when already closed", async () => {

@@ -1,9 +1,9 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
 import { setLocaleAction } from "@/app/(app)/settings/actions"
 import type { SetLocaleState } from "@/app/(app)/settings/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import {
   Field,
   FieldContent,
@@ -36,17 +36,12 @@ export function LocaleField(props: Props) {
 
   // action 完了後に画面の Server Component を再取得して `<html lang>` や辞書に反映する。
   // レンダー中には副作用を起こさない（useEffect は使わない）。
-  const action = useActionState(async (previousState: SetLocaleState, formData: FormData) => {
-    const next = await setLocaleAction(previousState, formData)
-
-    router.refresh()
-
-    return next
-  }, initialState)
-
-  const dispatch = action[1]
-
-  const isPending = action[2]
+  const [_state, dispatch, isPending] = useFormAction(
+    setLocaleAction,
+    initialState,
+    "表示言語を変更しました",
+    { onSuccess: () => router.refresh() },
+  )
 
   function handleValueChange(value: string | null) {
     if (value === null) return
@@ -60,7 +55,7 @@ export function LocaleField(props: Props) {
 
   return (
     <FieldGroup>
-      <Field orientation="responsive">
+      <Field orientation="vertical">
         <FieldContent>
           <FieldTitle id="locale-label">表示言語</FieldTitle>
           <FieldDescription>設定した言語で画面のテキストを表示します。</FieldDescription>

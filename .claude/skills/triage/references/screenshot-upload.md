@@ -39,9 +39,13 @@ agent-browser での撮影手順
 
 ## アップロードと貼り付け
 
-`inta tools images upload` の URL は約4分間しか有効ではない。これは Slack 等での即時共有を想定した ephemeral 設計のため。
+`inta tools images upload` の URL をそのまま Issue / PR の本文に貼ればよい。ephemeral-images-api（2026-07-09 更新）は GitHub の camo プロキシ（User-Agent `github-camo`、GitHub の IP レンジ検証つき）からの取得を TTL 無視で常に配信するため、**GitHub のページ上では画像が恒久表示される**。ブラウザでの貼り直しや user-attachments 化は不要。
 
-PR 本文に貼る場合は GitHub の自動取り込みを使う。GitHub は Issue / PR 本文や comment 内の外部画像 URL を、保存時に `user-attachments` に取り込んで永続化する。
+補足の性質を理解して使う。
+
+- 直接 URL を開く一般アクセスは従来どおり TTL（サービス側実装依存、2026-07 時点で 1 日）で expired になる。GitHub 経由でだけ生き続ける設計
+- GitHub は本文中の外部画像 URL を user-attachments に**変換しない**（2026-07-08 実測: `gh pr comment` / `gh pr edit --body` とも非変換）。変換されないことを前提にした仕組みなので、URL が ephemeral のまま残っていて正しい
+- Slack 等 GitHub 以外への貼り回しは不可（TTL で死ぬ）
 
 手順
 
@@ -50,38 +54,14 @@ URL=$(inta tools images upload workspace/users/{自分}/tmp/after.png)
 gh pr create --body "...![after]($URL)..."
 ```
 
-`gh pr create` の `--body` 内に画像 URL を含めれば、GitHub 側が同期的に取り込み、保存後の本文には `https://github.com/user-attachments/...` の永続 URL が入る。元の4分URL が失効しても画像は残る。
+複数枚も同様に、全 URL を取得してから 1 回の `gh pr create` / `gh pr edit --body` で本文に含める。
 
-順序が重要
+## 投稿直後の検証
 
-アップロードから `gh pr create` までを4分以内に終わらせる。途中で長い処理を挟まない。
-
-複数枚
-
-```bash
-BEFORE=$(inta tools images upload workspace/users/{自分}/tmp/before.png)
-AFTER=$(inta tools images upload workspace/users/{自分}/tmp/after.png)
-gh pr create --body "...
-## Screenshots
-
-### Before
-![before]($BEFORE)
-
-### After
-![after]($AFTER)
-..."
-```
-
-全ての URL を取得してから1回の `gh pr create` で本文に含める。1枚ずつ追加するとアップロードから貼り付けまでの時間が読めなくなる。
-
-## 失敗時のフォールバック
-
-GitHub の取り込みはベストエフォート。稀に失敗して URL がそのまま残ることがある。PR 作成後すぐに本文を見直し、URL が `user-attachments` に置換されていない場合は次のいずれかで復旧する。
-
-再アップロードして PR 本文を `gh pr edit --body` で更新する。何度試しても置換されない場合は、人間に「PR コメント欄に画像を直接ドロップしてください」と依頼する。
+投稿・作成の直後に、GitHub の PR ページ上（またはレンダリング済み body: `gh api .../comments -H "Accept: application/vnd.github.html+json"`）で画像が表示されることを確認する。表示されない場合は URL の打ち間違いかアップロード失敗なので、再アップロードして本文を `gh pr edit --body` で更新する。それでも表示されなければ、人間に「PR コメント欄に画像を直接ドロップしてください」と依頼し、ローカルの画像パスを伝える。
 
 ## やらないこと
 
 PR コメントの後追い投稿だけで済ませない。本文に貼ること。レビュアーが本文だけ見て変更内容を把握できる状態にする。
 
-`inta tools images upload` の出力 URL をそのまま Slack や別チャンネルに貼り回さない。4分で死ぬ。
+`inta tools images upload` の出力 URL をそのまま Slack や別チャンネルに貼り回さない。GitHub 以外では TTL で死ぬ。

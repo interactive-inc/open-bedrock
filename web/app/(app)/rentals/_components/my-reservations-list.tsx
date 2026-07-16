@@ -1,13 +1,16 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   cancelRentalReservationAction,
   updateRentalReservationAction,
 } from "@/app/(app)/rentals/actions"
 import type { RentalReservationActionState } from "@/app/(app)/rentals/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -67,11 +70,11 @@ export function MyReservationsList(props: Props) {
               <TableCell>{statusLabel(reservation.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateReservationDialog reservation={reservation} />
 
                   <CancelReservationButton reservationId={reservation.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -85,23 +88,12 @@ export function MyReservationsList(props: Props) {
 function UpdateReservationDialog(props: { reservation: RentalReservationResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: RentalReservationActionState,
-    formData: FormData,
-  ): Promise<RentalReservationActionState> {
-    const result = await updateRentalReservationAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateRentalReservationAction,
+    { ok: false, error: null } satisfies RentalReservationActionState,
+    "予約を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -174,18 +166,25 @@ function UpdateReservationDialog(props: { reservation: RentalReservationResponse
 
 // 予約取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelReservationButton(props: { reservationId: string }) {
-  const [, formAction, pending] = useActionState(cancelRentalReservationAction, {
-    ok: false,
-    error: null,
-  })
+  const [, formAction, pending] = useFormAction(
+    cancelRentalReservationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "予約を取り消しました",
+  )
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="このレンタル予約を取り消しますか？"
+      description="取り消した予約は元に戻せません。"
+      confirmLabel="予約を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="reservation_id" value={props.reservationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

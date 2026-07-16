@@ -1,5 +1,6 @@
 import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import { summarizeAttendance } from "@/lib/attendance/summarize-attendance"
+import { toBusinessMonth } from "@/lib/to-business-date"
 import { toMonthRange } from "@/interface/attendance/to-month-range"
 import { attendanceSummaryQuerySchema } from "@/interface/attendance/me/summary/attendance-summary-query"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -23,7 +24,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const month = parsed.data.month ?? (c.env.NOW ?? new Date().toISOString()).slice(0, 7)
+  const month = parsed.data.month ?? toBusinessMonth(c.env.NOW ?? new Date().toISOString())
 
   const range = toMonthRange(month)
 

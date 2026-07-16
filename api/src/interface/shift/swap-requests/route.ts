@@ -15,7 +15,7 @@ import {
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { employees, shiftSwapRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { count, eq } from "drizzle-orm"
+import { and, count, eq, ne } from "drizzle-orm"
 import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -58,14 +58,26 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(shiftSwapRequests)
     .leftJoin(requester, eq(requester.id, shiftSwapRequests.requesterEmployeeId))
     .leftJoin(target, eq(target.id, shiftSwapRequests.targetEmployeeId))
-    .where(eq(shiftSwapRequests.status, "pending"))
+    .where(
+      and(
+        eq(shiftSwapRequests.status, "pending"),
+        ne(shiftSwapRequests.requesterEmployeeId, session.employeeId),
+        ne(shiftSwapRequests.targetEmployeeId, session.employeeId),
+      ),
+    )
     .limit(limit)
     .offset(offset)
 
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(shiftSwapRequests)
-    .where(eq(shiftSwapRequests.status, "pending"))
+    .where(
+      and(
+        eq(shiftSwapRequests.status, "pending"),
+        ne(shiftSwapRequests.requesterEmployeeId, session.employeeId),
+        ne(shiftSwapRequests.targetEmployeeId, session.employeeId),
+      ),
+    )
 
   const responseBody = zAppShiftSwapRequestPendingList.parse({
     data: rows.map((row) => ({

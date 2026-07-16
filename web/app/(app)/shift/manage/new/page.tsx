@@ -3,7 +3,7 @@ import { ShiftAssignmentCreateForm } from "@/app/(app)/shift/_components/shift-a
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 
@@ -18,7 +18,7 @@ export default async function ShiftAssignmentNewPage() {
     notFound()
   }
 
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  const employeeResult = await getEmployeeDirectory()
 
   const employees =
     employeeResult instanceof Error

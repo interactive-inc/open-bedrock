@@ -76,6 +76,28 @@ export class UnprocessableError extends ApplicationError {
 }
 
 /**
+ * 要求または生成物が安全な処理上限を超える（HTTP 413 相当）
+ */
+export class PayloadTooLargeError extends ApplicationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+
+    this.name = "PayloadTooLargeError"
+  }
+}
+
+/**
+ * 必須の監査・外部依存を利用できず、安全に処理を継続できない（HTTP 503 相当）
+ */
+export class UnavailableError extends ApplicationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+
+    this.name = "UnavailableError"
+  }
+}
+
+/**
  * 想定外の失敗。infrastructure が返した素のエラーや、満たされるはずの不変条件の破れを表す。
  * 内部情報は cause に隠し、message には安全な説明だけを載せる（HTTP 500 相当）
  */

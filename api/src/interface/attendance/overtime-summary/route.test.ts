@@ -67,7 +67,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   // 2026-06 は平日 22 日 = 所定 10560 分。R020 は 12 日で 6000 分（時間外 0）。
   // R021 は毎日 600 分×22 日 = 13200 分（時間外 2640 分）。
-  const records: Array<Record<string, unknown>> = []
+  const records: Array<Record<string, string | number | boolean | null>> = []
 
   let id = 100
 

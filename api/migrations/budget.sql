@@ -1,26 +1,25 @@
--- 予算枠（会計年度・部署ごとの予算の事実記録）。金額は整数円で持つ。
--- 稟議・経費との自動連動はせず、消化は budget_consumptions への手動記録で表す。
--- 残額は「枠 amount − 消化合計」の単純減算で、会計計算や支払処理は持たない。
+-- 部署予算（部署・会計期間・金額の記録）。消化額はスナップショットせず、承認済み経費の読み取り集計で算出する。
 CREATE TABLE IF NOT EXISTS budgets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  fiscal_year INTEGER NOT NULL,
-  department_code TEXT,
-  title TEXT NOT NULL,
+  department_id INTEGER NOT NULL,
+  fiscal_period TEXT NOT NULL,
+  period_start TEXT NOT NULL,
+  period_end TEXT NOT NULL,
   amount INTEGER NOT NULL,
+  name TEXT NOT NULL,
   note TEXT,
   created_at TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_budgets_fiscal_year ON budgets (fiscal_year);
+CREATE INDEX IF NOT EXISTS idx_budgets_department ON budgets (department_id);
 
--- 予算枠の消化記録（枠に対して、いついくら使ったかの手動記録）。
-CREATE TABLE IF NOT EXISTS budget_consumptions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  budget_id INTEGER NOT NULL,
-  amount INTEGER NOT NULL,
-  note TEXT,
-  recorded_on TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
+CREATE INDEX IF NOT EXISTS idx_budgets_fiscal_period ON budgets (fiscal_period);
 
-CREATE INDEX IF NOT EXISTS idx_budget_consumptions_budget ON budget_consumptions (budget_id);
+-- budget:manage 権限を追加し、hr / admin に付与する。0004_iam_seed.sql と同じく INSERT OR IGNORE で冪等に追加する。
+INSERT OR IGNORE INTO permissions (key, description, category) VALUES
+  ('budget:manage', '部署予算を管理する', 'budget');
+
+INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+  SELECT r.id, p.id FROM roles r, permissions p
+  WHERE r.key IN ('hr', 'admin')
+    AND p.key = 'budget:manage';

@@ -128,6 +128,7 @@ async function request(props: {
   const bindings: Bindings = {
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
+    AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 
@@ -290,6 +291,22 @@ describe("PUT /surveys/:survey_id", () => {
 
     expect(response.status).toBe(400)
   })
+
+  // #910: closed → open の再開は禁止し、409 を返す。
+  test("returns 409 when reopening a closed survey", async () => {
+    const response = await request({
+      path: "/surveys/3",
+      token: await adminToken(),
+      method: "PUT",
+      body: {
+        title: "H2 FY2025 Retrospective Survey",
+        status: "open",
+        questions_json: [{ id: "q1", type: "scale", text: "I achieved my goals", min: 1, max: 5 }],
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
 })
 
 describe("DELETE /surveys/:survey_id", () => {
@@ -350,6 +367,7 @@ describe("DELETE /surveys/:survey_id", () => {
     const bindings: Bindings = {
       DB: db,
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 

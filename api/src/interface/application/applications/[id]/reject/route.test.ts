@@ -76,6 +76,9 @@ async function createTestDb(): Promise<D1Database> {
   )
 
   await seedIamForEmployees(db)
+  await seedD1(db, "org_memberships", [
+    { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+  ])
 
   return db
 }
@@ -128,6 +131,19 @@ describe("POST /applications/:id/reject", () => {
     })
 
     expect(response.status).toBe(400)
+  })
+
+  test("returns 400 with a clear message when comment is null", async () => {
+    const response = await request("/applications/1/reject", await tokenFor(2, "manager"), {
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(response.status).toBe(400)
+
+    const raw = await response.text()
+
+    expect(raw).toContain("却下にはコメントが必須です")
   })
 
   test("returns 404 for an unknown id", async () => {

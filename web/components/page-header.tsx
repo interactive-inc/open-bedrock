@@ -8,6 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 /**
  * 全ページ共通の見出しブロック。パンくず・タイトル・説明・右側アクションを縦並びに整える。
@@ -57,16 +58,20 @@ export function PageHeader(props: Props) {
       ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{props.title}</h1>
+        <div className="flex items-start gap-2">
+          <SidebarTrigger className="mt-1" />
 
-          {props.description !== undefined ? (
-            <p className="text-sm text-muted-foreground">{props.description}</p>
-          ) : null}
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">{props.title}</h1>
+
+            {props.description !== undefined ? (
+              <p className="text-sm text-muted-foreground">{props.description}</p>
+            ) : null}
+          </div>
         </div>
 
         {props.actions !== undefined ? (
-          <div className="flex items-center gap-2">{props.actions}</div>
+          <div className="flex flex-wrap items-center gap-2">{props.actions}</div>
         ) : null}
       </div>
     </div>

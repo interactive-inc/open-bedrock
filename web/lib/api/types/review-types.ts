@@ -22,6 +22,15 @@ export type ReviewCycleCreateRequest = {
   title: string
   period: string
   dueDate: string | null
+  policy: ReviewCyclePolicy
+}
+
+export type ReviewCyclePolicy = {
+  include_self: boolean
+  include_manager: boolean
+  include_peers: boolean
+  include_subordinates: boolean
+  peer_count: number
 }
 
 // PUT /review-cycles/:cycle_id のリクエスト body（管理者がサイクルの題目・期間・締切を更新）。

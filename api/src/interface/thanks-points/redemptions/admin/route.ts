@@ -14,6 +14,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { z } from "zod"
+import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { InternalError } from "@/interface/lib/errors"
 
 const SORT_OPTIONS = {
   created_at_desc: desc(thanksRedemptions.createdAt),
@@ -130,12 +132,23 @@ export const GET = factory.createHandlers(
       .from(thanksRedemptions)
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.employeeId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppThanksRedemptionAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         employee_id: row.employeeId,
         employee_name: row.employeeName ?? "",
-        employee_dept_name: row.employeeDeptName,
+        employee_dept_name:
+          currentDepartments.source === "lifecycle"
+            ? (currentDepartments.names.get(row.employeeId) ?? null)
+            : row.employeeDeptName,
         reward_id: row.rewardId,
         reward_name: row.rewardName ?? "",
         point_cost: row.pointCost,

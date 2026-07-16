@@ -3,7 +3,7 @@ import { NotificationCreateForm } from "@/app/(app)/notifications/_components/no
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
@@ -18,7 +18,7 @@ export default async function NotificationNewPage() {
     notFound()
   }
 
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  const employeeResult = await getEmployeeDirectory()
 
   const employees =
     employeeResult instanceof Error

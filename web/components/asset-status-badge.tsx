@@ -14,5 +14,9 @@ export function AssetStatusBadge(props: Props) {
     return <Badge className="bg-emerald-600 text-white">在庫</Badge>
   }
 
+  if (props.status === "disposed") {
+    return <Badge variant="secondary">廃棄済み</Badge>
+  }
+
   return <Badge variant="secondary">{props.status}</Badge>
 }

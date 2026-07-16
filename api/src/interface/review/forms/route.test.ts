@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { z } from "zod"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedReviewCycles } from "@/infrastructure/seed/seed-review-cycles"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -108,10 +109,16 @@ describe("GET /review-forms?subject_employee_id=", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z
+      .object({ form_count: z.number(), reviewer_type_summary: z.array(z.unknown()) })
+      .safeParse(await response.json())
 
-    expect(body.form_count).toBe(2)
-    expect(body.reviewer_type_summary.length).toBe(2)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.form_count).toBe(2)
+      expect(parsed.data.reviewer_type_summary.length).toBe(2)
+    }
   })
 
   test("subject only sees disclosed forms", async () => {
@@ -119,11 +126,20 @@ describe("GET /review-forms?subject_employee_id=", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z
+      .object({
+        form_count: z.number(),
+        forms: z.array(z.object({ visibility: z.string(), reviewer_type: z.string() })),
+      })
+      .safeParse(await response.json())
 
-    expect(body.form_count).toBe(1)
-    expect(body.forms[0].visibility).toBe("disclosed")
-    expect(body.forms[0].reviewer_type).toBe("self")
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.form_count).toBe(1)
+      expect(parsed.data.forms[0].visibility).toBe("disclosed")
+      expect(parsed.data.forms[0].reviewer_type).toBe("self")
+    }
   })
 
   test("another employee is forbidden", async () => {

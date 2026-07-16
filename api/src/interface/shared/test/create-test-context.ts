@@ -13,10 +13,18 @@ export function createTestContext(): { context: Context; db: D1Database } {
     var: {
       database: drizzle(db, { schema }),
       session: null,
+      auditContext: {
+        requestId: "00000000-0000-4000-8000-000000000000",
+        clientName: "api",
+        clientIp: null,
+        externalRequestId: null,
+      },
     },
     env: {
       DB: db,
       JWT_SECRET: "repository-test-secret",
+      AUDIT_HMAC_SECRET: "repository-test-audit-hmac-secret",
+      COMPANY_TIME_ZONE: "Asia/Tokyo",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   }

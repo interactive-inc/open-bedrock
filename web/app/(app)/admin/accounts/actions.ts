@@ -1,10 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { ApiResponseError } from "@/lib/api/api-response-error"
+import { getMe } from "@/lib/api/get-me"
 import { grantAccountRole } from "@/lib/api/grant-account-role"
 import { resetAccountPassword } from "@/lib/api/reset-account-password"
 import { revokeAccountRole } from "@/lib/api/revoke-account-role"
 import { setAccountStatus } from "@/lib/api/set-account-status"
+import { canAssignRoles } from "@/lib/iam/can-assign-roles"
+import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 
 export type GrantRoleFormState = {
   ok: boolean
@@ -16,11 +20,37 @@ export type AccountActionFormState = {
   error: string | null
 }
 
-// アカウントからロールを剥奪する。
+// api の {error, code} 応答の code を、そのアクションの文脈に合った日本語文言へ変換する。
+// 同じ code でもアクションによって意味が変わる（last_admin は剥奪では「外せません」、
+// 停止では「停止できません」）ため、マップはアクションごとに分ける。
+// 未知の code や code の無い応答（ApiResponseError 以外の Error）は fallback を返す。
+function toActionErrorMessage(
+  error: Error,
+  messages: Record<string, string>,
+  fallback: string,
+): string {
+  if (error instanceof ApiResponseError && error.code !== null) {
+    const mapped = messages[error.code]
+
+    if (mapped !== undefined) {
+      return mapped
+    }
+  }
+
+  return fallback
+}
+
+// アカウントからロールを剥奪する。iam:assign_roles 権限が必要。
 export async function revokeAccountRoleAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
@@ -32,7 +62,18 @@ export async function revokeAccountRoleAction(
   const revoked = await revokeAccountRole(accountId, roleKey)
 
   if (revoked instanceof Error) {
-    return { ok: false, error: "ロールの剥奪に失敗しました（最後の管理者は外せません）" }
+    const message = toActionErrorMessage(
+      revoked,
+      {
+        last_admin: "最後の管理者はロールを外せません",
+        role_escalation: "自分より強い権限のロールは外せません",
+        role_not_found: "指定したロールが見つかりません",
+        forbidden: "ロールを管理する権限がありません",
+      },
+      "ロールの剥奪に失敗しました",
+    )
+
+    return { ok: false, error: message }
   }
 
   revalidatePath("/admin/accounts")
@@ -40,11 +81,17 @@ export async function revokeAccountRoleAction(
   return { ok: true, error: null }
 }
 
-// 管理者がアカウントのパスワードを再設定する。
+// 管理者がアカウントのパスワードを再設定する。account:manage 権限が必要。
 export async function resetPasswordAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
+    return { ok: false, error: "アカウントを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const newPassword = toText(formData.get("new_password"))
@@ -60,7 +107,19 @@ export async function resetPasswordAction(
   const reset = await resetAccountPassword(accountId, newPassword)
 
   if (reset instanceof Error) {
-    return { ok: false, error: "パスワードの再設定に失敗しました" }
+    const message = toActionErrorMessage(
+      reset,
+      {
+        weak_password: "パスワードは8文字以上にしてください",
+        role_escalation: "自分より強い権限のアカウントは変更できません",
+        account_not_found: "対象のアカウントが見つかりません",
+        identity_not_found: "このアカウントにはパスワードが設定されていません",
+        forbidden: "アカウントを管理する権限がありません",
+      },
+      "パスワードの再設定に失敗しました",
+    )
+
+    return { ok: false, error: message }
   }
 
   revalidatePath("/admin/accounts")
@@ -68,11 +127,17 @@ export async function resetPasswordAction(
   return { ok: true, error: null }
 }
 
-// アカウントの状態を変更する（停止・有効化）。
+// アカウントの状態を変更する（停止・有効化）。account:manage 権限が必要。
 export async function setAccountStatusAction(
   _prevState: AccountActionFormState,
   formData: FormData,
 ): Promise<AccountActionFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
+    return { ok: false, error: "アカウントを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const status = toStatus(formData.get("status"))
@@ -84,7 +149,20 @@ export async function setAccountStatusAction(
   const updated = await setAccountStatus(accountId, status)
 
   if (updated instanceof Error) {
-    return { ok: false, error: "状態の変更に失敗しました（自分自身は停止できません）" }
+    const message = toActionErrorMessage(
+      updated,
+      {
+        self_deactivation: "自分自身は停止できません",
+        last_admin: "最後の管理者は停止できません",
+        role_escalation: "自分より強い権限のアカウントは変更できません",
+        account_not_found: "対象のアカウントが見つかりません",
+        invalid_status: "指定した状態が不正です",
+        forbidden: "アカウントを管理する権限がありません",
+      },
+      "状態の変更に失敗しました",
+    )
+
+    return { ok: false, error: message }
   }
 
   revalidatePath("/admin/accounts")
@@ -100,11 +178,17 @@ function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "l
   return null
 }
 
-// FormData からアカウントへのロール付与を実行するサーバーアクション。
+// FormData からアカウントへのロール付与を実行するサーバーアクション。iam:assign_roles 権限が必要。
 export async function grantAccountRoleAction(
   _prevState: GrantRoleFormState,
   formData: FormData,
 ): Promise<GrantRoleFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
+    return { ok: false, error: "ロールを管理する権限がありません" }
+  }
+
   const accountId = toPositiveInt(formData.get("account_id"))
 
   const roleKey = toText(formData.get("role_key"))
@@ -116,7 +200,19 @@ export async function grantAccountRoleAction(
   const granted = await grantAccountRole(accountId, roleKey)
 
   if (granted instanceof Error) {
-    return { ok: false, error: "ロールの付与に失敗しました（自己付与の禁止や権限不足の可能性）" }
+    const message = toActionErrorMessage(
+      granted,
+      {
+        self_assignment: "自分自身にはロールを付与できません",
+        role_escalation: "自分が持たない権限を含むロールは付与できません",
+        role_not_found: "指定したロールが見つかりません",
+        account_not_found: "対象のアカウントが見つかりません",
+        forbidden: "ロールを管理する権限がありません",
+      },
+      "ロールの付与に失敗しました",
+    )
+
+    return { ok: false, error: message }
   }
 
   revalidatePath("/admin/accounts")

@@ -2,15 +2,18 @@
 
 import { formatDateTime } from "@/lib/format-datetime"
 import Link from "next/link"
-import { useActionState, useState } from "react"
+import { useRef, useState } from "react"
 import {
   updateApplicationAction,
+  resubmitApplicationAction,
   withdrawApplicationAction,
 } from "@/app/(app)/applications/actions"
-import type { ApplicationActionState } from "@/app/(app)/applications/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -72,7 +75,10 @@ export function MyApplicationsList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <ApplicationStatusBadge status={application.status} />
+                <ApplicationStatusBadge
+                  status={application.status}
+                  returned={application.current_step?.startsWith("returned:") === true}
+                />
               </TableCell>
 
               <TableCell className="text-muted-foreground">
@@ -103,11 +109,17 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
   }
 
   return (
-    <div className="flex justify-end gap-2">
-      <UpdateApplicationDialog application={props.application} applicationId={applicationId} />
+    <TableRowActions>
+      {props.application.current_step?.startsWith("returned:") ? (
+        <UpdateApplicationDialog
+          application={props.application}
+          applicationId={applicationId}
+          resubmit
+        />
+      ) : null}
 
       <WithdrawApplicationButton applicationId={applicationId} />
-    </div>
+    </TableRowActions>
   )
 }
 
@@ -116,41 +128,37 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
 function UpdateApplicationDialog(props: {
   application: ApplicationListItem
   applicationId: number
+  resubmit?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
-  const [isDirty, setIsDirty] = useState(false)
+  const isDirty = useRef(false)
 
   const initialPayload = JSON.stringify(props.application.payload, null, 2)
 
-  async function reduce(
-    previousState: ApplicationActionState,
-    formData: FormData,
-  ): Promise<ApplicationActionState> {
-    const result = await updateApplicationAction(previousState, formData)
+  const selectedAction = props.resubmit ? resubmitApplicationAction : updateApplicationAction
 
-    if (result.ok) {
-      setIsDirty(false)
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    selectedAction,
+    { ok: false, error: null },
+    props.resubmit ? "申請を再提出しました" : "申請内容を変更しました",
+    {
+      onSuccess: () => {
+        isDirty.current = false
+        setOpen(false)
+      },
+    },
+  )
 
   function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen && isDirty) {
+    if (!nextOpen && isDirty.current) {
       const ok = window.confirm("編集中の内容は破棄されます。閉じてよろしいですか?")
 
       if (!ok) {
         return
       }
 
-      setIsDirty(false)
+      isDirty.current = false
     }
 
     setOpen(nextOpen)
@@ -158,11 +166,15 @@ function UpdateApplicationDialog(props: {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>変更</DialogTrigger>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        {props.resubmit ? "修正して再申請" : "変更"}
+      </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>申請内容を変更</DialogTitle>
+          <DialogTitle>
+            {props.resubmit ? "差戻し内容を修正して再申請" : "申請内容を変更"}
+          </DialogTitle>
 
           <DialogDescription>申請内容を編集して保存してください。</DialogDescription>
         </DialogHeader>
@@ -179,7 +191,9 @@ function UpdateApplicationDialog(props: {
                 name="payload"
                 rows={8}
                 defaultValue={initialPayload}
-                onChange={(event) => setIsDirty(event.target.value !== initialPayload)}
+                onChange={(event) => {
+                  isDirty.current = event.target.value !== initialPayload
+                }}
               />
             </Field>
           </FieldGroup>
@@ -187,7 +201,7 @@ function UpdateApplicationDialog(props: {
           {state.error === null ? null : <FieldError>{state.error}</FieldError>}
 
           <Button type="submit" disabled={pending}>
-            変更を保存
+            {props.resubmit ? "再申請する" : "変更を保存"}
           </Button>
         </form>
       </DialogContent>
@@ -197,18 +211,25 @@ function UpdateApplicationDialog(props: {
 
 // 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawApplicationButton(props: { applicationId: number }) {
-  const [_state, formAction, pending] = useActionState(withdrawApplicationAction, {
-    ok: false,
-    error: null,
-  })
+  const [_state, formAction, pending] = useFormAction(
+    withdrawApplicationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "申請を取り下げました",
+  )
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この申請を取り下げますか？"
+      description="取り下げた申請は承認されません。この操作は元に戻せません。"
+      confirmLabel="申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="application_id" value={props.applicationId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

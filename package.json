@@ -10,6 +10,7 @@
   "scripts": {
     "build:api-types": "bun run --filter api build:types",
     "typecheck": "bun run build:api-types && bun run --filter web check && bun run --filter cli check",
+    "test:web": "bun run --filter web test",
     "check": "vp check"
   },
   "devDependencies": {

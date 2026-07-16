@@ -13,7 +13,7 @@ DB_NAME="open-karte"
 SEEDS_DIR="$(cd "$(dirname "$0")/../seeds" && pwd)"
 
 # 依存順。employee（employees）と org（departments 等）を先に。
-ORDER=(employee org)
+ORDER=(employee org employee-lifecycle)
 
 apply() {
   local file="$1"

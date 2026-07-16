@@ -6,6 +6,7 @@ import { GoalList } from "@/app/(app)/goals/_components/goal-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "目標" }
 
@@ -18,11 +19,15 @@ type Props = {
  * 作成は /goals/new に分離。
  */
 export default async function GoalsPage(props: Props) {
-  const searchParams = await props.searchParams
+  const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
+
+  const canViewOthers =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("goal:read:all")
 
   const period = typeof searchParams.period === "string" ? searchParams.period : null
 
-  const employeeId = typeof searchParams.employee_id === "string" ? searchParams.employee_id : null
+  const employeeId =
+    canViewOthers && typeof searchParams.employee_id === "string" ? searchParams.employee_id : null
 
   const newHref = period === null ? "/goals/new" : `/goals/new?period=${encodeURIComponent(period)}`
 
@@ -30,7 +35,11 @@ export default async function GoalsPage(props: Props) {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="目標"
-        description="期間と従業員で絞り込み、目標を確認します。"
+        description={
+          canViewOthers
+            ? "期間と従業員で絞り込み、目標を確認します。"
+            : "期間で絞り込み、自分の目標を確認します。"
+        }
         actions={
           <div className="flex gap-2">
             <Button variant="outline" nativeButton={false} render={<Link href="/goals/tree" />}>
@@ -45,7 +54,7 @@ export default async function GoalsPage(props: Props) {
         }
       />
 
-      <GoalFilterForm period={period} employeeId={employeeId} />
+      <GoalFilterForm period={period} employeeId={employeeId} canFilterEmployee={canViewOthers} />
 
       <Suspense key={`${period ?? ""}:${employeeId ?? ""}`} fallback={<ListSkeleton rows={5} />}>
         <GoalList period={period} employeeId={employeeId} />

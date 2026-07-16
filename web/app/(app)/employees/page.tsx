@@ -3,10 +3,12 @@ import { EmployeeListSection } from "@/app/(app)/employees/_components/employee-
 import { EmployeeSearchForm } from "@/app/(app)/employees/_components/employee-search-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { parsePageSize } from "@/components/table-pagination"
 import type {
   EmployeeSearchFilter,
   EmployeeStatusFilter,
 } from "@/lib/api/types/employee-search-filter"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "従業員" }
 
@@ -17,15 +19,17 @@ type Props = {
 // 従業員一覧画面。searchParams から絞り込み条件を組み立て、
 // フォーム + 非同期テーブルを Suspense 境界で描画する RSC。
 export default async function EmployeesPage(props: Props) {
+  await requirePermission("employee:read")
+
   const params = await props.searchParams
 
   const filter = toFilter(params)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
-
-  const pageSize = 20
 
   const offset = (page - 1) * pageSize
 

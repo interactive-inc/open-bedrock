@@ -1,8 +1,17 @@
 import type { Application } from "@/domain/application/application.entity"
 import type { Context } from "@/env"
-import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  UnprocessableError,
+} from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
+import { validateAndNormalizeApplicationPayload } from "@/lib/application/validate-application-payload"
 
 export type Command = {
   applicationId: number
@@ -37,7 +46,41 @@ export class UpdateApplication {
       return new ConflictError("application is already decided", "not_pending")
     }
 
-    const updated = await applicationRepository.updatePayload(current.withPayload(command.payload))
+    const workflow = await new ApplicationWorkflowRepository(this.c).findInstance(
+      command.applicationId,
+    )
+    if (workflow instanceof Error) {
+      return new UnexpectedError("failed to find workflow instance", { cause: workflow })
+    }
+    if (workflow !== null) {
+      return new ConflictError(
+        "workflow application can only be edited when resubmitting a return",
+        "workflow_locked",
+      )
+    }
+
+    const template = await new ApplicationTemplateRepository(this.c).findById(current.templateId)
+    if (template instanceof Error) {
+      return new UnexpectedError("failed to find application template", { cause: template })
+    }
+    if (template === null) {
+      return new UnexpectedError("application template not found")
+    }
+    if (template.systemBinding !== null) {
+      return new ConflictError(
+        "system application must use its dedicated route",
+        "system_template_requires_dedicated_route",
+      )
+    }
+
+    const payload = validateAndNormalizeApplicationPayload(template.schemaJson, command.payload)
+    if (payload instanceof Error) {
+      return new UnprocessableError("payload does not match template schema", "invalid_payload", {
+        cause: payload,
+      })
+    }
+
+    const updated = await applicationRepository.updatePayload(current.withPayload(payload))
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update application", { cause: updated })

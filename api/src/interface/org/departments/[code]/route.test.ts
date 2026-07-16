@@ -92,11 +92,14 @@ type RequestProps = {
   token: string | null
   method?: string
   body?: unknown
+  setup?: (db: D1Database) => Promise<void>
 }
 
 async function request(props: RequestProps): Promise<Response> {
+  const db = await createTestDb()
+  await props.setup?.(db)
   return requestWithContext({
-    db: await createTestDb(),
+    db,
     jwtSecret,
     path: props.path,
     token: props.token,
@@ -135,12 +138,12 @@ describe("GET /org/departments/:code", () => {
 })
 
 describe("PUT /org/departments/:code", () => {
-  test("updates manager and order for a privileged role", async () => {
+  test("updates hierarchy metadata without bypassing lifecycle responsibility", async () => {
     const response = await request({
       path: "/org/departments/D003",
       token: await adminToken(),
       method: "PUT",
-      body: { parent_code: "D001", manager_employee_code: "E005", order: 7 },
+      body: { parent_code: "D001", order: 7 },
     })
 
     expect(response.status).toBe(200)
@@ -150,9 +153,20 @@ describe("PUT /org/departments/:code", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.manager_employee_code).toBe("E005")
+      expect(parsed.data.manager_employee_code).toBe("E004")
       expect(parsed.data.order).toBe(7)
     }
+  })
+
+  test("rejects direct department responsibility changes", async () => {
+    const response = await request({
+      path: "/org/departments/D003",
+      token: await adminToken(),
+      method: "PUT",
+      body: { manager_employee_code: "E005", order: 7 },
+    })
+
+    expect(response.status).toBe(400)
   })
 
   test("returns 403 for a non-privileged role", async () => {
@@ -256,11 +270,25 @@ describe("DELETE /org/departments/:code", () => {
     expect(response.status).toBe(409)
   })
 
-  test("returns 204 when an empty leaf department is deleted", async () => {
+  test("returns 204 when an empty leaf department is archived", async () => {
     const response = await request({
       path: "/org/departments/D006",
       token: await adminToken(),
       method: "DELETE",
+      setup: async (db) => {
+        await db.exec(`
+          INSERT INTO employment_period_versions
+            (period_id, revision, employee_id, starts_on, ends_on, is_void,
+             recorded_by_action_id, recorded_at)
+          VALUES ('fixture-employment-e001', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
+          INSERT INTO employee_status_period_versions
+            (period_id, revision, employment_period_id, employee_id, status, starts_on,
+             ends_on, is_void, recorded_by_action_id, recorded_at)
+          VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
+                  '2025-01-01', NULL, 0, 'fixture', 1);
+          UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+        `)
+      },
     })
 
     expect(response.status).toBe(204)

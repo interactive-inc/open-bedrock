@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -126,11 +127,11 @@ export function ReviewCycleList(props: Props) {
             </div>
           </CardHeader>
 
-          <CardContent className="flex items-center justify-between gap-4">
+          <CardContent className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <span className="text-sm text-muted-foreground">締切: {cycle.due_date ?? "-"}</span>
 
             {props.canAdminister ? (
-              <div className="flex gap-2">
+              <TableRowActions className="w-full md:w-auto">
                 {cycle.status === "draft" ? (
                   <form action={openDispatch}>
                     <input type="hidden" name="cycle_id" value={cycle.id} />
@@ -167,42 +168,44 @@ export function ReviewCycleList(props: Props) {
                   </DialogContent>
                 </Dialog>
 
-                <AlertDialog>
-                  <AlertDialogTrigger
-                    render={
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        data-icon="trash"
-                        disabled={isDeleting}
-                      />
-                    }
-                  >
-                    削除
-                  </AlertDialogTrigger>
+                {cycle.status === "draft" ? (
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          data-icon="trash"
+                          disabled={isDeleting}
+                        />
+                      }
+                    >
+                      削除
+                    </AlertDialogTrigger>
 
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>評価サイクルを削除しますか？</AlertDialogTitle>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>評価サイクルを削除しますか？</AlertDialogTitle>
 
-                      <AlertDialogDescription>
-                        この操作は取り消せません。サイクル「{cycle.title}」を削除します。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
+                        <AlertDialogDescription>
+                          この操作は取り消せません。サイクル「{cycle.title}」を削除します。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
 
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
 
-                      <form action={deleteDispatch}>
-                        <input type="hidden" name="cycle_id" value={cycle.id} />
+                        <form action={deleteDispatch}>
+                          <input type="hidden" name="cycle_id" value={cycle.id} />
 
-                        <AlertDialogAction type="submit">削除する</AlertDialogAction>
-                      </form>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+                          <AlertDialogAction type="submit">削除する</AlertDialogAction>
+                        </form>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : null}
+              </TableRowActions>
             ) : null}
           </CardContent>
         </Card>

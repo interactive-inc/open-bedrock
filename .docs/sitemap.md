@@ -1,6 +1,8 @@
-# サイトマップ
+# Web route 仕様
 
-web のユーザー向け画面一覧。実装ルートは `web/app` 配下を正とし、動的セグメントは `[param]` で表す。機能の概要は [[features|機能一覧]]、主要導線は [[user-flows|ユーザーフロー]] を参照する。
+規範性: 実装写像。Web route と画面責務の実装 snapshot を示す。
+
+実装済み Web route と各 route の操作責務を列挙する。route の正本は `web/app` とし、動的 segment は `[param]` で表す。本書は route snapshot であり、API の提供、認可、業務不変条件を保証しない。未掲載 route と差異がある場合はコードを優先する。
 
 ## 認証
 
@@ -13,11 +15,12 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 ## 社員と組織
 
 - `/employees` は従業員台帳を検索し、従業員一覧を確認する画面。
-- `/employees/new` は新しい従業員を従業員台帳に登録する画面。
-- `/employees/[code]` は従業員の基本情報、所属、状態を確認し編集する画面。
+- `/employees/new` は人物台帳、入社発令、初期アカウントを一括登録する画面。
+- `/employees/[code]` は基本情報、現在の人事状態、人材タイムライン、承認待ちの人事変更を確認し、人事変更を申請または確定する画面。
+- `/employees/[code]/timeline` は従業員の人事発令履歴をカーソルで継続表示する画面。
 - `/org` は部署ツリーを閲覧し、部署ノードを管理する画面。
-- `/org/departments` は部署の一覧を確認する画面。
-- `/org/departments/new` は新しい部署ノードを登録する画面。
+- `/org/departments` は部署ノードの一覧を確認し、変更や削除を行う管理画面(`org:manage`)。
+- `/org/departments/new` は新しい部署ノードを作成する画面(`org:manage`)。
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 - `/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
@@ -42,6 +45,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/applications/templates` は利用可能な申請テンプレートを確認し、新規申請を作成する画面。
 - `/applications/templates/new` は新しい申請テンプレートの名称、カテゴリ、入力項目を登録する画面。
 - `/applications/templates/[code]` は申請テンプレートの詳細を確認し、テンプレートから申請を始める画面。
+- `/applications/templates/[code]/workflow` はテンプレートの多段承認、条件、期限、差戻し、代理承認可否を設定する管理画面。
+- `/applications/delegations` は期間と対象テンプレートを指定して代理承認を設定する画面。
 
 ## 勤怠と休暇
 
@@ -62,6 +67,13 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/expense/inbox` は承認待ちの経費申請を確認し、承認または却下する画面。
 - `/expense/admin` は全社の経費申請を横断で確認する管理画面(`expense:read:all`)。
 
+## 予算
+
+- `/budgets` は部署と会計期間ごとの予算を一覧で確認する画面(`budget:manage`)。
+- `/budgets/new` は部署、会計期間、期間、金額、名称、メモを入力して予算を登録する画面(`budget:manage`)。
+- `/budgets/[id]` は予算の詳細と、承認済み経費による消化額、残額を確認し、修正や削除を行う画面(`budget:manage`)。
+- `/budgets/summary` は会計期間を指定し、部署ごとの予算、消化額、残額を横断で確認する画面(`budget:manage`)。
+
 ## ナレッジ
 
 - `/knowledge` は社内ナレッジをキーワードやカテゴリで検索する画面。
@@ -71,6 +83,12 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/regulations` は規程集の一覧と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
 - `/documents` は文書台帳(所在・期限)を確認、登録する画面(`document:read:all`)。
 
+## 規程・手続き
+
+- `/governance` は published status、audience、閲覧権限に応じた規程・手続きを検索する画面。現行実装は施行期間で絞り込まない。
+- `/governance/[code]` は Markdown 本文、版、ProcedureDefinition、authority rule と control の宣言 metadata、公開 review、確認状態を表示する画面。
+- `/governance/manage` は組織ロールの割当と、組織・参照・期限の整合性を検査する管理画面(`governance:manage`)。
+
 ## 会議室と備品
 
 - `/rooms` は会議室の空き状況を検索し、会議室を予約する画面。
@@ -79,8 +97,12 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/rooms/manage/new` は新しい会議室の名称、定員、所在地を登録する画面。
 - `/assets` は種別や状態で絞り込み、備品一覧を確認する画面。
 - `/assets/new` は新しい備品を備品マスタに登録する画面。
-- `/assets/[code]` は備品の属性と貸与、返却状況を確認する画面。
+- `/assets/[code]` は備品の属性と貸与、返却、廃棄を操作する画面。
 - `/assets/lent/me` は自分が借りている備品を確認する画面。
+- `/assets/holdings` は現在貸出中の備品を保有者ごとに横断で確認する管理画面。
+- `/stocktakes` は棚卸しセッションの一覧を確認する画面。
+- `/stocktakes/new` は名称と対象日を指定して棚卸しを開始する画面。
+- `/stocktakes/[id]` は対象備品ごとの現物確認を記録し、セッションを締める画面。
 
 ## スキルと目標
 
@@ -92,7 +114,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/goals/new` は期間と内容を入力して目標を登録する画面。
 - `/goals/[id]` は目標の内容、評価、状態を確認する詳細画面。
 
-## 1on1 とサーベイ
+## 個別面談とサーベイ
 
 - `/oneonone` は自分が参加した 1on1 の履歴を確認する画面。
 - `/oneonone/new` は日時、相手、メモを入力して 1on1 を記録する画面。
@@ -116,8 +138,9 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/onboarding` はオンボーディングのテンプレート管理と社員への割り当てを行う画面。
 - `/onboarding/me` は自分に割り当てられた未完了タスクを確認する画面。
+- `/onboarding/employees` は閲覧権限を持つ担当者が社員を選び、進行状況へ移動する画面。
 - `/onboarding/employee/[code]` は社員ごとのオンボーディング進行状況を確認する画面。
-- `/onboarding/templates` は入社、退社のオンボーディングテンプレートを管理する画面。
+- `/onboarding/templates` は入社、退社のオンボーディングテンプレートと人事発令からの自動割当を管理する画面。
 - `/onboarding/templates/new` はオンボーディングタスクをテンプレートとして登録する画面。
 - `/onboarding/assignments/new` は社員コードとテンプレートを指定して割り当てを作成する画面。
 
@@ -125,16 +148,18 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/review` は評価サイクルと自分の評価フォームを確認する画面。
 - `/review/manage` は評価サイクルの作成と評価結果の横断検索を行う管理画面。
+- 評価サイクル作成時に、組織図から割り当てる評価者種別と同僚評価者数を設定する。
 - `/review/results` は評価結果を検索し確認する管理画面。
 
 ## シフト
 
 - `/shift` は自分のシフトと交代申請を管理する画面。
+- `/shift/inbox` は自分が当事者でないシフト交代申請を承認する画面(`shift:manage`)。
 - `/shift/admin` は全社のシフト交代申請を横断で確認する管理画面(`shift_swap:read:all`)。
-- `/shift/manage` は全員のシフト割当を確認する管理画面。
-- `/shift/manage/new` は新しいシフト割当を作成する画面。
+- `/shift/manage` は全員のシフト割当を確認する管理画面(`shift:manage`)。
+- `/shift/manage/new` は対象社員、パターン、対象日を指定してシフト割当を作成する画面(`shift:manage`)。
 - `/shift/patterns` はシフトの定型パターンを一覧する画面。
-- `/shift/patterns/new` は新しいシフトパターンを登録する画面。
+- `/shift/patterns/new` はコード、名前、開始と終了の時刻、休憩時間を登録してシフトパターンを作成する画面(`shift:manage`)。
 
 ## 研修
 
@@ -147,13 +172,14 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 ## 通知
 
 - `/notifications` は自分宛ての通知を確認し、既読にする画面。
-- `/notifications/new` は宛先と本文を指定して通知を送信する画面(`notification:send`)。
+- `/notifications/new` は宛先、種別、タイトル、本文を入力して通知を送る画面(`notification:send`)。
 
 ## 感謝
 
 - `/thanks` はサンクスポイントの残量と、社内の感謝を見渡す画面。
 - `/thanks/send` は送り先と感謝メッセージを入力し、任意でポイントを添えて送る画面。
 - `/thanks/rewards` は受領残高で交換できる景品を確認し、交換を申請する画面。
+- `/thanks/inbox` は自分以外のサンクス交換申請を承認または却下する画面(`thanks_redemption:approve`)。
 - `/thanks/admin` は全社のサンクス交換申請を横断で確認する管理画面(`thanks_redemption:read:all`)。
 - `/thanks/rewards/manage` は管理者が新しい景品を登録する画面。
 
@@ -161,8 +187,8 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 
 - `/business-trips` は出張申請と申請状況を確認する画面。
 - `/business-trips/new` は出張先、期間、目的を記入して出張を申請する画面。
-- `/rentals` は自分の貸出予約を確認する画面。
-- `/rentals/new` は備品と利用期間を指定してレンタルを予約する画面。
+- `/rentals` は自分の貸与品利用申出を確認する画面。route 名は現行実装を表し、資源確保済みの Reservation を意味しない。
+- `/rentals/new` は品名と利用期間を指定して貸与品の利用を申し出る画面。備品台帳の個体や在庫は確保しない。
 - `/resignations` は退職申請と申請状況を確認する画面。
 - `/resignations/new` は退職予定日と理由を記入して退職を申請する画面。
 - `/life-events` は結婚、出産などのライフイベント届出を確認する画面。
@@ -179,6 +205,7 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/family-care-leaves/admin` は全社の産休・育休・介護休業の申出を横断で確認する管理画面(`family_care_leave:read:all`)。
 - `/business-trips/admin` は全社の出張申請を横断で確認する管理画面(`business_trip:read:all`)。
 - `/rentals/admin` は全社の貸与品予約を横断で確認する管理画面(`rental:read:all`)。
+- `/antisocial-checks/admin` は管理担当者が自分以外の申請へ確認結果を記録する画面(`antisocial_check:manage`)。
 - `/health-checkups` は健康診断・ストレスチェックの実施記録を管理する画面(`health_checkup:read:all`)。
 - `/work-accidents` は労災・事故の発生記録を確認、登録する画面(`work_accident:read:all`)。
 
@@ -192,7 +219,6 @@ web のユーザー向け画面一覧。実装ルートは `web/app` 配下を�
 - `/partners/new` は新しい取引先を登録する画面(`partner:manage`)。
 - `/partners/[code]` は取引先の詳細と契約記録を確認する画面(契約は `contract:read:all`)。
 - `/dashboard/management` は経営ダッシュボードを確認する画面(`management_dashboard:view`)。
-- `/budgets` は予算枠と消化・残額を確認、記録する画面(`budget:read:all`)。
 - `/meetings` は会議体の一覧を確認し、登録済みの会議体へ移動する画面。
 - `/meetings/new` は会議体のコードと名称を登録する画面(`meeting:manage`)。
 - `/meetings/[code]` は会議体の詳細と議事録一覧を確認し、議事録を記録する画面。

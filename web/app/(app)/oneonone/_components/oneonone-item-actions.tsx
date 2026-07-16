@@ -5,7 +5,9 @@ import { toast } from "sonner"
 import { deleteOneOnOneAction, updateOneOnOneAction } from "@/app/(app)/oneonone/actions"
 import type { OneOnOneActionState } from "@/app/(app)/oneonone/actions"
 import type { OneOnOne } from "@/lib/api/types/oneonone-types"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -27,11 +29,11 @@ const initialState: OneOnOneActionState = { ok: false, error: null }
 // 1on1 カードの操作群。記録内容の変更（Dialog）と削除ボタンを横並びにする client コンポーネント。
 export function OneOnOneItemActions(props: Props) {
   return (
-    <div className="flex justify-end gap-2">
+    <TableRowActions>
       <UpdateOneOnOneDialog oneOnOne={props.oneOnOne} />
 
       <DeleteOneOnOneButton oneOnOneId={props.oneOnOne.id} />
-    </div>
+    </TableRowActions>
   )
 }
 
@@ -142,12 +144,15 @@ function DeleteOneOnOneButton(props: { oneOnOneId: string }) {
   const [, formAction, pending] = useActionState(reduce, initialState)
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="この1on1記録を削除しますか？"
+      description="共有メモと管理者メモを含む記録は元に戻せません。"
+      confirmLabel="1on1記録を削除"
+      pending={pending}
+    >
       <input type="hidden" name="one_on_one_id" value={props.oneOnOneId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

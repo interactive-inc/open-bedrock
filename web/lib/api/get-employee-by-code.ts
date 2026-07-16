@@ -8,6 +8,7 @@ export async function getEmployeeByCode(code: string): Promise<EmployeeDetailIte
 
   const response = await client.employees[":code"].$get({
     param: { code: code },
+    query: {},
   })
 
   const status: number = response.status

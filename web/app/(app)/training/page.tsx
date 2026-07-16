@@ -5,7 +5,7 @@ import { CourseList } from "@/app/(app)/training/_components/course-list"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getMyTrainingEnrollments } from "@/lib/api/get-my-training-enrollments"
@@ -14,9 +14,7 @@ import { canManageTraining } from "@/lib/training/can-manage-training"
 
 export const metadata = { title: "研修" }
 
-const PAGE_SIZE = 20
-
-type SearchParams = Promise<{ page?: string }>
+type SearchParams = Promise<{ page?: string; size?: string }>
 
 /**
  * 研修コース一覧。自分の受講は /training/me、新規作成は /training/new に分離する。
@@ -24,9 +22,11 @@ type SearchParams = Promise<{ page?: string }>
 export default async function TrainingPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 
+  const pageSize = parsePageSize(searchParams.size)
+
   const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const currentUser = await getMe()
 
@@ -55,14 +55,14 @@ export default async function TrainingPage(props: { searchParams: SearchParams }
       />
 
       <Suspense fallback={<ListSkeleton rows={3} />}>
-        <Courses offset={offset} />
+        <Courses offset={offset} pageSize={pageSize} />
       </Suspense>
     </div>
   )
 }
 
-async function Courses(props: { offset: number }) {
-  const result = await getTrainingCourses({ limit: PAGE_SIZE, offset: props.offset })
+async function Courses(props: { offset: number; pageSize: number }) {
+  const result = await getTrainingCourses({ limit: props.pageSize, offset: props.offset })
 
   if (result instanceof Error) {
     return <FetchError message="研修コースの取得に失敗しました" />
@@ -80,8 +80,10 @@ async function Courses(props: { offset: number }) {
       <TablePagination
         pathname="/training"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
+        extraParams={{ size: String(props.pageSize) }}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

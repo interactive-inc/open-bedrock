@@ -1,4 +1,4 @@
-import { canDecideApplication } from "@/lib/application/can-decide-application"
+import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
 import type { Context, SessionPayload } from "@/env"
@@ -6,6 +6,9 @@ import { ApplicationRepository } from "@/infrastructure/application/application-
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { decideWorkflowApplication } from "@/application/application/decide-workflow-application"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
   session: SessionPayload
@@ -30,6 +33,10 @@ export class DecideApplication {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<ApplicationDecision | ApplicationError> {
+    if (command.session.employeeId !== command.approverId) {
+      return new ForbiddenError("cannot decide as another employee", "forbidden")
+    }
+
     const applicationRepository = new ApplicationRepository(this.c)
 
     const existing = await applicationRepository.findById(command.applicationId)
@@ -54,21 +61,81 @@ export class DecideApplication {
       return new UnexpectedError("template not found")
     }
 
-    // approverRoles が指定されていれば、そのいずれかのロールを持つアカウントのみ承認可能。
-    // 複数ロールを持つアカウントは roleKeys のいずれかが一致すればよい。
-    if (template.approverRoles.length > 0) {
-      const matches = command.session.roleKeys.some((roleKey) =>
-        template.approverRoles.includes(roleKey),
-      )
+    const workflowInstance = await new ApplicationWorkflowRepository(this.c).findInstance(
+      command.applicationId,
+    )
 
-      if (matches === false) {
-        return new ForbiddenError("cannot decide application", "forbidden")
+    if (workflowInstance instanceof Error) {
+      return new UnexpectedError("failed to load workflow instance", { cause: workflowInstance })
+    }
+
+    if (workflowInstance !== null) {
+      if (
+        existing.status !== "pending" ||
+        existing.currentStep !== workflowInstance.currentStepKey
+      ) {
+        return new ConflictError("workflow is not awaiting a decision", "already_decided")
       }
-    } else {
-      // approverRoles が空なら従来の canDecideApplication チェック
-      if (canDecideApplication(command.session) === false) {
-        return new ForbiddenError("cannot decide application", "forbidden")
+
+      const applicant = await new EmployeeRepository(this.c).findById(existing.applicantId)
+      if (applicant instanceof Error) {
+        return new UnexpectedError("failed to find workflow applicant", { cause: applicant })
       }
+      if (applicant === null) {
+        return new UnexpectedError("workflow applicant not found")
+      }
+
+      const decision = await decideWorkflowApplication({
+        c: this.c,
+        instance: workflowInstance,
+        templateCode: template.code,
+        applicantEmployeeId: existing.applicantId,
+        applicant: {
+          id: applicant.id,
+          code: applicant.code,
+          dept_id: applicant.deptId,
+          dept_name: applicant.deptName,
+          position: applicant.position,
+          status: applicant.status,
+        },
+        payload: existing.payload,
+        actorEmployeeId: command.approverId,
+        actorAccountId: command.session.accountId,
+        session: command.session,
+        action: command.action,
+        comment: command.comment,
+        createdAt: command.createdAt,
+      })
+
+      if (decision instanceof Error) return decision
+
+      if (decision.status !== "pending" || command.action === "reject") {
+        await new NotifyApprovalResult(this.c).run({
+          recipientEmployeeId: existing.applicantId,
+          action: command.action,
+          subjectLabel: `申請「${template.name}」`,
+          sourceDomain: "application",
+          sourceId: command.applicationId,
+          createdAt: command.createdAt,
+        })
+      }
+
+      return decision
+    }
+
+    const canDecideLegacy = await canDecideLegacyApplication({
+      c: this.c,
+      session: command.session,
+      applicantEmployeeId: existing.applicantId,
+      approverRoles: template.approverRoles,
+    })
+    if (canDecideLegacy instanceof Error) {
+      return new UnexpectedError("failed to resolve organization authority", {
+        cause: canDecideLegacy,
+      })
+    }
+    if (canDecideLegacy === false) {
+      return new ForbiddenError("cannot decide application outside organization scope", "forbidden")
     }
 
     if (existing.applicantId === command.approverId) {

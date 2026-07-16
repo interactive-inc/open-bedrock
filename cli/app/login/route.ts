@@ -41,7 +41,12 @@ export default factory.createHandlers(
       json: { email: query.email, password: query.password },
     })
 
-    const result = await response.json()
+    const result = z
+      .object({
+        access_token: z.string(),
+        refresh_token: z.string().nullable(),
+      })
+      .parse(await response.json())
 
     config.token = result.access_token
 

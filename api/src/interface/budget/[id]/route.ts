@@ -1,27 +1,63 @@
+import { BuildBudgetDetailView } from "@/application/budget/budget-detail-view"
+import { DeleteBudget } from "@/application/budget/delete-budget"
 import { UpdateBudget } from "@/application/budget/update-budget"
-import type { Budget } from "@/domain/budget/budget.entity"
-import type { Context } from "@/env"
+import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
-import { zAppBudget } from "@/lib/app-schemas"
+import { zAppBudget, zAppBudgetDetail } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/shared/validate-int-param"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BudgetRepository } from "@/infrastructure/budget/budget-repository"
-import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// PUT /budgets/:id — 予算枠の属性を更新（budget:manage）。消化合計を計算し残額付きで返す。
-export const PUT = factory.createHandlers(
+// GET /budgets/:id — 予算の詳細（承認済み経費の消化額・残額を集計して返す）。budget:manage を持つロールのみ。
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  if (canManageBudgets(session) === false) {
+    throw new ForbiddenError()
+  }
+
+  const budgetId = validateIntParam(c.req.param("id"), "budget")
+
+  const view = await new BuildBudgetDetailView(c).run({ budgetId })
+
+  if (view instanceof ApplicationError) {
+    throw toHttpException(view)
+  }
+
+  const responseBody = zAppBudgetDetail.parse({
+    id: view.id,
+    department_id: view.departmentId,
+    department_name: view.departmentName,
+    fiscal_period: view.fiscalPeriod,
+    period_start: view.periodStart,
+    period_end: view.periodEnd,
+    amount: view.amount,
+    name: view.name,
+    note: view.note,
+    consumed_amount: view.consumedAmount,
+    remaining_amount: view.remainingAmount,
+    created_at: view.createdAt,
+  })
+
+  return c.json(responseBody, 200)
+})
+
+// PATCH /budgets/:id — 金額・名称・メモを修正する。部署・会計期間は変更しない。budget:manage を持つロールのみ。
+export const PATCH = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
-      fiscal_year: z.number().int(),
-      department_code: z.string().max(200).nullable().optional(),
-      title: z.string().min(1).max(300),
-      amount: z.number().int().nonnegative(),
+      amount: z.number().positive().int().safe(),
+      name: z.string().min(1).max(200),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),
@@ -32,55 +68,60 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const json = c.req.valid("json")
+    if (canManageBudgets(session) === false) {
+      throw new ForbiddenError()
+    }
 
     const budgetId = validateIntParam(c.req.param("id"), "budget")
 
+    const json = c.req.valid("json")
+
     const updated = await new UpdateBudget(c).run({
-      session,
-      id: budgetId,
-      details: {
-        fiscalYear: json.fiscal_year,
-        departmentCode: json.department_code ?? null,
-        title: json.title,
-        amount: json.amount,
-        note: json.note ?? null,
-      },
+      budgetId,
+      amount: json.amount,
+      name: json.name,
+      note: json.note ?? null,
     })
 
     if (updated instanceof ApplicationError) {
       throw toHttpException(updated)
     }
 
-    const responseBody = await toResponseBody(c, updated)
-
-    if (responseBody instanceof Error) {
-      throw new InternalError("failed to sum budget consumptions")
-    }
+    const responseBody = zAppBudget.parse({
+      id: updated.id,
+      department_id: updated.departmentId,
+      fiscal_period: updated.fiscalPeriod,
+      period_start: updated.periodStart,
+      period_end: updated.periodEnd,
+      amount: updated.amount,
+      name: updated.name,
+      note: updated.note,
+      created_at: updated.createdAt,
+    })
 
     return c.json(responseBody, 200)
   },
 )
 
-// 消化合計を引いて残額付きのレスポンスに整える。
-async function toResponseBody(c: Context, budget: Budget) {
-  const consumedByBudgetId = await new BudgetRepository(c).sumConsumedByBudgetIds([budget.id ?? 0])
+// DELETE /budgets/:id — 予算を削除する。budget:manage を持つロールのみ。
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
 
-  if (consumedByBudgetId instanceof Error) {
-    return consumedByBudgetId
+  if (session === null) {
+    throw new UnauthorizedError()
   }
 
-  const consumed = consumedByBudgetId.get(budget.id ?? 0) ?? 0
+  if (canManageBudgets(session) === false) {
+    throw new ForbiddenError()
+  }
 
-  return zAppBudget.parse({
-    id: budget.id,
-    fiscal_year: budget.fiscalYear,
-    department_code: budget.departmentCode,
-    title: budget.title,
-    amount: budget.amount,
-    consumed: consumed,
-    remaining: budget.amount - consumed,
-    note: budget.note,
-    created_at: budget.createdAt,
-  })
-}
+  const budgetId = validateIntParam(c.req.param("id"), "budget")
+
+  const result = await new DeleteBudget(c).run({ budgetId })
+
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
+  }
+
+  return c.body(null, 204)
+})

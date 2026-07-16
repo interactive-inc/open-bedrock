@@ -22,6 +22,11 @@ export default async function ThanksPage() {
   const canViewAll =
     currentUser instanceof Error ? false : canViewAllRedemptions(currentUser.permissions)
 
+  const canApprove =
+    currentUser instanceof Error
+      ? false
+      : currentUser.permissions.includes("thanks_redemption:approve")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -32,6 +37,12 @@ export default async function ThanksPage() {
             {canViewAll ? (
               <Button variant="outline" nativeButton={false} render={<Link href="/thanks/admin" />}>
                 交換申請管理
+              </Button>
+            ) : null}
+
+            {canApprove ? (
+              <Button variant="outline" nativeButton={false} render={<Link href="/thanks/inbox" />}>
+                交換承認
               </Button>
             ) : null}
 

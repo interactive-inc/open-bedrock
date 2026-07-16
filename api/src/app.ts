@@ -6,17 +6,30 @@ import { secureHeaders } from "hono/secure-headers"
 import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
 import { rateLimitMiddleware } from "@/interface/shared/rate-limit-middleware"
+import { requestContextMiddleware } from "@/interface/shared/request-context-middleware"
 import { factory } from "@/lib/factory"
+import { auditNoStore } from "@/interface/audit/audit-route-contract"
+import * as auditEventExportsRoute from "@/interface/audit/audit-event-exports/route"
+import * as auditEventDetailRoute from "@/interface/audit/audit-events/[event_id]/route"
+import * as auditEventsRoute from "@/interface/audit/audit-events/route"
 import * as applicationAdminRoute from "@/interface/application/applications/admin/route"
 import * as applicationApproveRoute from "@/interface/application/applications/[id]/approve/route"
 import * as applicationDetailRoute from "@/interface/application/applications/[id]/route"
 import * as applicationInboxRoute from "@/interface/application/applications/inbox/route"
+import * as applicationWorkflowRepairsRoute from "@/interface/application/applications/workflow-repairs/route"
+import * as applicationReassignWorkflowStepRoute from "@/interface/application/applications/[id]/reassign-workflow-step/route"
 import * as applicationListRoute from "@/interface/application/applications/route"
 import * as applicationRejectRoute from "@/interface/application/applications/[id]/reject/route"
+import * as applicationResubmitRoute from "@/interface/application/applications/[id]/resubmit/route"
 import * as applicationSubmitRoute from "@/interface/application/applications/submit-route"
 import * as applicationTemplateDetailRoute from "@/interface/application/templates/[code]/route"
+import * as applicationTemplateWorkflowRoute from "@/interface/application/templates/[code]/workflow/route"
+import * as approvalDelegationsRoute from "@/interface/application/approval-delegations/route"
+import * as approvalDelegationDetailRoute from "@/interface/application/approval-delegations/[id]/route"
 import * as applicationTemplateListRoute from "@/interface/application/templates/route"
 import * as assetDetailRoute from "@/interface/asset/[code]/route"
+import * as assetDisposeRoute from "@/interface/asset/[code]/dispose/route"
+import * as assetHoldingsRoute from "@/interface/asset/holdings/route"
 import * as assetLendRoute from "@/interface/asset/[code]/lend/route"
 import * as assetLentMeRoute from "@/interface/asset/lent/me/route"
 import * as assetListRoute from "@/interface/asset/route"
@@ -28,6 +41,10 @@ import * as partnerUpdateRoute from "@/interface/partner/[id]/route"
 import * as partnerArchiveRoute from "@/interface/partner/[id]/archive/route"
 import * as contractListRoute from "@/interface/contract/route"
 import * as contractDetailRoute from "@/interface/contract/[id]/route"
+import * as stocktakeCheckRoute from "@/interface/stocktake/[id]/assets/[code]/check/route"
+import * as stocktakeCloseRoute from "@/interface/stocktake/[id]/close/route"
+import * as stocktakeDetailRoute from "@/interface/stocktake/[id]/route"
+import * as stocktakeListRoute from "@/interface/stocktake/route"
 import * as attendanceClockInRoute from "@/interface/attendance/clock-in/route"
 import * as attendanceClockOutRoute from "@/interface/attendance/clock-out/route"
 import * as attendanceListRoute from "@/interface/attendance/route"
@@ -39,10 +56,15 @@ import * as calendarDayCreateRoute from "@/interface/calendar/days/create-route"
 import * as calendarDayDetailRoute from "@/interface/calendar/days/[id]/route"
 import * as workStyleRoute from "@/interface/work-style/route"
 import * as authLoginRoute from "@/interface/auth/login/route"
+import * as authLogoutRoute from "@/interface/auth/logout/route"
 import * as authMeRoute from "@/interface/auth/me/route"
 import * as authRefreshRoute from "@/interface/auth/refresh/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
 import * as batchRoute from "@/interface/batch/route"
+import * as lifecycleMigrationPreflightRoute from "@/interface/batch/employee-lifecycle/preflight/route"
+import * as lifecycleMigrationBackfillRoute from "@/interface/batch/employee-lifecycle/backfill/route"
+import * as lifecycleMigrationVerifyRoute from "@/interface/batch/employee-lifecycle/verify/route"
+import * as lifecycleProjectionRebuildRoute from "@/interface/batch/employee-lifecycle/rebuild-projections/route"
 import * as businessTripCreateRoute from "@/interface/business-trip/business-trips/route"
 import * as businessTripDetailRoute from "@/interface/business-trip/business-trips/[id]/route"
 import * as businessTripMineRoute from "@/interface/business-trip/business-trips/me/route"
@@ -76,7 +98,17 @@ import * as careerSheetMeRoute from "@/interface/career/sheet/me/route"
 import * as careerSheetMeUpdateRoute from "@/interface/career/sheet/me/update/route"
 import * as dashboardRoute from "@/interface/dashboard/route"
 import * as dashboardManagementRoute from "@/interface/dashboard/management/route"
+import * as inboxCountsRoute from "@/interface/inbox/counts/route"
 import * as employeeListRoute from "@/interface/employee/route"
+import * as employeeDirectoryRoute from "@/interface/employee/directory/route"
+import * as employeeLifecycleEventsRoute from "@/interface/employee/[code]/lifecycle-events/route"
+import * as employeeLifecycleStateRoute from "@/interface/employee/[code]/lifecycle-state/route"
+import * as employeeArchiveRoute from "@/interface/employee/[code]/archive/route"
+import * as lifecycleOutboxRoute from "@/interface/batch/employee-lifecycle/process-outbox/route"
+import * as personnelActionsRoute from "@/interface/employee/personnel-actions/route"
+import * as personnelActionCorrectionRoute from "@/interface/employee/personnel-actions/[id]/correct/route"
+import * as personnelActionRequestsRoute from "@/interface/employee/personnel-action-requests/route"
+import * as personnelActionRequestDetailRoute from "@/interface/employee/personnel-action-requests/[id]/route"
 import * as expenseAdminRoute from "@/interface/expense/admin/route"
 import * as expenseApproveRoute from "@/interface/expense/[id]/approve/route"
 import * as expenseCreateRoute from "@/interface/expense/route"
@@ -84,6 +116,9 @@ import * as expenseDetailRoute from "@/interface/expense/[id]/route"
 import * as expenseInboxRoute from "@/interface/expense/inbox/route"
 import * as expenseMeRoute from "@/interface/expense/me/route"
 import * as expenseRejectRoute from "@/interface/expense/[id]/reject/route"
+import * as budgetListRoute from "@/interface/budget/route"
+import * as budgetSummaryRoute from "@/interface/budget/summary/route"
+import * as budgetDetailRoute from "@/interface/budget/[id]/route"
 import * as goalCreateRoute from "@/interface/goal/goals/create-route"
 import * as goalEvaluationCreateRoute from "@/interface/goal/goals/[goal_id]/evaluations/route"
 import * as goalListRoute from "@/interface/goal/goals/route"
@@ -93,6 +128,18 @@ import * as gradeDetailRoute from "@/interface/grade/grades/[id]/route"
 import * as gradeAssignmentsRoute from "@/interface/grade/grades/assignments/route"
 import * as gradeListRoute from "@/interface/grade/grades/route"
 import * as employeeEventsRoute from "@/interface/employee-event/employee-events/route"
+import * as governanceCapabilitiesRoute from "@/interface/governance/capabilities/route"
+import * as governanceDocumentDetailRoute from "@/interface/governance/documents/[code]/route"
+import * as governanceDocumentAcknowledgeRoute from "@/interface/governance/documents/[code]/acknowledge/route"
+import * as governanceDocumentPublishRoute from "@/interface/governance/documents/[code]/versions/[version]/publish/route"
+import * as governanceDocumentReviewRoute from "@/interface/governance/documents/[code]/versions/[version]/review/route"
+import * as governanceDocumentSubmitReviewRoute from "@/interface/governance/documents/[code]/versions/[version]/submit-review/route"
+import * as governanceDocumentsRoute from "@/interface/governance/documents/route"
+import * as governanceDocumentSyncRoute from "@/interface/governance/documents/sync/route"
+import * as governanceImpactRoute from "@/interface/governance/impact/route"
+import * as governanceOrgRolesRoute from "@/interface/governance/org-roles/route"
+import * as governanceOrgRoleAssignmentsRoute from "@/interface/governance/org-roles/[code]/assignments/route"
+import * as governanceOrgRoleAssignmentDetailRoute from "@/interface/governance/org-roles/assignments/[id]/route"
 import * as knowledgeDetailRoute from "@/interface/knowledge/[id]/route"
 import * as knowledgeListRoute from "@/interface/knowledge/route"
 import * as announcementListRoute from "@/interface/announcement/route"
@@ -146,6 +193,7 @@ import * as reviewFormsRoute from "@/interface/review/forms/route"
 import * as reviewCycleListRoute from "@/interface/review/cycles/route"
 import * as reviewCycleOpenRoute from "@/interface/review/cycles/[cycle_id]/open/route"
 import * as reviewCycleResultsRoute from "@/interface/review/cycles/[cycle_id]/results/[employee_code]/route"
+import * as reviewCyclePolicyRoute from "@/interface/review/cycles/[cycle_id]/policy/route"
 import * as reviewFormMeRoute from "@/interface/review/forms/me/route"
 import * as reviewFormSubmitRoute from "@/interface/review/forms/[form_id]/submit/route"
 import * as roomAvailabilityRoute from "@/interface/room/availability/route"
@@ -223,12 +271,14 @@ import * as certificateRequestRejectRoute from "@/interface/certificate-request/
 import * as antisocialCheckCreateRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as antisocialCheckDetailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as antisocialCheckMineRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
+import * as antisocialCheckAdminRoute from "@/interface/antisocial-check/antisocial-checks/admin/route"
 import * as applicationTemplateCreateRoute from "@/interface/application/templates/create-route"
 import * as roomMasterListRoute from "@/interface/room/rooms/route"
 import * as roomMasterDetailRoute from "@/interface/room/rooms/[id]/route"
 import * as surveyCreateRoute from "@/interface/survey/surveys/create-route"
 import * as surveyDetailRoute from "@/interface/survey/surveys/[survey_id]/route"
 import * as onboardingTemplateDetailRoute from "@/interface/onboarding/templates/[code]/route"
+import * as onboardingLifecycleBindingRoute from "@/interface/onboarding/templates/[code]/lifecycle-binding/route"
 import * as iamRolesRoute from "@/interface/iam/roles/route"
 import * as iamPermissionsRoute from "@/interface/iam/permissions/route"
 import * as iamAccountsRoute from "@/interface/iam/accounts/route"
@@ -237,7 +287,6 @@ import * as iamRoleDetailRoute from "@/interface/iam/roles/[id]/route"
 import * as iamAccountStatusRoute from "@/interface/iam/accounts/[id]/status/route"
 import * as iamAccountRoleRevokeRoute from "@/interface/iam/accounts/[id]/roles/[roleKey]/route"
 import * as iamAccountResetPasswordRoute from "@/interface/iam/accounts/[id]/reset-password/route"
-import * as iamAuditLogsRoute from "@/interface/iam/audit-logs/route"
 import * as reviewCycleEditRoute from "@/interface/review/cycles/[cycle_id]/route"
 import * as meetingListRoute from "@/interface/meeting/meetings/route"
 import * as meetingDetailRoute from "@/interface/meeting/meetings/[code]/route"
@@ -262,43 +311,87 @@ import * as licenseDetailRoute from "@/interface/license/[id]/route"
 import * as licenseCancelRoute from "@/interface/license/[id]/cancel/route"
 import * as itIncidentListRoute from "@/interface/it-incident/route"
 import * as itIncidentResolveRoute from "@/interface/it-incident/[id]/resolve/route"
-import * as budgetListRoute from "@/interface/budget/route"
-import * as budgetDetailRoute from "@/interface/budget/[id]/route"
-import * as budgetConsumptionRoute from "@/interface/budget/[id]/consumptions/route"
 import * as salaryRevisionListRoute from "@/interface/salary-revision/route"
 
 // CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
 
+let corsWarningLogged = false
+
 // Origin リクエストヘッダを env.CORS_ORIGIN（カンマ区切り）と照合し、許可された Origin のみ返す。
-// 未設定時は defaultAllowedOrigins のみ許可（本番では必ず CORS_ORIGIN を設定する）。
+// 未設定時は defaultAllowedOrigins のみ許可し、セキュリティ警告をログに出す。
+// 本番では必ず CORS_ORIGIN を設定すること。
 function resolveAllowedOrigin(origin: string, allowList: string | undefined): string | null {
-  const allowed =
-    allowList === undefined || allowList.trim() === ""
-      ? defaultAllowedOrigins
-      : allowList
-          .split(",")
-          .map((value) => value.trim())
-          .filter((value) => value.length > 0)
+  if (allowList === undefined || allowList.trim() === "") {
+    if (!corsWarningLogged) {
+      corsWarningLogged = true
+      console.warn(
+        "[SECURITY] CORS_ORIGIN is not set — falling back to localhost origins. " +
+          "Set CORS_ORIGIN in production to restrict cross-origin access.",
+      )
+    }
+    return defaultAllowedOrigins.includes(origin) ? origin : null
+  }
+
+  const allowed = allowList
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0)
 
   return allowed.includes(origin) ? origin : null
 }
+
+let nowProductionGuardWarned = false
+const nowProductionGuardMiddleware = factory.createMiddleware(async (c, next) => {
+  if (!nowProductionGuardWarned && c.env.CORS_ORIGIN !== undefined && c.env.NOW !== undefined) {
+    nowProductionGuardWarned = true
+    console.warn("[SECURITY] NOW override is set in production — this affects all timestamps")
+  }
+  await next()
+})
+
+const globalBodyLimit = bodyLimit({ maxSize: 1_000_000 })
+
+const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next) => {
+  if (c.req.path === "/audit-event-exports") {
+    await next()
+    return
+  }
+
+  await globalBodyLimit(c, next)
+})
 
 // interface/ のファイル構造（Next.js App Router 記法）を Hono のメソッドチェーンに対応づける。
 // 動的セグメント [code] は :code として登録する。RPC（hc）のため必ずチェーンで繋ぐ。
 export const app = factory
   .createApp()
-  .use("*", bodyLimit({ maxSize: 1_000_000 }))
+  .use("*", requestContextMiddleware)
+  .use("*", auditNoStore)
+  .use(
+    "*",
+    cors({
+      origin: (origin, c) => resolveAllowedOrigin(origin, c.env.CORS_ORIGIN),
+      exposeHeaders: ["X-Request-ID", "Content-Disposition"],
+    }),
+  )
+  .use("*", globalBodyLimitExceptAuditExport)
   .use("*", rateLimitMiddleware)
-  .use("*", cors({ origin: (origin, c) => resolveAllowedOrigin(origin, c.env.CORS_ORIGIN) }))
   // nosniff / HSTS / X-Frame-Options 等のセキュリティヘッダを付与する。
   // COOP/CORP は別オリジンの正規クライアント（web/cli）からの利用を阻害しうるため無効化する
   // （クロスオリジンアクセスの制御は CORS が担う）。
   .use("*", secureHeaders({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: false }))
   .use("*", contextStorage())
+  .use("*", nowProductionGuardMiddleware)
   .use("*", databaseMiddleware)
   .onError((error, c) => {
     if (error instanceof HTTPException) {
+      // toHttpException 経由の例外は res に {error, code} の JSON を積んでいる。
+      // それを尊重して返し、CLI/AI が理由（message）と code を受け取れるようにする。
+      // res 未設定の素の HTTPException（401/413/429 等）は従来どおり {error: message} を返す。
+      if (error.res) {
+        return error.getResponse()
+      }
+
       return c.json({ error: error.message }, error.status)
     }
 
@@ -308,9 +401,18 @@ export const app = factory
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
   .post("/auth/login", ...authLoginRoute.POST)
+  .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
+  .get("/audit-events", ...auditEventsRoute.GET)
+  .get("/audit-events/:event_id", ...auditEventDetailRoute.GET)
+  .post("/audit-event-exports", ...auditEventExportsRoute.POST)
   .get("/employees", ...employeeListRoute.GET)
+  .get("/directory/employees", ...employeeDirectoryRoute.GET)
+  .get("/employees/:code/lifecycle-events", ...employeeLifecycleEventsRoute.GET)
+  .get("/employees/:code/lifecycle-state", ...employeeLifecycleStateRoute.GET)
+  .post("/employees/:code/archive", ...employeeArchiveRoute.POST)
+  .post("/batch/employee-lifecycle/process-outbox", ...lifecycleOutboxRoute.POST)
   .get("/roles", ...iamRolesRoute.GET)
   .post("/roles", ...iamRolesRoute.POST)
   .get("/permissions", ...iamPermissionsRoute.GET)
@@ -322,11 +424,15 @@ export const app = factory
   .delete("/accounts/:id/roles/:roleKey", ...iamAccountRoleRevokeRoute.DELETE)
   .post("/accounts/:id/status", ...iamAccountStatusRoute.POST)
   .post("/accounts/:id/reset-password", ...iamAccountResetPasswordRoute.POST)
-  .get("/audit-logs", ...iamAuditLogsRoute.GET)
   .get("/dashboard", ...dashboardRoute.GET)
   .get("/dashboard/management", ...dashboardManagementRoute.GET)
+  .get("/inbox/counts", ...inboxCountsRoute.GET)
   .get("/batch", ...batchRoute.GET)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
+  .post("/batch/employee-lifecycle/preflight", ...lifecycleMigrationPreflightRoute.POST)
+  .post("/batch/employee-lifecycle/backfill", ...lifecycleMigrationBackfillRoute.POST)
+  .post("/batch/employee-lifecycle/verify", ...lifecycleMigrationVerifyRoute.POST)
+  .post("/batch/employee-lifecycle/rebuild-projections", ...lifecycleProjectionRebuildRoute.POST)
   .get("/org/tree", ...orgTreeRoute.GET)
   .get("/org/departments/:code/members", ...orgDepartmentMembersRoute.GET)
   .get("/org/reporting-line/:employee_code", ...orgReportingLineRoute.GET)
@@ -342,15 +448,44 @@ export const app = factory
   .delete("/grades/:id", ...gradeDetailRoute.DELETE)
   .get("/employee-events", ...employeeEventsRoute.GET)
   .post("/employee-events", ...employeeEventsRoute.POST)
+  .get("/governance/documents", ...governanceDocumentsRoute.GET)
+  .post("/governance/documents/sync", ...governanceDocumentSyncRoute.POST)
+  .get("/governance/documents/:code", ...governanceDocumentDetailRoute.GET)
+  .post("/governance/documents/:code/acknowledge", ...governanceDocumentAcknowledgeRoute.POST)
+  .post(
+    "/governance/documents/:code/versions/:version/submit-review",
+    ...governanceDocumentSubmitReviewRoute.POST,
+  )
+  .post(
+    "/governance/documents/:code/versions/:version/review",
+    ...governanceDocumentReviewRoute.POST,
+  )
+  .post(
+    "/governance/documents/:code/versions/:version/publish",
+    ...governanceDocumentPublishRoute.POST,
+  )
+  .get("/governance/impact", ...governanceImpactRoute.GET)
+  .get("/governance/capabilities", ...governanceCapabilitiesRoute.GET)
+  .get("/governance/org-roles", ...governanceOrgRolesRoute.GET)
+  .post("/governance/org-roles/:code/assignments", ...governanceOrgRoleAssignmentsRoute.POST)
+  .delete("/governance/org-roles/assignments/:id", ...governanceOrgRoleAssignmentDetailRoute.DELETE)
   .get("/applications/admin", ...applicationAdminRoute.GET)
   .get("/applications/inbox", ...applicationInboxRoute.GET)
+  .get("/applications/workflow-repairs", ...applicationWorkflowRepairsRoute.GET)
   .get("/applications/me", ...applicationApplicationsMeRoute.GET)
   .get("/applications/:id", ...applicationDetailRoute.GET)
   .get("/applications", ...applicationListRoute.GET)
   .post("/applications", ...applicationSubmitRoute.POST)
   .post("/applications/:id/approve", ...applicationApproveRoute.POST)
   .post("/applications/:id/reject", ...applicationRejectRoute.POST)
+  .post("/applications/:id/resubmit", ...applicationResubmitRoute.POST)
+  .post("/applications/:id/reassign-workflow-step", ...applicationReassignWorkflowStepRoute.POST)
   .get("/application-templates/:code", ...applicationTemplateDetailRoute.GET)
+  .get("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.GET)
+  .put("/application-templates/:code/workflow", ...applicationTemplateWorkflowRoute.PUT)
+  .get("/approval-delegations", ...approvalDelegationsRoute.GET)
+  .post("/approval-delegations", ...approvalDelegationsRoute.POST)
+  .delete("/approval-delegations/:id", ...approvalDelegationDetailRoute.DELETE)
   .get("/application-templates", ...applicationTemplateListRoute.GET)
   .get("/knowledge/:id", ...knowledgeDetailRoute.GET)
   .get("/knowledge", ...knowledgeListRoute.GET)
@@ -396,8 +531,10 @@ export const app = factory
   .get("/career/sheet/me", ...careerSheetMeRoute.GET)
   .put("/career/sheet/me", ...careerSheetMeUpdateRoute.PUT)
   .get("/assets/lent/me", ...assetLentMeRoute.GET)
+  .get("/assets/holdings", ...assetHoldingsRoute.GET)
   .post("/assets/:code/lend", ...assetLendRoute.POST)
   .post("/assets/:code/return", ...assetReturnRoute.POST)
+  .post("/assets/:code/dispose", ...assetDisposeRoute.POST)
   .get("/assets/:code", ...assetDetailRoute.GET)
   .post("/assets", ...assetRegisterRoute.POST)
   .get("/assets", ...assetListRoute.GET)
@@ -409,6 +546,11 @@ export const app = factory
   .get("/contracts", ...contractListRoute.GET)
   .post("/contracts", ...contractListRoute.POST)
   .put("/contracts/:id", ...contractDetailRoute.PUT)
+  .post("/stocktakes/:id/assets/:code/check", ...stocktakeCheckRoute.POST)
+  .post("/stocktakes/:id/close", ...stocktakeCloseRoute.POST)
+  .get("/stocktakes/:id", ...stocktakeDetailRoute.GET)
+  .get("/stocktakes", ...stocktakeListRoute.GET)
+  .post("/stocktakes", ...stocktakeListRoute.POST)
   .post("/attendance/clock-in", ...attendanceClockInRoute.POST)
   .post("/attendance/clock-out", ...attendanceClockOutRoute.POST)
   .get("/attendance/me/summary", ...attendanceMeSummaryRoute.GET)
@@ -441,6 +583,10 @@ export const app = factory
   .post("/expenses/:id/approve", ...expenseApproveRoute.POST)
   .post("/expenses/:id/reject", ...expenseRejectRoute.POST)
   .post("/expenses", ...expenseCreateRoute.POST)
+  .get("/budgets/summary", ...budgetSummaryRoute.GET)
+  .get("/budgets/:id", ...budgetDetailRoute.GET)
+  .get("/budgets", ...budgetListRoute.GET)
+  .post("/budgets", ...budgetListRoute.POST)
   .get("/training/courses/:code", ...trainingCourseDetailRoute.GET)
   .get("/training/courses", ...trainingCourseListRoute.GET)
   .post("/training/courses", ...trainingCourseCreateRoute.POST)
@@ -470,6 +616,8 @@ export const app = factory
   .post("/review-cycles/:cycle_id/disclose", ...reviewCycleDiscloseRoute.POST)
   .post("/review-cycles/:cycle_id/forms/bulk", ...reviewCycleFormsBulkRoute.POST)
   .get("/review-cycles/:cycle_id/results/:employee_code", ...reviewCycleResultsRoute.GET)
+  .get("/review-cycles/:cycle_id/policy", ...reviewCyclePolicyRoute.GET)
+  .put("/review-cycles/:cycle_id/policy", ...reviewCyclePolicyRoute.PUT)
   .post("/review-forms/:form_id/submit", ...reviewFormSubmitRoute.POST)
   .get("/review-forms/me", ...reviewFormMeRoute.GET)
   .get("/review-forms", ...reviewFormsRoute.GET)
@@ -481,6 +629,12 @@ export const app = factory
   .delete("/career/applications/:id", ...careerApplicationsIdRoute.DELETE)
   .delete("/career/sheet/me", ...careerSheetMeRoute.DELETE)
   .post("/employees", ...employeeListRoute.POST)
+  .post("/personnel-actions", ...personnelActionsRoute.POST)
+  .post("/personnel-actions/:id/correct", ...personnelActionCorrectionRoute.POST)
+  .post("/personnel-action-requests", ...personnelActionRequestsRoute.POST)
+  .get("/personnel-action-requests", ...personnelActionRequestsRoute.GET)
+  .get("/personnel-action-requests/:id", ...personnelActionRequestDetailRoute.GET)
+  .delete("/personnel-action-requests/:id", ...personnelActionRequestDetailRoute.DELETE)
   .get("/employees/:code", ...employeeCodeRoute.GET)
   .put("/employees/:code", ...employeeCodeRoute.PUT)
   .delete("/employees/:code", ...employeeCodeRoute.DELETE)
@@ -540,6 +694,8 @@ export const app = factory
   .delete("/assets/:code", ...assetDetailRoute.DELETE)
   .put("/expenses/:id", ...expenseDetailRoute.PUT)
   .delete("/expenses/:id", ...expenseDetailRoute.DELETE)
+  .patch("/budgets/:id", ...budgetDetailRoute.PATCH)
+  .delete("/budgets/:id", ...budgetDetailRoute.DELETE)
   .put("/training/courses/:code", ...trainingCourseDetailRoute.PUT)
   .delete("/training/courses/:code", ...trainingCourseDetailRoute.DELETE)
   .post("/business-trips", ...businessTripCreateRoute.POST)
@@ -610,6 +766,7 @@ export const app = factory
   .post("/certificate-requests/:id/reject", ...certificateRequestRejectRoute.POST)
   .post("/antisocial-checks", ...antisocialCheckCreateRoute.POST)
   .get("/antisocial-checks/me", ...antisocialCheckMineRoute.GET)
+  .get("/antisocial-checks/admin", ...antisocialCheckAdminRoute.GET)
   .get("/antisocial-checks/:id", ...antisocialCheckDetailRoute.GET)
   .put("/antisocial-checks/:id", ...antisocialCheckDetailRoute.PUT)
   .delete("/antisocial-checks/:id", ...antisocialCheckDetailRoute.DELETE)
@@ -628,6 +785,11 @@ export const app = factory
   .get("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.GET)
   .put("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.PUT)
   .delete("/onboarding/templates/:code", ...onboardingTemplateDetailRoute.DELETE)
+  .put("/onboarding/templates/:code/lifecycle-binding", ...onboardingLifecycleBindingRoute.PUT)
+  .delete(
+    "/onboarding/templates/:code/lifecycle-binding",
+    ...onboardingLifecycleBindingRoute.DELETE,
+  )
   .put("/review-cycles/:cycle_id", ...reviewCycleEditRoute.PUT)
   .delete("/review-cycles/:cycle_id", ...reviewCycleEditRoute.DELETE)
   .get("/meetings", ...meetingListRoute.GET)
@@ -667,10 +829,6 @@ export const app = factory
   .get("/it-incidents", ...itIncidentListRoute.GET)
   .post("/it-incidents", ...itIncidentListRoute.POST)
   .post("/it-incidents/:id/resolve", ...itIncidentResolveRoute.POST)
-  .get("/budgets", ...budgetListRoute.GET)
-  .post("/budgets", ...budgetListRoute.POST)
-  .post("/budgets/:id/consumptions", ...budgetConsumptionRoute.POST)
-  .put("/budgets/:id", ...budgetDetailRoute.PUT)
   .get("/salary-revisions", ...salaryRevisionListRoute.GET)
   .post("/salary-revisions", ...salaryRevisionListRoute.POST)
 

@@ -4,7 +4,7 @@
 // status は API 上 DB の text 列をそのまま返すため string。
 export type ShiftSwapStatus = string
 
-// GET /shift/assignments/me, GET /shift/assignments の各要素（シフト割当）。
+// GET /shift/assignments の各要素（シフト割当）。
 // POST /shift/assignments, POST /shift/assignments/:id/publish のレスポンスも同形。
 // id は作成・更新・公開レスポンスで採番前の null を含むため nullable。
 // pattern_id は nullable 列のため number | null。
@@ -12,6 +12,21 @@ export type ShiftAssignmentResponse = {
   id: number | null
   employee_id: number
   pattern_id: number | null
+  date: string
+  note: string | null
+  published_at: string | null
+}
+
+// GET /shift/assignments/me の各要素（本人向けシフト割当）。
+// member はパターン一覧（/shift/patterns）を閲覧できないため、割当にパターン名・時間帯を埋めて返す。
+// pattern_* は割当にパターンが紐付かない場合 null。
+export type MyShiftAssignmentResponse = {
+  id: number
+  employee_id: number
+  pattern_id: number | null
+  pattern_name: string | null
+  pattern_start_time: string | null
+  pattern_end_time: string | null
   date: string
   note: string | null
   published_at: string | null
@@ -28,14 +43,28 @@ export type ShiftPatternResponse = {
   break_minutes: number
 }
 
-// GET /shift/swap-requests/me, POST /shift/swap-requests,
-// POST /shift/swap-requests/:id/approve, GET/PUT /shift/swap-requests/:id のレスポンス（交代申請）。
+// POST /shift/swap-requests, POST /shift/swap-requests/:id/approve,
+// GET/PUT /shift/swap-requests/:id のレスポンス（交代申請）。
 // 申請者・対象は社員 ID（number）で返る。
 // status は api が任意文字列で返すため string。id は採番前 null を含む。
 export type ShiftSwapRequestResponse = {
   id: number | null
   requester_employee_id: number
   target_employee_id: number
+  date: string
+  note: string | null
+  status: string
+  approved_at: string | null
+}
+
+// GET /shift/swap-requests/me の各要素（本人向け交代申請）。
+// member は社員 ID から氏名を引けないため、交代相手の氏名を埋めて返す。
+// target_employee_name は該当社員が見つからない場合 null。
+export type MyShiftSwapRequestResponse = {
+  id: number
+  requester_employee_id: number
+  target_employee_id: number
+  target_employee_name: string | null
   date: string
   note: string | null
   status: string

@@ -5,8 +5,8 @@ import { Suspense } from "react"
 import { CareerPostingDetailSection } from "@/app/(app)/career/_components/career-posting-detail-section"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
@@ -56,7 +56,7 @@ export default async function CareerPostingDetailPage(props: Props) {
         }
       />
 
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <Suspense fallback={<DetailSkeleton fields={4} showBadge={false} />}>
         <CareerPostingDetailSection postingId={postingId} canManage={canManage} />
       </Suspense>
     </div>

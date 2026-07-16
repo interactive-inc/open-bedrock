@@ -77,7 +77,6 @@ describe("GetCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      session: makeTestSession("admin"),
       postingId: postingId,
     })
 
@@ -88,24 +87,22 @@ describe("GetCareerPosting", () => {
     const { context } = createTestContext()
 
     const result = await new GetCareerPosting(context).run({
-      session: makeTestSession("admin"),
       postingId: 9999,
     })
 
     expectApplicationError(result, NotFoundError, "posting_not_found")
   })
 
-  test("a non-privileged role is forbidden", async () => {
+  test("a member can read a posting to apply", async () => {
     const { context } = createTestContext()
 
     const postingId = await seedPosting(context)
 
     const result = await new GetCareerPosting(context).run({
-      session: makeTestSession("member"),
       postingId: postingId,
     })
 
-    expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(result).toBeInstanceOf(CareerPosting)
   })
 })
 
@@ -170,7 +167,6 @@ describe("DeleteCareerPosting", () => {
     expect(result.reason).toBe("deleted")
 
     const afterDelete = await new GetCareerPosting(context).run({
-      session: makeTestSession("admin"),
       postingId: postingId,
     })
 

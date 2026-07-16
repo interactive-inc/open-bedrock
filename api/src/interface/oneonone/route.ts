@@ -83,12 +83,18 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      member_email: z.string().min(1).max(254),
-      topics: z.string().max(5_000).nullable().optional(),
-      manager_note: z.string().max(5_000).nullable().optional(),
-      next_action: z.string().max(5_000).nullable().optional(),
-    }),
+    z
+      .object({
+        member_employee_code: z.string().min(1).max(100).optional(),
+        member_email: z.string().min(1).max(254).optional(),
+        topics: z.string().max(5_000).nullable().optional(),
+        manager_note: z.string().max(5_000).nullable().optional(),
+        next_action: z.string().max(5_000).nullable().optional(),
+      })
+      .refine(
+        (body) => body.member_employee_code !== undefined || body.member_email !== undefined,
+        { message: "member_employee_code or member_email is required" },
+      ),
   ),
   async (c) => {
     const session = c.var.session
@@ -104,7 +110,8 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const created = await new CreateOneOnOne(c).run({
-      memberEmail: json.member_email,
+      memberCode: json.member_employee_code ?? null,
+      memberEmail: json.member_email ?? null,
       managerId: session.employeeId,
       heldAt: c.env.NOW ?? new Date().toISOString(),
       topics: json.topics ?? null,

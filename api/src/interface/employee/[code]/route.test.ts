@@ -3,6 +3,7 @@ import type { Bindings } from "@/env"
 import * as employeeDetailRoute from "@/interface/employee/[code]/route"
 import * as employeeListRoute from "@/interface/employee/route"
 import { databaseMiddleware } from "@/interface/shared/database-middleware"
+import { requestContextMiddleware } from "@/interface/shared/request-context-middleware"
 import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
@@ -10,6 +11,8 @@ import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
 import { factory } from "@/lib/factory"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
@@ -33,6 +36,7 @@ function buildTestApp() {
     .createApp()
     .use("*", contextStorage())
     .use("*", databaseMiddleware)
+    .use("*", requestContextMiddleware)
     .onError((error, c) => {
       if (error instanceof HTTPException) {
         return c.json({ error: error.message }, error.status)
@@ -66,7 +70,44 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(
+    db,
+    "org_departments",
+    seedOrgDepartments.map((department) => ({
+      code: department.code,
+      department_id: department.departmentId,
+      parent_code: department.parentCode,
+      manager_employee_code: department.managerEmployeeCode,
+      sort_order: department.order,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+
   return db
+}
+
+async function enableVerifiedLifecycleForAdmin(db: D1Database): Promise<void> {
+  await db.exec(`
+    INSERT INTO employment_period_versions
+      (period_id, revision, employee_id, starts_on, ends_on, is_void,
+       recorded_by_action_id, recorded_at)
+    VALUES ('fixture-employment-e001', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1);
+    INSERT INTO employee_status_period_versions
+      (period_id, revision, employment_period_id, employee_id, status, starts_on,
+       ends_on, is_void, recorded_by_action_id, recorded_at)
+    VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
+            '2025-01-01', NULL, 0, 'fixture', 1);
+    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+  `)
 }
 
 function adminToken(): Promise<string> {
@@ -85,11 +126,28 @@ function memberToken(): Promise<string> {
   })
 }
 
+function managerToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 4,
+    email: "you+e004@example.com",
+    role: "manager",
+  })
+}
+
+function organizationManagerWithoutCapabilityToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 9,
+    email: "you+e009@example.com",
+    role: "member",
+  })
+}
+
 async function request(
   path: string,
   token: string | null,
   method?: string,
   body?: unknown,
+  setup?: (db: D1Database) => Promise<void>,
 ): Promise<Response> {
   const headers: Record<string, string> = {}
 
@@ -101,10 +159,18 @@ async function request(
     headers["content-type"] = "application/json"
   }
 
+  const db = await createTestDb()
+
+  if (setup !== undefined) {
+    await setup(db)
+  }
+
   const bindings: Bindings = {
-    DB: await createTestDb(),
+    DB: db,
     JWT_SECRET: jwtSecret,
+    AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
+    COMPANY_TIME_ZONE: "Asia/Tokyo",
   }
 
   return buildTestApp().request(
@@ -119,8 +185,8 @@ async function request(
 }
 
 describe("GET /employees/:code", () => {
-  test("returns 200 with the employee", async () => {
-    const response = await request("/employees/E001", await memberToken())
+  test("returns 200 with another employee for employee:read holder", async () => {
+    const response = await request("/employees/E001", await adminToken())
 
     expect(response.status).toBe(200)
 
@@ -135,7 +201,7 @@ describe("GET /employees/:code", () => {
   })
 
   test("never leaks passwordHash or id", async () => {
-    const response = await request("/employees/E001", await memberToken())
+    const response = await request("/employees/E001", await adminToken())
 
     const parsed = z.record(z.string(), z.unknown()).safeParse(await response.json())
 
@@ -145,6 +211,30 @@ describe("GET /employees/:code", () => {
       expect("passwordHash" in parsed.data).toBe(false)
       expect("id" in parsed.data).toBe(false)
     }
+  })
+
+  test("returns 200 for a member reading their own employee record", async () => {
+    const response = await request("/employees/E005", await memberToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("employee:read holder reads a managed employee detail", async () => {
+    const response = await request("/employees/E005", await managerToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("employee:read holder cannot read an employee outside their organization scope", async () => {
+    const response = await request("/employees/E009", await managerToken())
+
+    expect(response.status).toBe(404)
+  })
+
+  test("conceals another employee record from a member without employee:read", async () => {
+    const response = await request("/employees/E001", await memberToken())
+
+    expect(response.status).toBe(404)
   })
 
   test("returns 404 for a missing employee", async () => {
@@ -165,16 +255,22 @@ describe("POST /employees", () => {
     code: "E900",
     name: "Sam Rivers",
     email: "you+e900@example.com",
-    password: "initial-password",
+    password: "InitialPassword1",
     role: "member",
-    dept_id: 3,
-    dept_name: "Engineering",
-    position: "Engineer",
-    status: "active",
+    hire_on: "2026-01-01",
+    department_code: null,
+    position_title: null,
+    manager_employee_code: null,
   }
 
   test("admin creates an employee and gets 201", async () => {
-    const response = await request("/employees", await adminToken(), "POST", newEmployee)
+    const response = await request(
+      "/employees",
+      await adminToken(),
+      "POST",
+      newEmployee,
+      enableVerifiedLifecycleForAdmin,
+    )
 
     expect(response.status).toBe(201)
 
@@ -184,7 +280,8 @@ describe("POST /employees", () => {
 
     if (parsed.success) {
       expect(parsed.data.code).toBe("E900")
-      expect(parsed.data.dept_name).toBe("Engineering")
+      expect(parsed.data.dept_name).toBeNull()
+      expect(parsed.data.status).toBe("active")
     }
   })
 
@@ -203,10 +300,10 @@ describe("POST /employees", () => {
     expect(response.status).toBe(409)
   })
 
-  test("returns 400 when status is outside the allowed set", async () => {
+  test("returns 400 when hire date is invalid", async () => {
     const response = await request("/employees", await adminToken(), "POST", {
       ...newEmployee,
-      status: "unknown",
+      hire_on: "2026-02-30",
     })
 
     expect(response.status).toBe(400)
@@ -220,21 +317,26 @@ describe("POST /employees", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("rejects unknown fields instead of silently accepting lifecycle compatibility updates", async () => {
+    const response = await request("/employees", await adminToken(), "POST", {
+      ...newEmployee,
+      code: "E901",
+      status: "retired",
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
 
 describe("PUT /employees/:code", () => {
-  const profile = {
-    name: "Drew Sato",
-    email: "you+e004@example.com",
-    role: "manager",
-    dept_id: 3,
-    dept_name: "Engineering",
-    position: "Engineering Director",
-    status: "active",
-  }
+  const profileE4 = { name: "Drew Sato" }
+  const profileE5 = { name: "Emery Lane" }
 
-  test("admin updates an employee and gets 200", async () => {
-    const response = await request("/employees/E004", await adminToken(), "PUT", profile)
+  test("admin updates an employee name without bypassing lifecycle data and gets 200", async () => {
+    const response = await request("/employees/E004", await adminToken(), "PUT", {
+      name: "Drew Sato Updated",
+    })
 
     expect(response.status).toBe(200)
 
@@ -243,41 +345,98 @@ describe("PUT /employees/:code", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.position).toBe("Engineering Director")
+      expect(parsed.data.name).toBe("Drew Sato Updated")
+      expect(parsed.data.position).toBe("Engineering Manager")
       expect(parsed.data.role).toBe("manager")
     }
   })
 
   test("member cannot update and gets 403", async () => {
-    const response = await request("/employees/E004", await memberToken(), "PUT", profile)
+    const response = await request("/employees/E004", await memberToken(), "PUT", profileE4)
 
     expect(response.status).toBe(403)
   })
 
+  test("manager updates an employee inside their organization scope", async () => {
+    const response = await request("/employees/E005", await managerToken(), "PUT", profileE5)
+
+    expect(response.status).toBe(200)
+  })
+
+  test("employee:update alone cannot update outside the manager organization scope", async () => {
+    const response = await request("/employees/E009", await managerToken(), "PUT", profileE4)
+
+    expect(response.status).toBe(403)
+  })
+
+  test("org:manage allows a capability holder to update without an organization relationship", async () => {
+    const token = await createTestToken(jwtSecret, {
+      employeeId: 17,
+      email: "you+e017@example.com",
+      role: "hr",
+    })
+    const response = await request("/employees/E005", token, "PUT", profileE5, async (db) => {
+      await db
+        .prepare(
+          `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+           SELECT 17, id, NULL, 0 FROM roles WHERE key = 'hr'`,
+        )
+        .run()
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("organization relationship alone cannot update without employee:update", async () => {
+    const response = await request(
+      "/employees/E010",
+      await organizationManagerWithoutCapabilityToken(),
+      "PUT",
+      profileE4,
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("employee:update holder can update their own employee record", async () => {
+    const response = await request("/employees/E004", await managerToken(), "PUT", profileE4)
+
+    expect(response.status).toBe(200)
+  })
+
+  test("member cannot update their own employee record without employee:update", async () => {
+    const response = await request("/employees/E005", await memberToken(), "PUT", profileE5)
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 for update without a bearer token", async () => {
+    const response = await request("/employees/E005", null, "PUT", profileE5)
+
+    expect(response.status).toBe(401)
+  })
+
   test("returns 404 for a missing employee", async () => {
-    const response = await request("/employees/E999", await adminToken(), "PUT", profile)
+    const response = await request("/employees/E999", await adminToken(), "PUT", profileE4)
 
     expect(response.status).toBe(404)
   })
 
-  test("returns 409 when retiring the last admin", async () => {
+  test("rejects lifecycle and IAM fields instead of silently mutating them", async () => {
     const response = await request("/employees/E001", await adminToken(), "PUT", {
       name: "Alex Carter",
-      dept_id: 1,
-      dept_name: "Corporate Planning",
-      position: "CTO",
       status: "retired",
     })
 
-    expect(response.status).toBe(409)
+    expect(response.status).toBe(400)
   })
 })
 
 describe("DELETE /employees/:code", () => {
-  test("admin deletes an employee and gets 204", async () => {
+  test("admin is directed to the history-preserving archive operation", async () => {
     const response = await request("/employees/E004", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(204)
+    expect(response.status).toBe(409)
   })
 
   test("member cannot delete and gets 403", async () => {
@@ -286,10 +445,10 @@ describe("DELETE /employees/:code", () => {
     expect(response.status).toBe(403)
   })
 
-  test("admin cannot delete their own account and gets 403", async () => {
+  test("admin cannot physically delete their own account", async () => {
     const response = await request("/employees/E001", await adminToken(), "DELETE")
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing employee", async () => {

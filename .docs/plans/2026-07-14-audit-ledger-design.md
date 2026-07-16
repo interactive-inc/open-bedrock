@@ -1,0 +1,291 @@
+# 追記専用監査基盤の設計
+
+規範性: 非規範記録。種別は実装計画 snapshot。製品要件と実装済み状態は仕様正本、コード、migration で判定する。
+
+この文書は、機能網羅表の「IAM 監査ログ」を台帳のみから実装済みへ移し、以後に実装する認可、手続き、文書、保持、外部連携の共通証跡基盤を定める。
+
+## 位置づけ
+
+本変更は、対象外の七能力を除く社内事務能力を完全実装する計画の最初の完成単位である。後続のスコープ付き認可、汎用ケース、緊急権限、証拠、保持、ジョブ、外部同期は、この監査基盤を利用する。
+
+既存の `audit_logs` は保存先だけを持ち、業務処理から書き込まれず、更新と削除をデータベースで禁止しない。本変更では既存行を保持したまま構造を移行し、監査イベントの作成、検索、詳細、出力を API、Web、CLI へ提供する。
+
+## 目的
+
+- 認証、IAM、承認、委任、監査閲覧、監査出力の重要操作を追記専用イベントとして残す
+- 成功した重要変更と監査イベントを同じ原子的処理で確定する
+- 操作者、対象、変更前後、認可根拠、結果、理由、要求を後から再現できるようにする
+- 一覧、詳細、出力へ同じ認可と項目境界を適用する
+- 秘密値と業務上不要な個人情報を監査イベントへ保存しない
+- Web と CLI の双方で、監査担当者が検索、確認、限定期間の CSV 出力を完結できるようにする
+
+## 対象外
+
+- ログから法的適合性や不正を自動判定すること
+- 外部 SIEM への配信、長期アーカイブ、法的保全をこの完成単位だけで完結すること
+- 全業務ドメインの通常 CRUD を一度に監査対象へすること
+- パスワード、トークン、秘密鍵、Cookie、添付内容を監査イベントへ複製すること
+
+外部 SIEM、法的保全、全ドメインへの適用は後続能力で実装する。ただし、それらが監査イベントを安全に参照できるデータ契約はこの変更で固定する。
+
+## 採用方式
+
+各ルートが任意の JSON を直接 INSERT する方式は採用しない。型付きの監査イベント生成器を共通化し、成功する変更では業務更新と監査 INSERT、その直後の changed-row guard を同じ D1 batch に含める。監査 repository はこの二文を不可分の batch fragment として公開し、裸の INSERT statement は公開しない。
+
+イベントソーシングは採用しない。業務テーブルを現在状態の正本とし、監査イベントはその操作と判断の証跡を表す。監査イベントから業務状態を復元することを完成条件にしない。
+
+万能ミドルウェアだけで全イベントを推測する方式も採用しない。要求 ID、接続元、結果などの共通属性はミドルウェアで供給し、業務上の操作名、対象、変更前後、認可根拠は各アプリケーション処理が明示する。
+
+## データモデル
+
+既存の `audit_logs` を新構造の一時テーブルへ移し、既存行を変換してから置き換える。既存の整数主キーは内部カーソルとして保持し、外部参照には変更不能な文字列 `event_id` を使う。
+
+監査イベントは次の属性を持つ。
+
+- `id`: 内部ページング用の整数主キー
+- `event_id`: 外部参照用 UUID。既存行は `legacy-<id>` へ変換する
+- `request_id`: 一つの HTTP 要求または CLI 操作を結ぶ UUID
+- `actor_account_id`: 実行アカウント。未認証の拒否では null を許す
+- `actor_employee_id`: 実行時点の従業員識別子。業務主体を持たないアカウントでは null を許す
+- `action`: 管理された語彙による操作名
+- `target_type`: 管理された語彙による対象種別
+- `target_id`: UUID、コード、整数のいずれも表せる文字列
+- `outcome`: `succeeded`、`denied`、`failed` のいずれか
+- `reason_code`: 拒否または失敗の安定した機械可読コード
+- `authorization_json`: 使用した権限、組織スコープ、案件、委任の識別子
+- `before_json`: 操作前の監査用投影
+- `after_json`: 操作後の監査用投影
+- `metadata_json`: 操作固有で、検索条件に使わない補足
+- `client_ip`: Cloudflare が検証した接続元 IP。信頼できない任意ヘッダーは使用しない
+- `client_name`: `web`、`cli`、`api`、`system` のいずれか
+- `created_at`: UTC の Unix 秒
+
+監査イベントは従業員、アカウント、対象資源への外部キーを持たない。対象が退職、匿名化、削除された後も、イベントに保存した識別子と投影を保持するためである。
+
+`before_json`、`after_json`、`metadata_json` は型付きの入力から正規化した JSON だけを受け付ける。各列の UTF-8 サイズ上限を六十四 KiB とし、超過時は重要変更を失敗させる。大量の本文、添付、CSV、トークンは外部参照または件数とハッシュだけを記録する。
+
+## 追記専用制約
+
+データベースへ `BEFORE UPDATE` と `BEFORE DELETE` のトリガーを追加し、監査イベントの変更と削除を常に拒否する。アプリケーションには更新と削除の repository メソッドを作らない。
+
+移行前の既存行は、次の規則で保持する。
+
+- `event_id` は `legacy-<id>`
+- `request_id` は `legacy-<id>`
+- `outcome` は `succeeded`
+- 旧 `metadata` は秘密値除去器を適用できないため、移行ではそのまま `metadata_json` へ保持する
+- 旧 `target_id` は文字列へ変換する
+- 追加属性は null または `api` とする
+
+旧行の内容は移行後に書き換えない。旧 metadata の閲覧は新規イベントと同じ監査閲覧権限へ限定する。
+
+## 操作語彙
+
+操作名は `<領域>.<資源>.<過去形の操作>` で表す。最初の完成単位では次を管理語彙へ含める。
+
+- `auth.session.login_succeeded`
+- `auth.session.login_denied`
+- `auth.session.refreshed`
+- `auth.session.reuse_detected`
+- `iam.role.created`
+- `iam.role.updated`
+- `iam.role.deleted`
+- `iam.account.role_granted`
+- `iam.account.role_revoked`
+- `iam.account.status_changed`
+- `iam.account.password_reset`
+- `employee.account.registered`
+- `employee.account.retired`
+- `employee.account.deleted`
+- `application.workflow.updated`
+- `application.workflow.repaired`
+- `application.delegation.created`
+- `application.delegation.cancelled`
+- `application.decision.approved`
+- `application.decision.rejected`
+- `audit.event.searched`
+- `audit.event.read`
+- `audit.event.exported`
+
+新しい語彙は監査型の列挙へ追加し、自由な文字列を production の生成器へ渡さない。対象種別も同様に管理し、少なくとも `session`、`role`、`account`、`employee`、`application_workflow`、`application`、`approval_delegation`、`audit_event`、`audit_export` を定義する。
+
+## 秘密値と個人情報
+
+共通正規化器はオブジェクトを再帰的に走査し、キー名を大文字小文字を区別せず評価する。次を値ごと除去し、`[REDACTED]` へ置き換える。
+
+- `password`
+- `secret`
+- `token`
+- `authorization`
+- `cookie`
+- `set-cookie`
+- `private_key`
+- `client_secret`
+
+ログイン拒否ではメールアドレスを保存しない。正規化済み識別子へ監査専用の `AUDIT_HMAC_SECRET` を鍵とする HMAC-SHA-256 を適用し、同一識別子からの反復を照合できる `identifier_hash` だけを metadata に保存する。この秘密は JWT や外部認証の秘密と共有せず、`.dev.vars.example` と配備設定では必須項目として扱う。生のパスワード、トークン、Authorization ヘッダーは生成器の入力型に存在させない。
+
+ロール変更の前後にはロール名、説明、権限キーを記録できる。従業員変更では氏名、メール、住所などの値を汎用的に複製せず、変更した項目名、状態、ロール、組織識別子だけを記録する。
+
+## 原子性と失敗動作
+
+成功する重要変更では、次の順序で一つの D1 batch を構成する。
+
+- 操作直前の live 認可ガード
+- 業務更新
+- 変更行数または不変条件の検査
+- 監査イベント INSERT
+
+いずれかが失敗した場合は全体を取り消す。監査 INSERT が失敗した重要変更を成功として返してはならない。
+
+拒否操作では業務更新を行わず、`denied` イベントを別の INSERT として記録する。INSERT が失敗した場合も操作は拒否したままとし、応答は `503 audit_unavailable` とする。認証情報が誤っていても監査可用性の差からアカウント存在を推測できないよう、ログイン拒否の外部応答は既存の同一メッセージを維持する。
+
+`denied` は認証、認可、職務分離、状態遷移規則による意図した拒否に使う。競合、永続化制約、外部依存、予期しない例外には `failed` を使う。業務 batch が監査 INSERT 以外の理由で失敗した場合は rollback 後に結果イベントを別途記録し、その記録にも失敗した場合は `503 audit_unavailable` を返す。JSON 構文や必須項目の不足など、対象操作を特定できない入力検証エラーは業務監査イベントを作らず、要求 ID 付きの API アクセスログだけへ残す。
+
+監査検索、詳細閲覧、出力は、対象データを読み出した後、応答を返す前に検索イベント、閲覧イベント、出力イベントを確定する。イベントにはフィルターのハッシュ、結果件数、出力形式だけを保存し、結果本文を複製しない。監査記録に失敗した場合はデータを返さず `503 audit_unavailable` として fail closed にする。検索イベントは現在の検索結果を取得した後に作るため、その検索自身のイベントは次回以降の検索で現れる。
+
+## 要求コンテキスト
+
+API ミドルウェアはすべての要求へ内部生成した UUID `request_id` を設定し、応答の `X-Request-ID` に返す。外部から受け取った `X-Request-ID` は相関用の `external_request_id` として形式と長さを検証したうえで metadata に保存できるが、内部 ID の代用にはしない。
+
+`client_name` は API キーや User-Agent 文字列から推測せず、Web の server action と CLI クライアントが `X-Open-Karte-Client` で明示する。API は許可値だけを受け付け、値が無い一般 HTTP 要求は `api`、定期処理は `system` とする。この値は利用面を表す補助情報であり、認証、認可、職務分離の根拠には使わない。
+
+## 認可
+
+権限カタログへ次を追加する。
+
+- `audit:read`: 監査イベントの一覧と詳細を閲覧する
+- `audit:export`: 監査イベントを CSV 出力する
+
+システム管理者だけへ両権限を初期付与する。業務管理者、人事管理者、標準利用者へは初期付与しない。動的ロールへの付与は既存の自己昇格防止と最後の実効管理者ガードを通す。
+
+監査イベントは組織スコープで分割しない。全社横断のセキュリティ証跡であるため、専用権限を持つ主体だけが全件を閲覧する。後続のデータ保持能力で、監査担当者向けの限定ビューや保存期間を追加できる。
+
+## API
+
+次の資源を追加する。
+
+- `GET /audit-events`: カーソルページング付き一覧
+- `GET /audit-events/:event_id`: 詳細
+- `POST /audit-event-exports`: フィルターを受け取り CSV を返す限定期間出力
+
+一覧は `created_at DESC, id DESC` の安定順序とする。二百五十六文字以内の version 2 cursor は、初回検索時の最大内部 ID、limit、正規化 filter の fingerprint、移動元ページと必要な場合の復元先ページの先頭・末尾 anchor を保持する。以後は最大内部 ID 以下だけを読むため、途中で追加された行は過去日時でも同じ走査へ混入しない。直後の next→previous と previous→next は元のページ範囲を完全復元し、さらに深い逆方向走査はページ幅が変わっても連続性を保つ。cursor は認可情報ではないため署名しないが、limit または filter が要求と一致しない cursor は `invalid_audit_cursor` として拒否する。`limit` は一から百、既定値は五十とする。
+
+一覧と出力は次のフィルターを共有する。
+
+- `actor_account_id`
+- `action`
+- `target_type`
+- `target_id`
+- `outcome`
+- `from`
+- `to`
+
+時刻範囲は UTC の ISO 8601 を受け取り、開始を含み終了を含まない。CSV 出力は開始と終了を必須とし、最大三十一日、最大五万件、完成 CSV の UTF-8 十六 MiB とする。repository は各 text 列の SQLite storage class と byte length を含む狭い descriptor を最大五千件ずつ取得する。text または許可された null 以外の storage class、型と null/length の不整合、無効 UTF-8、取得中の ID・時刻・actor・storage class・長さ変更、欠落、重複、順序変更は `503 audit_unavailable` として fail closed にする。
+
+export の通常行は descriptor CTE の同一 statement から compact positional `.raw()` と保存 byte の `hex(CAST(column AS BLOB))` を返し、descriptor と payload の二重 query を行わない。SQL は各 computed HEX value と結果 row を二百万 byte 未満、全 response を四 MiB 以下に収める行だけを exact とする。それ以外は、十三列を固定した `CASE` と一 bind の JSON plan により `hex(substr(...))` segment を全 export 行でまとめて取得する。各 chunk は source 九十九万九千 byte 以下、各 query の source 合計は百九十九万八千 byte 以下とし、computed value と結果 row は二百万 byte 未満、response は四 MiB 以下に保つ。全 byte の再構築後に `fatal: true, ignoreBOM: true` で各列を一度だけ UTF-8 decode するため、先頭 BOM と保存原文を保持し、replacement decode を許さない。
+
+完成 CSV が十六 MiB 以下なら segment の総 source text も十六 MiB 以下なので、segment query は `ceil(16 MiB / 1,998,000) = 9` 回以下となる。五万件成功と五万一件目拒否は repository 十一 query、remote-valid 約一・八 MB 行八件は十 query、一・〇 MB 行十六件と一・九九八 MB 行八件は各十一 query、segment 十四件と tiny 四万六千件の混在は十九 queryであり、全形状で repository 二十五 query 以下を維持する。各行二百万 byte 未満の九行で完成 CSV ちょうど十六 MiB と一 byte 超過も検査する。五万一件目または raw byte 超過を descriptor 走査で検出した場合は segment query を行わない。上限超過は `413 audit_export_too_large` を返し、範囲を狭めるよう案内する。非同期出力は後続のジョブ運用能力で追加する。
+
+export は exact 行を各五千件の raw window 内で即時 decode して最終出力 slot へ置き、HEX と layout 配列を次の window 前に破棄する。全走査後まで保持する descriptor は segment 対象だけで、segment buffer の source byte 合計は十六 MiB 以下である。五万件 tiny fixture が保持する JS heap と ArrayBuffer の増分は 40,119,788 byte で、六十四 MiB 未満を回帰テストにする。これにより公開契約上必要な最終行配列に加え、全五万件分の descriptor/HEX を重ねて保持しない。
+
+複数 segment query 間の同一長・妥当 UTF-8 への書換えは payload digest を永続化しない限り検出できないため、production の `audit_logs_prevent_update` / `audit_logs_prevent_delete` trigger を trust boundary とする。migration test は両操作の拒否を固定し、repository はその上で ID、時刻、actor、storage class、全長、chunk 長を各応答で再検証する。
+
+CSV は表計算ソフトで式として評価される先頭文字 `=`, `+`, `-`, `@` を持つ値へ単一引用符を付け、改行、引用符、カンマを RFC 4180 に従ってエスケープする。
+
+一覧は最初に最大 `limit + 1` 件の要約 descriptor を取得し、hex 投影の列名・envelopeを含む保守的な四 MiB 累積上限または指定 `limit` の早い方までを byte-faithful 要約取得へ渡す。上限を超える単一要約行は `503 audit_unavailable` とする。`limit` は返却件数の最大値であり、byte 上限で短縮したページも version 2 cursor を返す。要約と詳細の一括 HEX 取得は、単一列が九十九万九千 source byte 以下で、全 text 列と固定 envelope を合算した exact 結果行の保守的推定が二百万 byte 未満の場合だけ選ぶ。個々の列が上限内でも合算結果行が上限へ達する場合は bounded segment 取得へ切り替え、各結果行を二百万 byte 未満、response を四 MiB 以下に保つ。要約取得では `before_json`、`after_json`、`authorization_json`、`metadata_json` と client IP を読まない。詳細と CSV は非 null の JSON 四列を構文検証し、scalar と legacy wrapper を再直列化せず保存文字列のまま返す。壊れた JSON は `503 audit_unavailable` とする。CSV は要約列と JSON 列を含む。すべての応答へ `event_id` と `request_id` を含める。
+
+## Web
+
+`/admin/audit-events` を追加し、システムメニューには `audit:read` を持つ場合だけ表示する。ページは次を提供する。
+
+- 時刻範囲、操作、結果、対象種別、対象 ID、操作者による絞り込み
+- カーソルによる前後ページ移動
+- 操作、結果、操作者、対象、日時を表示する一覧
+- 選択したイベントの変更前後、認可根拠、補足を表示する詳細
+- `audit:export` を持つ場合だけ表示する CSV 出力
+
+操作、対象、理由コードは機械語彙の生文字列だけでなく日本語ラベルも表示する。JSON は整形し、長い値を省略表示して明示操作で展開する。秘密値の表示切替は設けない。API が返さない情報を Web 側で補完しない。
+
+## CLI
+
+CLI へ次を追加し、`cli/app/index.ts` へ登録する。
+
+- `audit list`
+- `audit show --event-id <id>`
+- `audit export --from <ISO8601> --to <ISO8601> --out <path>`
+
+一覧は API と同じフィルターとカーソルを受ける。詳細は JSON、出力は API が返す CSV を指定先へ保存する。標準出力へ秘密値を追加表示しない。API の `403`、`413`、`503` のコードとメッセージを保持する。
+
+## 初期適用範囲
+
+この完成単位では、次の操作へ監査生成を接続する。
+
+- ログイン成功、ログイン拒否、トークン更新、更新トークン再利用検知
+- ロール作成、変更、削除
+- アカウントへのロール付与と剥奪
+- アカウント状態変更とパスワード再設定
+- ロールを伴う従業員登録、退職、削除
+- 汎用申請ワークフロー定義の変更と停滞ワークフロー修復
+- 汎用申請の承認、却下
+- 代理承認の作成と取消
+- 監査イベントの一覧検索、詳細閲覧、CSV 出力
+
+一覧検索は一ページ取得ごとに監査する。ページングカーソルそのものは保存せず、フィルターのハッシュ、要求した件数、返した件数を記録する。
+
+## 既存 API との互換性
+
+既存の成功応答、業務エラーコード、認可条件は変更しない。監査可用性が必要な重要操作で監査 INSERT に失敗した場合だけ、新しい `503 audit_unavailable` を返す。
+
+監査対応のために既存の一つの業務更新を複数の非原子的要求へ分割しない。既存 repository が D1 batch を構成する場合は監査 statement を同じ batch へ追加する。batch を構成しない処理は、変更と検査と監査をまとめる repository メソッドへ移す。
+
+## テスト戦略
+
+実装は振る舞いごとに失敗するテストを先に追加し、失敗理由を確認してから production code を追加する。
+
+データベーステストは次を検証する。
+
+- 旧行を失わず新構造へ移行できる
+- 更新と削除がトリガーで拒否される
+- UUID、コード、整数の対象 ID を文字列で保持できる
+- 業務更新か監査 INSERT のどちらかが失敗すると両方を取り消す
+- 同時要求でも event ID と request ID が衝突しない
+
+生成器テストは次を検証する。
+
+- 秘密キーを深い配列とオブジェクトから除去する
+- 許可していない操作名と対象種別を拒否する
+- サイズ上限を超える投影を拒否する
+- JSON を安定したキー順で保存する
+
+API テストは次を検証する。
+
+- 各初期適用操作の成功、拒否、競合が正しい event を残す
+- 生の認証情報とメールアドレスが event に存在しない
+- `audit:read` と `audit:export` を別々に強制する
+- 一覧と詳細がカーソル、フィルター、半開時刻範囲を正しく扱う
+- CSV 式注入、改行、引用符を安全に処理する
+- 監査 INSERT 障害時に重要操作、詳細閲覧、出力を fail closed にする
+
+Web テストはメニュー表示、フィルター、ページ移動、詳細、権限別出力を検証する。CLI テストはルート登録、引数検証、API エラー保持、CSV 保存を検証する。
+
+最終確認では `vp check`、API 全テスト、Web 全テスト、CLI 全テスト、三ワークスペースの型検査を実行する。管理者と一般利用者で Web を開き、管理者の検索、詳細、出力と、一般利用者のメニュー非表示、直 URL 拒否をブラウザで確認する。
+
+## 完成条件
+
+次をすべて満たした場合だけ、機能網羅表の「IAM 監査ログ」を実装済みへ変更する。
+
+- 初期適用範囲の重要操作が成功、拒否、競合の証跡を残す
+- 重要変更と成功イベントが原子的に確定する
+- 監査イベントの更新と削除をデータベースが拒否する
+- API、Web、CLI で検索、詳細、限定期間出力を完結できる
+- 閲覧と出力を別権限で制御し、監査検索、詳細閲覧、出力も証跡化する
+- 秘密値と不要な個人情報がイベント、API、Web、CLI に現れない
+- 移行、認可、競合、改ざん、式注入、監査障害の自動テストが通る
+- ブラウザで管理者の正常経路と一般利用者の拒否経路を確認する
+- `.docs/capability-map.md` と `.docs/authorization-model.md` が実装と一致する
+
+## 後続能力との契約
+
+後続機能は、自由な SQL で `audit_logs` へ書き込まず、型付き生成器を使う。業務変更では監査 statement を同じ原子的処理へ含める。読み取りと出力を監査する場合は、対象件数、フィルターのハッシュ、出力形式だけを記録し、結果本文を複製しない。
+
+スコープ付き認可は `authorization_json` に使用した権限、スコープ種別、スコープ対象、案件タスク、委任、緊急権限の識別子を保存する。汎用ケースと意思決定は `target_type` と `target_id` でイベントへ結び、証拠基盤は監査イベントを変更せず外部関連として参照する。

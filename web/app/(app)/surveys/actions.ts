@@ -6,6 +6,7 @@ import { updateSurveyResponse } from "@/lib/api/update-survey-response"
 import { withdrawSurveyResponse } from "@/lib/api/withdraw-survey-response"
 import { fitsJsonStringifiedLength, FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState のタプル要素となるアクション結果。
 // status で成否を表し、message は画面のトースト/エラー表示に使う。
@@ -20,6 +21,8 @@ export async function submitSurveyResponseAction(
   previousState: SubmitSurveyResponseState,
   formData: FormData,
 ): Promise<SubmitSurveyResponseState> {
+  await requireAuth()
+
   const surveyId = toPositiveIntId(formData.get("surveyId"))
 
   if (surveyId === null) {
@@ -75,6 +78,8 @@ export async function updateSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,
 ): Promise<MyResponseActionState> {
+  await requireAuth()
+
   const responseId = toPositiveIntId(formData.get("responseId"))
 
   if (responseId === null) {
@@ -121,6 +126,8 @@ export async function withdrawSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,
 ): Promise<MyResponseActionState> {
+  await requireAuth()
+
   const responseId = toPositiveIntId(formData.get("responseId"))
 
   if (responseId === null) {

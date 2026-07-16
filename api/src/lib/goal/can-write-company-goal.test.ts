@@ -3,12 +3,13 @@ import { canWriteCompanyGoal } from "@/lib/goal/can-write-company-goal"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 
 describe("canWriteCompanyGoal", () => {
-  test("allows review administrators (manager/hr/admin)", () => {
-    expect(canWriteCompanyGoal(makeTestSession("manager"))).toBe(true)
+  test("allows review administrators (hr/admin)", () => {
+    expect(canWriteCompanyGoal(makeTestSession("hr"))).toBe(true)
     expect(canWriteCompanyGoal(makeTestSession("admin"))).toBe(true)
   })
 
-  test("denies plain members", () => {
+  test("denies plain members and managers without review:administer", () => {
     expect(canWriteCompanyGoal(makeTestSession("member"))).toBe(false)
+    expect(canWriteCompanyGoal(makeTestSession("manager"))).toBe(false)
   })
 })

@@ -6,7 +6,7 @@ import { ExpenseAdminTable } from "@/app/(app)/expense/admin/_components/expense
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import {
   getExpenseAdminList,
@@ -18,8 +18,6 @@ import { getMe } from "@/lib/api/get-me"
 import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
 
 export const metadata = { title: "経費申請管理" }
-
-const PAGE_SIZE = 20
 
 const SORT_VALUES: ReadonlyArray<ExpenseAdminSort> = [
   "created_at_desc",
@@ -52,11 +50,13 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
 
   const to = toSingleValue(params.to)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const sort = toSort(toSingleValue(params.sort))
 
@@ -93,9 +93,11 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
         description="全社の経費申請を横断で確認します。承認は各申請の詳細から行います。"
         breadcrumbs={[{ label: "経費", href: "/expense" }, { label: "経費申請管理" }]}
         actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
-            承認受信箱
-          </Button>
+          currentUser.permissions.includes("expense:approve") ? (
+            <Button variant="outline" nativeButton={false} render={<Link href="/expense/inbox" />}>
+              承認受信箱
+            </Button>
+          ) : null
         }
       />
 
@@ -111,6 +113,7 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
         <ExpenseAdminSection
           filter={filter}
           offset={offset}
+          pageSize={pageSize}
           sort={sort}
           extraParams={extraParams}
         />
@@ -122,11 +125,12 @@ export default async function AdminExpensesPage(props: { searchParams: SearchPar
 async function ExpenseAdminSection(props: {
   filter: ExpenseAdminFilter
   offset: number
+  pageSize: number
   sort: ExpenseAdminSort
   extraParams: Record<string, string | undefined>
 }) {
   const result = await getExpenseAdminList(props.filter, {
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
     sort: props.sort,
   })
@@ -138,6 +142,7 @@ async function ExpenseAdminSection(props: {
   const paginationExtraParams: Record<string, string | undefined> = {
     ...props.extraParams,
     sort: props.sort === "created_at_desc" ? undefined : props.sort,
+    size: String(props.pageSize),
   }
 
   return (
@@ -152,9 +157,10 @@ async function ExpenseAdminSection(props: {
       <TablePagination
         pathname="/expense/admin"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={paginationExtraParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

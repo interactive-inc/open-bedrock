@@ -14,7 +14,13 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      comment: z.string().min(1).max(3_000),
+      comment: z
+        .string({
+          required_error: "却下にはコメントが必須です",
+          invalid_type_error: "却下にはコメントが必須です",
+        })
+        .min(1, "却下にはコメントが必須です")
+        .max(3_000),
     }),
   ),
   async (c) => {

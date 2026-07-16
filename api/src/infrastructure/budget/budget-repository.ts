@@ -1,54 +1,23 @@
 import { Budget } from "@/domain/budget/budget.entity"
-import { BudgetConsumption } from "@/domain/budget/budget-consumption.entity"
 import type { Context } from "@/env"
-import { budgets, budgetConsumptions } from "@/schema"
-import { and, count, desc, eq } from "drizzle-orm"
+import { budgets, employees, expenses } from "@/schema"
+import { and, asc, eq, gte, lte, sum } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+
+export type BudgetListFilter = {
+  departmentId: number | null
+  fiscalPeriod: string | null
+}
 
 export class BudgetRepository {
   constructor(private readonly c: Context) {}
 
-  // 会計年度の新しい順で予算枠を返す。fiscal_year / department_code で絞り込める。
-  async findAll(props: {
-    fiscalYear: number | null
-    departmentCode: string | null
-    limit: number
-    offset: number
-  }): Promise<ReadonlyArray<Budget> | Error> {
+  async findById(budgetId: number): Promise<Budget | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(budgets)
-        .where(toWhere(props.fiscalYear, props.departmentCode))
-        .orderBy(desc(budgets.fiscalYear))
-        .limit(props.limit)
-        .offset(props.offset)
-
-      return rows.map((row) => Budget.fromRow(row))
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to load budgets")
-    }
-  }
-
-  async count(fiscalYear: number | null, departmentCode: string | null): Promise<number | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ total: count() })
-        .from(budgets)
-        .where(toWhere(fiscalYear, departmentCode))
-
-      return rows.at(0)?.total ?? 0
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to count budgets")
-    }
-  }
-
-  async findById(id: number): Promise<Budget | null | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select()
-        .from(budgets)
-        .where(eq(budgets.id, id))
+        .where(eq(budgets.id, budgetId))
         .limit(1)
 
       const row = rows.at(0)
@@ -59,32 +28,29 @@ export class BudgetRepository {
     }
   }
 
-  // 予算枠ごとの消化合計。会計計算ではなく amount からの単純減算のための集計。
-  async sumConsumedByBudgetIds(
-    budgetIds: ReadonlyArray<number>,
-  ): Promise<Map<number, number> | Error> {
+  async list(filter: BudgetListFilter): Promise<ReadonlyArray<Budget> | Error> {
     try {
-      const consumedByBudgetId = new Map<number, number>()
+      const conditions: Array<SQL> = []
 
-      if (budgetIds.length === 0) {
-        return consumedByBudgetId
+      if (filter.departmentId !== null) {
+        conditions.push(eq(budgets.departmentId, filter.departmentId))
       }
 
-      const rows = await this.c.var.database.select().from(budgetConsumptions)
-
-      for (const row of rows) {
-        if (budgetIds.includes(row.budgetId) === false) {
-          continue
-        }
-
-        const current = consumedByBudgetId.get(row.budgetId) ?? 0
-
-        consumedByBudgetId.set(row.budgetId, current + row.amount)
+      if (filter.fiscalPeriod !== null) {
+        conditions.push(eq(budgets.fiscalPeriod, filter.fiscalPeriod))
       }
 
-      return consumedByBudgetId
+      const where = conditions.length === 0 ? undefined : and(...conditions)
+
+      const rows = await this.c.var.database
+        .select()
+        .from(budgets)
+        .where(where)
+        .orderBy(asc(budgets.departmentId), asc(budgets.fiscalPeriod))
+
+      return rows.map((row) => Budget.fromRow(row))
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to sum budget consumptions")
+      return error instanceof Error ? error : new Error("failed to list budgets")
     }
   }
 
@@ -93,10 +59,12 @@ export class BudgetRepository {
       const rows = await this.c.var.database
         .insert(budgets)
         .values({
-          fiscalYear: budget.fiscalYear,
-          departmentCode: budget.departmentCode,
-          title: budget.title,
+          departmentId: budget.departmentId,
+          fiscalPeriod: budget.fiscalPeriod,
+          periodStart: budget.periodStart,
+          periodEnd: budget.periodEnd,
           amount: budget.amount,
+          name: budget.name,
           note: budget.note,
           createdAt: budget.createdAt,
         })
@@ -119,10 +87,8 @@ export class BudgetRepository {
       const rows = await this.c.var.database
         .update(budgets)
         .set({
-          fiscalYear: budget.fiscalYear,
-          departmentCode: budget.departmentCode,
-          title: budget.title,
           amount: budget.amount,
+          name: budget.name,
           note: budget.note,
         })
         .where(eq(budgets.id, budget.id))
@@ -136,41 +102,45 @@ export class BudgetRepository {
     }
   }
 
-  async createConsumption(consumption: BudgetConsumption): Promise<BudgetConsumption | Error> {
+  async delete(budgetId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
-        .insert(budgetConsumptions)
-        .values({
-          budgetId: consumption.budgetId,
-          amount: consumption.amount,
-          note: consumption.note,
-          recordedOn: consumption.recordedOn,
-          createdAt: consumption.createdAt,
-        })
-        .returning()
+        .delete(budgets)
+        .where(eq(budgets.id, budgetId))
+        .returning({ id: budgets.id })
 
-      const row = rows.at(0)
-
-      return row === undefined
-        ? new Error("failed to insert budget_consumption")
-        : BudgetConsumption.fromRow(row)
+      return rows.length > 0 ? true : null
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to insert budget_consumption")
+      return error instanceof Error ? error : new Error("failed to delete budget")
     }
   }
-}
 
-/** fiscal_year / department_code の絞り込み条件を組み立てる。未指定は全件。 */
-function toWhere(fiscalYear: number | null, departmentCode: string | null): SQL | undefined {
-  const conditions: Array<SQL> = []
+  // 承認済み経費を部署・期間で SUM する。経費に部署の紐付きは無いため、申請者従業員の所属部署で集計する。
+  // spent_at が予算の period_start..period_end に収まる approved の経費のみ対象。
+  async sumApprovedExpenses(props: {
+    departmentId: number
+    periodStart: string
+    periodEnd: string
+  }): Promise<number | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ total: sum(expenses.amount) })
+        .from(expenses)
+        .innerJoin(employees, eq(employees.id, expenses.employeeId))
+        .where(
+          and(
+            eq(employees.deptId, props.departmentId),
+            eq(expenses.status, "approved"),
+            gte(expenses.spentAt, props.periodStart),
+            lte(expenses.spentAt, props.periodEnd),
+          ),
+        )
 
-  if (fiscalYear !== null) {
-    conditions.push(eq(budgets.fiscalYear, fiscalYear))
+      const total = rows.at(0)?.total
+
+      return total === null || total === undefined ? 0 : Number(total)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to sum approved expenses")
+    }
   }
-
-  if (departmentCode !== null) {
-    conditions.push(eq(budgets.departmentCode, departmentCode))
-  }
-
-  return conditions.length === 0 ? undefined : and(...conditions)
 }

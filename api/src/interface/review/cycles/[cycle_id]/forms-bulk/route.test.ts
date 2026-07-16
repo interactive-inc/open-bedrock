@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { z } from "zod"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedReviewCycles } from "@/infrastructure/seed/seed-review-cycles"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -81,15 +82,26 @@ describe("POST /review-cycles/:cycle_id/forms/bulk", () => {
 
     expect(response.status).toBe(201)
 
-    const body = await response.json()
+    const parsed = z
+      .object({
+        created_count: z.number(),
+        forms: z.array(
+          z.object({ visibility: z.string(), status: z.string(), cycle_id: z.number() }),
+        ),
+      })
+      .safeParse(await response.json())
 
-    expect(body.created_count).toBe(3)
-    expect(body.forms.length).toBe(3)
+    expect(parsed.success).toBe(true)
 
-    for (const form of body.forms) {
-      expect(form.visibility).toBe("hidden")
-      expect(form.status).toBe("pending")
-      expect(form.cycle_id).toBe(1)
+    if (parsed.success) {
+      expect(parsed.data.created_count).toBe(3)
+      expect(parsed.data.forms.length).toBe(3)
+
+      for (const form of parsed.data.forms) {
+        expect(form.visibility).toBe("hidden")
+        expect(form.status).toBe("pending")
+        expect(form.cycle_id).toBe(1)
+      }
     }
   })
 

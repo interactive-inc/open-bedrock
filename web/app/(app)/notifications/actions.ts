@@ -1,12 +1,12 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createNotification } from "@/lib/api/create-notification"
 import { getMe } from "@/lib/api/get-me"
 import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
 import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
@@ -21,6 +21,8 @@ export async function markNotificationReadAction(
   _previousState: NotificationFormState,
   formData: FormData,
 ): Promise<NotificationFormState> {
+  await requireAuth()
+
   const notificationId = toPositiveIntId(formData.get("notification_id"))
 
   if (notificationId === null) {
@@ -42,6 +44,8 @@ export async function markNotificationReadAction(
 export async function markAllNotificationsReadAction(
   _previousState: NotificationFormState,
 ): Promise<NotificationFormState> {
+  await requireAuth()
+
   const result = await markAllNotificationsRead()
 
   if (result instanceof Error) {
@@ -123,5 +127,7 @@ export async function createNotificationAction(
 
   revalidatePath("/notifications")
 
-  redirect("/notifications")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }

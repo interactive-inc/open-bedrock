@@ -1,28 +1,25 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /budgets を session トークン付きで呼び、予算枠一覧（消化合計・残額つき）を取得する。
-export async function getBudgetList(query: {
-  fiscalYear?: string
-  departmentCode?: string
-  limit: number
-  offset: number
-}) {
+export type BudgetListFilter = {
+  departmentId: number | null
+  fiscalPeriod: string | null
+}
+
+// GET /budgets。部署予算の一覧。budget:manage が無いと 403。
+export async function getBudgetList(filter: BudgetListFilter) {
   const client = await createClient()
 
   const response = await client.budgets.$get({
     query: {
-      fiscal_year: query.fiscalYear,
-      department_code: query.departmentCode,
-      limit: String(query.limit),
-      offset: String(query.offset),
+      department_id: filter.departmentId !== null ? String(filter.departmentId) : undefined,
+      fiscal_period: filter.fiscalPeriod ?? undefined,
     },
   })
 
-  if (!response.ok) {
-    return new Error("failed to load budgets")
+  if (response.status >= 400) {
+    return new Error("failed to load budget list")
   }
 
   const body = await response.json()
-
-  return { data: body.data, total: body.total }
+  return body.data
 }

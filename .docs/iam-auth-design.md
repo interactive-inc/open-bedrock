@@ -1,76 +1,70 @@
-# IAM 認証・認可システム 設計
+# IAM 分離移行記録
 
-複数アカウント認証 + 動的ロール(IAM) + 機能別権限 + 権限ベースサイドバーの実装青写真。
-3つの設計観点(security-first / pragmatic / clean-iam)を統合して確定したもの。
+規範性: 非規範記録。完了した移行の理由と残存制約だけを記録する。
 
-## 統合方針
+従業員台帳から認証と role 情報を分離した移行結果を記録する。本書は履歴資料であり、現行 schema、route、認可規則の正本ではない。現行実装はコードと migration、規範は [認可モデル](./authorization-model.md) と [権限と意思決定モデル](./authority-model.md) を正本とする。新しい認可経路を本書から導出してはならない。
 
-security-first(JWT に権限を載せずサーバ側 DB 解決一本化・refresh ローテ + tokenVersion 失効・OAuth は sub 固定)を骨格に、pragmatic(can-\* シグネチャ温存・migration 連番・SSOT permission-keys・KV 活用)と clean-iam(accounts/identities/roles/permissions/role_permissions/account_roles 完全分離)を統合。
+## 移行前の問題
 
-fail-open は一切採用しない。認可解決失敗・未知 permission キーは常に deny(fail-closed)。最終的に employees.email/password_hash/role の3列を撤去し employees は純台帳に戻す。D1/SQLite では FK 制約を張らず論理参照 + unique/部分 index で担保。
+移行前は従業員 record が email、password hash、単一 role を持ち、Person、Employee、Account、Identity、SystemRole の責務が混在していた。固定 role と個別 helper へ認可が分散し、複数 role、即時失効、外部 identity、permission catalog の管理が難しかった。
 
-## データモデル(新規8テーブル)
+## 移行で導入した構造
 
-- accounts: id / employeeId(論理FK, null可) / status(active|suspended|locked) / tokenVersion(default 0) / createdAt / updatedAt。部分 uniqueIndex(employeeId) where NOT NULL で 1従業員=1アカウント。
-- identities: id / accountId / provider(password|google|github|oidc) / subject(password=正規化email, OAuth=sub) / secret(PBKDF2のみ, null可) / email(null可) / emailVerified(default 0) / lastUsedAt / createdAt。uniqueIndex(provider, subject)。
-- roles: id / key(unique, 不変) / name / description / isSystem(default 0) / createdAt。
-- permissions: id / key(unique, "<domain>:<action>[:<scope>]") / description / category。正はコードの PERMISSION_KEYS、テーブルは UI 用の写し。
-- rolePermissions: roleId / permissionId。PK(roleId, permissionId)。
-- accountRoles: accountId / roleId / grantedBy(null可) / grantedAt。PK(accountId, roleId)。複数ロール可、実効 permission は和集合。
-- refreshTokens: id / accountId(index) / tokenHash(unique, SHA-256のみ) / familyId / expiresAt / revokedAt / userAgent / createdAt。
-- auditLogs(append-only): id / actorAccountId / action / targetType / targetId / metadata(JSON) / ip / createdAt。UPDATE/DELETE はアプリ層で禁止。
+- `accounts`: 認証可能な account の状態、従業員との関連、token version
+- `identities`: password または外部 identity provider ごとの識別子と credential
+- `roles`: system role の安定 key と表示 metadata
+- `permissions`: code 上の TechnicalPermission catalog の投影
+- `role_permissions`: role と permission の対応
+- `account_roles`: account への role assignment
+- `refresh_tokens`: rotation、family 単位の失効、replay 検出用 record
+- `audit_logs`: 当時導入した audit 保存先
 
-## permission カタログ
+Permission key の集合は code、assignment は database を正とする。JWT に role と permission を固定せず、API が account と token version を検証して実効 permission を解決する構成へ移行した。
 
-粒度 `<domain>:<action>[:<scope>]`。約40-50 permission。self スコープは permission に載せず所有者判定としてコードに残す(最小権限)。28 can-\* + goal-access 2 + インライン2 ≒ 32ゲートを起点に正規化。
+## 完了した変更
 
-system role 4値の再現: member=self中心(permission なし) / manager=承認 + 大半の管理 / hr=manager + org:manage,employee:delete,thanks_reward:manage,thanks_redemption:approve / admin=全権 + employee:assign_role + iam:\* + account:manage。
+- 従業員台帳から認証 credential と単一 role を分離した。
+- password identity、account、role assignment を migration した。
+- access token と refresh token を IAM 基盤へ切り替えた。
+- role 名の直接判定を TechnicalPermission 中心へ移した。
+- role、permission、account assignment の API と管理画面を追加した。
+- 一般業務向けの従業員選択を、必要最小限の directory field へ分けた。
 
-per-template 動的ロール(approver_roles)は permission に正規化せず roleKey 参照として残す。
+実際の table、migration、route は現在の code を正とする。本書の列挙は現在 schema の完全な一覧ではない。
 
-## 認証フロー
+## 未実装の境界
 
-複数ログイン方法を identities の多態で吸収。全成功フロー: identity検証 → account取得 → status=active → employees.status が retired でない → access token(短命1時間) + refresh token(長命7日、ローテーション) 発行。
+この移行は HumanPrincipal 相当の Account と Employee を分離する基礎を作ったが、現在の会社メタモデル全体を完成させたものではない。
 
-JWT claims = `{ accountId, employeeId, tokenVersion }` のみ(email/role/permission は載せない)。permission は verify-bearer が毎回 DB 解決(accountRoles⋈rolePermissions⋈permissions を1クエリ)して session に Set で展開。tokenVersion 不一致なら 401(即時失効)。
+- Human、Agent、Service、Connector を独立した Principal kind として表現しない。
+- requested_by、proposed_by、approved_by、executed_by を完全には分離しない。
+- TechnicalPermission と OrganizationalAuthority を同じ評価器で合成しない。
+- HumanAttestation と ExecutionAuthorization を持たない。
+- organization scope、field policy、case candidate snapshot は domain ごとに実装差がある。
+- 外部 identity の schema 上の拡張点は、外部 login flow の実装済みを意味しない。
+- audit table の存在は、すべての高リスク operation が完全に監査されることを意味しない。
 
-OAuth/OIDC: state(CSRF)+PKCE、sub 固定、id_token 検証、emailVerified=true かつ既存 password identity と email 一致時のみ自動リンク。
+これらは migration の失敗ではなく、後続の [会社メタモデル](./company-model.md) が導入した拡張課題である。
 
-## 実装フェーズ
+## 維持する原則
 
-- Phase 0: PERMISSION_KEYS 定義、system role 許可集合確定、schema 追加(z.enum)、seed の role 乖離解消、subset チェック。
-- Phase 1: 新8テーブルの migration + schema.ts 同期(無害、既存無変更)。
-- Phase 2: backfill(各 employee に accounts/identities/account_roles を 1:1 生成、roles/permissions/role_permissions シード)。冪等。
-- Phase 3: 認証カットオーバー(AuthenticateWithPassword、JWT claims 変更、verify-bearer 改修、refresh token)。
-- Phase 4: 認可 permission 化(has-permission.ts、can-\* を canX(session) へ、Command.viewerRole→session)。
-- Phase 4.5: per-template 動的ロール正規化(approver_roles/owner_role を roleKey 参照へ)。
-- Phase 5: IAM/アカウント管理 API・画面・cli(/accounts, /roles, /permissions、escalation guard、last-admin 不変条件)。
-- Phase 6: 権限ベースサイドバー(/me に permissions/role_keys、sidebar-nav に requiredPermission)。
-- Phase 7: クリーンアップ(employees.email/password_hash/role drop、role 単一参照撤去)。
+- Person、Employee、Principal、Account、Identity、SystemRole を同一視しない。
+- role key ではなく TechnicalPermission を業務 code の操作上限に使う。
+- permission は scope、field、state、case assignment、authority を代替しない。
+- UI の表示制御を認可の正本にしない。
+- token と role の変更を即時失効可能にする。
+- 最後の実効管理者を失う変更を account 状態と permission の実効和集合で拒否する。
+- assignment の取消と過去の audit 根拠の削除を分ける。
 
-## セキュリティ要点
-
-権限昇格防止(JWT に権限載せない / admin は実効全許可をコード固定 / 付与できるロールは付与者の部分集合 / 自分に自分でロール付与を塞ぐ)、最小権限、トークン失効(1時間 + refresh ローテ + tokenVersion)、監査(append-only)、OAuth 安全性(state+PKCE+sub固定)。
-
-## 実装状況
-
-Phase 0〜6 を実装・テスト済み（api 2016 pass / cli 118 pass / web 改修由来型エラー 0）。
-
-- Phase 0〜2: permission カタログ・8テーブル・マスタシード・backfill 完了
-- Phase 3: 認証を identities/accounts ベースへカットオーバー（JWT に権限を載せず DB 解決、tokenVersion 失効）
-- Phase 4/4.5: 全 can-\* を permission ベースへ、承認の動的ロールを roleKeys 複数対応へ
-- Phase 5: ロール管理 API（GET/POST /roles）、権限カタログ API（GET /permissions）、アカウント一覧 API（GET /accounts）、アカウントへのロール割当 API（POST /accounts/:id/roles、escalation guard・自己付与禁止・tokenVersion 失効）、/me の permissions/role_keys 返却、Web 管理画面（/admin/roles・/admin/accounts）、cli（karte roles・karte accounts）
-- Phase 6: 権限ベースのサイドバー出し分け（filterByPermission）
-
-- Phase 7: employees から email/password_hash/role を物理 drop（0006 migration）して純台帳化。完了。
-  認証は identities、認可は account_roles、メールは identities.subject が正。employee API の email/role は
-  IdentityRepository/AccountRepository で解決。register-employee は identity 払い出し、update-employee は
-  台帳更新に縮小（ロール変更は Grant/Revoke AccountRole へ委譲）。dev seed は seeds/iam.sql で IAM を投入。
-
-全8フェーズ完了。api 2016 pass / cli 118 pass / web 改修由来型エラー 0、migrate（drop 含む）→ seed クリーン通過。
-
-Phase 7 の残作業として残っていた移行互換の role 単一参照も撤去済み。SessionPayload から role フィールドを削除し、api の認可（goal-access・attendance 検索・register-employee）と web の全 can-\* ヘルパー（21+1個）を permission ベースへ統一。/me の role はレスポンス互換のため roleKeys から導出して返す（認可には使わない）。職能別プリセットロール（review_admin / general_affairs / it_admin / auditor、is_system=0）を 0009_role_presets.sql で追加。ロール設計の全体は roles-and-permissions.md を参照。
+ロール設計の全体は [[roles-and-permissions|ロールと権限]] を参照する。
 
 ## 既知リスク
 
-D1 に FK 無し(孤児行はアプリ層 + index + 監査)、permission 二重定義の同期ズレ(起動時 subset チェック)、二重正期間(Phase2-6)の整合、approver_roles の未知キー突合、admin 全許可固定の硬直、毎リクエスト join のレイテンシ、OR 結合は deny を表現できない、access token 1時間 + refresh token 7日。POST /auth/refresh でローテーション更新。
+移行で残った構造上の制約を記録する。具体的な値や現行実装は code、migration、生成型を正とする。
+
+- D1 に外部キー制約がなく、孤児行はアプリ層の検査、index、監査で防ぐ。
+- permission catalog は code(SSOT)と DB 投影で二重定義になるため、起動時の subset 検査で同期ズレを検出する。
+- per-template の approver_roles に未知の role key が混ざる可能性があり、突合で検出する。
+- admin の実効全許可を code に固定するため、柔軟性と硬直がトレードオフになる。
+- 認可解決は request ごとに account と role を join するため、レイテンシ増を許容する。
+- permission の OR 結合は deny を表現できないため、禁止は scope と field policy で表す。

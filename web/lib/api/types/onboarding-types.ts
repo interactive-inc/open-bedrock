@@ -13,6 +13,7 @@ export type OnboardingTemplate = {
   kind: string
   description: string | null
   task_count: number
+  lifecycle_effect: "hire" | "retired" | null
 }
 
 // GET /onboarding/templates/:code のレスポンス、POST /onboarding/templates・PUT のレスポンスも同形。

@@ -30,6 +30,13 @@ export class CreateOrgDepartment {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 
+    if (command.department.managerEmployeeCode !== null) {
+      return new ConflictError(
+        "department responsibility must be changed with a personnel action",
+        "lifecycle_action_required",
+      )
+    }
+
     const existing = await departmentRepository.findByCode(command.department.code)
 
     if (existing instanceof Error) {

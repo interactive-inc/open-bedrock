@@ -1,13 +1,15 @@
 import { OneOnOne } from "@/domain/oneonone/one-on-one.entity"
 import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OneOnOneRepository } from "@/infrastructure/oneonone/one-on-one-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  memberEmail: string
+  memberCode: string | null
+  memberEmail: string | null
   managerId: number
   heldAt: string
   topics: string | null
@@ -22,12 +24,20 @@ export class CreateOneOnOne {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
-    const identityRepository = new IdentityRepository(this.c)
-
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    // email は認証情報(identities)が正。対象社員を email から解決する。
-    const memberId = await identityRepository.findEmployeeIdByEmail(command.memberEmail)
+    let memberId: number | null | Error
+
+    if (command.memberCode !== null) {
+      const employee = await new EmployeeRepository(this.c).findByCode(command.memberCode)
+
+      memberId = employee instanceof Error ? employee : (employee?.id ?? null)
+    } else if (command.memberEmail !== null) {
+      // 既存 CLI との互換用。新規クライアントは台帳の機微項目を取得せず code で指定する。
+      memberId = await new IdentityRepository(this.c).findEmployeeIdByEmail(command.memberEmail)
+    } else {
+      memberId = null
+    }
 
     if (memberId instanceof Error) {
       return new UnexpectedError("failed to find member", { cause: memberId })

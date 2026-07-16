@@ -78,6 +78,14 @@ function memberToken(): Promise<string> {
   })
 }
 
+function tokenFor(employeeId: number): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId,
+    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
+    role: employeeId === 1 ? "admin" : "member",
+  })
+}
+
 async function request(
   path: string,
   token: string | null,
@@ -95,7 +103,7 @@ async function request(
 }
 
 describe("GET /assets/:code", () => {
-  test("returns 200 with the asset", async () => {
+  test("current holder reads their asset sensitive fields", async () => {
     const response = await request("/assets/A0001", await memberToken())
 
     expect(response.status).toBe(200)
@@ -106,12 +114,47 @@ describe("GET /assets/:code", () => {
 
     if (parsed.success) {
       expect(parsed.data.code).toBe("A0001")
+      expect(parsed.data.serial).toBe("PF-X1-0001")
+      expect(parsed.data.purchased_on).toBe("2024-04-01")
+      expect(parsed.data.holder_employee_id).toBe(5)
     }
+  })
+
+  test("asset:manage holder reads another employee asset sensitive fields", async () => {
+    const response = await request("/assets/A0002", await tokenFor(1))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      serial: "CN-D27-0002",
+      purchased_on: "2024-04-01",
+      holder_employee_id: 9,
+    })
+  })
+
+  test("unrelated member receives only catalog fields", async () => {
+    const response = await request("/assets/A0001", await tokenFor(6))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      code: "A0001",
+      name: "Standard Laptop 14",
+      kind: "pc",
+      status: "lent",
+      serial: null,
+      purchased_on: null,
+      holder_employee_id: null,
+    })
   })
 
   test("returns 404 for a missing asset", async () => {
     const response = await request("/assets/A9999", await memberToken())
 
     expect(response.status).toBe(404)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request("/assets/A0001", null)
+
+    expect(response.status).toBe(401)
   })
 })

@@ -1,24 +1,18 @@
 import type { Budget } from "@/domain/budget/budget.entity"
-import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { BudgetRepository } from "@/infrastructure/budget/budget-repository"
+import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
-  id: number
-  details: {
-    fiscalYear: number
-    departmentCode: string | null
-    title: string
-    amount: number
-    note: string | null
-  }
+  budgetId: number
+  amount: number
+  name: string
+  note: string | null
 }
 
 /**
- * 権限と存在を確認し、予算枠の属性を更新する。
+ * 部署予算の金額・名称・メモを変更する。部署・会計期間は変更しない
  */
 export class UpdateBudget {
   constructor(private readonly c: Context) {}
@@ -26,30 +20,32 @@ export class UpdateBudget {
   async run(command: Command): Promise<Budget | ApplicationError> {
     const repository = new BudgetRepository(this.c)
 
-    if (canManageBudgets(command.session) === false) {
-      return new ForbiddenError("cannot manage budgets", "forbidden")
+    const current = await repository.findById(command.budgetId)
+
+    if (current instanceof Error) {
+      return new UnexpectedError("failed to find budget", { cause: current })
     }
 
-    const budget = await repository.findById(command.id)
-
-    if (budget instanceof Error) {
-      return new UnexpectedError("failed to find budget", { cause: budget })
-    }
-
-    if (budget === null) {
+    if (current === null) {
       return new NotFoundError("budget not found", "budget_not_found")
     }
 
-    const updated = await repository.update(budget.withDetails(command.details))
+    const updated = current.withDetails({
+      amount: command.amount,
+      name: command.name,
+      note: command.note,
+    })
 
-    if (updated instanceof Error) {
-      return new UnexpectedError("failed to update budget", { cause: updated })
+    const saved = await repository.update(updated)
+
+    if (saved instanceof Error) {
+      return new UnexpectedError("failed to update budget", { cause: saved })
     }
 
-    if (updated === null) {
+    if (saved === null) {
       return new NotFoundError("budget not found", "budget_not_found")
     }
 
-    return updated
+    return saved
   }
 }

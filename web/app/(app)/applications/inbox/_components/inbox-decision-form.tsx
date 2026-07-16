@@ -1,8 +1,9 @@
 "use client"
 
-import { useActionState } from "react"
 import { decideApplicationAction } from "@/app/(app)/applications/inbox/actions"
 import type { DecisionState } from "@/app/(app)/applications/inbox/actions"
+import { useFormAction } from "@/hooks/use-form-action"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,7 +17,9 @@ const initialState: DecisionState = { ok: false, error: null }
 // inbox 行の承認/却下フォーム。1 つの form 内で 2 つの送信ボタンを decision 値で分岐する。
 // 却下時のみコメント必須。useActionState の state でエラーを表示する。
 export function InboxDecisionForm(props: Props) {
-  const action = useActionState(decideApplicationAction, initialState)
+  const action = useFormAction(decideApplicationAction, initialState, (_state, formData) =>
+    formData.get("decision") === "approve" ? "申請を承認しました" : "申請を却下しました",
+  )
 
   const state = action[0]
 
@@ -37,7 +40,7 @@ export function InboxDecisionForm(props: Props) {
         aria-invalid={state.error !== null}
       />
 
-      <div className="flex gap-2">
+      <TableRowActions>
         <Button type="submit" name="decision" value="approve" size="sm" disabled={isPending}>
           承認
         </Button>
@@ -52,7 +55,7 @@ export function InboxDecisionForm(props: Props) {
         >
           却下
         </Button>
-      </div>
+      </TableRowActions>
 
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
     </form>

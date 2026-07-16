@@ -1,11 +1,10 @@
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zAppOrgReportingLineList } from "@/lib/app-schemas"
 import type { AppOrgReportingLineNode } from "@/lib/app-schemas"
-import { employees, orgMemberships } from "@/schema"
-import { eq } from "drizzle-orm"
+import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 
 // GET /org/reporting-line/:employee_code — 本人から上位へのレポートライン
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -17,43 +16,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const employeeCode = validateCodeParam(c.req.param("employee_code"), "employee")
 
-  // 全 memberships + employees を 1 クエリで一括取得し、メモリ上でツリーを走査する。
-  // 組織規模が小さい前提（数百人以下）なので全件取得で十分速い。
-  const allRows = await c.var.database
-    .select({
-      membership: orgMemberships,
-      employeeName: employees.name,
-      position: employees.position,
-    })
-    .from(orgMemberships)
-    .leftJoin(employees, eq(employees.code, orgMemberships.employeeCode))
+  const organization = await loadCurrentOrganization(c)
+  if (organization instanceof Error) throw new InternalError("failed to load organization")
+  const entry = organization.employeesByCode.get(employeeCode)
 
-  // employeeCode → row の lookup map を構築
-  const lookup = new Map<
-    string,
-    {
-      employeeName: string | null
-      departmentCode: string
-      position: string | null
-      managerEmployeeCode: string | null
-    }
-  >()
-
-  for (const row of allRows) {
-    // 同一 employeeCode が複数 membership を持つ場合、最初のエントリのみ使う
-    if (!lookup.has(row.membership.employeeCode)) {
-      lookup.set(row.membership.employeeCode, {
-        employeeName: row.employeeName,
-        departmentCode: row.membership.departmentCode,
-        position: row.position,
-        managerEmployeeCode: row.membership.managerEmployeeCode,
-      })
-    }
-  }
-
-  const entry = lookup.get(employeeCode)
-
-  if (entry === undefined) {
+  if (entry === undefined || entry.primaryDepartmentCode === null) {
     throw new NotFoundError("membership not found")
   }
 
@@ -64,9 +31,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   let currentCode: string | null = employeeCode
 
   while (currentCode !== null && visited.has(currentCode) === false) {
-    const row = lookup.get(currentCode)
+    const row = organization.employeesByCode.get(currentCode)
 
-    if (row === undefined) {
+    if (row === undefined || row.primaryDepartmentCode === null) {
       break
     }
 
@@ -74,9 +41,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     body.push({
       employee_code: currentCode,
-      employee_name: row.employeeName ?? "",
-      department_code: row.departmentCode,
-      position: row.position ?? null,
+      employee_name: row.name,
+      department_code: row.primaryDepartmentCode,
+      position: row.position,
       depth: body.length,
     })
 

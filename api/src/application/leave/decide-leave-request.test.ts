@@ -31,6 +31,21 @@ async function seedPendingRequest(
   return created
 }
 
+async function seedManagerRelationship(db: D1Database): Promise<void> {
+  await seedD1(db, "employees", [
+    { id: 2, code: "E002", name: "Manager", status: "active" },
+    { id: 5, code: "E005", name: "Member", status: "active" },
+  ])
+
+  await seedD1(db, "org_memberships", [
+    {
+      department_code: "TEAM",
+      employee_code: "E005",
+      manager_employee_code: "E002",
+    },
+  ])
+}
+
 describe("DecideLeaveRequest", () => {
   test("returns forbidden for a member role", async () => {
     const { context, db } = createTestContext()
@@ -63,7 +78,9 @@ describe("DecideLeaveRequest", () => {
   })
 
   test("allows manager to reject a leave request", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedManagerRelationship(db)
 
     const repository = new LeaveRequestRepository(context)
 
@@ -147,7 +164,9 @@ describe("DecideLeaveRequest", () => {
   })
 
   test("returns cross_fiscal_year when leave request spans fiscal years", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedManagerRelationship(db)
 
     const repository = new LeaveRequestRepository(context)
 
@@ -182,6 +201,8 @@ describe("DecideLeaveRequest", () => {
 
   test("allows approval when leave request stays within the same fiscal year", async () => {
     const { context, db } = createTestContext()
+
+    await seedManagerRelationship(db)
 
     await seedD1(db, "leave_balances", [
       {

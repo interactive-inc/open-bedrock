@@ -1,12 +1,12 @@
 import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import { validatePasswordComplexity } from "@/lib/auth/password-policy"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
-import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-
-const MIN_PASSWORD_LENGTH = 8
+import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
@@ -29,8 +29,21 @@ export class ResetAccountPassword {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 
-    if (command.newPassword.length < MIN_PASSWORD_LENGTH) {
-      return new ValidationError("password is too weak", "weak_password")
+    const passwordError = validatePasswordComplexity(command.newPassword)
+    if (passwordError !== null) return passwordError
+
+    const targetAccount = await new AccountAuthRepository(this.c).resolveById(command.accountId)
+
+    if (targetAccount instanceof Error) {
+      return new UnexpectedError("failed to find account", { cause: targetAccount })
+    }
+
+    if (targetAccount === null) {
+      return new NotFoundError("account not found", "account_not_found")
+    }
+
+    if (hasPermissionSuperset(command.session, targetAccount.permissions) === false) {
+      return new ForbiddenError("cannot reset a higher privilege account", "role_escalation")
     }
 
     const identityRepository = new IdentityRepository(this.c)
@@ -47,18 +60,15 @@ export class ResetAccountPassword {
 
     const hash = await toPasswordHash(command.newPassword)
 
-    const updated = await identityRepository.updateSecret(identityId, hash)
+    const updated = await identityRepository.updateSecretAndBumpTokenVersion(
+      identityId,
+      hash,
+      command.accountId,
+      command.now,
+    )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to reset password", { cause: updated })
-    }
-
-    const accountRepository = new AccountRepository(this.c)
-
-    const bumped = await accountRepository.bumpTokenVersion(command.accountId, command.now)
-
-    if (bumped instanceof Error) {
-      return new UnexpectedError("failed to revoke sessions", { cause: bumped })
     }
 
     return { reason: "reset" }

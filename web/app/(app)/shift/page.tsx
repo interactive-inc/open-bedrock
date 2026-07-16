@@ -9,11 +9,10 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { getMyShiftAssignments } from "@/lib/api/get-my-shift-assignments"
 import { getMyShiftSwapRequests } from "@/lib/api/get-my-shift-swap-requests"
-import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 
@@ -31,6 +30,9 @@ export default async function ShiftPage() {
   const canViewAllSwaps =
     currentUser instanceof Error ? false : canViewAllShiftSwaps(currentUser.permissions)
 
+  const canApproveSwaps =
+    currentUser instanceof Error ? false : currentUser.permissions.includes("shift_swap:approve")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -38,14 +40,26 @@ export default async function ShiftPage() {
         description="自分のシフトと交代申請を管理します。"
         actions={
           <>
-            <Button variant="outline" nativeButton={false} render={<Link href="/shift/patterns" />}>
-              <CalendarDays />
-              パターン
-            </Button>
+            {canManage ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/shift/patterns" />}
+              >
+                <CalendarDays />
+                パターン
+              </Button>
+            ) : null}
 
             {canViewAllSwaps ? (
               <Button variant="outline" nativeButton={false} render={<Link href="/shift/admin" />}>
                 交代管理
+              </Button>
+            ) : null}
+
+            {canApproveSwaps ? (
+              <Button variant="outline" nativeButton={false} render={<Link href="/shift/inbox" />}>
+                交代承認
               </Button>
             ) : null}
 
@@ -89,14 +103,7 @@ async function MyShift() {
     return <FetchError message="自分のシフトの取得に失敗しました" />
   }
 
-  const patterns = await getShiftPatterns()
-
-  const patternNameMap: Record<number, string> =
-    patterns instanceof Error
-      ? {}
-      : Object.fromEntries(patterns.filter((p) => p.id !== null).map((p) => [p.id, p.name]))
-
-  return <MyShiftAssignments assignments={assignments} patternNameMap={patternNameMap} />
+  return <MyShiftAssignments assignments={assignments} />
 }
 
 async function MySwapRequests() {
@@ -106,11 +113,11 @@ async function MySwapRequests() {
     return <FetchError message="交代申請の取得に失敗しました" />
   }
 
-  return <MyShiftSwapRequests swapRequests={swapRequests} employeeNameMap={{}} />
+  return <MyShiftSwapRequests swapRequests={swapRequests} />
 }
 
 async function ShiftSwapSection() {
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  const employeeResult = await getEmployeeDirectory()
 
   const employees =
     employeeResult instanceof Error

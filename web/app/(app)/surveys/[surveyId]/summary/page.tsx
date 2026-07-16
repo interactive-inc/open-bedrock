@@ -5,6 +5,7 @@ import { SurveyQuestionSummaryCard } from "@/app/(app)/surveys/[surveyId]/summar
 import { EmptyState } from "@/components/empty-state"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
+import { requirePermission } from "@/lib/auth/require-permission"
 import { getSurveySummary } from "@/lib/api/get-survey-summary"
 
 export const metadata = { title: "サーベイ集計" }
@@ -17,6 +18,8 @@ type Props = {
 // アンケート集計画面 (/surveys/:surveyId/summary)。
 // 回答件数と設問ごとの集計（スケール/選択肢は分布、自由記述は一覧）を表示する。
 export default async function SurveySummaryPage(props: Props) {
+  await requirePermission("survey:manage")
+
   const routeParams = await props.params
 
   const surveyId = Number(routeParams.surveyId)

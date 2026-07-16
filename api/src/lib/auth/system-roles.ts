@@ -1,22 +1,29 @@
 import type { PermissionKey } from "@/lib/auth/permission-keys"
+import { EFFECTIVE_ADMIN_PERMISSION_KEYS } from "@/lib/auth/effective-admin-permissions"
 
 // 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現する。
 // 移行で権限が広がらないことをテストで担保するための基準。backfill の role_permissions シードに使う。
 // 実態: 大半の can-* は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
 
-// manager が持つ permission(can-* が manager を許可するもの)。
+// 全従業員が持つガバナンスの基本権限。
+const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  "governance:read",
+  "governance:acknowledge",
+]
+
+// manager が member に加えて持つ permission(can-* が manager を許可するもの)。
 const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  ...MEMBER_PERMISSIONS,
   "dashboard:view",
   "employee:read",
   "employee:create",
   "employee:update",
+  "employee:lifecycle:request",
   "application:approve",
-  "application_template:manage",
   "expense:approve",
   "leave:approve",
   "notification:send",
   "oneonone:create",
-  "review:administer",
   "career_posting:manage",
   "room:manage",
   "asset:manage",
@@ -35,12 +42,18 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "attendance:read:reports",
   "leave:read:reports",
   "grade:read:reports",
+  "governance:review",
 ]
 
 // hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。
 const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  "application_template:manage",
+  "review:administer",
   "org:manage",
   "employee:delete",
+  "employee:lifecycle:apply",
+  "employee:lifecycle:read:all",
+  "employee:archive",
   "thanks_reward:manage",
   "thanks_redemption:approve",
   "application:read:all",
@@ -93,15 +106,17 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "headcount_plan:read:all",
   "year_end_adjustment:manage",
   "year_end_adjustment:read:all",
+  "budget:manage",
 ]
 
-// admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
+// admin が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。
 const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
-  "employee:assign_role",
-  "iam:manage_roles",
-  "iam:assign_roles",
-  "account:manage",
-  "audit_log:read",
+  ...EFFECTIVE_ADMIN_PERMISSION_KEYS,
+  "audit:read",
+  "audit:export",
+  "governance:read:restricted",
+  "governance:manage",
+  "governance:publish",
   // どのプリセットにも実務付与しない department スコープも、escalation guard
   // （付与するロールの権限 ⊆ 付与者の権限）を通すため admin は保持する。
   "goal:read:department",
@@ -141,15 +156,15 @@ const ADMIN_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 
 /**
  * system role の key と、その role が持つ permission キー集合の対応。
- * member は permission を持たない(self 判定のみ)。
+ * member も公開済みガバナンス文書の閲覧・確認権限を持つ。
  */
 export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{
   key: string
   name: string
   permissions: ReadonlyArray<PermissionKey>
 }> = [
-  { key: "member", name: "メンバー", permissions: [] },
-  { key: "manager", name: "マネージャー", permissions: MANAGER_PERMISSIONS },
-  { key: "hr", name: "人事", permissions: HR_PERMISSIONS },
-  { key: "admin", name: "管理者", permissions: ADMIN_PERMISSIONS },
+  { key: "member", name: "標準利用者", permissions: MEMBER_PERMISSIONS },
+  { key: "manager", name: "業務管理者", permissions: MANAGER_PERMISSIONS },
+  { key: "hr", name: "人事管理者", permissions: HR_PERMISSIONS },
+  { key: "admin", name: "システム管理者", permissions: ADMIN_PERMISSIONS },
 ]

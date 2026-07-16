@@ -10,6 +10,8 @@ export const assetRowSchema = z.object({
   purchasedOn: z.string().nullable(),
   status: z.string(),
   holderEmployeeId: z.number().nullable(),
+  disposedOn: z.string().nullable(),
+  disposalReason: z.string().nullable(),
 })
 
 const zProps = z.object({
@@ -20,6 +22,8 @@ const zProps = z.object({
   purchasedOn: z.string().nullable(),
   status: z.string(),
   holderEmployeeId: z.number().nullable(),
+  disposedOn: z.string().nullable(),
+  disposalReason: z.string().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -39,6 +43,10 @@ export class Asset implements Props {
   readonly status!: Props["status"]
 
   readonly holderEmployeeId!: Props["holderEmployeeId"]
+
+  readonly disposedOn!: Props["disposedOn"]
+
+  readonly disposalReason!: Props["disposalReason"]
 
   constructor(private readonly props: Props) {
     zProps.parse(props)
@@ -64,6 +72,8 @@ export class Asset implements Props {
       purchasedOn: props.purchasedOn,
       status: "in_stock",
       holderEmployeeId: null,
+      disposedOn: null,
+      disposalReason: null,
     })
   }
 
@@ -77,6 +87,8 @@ export class Asset implements Props {
       purchasedOn: row.purchasedOn,
       status: row.status,
       holderEmployeeId: row.holderEmployeeId,
+      disposedOn: row.disposedOn,
+      disposalReason: row.disposalReason,
     })
   }
 
@@ -93,6 +105,17 @@ export class Asset implements Props {
       kind: details.kind,
       serial: details.serial,
       purchasedOn: details.purchasedOn,
+    })
+  }
+
+  /** 廃棄済みに遷移する。理由・日付を記録し、保有者は外す。 */
+  withDisposed(disposal: { disposedOn: string; reason: string }) {
+    return new Asset({
+      ...this.props,
+      status: "disposed",
+      holderEmployeeId: null,
+      disposedOn: disposal.disposedOn,
+      disposalReason: disposal.reason,
     })
   }
 }

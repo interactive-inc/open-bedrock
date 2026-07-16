@@ -13,12 +13,17 @@ export type Props = {
   relation: EmployeeRelation
 }
 
-/** self は本人のみ、manager/final は評価スコープ(all/reports)で許可する。 */
+/** self は本人のみ、manager/final は評価スコープ(all/reports)で許可する。本人による自己承認は禁止する。 */
 export function resolveEvaluationPermission(props: Props): null | Forbidden {
   if (props.kind === "self") {
     const isOwner = props.goalEmployeeId === props.viewerEmployeeId
 
     return isOwner ? null : { reason: "forbidden" }
+  }
+
+  // 上長・確定評価は本人による自己承認を禁止する。
+  if (props.goalEmployeeId === props.viewerEmployeeId) {
+    return { reason: "forbidden" }
   }
 
   return canEvaluateGoalOf(props.session, props.relation) ? null : { reason: "forbidden" }

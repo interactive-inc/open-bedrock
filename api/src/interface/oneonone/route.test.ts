@@ -126,6 +126,15 @@ describe("GET /oneonones", () => {
 })
 
 describe("POST /oneonones", () => {
+  test("returns 201 when the member is selected by employee code", async () => {
+    const response = await postOneOnOne(await managerToken(), {
+      member_employee_code: "E005",
+      topics: "Next challenge",
+    })
+
+    expect(response.status).toBe(201)
+  })
+
   test("returns 201 and resolves member/manager into snake_case shape", async () => {
     const response = await postOneOnOne(await managerToken(), {
       member_email: "you+e005@example.com",

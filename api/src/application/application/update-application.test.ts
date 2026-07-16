@@ -8,6 +8,7 @@ import { ApplicationRepository } from "@/infrastructure/application/application-
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
 import { describe, expect, test } from "bun:test"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
 
 async function seedPending(
   repository: ApplicationRepository,
@@ -97,7 +98,18 @@ describe("ListMyApplications", () => {
 
 describe("UpdateApplication", () => {
   test("updates the payload of a pending application for the applicant", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "test",
+        name: "Test",
+        category: "general",
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
 
     const repository = new ApplicationRepository(context)
 

@@ -37,6 +37,18 @@ export class WithdrawApplication {
       return new ConflictError("application is already decided", "not_pending")
     }
 
+    const systemBinding = await this.c.env.DB.prepare(
+      "SELECT 1 AS found FROM application_completion_bindings WHERE application_id = ?1",
+    )
+      .bind(command.applicationId)
+      .first<number>("found")
+    if (systemBinding === 1) {
+      return new ConflictError(
+        "system application must use its dedicated withdrawal route",
+        "system_template_requires_dedicated_route",
+      )
+    }
+
     const deleted = await applicationRepository.delete(command.applicationId)
 
     if (deleted instanceof Error) {

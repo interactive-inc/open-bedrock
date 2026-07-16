@@ -67,31 +67,24 @@ export class OnboardingTemplateRepository {
   }
 
   // テンプレートの名称・種別・説明を更新する。code をキーに更新し、更新後の行を tasks 付きで返す。
-  async update(template: OnboardingTemplate): Promise<OnboardingTemplate | Error> {
+  async update(template: OnboardingTemplate): Promise<OnboardingTemplate | null | Error> {
     try {
-      const rows = await this.c.var.database
-        .update(onboardingTemplates)
-        .set({
-          name: template.name,
-          kind: template.kind,
-          description: template.description,
-        })
-        .where(eq(onboardingTemplates.code, template.code))
-        .returning()
+      const code = await this.c.env.DB.prepare(
+        `UPDATE onboarding_templates
+         SET name = ?2, kind = ?3, description = ?4
+         WHERE code = ?1
+           AND (
+             kind = ?3 OR NOT EXISTS (
+               SELECT 1 FROM lifecycle_effect_template_bindings
+               WHERE template_code = ?1
+             )
+           )
+         RETURNING code`,
+      )
+        .bind(template.code, template.name, template.kind, template.description)
+        .first<string>("code")
 
-      const row = rows.at(0)
-
-      if (row === undefined) {
-        return new Error("failed to update onboarding_template")
-      }
-
-      const tasks = await this.findTasksByCode(row.code)
-
-      if (tasks instanceof Error) {
-        return tasks
-      }
-
-      return OnboardingTemplate.fromRow(row, tasks)
+      return code === null ? null : await this.findByCode(code)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update onboarding_template")
     }
@@ -106,7 +99,16 @@ export class OnboardingTemplateRepository {
         db.prepare("DELETE FROM onboarding_template_tasks WHERE template_code = ?1").bind(code),
         db
           .prepare(
-            `DELETE FROM onboarding_templates WHERE code = ?1 AND NOT EXISTS (SELECT 1 FROM onboarding_assignments WHERE template_code = ?1 AND status = 'in_progress')`,
+            `DELETE FROM onboarding_templates
+             WHERE code = ?1
+               AND NOT EXISTS (
+                 SELECT 1 FROM onboarding_assignments
+                 WHERE template_code = ?1 AND status = 'in_progress'
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM lifecycle_effect_template_bindings
+                 WHERE template_code = ?1
+               )`,
           )
           .bind(code),
         abortWhenPreviousStatementChangedNoRows(db),

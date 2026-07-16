@@ -4,10 +4,12 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { deleteExpenseAction, updateExpenseAction } from "@/app/(app)/expense/actions"
-import type { ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
+import type { ExpenseDeleteFormState, ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
 import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -82,13 +84,13 @@ export function MyExpensesList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {expense.status === "pending" ? <UpdateExpenseDialog expense={expense} /> : null}
 
                   {expense.status === "pending" ? (
                     <DeleteExpenseButton expenseId={expense.id} />
                   ) : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -205,21 +207,39 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
   )
 }
 
-// 経費取り下げボタン。Server Action を呼び、成功時は一覧が revalidate される。
+// 経費取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteExpenseButton(props: { expenseId: number }) {
-  const action = useActionState(deleteExpenseAction, { ok: false, error: null })
+  async function reduce(
+    previousState: ExpenseDeleteFormState,
+    formData: FormData,
+  ): Promise<ExpenseDeleteFormState> {
+    const result = await deleteExpenseAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("経費申請を取り下げました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const action = useActionState(reduce, { ok: false, error: null })
 
   const formAction = action[1]
 
   const pending = action[2]
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取り下げ"
+      title="この経費申請を取り下げますか？"
+      description="取り下げた経費申請は元に戻せません。"
+      confirmLabel="経費申請を取り下げ"
+      pending={pending}
+    >
       <input type="hidden" name="expense_id" value={props.expenseId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取り下げ
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

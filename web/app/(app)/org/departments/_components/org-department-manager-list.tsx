@@ -7,6 +7,8 @@ import {
   updateOrgDepartmentAction,
 } from "@/app/(app)/org/departments/actions"
 import type { OrgDepartmentActionState } from "@/app/(app)/org/departments/actions"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -69,11 +71,11 @@ export function OrgDepartmentManagerList(props: Props) {
                 <TableCell>{department.order}</TableCell>
 
                 <TableCell>
-                  <div className="flex justify-end gap-2">
+                  <TableRowActions>
                     <UpdateDepartmentDialog department={department} />
 
                     <DeleteDepartmentButton code={department.code} />
-                  </div>
+                  </TableRowActions>
                 </TableCell>
               </TableRow>
             ))}
@@ -170,22 +172,42 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   )
 }
 
-// 部署ノード削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+// 部署ノード削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteDepartmentButton(props: { code: string }) {
-  const [state, formAction, pending] = useActionState(deleteOrgDepartmentAction, {
+  async function reduce(
+    previousState: OrgDepartmentActionState,
+    formData: FormData,
+  ): Promise<OrgDepartmentActionState> {
+    const result = await deleteOrgDepartmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("部署を削除しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
 
   return (
-    <form action={formAction} className="flex flex-col items-end gap-1">
-      <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col items-end gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title={`部署 ${props.code} を削除しますか？`}
+        description="部署ノードの削除は元に戻せません。配下の部署がある場合は削除できません。"
+        confirmLabel="部署を削除"
+        pending={pending}
+      >
+        <input type="hidden" name="code" value={props.code} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <p className="text-xs text-destructive">{state.error}</p>}
-    </form>
+    </div>
   )
 }

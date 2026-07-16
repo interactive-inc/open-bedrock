@@ -1,7 +1,7 @@
 import { tokenPayloadSchema } from "@/lib/auth/token-payload"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { createMiddleware } from "hono/factory"
 import { jwtVerify } from "jose"
@@ -46,23 +46,14 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("account has no employee")
   }
 
-  const employeeRepository = new EmployeeRepository(c)
-
-  const employee = await employeeRepository.findById(account.employeeId)
-
-  if (employee === null || employee instanceof Error) {
-    throw new UnauthorizedError("employee not found")
-  }
-
-  // 退職者の既存トークンを即時無効化する。
-  if (employee.status === "retired") {
-    throw new UnauthorizedError("employee is retired")
-  }
+  const access = await resolveLiveEmployeeAccess(c, account.employeeId)
+  if (access === null || access instanceof Error)
+    throw new UnauthorizedError("employee is unavailable")
 
   c.set("session", {
     accountId: account.accountId,
     employeeId: account.employeeId,
-    employeeStatus: employee.status,
+    employeeStatus: access.status,
     permissions: account.permissions,
     roleKeys: account.roleKeys,
   })

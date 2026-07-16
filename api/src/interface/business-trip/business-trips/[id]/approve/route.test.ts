@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { z } from "zod"
 import { seedBusinessTrips } from "@/infrastructure/seed/seed-business-trips"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -72,9 +73,13 @@ describe("POST /business-trips/:id/approve", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z.object({ status: z.string() }).safeParse(await response.json())
 
-    expect(body.status).toBe("approved")
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("approved")
+    }
   })
 
   test("returns 403 for a member", async () => {
