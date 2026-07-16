@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { checkStocktakeItem } from "@/lib/api/check-stocktake-item"
 import { closeStocktake } from "@/lib/api/close-stocktake"
 import { getMe } from "@/lib/api/get-me"
@@ -11,6 +10,8 @@ import { canManageAssets } from "@/lib/asset/can-manage-assets"
 export type StocktakeStartFormState = {
   ok: boolean
   error: string | null
+  // 開始に成功した棚卸しの id。クライアント側で詳細ページへ遷移するために使う。
+  id: number | null
 }
 
 export type StocktakeCheckFormState = {
@@ -31,7 +32,7 @@ export async function startStocktakeAction(
   const currentUser = await getMe()
 
   if (currentUser instanceof Error || canManageAssets(currentUser.permissions) === false) {
-    return { ok: false, error: "棚卸しを管理する権限がありません" }
+    return { ok: false, error: "棚卸しを管理する権限がありません", id: null }
   }
 
   const nameValue = formData.get("name")
@@ -39,7 +40,7 @@ export async function startStocktakeAction(
   const name = typeof nameValue === "string" ? nameValue : ""
 
   if (name === "") {
-    return { ok: false, error: "名称を入力してください" }
+    return { ok: false, error: "名称を入力してください", id: null }
   }
 
   const targetDateValue = formData.get("target_date")
@@ -47,18 +48,20 @@ export async function startStocktakeAction(
   const targetDate = typeof targetDateValue === "string" ? targetDateValue : ""
 
   if (targetDate === "") {
-    return { ok: false, error: "対象日を入力してください" }
+    return { ok: false, error: "対象日を入力してください", id: null }
   }
 
   const started = await startStocktake(name, targetDate)
 
   if (started instanceof Error) {
-    return { ok: false, error: started.message }
+    return { ok: false, error: started.message, id: null }
   }
 
   revalidatePath("/stocktakes")
 
-  redirect(`/stocktakes/${started.id}`)
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null, id: started.id }
 }
 
 // 現物確認の Server Action。id と資産コードと任意の所在メモを受け取る。

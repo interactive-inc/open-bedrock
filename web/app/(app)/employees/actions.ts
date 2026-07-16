@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createEmployee } from "@/lib/api/create-employee"
 import { archiveEmployee } from "@/lib/api/archive-employee"
 import { updateEmployee } from "@/lib/api/update-employee"
@@ -221,5 +220,7 @@ export async function archiveEmployeeAction(
   const archived = await archiveEmployee(code)
   if (archived instanceof Error) return { ok: false, error: archived.message }
   revalidatePath("/employees")
-  redirect("/employees")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }

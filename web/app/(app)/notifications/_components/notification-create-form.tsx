@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { NotificationFormState } from "@/app/(app)/notifications/actions"
@@ -33,13 +34,19 @@ type Props = {
 }
 
 // 通知の作成フォーム（特権ロール向け）。宛先・種別・タイトル・本文を native form で送る。
-// 成功時は action が一覧へ redirect するため、toast は失敗時のみ出す。
+// 成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
 export function NotificationCreateForm(props: Props) {
+  const router = useRouter()
+
   const action = useActionState(
     async (previousState: NotificationFormState, formData: FormData) => {
       const next = await createNotificationAction(previousState, formData)
 
-      if (next.error !== null) {
+      if (next.ok) {
+        toast.success("通知を作成しました")
+
+        router.push("/notifications")
+      } else if (next.error !== null) {
         toast.error(next.error)
       }
 

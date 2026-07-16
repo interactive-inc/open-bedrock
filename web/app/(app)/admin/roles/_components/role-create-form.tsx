@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createRoleAction } from "@/app/(app)/admin/roles/actions"
@@ -21,15 +22,21 @@ type Props = {
 const initialState: RoleCreateFormState = { ok: false, error: null }
 
 // 動的ロール作成フォーム。キー・名前・説明と、付与する権限をチェックボックスで選ぶ。
-// 権限はカテゴリごとにまとめて表示する。成功・失敗は toast で通知する。
+// 権限はカテゴリごとにまとめて表示する。成功・失敗は toast で通知する。成功時は一覧へ遷移する。
 export function RoleCreateForm(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: RoleCreateFormState,
     formData: FormData,
   ): Promise<RoleCreateFormState> {
     const result = await createRoleAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("ロールを作成しました")
+
+      router.push("/admin/roles")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

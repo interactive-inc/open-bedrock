@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
@@ -11,12 +12,18 @@ import { Input } from "@/components/ui/input"
 const initialState: ShiftFormState = { ok: false, error: null }
 
 // シフトパターンの作成フォーム（特権ロール向け）。コード・名前・開始/終了時刻・休憩時間を送る。
-// 成功時は action が /shift/patterns へ redirect するため、toast は失敗時のみ出す。
+// 成功・失敗の通知は action の結果を見て toast() で出す。成功時は /shift/patterns へ遷移する。
 export function ShiftPatternCreateForm() {
+  const router = useRouter()
+
   const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {
     const next = await createShiftPatternAction(previousState, formData)
 
-    if (next.error !== null) {
+    if (next.ok) {
+      toast.success("パターンを作成しました")
+
+      router.push("/shift/patterns")
+    } else if (next.error !== null) {
       toast.error(next.error)
     }
 
