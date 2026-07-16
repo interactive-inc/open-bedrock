@@ -6,8 +6,11 @@ import {
   updateBusinessTripAction,
 } from "@/app/(app)/business-trips/actions"
 import { useFormAction } from "@/hooks/use-form-action"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
@@ -36,9 +39,45 @@ type Props = {
 }
 
 // 自分の出張申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+// モバイル幅ではテーブルではなく1件1カードの label:value レイアウトに切り替える。
 export function MyBusinessTripsList(props: Props) {
+  const isMobile = useIsMobile()
+
   if (props.businessTrips.length === 0) {
     return <EmptyState title="出張申請はありません" />
+  }
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col gap-3">
+        {props.businessTrips.map((businessTrip) => (
+          <Card key={businessTrip.id}>
+            <CardContent className="flex flex-col gap-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">{businessTrip.destination}</span>
+                <span className="text-muted-foreground">{statusLabel(businessTrip.status)}</span>
+              </div>
+
+              <BusinessTripField label="期間">
+                {businessTrip.start_date} 〜 {businessTrip.end_date}
+              </BusinessTripField>
+
+              <BusinessTripField label="目的">{businessTrip.purpose}</BusinessTripField>
+
+              <BusinessTripField label="概算費用">
+                {businessTrip.estimated_cost ?? "-"}
+              </BusinessTripField>
+
+              <TableRowActions className="pt-2">
+                <UpdateBusinessTripDialog businessTrip={businessTrip} />
+
+                <CancelBusinessTripButton businessTripId={businessTrip.id} />
+              </TableRowActions>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -72,16 +111,26 @@ export function MyBusinessTripsList(props: Props) {
               <TableCell>{statusLabel(businessTrip.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateBusinessTripDialog businessTrip={businessTrip} />
 
                   <CancelBusinessTripButton businessTripId={businessTrip.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+    </div>
+  )
+}
+
+// カード表示内の label:value 行。
+function BusinessTripField(props: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-2">
+      <span className="text-muted-foreground">{props.label}</span>
+      <span>{props.children}</span>
     </div>
   )
 }

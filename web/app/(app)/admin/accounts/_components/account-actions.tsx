@@ -58,7 +58,7 @@ export function RevokeRoleButton(props: RevokeProps) {
       <button
         type="submit"
         disabled={isPending}
-        className="ml-1 text-muted-foreground hover:text-destructive"
+        className="relative ml-1 text-muted-foreground hover:text-destructive max-md:after:absolute max-md:after:inset-[-14px] max-md:after:content-['']"
         aria-label={`${props.roleKey} を剥奪`}
       >
         ×

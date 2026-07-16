@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/antisocial-checks/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -70,14 +71,14 @@ export function MyAntisocialChecksList(props: Props) {
 
               <TableCell>
                 {antisocialCheck.status === "requested" ? (
-                  <div className="flex justify-end gap-2">
+                  <TableRowActions>
                     <UpdateAntisocialCheckDialog
                       antisocialCheck={antisocialCheck}
                       canManageResults={props.canManageResults}
                     />
 
                     <CancelAntisocialCheckButton antisocialCheckId={antisocialCheck.id} />
-                  </div>
+                  </TableRowActions>
                 ) : (
                   <span className="text-sm text-muted-foreground">確定済み</span>
                 )}

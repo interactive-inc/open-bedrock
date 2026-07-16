@@ -8,6 +8,7 @@ import { RoomEditForm } from "@/app/(app)/rooms/manage/_components/room-edit-for
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -101,7 +102,7 @@ async function RoomsTable() {
               <TableCell className="text-muted-foreground">{room.location ?? "-"}</TableCell>
 
               <TableCell>
-                <div className="flex items-center justify-end gap-2">
+                <TableRowActions>
                   <RoomEditForm
                     id={room.id}
                     name={room.name}
@@ -110,7 +111,7 @@ async function RoomsTable() {
                   />
 
                   <RoomDeleteButton id={room.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
