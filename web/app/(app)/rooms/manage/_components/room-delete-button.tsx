@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteRoomAction } from "@/app/(app)/rooms/manage/actions"
@@ -13,15 +14,21 @@ type Props = {
 
 const initialState: RoomDeleteFormState = { ok: false, error: null }
 
-// 会議室削除ボタン。成功時は Server Action 側で /rooms/manage へ遷移する。
+// 会議室削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
 export function RoomDeleteButton(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: RoomDeleteFormState,
     formData: FormData,
   ): Promise<RoomDeleteFormState> {
     const result = await deleteRoomAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("会議室を削除しました")
+
+      router.push("/rooms/manage")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

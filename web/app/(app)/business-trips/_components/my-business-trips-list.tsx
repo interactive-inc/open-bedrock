@@ -183,10 +183,14 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
 
 // 出張申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelBusinessTripButton(props: { businessTripId: string }) {
-  const [_state, formAction, pending] = useFormAction(cancelBusinessTripAction, {
-    ok: false,
-    error: null,
-  }, "出張申請を取り消しました")
+  const [_state, formAction, pending] = useFormAction(
+    cancelBusinessTripAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "出張申請を取り消しました",
+  )
 
   return (
     <ConfirmActionDialog

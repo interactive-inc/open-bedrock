@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { startStocktakeAction } from "@/app/(app)/stocktakes/actions"
@@ -8,18 +9,24 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
-const initialState: StocktakeStartFormState = { ok: false, error: null }
+const initialState: StocktakeStartFormState = { ok: false, error: null, id: null }
 
-// 棚卸し開始フォーム。名称と対象日を native form で送る。成功時は action 側で詳細へ遷移する。
-// 失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+// 棚卸し開始フォーム。名称と対象日を native form で送る。
+// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。成功時は詳細へ遷移する。
 export function StocktakeStartForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: StocktakeStartFormState,
     formData: FormData,
   ): Promise<StocktakeStartFormState> {
     const result = await startStocktakeAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("棚卸しを開始しました")
+
+      router.push(`/stocktakes/${result.id}`)
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

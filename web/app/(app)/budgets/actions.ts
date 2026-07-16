@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createBudget } from "@/lib/api/create-budget"
 import { deleteBudget } from "@/lib/api/delete-budget"
 import { getMe } from "@/lib/api/get-me"
@@ -186,5 +185,7 @@ export async function deleteBudgetAction(
 
   revalidatePath("/budgets")
 
-  redirect("/budgets")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }

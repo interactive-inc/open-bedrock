@@ -163,10 +163,14 @@ function UpdateCertificateRequestDialog(props: { certificateRequest: Certificate
 
 // 証明書発行依頼取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelCertificateRequestButton(props: { certificateRequestId: string }) {
-  const [_state, formAction, pending] = useFormAction(cancelCertificateRequestAction, {
-    ok: false,
-    error: null,
-  }, "証明書発行依頼を取り消しました")
+  const [_state, formAction, pending] = useFormAction(
+    cancelCertificateRequestAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "証明書発行依頼を取り消しました",
+  )
 
   return (
     <ConfirmActionDialog

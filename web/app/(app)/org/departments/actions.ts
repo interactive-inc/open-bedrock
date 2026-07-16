@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createOrgDepartment } from "@/lib/api/create-org-department"
 import { deleteOrgDepartment } from "@/lib/api/delete-org-department"
 import { getMe } from "@/lib/api/get-me"
@@ -61,7 +60,9 @@ export async function createOrgDepartmentAction(
 
   revalidatePath("/org/departments")
 
-  redirect("/org/departments")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // 部署ノード変更 Server Action。code/order 必須、parent/manager は任意。
