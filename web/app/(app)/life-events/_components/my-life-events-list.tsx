@@ -150,10 +150,14 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
 
 // ライフイベント届出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelLifeEventButton(props: { lifeEventId: string }) {
-  const [_state, formAction, pending] = useFormAction(cancelLifeEventAction, {
-    ok: false,
-    error: null,
-  }, "ライフイベント届出を取り消しました")
+  const [_state, formAction, pending] = useFormAction(
+    cancelLifeEventAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "ライフイベント届出を取り消しました",
+  )
 
   return (
     <ConfirmActionDialog
