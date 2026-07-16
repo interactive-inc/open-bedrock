@@ -3,21 +3,29 @@
 import { archiveEmployeeAction } from "@/app/(app)/employees/actions"
 import type { EmployeeArchiveFormState } from "@/app/(app)/employees/actions"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 
 const initialState: EmployeeArchiveFormState = { ok: false, error: null }
 
-async function reduce(
-  previousState: EmployeeArchiveFormState,
-  formData: FormData,
-): Promise<EmployeeArchiveFormState> {
-  const result = await archiveEmployeeAction(previousState, formData)
-  if (result.error !== null) toast.error(result.error)
-  return result
-}
-
 export function EmployeeArchiveButton(props: { code: string }) {
+  const router = useRouter()
+
+  async function reduce(
+    previousState: EmployeeArchiveFormState,
+    formData: FormData,
+  ): Promise<EmployeeArchiveFormState> {
+    const result = await archiveEmployeeAction(previousState, formData)
+    if (result.ok) {
+      toast.success("従業員をアーカイブしました")
+      router.push("/employees")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+    return result
+  }
+
   const [state, action, pending] = useActionState(reduce, initialState)
   return (
     <ConfirmActionDialog

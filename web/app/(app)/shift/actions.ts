@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { cancelShiftSwapRequest } from "@/lib/api/cancel-shift-swap-request"
 import { createShiftAssignment } from "@/lib/api/create-shift-assignment"
 import { createShiftPattern } from "@/lib/api/create-shift-pattern"
@@ -120,7 +119,9 @@ export async function createShiftAssignmentAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  redirect("/shift/manage")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。
@@ -223,7 +224,9 @@ export async function createShiftPatternAction(
   revalidatePath("/shift/patterns")
   revalidatePath("/shift/manage")
 
-  redirect("/shift/patterns")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
 
 // シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。

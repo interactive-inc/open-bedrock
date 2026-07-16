@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteSurveyAction } from "@/app/(app)/surveys/manage/actions"
@@ -13,15 +14,21 @@ type Props = {
 
 const initialState: SurveyFormState = { ok: false, error: null }
 
-// アンケート削除ボタン。成功時は Server Action 側で /surveys/manage へ遷移する。
+// アンケート削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
 export function SurveyDeleteButton(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: SurveyFormState,
     formData: FormData,
   ): Promise<SurveyFormState> {
     const result = await deleteSurveyAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("アンケートを削除しました")
+
+      router.push("/surveys/manage")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

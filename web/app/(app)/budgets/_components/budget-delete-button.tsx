@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteBudgetAction } from "@/app/(app)/budgets/actions"
@@ -13,15 +14,21 @@ type Props = {
 
 const initialState: BudgetDeleteFormState = { ok: false, error: null }
 
-// 予算削除ボタン。成功時は Server Action 側で /budgets へ遷移する。失敗は toast する。
+// 予算削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
 export function BudgetDeleteButton(props: Props) {
+  const router = useRouter()
+
   async function reduce(
     previousState: BudgetDeleteFormState,
     formData: FormData,
   ): Promise<BudgetDeleteFormState> {
     const result = await deleteBudgetAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("予算を削除しました")
+
+      router.push("/budgets")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { createAsset } from "@/lib/api/create-asset"
 import { deleteAsset } from "@/lib/api/delete-asset"
 import { disposeAsset } from "@/lib/api/dispose-asset"
@@ -327,6 +326,7 @@ export async function deleteAssetAction(
 
   revalidatePath("/assets")
 
-  // 削除後は詳細ページが消えるため一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。
-  redirect("/assets")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }
