@@ -5,6 +5,7 @@ import {
 } from "@/app/(app)/admin/accounts/_components/account-actions"
 import { GrantRoleForm } from "@/app/(app)/admin/accounts/_components/grant-role-form"
 import { FetchError } from "@/components/fetch-error"
+import { TableRowActions } from "@/components/table-row-actions"
 import {
   Table,
   TableBody,
@@ -96,14 +97,16 @@ export async function AccountListSection(props: {
                   <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
-              <TableCell className="flex gap-2">
-                {account.can_manage && account.is_self === false ? (
-                  <AccountStatusButton accountId={account.id} status={account.status} />
-                ) : null}
+              <TableCell>
+                {account.can_manage ? (
+                  <TableRowActions>
+                    {account.is_self === false ? (
+                      <AccountStatusButton accountId={account.id} status={account.status} />
+                    ) : null}
 
-                {account.can_manage ? <ResetPasswordButton accountId={account.id} /> : null}
-
-                {account.can_manage ? null : (
+                    <ResetPasswordButton accountId={account.id} />
+                  </TableRowActions>
+                ) : (
                   <span className="text-sm text-muted-foreground">上位アカウント</span>
                 )}
               </TableCell>

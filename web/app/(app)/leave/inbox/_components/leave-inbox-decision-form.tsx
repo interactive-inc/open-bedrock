@@ -4,6 +4,7 @@ import { FieldError } from "@/components/ui/field"
 import { decideLeaveRequestAction } from "@/app/(app)/leave/inbox/actions"
 import type { LeaveDecisionState } from "@/app/(app)/leave/inbox/actions"
 import { useFormAction } from "@/hooks/use-form-action"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -39,7 +40,7 @@ export function LeaveInboxDecisionForm(props: Props) {
         aria-invalid={state.error !== null}
       />
 
-      <div className="flex gap-2">
+      <TableRowActions>
         <Button type="submit" name="decision" value="approve" size="sm" disabled={isPending}>
           承認
         </Button>
@@ -54,7 +55,7 @@ export function LeaveInboxDecisionForm(props: Props) {
         >
           却下
         </Button>
-      </div>
+      </TableRowActions>
 
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
     </form>

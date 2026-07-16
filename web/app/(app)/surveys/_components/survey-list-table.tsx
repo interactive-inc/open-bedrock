@@ -2,6 +2,7 @@ import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getSurveyList } from "@/lib/api/get-survey-list"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -51,25 +52,27 @@ export async function SurveyListTable(props: { canViewSummary: boolean }) {
 
               <TableCell>{survey.questions_json.length}</TableCell>
 
-              <TableCell className="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  nativeButton={false}
-                  render={<Link href={`/surveys/${survey.id}`} />}
-                >
-                  回答
-                </Button>
-
-                {props.canViewSummary ? (
+              <TableCell>
+                <TableRowActions>
                   <Button
                     size="sm"
-                    variant="outline"
                     nativeButton={false}
-                    render={<Link href={`/surveys/${survey.id}/summary`} />}
+                    render={<Link href={`/surveys/${survey.id}`} />}
                   >
-                    集計
+                    回答
                   </Button>
-                ) : null}
+
+                  {props.canViewSummary ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      nativeButton={false}
+                      render={<Link href={`/surveys/${survey.id}/summary`} />}
+                    >
+                      集計
+                    </Button>
+                  ) : null}
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

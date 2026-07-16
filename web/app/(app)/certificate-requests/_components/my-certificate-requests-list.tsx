@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/certificate-requests/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -68,11 +69,11 @@ export function MyCertificateRequestsList(props: Props) {
               <TableCell>{statusLabel(certificateRequest.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateCertificateRequestDialog certificateRequest={certificateRequest} />
 
                   <CancelCertificateRequestButton certificateRequestId={certificateRequest.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

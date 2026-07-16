@@ -6,6 +6,7 @@ import { cancelRoomReservationAction, updateRoomReservationAction } from "@/app/
 import type { RoomReservationActionState } from "@/app/(app)/rooms/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -66,11 +67,11 @@ export function MyReservationsList(props: Props) {
               <TableCell>{reservation.purpose ?? "-"}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateReservationDialog reservation={reservation} />
 
                   <CancelReservationButton reservationId={reservation.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
