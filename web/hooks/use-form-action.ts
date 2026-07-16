@@ -21,33 +21,30 @@ export function useFormAction<S extends { ok: boolean }>(
   successMessage: string | ((state: Awaited<S>, formData: FormData) => string),
   options?: { onSuccess?: () => void },
 ): [state: Awaited<S>, dispatch: (payload: FormData) => void, isPending: boolean] {
-  return useActionState(
-    async (previousState: Awaited<S>, formData: FormData): Promise<S> => {
-      const next = await action(previousState, formData)
+  return useActionState(async (previousState: Awaited<S>, formData: FormData): Promise<S> => {
+    const next = await action(previousState, formData)
 
-      if (next.ok) {
-        const message =
-          typeof successMessage === "function"
-            ? successMessage(next as Awaited<S>, formData)
-            : successMessage
+    if (next.ok) {
+      const message =
+        typeof successMessage === "function"
+          ? successMessage(next as Awaited<S>, formData)
+          : successMessage
 
-        toast.success(message)
-        options?.onSuccess?.()
-      } else {
-        // Support both `{ error }` and `{ message }` state shapes.
-        const record = next as Record<string, unknown>
+      toast.success(message)
+      options?.onSuccess?.()
+    } else {
+      // Support both `{ error }` and `{ message }` state shapes.
+      const record = next as Record<string, unknown>
 
-        const errorText =
-          (typeof record.error === "string" ? record.error : null) ??
-          (typeof record.message === "string" ? record.message : null)
+      const errorText =
+        (typeof record.error === "string" ? record.error : null) ??
+        (typeof record.message === "string" ? record.message : null)
 
-        if (errorText !== null) {
-          toast.error(errorText)
-        }
+      if (errorText !== null) {
+        toast.error(errorText)
       }
+    }
 
-      return next
-    },
-    initialState,
-  )
+    return next
+  }, initialState)
 }

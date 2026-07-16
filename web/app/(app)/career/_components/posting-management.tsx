@@ -40,10 +40,14 @@ type DeleteProps = {
 
 // 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
 function DeletePostingButton(props: DeleteProps) {
-  const [state, formAction, pending] = useFormAction(deleteCareerPostingAction, {
-    ok: false,
-    error: null,
-  }, "公募を削除しました")
+  const [state, formAction, pending] = useFormAction(
+    deleteCareerPostingAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "公募を削除しました",
+  )
 
   return (
     <div className="flex flex-col gap-1">

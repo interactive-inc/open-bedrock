@@ -181,10 +181,14 @@ function UpdateAntisocialCheckDialog(props: {
 
 // 反社チェック申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelAntisocialCheckButton(props: { antisocialCheckId: string }) {
-  const [_state, formAction, pending] = useFormAction(cancelAntisocialCheckAction, {
-    ok: false,
-    error: null,
-  }, "反社チェック申請を取り消しました")
+  const [_state, formAction, pending] = useFormAction(
+    cancelAntisocialCheckAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "反社チェック申請を取り消しました",
+  )
 
   return (
     <ConfirmActionDialog

@@ -148,10 +148,14 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
 
 // 回答取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawResponseButton(props: { responseId: number }) {
-  const [_state, formAction, pending] = useFormAction(withdrawSurveyResponseAction, {
-    ok: false,
-    error: null,
-  }, "回答を取り下げました")
+  const [_state, formAction, pending] = useFormAction(
+    withdrawSurveyResponseAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "回答を取り下げました",
+  )
 
   return (
     <ConfirmActionDialog
