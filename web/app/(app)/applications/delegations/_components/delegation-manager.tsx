@@ -34,7 +34,15 @@ export function DelegationManager(props: { delegations: ReadonlyArray<Delegation
     },
     initial,
   )
-  const [, deleteAction, deleting] = useActionState(deleteDelegationAction, initial)
+  const [, deleteAction, deleting] = useActionState(
+    async (state: DelegationState, data: FormData) => {
+      const next = await deleteDelegationAction(state, data)
+      if (next.ok) toast.success("代理承認設定を解除しました")
+      else if (next.error) toast.error(next.error)
+      return next
+    },
+    initial,
+  )
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_1fr]">
       <Card>

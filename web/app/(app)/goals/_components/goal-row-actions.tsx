@@ -153,8 +153,24 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
 }
 
 // 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+// 成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteGoalButton(props: { goalId: number }) {
-  const [, formAction, pending] = useActionState(deleteGoalAction, {
+  async function reduce(
+    previousState: GoalActionState,
+    formData: FormData,
+  ): Promise<GoalActionState> {
+    const result = await deleteGoalAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("目標を削除しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

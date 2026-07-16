@@ -132,10 +132,28 @@ export function ShiftAssignmentList(props: Props) {
 }
 
 // 割当変更フォームを Dialog で開く。パターンコード・日付・備考を編集して送信する。
+// 成功・失敗の通知は action の結果を見て toast() で出す。
 function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateShiftAssignmentAction, initialState)
+  async function reduce(
+    previousState: ShiftFormState,
+    formData: FormData,
+  ): Promise<ShiftFormState> {
+    const result = await updateShiftAssignmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("シフト割当を変更しました")
+
+      setOpen(false)
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [state, formAction, pending] = useActionState(reduce, initialState)
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -187,9 +205,24 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
   )
 }
 
-// 割当削除ボタン。Server Action を呼び、成功時はリストが revalidate される。
+// 割当削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteAssignmentButton(props: { assignmentId: number | null }) {
-  const [, formAction, pending] = useActionState(deleteShiftAssignmentAction, initialState)
+  async function reduce(
+    previousState: ShiftFormState,
+    formData: FormData,
+  ): Promise<ShiftFormState> {
+    const result = await deleteShiftAssignmentAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("シフト割当を削除しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [, formAction, pending] = useActionState(reduce, initialState)
 
   return (
     <ConfirmActionDialog

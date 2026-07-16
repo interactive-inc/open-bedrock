@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { deleteExpenseAction, updateExpenseAction } from "@/app/(app)/expense/actions"
-import type { ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
+import type { ExpenseDeleteFormState, ExpenseUpdateFormState } from "@/app/(app)/expense/actions"
 import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { TableRowActions } from "@/components/table-row-actions"
@@ -207,9 +207,24 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
   )
 }
 
-// 経費取り下げボタン。Server Action を呼び、成功時は一覧が revalidate される。
+// 経費取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteExpenseButton(props: { expenseId: number }) {
-  const action = useActionState(deleteExpenseAction, { ok: false, error: null })
+  async function reduce(
+    previousState: ExpenseDeleteFormState,
+    formData: FormData,
+  ): Promise<ExpenseDeleteFormState> {
+    const result = await deleteExpenseAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("経費申請を取り下げました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const action = useActionState(reduce, { ok: false, error: null })
 
   const formAction = action[1]
 
