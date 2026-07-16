@@ -10,6 +10,7 @@ import type { MyResponseActionState } from "@/app/(app)/surveys/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import type { SurveyResponseItem } from "@/lib/api/types/survey-types"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -78,11 +79,11 @@ export function MyResponsesList(props: Props) {
                 <TableCell>{formatDateTime(response.submitted_at)}</TableCell>
 
                 <TableCell>
-                  <div className="flex justify-end gap-2">
+                  <TableRowActions>
                     <UpdateResponseDialog responseId={responseId} response={response} />
 
                     <WithdrawResponseButton responseId={responseId} />
-                  </div>
+                  </TableRowActions>
                 </TableCell>
               </TableRow>
             )

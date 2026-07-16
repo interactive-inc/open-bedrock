@@ -7,6 +7,7 @@ import { SurveyDeleteButton } from "@/app/(app)/surveys/manage/_components/surve
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -102,7 +103,7 @@ async function SurveysTable() {
               <TableCell>{survey.questions_json.length}</TableCell>
 
               <TableCell>
-                <div className="flex items-center justify-end gap-2">
+                <TableRowActions>
                   <Button
                     variant="outline"
                     size="sm"
@@ -113,7 +114,7 @@ async function SurveysTable() {
                   </Button>
 
                   <SurveyDeleteButton id={survey.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

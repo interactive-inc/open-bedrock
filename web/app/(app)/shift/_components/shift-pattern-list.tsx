@@ -5,6 +5,7 @@ import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { deleteShiftPatternAction, updateShiftPatternAction } from "@/app/(app)/shift/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -68,11 +69,11 @@ export function ShiftPatternList(props: Props) {
               <TableCell className="tabular-nums">{pattern.break_minutes ?? "-"}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {props.canManage ? <UpdatePatternDialog pattern={pattern} /> : null}
 
                   {props.canManage ? <DeletePatternButton patternId={pattern.id} /> : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

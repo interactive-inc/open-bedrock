@@ -4,6 +4,7 @@ import { useState } from "react"
 import { cancelLifeEventAction, updateLifeEventAction } from "@/app/(app)/life-events/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -63,11 +64,11 @@ export function MyLifeEventsList(props: Props) {
               <TableCell>{statusLabel(lifeEvent.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateLifeEventDialog lifeEvent={lifeEvent} />
 
                   <CancelLifeEventButton lifeEventId={lifeEvent.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

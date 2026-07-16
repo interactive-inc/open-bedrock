@@ -7,6 +7,7 @@ import { cancelLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/
 import type { LeaveActionState } from "@/app/(app)/leave/actions"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -76,7 +77,7 @@ export function MyLeaveRequestsList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {leaveRequest.status === "pending" ? (
                     <UpdateLeaveRequestDialog leaveRequest={leaveRequest} />
                   ) : null}
@@ -84,7 +85,7 @@ export function MyLeaveRequestsList(props: Props) {
                   {leaveRequest.status === "pending" ? (
                     <CancelLeaveRequestButton leaveRequestId={leaveRequest.id} />
                   ) : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

@@ -11,6 +11,7 @@ import {
 import { useFormAction } from "@/hooks/use-form-action"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -108,7 +109,7 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <TableRowActions>
       {props.application.current_step?.startsWith("returned:") ? (
         <UpdateApplicationDialog
           application={props.application}
@@ -118,7 +119,7 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
       ) : null}
 
       <WithdrawApplicationButton applicationId={applicationId} />
-    </div>
+    </TableRowActions>
   )
 }
 

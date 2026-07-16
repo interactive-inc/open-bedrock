@@ -8,6 +8,7 @@ import {
 } from "@/app/(app)/org/departments/actions"
 import type { OrgDepartmentActionState } from "@/app/(app)/org/departments/actions"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -70,11 +71,11 @@ export function OrgDepartmentManagerList(props: Props) {
                 <TableCell>{department.order}</TableCell>
 
                 <TableCell>
-                  <div className="flex justify-end gap-2">
+                  <TableRowActions>
                     <UpdateDepartmentDialog department={department} />
 
                     <DeleteDepartmentButton code={department.code} />
-                  </div>
+                  </TableRowActions>
                 </TableCell>
               </TableRow>
             ))}
