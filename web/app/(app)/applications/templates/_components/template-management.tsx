@@ -59,10 +59,14 @@ export function TemplateManagement(props: Props) {
 function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useFormAction(updateApplicationTemplateAction, {
-    ok: false,
-    error: null,
-  }, "テンプレートを変更しました")
+  const [state, formAction, pending] = useFormAction(
+    updateApplicationTemplateAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "テンプレートを変更しました",
+  )
 
   const initialSchema = toFormSchema(props.template.schema_json)
 
@@ -132,10 +136,14 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
 }
 
 function DeleteTemplateButton(props: { code: string }) {
-  const [state, formAction, pending] = useFormAction(deleteApplicationTemplateAction, {
-    ok: false,
-    error: null,
-  }, "テンプレートを削除しました")
+  const [state, formAction, pending] = useFormAction(
+    deleteApplicationTemplateAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "テンプレートを削除しました",
+  )
 
   return (
     <div className="flex flex-col gap-1">

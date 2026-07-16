@@ -16,11 +16,8 @@ const initialState: DecisionState = { ok: false, error: null }
 // inbox 行の承認/却下フォーム。1 つの form 内で 2 つの送信ボタンを decision 値で分岐する。
 // 却下時のみコメント必須。useActionState の state でエラーを表示する。
 export function InboxDecisionForm(props: Props) {
-  const action = useFormAction(
-    decideApplicationAction,
-    initialState,
-    (_state, formData) =>
-      formData.get("decision") === "approve" ? "申請を承認しました" : "申請を却下しました",
+  const action = useFormAction(decideApplicationAction, initialState, (_state, formData) =>
+    formData.get("decision") === "approve" ? "申請を承認しました" : "申請を却下しました",
   )
 
   const state = action[0]

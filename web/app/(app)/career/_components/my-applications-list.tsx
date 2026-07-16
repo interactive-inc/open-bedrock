@@ -156,10 +156,14 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
 
 // 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
 function WithdrawApplicationButton(props: { applicationId: number }) {
-  const [_state, formAction, pending] = useFormAction(withdrawCareerApplicationAction, {
-    ok: false,
-    error: null,
-  }, "応募を取り下げました")
+  const [_state, formAction, pending] = useFormAction(
+    withdrawCareerApplicationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "応募を取り下げました",
+  )
 
   return (
     <ConfirmActionDialog
