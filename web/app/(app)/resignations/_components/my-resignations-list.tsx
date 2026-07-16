@@ -161,10 +161,14 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
 
 // 退職申請取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelResignationButton(props: { resignationId: string }) {
-  const [, formAction, pending] = useFormAction(cancelResignationAction, {
-    ok: false,
-    error: null,
-  }, "退職申請を取り消しました")
+  const [, formAction, pending] = useFormAction(
+    cancelResignationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "退職申請を取り消しました",
+  )
 
   return (
     <AlertDialog>
