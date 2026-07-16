@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/career/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
@@ -82,7 +83,7 @@ export function MyApplicationsList(props: Props) {
                 </TableCell>
 
                 <TableCell>
-                  <div className="flex justify-end gap-2">
+                  <TableRowActions>
                     {application.status === "applied" ? (
                       <UpdateApplicationDialog
                         applicationId={applicationId}
@@ -93,7 +94,7 @@ export function MyApplicationsList(props: Props) {
                     {application.status === "applied" ? (
                       <WithdrawApplicationButton applicationId={applicationId} />
                     ) : null}
-                  </div>
+                  </TableRowActions>
                 </TableCell>
               </TableRow>
             )

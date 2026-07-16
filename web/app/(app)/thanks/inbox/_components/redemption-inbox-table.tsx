@@ -7,6 +7,7 @@ import {
   type RedemptionDecisionState,
 } from "@/app/(app)/thanks/inbox/actions"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import {
@@ -83,7 +84,7 @@ function DecisionForm(props: { redemptionId: number }) {
     <form action={formAction} className="flex flex-col gap-1">
       <input type="hidden" name="redemption_id" value={props.redemptionId} />
 
-      <div className="flex gap-2">
+      <TableRowActions>
         <Button type="submit" name="decision" value="approve" size="sm" disabled={pending}>
           承認
         </Button>
@@ -98,7 +99,7 @@ function DecisionForm(props: { redemptionId: number }) {
         >
           却下
         </Button>
-      </div>
+      </TableRowActions>
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
     </form>

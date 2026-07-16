@@ -9,6 +9,7 @@ import {
   updateShiftAssignmentAction,
 } from "@/app/(app)/shift/actions"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
@@ -107,7 +108,7 @@ export function ShiftAssignmentList(props: Props) {
               </TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {props.canManage && assignment.published_at === null ? (
                     <form action={publishDispatch}>
                       <input type="hidden" name="assignment_id" value={assignment.id ?? ""} />
@@ -121,7 +122,7 @@ export function ShiftAssignmentList(props: Props) {
                   {props.canManage ? <UpdateAssignmentDialog assignment={assignment} /> : null}
 
                   {props.canManage ? <DeleteAssignmentButton assignmentId={assignment.id} /> : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

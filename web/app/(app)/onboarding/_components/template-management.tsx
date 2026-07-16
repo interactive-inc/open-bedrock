@@ -8,6 +8,7 @@ import {
 } from "@/app/(app)/onboarding/actions"
 import type { TemplateMutationState } from "@/app/(app)/onboarding/actions"
 import { useFormAction } from "@/hooks/use-form-action"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -31,13 +32,13 @@ type Props = {
 // テンプレート行の管理操作（変更 Dialog と削除）。管理権限にのみ表示する。
 export function TemplateManagement(props: Props) {
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <TableRowActions className="md:flex-wrap">
       <LifecycleBindingButton template={props.template} />
 
       <UpdateTemplateDialog template={props.template} />
 
       <DeleteTemplateButton code={props.template.code} />
-    </div>
+    </TableRowActions>
   )
 }
 

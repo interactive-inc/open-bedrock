@@ -7,6 +7,7 @@ import {
 } from "@/app/(app)/family-care-leaves/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,11 +81,11 @@ export function MyFamilyCareLeavesList(props: Props) {
               <TableCell>{statusLabel(familyCareLeave.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateFamilyCareLeaveDialog familyCareLeave={familyCareLeave} />
 
                   <CancelFamilyCareLeaveButton familyCareLeaveId={familyCareLeave.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

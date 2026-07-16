@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -74,11 +75,11 @@ export function MyResignationsList(props: Props) {
               <TableCell>{statusLabel(resignation.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateResignationDialog resignation={resignation} />
 
                   <CancelResignationButton resignationId={resignation.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
