@@ -18,6 +18,14 @@ const dashboardSummaryResponseSchema = z.object({
   open_goal_count: z.number(),
   pending_application_count: z.number(),
   open_survey_count: z.number(),
+  department_breakdown: z.array(z.object({ dept_name: z.string(), count: z.number() })),
+  goal_status_summary: z.object({
+    draft: z.number(),
+    in_progress: z.number(),
+    completed: z.number(),
+  }),
+  goal_completion_rate: z.number(),
+  application_trend: z.array(z.object({ month: z.string(), count: z.number() })),
 })
 
 async function createTestDb(): Promise<D1Database> {
@@ -97,8 +105,11 @@ function memberToken(): Promise<string> {
   })
 }
 
+// NOW を 2026-06-01 に固定し、seed の申請データ（2026-05 月）が直近 6 か月の窓に入るようにする。
+const testNow = "2026-06-01T00:00:00.000Z"
+
 async function request(path: string, token: string | null): Promise<Response> {
-  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token })
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, now: testNow })
 }
 
 describe("GET /dashboard", () => {
@@ -112,10 +123,38 @@ describe("GET /dashboard", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
+      // 既存 4 カウント
       expect(parsed.data.employee_count).toBe(14)
       expect(parsed.data.open_goal_count).toBe(5)
       expect(parsed.data.pending_application_count).toBe(3)
       expect(parsed.data.open_survey_count).toBe(2)
+
+      // 部署別内訳: 合計が employee_count と一致する
+      const deptTotal = parsed.data.department_breakdown.reduce((sum, d) => sum + d.count, 0)
+      expect(deptTotal).toBe(14)
+      expect(parsed.data.department_breakdown.length).toBeGreaterThanOrEqual(1)
+
+      // 目標ステータス: seed は draft=2, in_progress=5, completed=1 の計 8 件
+      expect(parsed.data.goal_status_summary.draft).toBe(2)
+      expect(parsed.data.goal_status_summary.in_progress).toBe(5)
+      expect(parsed.data.goal_status_summary.completed).toBe(1)
+
+      // 完了率: 1/8 = 12.5%
+      expect(parsed.data.goal_completion_rate).toBe(12.5)
+
+      // 申請月別推移: 6 か月分のエントリが返る（NOW=2026-06 → 2026-01..2026-06）
+      expect(parsed.data.application_trend).toHaveLength(6)
+
+      // seed の申請は全て 2026-05 月 → 2026-05 のバケットに 5 件
+      const may = parsed.data.application_trend.find((t) => t.month === "2026-05")
+      expect(may?.count).toBe(5)
+
+      // 他の月は 0
+      const otherMonths = parsed.data.application_trend.filter((t) => t.month !== "2026-05")
+
+      for (const m of otherMonths) {
+        expect(m.count).toBe(0)
+      }
     }
   })
 
