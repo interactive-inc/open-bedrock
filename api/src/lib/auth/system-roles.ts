@@ -91,6 +91,8 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "disciplinary_action:read:all",
   "headcount_plan:manage",
   "headcount_plan:read:all",
+  "year_end_adjustment:manage",
+  "year_end_adjustment:read:all",
 ]
 
 // admin が hr に加えて持つ permission(IAM・アカウント管理・ロール割当)。
@@ -121,6 +123,10 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "it_incident:read:all",
   "budget:manage",
   "budget:read:all",
+  // 基盤の運用系。トークン発行とエクスポートは admin に限定する。
+  "api_token:manage",
+  "access_review:view",
+  "export:run",
 ]
 
 const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
