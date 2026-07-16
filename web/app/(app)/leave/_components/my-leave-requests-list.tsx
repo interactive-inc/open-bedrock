@@ -190,9 +190,24 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
   )
 }
 
-// 休暇申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+// 休暇申請取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
 function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
-  const [_state, formAction, pending] = useActionState(cancelLeaveRequestAction, {
+  async function reduce(
+    previousState: LeaveActionState,
+    formData: FormData,
+  ): Promise<LeaveActionState> {
+    const result = await cancelLeaveRequestAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("休暇申請を取り下げました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [_state, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })
