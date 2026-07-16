@@ -1,127 +1,145 @@
-import { hasPermission } from "@/lib/auth/has-permission"
-import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { Employee } from "@/domain/employee/employee.entity"
-import { canManageEmployees } from "@/lib/employee/can-manage-employees"
+import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
+import type { Employee } from "@/domain/employee/employee.entity"
 import type { Context, SessionPayload } from "@/env"
-import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
-import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
-import type { ApplicationError } from "@/lib/errors"
+import { isAbortedByLivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { validatePasswordComplexity } from "@/lib/auth/password-policy"
+import { toPasswordHash } from "@/lib/auth/to-password-hash"
+import { isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import {
+  ApplicationError,
+  ConflictError,
+  ForbiddenError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
   employee: {
     code: string
     name: string
+    hireOn: string
     email: string
     password: string
     role: string
-    deptId: number | null
-    deptName: string | null
-    position: string | null
-    status: "active" | "leave" | "retired"
+    departmentCode: string | null
+    positionTitle: string | null
+    managerEmployeeCode: string | null
   }
 }
 
-// パスワード最低文字数。route 層の zod 検証と二重で防御する。
-const MIN_PASSWORD_LENGTH = 8
-
-/**
- * 権限と重複コードを確認し、新しい従業員を台帳に登録する。
- */
 export class RegisterEmployee {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Employee | ApplicationError> {
-    const employeeRepository = new EmployeeRepository(this.c)
-
-    if (canManageEmployees(command.session) === false) {
-      return new ForbiddenError("cannot manage employees", "forbidden")
-    }
-
-    // employee:assign_role を持たない場合は member ロールしか付与できない
     if (
-      command.employee.role !== "member" &&
-      hasPermission(command.session, "employee:assign_role") === false
+      !hasPermission(command.session, "employee:create") ||
+      !hasPermission(command.session, "employee:lifecycle:apply") ||
+      !hasPermission(command.session, "account:manage")
     ) {
       return new ForbiddenError(
-        "only admin can assign non-member roles",
+        "direct hire requires employee, lifecycle, and account permissions",
+        "forbidden",
+      )
+    }
+    if (
+      command.employee.role !== "member" &&
+      !hasPermission(command.session, "employee:assign_role")
+    ) {
+      return new ForbiddenError(
+        "only authorized account managers can assign non-member roles",
         "role_escalation_forbidden",
       )
     }
-
-    if (command.employee.password.length < MIN_PASSWORD_LENGTH) {
-      return new ValidationError("password is too weak", "weak_password")
+    const roleRepository = new RoleRepository(this.c)
+    const role = await roleRepository.findByKey(command.employee.role)
+    if (role instanceof Error) {
+      return new UnexpectedError("failed to find role", { cause: role })
     }
-
-    const existing = await employeeRepository.findByCode(command.employee.code)
-
-    if (existing instanceof Error) {
-      return new UnexpectedError("failed to find employee", { cause: existing })
+    if (role === null) return new ValidationError("role not found", "role_not_found")
+    const rolePermissions = await roleRepository.permissionKeysOf(role.id)
+    if (rolePermissions instanceof Error) {
+      return new UnexpectedError("failed to load role permissions", { cause: rolePermissions })
     }
-
+    if (!hasPermissionSuperset(command.session, rolePermissions)) {
+      return new ForbiddenError(
+        "cannot assign a role with permissions you do not hold",
+        "role_escalation_forbidden",
+      )
+    }
+    const passwordError = validatePasswordComplexity(command.employee.password)
+    if (passwordError !== null) return passwordError
+    const [existing, existingByEmail] = await Promise.all([
+      new EmployeeRepository(this.c).findByCode(command.employee.code),
+      new IdentityRepository(this.c).findEmployeeIdByEmail(command.employee.email),
+    ])
+    if (existing instanceof Error || existingByEmail instanceof Error) {
+      return new UnexpectedError("failed to validate employee identity", {
+        cause: existing instanceof Error ? existing : existingByEmail,
+      })
+    }
     if (existing !== null) {
       return new ConflictError("employee code already exists", "employee_code_conflict")
     }
-
-    return this.persist(command)
-  }
-
-  /**
-   * employee / account / identity / account_role を単一の D1 batch でアトミックに作成する。
-   * email 重複は batch 外で事前チェックし、batch 内では UNIQUE 制約でも二重防御する。
-   * 途中失敗時は batch 全体が rollback され、孤立レコード（employee だけ・account だけ）を防ぐ。
-   */
-  private async persist(command: Command): Promise<Employee | ApplicationError> {
-    const passwordHash = await toPasswordHash(command.employee.password)
-
-    // email(認証情報)の重複は identities が正。batch の前に確認する。
-    const existingByEmail = await new IdentityRepository(this.c).findEmployeeIdByEmail(
-      command.employee.email,
-    )
-
-    if (existingByEmail instanceof Error) {
-      return new UnexpectedError("failed to check email", { cause: existingByEmail })
-    }
-
     if (existingByEmail !== null) {
       return new ConflictError("email already exists", "email_conflict")
     }
 
-    const provisioner = new AccountProvisioner(this.c)
-
-    const result = await provisioner.provisionWithEmployee({
-      employee: {
-        code: command.employee.code,
-        name: command.employee.name,
-        deptId: command.employee.deptId,
-        deptName: command.employee.deptName,
-        position: command.employee.position,
-        status: command.employee.status,
+    const organizationRevision =
+      (await this.c.env.DB.prepare(
+        "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+      ).first<number>("revision")) ?? 0
+    const prepared = await new ApplyPersonnelAction(this.c).prepareDirectProspectiveHire({
+      session: command.session,
+      input: {
+        kind: "hire",
+        employeeCode: command.employee.code,
+        employeeName: command.employee.name,
+        eventOn: command.employee.hireOn,
+        departmentCode: command.employee.departmentCode,
+        positionTitle: command.employee.positionTitle,
+        managerEmployeeCode: command.employee.managerEmployeeCode,
       },
+      idempotencyKey: `employee-register:${crypto.randomUUID()}`,
+      expectedOrganizationRevision: organizationRevision,
+    })
+    if (prepared instanceof ApplicationError) return prepared
+
+    const passwordHash = await toPasswordHash(command.employee.password)
+    const now = Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW))
+    const accountStatements = new AccountProvisioner(this.c).prepareProvisionByEmployeeCode({
+      employeeCode: command.employee.code,
       email: command.employee.email,
-      passwordHash: passwordHash,
+      passwordHash,
       roleKey: command.employee.role,
-      now: Number(this.c.env.NOW === undefined ? Date.now() : Date.parse(this.c.env.NOW)),
+      grantedByAccountId: command.session.accountId,
+      now,
     })
-
-    if (result instanceof Error) {
-      if (result.message.includes("UNIQUE constraint")) {
-        return new ConflictError("employee code already exists", "employee_code_conflict")
+    try {
+      await this.c.env.DB.batch([...prepared.statements, ...accountStatements])
+    } catch (cause) {
+      if (isAbortedByLivePermissionGuard(cause) || isAbortedByGuard(cause)) {
+        return new ForbiddenError(
+          "live permissions changed while registering employee",
+          "role_escalation_forbidden",
+        )
       }
-
-      return new UnexpectedError("failed to register employee", { cause: result })
+      if (cause instanceof Error && cause.message.includes("UNIQUE constraint")) {
+        return new ConflictError("employee identity already exists", "employee_code_conflict")
+      }
+      return new UnexpectedError("failed to register employee", { cause })
     }
-
-    return new Employee({
-      id: result,
-      code: command.employee.code,
-      name: command.employee.name,
-      deptId: command.employee.deptId,
-      deptName: command.employee.deptName,
-      position: command.employee.position,
-      status: command.employee.status,
-    })
+    const created = await new EmployeeRepository(this.c).findByCode(command.employee.code)
+    return created instanceof Error || created === null
+      ? new UnexpectedError("failed to read registered employee", {
+          cause: created instanceof Error ? created : undefined,
+        })
+      : created
   }
 }

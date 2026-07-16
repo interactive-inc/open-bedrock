@@ -3,10 +3,15 @@ import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 type Props = {
   status: ApplicationStatus
+  returned?: boolean
 }
 
 // 申請ステータスを日本語ラベルと配色付きの Badge で表示する。
 export function ApplicationStatusBadge(props: Props) {
+  if (props.returned === true) {
+    return <Badge variant="outline">差戻し</Badge>
+  }
+
   if (props.status === "approved") {
     return <Badge className="bg-emerald-600 text-white">承認済み</Badge>
   }

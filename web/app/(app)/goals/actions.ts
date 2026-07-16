@@ -13,6 +13,7 @@ import {
   toRequiredText,
 } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type GoalActionState = {
@@ -26,6 +27,8 @@ export async function createGoalAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
+  await requireAuth()
+
   const period = toRequiredText(formData.get("period"), {
     label: "期間",
     max: FORM_CONSTRAINTS.goal.periodMax,
@@ -149,6 +152,8 @@ export async function updateGoalAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
+  await requireAuth()
+
   const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {
@@ -214,6 +219,8 @@ export async function deleteGoalAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
+  await requireAuth()
+
   const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {
@@ -238,6 +245,8 @@ export async function createGoalEvaluationAction(
   previousState: GoalActionState,
   formData: FormData,
 ): Promise<GoalActionState> {
+  await requireAuth()
+
   const goalId = toPositiveIntId(formData.get("goalId"))
 
   if (goalId === null) {

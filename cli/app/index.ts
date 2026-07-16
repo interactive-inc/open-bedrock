@@ -67,6 +67,13 @@ import ringiInboxHandler from "@/app/ringi/inbox/route"
 import ringiMeHandler from "@/app/ringi/me/route"
 import ringiRejectHandler from "@/app/ringi/reject/[ringi_id]/route"
 import ringiSubmitHandler from "@/app/ringi/submit/route"
+import budgetHandler from "@/app/budget/route"
+import budgetListHandler from "@/app/budget/list/route"
+import budgetShowHandler from "@/app/budget/show/[budget_id]/route"
+import budgetSummaryHandler from "@/app/budget/summary/route"
+import budgetCreateHandler from "@/app/budget/create/route"
+import budgetUpdateHandler from "@/app/budget/update/[budget_id]/route"
+import budgetDeleteHandler from "@/app/budget/delete/[budget_id]/route"
 import goalCreateHandler from "@/app/goal/create/route"
 import goalEvaluateHandler from "@/app/goal/evaluate/[goal_id]/route"
 import goalHandler from "@/app/goal/route"
@@ -105,7 +112,6 @@ import onboardingHandler from "@/app/onboarding/route"
 import onboardingMeHandler from "@/app/onboarding/me/route"
 import rolesHandler from "@/app/roles/route"
 import accountsHandler from "@/app/accounts/route"
-import auditLogsHandler from "@/app/audit-logs/route"
 import onboardingShowHandler from "@/app/onboarding/show/[employee_code]/route"
 import onboardingTemplatesHandler from "@/app/onboarding/templates/route"
 import oneononeCreateHandler from "@/app/1on1/create/route"
@@ -181,6 +187,18 @@ import trainingEnrollmentsHandler from "@/app/training/enrollments/route"
 import trainingHandler from "@/app/training/route"
 import trainingMineHandler from "@/app/training/mine/route"
 import whoamiHandler from "@/app/whoami/route"
+import governanceHandler from "@/app/governance/route"
+import governanceAcknowledgeHandler from "@/app/governance/acknowledge/[code]/route"
+import governanceAssignRoleHandler from "@/app/governance/assign-role/[code]/route"
+import governanceImpactHandler from "@/app/governance/impact/route"
+import governanceListHandler from "@/app/governance/list/route"
+import governanceOrgRolesHandler from "@/app/governance/org-roles/route"
+import governancePublishHandler from "@/app/governance/publish/[code]/route"
+import governanceReviewHandler from "@/app/governance/review/[code]/route"
+import governanceRevokeRoleHandler from "@/app/governance/revoke-role/[assignment_id]/route"
+import governanceShowHandler from "@/app/governance/show/[code]/route"
+import governanceSubmitReviewHandler from "@/app/governance/submit-review/[code]/route"
+import governanceSyncHandler from "@/app/governance/sync/route"
 import businessTripHandler from "@/app/business-trip/route"
 import businessTripRequestHandler from "@/app/business-trip/request/route"
 import businessTripMineHandler from "@/app/business-trip/mine/route"
@@ -244,6 +262,14 @@ import antisocialCheckCancelHandler from "@/app/antisocial-check/cancel/route"
 import appTemplateCreateHandler from "@/app/app/template-create/route"
 import appTemplateUpdateHandler from "@/app/app/template-update/route"
 import appTemplateDeleteHandler from "@/app/app/template-delete/route"
+import appWorkflowHandler from "@/app/app/workflow/[code]/route"
+import appWorkflowRepairListHandler from "@/app/app/workflow-repair/list/route"
+import appWorkflowRepairReassignHandler from "@/app/app/workflow-repair/reassign/[app_id]/route"
+import appResubmitHandler from "@/app/app/resubmit/[app_id]/route"
+import appDelegationsHandler from "@/app/app/delegations/route"
+import appDelegateHandler from "@/app/app/delegate/route"
+import appDelegationDeleteHandler from "@/app/app/delegation-delete/[id]/route"
+import reviewCyclePolicyHandler from "@/app/review/cycle/policy/route"
 import roomsListHandler from "@/app/rooms/list/route"
 import roomsShowHandler from "@/app/rooms/show/[room_id]/route"
 import roomsCreateHandler from "@/app/rooms/create/route"
@@ -259,6 +285,8 @@ import careerPostingDeleteHandler from "@/app/career/posting-delete/route"
 import onboardingTemplateCreateHandler from "@/app/onboarding/template-create/route"
 import onboardingTemplateUpdateHandler from "@/app/onboarding/template-update/route"
 import onboardingTemplateDeleteHandler from "@/app/onboarding/template-delete/route"
+import onboardingTemplateBindLifecycleHandler from "@/app/onboarding/template-bind-lifecycle/[template_code]/route"
+import onboardingTemplateUnbindLifecycleHandler from "@/app/onboarding/template-unbind-lifecycle/[template_code]/route"
 import onboardingTemplateShowHandler from "@/app/onboarding/template/[code]/route"
 import reviewCycleUpdateHandler from "@/app/review/cycle/update/route"
 import reviewCycleDeleteHandler from "@/app/review/cycle/delete/route"
@@ -274,6 +302,14 @@ import applicationUpdateHandler from "@/app/application/update/route"
 import applicationWithdrawHandler from "@/app/application/withdraw/route"
 import assetDeleteHandler from "@/app/asset/delete/[asset_code]/route"
 import assetUpdateHandler from "@/app/asset/update/[asset_code]/route"
+import assetDisposeHandler from "@/app/asset/dispose/[asset_code]/route"
+import assetHoldingsHandler from "@/app/asset/holdings/route"
+import stocktakeHandler from "@/app/stocktake/route"
+import stocktakeListHandler from "@/app/stocktake/list/route"
+import stocktakeStartHandler from "@/app/stocktake/start/route"
+import stocktakeShowHandler from "@/app/stocktake/show/[stocktake_id]/route"
+import stocktakeCheckHandler from "@/app/stocktake/check/[stocktake_id]/route"
+import stocktakeCloseHandler from "@/app/stocktake/close/[stocktake_id]/route"
 import careerApplicationShowHandler from "@/app/career/application-show/route"
 import careerApplicationUpdateHandler from "@/app/career/application-update/route"
 import careerApplicationsHandler from "@/app/career/applications/route"
@@ -283,6 +319,17 @@ import employeeDeleteHandler from "@/app/employee/delete/[employee_code]/route"
 import employeeRegisterHandler from "@/app/employee/register/route"
 import employeeShowHandler from "@/app/employee/show/[employee_code]/route"
 import employeeUpdateHandler from "@/app/employee/update/[employee_code]/route"
+import employeeTimelineHandler from "@/app/employee/timeline/route"
+import employeeStateHandler from "@/app/employee/state/route"
+import employeeArchiveHandler from "@/app/employee/archive/route"
+import personnelActionRequestHandler from "@/app/personnel-action/request/route"
+import personnelActionApplyHandler from "@/app/personnel-action/apply/route"
+import personnelActionCorrectHandler from "@/app/personnel-action/correct/route"
+import lifecyclePreflightHandler from "@/app/batch/employee-lifecycle/preflight/route"
+import lifecycleBackfillHandler from "@/app/batch/employee-lifecycle/backfill/route"
+import lifecycleVerifyHandler from "@/app/batch/employee-lifecycle/verify/route"
+import lifecycleRebuildHandler from "@/app/batch/employee-lifecycle/rebuild-projections/route"
+import lifecycleOutboxHandler from "@/app/batch/employee-lifecycle/process-outbox/route"
 import expenseDeleteHandler from "@/app/expense/delete/[expense_id]/route"
 import expenseUpdateHandler from "@/app/expense/update/[expense_id]/route"
 import goalDeleteHandler from "@/app/goal/delete/route"
@@ -387,11 +434,6 @@ import itIncidentsHandler from "@/app/it-incidents/route"
 import itIncidentsListHandler from "@/app/it-incidents/list/route"
 import itIncidentsCreateHandler from "@/app/it-incidents/create/route"
 import itIncidentsResolveHandler from "@/app/it-incidents/resolve/[incident_id]/route"
-import budgetsHandler from "@/app/budgets/route"
-import budgetsListHandler from "@/app/budgets/list/route"
-import budgetsCreateHandler from "@/app/budgets/create/route"
-import budgetsUpdateHandler from "@/app/budgets/update/[budget_id]/route"
-import budgetsConsumeHandler from "@/app/budgets/consume/[budget_id]/route"
 import salaryRevisionsHandler from "@/app/salary-revisions/route"
 import salaryRevisionsListHandler from "@/app/salary-revisions/list/route"
 import salaryRevisionsCreateHandler from "@/app/salary-revisions/create/route"
@@ -437,6 +479,19 @@ const routes = base
 routes.post("/login", ...loginHandler)
 routes.post("/whoami", ...whoamiHandler)
 
+routes.post("/governance", ...governanceHandler)
+routes.post("/governance/list", ...governanceListHandler)
+routes.post("/governance/show/:code?", ...governanceShowHandler)
+routes.post("/governance/sync", ...governanceSyncHandler)
+routes.post("/governance/impact", ...governanceImpactHandler)
+routes.post("/governance/submit-review/:code?", ...governanceSubmitReviewHandler)
+routes.post("/governance/review/:code?", ...governanceReviewHandler)
+routes.post("/governance/publish/:code?", ...governancePublishHandler)
+routes.post("/governance/acknowledge/:code?", ...governanceAcknowledgeHandler)
+routes.post("/governance/org-roles", ...governanceOrgRolesHandler)
+routes.post("/governance/assign-role/:code?", ...governanceAssignRoleHandler)
+routes.post("/governance/revoke-role/:assignment_id?", ...governanceRevokeRoleHandler)
+
 routes.post("/employee", ...employeeHandler)
 routes.post("/employee/search", ...employeeSearchHandler)
 
@@ -475,6 +530,13 @@ routes.post("/expense/inbox", ...expenseInboxHandler)
 routes.post("/expense/show/:expense_id?", ...expenseShowHandler)
 routes.post("/expense/approve/:expense_id?", ...expenseApproveHandler)
 routes.post("/expense/reject/:expense_id?", ...expenseRejectHandler)
+routes.post("/budget", ...budgetHandler)
+routes.post("/budget/list", ...budgetListHandler)
+routes.post("/budget/summary", ...budgetSummaryHandler)
+routes.post("/budget/create", ...budgetCreateHandler)
+routes.post("/budget/show/:budget_id?", ...budgetShowHandler)
+routes.post("/budget/update/:budget_id?", ...budgetUpdateHandler)
+routes.post("/budget/delete/:budget_id?", ...budgetDeleteHandler)
 
 routes.post("/ringi", ...ringiHandler)
 routes.post("/ringi/submit", ...ringiSubmitHandler)
@@ -536,6 +598,15 @@ routes.post("/asset/show/:asset_code?", ...assetShowHandler)
 routes.post("/asset/register", ...assetRegisterHandler)
 routes.post("/asset/lend/:asset_code?", ...assetLendHandler)
 routes.post("/asset/return/:asset_code?", ...assetReturnHandler)
+routes.post("/asset/dispose/:asset_code?", ...assetDisposeHandler)
+routes.post("/asset/holdings", ...assetHoldingsHandler)
+
+routes.post("/stocktake", ...stocktakeHandler)
+routes.post("/stocktake/list", ...stocktakeListHandler)
+routes.post("/stocktake/start", ...stocktakeStartHandler)
+routes.post("/stocktake/show/:stocktake_id?", ...stocktakeShowHandler)
+routes.post("/stocktake/check/:stocktake_id?", ...stocktakeCheckHandler)
+routes.post("/stocktake/close/:stocktake_id?", ...stocktakeCloseHandler)
 
 routes.post("/partners", ...partnersHandler)
 routes.post("/partners/list", ...partnersListHandler)
@@ -592,7 +663,6 @@ routes.post("/onboarding/assign/:employee_code?", ...onboardingAssignHandler)
 routes.post("/onboarding/me", ...onboardingMeHandler)
 routes.post("/roles", ...rolesHandler)
 routes.post("/accounts", ...accountsHandler)
-routes.post("/audit-logs", ...auditLogsHandler)
 routes.post("/onboarding/complete/:task_id?", ...onboardingCompleteHandler)
 routes.post("/onboarding/show/:employee_code?", ...onboardingShowHandler)
 
@@ -708,6 +778,14 @@ routes.post("/antisocial-check/cancel", ...antisocialCheckCancelHandler)
 routes.post("/app/template-create", ...appTemplateCreateHandler)
 routes.post("/app/template-update", ...appTemplateUpdateHandler)
 routes.post("/app/template-delete", ...appTemplateDeleteHandler)
+routes.post("/app/workflow/:code?", ...appWorkflowHandler)
+routes.post("/app/workflow-repair/list", ...appWorkflowRepairListHandler)
+routes.post("/app/workflow-repair/reassign/:app_id?", ...appWorkflowRepairReassignHandler)
+routes.post("/app/resubmit/:app_id?", ...appResubmitHandler)
+routes.post("/app/delegations", ...appDelegationsHandler)
+routes.post("/app/delegate", ...appDelegateHandler)
+routes.post("/app/delegation-delete/:id?", ...appDelegationDeleteHandler)
+routes.post("/review/cycle/policy", ...reviewCyclePolicyHandler)
 routes.post("/rooms/list", ...roomsListHandler)
 routes.post("/rooms/create", ...roomsCreateHandler)
 routes.post("/rooms/show/:room_id?", ...roomsShowHandler)
@@ -723,6 +801,14 @@ routes.post("/career/posting/:posting_id?", ...careerPostingShowHandler)
 routes.post("/onboarding/template-create", ...onboardingTemplateCreateHandler)
 routes.post("/onboarding/template-update", ...onboardingTemplateUpdateHandler)
 routes.post("/onboarding/template-delete", ...onboardingTemplateDeleteHandler)
+routes.post(
+  "/onboarding/template-bind-lifecycle/:template_code?",
+  ...onboardingTemplateBindLifecycleHandler,
+)
+routes.post(
+  "/onboarding/template-unbind-lifecycle/:template_code?",
+  ...onboardingTemplateUnbindLifecycleHandler,
+)
 routes.post("/onboarding/template/:code?", ...onboardingTemplateShowHandler)
 routes.post("/review/cycle/update", ...reviewCycleUpdateHandler)
 routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
@@ -749,6 +835,17 @@ routes.post("/employee/delete/:employee_code?", ...employeeDeleteHandler)
 routes.post("/employee/register", ...employeeRegisterHandler)
 routes.post("/employee/show/:employee_code?", ...employeeShowHandler)
 routes.post("/employee/update/:employee_code?", ...employeeUpdateHandler)
+routes.post("/employee/timeline", ...employeeTimelineHandler)
+routes.post("/employee/state", ...employeeStateHandler)
+routes.post("/employee/archive", ...employeeArchiveHandler)
+routes.post("/personnel-action/request", ...personnelActionRequestHandler)
+routes.post("/personnel-action/apply", ...personnelActionApplyHandler)
+routes.post("/personnel-action/correct", ...personnelActionCorrectHandler)
+routes.post("/batch/employee-lifecycle/preflight", ...lifecyclePreflightHandler)
+routes.post("/batch/employee-lifecycle/backfill", ...lifecycleBackfillHandler)
+routes.post("/batch/employee-lifecycle/verify", ...lifecycleVerifyHandler)
+routes.post("/batch/employee-lifecycle/rebuild-projections", ...lifecycleRebuildHandler)
+routes.post("/batch/employee-lifecycle/process-outbox", ...lifecycleOutboxHandler)
 routes.post("/expense/delete/:expense_id?", ...expenseDeleteHandler)
 routes.post("/expense/update/:expense_id?", ...expenseUpdateHandler)
 routes.post("/goal/delete", ...goalDeleteHandler)
@@ -853,11 +950,6 @@ routes.post("/it-incidents", ...itIncidentsHandler)
 routes.post("/it-incidents/list", ...itIncidentsListHandler)
 routes.post("/it-incidents/create", ...itIncidentsCreateHandler)
 routes.post("/it-incidents/resolve/:incident_id?", ...itIncidentsResolveHandler)
-routes.post("/budgets", ...budgetsHandler)
-routes.post("/budgets/list", ...budgetsListHandler)
-routes.post("/budgets/create", ...budgetsCreateHandler)
-routes.post("/budgets/update/:budget_id?", ...budgetsUpdateHandler)
-routes.post("/budgets/consume/:budget_id?", ...budgetsConsumeHandler)
 routes.post("/salary-revisions", ...salaryRevisionsHandler)
 routes.post("/salary-revisions/list", ...salaryRevisionsListHandler)
 routes.post("/salary-revisions/create", ...salaryRevisionsCreateHandler)

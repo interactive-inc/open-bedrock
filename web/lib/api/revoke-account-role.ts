@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 // DELETE /accounts/:id/roles/:roleKey。アカウントからロールを剥奪する（iam:assign_roles が必要）。
 export async function revokeAccountRole(accountId: number, roleKey: string): Promise<null | Error> {
@@ -9,7 +10,7 @@ export async function revokeAccountRole(accountId: number, roleKey: string): Pro
   })
 
   if (response.status >= 400) {
-    return new Error("failed to revoke role")
+    return await toApiResponseError(response, "failed to revoke role")
   }
 
   return null

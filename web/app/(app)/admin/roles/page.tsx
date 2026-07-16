@@ -32,7 +32,7 @@ export default async function AdminRolesPage() {
       </div>
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-10 w-full" />}>
-        <RoleListSection />
+        <RoleListSection actorPermissionKeys={currentUser.permissions} />
       </Suspense>
     </div>
   )

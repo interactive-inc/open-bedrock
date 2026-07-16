@@ -6,6 +6,8 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
+import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
 import { z } from "zod"
 
 const jwtSecret = "employee-route-test-secret"
@@ -38,6 +40,27 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(
+    db,
+    "org_departments",
+    seedOrgDepartments.map((department) => ({
+      code: department.code,
+      department_id: department.departmentId,
+      parent_code: department.parentCode,
+      manager_employee_code: department.managerEmployeeCode,
+      sort_order: department.order,
+    })),
+  )
+  await seedD1(
+    db,
+    "org_memberships",
+    seedOrgMemberships.map((membership) => ({
+      department_code: membership.departmentCode,
+      employee_code: membership.employeeCode,
+      manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+
   return db
 }
 
@@ -46,6 +69,22 @@ function adminToken(): Promise<string> {
     employeeId: 1,
     email: "you+e001@example.com",
     role: "admin",
+  })
+}
+
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
+function managerToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 4,
+    email: "you+e004@example.com",
+    role: "manager",
   })
 }
 
@@ -220,6 +259,24 @@ describe("GET /employees", () => {
     expect(response.status).toBe(401)
   })
 
+  test("returns 403 without employee:read", async () => {
+    const response = await request("/employees", await memberToken())
+
+    expect(response.status).toBe(403)
+  })
+
+  test("employee:read lists only self and managed employees without org:manage", async () => {
+    const response = await request("/employees", await managerToken())
+
+    expect(response.status).toBe(200)
+    const body = z
+      .object({ data: z.array(employeeResponseSchema), total: z.number() })
+      .parse(await response.json())
+
+    expect(new Set(body.data.map((employee) => employee.code))).toEqual(new Set(["E004", "E005"]))
+    expect(body.total).toBe(2)
+  })
+
   test("returns 401 with an invalid bearer token", async () => {
     const response = await request("/employees", "not-a-real-token")
 
@@ -236,5 +293,80 @@ describe("GET /employees", () => {
     const response = await request("/employees/extra", await adminToken())
 
     expect(response.status).toBe(404)
+  })
+})
+
+describe("GET /directory/employees", () => {
+  test("returns only active employees without sensitive fields to a member", async () => {
+    const response = await request("/directory/employees", await memberToken())
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(z.record(z.string(), z.unknown())), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(12)
+
+      for (const employee of parsed.data.data) {
+        expect("email" in employee).toBe(false)
+        expect("status" in employee).toBe(false)
+        expect("role" in employee).toBe(false)
+        expect("id" in employee).toBe(false)
+      }
+    }
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request("/directory/employees", null)
+
+    expect(response.status).toBe(401)
+  })
+
+  test("uses current lifecycle state for visibility, department filters, and position", async () => {
+    const db = await createTestDb()
+    await db.exec(`
+      INSERT INTO departments (id, name) VALUES (4, 'Sales');
+      INSERT INTO employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void,
+         recorded_by_action_id, recorded_at) VALUES
+        ('employment-5', 1, 5, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('employment-6', 1, 6, '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO employee_status_period_versions
+        (period_id, revision, employment_period_id, employee_id, status, starts_on,
+         ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+        ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+        ('status-6', 1, 'employment-6', 6, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
+      INSERT INTO org_assignment_period_versions
+        (period_id, revision, employment_period_id, employee_id, department_code,
+         assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+         is_void, recorded_by_action_id, recorded_at) VALUES
+        ('assignment-5', 1, 'employment-5', 5, 'D004', 'primary', 'Account Lead', NULL, '2025-01-01', NULL, 0, 'fixture', 1),
+        ('assignment-6', 1, 'employment-6', 6, 'D003', 'primary', 'Engineer', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
+      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    `)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/directory/employees?dept=Sales",
+      token: await memberToken(),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      data: [
+        {
+          code: "E005",
+          name: "Emery Lane",
+          dept_name: "Sales",
+          position: "Account Lead",
+        },
+      ],
+      total: 1,
+    })
   })
 })

@@ -17,11 +17,13 @@ export const POST = factory.createHandlers(
   ),
   async (c) => {
     const json = c.req.valid("json")
+    const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
 
     const result = await new RefreshAccessToken(c).run({
       refreshToken: json.refresh_token,
       jwtSecret: c.env.JWT_SECRET,
       userAgent: c.req.header("User-Agent") ?? null,
+      now,
     })
 
     if (result instanceof ApplicationError) {

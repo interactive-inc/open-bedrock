@@ -1,29 +1,50 @@
 import type { BudgetRow } from "@/schema"
 import { z } from "zod"
 
+/** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
+export const budgetRowSchema = z.object({
+  id: z.number(),
+  departmentId: z.number(),
+  fiscalPeriod: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+  amount: z.number(),
+  name: z.string(),
+  note: z.string().nullable(),
+  createdAt: z.string(),
+})
+
 const zProps = z.object({
   id: z.number().nullable(),
-  fiscalYear: z.number().int(),
-  departmentCode: z.string().nullable(),
-  title: z.string(),
-  amount: z.number().int(),
+  departmentId: z.number(),
+  fiscalPeriod: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+  amount: z.number(),
+  name: z.string(),
   note: z.string().nullable(),
   createdAt: z.string(),
 })
 
 type Props = z.infer<typeof zProps>
 
-/** 予算枠。会計年度・部署・金額（整数円）の事実のみ持ち、会計計算や支払処理はしない。 */
+/**
+ * 部署予算（部署・会計期間ごとの予算額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する
+ */
 export class Budget implements Props {
   readonly id!: Props["id"]
 
-  readonly fiscalYear!: Props["fiscalYear"]
+  readonly departmentId!: Props["departmentId"]
 
-  readonly departmentCode!: Props["departmentCode"]
+  readonly fiscalPeriod!: Props["fiscalPeriod"]
 
-  readonly title!: Props["title"]
+  readonly periodStart!: Props["periodStart"]
+
+  readonly periodEnd!: Props["periodEnd"]
 
   readonly amount!: Props["amount"]
+
+  readonly name!: Props["name"]
 
   readonly note!: Props["note"]
 
@@ -37,21 +58,25 @@ export class Budget implements Props {
     Object.freeze(this)
   }
 
-  /** 新規の予算枠を組み立てる。id は未採番。 */
+  /** 新規作成する部署予算を組み立てる。id は未採番。 */
   static create(props: {
-    fiscalYear: number
-    departmentCode: string | null
-    title: string
+    departmentId: number
+    fiscalPeriod: string
+    periodStart: string
+    periodEnd: string
     amount: number
+    name: string
     note: string | null
     createdAt: string
   }): Budget {
     return new Budget({
       id: null,
-      fiscalYear: props.fiscalYear,
-      departmentCode: props.departmentCode,
-      title: props.title,
+      departmentId: props.departmentId,
+      fiscalPeriod: props.fiscalPeriod,
+      periodStart: props.periodStart,
+      periodEnd: props.periodEnd,
       amount: props.amount,
+      name: props.name,
       note: props.note,
       createdAt: props.createdAt,
     })
@@ -60,30 +85,24 @@ export class Budget implements Props {
   static fromRow(row: BudgetRow): Budget {
     return new Budget({
       id: row.id,
-      fiscalYear: row.fiscalYear,
-      departmentCode: row.departmentCode,
-      title: row.title,
+      departmentId: row.departmentId,
+      fiscalPeriod: row.fiscalPeriod,
+      periodStart: row.periodStart,
+      periodEnd: row.periodEnd,
       amount: row.amount,
+      name: row.name,
       note: row.note,
       createdAt: row.createdAt,
     })
   }
 
-  /** 予算枠の属性（年度・部署・表題・金額・備考）を差し替える。 */
-  withDetails(details: {
-    fiscalYear: Props["fiscalYear"]
-    departmentCode: Props["departmentCode"]
-    title: Props["title"]
-    amount: Props["amount"]
-    note: Props["note"]
-  }): Budget {
+  /** 金額・名称・メモを変更した新しい予算を返す。部署・会計期間は変更しない。 */
+  withDetails(props: { amount: number; name: string; note: string | null }): Budget {
     return new Budget({
       ...this.props,
-      fiscalYear: details.fiscalYear,
-      departmentCode: details.departmentCode,
-      title: details.title,
-      amount: details.amount,
-      note: details.note,
+      amount: props.amount,
+      name: props.name,
+      note: props.note,
     })
   }
 }

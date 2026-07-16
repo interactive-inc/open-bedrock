@@ -10,6 +10,7 @@ import {
   toRequiredIntInRange,
   toRequiredText,
 } from "@/lib/form/constraints"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 export type SkillUpdateState = {
   ok: boolean
@@ -22,6 +23,8 @@ export async function updateSkillAction(
   previousState: SkillUpdateState,
   formData: FormData,
 ): Promise<SkillUpdateState> {
+  await requireAuth()
+
   const skillCode = toRequiredText(formData.get("skill_code"), {
     label: "スキルコード",
     max: FORM_CONSTRAINTS.skill.codeMax,
@@ -81,6 +84,8 @@ export async function removeSkillAction(
   previousState: SkillUpdateState,
   formData: FormData,
 ): Promise<SkillUpdateState> {
+  await requireAuth()
+
   const skillCode = formData.get("skill_code")
 
   if (typeof skillCode !== "string" || skillCode === "") {

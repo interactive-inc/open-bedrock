@@ -3,6 +3,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
+import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
@@ -33,6 +34,42 @@ export class CreateShiftSwapRequest {
 
     if (target.id === input.requesterEmployeeId) {
       return new ValidationError("cannot swap with yourself", "self_reference")
+    }
+
+    // 承認可能な交代のみ受け付ける。双方が対象日に公開済みの割当を持たなければ承認時に必ず
+    // 409 になるため、作成時点で拒否する。承認側と同じ assignment_not_found コードで揃える。
+    const assignmentRepository = new ShiftAssignmentRepository(this.c)
+
+    const requesterAssignment = await assignmentRepository.findByEmployeeIdAndDate(
+      input.requesterEmployeeId,
+      input.date,
+    )
+
+    if (requesterAssignment instanceof Error) {
+      return new UnexpectedError("failed to find shift assignment", { cause: requesterAssignment })
+    }
+
+    if (requesterAssignment === null || requesterAssignment.publishedAt === null) {
+      return new ConflictError(
+        "requester has no published shift assignment on the date",
+        "assignment_not_found",
+      )
+    }
+
+    const targetAssignment = await assignmentRepository.findByEmployeeIdAndDate(
+      target.id,
+      input.date,
+    )
+
+    if (targetAssignment instanceof Error) {
+      return new UnexpectedError("failed to find shift assignment", { cause: targetAssignment })
+    }
+
+    if (targetAssignment === null || targetAssignment.publishedAt === null) {
+      return new ConflictError(
+        "target has no published shift assignment on the date",
+        "assignment_not_found",
+      )
     }
 
     const swapRequestRepository = new ShiftSwapRequestRepository(this.c)

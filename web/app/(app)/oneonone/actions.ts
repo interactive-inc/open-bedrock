@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { createOneOnOne } from "@/lib/api/create-oneonone"
 import { deleteOneOnOne } from "@/lib/api/delete-oneonone"
-import { getEmployeeByCode } from "@/lib/api/get-employee-by-code"
 import { updateOneOnOne } from "@/lib/api/update-oneonone"
 import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type OneOnOneActionState = {
@@ -19,6 +19,8 @@ export async function createOneOnOneAction(
   previousState: OneOnOneActionState,
   formData: FormData,
 ): Promise<OneOnOneActionState> {
+  await requireAuth()
+
   const memberCode = toRequiredText(formData.get("member_employee_code"), {
     label: "メンバー",
     max: 20,
@@ -27,14 +29,6 @@ export async function createOneOnOneAction(
   if (memberCode instanceof Error) {
     return { ok: false, error: memberCode.message }
   }
-
-  const member = await getEmployeeByCode(memberCode)
-
-  if (member instanceof Error || member === null) {
-    return { ok: false, error: "指定されたメンバーが見つかりません" }
-  }
-
-  const memberEmail = member.email
 
   const topics = toOneOnOneText(formData.get("topics"), "トピック")
 
@@ -55,7 +49,7 @@ export async function createOneOnOneAction(
   }
 
   const created = await createOneOnOne({
-    member_email: memberEmail,
+    member_employee_code: memberCode,
     topics,
     manager_note: managerNote,
     next_action: nextAction,
@@ -76,6 +70,8 @@ export async function updateOneOnOneAction(
   previousState: OneOnOneActionState,
   formData: FormData,
 ): Promise<OneOnOneActionState> {
+  await requireAuth()
+
   const oneOnOneId = formData.get("one_on_one_id")
 
   if (typeof oneOnOneId !== "string" || oneOnOneId === "") {
@@ -121,6 +117,8 @@ export async function deleteOneOnOneAction(
   previousState: OneOnOneActionState,
   formData: FormData,
 ): Promise<OneOnOneActionState> {
+  await requireAuth()
+
   const oneOnOneId = formData.get("one_on_one_id")
 
   if (typeof oneOnOneId !== "string" || oneOnOneId === "") {

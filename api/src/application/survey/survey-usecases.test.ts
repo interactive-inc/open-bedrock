@@ -358,6 +358,45 @@ describe("UpdateSurvey", () => {
 
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
+
+  // #910: closed → open の再開は回答済みデータとの整合性を壊すため禁止する。
+  test("returns survey_reopen_forbidden when reopening a closed survey", async () => {
+    const { context } = createTestContext()
+
+    const surveyId = await seedSurvey(context, "closed")
+
+    const result = await new UpdateSurvey(context).run({
+      session: makeTestSession("admin"),
+      surveyId: surveyId,
+      title: "Test Survey",
+      status: "open",
+      questionsJson: [{ q: "How are you?" }],
+    })
+
+    expectApplicationError(result, ConflictError, "survey_reopen_forbidden")
+  })
+
+  test("allows staying closed when updating a closed survey", async () => {
+    const { context } = createTestContext()
+
+    const surveyId = await seedSurvey(context, "closed")
+
+    const result = await new UpdateSurvey(context).run({
+      session: makeTestSession("admin"),
+      surveyId: surveyId,
+      title: "Updated Title",
+      status: "closed",
+      questionsJson: [{ q: "How are you?" }],
+    })
+
+    expect(result).toBeInstanceOf(Survey)
+
+    if (result instanceof Survey === false) {
+      throw new Error("expected Survey")
+    }
+
+    expect(result.status).toBe("closed")
+  })
 })
 
 // --- SubmitSurveyResponse ---

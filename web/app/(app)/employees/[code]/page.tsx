@@ -5,8 +5,12 @@ import { EmployeeGradeHistory } from "@/app/(app)/employees/[code]/_components/e
 import { EmployeeSalaryRevisionHistory } from "@/app/(app)/employees/[code]/_components/employee-salary-revision-history"
 import { EmployeeWorkStyleHistory } from "@/app/(app)/employees/[code]/_components/employee-work-style-history"
 import { BackButton } from "@/components/back-button"
-import { PageHeader } from "@/components/page-header"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PageHeader } from "@/components/page-header"
+import { getMe } from "@/lib/api/get-me"
+import { canReadEmployees } from "@/lib/employee/can-read-employees"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "従業員詳細" }
 
@@ -16,7 +20,14 @@ type Props = {
 
 // 従業員詳細画面。params.code で対象を取得し、詳細カードを Suspense 境界で描画する RSC。
 export default async function EmployeeDetailPage(props: Props) {
-  const params = await props.params
+  const [params, currentUser] = await Promise.all([props.params, getMe()])
+
+  if (
+    currentUser instanceof Error ||
+    (currentUser.code !== params.code && canReadEmployees(currentUser.permissions) === false)
+  ) {
+    notFound()
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,8 +36,12 @@ export default async function EmployeeDetailPage(props: Props) {
         actions={<BackButton href="/employees" label="一覧に戻る" />}
       />
 
-      <Suspense fallback={<EmployeeDetailSkeleton />}>
-        <EmployeeDetail code={params.code} />
+      <Suspense fallback={<DetailSkeleton fields={5} />}>
+        <EmployeeDetail
+          code={params.code}
+          permissions={currentUser.permissions}
+          currentUserCode={currentUser.code}
+        />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
@@ -46,8 +61,4 @@ export default async function EmployeeDetailPage(props: Props) {
       </Suspense>
     </div>
   )
-}
-
-function EmployeeDetailSkeleton() {
-  return <Skeleton className="h-64 w-full" />
 }

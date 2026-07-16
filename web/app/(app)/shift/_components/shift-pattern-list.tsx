@@ -1,10 +1,13 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import type { ShiftFormState } from "@/app/(app)/shift/actions"
 import { deleteShiftPatternAction, updateShiftPatternAction } from "@/app/(app)/shift/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -66,11 +69,11 @@ export function ShiftPatternList(props: Props) {
               <TableCell className="tabular-nums">{pattern.break_minutes ?? "-"}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   {props.canManage ? <UpdatePatternDialog pattern={pattern} /> : null}
 
                   {props.canManage ? <DeletePatternButton patternId={pattern.id} /> : null}
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -84,7 +87,11 @@ export function ShiftPatternList(props: Props) {
 function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateShiftPatternAction, initialState)
+  const [state, formAction, pending] = useFormAction(
+    updateShiftPatternAction,
+    initialState,
+    "シフトパターンを変更しました",
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -160,15 +167,22 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
 
 // パターン削除ボタン。割当から参照されているとサーバーが拒否し action がエラーを返す。
 function DeletePatternButton(props: { patternId: number | null }) {
-  const [, formAction, pending] = useActionState(deleteShiftPatternAction, initialState)
+  const [, formAction, pending] = useFormAction(
+    deleteShiftPatternAction,
+    initialState,
+    "シフトパターンを削除しました",
+  )
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="削除"
+      title="このシフトパターンを削除しますか？"
+      description="割当から参照中の場合は削除できません。削除後は元に戻せません。"
+      confirmLabel="パターンを削除"
+      pending={pending}
+    >
       <input type="hidden" name="pattern_id" value={props.patternId ?? undefined} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

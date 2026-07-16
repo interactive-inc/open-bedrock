@@ -3,6 +3,10 @@ import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import { zAppAuthMe } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
+import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
@@ -34,6 +38,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("internal server error")
   }
 
+  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+  if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+  const lifecycleState =
+    migrationStatus === "verified"
+      ? await new GetLifecycleState(c).run({ employeeId: row.id })
+      : null
+  if (lifecycleState instanceof ApplicationError) throw toHttpException(lifecycleState)
+
   const responseBody = zAppAuthMe.parse({
     id: row.id,
     code: row.code,
@@ -41,8 +53,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     email: emailByEmployeeId.get(row.id) ?? "",
     // レスポンス互換: 単一 role は roleKeys の代表値から導出する。
     role: toPrimaryRole(session.roleKeys),
-    dept_name: row.deptName,
-    position: row.position,
+    dept_name:
+      lifecycleState === null
+        ? row.deptName
+        : (lifecycleState.primaryAssignment?.departmentName ?? null),
+    position:
+      lifecycleState === null
+        ? row.position
+        : (lifecycleState.primaryAssignment?.positionTitle ?? null),
     permissions: [...session.permissions],
     role_keys: [...session.roleKeys],
   })

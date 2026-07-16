@@ -165,6 +165,33 @@ export class IdentityRepository {
   }
 
   /**
+   * パスワード更新と対象アカウントの tokenVersion bump を原子的に行う。
+   * 途中失敗で旧トークンが有効なまま残ることを防ぐ。
+   */
+  async updateSecretAndBumpTokenVersion(
+    identityId: number,
+    secret: string,
+    accountId: number,
+    now: number,
+  ): Promise<null | Error> {
+    try {
+      await this.c.env.DB.batch([
+        this.c.env.DB.prepare("UPDATE identities SET secret = ?2 WHERE id = ?1").bind(
+          identityId,
+          secret,
+        ),
+        this.c.env.DB.prepare(
+          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
+        ).bind(accountId, now),
+      ])
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to reset password")
+    }
+  }
+
+  /**
    * secret が純正 PBKDF2 形式でない password identity を全件返す。
    * 旧形式(hex)とラップ済み旧形式(pbkdf2-wrapped-legacy:)が対象。
    */

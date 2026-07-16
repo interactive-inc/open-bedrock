@@ -4,6 +4,13 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import type { AccountSummary } from "@/infrastructure/iam/account-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
+import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+
+export type AccountAccessSummary = AccountSummary & {
+  canManage: boolean
+  isSelf: boolean
+}
 
 export type Command = {
   session: SessionPayload
@@ -15,7 +22,7 @@ export type Command = {
 export class ListAccounts {
   constructor(private readonly c: Context) {}
 
-  async run(command: Command): Promise<ReadonlyArray<AccountSummary> | ApplicationError> {
+  async run(command: Command): Promise<ReadonlyArray<AccountAccessSummary> | ApplicationError> {
     if (canManageAccounts(command.session) === false) {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
@@ -28,6 +35,35 @@ export class ListAccounts {
       return new UnexpectedError("failed to list accounts", { cause: found })
     }
 
-    return found
+    const authRepository = new AccountAuthRepository(this.c)
+
+    const withAccess = await Promise.all(
+      found.map(async (account) => ({
+        account: account,
+        resolved: await authRepository.resolveById(account.id),
+      })),
+    )
+
+    const failed = withAccess.find(
+      (entry) => entry.resolved instanceof Error || entry.resolved === null,
+    )
+
+    if (failed !== undefined) {
+      return new UnexpectedError("failed to resolve account permissions", {
+        cause:
+          failed.resolved instanceof Error
+            ? failed.resolved
+            : new Error("account disappeared while listing"),
+      })
+    }
+
+    return withAccess.map(({ account, resolved }) => ({
+      ...account,
+      canManage:
+        resolved !== null &&
+        !(resolved instanceof Error) &&
+        hasPermissionSuperset(command.session, resolved.permissions),
+      isSelf: account.id === command.session.accountId,
+    }))
   }
 }

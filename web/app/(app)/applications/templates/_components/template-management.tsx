@@ -1,12 +1,14 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   deleteApplicationTemplateAction,
   updateApplicationTemplateAction,
 } from "@/app/(app)/applications/templates/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { FormBuilder } from "@/components/form-builder"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +20,7 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { toFormSchema } from "@/lib/application/form-schema"
+import Link from "next/link"
 
 type ManagedTemplate = {
   code: string
@@ -38,6 +41,14 @@ type Props = {
 export function TemplateManagement(props: Props) {
   return (
     <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        nativeButton={false}
+        render={<Link href={`/applications/templates/${props.template.code}/workflow`} />}
+      >
+        承認フロー
+      </Button>
       <UpdateTemplateDialog template={props.template} />
 
       <DeleteTemplateButton code={props.template.code} />
@@ -48,10 +59,14 @@ export function TemplateManagement(props: Props) {
 function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
   const [open, setOpen] = useState(false)
 
-  const [state, formAction, pending] = useActionState(updateApplicationTemplateAction, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateApplicationTemplateAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "テンプレートを変更しました",
+  )
 
   const initialSchema = toFormSchema(props.template.schema_json)
 
@@ -121,20 +136,29 @@ function UpdateTemplateDialog(props: { template: ManagedTemplate }) {
 }
 
 function DeleteTemplateButton(props: { code: string }) {
-  const [state, formAction, pending] = useActionState(deleteApplicationTemplateAction, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    deleteApplicationTemplateAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "テンプレートを削除しました",
+  )
 
   return (
-    <form action={formAction}>
-      <input type="hidden" name="code" value={props.code} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        削除
-      </Button>
+    <div className="flex flex-col gap-1">
+      <ConfirmActionDialog
+        action={formAction}
+        triggerLabel="削除"
+        title="この申請テンプレートを削除しますか？"
+        description="テンプレートは元に戻せません。既存の申請記録は削除されません。"
+        confirmLabel="テンプレートを削除"
+        pending={pending}
+      >
+        <input type="hidden" name="code" value={props.code} />
+      </ConfirmActionDialog>
 
       {state.error === null ? null : <FieldError>{state.error}</FieldError>}
-    </form>
+    </div>
   )
 }

@@ -115,4 +115,28 @@ describe("resolveEvaluationPermission", () => {
 
     expect(permission).toEqual({ reason: "forbidden" })
   })
+
+  test("manager kind: owner cannot evaluate their own goal even with goal:evaluate", () => {
+    const permission = resolveEvaluationPermission({
+      kind: "manager",
+      goalEmployeeId: 10,
+      viewerEmployeeId: 10,
+      session: makeTestSession("admin", 10),
+      relation: noRelation,
+    })
+
+    expect(permission).toEqual({ reason: "forbidden" })
+  })
+
+  test("final kind: owner cannot finalize their own goal even with goal:evaluate", () => {
+    const permission = resolveEvaluationPermission({
+      kind: "final",
+      goalEmployeeId: 10,
+      viewerEmployeeId: 10,
+      session: makeTestSession("admin", 10),
+      relation: noRelation,
+    })
+
+    expect(permission).toEqual({ reason: "forbidden" })
+  })
 })

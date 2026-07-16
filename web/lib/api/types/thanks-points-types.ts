@@ -35,3 +35,10 @@ export type ThanksRedemptionResponse = {
   decided_at: string | null
   decider_id: number | null
 }
+
+export type ThanksRedemptionInboxResponse = ThanksRedemptionResponse & {
+  id: number
+  employee_name: string
+  employee_dept_name: string | null
+  reward_name: string
+}

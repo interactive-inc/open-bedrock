@@ -1,8 +1,9 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import { cancelResignationAction, updateResignationAction } from "@/app/(app)/resignations/actions"
 import type { ResignationActionState } from "@/app/(app)/resignations/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -73,11 +75,11 @@ export function MyResignationsList(props: Props) {
               <TableCell>{statusLabel(resignation.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateResignationDialog resignation={resignation} />
 
                   <CancelResignationButton resignationId={resignation.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -91,23 +93,12 @@ export function MyResignationsList(props: Props) {
 function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: ResignationActionState,
-    formData: FormData,
-  ): Promise<ResignationActionState> {
-    const result = await updateResignationAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateResignationAction,
+    { ok: false, error: null } satisfies ResignationActionState,
+    "退職申請を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -171,10 +162,14 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
 
 // 退職申請取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelResignationButton(props: { resignationId: string }) {
-  const [, formAction, pending] = useActionState(cancelResignationAction, {
-    ok: false,
-    error: null,
-  })
+  const [, formAction, pending] = useFormAction(
+    cancelResignationAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "退職申請を取り消しました",
+  )
 
   return (
     <AlertDialog>

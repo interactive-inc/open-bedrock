@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createOrgDepartmentAction } from "@/app/(app)/org/departments/actions"
@@ -12,13 +13,19 @@ const initialState: OrgDepartmentActionState = { ok: false, error: null }
 
 // 部署ノード作成フォーム。コード・マスタ ID・表示順は必須、親と責任者は任意。成功時は一覧へ遷移する。
 export function OrgDepartmentCreateForm() {
+  const router = useRouter()
+
   async function reduce(
     previousState: OrgDepartmentActionState,
     formData: FormData,
   ): Promise<OrgDepartmentActionState> {
     const result = await createOrgDepartmentAction(previousState, formData)
 
-    if (result.error !== null) {
+    if (result.ok) {
+      toast.success("部署を作成しました")
+
+      router.push("/org/departments")
+    } else if (result.error !== null) {
       toast.error(result.error)
     }
 

@@ -14,6 +14,8 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { z } from "zod"
+import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { InternalError } from "@/interface/lib/errors"
 
 // 並び順のホワイトリスト。未知の値は created_at desc にフォールバックする。
 const SORT_OPTIONS = {
@@ -129,6 +131,14 @@ export const GET = factory.createHandlers(
       .innerJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
       .where(where)
 
+    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
+      c,
+      rows.map((row) => row.applicantId),
+    )
+    if (currentDepartments instanceof Error) {
+      throw new InternalError("failed to load current departments")
+    }
+
     const responseBody = zAppApplicationAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
@@ -137,7 +147,10 @@ export const GET = factory.createHandlers(
         template_category: row.templateCategory ?? "",
         applicant_id: row.applicantId,
         applicant_name: row.applicantName ?? "",
-        applicant_dept_name: row.applicantDeptName,
+        applicant_dept_name:
+          currentDepartments.source === "lifecycle"
+            ? (currentDepartments.names.get(row.applicantId) ?? null)
+            : row.applicantDeptName,
         current_step: row.currentStep,
         status: row.status,
         created_at: row.createdAt,

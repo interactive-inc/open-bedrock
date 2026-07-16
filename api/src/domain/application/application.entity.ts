@@ -12,6 +12,9 @@ const zProps = z.object({
 })
 
 type Props = z.infer<typeof zProps>
+type ApplicationPersistenceRow = Omit<ApplicationRow, "workflowCreationId"> & {
+  workflowCreationId?: string | null
+}
 
 /** 申請（テンプレートに紐づく申請者の提出）。集約ルート。 */
 export class Application implements Props {
@@ -57,7 +60,7 @@ export class Application implements Props {
     })
   }
 
-  static fromRow(row: ApplicationRow): Application | Error {
+  static fromRow(row: ApplicationPersistenceRow): Application | Error {
     const status = toStatus(row.status)
 
     if (status instanceof Error) {

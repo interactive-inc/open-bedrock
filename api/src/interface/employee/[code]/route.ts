@@ -10,14 +10,21 @@ import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/lib/auth/to-primary-role"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/shared/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { canReadEmployees } from "@/lib/employee/can-read-employees"
+import { hasPermission } from "@/lib/auth/has-permission"
+import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
+import type { EmployeeLifecycleState } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { isoDate } from "@/lib/schemas"
 
 // 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。
-async function toResponseBody(c: Context, employee: Employee) {
+async function toResponseBody(c: Context, employee: Employee, state?: EmployeeLifecycleState) {
   const emailByEmployeeId = await new IdentityRepository(c).findEmailsByEmployeeIds([employee.id])
 
   if (emailByEmployeeId instanceof Error) {
@@ -33,54 +40,80 @@ async function toResponseBody(c: Context, employee: Employee) {
   return zAppEmployee.parse({
     code: employee.code,
     name: employee.name,
-    dept_name: employee.deptName,
-    position: employee.position,
+    dept_name: state?.primaryAssignment?.departmentName ?? employee.deptName,
+    position: state?.primaryAssignment?.positionTitle ?? employee.position,
     email: emailByEmployeeId.get(employee.id) ?? "",
-    status: employee.status,
+    status: state?.status ?? employee.status,
     role: toPrimaryRole(roleKeys),
   })
 }
 
 // GET /employees/:code — 従業員 1 件の詳細
-export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const session = c.var.session
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator("query", z.object({ as_of: isoDate.optional() })),
+  async (c) => {
+    const session = c.var.session
 
-  if (session === null) {
-    throw new UnauthorizedError()
-  }
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
 
-  const employee = await new GetEmployee(c).run({
-    code: validateCodeParam(c.req.param("code"), "employee"),
-  })
+    const employee = await new GetEmployee(c).run({
+      code: validateCodeParam(c.req.param("code"), "employee"),
+    })
 
-  if (employee instanceof ApplicationError) {
-    throw toHttpException(employee)
-  }
+    if (employee instanceof ApplicationError) {
+      throw toHttpException(employee)
+    }
 
-  const body = await toResponseBody(c, employee)
+    if (employee.id !== session.employeeId) {
+      if (canReadEmployees(session) === false) {
+        throw new NotFoundError("employee not found")
+      }
 
-  if (body instanceof ApplicationError) {
-    throw toHttpException(body)
-  }
+      if (hasPermission(session, "org:manage") === false) {
+        const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
 
-  return c.json(body, 200)
-})
+        if (authority instanceof Error) {
+          throw new InternalError("failed to resolve employee organization scope")
+        }
 
-// PUT /employees/:code — 従業員台帳の氏名・部署・役職・在籍状況を変更（権限が必要）。
-// email は identity(認証)、role は account_roles(認可)が正で、ここでは扱わない。
-// メール変更はアカウント管理、ロール変更は /admin/accounts のロール付与・剥奪で行う。
+        if (authority.managementChain === false && authority.departmentManager === false) {
+          throw new NotFoundError("employee not found")
+        }
+      }
+    }
+
+    const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
+    if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+    const state =
+      migrationStatus === "verified"
+        ? await new GetLifecycleState(c).run({
+            employeeId: employee.id,
+            asOf: c.req.valid("query").as_of,
+          })
+        : undefined
+    if (state instanceof ApplicationError) throw toHttpException(state)
+    if (state?.archived || state?.status === "prehire") {
+      throw new NotFoundError("employee not found")
+    }
+
+    const body = await toResponseBody(c, employee, state)
+
+    if (body instanceof ApplicationError) {
+      throw toHttpException(body)
+    }
+
+    return c.json(body, 200)
+  },
+)
+
+// PUT /employees/:code — 人物台帳の氏名だけを変更（権限が必要）。
+// IAM はアカウント管理、所属・役職・在籍状態は人事発令で変更する。
 export const PUT = factory.createHandlers(
   verifyBearer,
-  zValidator(
-    "json",
-    z.object({
-      name: z.string().min(1).max(200),
-      dept_id: z.number().int().nullable().optional(),
-      dept_name: z.string().max(200).nullable().optional(),
-      position: z.string().max(200).nullable().optional(),
-      status: z.enum(["active", "leave", "retired"]),
-    }),
-  ),
+  zValidator("json", z.strictObject({ name: z.string().min(1).max(200) })),
   async (c) => {
     const session = c.var.session
 
@@ -90,18 +123,11 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    // email/role の認証・認可情報は IAM が正。台帳更新は name/dept/position/status のみ。
     const updated = await new UpdateEmployee(c).run({
       session: session,
       viewerEmployeeId: session.employeeId,
       code: validateCodeParam(c.req.param("code"), "employee"),
-      profile: {
-        name: json.name,
-        deptId: json.dept_id ?? null,
-        deptName: json.dept_name ?? null,
-        position: json.position ?? null,
-        status: json.status,
-      },
+      name: json.name,
     })
 
     if (updated instanceof ApplicationError) {
@@ -118,7 +144,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
-// DELETE /employees/:code — 従業員を台帳から削除（権限が必要、自分自身は不可）
+// DELETE /employees/:code — 互換用。物理削除は禁止し、履歴保持アーカイブへ誘導する。
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

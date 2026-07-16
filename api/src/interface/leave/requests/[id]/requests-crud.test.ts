@@ -65,6 +65,10 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(db, "org_memberships", [
+    { department_code: "ENGINEERING", employee_code: "E005", manager_employee_code: "E004" },
+  ])
+
   await seedD1(
     db,
     "leave_requests",
@@ -113,6 +117,7 @@ async function request(props: {
   const bindings: Bindings = {
     DB: await createTestDb(),
     JWT_SECRET: jwtSecret,
+    AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     NOW: "2026-01-01T00:00:00.000Z",
   }
 
@@ -159,6 +164,7 @@ describe("GET /leave/requests/:id", () => {
     const bindings: Bindings = {
       DB: db,
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
@@ -185,6 +191,15 @@ describe("GET /leave/requests/:id", () => {
     }
   })
 
+  test("returns 403 for a manager outside the applicant organization scope", async () => {
+    const response = await request({
+      path: "/leave/requests/1",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
   test("returns 200 for an hr viewer viewing another person's request", async () => {
     const db = await createTestDb()
 
@@ -198,6 +213,7 @@ describe("GET /leave/requests/:id", () => {
     const bindings: Bindings = {
       DB: db,
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 
@@ -317,6 +333,7 @@ describe("PUT /leave/requests/:id", () => {
     const bindings: Bindings = {
       DB: db,
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     }
 

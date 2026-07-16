@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zReviewCyclePolicy } from "@/domain/review/review-cycle-policy"
 
 // POST /review-cycles — 管理者が draft の評価サイクルを作成
 export const POST = factory.createHandlers(
@@ -18,6 +19,7 @@ export const POST = factory.createHandlers(
       title: z.string().min(1).max(500),
       period: z.string().min(1).max(100),
       dueDate: isoDate.optional(),
+      policy: zReviewCyclePolicy.optional(),
     }),
   ),
   async (c) => {
@@ -34,6 +36,7 @@ export const POST = factory.createHandlers(
       title: json.title,
       period: json.period,
       dueDate: json.dueDate ?? null,
+      policy: json.policy,
     })
 
     if (cycle instanceof ApplicationError) {

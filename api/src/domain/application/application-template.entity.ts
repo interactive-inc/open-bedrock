@@ -9,6 +9,8 @@ const zProps = z.object({
   description: z.string().nullable(),
   schemaJson: z.unknown(),
   approverRoles: z.array(z.string()).readonly(),
+  systemBinding: z.string().nullable(),
+  completionHandlerKey: z.literal("personnel_action").nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -29,6 +31,10 @@ export class ApplicationTemplate implements Props {
   readonly schemaJson!: Props["schemaJson"]
 
   readonly approverRoles!: Props["approverRoles"]
+
+  readonly systemBinding!: Props["systemBinding"]
+
+  readonly completionHandlerKey!: Props["completionHandlerKey"]
 
   constructor(private readonly props: Props) {
     zProps.parse(props)
@@ -55,10 +61,18 @@ export class ApplicationTemplate implements Props {
       description: props.description,
       schemaJson: props.schemaJson,
       approverRoles: props.approverRoles,
+      systemBinding: null,
+      completionHandlerKey: null,
     })
   }
 
-  static fromRow(row: ApplicationTemplateRow): ApplicationTemplate | Error {
+  static fromRow(
+    row: Pick<
+      ApplicationTemplateRow,
+      "id" | "code" | "name" | "category" | "description" | "schemaJson" | "approverRoles"
+    > &
+      Partial<Pick<ApplicationTemplateRow, "systemBinding" | "completionHandlerKey">>,
+  ): ApplicationTemplate | Error {
     const schemaJson = decodeSchemaJson(row.schemaJson)
 
     if (schemaJson instanceof Error) {
@@ -79,6 +93,8 @@ export class ApplicationTemplate implements Props {
       description: row.description,
       schemaJson: schemaJson,
       approverRoles: approverRoles,
+      systemBinding: row.systemBinding ?? null,
+      completionHandlerKey: row.completionHandlerKey ?? null,
     })
   }
 

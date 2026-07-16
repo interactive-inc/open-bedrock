@@ -1,13 +1,15 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   cancelCertificateRequestAction,
   updateCertificateRequestAction,
 } from "@/app/(app)/certificate-requests/actions"
-import type { CertificateRequestActionState } from "@/app/(app)/certificate-requests/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Dialog,
   DialogContent,
@@ -67,11 +69,11 @@ export function MyCertificateRequestsList(props: Props) {
               <TableCell>{statusLabel(certificateRequest.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateCertificateRequestDialog certificateRequest={certificateRequest} />
 
                   <CancelCertificateRequestButton certificateRequestId={certificateRequest.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -85,23 +87,12 @@ export function MyCertificateRequestsList(props: Props) {
 function UpdateCertificateRequestDialog(props: { certificateRequest: CertificateRequestResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: CertificateRequestActionState,
-    formData: FormData,
-  ): Promise<CertificateRequestActionState> {
-    const result = await updateCertificateRequestAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateCertificateRequestAction,
+    { ok: false, error: null },
+    "証明書発行依頼を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -173,18 +164,25 @@ function UpdateCertificateRequestDialog(props: { certificateRequest: Certificate
 
 // 証明書発行依頼取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
 function CancelCertificateRequestButton(props: { certificateRequestId: string }) {
-  const [_state, formAction, pending] = useActionState(cancelCertificateRequestAction, {
-    ok: false,
-    error: null,
-  })
+  const [_state, formAction, pending] = useFormAction(
+    cancelCertificateRequestAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "証明書発行依頼を取り消しました",
+  )
 
   return (
-    <form action={formAction}>
+    <ConfirmActionDialog
+      action={formAction}
+      triggerLabel="取消"
+      title="この証明書発行依頼を取り消しますか？"
+      description="取り消した依頼は元に戻せません。"
+      confirmLabel="発行依頼を取り消す"
+      pending={pending}
+    >
       <input type="hidden" name="certificate_request_id" value={props.certificateRequestId} />
-
-      <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-        取消
-      </Button>
-    </form>
+    </ConfirmActionDialog>
   )
 }

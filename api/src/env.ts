@@ -6,6 +6,10 @@ import type { DrizzleD1Database } from "drizzle-orm/d1"
 export type Bindings = {
   DB: D1Database
   JWT_SECRET: string
+  // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
+  AUDIT_HMAC_SECRET: string
+  // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。
+  COMPANY_TIME_ZONE?: string
   // CORS で許可する Origin をカンマ区切りで指定する（例: "https://app.example.com,https://admin.example.com"）。
   // 未設定時はローカル開発用 Origin のみ許可。本番では必ず設定する。
   CORS_ORIGIN?: string
@@ -17,6 +21,13 @@ export type Bindings = {
   // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（Workers Rate Limiting binding）。
   // wrangler.jsonc の ratelimits で設定する。未設定（ローカル開発・テスト）ではスキップする。
   API_RATE_LIMITER?: RateLimit
+}
+
+export type RequestAuditContext = {
+  requestId: string
+  clientName: "web" | "cli" | "api" | "system"
+  clientIp: string | null
+  externalRequestId: string | null
 }
 
 // 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
@@ -33,6 +44,7 @@ export type SessionPayload = {
 export type Variables = {
   database: DrizzleD1Database<typeof schema>
   session: SessionPayload | null
+  auditContext: RequestAuditContext
 }
 
 // Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。

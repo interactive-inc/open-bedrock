@@ -2,7 +2,8 @@ import { OneOnOneCreateForm } from "@/app/(app)/oneonone/_components/oneonone-cr
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
-import { getEmployeeList } from "@/lib/api/get-employee-list"
+import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "1on1 を記録" }
 
@@ -10,7 +11,9 @@ export const metadata = { title: "1on1 を記録" }
  * 1on1 の新規記録。フォーム単機能のページとして履歴から独立させる。
  */
 export default async function NewOneOnOnePage() {
-  const employeeResult = await getEmployeeList({ q: null, dept: null, status: "active" })
+  await requirePermission("oneonone:create")
+
+  const employeeResult = await getEmployeeDirectory()
 
   const employees =
     employeeResult instanceof Error

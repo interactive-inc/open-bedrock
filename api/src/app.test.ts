@@ -10,6 +10,7 @@ function makeBindings(corsOrigin?: string): Bindings {
   return {
     DB: createD1TestDatabase(loadSchema()),
     JWT_SECRET: jwtSecret,
+    AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
     CORS_ORIGIN: corsOrigin,
     NOW: "2026-01-01T00:00:00.000Z",
   }

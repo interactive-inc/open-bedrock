@@ -6,8 +6,14 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { z } from "zod"
 
 const jwtSecret = "employee-certification-route-test-secret"
+
+const employeeCertificationListSchema = z.object({
+  data: z.array(z.object({ employee_id: z.number() })),
+  total: z.number(),
+})
 
 // E001=admin(read:all / manage), E005・E006=member。
 // 保有記録: E005 が id=1 を持つ。
@@ -85,10 +91,14 @@ describe("GET /employee-certifications", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = employeeCertificationListSchema.safeParse(await response.json())
 
-    expect(body.total).toBe(1)
-    expect(body.data[0].employee_id).toBe(5)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0].employee_id).toBe(5)
+    }
   })
 
   test("member can read their own records with own employee_id", async () => {
@@ -117,9 +127,13 @@ describe("GET /employee-certifications", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = employeeCertificationListSchema.safeParse(await response.json())
 
-    expect(body.total).toBe(1)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(1)
+    }
   })
 
   test("returns 401 without a bearer token", async () => {

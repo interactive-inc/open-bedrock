@@ -2,35 +2,102 @@
 
 import { revalidatePath } from "next/cache"
 import { createBudget } from "@/lib/api/create-budget"
-import { recordBudgetConsumption } from "@/lib/api/record-budget-consumption"
+import { deleteBudget } from "@/lib/api/delete-budget"
+import { getMe } from "@/lib/api/get-me"
+import { updateBudget } from "@/lib/api/update-budget"
+import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
+import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
-export type BudgetActionState = {
+export type BudgetCreateFormState = {
   ok: boolean
   error: string | null
 }
 
-// 予算枠の作成 Server Action。budget:manage が無いと api が 403。
-export async function createBudgetAction(
-  previousState: BudgetActionState,
-  formData: FormData,
-): Promise<BudgetActionState> {
-  const fiscalYear = toInteger(formData.get("fiscal_year"))
+export type BudgetUpdateFormState = {
+  ok: boolean
+  error: string | null
+}
 
-  const title = toText(formData.get("title"))
+export type BudgetDeleteFormState = {
+  ok: boolean
+  error: string | null
+}
 
-  const amount = toInteger(formData.get("amount"))
+// FormData の値を正の整数に検証付きで変換する。不正なら null。
+function toPositiveInt(value: FormDataEntryValue | null): number | null {
+  const parsed = Number(value)
 
-  if (fiscalYear === null || title === null || amount === null) {
-    return { ok: false, error: "会計年度・表題・金額を入力してください" }
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
+    return null
   }
 
+  return parsed
+}
+
+// FormData の文字列を取り出す。文字列でなければ空文字。
+function toText(value: FormDataEntryValue | null): string {
+  return typeof value === "string" ? value : ""
+}
+
+// 予算登録の Server Action。budget:manage を持つロールのみ。
+export async function createBudgetAction(
+  previousState: BudgetCreateFormState,
+  formData: FormData,
+): Promise<BudgetCreateFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageBudgets(currentUser.permissions) === false) {
+    return { ok: false, error: "予算を管理する権限がありません" }
+  }
+
+  const departmentId = toPositiveInt(formData.get("department_id"))
+
+  if (departmentId === null) {
+    return { ok: false, error: "部署 ID は正の整数で入力してください" }
+  }
+
+  const fiscalPeriod = toText(formData.get("fiscal_period"))
+
+  if (fiscalPeriod === "") {
+    return { ok: false, error: "会計期間を入力してください" }
+  }
+
+  const periodStart = toText(formData.get("period_start"))
+
+  const periodEnd = toText(formData.get("period_end"))
+
+  if (periodStart === "" || periodEnd === "") {
+    return { ok: false, error: "期間の開始日と終了日を入力してください" }
+  }
+
+  if (periodEnd < periodStart) {
+    return { ok: false, error: "終了日は開始日以降を指定してください" }
+  }
+
+  const amount = toPositiveInt(formData.get("amount"))
+
+  if (amount === null) {
+    return { ok: false, error: "金額は正の整数で入力してください" }
+  }
+
+  const name = toText(formData.get("name"))
+
+  if (name === "") {
+    return { ok: false, error: "名称を入力してください" }
+  }
+
+  const noteValue = formData.get("note")
+
+  const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : undefined
+
   const created = await createBudget({
-    fiscal_year: fiscalYear,
-    title: title,
+    department_id: departmentId,
+    fiscal_period: fiscalPeriod,
+    period_start: periodStart,
+    period_end: periodEnd,
     amount: amount,
-    department_code: toText(formData.get("department_code")),
-    note: toText(formData.get("note")),
+    name: name,
+    note: note,
   })
 
   if (created instanceof Error) {
@@ -42,54 +109,83 @@ export async function createBudgetAction(
   return { ok: true, error: null }
 }
 
-// 予算枠の消化記録 Server Action。form の hidden input で budget id を渡す。budget:manage が無いと api が 403。
-export async function recordBudgetConsumptionAction(
-  previousState: BudgetActionState,
+// 予算変更の Server Action。金額・名称・メモのみ変更できる。budget:manage を持つロールのみ。
+export async function updateBudgetAction(
+  previousState: BudgetUpdateFormState,
   formData: FormData,
-): Promise<BudgetActionState> {
-  const budgetId = toInteger(formData.get("budget_id"))
+): Promise<BudgetUpdateFormState> {
+  const currentUser = await getMe()
 
-  const amount = toInteger(formData.get("amount"))
-
-  const recordedOn = toText(formData.get("recorded_on"))
-
-  if (budgetId === null || amount === null || recordedOn === null) {
-    return { ok: false, error: "金額と記録日を入力してください" }
+  if (currentUser instanceof Error || canManageBudgets(currentUser.permissions) === false) {
+    return { ok: false, error: "予算を管理する権限がありません" }
   }
 
-  const recorded = await recordBudgetConsumption(budgetId, {
+  const budgetId = toPositiveIntId(formData.get("budget_id"))
+
+  if (budgetId === null) {
+    return { ok: false, error: "予算が不正です" }
+  }
+
+  const amount = toPositiveInt(formData.get("amount"))
+
+  if (amount === null) {
+    return { ok: false, error: "金額は正の整数で入力してください" }
+  }
+
+  const name = toText(formData.get("name"))
+
+  if (name === "") {
+    return { ok: false, error: "名称を入力してください" }
+  }
+
+  const noteValue = formData.get("note")
+
+  const note = typeof noteValue === "string" && noteValue !== "" ? noteValue : null
+
+  const updated = await updateBudget(budgetId, {
     amount: amount,
-    recorded_on: recordedOn,
-    note: toText(formData.get("note")),
+    name: name,
+    note: note,
   })
 
-  if (recorded instanceof Error) {
-    return { ok: false, error: recorded.message }
+  if (updated instanceof Error) {
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/budgets")
 
+  revalidatePath(`/budgets/${budgetId}`)
+
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
-function toText(value: FormDataEntryValue | null): string | null {
-  if (typeof value !== "string" || value.trim() === "") {
-    return null
+// 予算削除の Server Action。budget:manage を持つロールのみ。
+// 削除後は詳細ページが消えるため一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。
+export async function deleteBudgetAction(
+  previousState: BudgetDeleteFormState,
+  formData: FormData,
+): Promise<BudgetDeleteFormState> {
+  const currentUser = await getMe()
+
+  if (currentUser instanceof Error || canManageBudgets(currentUser.permissions) === false) {
+    return { ok: false, error: "予算を管理する権限がありません" }
   }
 
-  return value.trim()
-}
+  const budgetId = toPositiveIntId(formData.get("budget_id"))
 
-// FormData 値を整数へ。未入力や不正は null。
-function toInteger(value: FormDataEntryValue | null): number | null {
-  const text = toText(value)
-
-  if (text === null) {
-    return null
+  if (budgetId === null) {
+    return { ok: false, error: "予算が不正です" }
   }
 
-  const parsed = Number(text)
+  const deleted = await deleteBudget(budgetId)
 
-  return Number.isInteger(parsed) ? parsed : null
+  if (deleted instanceof Error) {
+    return { ok: false, error: deleted.message }
+  }
+
+  revalidatePath("/budgets")
+
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }

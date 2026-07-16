@@ -27,3 +27,7 @@ export type AntisocialCheckResponse = {
   status: string
   created_at: string
 }
+
+export type AntisocialCheckAdminResponse = AntisocialCheckResponse & {
+  requester_name: string
+}

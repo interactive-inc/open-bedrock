@@ -28,14 +28,15 @@ INSERT INTO identities (account_id, provider, subject, secret, email, email_veri
   (13, 'password', 'you+e013@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e013@example.com', 1, 0),
   (16, 'password', 'you+e016@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e016@example.com', 1, 0);
 
--- account_roles: E001 は admin、E002/E004 は manager、その他は member(seed-employees.ts と一致)。
--- Manager 役職が manager ロールを持たないと承認 inbox が誰も使えず、承認フローを試せない。
+-- account_roles: E001 は admin、E003 は hr、E002/E004 は manager、その他は member。
+-- 組織上の役職とは分離しつつ、seed だけで管理・人事・一般の権限経路を検証可能にする。
 INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
   SELECT a.id, r.id, NULL, 0
   FROM accounts a
   JOIN roles r ON r.is_system = 1 AND r.key = (
     CASE
       WHEN a.id = 1 THEN 'admin'
+      WHEN a.id = 3 THEN 'hr'
       WHEN a.id IN (2, 4) THEN 'manager'
       ELSE 'member'
     END

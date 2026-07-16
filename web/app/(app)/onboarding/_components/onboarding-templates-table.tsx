@@ -34,6 +34,7 @@ export async function OnboardingTemplatesTable() {
             <TableHead>種別</TableHead>
             <TableHead>説明</TableHead>
             <TableHead className="text-right">タスク数</TableHead>
+            <TableHead>人事連携</TableHead>
             <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
@@ -55,6 +56,16 @@ export async function OnboardingTemplatesTable() {
 
               <TableCell className="text-right">{template.task_count}</TableCell>
 
+              <TableCell>
+                {template.lifecycle_effect === null ? (
+                  <span className="text-muted-foreground">未設定</span>
+                ) : (
+                  <Badge variant="outline">
+                    {template.lifecycle_effect === "hire" ? "入社" : "退職"}
+                  </Badge>
+                )}
+              </TableCell>
+
               <TableCell className="text-right">
                 <TemplateManagement
                   template={{
@@ -63,6 +74,7 @@ export async function OnboardingTemplatesTable() {
                     kind: template.kind,
                     description: template.description,
                     task_count: template.task_count,
+                    lifecycle_effect: template.lifecycle_effect,
                   }}
                 />
               </TableCell>

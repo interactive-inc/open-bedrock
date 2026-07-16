@@ -6,7 +6,7 @@ import { AdminApplicationsTable } from "@/app/(app)/applications/admin/_componen
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import { getApplicationTemplates } from "@/lib/api/get-application-templates"
 import {
@@ -16,11 +16,10 @@ import {
 } from "@/lib/api/get-application-admin-list"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
+import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-repairs"
 import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 export const metadata = { title: "申請管理" }
-
-const PAGE_SIZE = 20
 
 const SORT_VALUES: ReadonlyArray<ApplicationAdminSort> = ["created_at_desc", "created_at_asc"]
 
@@ -36,6 +35,8 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
     notFound()
   }
 
+  const canRepairWorkflows = canManageWorkflowRepairs(currentUser.permissions)
+
   const params = await props.searchParams
 
   const status = toStatus(toSingleValue(params.status))
@@ -50,11 +51,13 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
 
   const to = toSingleValue(params.to)
 
+  const pageSize = parsePageSize(toSingleValue(params.size) ?? undefined)
+
   const rawPage = toSingleValue(params.page)
 
   const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
 
-  const offset = (page - 1) * PAGE_SIZE
+  const offset = (page - 1) * pageSize
 
   const sort = toSort(toSingleValue(params.sort))
 
@@ -93,13 +96,24 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
         description="全社の申請を横断で確認します。承認操作は各申請の詳細から行います。"
         breadcrumbs={[{ label: "申請", href: "/applications" }, { label: "申請管理" }]}
         actions={
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/applications/inbox" />}
-          >
-            承認 inbox
-          </Button>
+          <>
+            {canRepairWorkflows ? (
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/applications/workflow-repairs" />}
+              >
+                承認フロー修復
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/applications/inbox" />}
+            >
+              承認 inbox
+            </Button>
+          </>
         }
       />
 
@@ -116,7 +130,13 @@ export default async function AdminApplicationsPage(props: { searchParams: Searc
       </Suspense>
 
       <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
-        <AdminListSection filter={filter} offset={offset} sort={sort} extraParams={extraParams} />
+        <AdminListSection
+          filter={filter}
+          offset={offset}
+          pageSize={pageSize}
+          sort={sort}
+          extraParams={extraParams}
+        />
       </Suspense>
     </div>
   )
@@ -148,11 +168,12 @@ async function FilterFormSection(props: {
 async function AdminListSection(props: {
   filter: ApplicationAdminFilter
   offset: number
+  pageSize: number
   sort: ApplicationAdminSort
   extraParams: Record<string, string | undefined>
 }) {
   const result = await getApplicationAdminList(props.filter, {
-    limit: PAGE_SIZE,
+    limit: props.pageSize,
     offset: props.offset,
     sort: props.sort,
   })
@@ -164,6 +185,7 @@ async function AdminListSection(props: {
   const paginationExtraParams: Record<string, string | undefined> = {
     ...props.extraParams,
     sort: props.sort === "created_at_desc" ? undefined : props.sort,
+    size: String(props.pageSize),
   }
 
   return (
@@ -178,9 +200,10 @@ async function AdminListSection(props: {
       <TablePagination
         pathname="/applications/admin"
         total={result.total}
-        limit={PAGE_SIZE}
+        limit={props.pageSize}
         offset={props.offset}
         extraParams={paginationExtraParams}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
       />
     </div>
   )

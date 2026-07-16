@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
 
 const initialState: AccountActionFormState = { ok: false, error: null }
 
@@ -57,7 +58,7 @@ export function RevokeRoleButton(props: RevokeProps) {
       <button
         type="submit"
         disabled={isPending}
-        className="ml-1 text-muted-foreground hover:text-destructive"
+        className="relative ml-1 text-muted-foreground transition-colors select-none hover:text-destructive focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50 disabled:pointer-events-none max-md:after:absolute max-md:after:inset-[-14px] max-md:after:content-['']"
         aria-label={`${props.roleKey} を剥奪`}
       >
         ×
@@ -179,14 +180,20 @@ export function ResetPasswordButton(props: ResetProps) {
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="account_id" value={props.accountId} />
 
-          <Input
-            type="password"
-            name="new_password"
-            required
-            minLength={8}
-            maxLength={200}
-            placeholder="新しいパスワード（8文字以上）"
-          />
+          <Field>
+            <FieldLabel htmlFor={`new-password-${props.accountId}`}>新しいパスワード</FieldLabel>
+
+            <Input
+              id={`new-password-${props.accountId}`}
+              type="password"
+              name="new_password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={200}
+              placeholder="8文字以上で入力…"
+            />
+          </Field>
 
           <AlertDialogFooter>
             <AlertDialogCancel>やめる</AlertDialogCancel>

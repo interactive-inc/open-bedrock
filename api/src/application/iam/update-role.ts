@@ -1,9 +1,18 @@
 import { canManageRoles } from "@/lib/iam/can-manage-roles"
 import { permissionKeySchema } from "@/lib/auth/permission-keys"
-import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
+import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
   session: SessionPayload
@@ -29,16 +38,6 @@ export class UpdateRole {
       return new ForbiddenError("cannot manage roles", "forbidden")
     }
 
-    for (const key of command.permissionKeys) {
-      if (permissionKeySchema.safeParse(key).success === false) {
-        return new ValidationError("unknown permission key", "unknown_permission")
-      }
-
-      if (command.session.permissions.has(key) === false) {
-        return new ForbiddenError("cannot grant a permission you do not hold", "role_escalation")
-      }
-    }
-
     const roleRepository = new RoleRepository(this.c)
 
     const role = await roleRepository.findById(command.roleId)
@@ -51,20 +50,47 @@ export class UpdateRole {
       return new NotFoundError("role not found", "role_not_found")
     }
 
-    const metaUpdated = await roleRepository.updateMeta({
+    const currentPermissionKeys = await roleRepository.permissionKeysOf(command.roleId)
+
+    if (currentPermissionKeys instanceof Error) {
+      return new UnexpectedError("failed to load role permissions", {
+        cause: currentPermissionKeys,
+      })
+    }
+
+    // 現在のロールが実行者より高権限なら、権限の除去も含めて変更を拒否する。
+    if (hasPermissionSuperset(command.session, currentPermissionKeys) === false) {
+      return new ForbiddenError("cannot edit a higher privilege role", "role_escalation")
+    }
+
+    for (const key of command.permissionKeys) {
+      if (permissionKeySchema.safeParse(key).success === false) {
+        return new ValidationError("unknown permission key", "unknown_permission")
+      }
+
+      if (command.session.permissions.has(key) === false) {
+        return new ForbiddenError("cannot grant a permission you do not hold", "role_escalation")
+      }
+    }
+
+    const updated = await roleRepository.updateMetaAndPermissions({
+      actorAccountId: command.session.accountId,
       roleId: command.roleId,
       name: command.name,
       description: command.description,
+      permissionKeys: command.permissionKeys,
     })
 
-    if (metaUpdated instanceof Error) {
-      return new UnexpectedError("failed to update role", { cause: metaUpdated })
+    if (updated instanceof LastAdminError) {
+      return new ConflictError("cannot remove the last effective admin", "last_admin")
     }
 
-    const replaced = await roleRepository.replacePermissions(command.roleId, command.permissionKeys)
+    if (updated instanceof LivePermissionGuardError) {
+      return new ForbiddenError("cannot edit a higher privilege role", "role_escalation")
+    }
 
-    if (replaced instanceof Error) {
-      return new UnexpectedError("failed to replace role permissions", { cause: replaced })
+    if (updated instanceof Error) {
+      return new UnexpectedError("failed to update role", { cause: updated })
     }
 
     return { reason: "updated" }

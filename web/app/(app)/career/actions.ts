@@ -9,6 +9,7 @@ import { updateCareerApplication } from "@/lib/api/update-career-application"
 import { updateCareerPosting } from "@/lib/api/update-career-posting"
 import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
@@ -34,6 +35,8 @@ export async function updateCareerSheetAction(
   previousState: CareerSheetFormState,
   formData: FormData,
 ): Promise<CareerSheetFormState> {
+  await requireAuth()
+
   const goalsText = toOptionalText(formData.get("goals_text"), {
     label: "キャリア目標",
     max: FORM_CONSTRAINTS.career.sheetTextMax,
@@ -71,6 +74,8 @@ export async function applyCareerPostingAction(
   previousState: CareerApplyFormState,
   formData: FormData,
 ): Promise<CareerApplyFormState> {
+  await requireAuth()
+
   const postingId = toPositiveIntId(formData.get("posting_id"))
 
   if (postingId === null) {
@@ -105,6 +110,8 @@ export async function updateCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
 ): Promise<CareerApplicationActionState> {
+  await requireAuth()
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {
@@ -137,6 +144,8 @@ export async function withdrawCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
 ): Promise<CareerApplicationActionState> {
+  await requireAuth()
+
   const applicationId = toPositiveIntId(formData.get("application_id"))
 
   if (applicationId === null) {

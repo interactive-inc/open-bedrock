@@ -2,8 +2,9 @@ import { FetchError } from "@/components/fetch-error"
 import { getDashboard } from "@/lib/api/get-dashboard"
 import { getMe } from "@/lib/api/get-me"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { DashboardCharts } from "@/app/(app)/_components/dashboard-charts"
 
-// /dashboard を認証付きで取得して 4 つのサマリカードを描画する非同期 RSC。
+// /dashboard を認証付きで取得して 4 つのサマリカードとチャートを描画する非同期 RSC。
 // dashboard:view 権限が無いユーザーにはサマリを出さず、案内文を表示する。
 export async function DashboardSummaryCards() {
   const me = await getMe()
@@ -34,18 +35,27 @@ export async function DashboardSummaryCards() {
   ]
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => (
-        <Card key={card.label}>
-          <CardHeader>
-            <CardDescription>{card.label}</CardDescription>
-          </CardHeader>
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <Card key={card.label}>
+            <CardHeader>
+              <CardDescription>{card.label}</CardDescription>
+            </CardHeader>
 
-          <CardContent>
-            <span className="text-3xl font-semibold">{card.value}</span>
-          </CardContent>
-        </Card>
-      ))}
+            <CardContent>
+              <span className="text-3xl font-semibold">{card.value}</span>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <DashboardCharts
+        departmentBreakdown={summary.department_breakdown}
+        applicationTrend={summary.application_trend}
+        goalStatusSummary={summary.goal_status_summary}
+        goalCompletionRate={summary.goal_completion_rate}
+      />
     </div>
   )
 }

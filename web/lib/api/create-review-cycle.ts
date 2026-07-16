@@ -6,10 +6,20 @@ import type { ReviewCycleCreateRequest } from "@/lib/api/types/review-types"
 export async function createReviewCycle(request: ReviewCycleCreateRequest) {
   const client = await createClient()
 
-  const json: { title: string; period: string; dueDate?: string } =
+  const json: {
+    title: string
+    period: string
+    dueDate?: string
+    policy: ReviewCycleCreateRequest["policy"]
+  } =
     request.dueDate === null
-      ? { title: request.title, period: request.period }
-      : { title: request.title, period: request.period, dueDate: request.dueDate }
+      ? { title: request.title, period: request.period, policy: request.policy }
+      : {
+          title: request.title,
+          period: request.period,
+          dueDate: request.dueDate,
+          policy: request.policy,
+        }
 
   const response = await client["review-cycles"].$post({ json })
 

@@ -1,36 +1,25 @@
 "use client"
 
-import { LogOut } from "lucide-react"
-import { AppHeader } from "@/components/app-header"
+import Link from "next/link"
+import { CommandPalette } from "@/components/command-palette"
 import { SidebarNav } from "@/components/sidebar-nav"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { SidebarUserMenu } from "@/components/sidebar-user-menu"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
+import type { InboxCounts } from "@/lib/api/types/inbox-types"
 import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
   children: React.ReactNode
   currentUser: MeResponse
+  inboxCounts: InboxCounts
   locale: Locale
   onLogout: () => void
   unreadNotificationCount: number
@@ -44,6 +33,13 @@ export function AppShell(props: Props) {
 
   return (
     <SidebarProvider>
+      <a
+        href="#main-content"
+        className="sr-only fixed top-2 left-2 z-50 rounded-md bg-background px-3 py-2 text-sm shadow focus:not-sr-only"
+      >
+        本文へスキップ
+      </a>
+
       <Sidebar collapsible="offcanvas" className="border-none">
         <SidebarHeader>
           <div className="flex flex-col gap-0.5 px-2 py-1">
@@ -55,66 +51,42 @@ export function AppShell(props: Props) {
 
         <SidebarContent>
           <SidebarNav
+            inboxCounts={props.inboxCounts}
             unreadNotificationCount={props.unreadNotificationCount}
             permissions={props.currentUser.permissions}
           />
         </SidebarContent>
 
         <SidebarFooter className="border-t border-border/70 bg-muted/60">
-          <div className="flex flex-col gap-0.5 px-2 py-1">
-            <span className="text-sm font-medium">{props.currentUser.name}</span>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/settings"
+              className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
+            >
+              <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
 
-            <span className="text-xs text-muted-foreground">{props.currentUser.role}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {props.currentUser.role_keys.join(", ") || props.currentUser.role}
+              </span>
+            </Link>
+
+            <SidebarUserMenu
+              currentUser={props.currentUser}
+              locale={props.locale}
+              onLogout={props.onLogout}
+              unreadNotificationCount={props.unreadNotificationCount}
+            />
           </div>
-
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <SidebarMenuButton>
-                      <LogOut />
-
-                      <span>ログアウト</span>
-                    </SidebarMenuButton>
-                  }
-                />
-
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>ログアウトしますか?</AlertDialogTitle>
-
-                    <AlertDialogDescription>
-                      もう一度ログインするにはパスワードが必要です。
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
-
-                    <form action={props.onLogout}>
-                      <AlertDialogAction type="submit" variant="destructive">
-                        ログアウト
-                      </AlertDialogAction>
-                    </form>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
 
       <SidebarInset>
-        <AppHeader
-          currentUser={props.currentUser}
-          locale={props.locale}
-          onLogout={props.onLogout}
-          unreadNotificationCount={props.unreadNotificationCount}
-        />
-
-        <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{props.children}</main>
+        <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-6" tabIndex={-1}>
+          {props.children}
+        </main>
       </SidebarInset>
+
+      <CommandPalette inboxCounts={props.inboxCounts} permissions={props.currentUser.permissions} />
     </SidebarProvider>
   )
 }

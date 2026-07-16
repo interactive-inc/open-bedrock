@@ -9,6 +9,8 @@ export type Props = {
   method?: string
   body?: unknown
   now?: string
+  headers?: Record<string, string>
+  companyTimeZone?: string
 }
 
 // テスト用の既定の固定時刻。created_at 等の検証はこの値を期待値にする。
@@ -16,10 +18,10 @@ export type Props = {
 // fiscal year を参照するテストはシードと整合する now（例: 2026-06-01）を明示的に渡すこと。
 const defaultNow = "2026-01-01T00:00:00.000Z"
 
-// テスト用: テスト DB と Bindings（JWT_SECRET と固定時刻）を渡して app を叩く。
+// テスト用: テスト DB と Bindings（secret と固定時刻）を渡して app を叩く。
 // リクエストスコープは Hono の contextStorage が確立する。
 export function requestWithContext(props: Props): Promise<Response> {
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = { ...props.headers }
 
   if (props.token !== null) {
     headers.Authorization = `Bearer ${props.token}`
@@ -32,6 +34,8 @@ export function requestWithContext(props: Props): Promise<Response> {
   const bindings: Bindings = {
     DB: props.db,
     JWT_SECRET: props.jwtSecret,
+    AUDIT_HMAC_SECRET: "request-with-context-audit-hmac-secret",
+    COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",
     NOW: props.now ?? defaultNow,
   }
 

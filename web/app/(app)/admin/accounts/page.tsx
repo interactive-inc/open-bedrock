@@ -19,6 +19,8 @@ export default async function AdminAccountsPage() {
     notFound()
   }
 
+  const canAssignRoles = currentUser.permissions.includes("iam:assign_roles")
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -27,7 +29,10 @@ export default async function AdminAccountsPage() {
       />
 
       <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-10 w-full" />}>
-        <AccountListSection />
+        <AccountListSection
+          canAssignRoles={canAssignRoles}
+          actorPermissionKeys={currentUser.permissions}
+        />
       </Suspense>
     </div>
   )

@@ -17,7 +17,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { attendanceRecords } from "@/schema"
 import type { SQL } from "drizzle-orm"
-import { and, asc, count, eq, gte, inArray, lte } from "drizzle-orm"
+import { and, asc, count, gte, inArray, lte } from "drizzle-orm"
 import {
   BadRequestError,
   ForbiddenError,
@@ -112,8 +112,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       throw toHttpException(query)
     }
 
-    if (query.employeeId !== null) {
-      conditions.push(eq(attendanceRecords.employeeId, query.employeeId))
+    if (query.employeeIds !== null) {
+      conditions.push(inArray(attendanceRecords.employeeId, query.employeeIds))
     }
   }
 

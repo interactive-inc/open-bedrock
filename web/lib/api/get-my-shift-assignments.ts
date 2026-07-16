@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
-import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
+import type { MyShiftAssignmentResponse } from "@/lib/api/types/shift-types"
 
 // GET /shift/assignments/me。本人の担当シフト一覧。日付範囲で絞り込み可能。
 export async function getMyShiftAssignments(
   from: string | null,
   to: string | null,
-): Promise<Array<ShiftAssignmentResponse> | Error> {
+): Promise<Array<MyShiftAssignmentResponse> | Error> {
   const client = await createClient()
 
   const response = await client.shift.assignments.me.$get({

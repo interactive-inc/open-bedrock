@@ -12,7 +12,12 @@ commands:
   employee register           社員を登録
   employee show <code>        社員の詳細
   employee update <code>      社員情報を更新
-  employee delete <code>      社員を削除
+  employee timeline           入社・配属・異動・退職の履歴
+  employee state              基準日現在の人事状態
+  employee archive            退職者を履歴保持してアーカイブ
+  personnel-action request    人事変更を承認申請
+  personnel-action apply      人事発令を直接確定
+  personnel-action correct    確定済み発令を追記訂正
   app templates               申請テンプレート一覧 (--category)
   app template <code>         申請テンプレート詳細
   app submit <code>           申請を提出 (--data <file>)
@@ -21,6 +26,8 @@ commands:
   app show <id>               申請の詳細
   app approve <id>            申請を承認 (--comment)
   app reject <id>             申請を却下 (--comment)
+  app workflow-repair list    修復が必要な承認フロー一覧
+  app workflow-repair reassign <id>  承認候補を再割当 (--candidates <id,id,...> --reason <text>)
   application mine            申請一覧
   application show <id>       申請の詳細
   application update <id>     申請を更新
@@ -44,6 +51,17 @@ commands:
   documents list              文書台帳一覧（期限の近い順） (--category)
   documents register          文書を登録 (--title --location [--category --partner-code --expires-on --note])
   documents update <id>       文書を更新 (--title --location [--category --partner-code --expires-on --note])
+  governance list             規程・手続き一覧
+  governance show <code>      規程・手続き詳細
+  governance sync             .docs/governance の Markdown 原本を同期 ([--path])
+  governance impact           組織変更・参照・期限の矛盾を検査
+  governance submit-review <code>  指定版をレビューへ提出 (--version)
+  governance review <code>    組織ロールとして判断 (--version --org-role --decision)
+  governance publish <code>   指定版を公開 (--version)
+  governance acknowledge <code>  現行版を確認済みにする
+  governance org-roles        組織ロールと現在の担当者
+  governance assign-role <role>  組織ロールを割当
+  governance revoke-role <id> 組織ロール割当を終了
   leave request               休暇申請 (--type --start --end [--reason])
   leave mine                  自分の休暇申請一覧
   leave show <id>             休暇申請の詳細
@@ -63,6 +81,12 @@ commands:
   ringi approve <id>          稟議を承認 ([--comment])
   ringi reject <id>           稟議を却下 (--comment)
   ringi admin                 稟議全件参照 ([--status --applicant-id --sort --limit --offset])
+  budget list                 部署予算一覧 ([--department-id --fiscal-period])
+  budget show <id>            予算詳細（消化額・残額）
+  budget summary              部署ごとの消化状況 (--fiscal-period)
+  budget create               予算を登録 (--department-id --fiscal-period --period-start --period-end --amount --name [--note])
+  budget update <id>          予算の金額・名称・メモを修正 (--amount --name [--note])
+  budget delete <id>          予算を削除
   attendance clock-in         出勤打刻 ([--note])
   attendance clock-out        退勤打刻 ([--note])
   attendance me               自分の勤怠 ([--from --to])
@@ -180,12 +204,21 @@ commands:
   org dept delete             部署を削除
   asset update <code>         備品情報を更新
   asset delete <code>         備品を削除
+  asset dispose <code>        備品を廃棄 (--reason [--disposed-on])
+  asset holdings              保有状況一覧（誰が何を持っているか）
+  stocktake list              棚卸しセッション一覧 ([--status])
+  stocktake start             棚卸しを開始 (--name --target-date)
+  stocktake show <id>         棚卸しの詳細（確認状況）
+  stocktake check <id>        現物確認を記録 (--asset-code [--location-note])
+  stocktake close <id>        棚卸しを締める
   notify show <id>            通知の詳細
   notify delete <id>          通知を削除
   onboarding uncomplete <id>          オンボーディングタスクを未完了に戻す
   onboarding assignment show <id>     オンボーディング割当の詳細
   onboarding assignment update <id>   オンボーディング割当を更新
   onboarding assignment cancel <id>   オンボーディング割当を取り消し
+  onboarding template-bind-lifecycle <code>  入退社イベントのテンプレートを設定 (--effect hire|retired)
+  onboarding template-unbind-lifecycle <code>  入退社イベントのテンプレート連携を解除
   business-trip request       出張申請 (--destination --start --end --purpose [--cost])
   business-trip mine          自分の出張申請一覧
   business-trip show          出張申請の詳細 (--id)
@@ -276,16 +309,16 @@ commands:
   it-incidents list           インシデント記録一覧 (--status) ※read:all
   it-incidents create         インシデントを記録 (--occurred-at --title --summary [--severity])
   it-incidents resolve <id>   インシデントを解消済みにする
-  budgets list                予算枠一覧 (--fiscal-year --department-code) ※消化・残額つき・read:all
-  budgets create              予算枠を作成 (--fiscal-year --title --amount [--department-code --note])
-  budgets update <id>         予算枠を更新 (--fiscal-year --title --amount [--department-code --note])
-  budgets consume <id>        予算枠の消化を記録 (--amount --recorded-on [--note])
   salary-revisions list       給与改定履歴 (--employee-id) ※最機微・salary_revision 権限のみ
   salary-revisions create     給与改定を記録 (--employee-id --effective-date --previous-base-salary --new-base-salary [--reason])
   batch                       バッチ状況
+  batch employee-lifecycle preflight  人事履歴移行を事前検査
+  batch employee-lifecycle backfill   旧台帳を人事履歴へ移行
+  batch employee-lifecycle verify     移行結果を検証して正本化
+  batch employee-lifecycle rebuild-projections  互換投影を再構築
+  batch employee-lifecycle process-outbox       入退社手続きを展開
   roles                       ロール一覧（iam:manage_roles）
   accounts                    アカウント一覧（account:manage）
-  audit-logs                  監査ログ一覧（audit_log:read）
   dashboard                   ダッシュボード集計
 
 options:

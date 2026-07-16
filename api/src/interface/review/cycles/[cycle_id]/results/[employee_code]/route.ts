@@ -22,10 +22,6 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) {
     throw new UnauthorizedError()
   }
-  if (canAdministerCycle(session) === false) {
-    throw new ForbiddenError()
-  }
-
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
 
   const cycleRows = await c.var.database
@@ -51,7 +47,25 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
-  const forms = formRows.map((row) => ReviewForm.fromRow(row))
+  const canAdminister = canAdministerCycle(session)
+  let visibleFormRows = formRows
+
+  if (canAdminister === false) {
+    if (cycleRow.status !== "closed") {
+      throw new ForbiddenError()
+    }
+
+    if (employeeRow.id !== session.employeeId) {
+      visibleFormRows = formRows.filter(
+        (form) => form.reviewerEmployeeId === session.employeeId && form.status === "submitted",
+      )
+
+      if (visibleFormRows.length === 0) {
+        throw new ForbiddenError()
+      }
+    }
+  }
+  const forms = visibleFormRows.map((row) => ReviewForm.fromRow(row))
   const cycle = new ReviewCycle({
     id: cycleRow.id,
     title: cycleRow.title,
@@ -63,6 +77,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (view instanceof Error) {
     throw new InternalError("internal server error")
   }
+  // 360-degree review confidentiality: when the subject employee views their own
+  // results as a non-admin, strip reviewer identity to keep feedback anonymous.
+  const isSelfView = canAdminister === false && employeeRow.id === session.employeeId
   const responseBody = zAppReviewResult.parse({
     cycle_id: view.cycleId,
     subject_employee_id: view.subjectEmployeeId,
@@ -78,7 +95,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       id: form.id,
       cycle_id: form.cycleId,
       subject_employee_id: form.subjectEmployeeId,
-      reviewer_employee_id: form.reviewerEmployeeId,
+      reviewer_employee_id: isSelfView ? 0 : form.reviewerEmployeeId,
       reviewer_type: form.reviewerType,
       answers: form.answers,
       score: form.score,

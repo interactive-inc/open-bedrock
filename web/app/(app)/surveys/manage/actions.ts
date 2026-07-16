@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createSurvey } from "@/lib/api/create-survey"
 import { deleteSurvey } from "@/lib/api/delete-survey"
@@ -183,6 +182,7 @@ export async function deleteSurveyAction(
   revalidatePath("/surveys")
   revalidatePath("/surveys/manage")
 
-  // 削除後は一覧へ遷移する。redirect は内部で throw するので最後に呼ぶ。
-  redirect("/surveys/manage")
+  // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
+  // 成功フィードバック（toast等）が握り潰されるのを防ぐ。
+  return { ok: true, error: null }
 }

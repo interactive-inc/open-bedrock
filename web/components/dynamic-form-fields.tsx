@@ -17,8 +17,10 @@ type Props = {
   name: string
 }
 
-function initialValues(schema: FormSchema): Record<string, string> {
-  const result: Record<string, string> = {}
+type FieldValue = string | number
+
+function initialValues(schema: FormSchema): Record<string, FieldValue> {
+  const result: Record<string, FieldValue> = {}
 
   for (const field of schema.fields) {
     result[field.id] = ""
@@ -28,7 +30,9 @@ function initialValues(schema: FormSchema): Record<string, string> {
 }
 
 export function DynamicFormFields(props: Props) {
-  const [values, setValues] = useState<Record<string, string>>(initialValues(props.schema))
+  const [values, setValues] = useState<Record<string, FieldValue>>(() =>
+    initialValues(props.schema),
+  )
 
   if (props.schema.fields.length === 0) {
     return (
@@ -39,7 +43,7 @@ export function DynamicFormFields(props: Props) {
     )
   }
 
-  function setValue(id: string, value: string) {
+  function setValue(id: string, value: FieldValue) {
     setValues({ ...values, [id]: value })
   }
 
@@ -89,7 +93,15 @@ export function DynamicFormFields(props: Props) {
                 value={values[field.id] ?? ""}
                 required={field.required}
                 aria-required={field.required}
-                onChange={(event) => setValue(field.id, event.target.value)}
+                onChange={(event) => {
+                  const rawValue = event.currentTarget.value
+                  const numericValue = event.currentTarget.valueAsNumber
+
+                  setValue(
+                    field.id,
+                    rawValue === "" || Number.isNaN(numericValue) ? "" : numericValue,
+                  )
+                }}
               />
             ) : null}
 

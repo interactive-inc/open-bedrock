@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -43,11 +44,11 @@ export function GoalRowActions(props: Props) {
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <TableRowActions>
       <UpdateGoalDialog goal={props.goal} goalId={goalId} />
 
       <DeleteGoalButton goalId={goalId} />
-    </div>
+    </TableRowActions>
   )
 }
 
@@ -152,8 +153,24 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
 }
 
 // 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+// 成功・失敗の通知は action の結果を見て toast() で出す。
 function DeleteGoalButton(props: { goalId: number }) {
-  const [, formAction, pending] = useActionState(deleteGoalAction, {
+  async function reduce(
+    previousState: GoalActionState,
+    formData: FormData,
+  ): Promise<GoalActionState> {
+    const result = await deleteGoalAction(previousState, formData)
+
+    if (result.ok) {
+      toast.success("目標を削除しました")
+    } else if (result.error !== null) {
+      toast.error(result.error)
+    }
+
+    return result
+  }
+
+  const [, formAction, pending] = useActionState(reduce, {
     ok: false,
     error: null,
   })

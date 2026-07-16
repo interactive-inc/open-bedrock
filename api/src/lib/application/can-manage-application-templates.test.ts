@@ -3,8 +3,8 @@ import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageApplicationTemplates", () => {
-  test("manager can manage", () => {
-    expect(canManageApplicationTemplates(makeTestSession("manager"))).toBe(true)
+  test("manager cannot manage company-wide templates", () => {
+    expect(canManageApplicationTemplates(makeTestSession("manager"))).toBe(false)
   })
 
   test("hr can manage", () => {

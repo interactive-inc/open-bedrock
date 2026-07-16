@@ -1,12 +1,13 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useState } from "react"
 import {
   cancelFamilyCareLeaveAction,
   updateFamilyCareLeaveAction,
 } from "@/app/(app)/family-care-leaves/actions"
-import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leaves/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,11 +81,11 @@ export function MyFamilyCareLeavesList(props: Props) {
               <TableCell>{statusLabel(familyCareLeave.status)}</TableCell>
 
               <TableCell>
-                <div className="flex justify-end gap-2">
+                <TableRowActions>
                   <UpdateFamilyCareLeaveDialog familyCareLeave={familyCareLeave} />
 
                   <CancelFamilyCareLeaveButton familyCareLeaveId={familyCareLeave.id} />
-                </div>
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}
@@ -98,23 +99,12 @@ export function MyFamilyCareLeavesList(props: Props) {
 function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveResponse }) {
   const [open, setOpen] = useState(false)
 
-  async function reduce(
-    previousState: FamilyCareLeaveActionState,
-    formData: FormData,
-  ): Promise<FamilyCareLeaveActionState> {
-    const result = await updateFamilyCareLeaveAction(previousState, formData)
-
-    if (result.ok) {
-      setOpen(false)
-    }
-
-    return result
-  }
-
-  const [state, formAction, pending] = useActionState(reduce, {
-    ok: false,
-    error: null,
-  })
+  const [state, formAction, pending] = useFormAction(
+    updateFamilyCareLeaveAction,
+    { ok: false, error: null },
+    "休業申出を変更しました",
+    { onSuccess: () => setOpen(false) },
+  )
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -195,10 +185,14 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
 
 // 休業申出取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
 function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
-  const [, formAction, pending] = useActionState(cancelFamilyCareLeaveAction, {
-    ok: false,
-    error: null,
-  })
+  const [, formAction, pending] = useFormAction(
+    cancelFamilyCareLeaveAction,
+    {
+      ok: false,
+      error: null,
+    },
+    "休業申出を取り消しました",
+  )
 
   return (
     <AlertDialog>

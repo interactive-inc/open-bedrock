@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState } from "react"
 import { assignOnboardingAction } from "@/app/(app)/onboarding/actions"
 import type { AssignState } from "@/app/(app)/onboarding/actions"
+import { useFormAction } from "@/hooks/use-form-action"
 import type { OnboardingTemplate } from "@/lib/api/types/onboarding-types"
 import { EmployeeSelect } from "@/components/employee-select"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,11 @@ const initialState: AssignState = { ok: false, message: null }
 // 社員へオンボーディングテンプレートを割り当てるフォーム。
 // useActionState + native form。テンプレ選択は native select で FormData に乗せる。
 export function AssignForm(props: Props) {
-  const action = useActionState(assignOnboardingAction, initialState)
+  const action = useFormAction(
+    assignOnboardingAction,
+    initialState,
+    (state) => state.message ?? "割り当てました",
+  )
 
   const state = action[0]
 

@@ -2,6 +2,7 @@ import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getSurveyList } from "@/lib/api/get-survey-list"
 import { EmptyState } from "@/components/empty-state"
+import { TableRowActions } from "@/components/table-row-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,7 +16,7 @@ import {
 
 // 実施中アンケートを取得してテーブル表示する非同期 RSC。
 // 各行から回答画面 (/surveys/:id) と集計画面 (/surveys/:id/summary) へ遷移できる。
-export async function SurveyListTable() {
+export async function SurveyListTable(props: { canViewSummary: boolean }) {
   const surveys = await getSurveyList()
 
   if (surveys instanceof Error) {
@@ -51,23 +52,27 @@ export async function SurveyListTable() {
 
               <TableCell>{survey.questions_json.length}</TableCell>
 
-              <TableCell className="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  nativeButton={false}
-                  render={<Link href={`/surveys/${survey.id}`} />}
-                >
-                  回答
-                </Button>
+              <TableCell>
+                <TableRowActions>
+                  <Button
+                    size="sm"
+                    nativeButton={false}
+                    render={<Link href={`/surveys/${survey.id}`} />}
+                  >
+                    回答
+                  </Button>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  nativeButton={false}
-                  render={<Link href={`/surveys/${survey.id}/summary`} />}
-                >
-                  集計
-                </Button>
+                  {props.canViewSummary ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      nativeButton={false}
+                      render={<Link href={`/surveys/${survey.id}/summary`} />}
+                    >
+                      集計
+                    </Button>
+                  ) : null}
+                </TableRowActions>
               </TableCell>
             </TableRow>
           ))}

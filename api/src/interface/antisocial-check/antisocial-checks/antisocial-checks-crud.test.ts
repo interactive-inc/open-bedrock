@@ -14,6 +14,7 @@ import { factory } from "@/lib/factory"
 import * as createRoute from "@/interface/antisocial-check/antisocial-checks/route"
 import * as detailRoute from "@/interface/antisocial-check/antisocial-checks/[id]/route"
 import * as meRoute from "@/interface/antisocial-check/antisocial-checks/me/route"
+import * as adminRoute from "@/interface/antisocial-check/antisocial-checks/admin/route"
 import { z } from "zod"
 
 // app.ts は統合者が後で配線するため、ここでは同じミドルウェア連鎖の使い捨て app に
@@ -32,6 +33,7 @@ const app = factory
   })
   .post("/antisocial-checks", ...createRoute.POST)
   .get("/antisocial-checks/me", ...meRoute.GET)
+  .get("/antisocial-checks/admin", ...adminRoute.GET)
   .get("/antisocial-checks/:id", ...detailRoute.GET)
   .put("/antisocial-checks/:id", ...detailRoute.PUT)
   .delete("/antisocial-checks/:id", ...detailRoute.DELETE)
@@ -98,6 +100,14 @@ function requesterToken(): Promise<string> {
   })
 }
 
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: 5,
+    email: "you+e005@example.com",
+    role: "member",
+  })
+}
+
 async function request(props: {
   path: string
   token: string | null
@@ -124,6 +134,7 @@ async function request(props: {
     {
       DB: await createTestDb(),
       JWT_SECRET: jwtSecret,
+      AUDIT_HMAC_SECRET: "test-audit-hmac-secret",
       NOW: "2026-01-01T00:00:00.000Z",
     },
   )
@@ -216,6 +227,40 @@ describe("GET /antisocial-checks/me", () => {
   })
 })
 
+describe("GET /antisocial-checks/admin", () => {
+  test("returns other employees' checks and excludes the manager's own request", async () => {
+    const response = await request({
+      path: "/antisocial-checks/admin",
+      token: await requesterToken(),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({
+        data: z.array(antisocialCheckResponseSchema.extend({ requester_name: z.string() })),
+        total: z.number(),
+      })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data.some((check) => check.requester_id === 4)).toBe(false)
+    }
+  })
+
+  test("returns 403 for a member without management permission", async () => {
+    const response = await request({
+      path: "/antisocial-checks/admin",
+      token: await memberToken(),
+    })
+
+    expect(response.status).toBe(403)
+  })
+})
+
 describe("GET /antisocial-checks/:id", () => {
   test("returns the antisocial check for its requester", async () => {
     const response = await request({
@@ -234,13 +279,13 @@ describe("GET /antisocial-checks/:id", () => {
     }
   })
 
-  test("returns 403 for another person's antisocial check", async () => {
+  test("allows a manager to read another person's antisocial check", async () => {
     const response = await request({
       path: `/antisocial-checks/${othersAntisocialCheckId}`,
       token: await requesterToken(),
     })
 
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(200)
   })
 
   test("returns 404 for an unknown antisocial check", async () => {
@@ -254,7 +299,7 @@ describe("GET /antisocial-checks/:id", () => {
 })
 
 describe("PUT /antisocial-checks/:id", () => {
-  test("updates the details and result of the viewer's antisocial check", async () => {
+  test("updates the details but not the result of the viewer's antisocial check", async () => {
     const response = await request({
       path: `/antisocial-checks/${ownAntisocialCheckId}`,
       token: await requesterToken(),
@@ -263,7 +308,7 @@ describe("PUT /antisocial-checks/:id", () => {
         partner_name: "Demo Partners LLC",
         partner_address: "4-5-6 Placeholder, Example City",
         representative_name: "Alex Sample",
-        result: "clear",
+        result: null,
       },
     })
 
@@ -275,8 +320,49 @@ describe("PUT /antisocial-checks/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.partner_name).toBe("Demo Partners LLC")
-      expect(parsed.data.result).toBe("clear")
+      expect(parsed.data.result).toBeNull()
     }
+  })
+
+  test("allows a manager to complete another person's antisocial check", async () => {
+    const response = await request({
+      path: `/antisocial-checks/${othersAntisocialCheckId}`,
+      token: await requesterToken(),
+      method: "PUT",
+      body: {
+        partner_name: "Example Trading Co.",
+        partner_address: "1-2-3 Sample, Example City",
+        representative_name: "Pat Example",
+        result: "clear",
+      },
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = antisocialCheckResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.result).toBe("clear")
+      expect(parsed.data.status).toBe("completed")
+    }
+  })
+
+  test("returns 403 when a manager decides their own antisocial check", async () => {
+    const response = await request({
+      path: `/antisocial-checks/${ownAntisocialCheckId}`,
+      token: await requesterToken(),
+      method: "PUT",
+      body: {
+        partner_name: "Sample Logistics Inc.",
+        partner_address: null,
+        representative_name: null,
+        result: "clear",
+      },
+    })
+
+    expect(response.status).toBe(403)
   })
 
   test("returns 403 when updating another person's antisocial check", async () => {

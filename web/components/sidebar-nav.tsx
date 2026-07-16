@@ -3,6 +3,7 @@
 import {
   Award,
   Bell,
+  BookOpen,
   BookOpenCheck,
   UserPlus,
   Boxes,
@@ -11,15 +12,20 @@ import {
   Briefcase,
   CalendarClock,
   CalendarDays,
+  CalendarOff,
   ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   ClipboardList,
   Coins,
+  DoorOpen,
+  FileClock,
   FileText,
   GitBranch,
   GraduationCap,
   HeartHandshake,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   type LucideIcon,
   MessagesSquare,
@@ -32,12 +38,13 @@ import {
   Target,
   TimerReset,
   Users,
+  Wallet,
   Workflow,
   UserCog,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useCallback, useDeferredValue, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
@@ -54,6 +61,7 @@ import {
 } from "@/components/ui/sidebar"
 
 type Props = {
+  inboxCounts: import("@/lib/api/types/inbox-types").InboxCounts
   unreadNotificationCount: number
   // 本人が持つ permission キー。これに含まれる requiredPermission の項目だけ表示する。
   permissions: ReadonlyArray<string>
@@ -63,6 +71,7 @@ type SubItem = {
   label: string
   href: string
   requiredPermission?: string
+  prefetch?: boolean
 }
 
 type NavItem = {
@@ -70,6 +79,7 @@ type NavItem = {
   href: string
   icon: LucideIcon
   requiredPermission?: string
+  prefetch?: boolean
   children?: ReadonlyArray<SubItem>
 }
 
@@ -88,12 +98,22 @@ function filterByPermission(
     required === undefined || permissions.has(required)
 
   const filteredGroups = groups.map((group) => {
-    const items = group.items
-      .filter((item) => allowed(item.requiredPermission))
-      .map((item) => ({
+    const items = group.items.reduce<Array<NavItem>>((result, item) => {
+      if (allowed(item.requiredPermission) === false) {
+        return result
+      }
+
+      const filteredItem = {
         ...item,
         children: item.children?.filter((child) => allowed(child.requiredPermission)),
-      }))
+      }
+
+      if (filteredItem.children === undefined || filteredItem.children.length > 0) {
+        result.push(filteredItem)
+      }
+
+      return result
+    }, [])
 
     return { ...group, items: items }
   })
@@ -113,7 +133,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
         label: "申請の承認",
         href: "/applications/inbox",
         icon: Inbox,
-        requiredPermission: "application:approve",
       },
       {
         label: "経費の承認",
@@ -146,7 +165,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
           {
             label: "受信箱",
             href: "/applications/inbox",
-            requiredPermission: "application:approve",
           },
           {
             label: "全社の申請",
@@ -232,6 +250,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "一覧", href: "/antisocial-checks" },
           { label: "新規宣誓", href: "/antisocial-checks/new" },
+          {
+            label: "判定受信箱",
+            href: "/antisocial-checks/admin",
+            requiredPermission: "antisocial_check:manage",
+          },
         ],
       },
     ],
@@ -253,7 +276,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "休暇",
         href: "/leave",
-        icon: Plane,
+        icon: CalendarOff,
         children: [
           { label: "一覧", href: "/leave" },
           { label: "新規", href: "/leave/new" },
@@ -271,7 +294,12 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: CalendarDays,
         children: [
           { label: "自分", href: "/shift" },
-          { label: "パターン", href: "/shift/patterns" },
+          {
+            label: "交代承認",
+            href: "/shift/inbox",
+            requiredPermission: "shift_swap:approve",
+          },
+          { label: "パターン", href: "/shift/patterns", requiredPermission: "shift:manage" },
           { label: "管理", href: "/shift/manage", requiredPermission: "shift:manage" },
           {
             label: "全社の交代",
@@ -391,6 +419,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
         children: [
           { label: "ハブ", href: "/onboarding", requiredPermission: "onboarding:manage" },
           {
+            label: "社員別の状況",
+            href: "/onboarding/employees",
+            requiredPermission: "onboarding:view:all",
+          },
+          {
             label: "テンプレート",
             href: "/onboarding/templates",
             requiredPermission: "onboarding:manage",
@@ -416,7 +449,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
       {
         label: "ナレッジ",
         href: "/knowledge",
-        icon: FileText,
+        icon: BookOpen,
         children: [
           { label: "一覧", href: "/knowledge" },
           { label: "新規", href: "/knowledge/new" },
@@ -445,6 +478,11 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "送る", href: "/thanks/send" },
           { label: "景品", href: "/thanks/rewards" },
           {
+            label: "交換承認",
+            href: "/thanks/inbox",
+            requiredPermission: "thanks_redemption:approve",
+          },
+          {
             label: "景品の管理",
             href: "/thanks/rewards/manage",
             requiredPermission: "thanks_reward:manage",
@@ -462,12 +500,31 @@ const navGroups: ReadonlyArray<NavGroup> = [
     ],
   },
   {
+    heading: "ガバナンス",
+    items: [
+      {
+        label: "規程・手続き",
+        href: "/governance",
+        icon: ShieldCheck,
+        requiredPermission: "governance:read",
+        children: [
+          { label: "一覧", href: "/governance", requiredPermission: "governance:read" },
+          {
+            label: "整合性と組織ロール",
+            href: "/governance/manage",
+            requiredPermission: "governance:manage",
+          },
+        ],
+      },
+    ],
+  },
+  {
     heading: "物と場所",
     items: [
       {
         label: "会議室",
         href: "/rooms",
-        icon: CalendarClock,
+        icon: DoorOpen,
         children: [
           { label: "空き状況", href: "/rooms" },
           { label: "自分の予約", href: "/rooms/me" },
@@ -487,6 +544,8 @@ const navGroups: ReadonlyArray<NavGroup> = [
           { label: "一覧", href: "/assets" },
           { label: "新規登録", href: "/assets/new", requiredPermission: "asset:manage" },
           { label: "自分の貸与品", href: "/assets/lent/me" },
+          { label: "保有状況", href: "/assets/holdings", requiredPermission: "asset:manage" },
+          { label: "棚卸し", href: "/stocktakes", requiredPermission: "asset:manage" },
         ],
       },
       {
@@ -535,10 +594,15 @@ const navGroups: ReadonlyArray<NavGroup> = [
         icon: Building2,
       },
       {
-        label: "予算枠",
+        label: "予算",
         href: "/budgets",
-        icon: Boxes,
-        requiredPermission: "budget:read:all",
+        icon: Wallet,
+        requiredPermission: "budget:manage",
+        children: [
+          { label: "一覧", href: "/budgets", requiredPermission: "budget:manage" },
+          { label: "新規", href: "/budgets/new", requiredPermission: "budget:manage" },
+          { label: "消化状況", href: "/budgets/summary", requiredPermission: "budget:manage" },
+        ],
       },
       {
         label: "文書台帳",
@@ -552,9 +616,16 @@ const navGroups: ReadonlyArray<NavGroup> = [
     heading: "管理",
     items: [
       {
+        label: "監査ログ",
+        href: "/admin/audit-events",
+        icon: FileClock,
+        requiredPermission: "audit:read",
+        prefetch: false,
+      },
+      {
         label: "ロール管理",
         href: "/admin/roles",
-        icon: ShieldCheck,
+        icon: KeyRound,
         requiredPermission: "iam:manage_roles",
       },
       {
@@ -562,12 +633,6 @@ const navGroups: ReadonlyArray<NavGroup> = [
         href: "/admin/accounts",
         icon: UserCog,
         requiredPermission: "account:manage",
-      },
-      {
-        label: "監査ログ",
-        href: "/admin/audit-logs",
-        icon: ScrollText,
-        requiredPermission: "audit_log:read",
       },
       {
         label: "健診の実施記録",
@@ -667,6 +732,35 @@ function filterGroups(query: string, permissions: ReadonlyArray<string>): Readon
   return filtered
 }
 
+/** テキスト中の query にマッチする部分を <mark> で囲んで返す。 */
+function HighlightText(props: { text: string; query: string }) {
+  if (props.query === "") return <>{props.text}</>
+
+  const lowerText = props.text.toLowerCase()
+
+  const lowerQuery = props.query.toLowerCase()
+
+  const index = lowerText.indexOf(lowerQuery)
+
+  if (index === -1) return <>{props.text}</>
+
+  const before = props.text.slice(0, index)
+
+  const match = props.text.slice(index, index + props.query.length)
+
+  const after = props.text.slice(index + props.query.length)
+
+  return (
+    <>
+      {before}
+      <mark className="rounded-sm bg-yellow-200/60 text-inherit dark:bg-yellow-500/30">
+        {match}
+      </mark>
+      {after}
+    </>
+  )
+}
+
 function isSubItemActive(pathname: string, href: string): boolean {
   return pathname === href
 }
@@ -683,16 +777,108 @@ function isParentActive(pathname: string, item: NavItem): boolean {
   return pathname.startsWith(`${item.href}/`)
 }
 
+const SIDEBAR_EXPANDED_KEY = "sidebar-expanded:v1"
+const LEGACY_SIDEBAR_EXPANDED_KEY = "sidebar-expanded"
+
+/**
+ * localStorage にアコーディオンの展開状態を保存・復元する。
+ * アクティブな項目は常に展開し、ユーザーが手動で開閉した状態をページ遷移後も維持する。
+ */
+function useExpandedState(pathname: string) {
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+
+  const [initialized, setInitialized] = useState(false)
+
+  useEffect(() => {
+    try {
+      const current = localStorage.getItem(SIDEBAR_EXPANDED_KEY)
+      const legacy = current === null ? localStorage.getItem(LEGACY_SIDEBAR_EXPANDED_KEY) : null
+      const stored = current ?? legacy
+
+      if (stored !== null) {
+        setExpanded(new Set(JSON.parse(stored)))
+
+        if (legacy !== null) {
+          localStorage.setItem(SIDEBAR_EXPANDED_KEY, legacy)
+          localStorage.removeItem(LEGACY_SIDEBAR_EXPANDED_KEY)
+        }
+      }
+    } catch {
+      // localStorage が使えない場合は空 Set のまま
+    }
+
+    setInitialized(true)
+  }, [])
+
+  useEffect(() => {
+    if (!initialized) return
+
+    try {
+      localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...expanded]))
+    } catch {
+      // localStorage が使えない場合は無視
+    }
+  }, [expanded, initialized])
+
+  const toggle = useCallback((href: string, open: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+
+      if (open) {
+        next.add(href)
+      } else {
+        next.delete(href)
+      }
+
+      return next
+    })
+  }, [])
+
+  const isExpanded = useCallback(
+    (item: NavItem): boolean => {
+      // まだ localStorage を読み込んでいない初期状態ではアクティブなもののみ展開
+      if (!initialized) return isParentActive(pathname, item)
+
+      // アクティブなアイテムは常に展開
+      if (isParentActive(pathname, item)) return true
+
+      // localStorage に保存された状態を使用
+      return expanded.has(item.href)
+    },
+    [expanded, initialized, pathname],
+  )
+
+  return { isExpanded, toggle }
+}
+
 /**
  * コアの業務領域（申請・時間・人・成長）を上、補足領域（情報・物と場所）を下、管理を最後に並べたサイドバーナビ。
  * 各項目の詳細ページは Collapsible で展開する。入力でメニューを絞り込み、現在のパスを含む親は自動で開いた状態にする。
+ * アコーディオンの展開状態は localStorage に保持し、ページ遷移・リロード後も維持される。
  */
 export function SidebarNav(props: Props) {
   const pathname = usePathname()
 
   const [filterQuery, setFilterQuery] = useState("")
 
-  const visibleGroups = filterGroups(filterQuery, props.permissions)
+  const deferredQuery = useDeferredValue(filterQuery)
+
+  const isStale = filterQuery !== deferredQuery
+
+  const visibleGroups = filterGroups(deferredQuery, props.permissions)
+
+  const highlightQuery = deferredQuery.trim().toLowerCase()
+
+  const { isExpanded, toggle } = useExpandedState(pathname)
+
+  // 受信箱パスごとの未処理件数マップ。0 の項目にはバッジを表示しない。
+  const inboxBadgeMap: Record<string, number> = {
+    "/applications/inbox": props.inboxCounts.applications,
+    "/expense/inbox": props.inboxCounts.expenses,
+    "/leave/inbox": props.inboxCounts.leaves,
+    "/shift/inbox": props.inboxCounts.shifts,
+    "/thanks/inbox": props.inboxCounts.thanks,
+  }
 
   return (
     <>
@@ -713,80 +899,111 @@ export function SidebarNav(props: Props) {
         </SidebarGroupContent>
       </SidebarGroup>
 
-      {visibleGroups.map((group) => (
-        <SidebarGroup key={group.heading}>
-          <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
+      <div className={isStale ? "opacity-60 transition-opacity duration-200" : undefined}>
+        {visibleGroups.map((group) => (
+          <SidebarGroup key={group.heading}>
+            <SidebarGroupLabel>{group.heading}</SidebarGroupLabel>
 
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {group.items.map((item) => {
-                const Icon = item.icon
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const Icon = item.icon
 
-                const hasChildren = item.children !== undefined && item.children.length > 0
+                  const hasChildren = item.children !== undefined && item.children.length > 0
 
-                const parentActive = isParentActive(pathname, item)
+                  const parentActive = isParentActive(pathname, item)
 
-                if (!hasChildren) {
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        isActive={parentActive}
-                        tooltip={item.label}
-                        render={<Link href={item.href} />}
-                      >
-                        <Icon />
-                        <span>{item.label}</span>
-
-                        {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
-                          <Badge
-                            className="ml-auto"
-                            aria-label={`未読 ${props.unreadNotificationCount} 件`}
-                          >
-                            {props.unreadNotificationCount}
-                          </Badge>
-                        ) : null}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                }
-
-                return (
-                  <Collapsible
-                    key={`${item.href}:${parentActive}`}
-                    defaultOpen={parentActive}
-                    render={<SidebarMenuItem />}
-                  >
-                    <CollapsibleTrigger
-                      render={
-                        <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
+                  if (!hasChildren) {
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          isActive={parentActive}
+                          tooltip={item.label}
+                          render={<Link href={item.href} prefetch={item.prefetch} />}
+                        >
                           <Icon />
-                          <span>{item.label}</span>
-                          <ChevronDown className="ml-auto size-4 transition-transform group-data-[panel-open]/collapsible:rotate-180" />
-                        </SidebarMenuButton>
-                      }
-                    />
+                          <span>
+                            <HighlightText text={item.label} query={highlightQuery} />
+                          </span>
 
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {(item.children ?? []).map((child) => (
-                          <SidebarMenuSubItem key={child.href}>
-                            <SidebarMenuSubButton
-                              isActive={isSubItemActive(pathname, child.href)}
-                              render={<Link href={child.href} />}
+                          {item.href === "/notifications" && props.unreadNotificationCount > 0 ? (
+                            <Badge
+                              className="ml-auto"
+                              aria-label={`未読 ${props.unreadNotificationCount} 件`}
                             >
-                              <span>{child.label}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      ))}
+                              {props.unreadNotificationCount}
+                            </Badge>
+                          ) : null}
+
+                          {inboxBadgeMap[item.href] != null && inboxBadgeMap[item.href] > 0 ? (
+                            <Badge
+                              variant="secondary"
+                              className="ml-auto"
+                              aria-label={`未処理 ${inboxBadgeMap[item.href]} 件`}
+                            >
+                              {inboxBadgeMap[item.href]}
+                            </Badge>
+                          ) : null}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  }
+
+                  return (
+                    <Collapsible
+                      key={item.href}
+                      open={isExpanded(item)}
+                      onOpenChange={(open) => toggle(item.href, open)}
+                      render={<SidebarMenuItem />}
+                    >
+                      <CollapsibleTrigger
+                        render={
+                          <SidebarMenuButton tooltip={item.label} isActive={parentActive}>
+                            <Icon />
+                            <span>
+                              <HighlightText text={item.label} query={highlightQuery} />
+                            </span>
+                            <ChevronDown className="ml-auto size-4 transition-transform group-data-[open]/collapsible:rotate-180" />
+                          </SidebarMenuButton>
+                        }
+                      />
+
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {(item.children ?? []).map((child) => (
+                            <SidebarMenuSubItem key={child.href}>
+                              <SidebarMenuSubButton
+                                isActive={isSubItemActive(pathname, child.href)}
+                                render={<Link href={child.href} prefetch={child.prefetch} />}
+                              >
+                                <ChevronRight className="size-3 shrink-0 text-sidebar-foreground/50" />
+                                <span>
+                                  <HighlightText text={child.label} query={highlightQuery} />
+                                </span>
+
+                                {inboxBadgeMap[child.href] != null &&
+                                inboxBadgeMap[child.href] > 0 ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-auto"
+                                    aria-label={`未処理 ${inboxBadgeMap[child.href]} 件`}
+                                  >
+                                    {inboxBadgeMap[child.href]}
+                                  </Badge>
+                                ) : null}
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </div>
 
       {visibleGroups.length === 0 ? (
         <SidebarGroup>

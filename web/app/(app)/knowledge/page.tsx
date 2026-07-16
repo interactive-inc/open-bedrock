@@ -5,12 +5,13 @@ import { KnowledgeResultList } from "@/app/(app)/knowledge/_components/knowledge
 import { KnowledgeSearchForm } from "@/app/(app)/knowledge/_components/knowledge-search-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { parsePageSize } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "ナレッジ" }
 
 type Props = {
-  searchParams: Promise<{ q?: string; category?: string; page?: string }>
+  searchParams: Promise<{ q?: string; category?: string; page?: string; size?: string }>
 }
 
 // /knowledge ナレッジ検索画面。検索語 q とカテゴリ category を searchParams から受け取り、
@@ -22,9 +23,11 @@ export default async function KnowledgePage(props: Props) {
 
   const category = params.category ?? null
 
+  const pageSize = parsePageSize(params.size)
+
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1)
 
-  const offset = (page - 1) * 20
+  const offset = (page - 1) * pageSize
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +48,7 @@ export default async function KnowledgePage(props: Props) {
         key={`${q}:${category}:${page}`}
         fallback={<ListSkeleton rows={5} rowClassName="h-20 w-full" />}
       >
-        <KnowledgeResultList q={q} category={category} offset={offset} />
+        <KnowledgeResultList q={q} category={category} offset={offset} pageSize={pageSize} />
       </Suspense>
     </div>
   )

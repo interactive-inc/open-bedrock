@@ -5,6 +5,7 @@ import { cancelRoomReservation } from "@/lib/api/cancel-room-reservation"
 import { createRoomReservation } from "@/lib/api/create-room-reservation"
 import { updateRoomReservation } from "@/lib/api/update-room-reservation"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type RoomReservationActionState = {
@@ -18,6 +19,8 @@ export async function createRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
 ): Promise<RoomReservationActionState> {
+  await requireAuth()
+
   const roomId = toPositiveIntId(formData.get("room_id"))
 
   if (roomId === null) {
@@ -64,6 +67,8 @@ export async function updateRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
 ): Promise<RoomReservationActionState> {
+  await requireAuth()
+
   const reservationId = formData.get("reservation_id")
 
   if (typeof reservationId !== "string" || reservationId === "") {
@@ -106,6 +111,8 @@ export async function cancelRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
 ): Promise<RoomReservationActionState> {
+  await requireAuth()
+
   const reservationId = formData.get("reservation_id")
 
   if (typeof reservationId !== "string" || reservationId === "") {

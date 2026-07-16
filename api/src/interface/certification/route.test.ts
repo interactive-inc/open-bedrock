@@ -6,6 +6,7 @@ import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { z } from "zod"
 
 const jwtSecret = "certification-route-test-secret"
 
@@ -72,9 +73,15 @@ describe("GET /certifications", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z
+      .object({ data: z.array(z.unknown()), total: z.number() })
+      .safeParse(await response.json())
 
-    expect(body.total).toBe(1)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(1)
+    }
   })
 
   test("returns 401 without a bearer token", async () => {
@@ -95,9 +102,13 @@ describe("POST /certifications", () => {
 
     expect(response.status).toBe(201)
 
-    const body = await response.json()
+    const parsed = z.object({ code: z.string() }).safeParse(await response.json())
 
-    expect(body.code).toBe("AP")
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.code).toBe("AP")
+    }
   })
 
   test("returns 403 for a member without certification:manage", async () => {

@@ -8,6 +8,7 @@ import { issueCertificateRequest } from "@/lib/api/issue-certificate-request"
 import { rejectCertificateRequest } from "@/lib/api/reject-certificate-request"
 import { updateCertificateRequest } from "@/lib/api/update-certificate-request"
 import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type CertificateRequestActionState = {
@@ -94,6 +95,8 @@ export async function createCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
 ): Promise<CertificateRequestActionState> {
+  await requireAuth()
+
   const fields = toRequestFields(formData)
 
   if (fields instanceof Error) {
@@ -116,6 +119,8 @@ export async function updateCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
 ): Promise<CertificateRequestActionState> {
+  await requireAuth()
+
   const certificateRequestId = formData.get("certificate_request_id")
 
   if (typeof certificateRequestId !== "string" || certificateRequestId === "") {
@@ -144,6 +149,8 @@ export async function cancelCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
 ): Promise<CertificateRequestActionState> {
+  await requireAuth()
+
   const certificateRequestId = formData.get("certificate_request_id")
 
   if (typeof certificateRequestId !== "string" || certificateRequestId === "") {

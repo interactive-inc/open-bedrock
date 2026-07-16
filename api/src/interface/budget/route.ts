@@ -1,31 +1,26 @@
 import { CreateBudget } from "@/application/budget/create-budget"
+import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
 import { factory } from "@/lib/factory"
-import {
-  DEFAULT_LIST_LIMIT,
-  MAX_LIST_LIMIT,
-  MAX_LIST_OFFSET,
-  toBoundedInt,
-} from "@/interface/shared/to-bounded-int"
-import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { BudgetRepository } from "@/infrastructure/budget/budget-repository"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllBudgets } from "@/lib/budget/can-view-all-budgets"
 import { zAppBudget, zAppBudgetList } from "@/lib/app-schemas"
+import { isoDate } from "@/lib/schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { budgets, departments } from "@/schema"
+import { and, asc, eq } from "drizzle-orm"
+import type { SQL } from "drizzle-orm"
+import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-// GET /budgets — 全社の予算枠（budget:read:all）。消化合計と残額（単純減算）を含む。
+// GET /budgets — 部署予算の一覧。部署・会計期間で絞り込む。budget:manage を持つロールのみ。
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
     z.object({
-      fiscal_year: z.string().optional(),
-      department_code: z.string().optional(),
-      limit: z.string().optional(),
-      offset: z.string().optional(),
+      department_id: z.string().optional(),
+      fiscal_period: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -35,88 +30,78 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllBudgets(session) === false) {
+    if (canManageBudgets(session) === false) {
       throw new ForbiddenError()
     }
 
     const query = c.req.valid("query")
 
-    const fiscalYear = toFiscalYear(query.fiscal_year)
+    const conditions: Array<SQL> = []
 
-    const departmentCode =
-      query.department_code !== undefined && query.department_code !== ""
-        ? query.department_code
-        : null
+    if (query.department_id !== undefined && query.department_id !== "") {
+      const departmentId = Number(query.department_id)
 
-    const limit = toBoundedInt({
-      raw: query.limit,
-      fallback: DEFAULT_LIST_LIMIT,
-      min: 1,
-      max: MAX_LIST_LIMIT,
-    })
-
-    const offset = toBoundedInt({
-      raw: query.offset,
-      fallback: 0,
-      min: 0,
-      max: MAX_LIST_OFFSET,
-    })
-
-    const repository = new BudgetRepository(c)
-
-    const budgets = await repository.findAll({ fiscalYear, departmentCode, limit, offset })
-
-    if (budgets instanceof Error) {
-      throw new InternalError("failed to load budgets")
+      if (Number.isInteger(departmentId)) {
+        conditions.push(eq(budgets.departmentId, departmentId))
+      }
     }
 
-    const consumedByBudgetId = await repository.sumConsumedByBudgetIds(
-      budgets.map((budget) => budget.id ?? 0),
-    )
-
-    if (consumedByBudgetId instanceof Error) {
-      throw new InternalError("failed to sum budget consumptions")
+    if (query.fiscal_period !== undefined && query.fiscal_period !== "") {
+      conditions.push(eq(budgets.fiscalPeriod, query.fiscal_period))
     }
 
-    const total = await repository.count(fiscalYear, departmentCode)
+    const where = conditions.length === 0 ? undefined : and(...conditions)
 
-    if (total instanceof Error) {
-      throw new InternalError("failed to count budgets")
-    }
+    const rows = await c.var.database
+      .select({
+        id: budgets.id,
+        departmentId: budgets.departmentId,
+        departmentName: departments.name,
+        fiscalPeriod: budgets.fiscalPeriod,
+        periodStart: budgets.periodStart,
+        periodEnd: budgets.periodEnd,
+        amount: budgets.amount,
+        name: budgets.name,
+        note: budgets.note,
+        createdAt: budgets.createdAt,
+      })
+      .from(budgets)
+      .leftJoin(departments, eq(departments.id, budgets.departmentId))
+      .where(where)
+      .orderBy(asc(budgets.departmentId), asc(budgets.fiscalPeriod))
 
     const responseBody = zAppBudgetList.parse({
-      data: budgets.map((budget) => {
-        const consumed = consumedByBudgetId.get(budget.id ?? 0) ?? 0
-
-        return {
-          id: budget.id,
-          fiscal_year: budget.fiscalYear,
-          department_code: budget.departmentCode,
-          title: budget.title,
-          amount: budget.amount,
-          consumed: consumed,
-          remaining: budget.amount - consumed,
-          note: budget.note,
-          created_at: budget.createdAt,
-        }
-      }),
-      total,
+      data: rows.map((row) => ({
+        id: row.id,
+        department_id: row.departmentId,
+        department_name: row.departmentName,
+        fiscal_period: row.fiscalPeriod,
+        period_start: row.periodStart,
+        period_end: row.periodEnd,
+        amount: row.amount,
+        name: row.name,
+        note: row.note,
+        created_at: row.createdAt,
+      })),
+      total: rows.length,
     })
 
     return c.json(responseBody, 200)
   },
 )
 
-// POST /budgets — 予算枠を新規登録（budget:manage）
+// POST /budgets — 部署予算を登録する。budget:manage を持つロールのみ。
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
     z.object({
-      fiscal_year: z.number().int(),
-      department_code: z.string().max(200).nullable().optional(),
-      title: z.string().min(1).max(300),
-      amount: z.number().int().nonnegative(),
+      department_id: z.number().positive().int().safe(),
+      fiscal_period: z.string().min(1).max(200),
+      period_start: isoDate,
+      period_end: isoDate,
+      amount: z.number().positive().int().safe(),
+      name: z.string().min(1).max(200),
       note: z.string().max(3_000).nullable().optional(),
     }),
   ),
@@ -127,17 +112,20 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const json = c.req.valid("json")
+    if (canManageBudgets(session) === false) {
+      throw new ForbiddenError()
+    }
+
+    const body = c.req.valid("json")
 
     const created = await new CreateBudget(c).run({
-      session,
-      budget: {
-        fiscalYear: json.fiscal_year,
-        departmentCode: json.department_code ?? null,
-        title: json.title,
-        amount: json.amount,
-        note: json.note ?? null,
-      },
+      departmentId: body.department_id,
+      fiscalPeriod: body.fiscal_period,
+      periodStart: body.period_start,
+      periodEnd: body.period_end,
+      amount: body.amount,
+      name: body.name,
+      note: body.note ?? null,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
 
@@ -147,12 +135,12 @@ export const POST = factory.createHandlers(
 
     const responseBody = zAppBudget.parse({
       id: created.id,
-      fiscal_year: created.fiscalYear,
-      department_code: created.departmentCode,
-      title: created.title,
+      department_id: created.departmentId,
+      fiscal_period: created.fiscalPeriod,
+      period_start: created.periodStart,
+      period_end: created.periodEnd,
       amount: created.amount,
-      consumed: 0,
-      remaining: created.amount,
+      name: created.name,
       note: created.note,
       created_at: created.createdAt,
     })
@@ -160,14 +148,3 @@ export const POST = factory.createHandlers(
     return c.json(responseBody, 201)
   },
 )
-
-/** fiscal_year クエリを整数へ。空・不正は null（=絞り込みなし）。 */
-function toFiscalYear(raw: string | undefined): number | null {
-  if (raw === undefined || raw === "") {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  return Number.isInteger(parsed) ? parsed : null
-}

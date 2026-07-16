@@ -14,6 +14,7 @@ import {
   toRequiredIsoDate,
 } from "@/lib/form/constraints"
 import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type ResignationActionState = {
@@ -94,6 +95,8 @@ export async function createResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
 ): Promise<ResignationActionState> {
+  await requireAuth()
+
   const fields = toResignationFields(formData)
 
   if (fields instanceof Error) {
@@ -116,6 +119,8 @@ export async function updateResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
 ): Promise<ResignationActionState> {
+  await requireAuth()
+
   const resignationId = formData.get("resignation_id")
 
   if (typeof resignationId !== "string" || resignationId === "") {
@@ -144,6 +149,8 @@ export async function cancelResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
 ): Promise<ResignationActionState> {
+  await requireAuth()
+
   const resignationId = formData.get("resignation_id")
 
   if (typeof resignationId !== "string" || resignationId === "") {

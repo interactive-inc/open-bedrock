@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte org dept create --code <c> --department-id <n> --order <n> [--parent <c>] [--manager <employee-code>]`
+export const help = `karte org dept create --code <c> --department-id <n> --order <n> [--parent <c>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -16,7 +16,6 @@ export default factory.createHandlers(
       "department-id": z.string().optional(),
       order: z.string().optional(),
       parent: z.string().optional(),
-      manager: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -34,7 +33,6 @@ export default factory.createHandlers(
         code: query.code,
         department_id: toFiniteNumber(query["department-id"], "--department-id"),
         parent_code: query.parent ?? null,
-        manager_employee_code: query.manager ?? null,
         order: toFiniteNumber(query.order, "--order"),
       },
     })

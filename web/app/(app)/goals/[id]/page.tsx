@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { getGoal } from "@/lib/api/get-goal"
 import { statusLabel } from "@/lib/status-label"
+import { getMe } from "@/lib/api/get-me"
+import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
 
 export const metadata = { title: "目標詳細" }
 
@@ -25,7 +27,7 @@ export default async function GoalDetailPage(props: Props) {
     return <FetchError message="目標 ID が不正です" />
   }
 
-  const goal = await getGoal(goalId)
+  const [goal, currentUser] = await Promise.all([getGoal(goalId), getMe()])
 
   if (goal instanceof Error) {
     return (
@@ -38,6 +40,15 @@ export default async function GoalDetailPage(props: Props) {
       </div>
     )
   }
+
+  const evaluationKinds: ReadonlyArray<GoalEvaluationKind> =
+    currentUser instanceof Error
+      ? []
+      : goal.employee_id === currentUser.id
+        ? ["self"]
+        : currentUser.permissions.includes("goal:evaluate")
+          ? ["manager", "final"]
+          : []
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,7 +84,9 @@ export default async function GoalDetailPage(props: Props) {
         </CardContent>
       </Card>
 
-      {goal.id !== null && <GoalEvaluationForm goalId={goal.id} />}
+      {goal.id !== null && evaluationKinds.length > 0 ? (
+        <GoalEvaluationForm goalId={goal.id} allowedKinds={evaluationKinds} />
+      ) : null}
     </div>
   )
 }

@@ -19,7 +19,7 @@ export function resolveAttendanceSearchQuery(
   props: Props,
 ): AttendanceSearchQuery | ApplicationError {
   if (props.requestedEmployeeId === null) {
-    return { employeeId: props.session.employeeId, from: props.from, to: props.to }
+    return { employeeIds: [props.session.employeeId], from: props.from, to: props.to }
   }
 
   const isViewingOthers = props.requestedEmployeeId !== props.session.employeeId
@@ -31,5 +31,5 @@ export function resolveAttendanceSearchQuery(
     return new ForbiddenError("cannot view other employee attendance", "forbidden")
   }
 
-  return { employeeId: props.requestedEmployeeId, from: props.from, to: props.to }
+  return { employeeIds: [props.requestedEmployeeId], from: props.from, to: props.to }
 }

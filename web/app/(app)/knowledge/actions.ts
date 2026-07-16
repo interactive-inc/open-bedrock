@@ -5,6 +5,7 @@ import { createKnowledge } from "@/lib/api/create-knowledge"
 import { deleteKnowledge } from "@/lib/api/delete-knowledge"
 import { updateKnowledge } from "@/lib/api/update-knowledge"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 // useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
 export type KnowledgeActionState = {
@@ -18,6 +19,8 @@ export async function createKnowledgeAction(
   previousState: KnowledgeActionState,
   formData: FormData,
 ): Promise<KnowledgeActionState> {
+  await requireAuth()
+
   const title = toText(formData.get("title"))
 
   const category = toText(formData.get("category"))
@@ -49,6 +52,8 @@ export async function updateKnowledgeAction(
   previousState: KnowledgeActionState,
   formData: FormData,
 ): Promise<KnowledgeActionState> {
+  await requireAuth()
+
   const articleId = toPositiveIntId(formData.get("article_id"))
 
   if (articleId === null) {
@@ -88,6 +93,8 @@ export async function deleteKnowledgeAction(
   previousState: KnowledgeActionState,
   formData: FormData,
 ): Promise<KnowledgeActionState> {
+  await requireAuth()
+
   const articleId = toPositiveIntId(formData.get("article_id"))
 
   if (articleId === null) {

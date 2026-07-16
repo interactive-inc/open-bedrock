@@ -49,6 +49,7 @@ export const POST = factory.createHandlers(
       current_step: created.currentStep,
       payload: created.payload,
       created_at: created.createdAt,
+      approver_roles: [...created.approverRoles],
     })
 
     return c.json(responseBody, 201)

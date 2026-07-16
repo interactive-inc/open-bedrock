@@ -4,6 +4,8 @@ import type { Context, SessionPayload } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
+import { ReviewCyclePolicyRepository } from "@/infrastructure/review/review-cycle-policy-repository"
+import { generateReviewForms } from "@/application/review/generate-review-forms"
 
 export type Input = {
   session: SessionPayload
@@ -46,6 +48,24 @@ export class SetReviewCycleStatus {
 
     if (transitioned === null) {
       return new ConflictError("invalid review cycle transition", "invalid_transition")
+    }
+
+    if (input.status === "open" && reviewCycle.id !== null) {
+      const policy = await new ReviewCyclePolicyRepository(this.c).find(reviewCycle.id)
+
+      if (policy instanceof Error) {
+        return new UnexpectedError("failed to load review cycle policy", { cause: policy })
+      }
+
+      const generated = await generateReviewForms({
+        c: this.c,
+        cycleId: reviewCycle.id,
+        policy,
+      })
+
+      if (generated instanceof Error) {
+        return new UnexpectedError("failed to generate review forms", { cause: generated })
+      }
     }
 
     const updated = await repository.updateStatus(transitioned, previousStatus)

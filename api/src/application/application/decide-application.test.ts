@@ -7,6 +7,7 @@ import { ForbiddenError } from "@/lib/errors"
 import { makeTestSession } from "@/interface/shared/test/make-test-session"
 import { createTestContext } from "@/interface/shared/test/create-test-context"
 import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { seedD1 } from "@/interface/shared/test/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 async function seedTemplate(
@@ -55,7 +56,7 @@ async function seedPending(
 }
 
 describe("DecideApplication", () => {
-  test("approves when viewer role is listed in approverRoles", async () => {
+  test("does not treat a listed role as an application approval permission", async () => {
     const { context } = createTestContext()
 
     const templateRepository = new ApplicationTemplateRepository(context)
@@ -74,11 +75,85 @@ describe("DecideApplication", () => {
       createdAt: "2026-01-02T00:00:00.000Z",
     })
 
-    if (result instanceof Error) {
-      throw result
-    }
+    expectApplicationError(result, ForbiddenError, "forbidden")
+  })
 
-    expect(result.status).toBe("approved")
+  test("approves for a listed role with approval permission inside its organization scope", async () => {
+    const { context, db } = createTestContext()
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+    ])
+
+    const templateRepository = new ApplicationTemplateRepository(context)
+    const applicationRepository = new ApplicationRepository(context)
+    const template = await seedTemplate(templateRepository, "role_test_scoped", ["manager"])
+    const application = await seedPending(applicationRepository, template.id ?? 0, 5)
+
+    const result = await new DecideApplication(context).run({
+      session: makeTestSession("manager", 2),
+      applicationId: application.id ?? 0,
+      approverId: 2,
+      action: "approve",
+      comment: null,
+      createdAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expect(result).toMatchObject({ status: "approved" })
+  })
+
+  test("rejects a listed approver role outside its organization scope", async () => {
+    const { context, db } = createTestContext()
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+
+    const templateRepository = new ApplicationTemplateRepository(context)
+    const applicationRepository = new ApplicationRepository(context)
+    const template = await seedTemplate(templateRepository, "role_test_outside_scope", ["manager"])
+    const application = await seedPending(applicationRepository, template.id ?? 0, 5)
+
+    const result = await new DecideApplication(context).run({
+      session: makeTestSession("manager", 2),
+      applicationId: application.id ?? 0,
+      approverId: 2,
+      action: "approve",
+      comment: null,
+      createdAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expectApplicationError(result, ForbiddenError, "forbidden")
+  })
+
+  test("does not let a session record a decision as another employee", async () => {
+    const { context, db } = createTestContext()
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 3, code: "E003", name: "Other", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+    ])
+    const templateRepository = new ApplicationTemplateRepository(context)
+    const applicationRepository = new ApplicationRepository(context)
+    const template = await seedTemplate(templateRepository, "actor_mismatch", ["manager"])
+    const application = await seedPending(applicationRepository, template.id ?? 0, 5)
+
+    const result = await new DecideApplication(context).run({
+      session: makeTestSession("manager", 2),
+      applicationId: application.id ?? 0,
+      approverId: 3,
+      action: "approve",
+      comment: null,
+      createdAt: "2026-01-02T00:00:00.000Z",
+    })
+
+    expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("returns forbidden when viewer role is not listed in approverRoles", async () => {
@@ -104,7 +179,15 @@ describe("DecideApplication", () => {
   })
 
   test("falls back to canDecideApplication when approverRoles is empty", async () => {
-    const { context } = createTestContext()
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "employees", [
+      { id: 2, code: "E002", name: "Manager", status: "active" },
+      { id: 5, code: "E005", name: "Applicant", status: "active" },
+    ])
+    await seedD1(db, "org_memberships", [
+      { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
+    ])
 
     const templateRepository = new ApplicationTemplateRepository(context)
     const applicationRepository = new ApplicationRepository(context)
@@ -115,7 +198,7 @@ describe("DecideApplication", () => {
 
     // manager is in canDecideApplication privileged roles
     const managerResult = await new DecideApplication(context).run({
-      session: makeTestSession("manager"),
+      session: makeTestSession("manager", 2),
       applicationId: application.id ?? 0,
       approverId: 2,
       action: "approve",

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation"
 import { submitApplication } from "@/lib/api/submit-application"
+import { requireAuth } from "@/lib/auth/require-auth"
 
 export type SubmitState = {
   ok: boolean
@@ -36,6 +37,8 @@ export async function submitApplicationAction(
   previousState: SubmitState,
   formData: FormData,
 ): Promise<SubmitState> {
+  await requireAuth()
+
   const templateCode = formData.get("template_code")
 
   const rawPayload = formData.get("payload")

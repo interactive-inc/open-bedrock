@@ -8,6 +8,7 @@ import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { updateExpense } from "@/lib/api/update-expense"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
@@ -60,6 +61,8 @@ export async function submitExpenseAction(
   previousState: ExpenseSubmitFormState,
   formData: FormData,
 ): Promise<ExpenseSubmitFormState> {
+  await requireAuth()
+
   const category = toCategory(formData.get("category"))
 
   if (category === null) {
@@ -186,6 +189,8 @@ export async function updateExpenseAction(
   previousState: ExpenseUpdateFormState,
   formData: FormData,
 ): Promise<ExpenseUpdateFormState> {
+  await requireAuth()
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {
@@ -243,6 +248,8 @@ export async function deleteExpenseAction(
   previousState: ExpenseDeleteFormState,
   formData: FormData,
 ): Promise<ExpenseDeleteFormState> {
+  await requireAuth()
+
   const expenseId = toPositiveIntId(formData.get("expense_id"))
 
   if (expenseId === null) {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useTranslator } from "@/lib/i18n/use-translator"
 
 /**
- * 未認証時に error boundary から差し替えで描画するログイン画面。
+ * 未認証時に保護領域の layout（または認証切れ時の error boundary）から描画するログイン画面。
  * 画面全体を覆い、サインインしたら Server Action が `/` へ redirect する。
  * error.tsx（Next.js の規約で必ず Client Component）から import されるため Client Component。
  */

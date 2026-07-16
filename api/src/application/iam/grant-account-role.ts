@@ -4,6 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context, SessionPayload } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
 
 export type Command = {
   session: SessionPayload
@@ -70,22 +71,19 @@ export class GrantAccountRole {
       return new NotFoundError("account not found", "account_not_found")
     }
 
-    const granted = await accountRepository.grantRole({
+    const granted = await accountRepository.grantRoleAndBumpTokenVersion({
       accountId: command.accountId,
       roleId: role.id,
       grantedBy: command.session.accountId,
       now: command.now,
     })
 
-    if (granted instanceof Error) {
-      return new UnexpectedError("failed to grant role", { cause: granted })
+    if (granted instanceof LivePermissionGuardError) {
+      return new ForbiddenError("cannot grant a permission you do not hold", "role_escalation")
     }
 
-    // 付与した権限を即時反映させるため対象の既存トークンを失効させる。
-    const bumped = await accountRepository.bumpTokenVersion(command.accountId, command.now)
-
-    if (bumped instanceof Error) {
-      return new UnexpectedError("failed to revoke sessions", { cause: bumped })
+    if (granted instanceof Error) {
+      return new UnexpectedError("failed to grant role", { cause: granted })
     }
 
     return { reason: "granted" }

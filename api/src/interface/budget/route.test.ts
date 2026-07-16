@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test"
+import { seedBudgets } from "@/infrastructure/seed/seed-budgets"
+import { seedDepartments } from "@/infrastructure/seed/seed-departments"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
-import { seedBudgets, seedBudgetConsumptions } from "@/infrastructure/seed/seed-budgets"
-import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { createTestToken } from "@/interface/shared/test/create-test-token"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { requestWithContext } from "@/interface/shared/test/request-with-context"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
@@ -11,31 +12,46 @@ import { z } from "zod"
 
 const jwtSecret = "budget-route-test-secret"
 
-const budgetSchema = z.object({
+const now = "2026-07-08T00:00:00.000Z"
+
+const budgetResponseSchema = z.object({
   id: z.number(),
-  fiscal_year: z.number(),
-  department_code: z.string().nullable(),
-  title: z.string(),
+  department_id: z.number(),
+  fiscal_period: z.string(),
+  period_start: z.string(),
+  period_end: z.string(),
   amount: z.number(),
-  consumed: z.number(),
-  remaining: z.number(),
+  name: z.string(),
   note: z.string().nullable(),
   created_at: z.string(),
 })
 
-const listSchema = z.object({ data: z.array(budgetSchema), total: z.number() })
-
-const consumptionSchema = z.object({
+const listItemSchema = z.object({
   id: z.number(),
-  budget_id: z.number(),
+  department_id: z.number(),
+  department_name: z.string().nullable(),
+  fiscal_period: z.string(),
+  period_start: z.string(),
+  period_end: z.string(),
   amount: z.number(),
+  name: z.string(),
   note: z.string().nullable(),
-  recorded_on: z.string(),
   created_at: z.string(),
+})
+
+const listSchema = z.object({
+  data: z.array(listItemSchema),
+  total: z.number(),
 })
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "departments",
+    seedDepartments.map((department) => ({ id: department.id, name: department.name })),
+  )
 
   await seedD1(
     db,
@@ -58,25 +74,14 @@ async function createTestDb(): Promise<D1Database> {
     "budgets",
     seedBudgets.map((budget) => ({
       id: budget.id,
-      fiscal_year: budget.fiscalYear,
-      department_code: budget.departmentCode,
-      title: budget.title,
+      department_id: budget.departmentId,
+      fiscal_period: budget.fiscalPeriod,
+      period_start: budget.periodStart,
+      period_end: budget.periodEnd,
       amount: budget.amount,
+      name: budget.name,
       note: budget.note,
       created_at: budget.createdAt,
-    })),
-  )
-
-  await seedD1(
-    db,
-    "budget_consumptions",
-    seedBudgetConsumptions.map((consumption) => ({
-      id: consumption.id,
-      budget_id: consumption.budgetId,
-      amount: consumption.amount,
-      note: consumption.note,
-      recorded_on: consumption.recordedOn,
-      created_at: consumption.createdAt,
     })),
   )
 
@@ -91,18 +96,31 @@ function tokenFor(employeeId: number, role: string): Promise<string> {
   })
 }
 
-async function request(
-  path: string,
-  token: string | null,
-  method?: string,
-  body?: unknown,
-): Promise<Response> {
-  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+type RequestProps = {
+  path: string
+  token: string | null
+  method?: string
+  body?: unknown
+}
+
+async function request(props: RequestProps): Promise<Response> {
+  return requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path: props.path,
+    token: props.token,
+    method: props.method,
+    body: props.body,
+    now,
+  })
 }
 
 describe("GET /budgets", () => {
-  test("returns 200 with consumed and remaining for a read:all viewer (admin)", async () => {
-    const response = await request("/budgets", await tokenFor(1, "admin"))
+  test("returns budgets with department name for a budget:manage role", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(1, "admin"),
+    })
 
     expect(response.status).toBe(200)
 
@@ -111,117 +129,142 @@ describe("GET /budgets", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.length).toBe(2)
-
-      const budget1 = parsed.data.data.find((budget) => budget.id === 1)
-
-      expect(budget1?.consumed).toBe(300_000)
-      expect(budget1?.remaining).toBe(700_000)
-
-      const budget2 = parsed.data.data.find((budget) => budget.id === 2)
-
-      expect(budget2?.consumed).toBe(0)
-      expect(budget2?.remaining).toBe(500_000)
+      expect(parsed.data.total).toBe(2)
+      expect(parsed.data.data[0]?.department_name).toBe("Engineering")
     }
   })
 
-  test("returns 403 for a viewer without read:all (member)", async () => {
-    const response = await request("/budgets", await tokenFor(5, "member"))
-
-    expect(response.status).toBe(403)
-  })
-})
-
-describe("POST /budgets", () => {
-  test("creates a budget as admin", async () => {
-    const response = await request("/budgets", await tokenFor(1, "admin"), "POST", {
-      fiscal_year: 2027,
-      department_code: "D002",
-      title: "研修",
-      amount: 200_000,
-    })
-
-    expect(response.status).toBe(201)
-
-    const parsed = budgetSchema.safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.remaining).toBe(200_000)
-      expect(parsed.data.consumed).toBe(0)
-    }
-  })
-
-  test("returns 403 for a member", async () => {
-    const response = await request("/budgets", await tokenFor(5, "member"), "POST", {
-      fiscal_year: 2027,
-      title: "Blocked",
-      amount: 1,
-    })
-
-    expect(response.status).toBe(403)
-  })
-})
-
-describe("PUT /budgets/:id", () => {
-  test("updates a budget and reflects consumed", async () => {
-    const response = await request("/budgets/1", await tokenFor(1, "admin"), "PUT", {
-      fiscal_year: 2026,
-      department_code: "D001",
-      title: "採用広報（改）",
-      amount: 1_200_000,
+  test("filters by fiscal_period and department_id", async () => {
+    const response = await request({
+      path: "/budgets?department_id=3&fiscal_period=2026",
+      token: await tokenFor(1, "admin"),
     })
 
     expect(response.status).toBe(200)
 
-    const parsed = budgetSchema.safeParse(await response.json())
+    const parsed = listSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.amount).toBe(1_200_000)
-      expect(parsed.data.consumed).toBe(300_000)
-      expect(parsed.data.remaining).toBe(900_000)
+      expect(parsed.data.total).toBe(1)
+      expect(parsed.data.data[0]?.department_id).toBe(3)
     }
+  })
+
+  test("returns 403 without budget:manage", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(2, "manager"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request({ path: "/budgets", token: null })
+
+    expect(response.status).toBe(401)
   })
 })
 
-describe("POST /budgets/:id/consumptions", () => {
-  test("records a consumption as admin", async () => {
-    const response = await request("/budgets/2/consumptions", await tokenFor(1, "admin"), "POST", {
-      amount: 100_000,
-      recorded_on: "2026-05-20",
-      note: "ライセンス更新",
+describe("POST /budgets", () => {
+  test("returns 201 with the created budget", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        department_id: 5,
+        fiscal_period: "2026",
+        period_start: "2026-04-01",
+        period_end: "2027-03-31",
+        amount: 300000,
+        name: "CS FY2026",
+      },
     })
 
     expect(response.status).toBe(201)
 
-    const parsed = consumptionSchema.safeParse(await response.json())
+    const parsed = budgetResponseSchema.safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.budget_id).toBe(2)
-      expect(parsed.data.amount).toBe(100_000)
+      expect(parsed.data.department_id).toBe(5)
+      expect(parsed.data.amount).toBe(300000)
+      expect(parsed.data.note).toBeNull()
+      expect(parsed.data.created_at).toBe(now)
     }
   })
 
-  test("returns 404 for an unknown budget", async () => {
-    const response = await request(
-      "/budgets/9999/consumptions",
-      await tokenFor(1, "admin"),
-      "POST",
-      { amount: 1, recorded_on: "2026-05-20" },
-    )
+  test("returns 404 when the department does not exist", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        department_id: 999,
+        fiscal_period: "2026",
+        period_start: "2026-04-01",
+        period_end: "2027-03-31",
+        amount: 300000,
+        name: "Ghost",
+      },
+    })
 
     expect(response.status).toBe(404)
   })
 
-  test("returns 403 for a member", async () => {
-    const response = await request("/budgets/1/consumptions", await tokenFor(5, "member"), "POST", {
-      amount: 1,
-      recorded_on: "2026-05-20",
+  test("returns 400 when period_end precedes period_start", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        department_id: 3,
+        fiscal_period: "2026",
+        period_start: "2026-04-01",
+        period_end: "2026-03-01",
+        amount: 300000,
+        name: "Reversed",
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when amount is not positive", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(1, "admin"),
+      method: "POST",
+      body: {
+        department_id: 3,
+        fiscal_period: "2026",
+        period_start: "2026-04-01",
+        period_end: "2027-03-31",
+        amount: 0,
+        name: "Zero",
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 403 without budget:manage", async () => {
+    const response = await request({
+      path: "/budgets",
+      token: await tokenFor(2, "manager"),
+      method: "POST",
+      body: {
+        department_id: 3,
+        fiscal_period: "2026",
+        period_start: "2026-04-01",
+        period_end: "2027-03-31",
+        amount: 300000,
+        name: "Nope",
+      },
     })
 
     expect(response.status).toBe(403)

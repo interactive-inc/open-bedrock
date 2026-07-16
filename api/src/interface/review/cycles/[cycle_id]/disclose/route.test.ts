@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { z } from "zod"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedReviewCycles } from "@/infrastructure/seed/seed-review-cycles"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
@@ -98,10 +99,16 @@ describe("POST /review-cycles/:cycle_id/disclose", () => {
 
     expect(response.status).toBe(200)
 
-    const body = await response.json()
+    const parsed = z
+      .object({ cycle_id: z.number(), disclosed_count: z.number() })
+      .safeParse(await response.json())
 
-    expect(body.cycle_id).toBe(1)
-    expect(body.disclosed_count).toBe(2)
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.cycle_id).toBe(1)
+      expect(parsed.data.disclosed_count).toBe(2)
+    }
   })
 
   test("member is forbidden", async () => {
