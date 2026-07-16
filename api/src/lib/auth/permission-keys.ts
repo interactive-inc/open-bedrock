@@ -291,6 +291,27 @@ export const PERMISSION_CATALOG = [
     description: "経営ダッシュボードを閲覧する",
   },
   { key: "audit_log:read", category: "iam", description: "監査ログを閲覧する" },
+  {
+    key: "api_token:manage",
+    category: "iam",
+    description: "機械用トークン(サービスアカウント)を管理する",
+  },
+  {
+    key: "access_review:view",
+    category: "iam",
+    description: "アクセス権の棚卸(アカウント×権限の一覧)を閲覧する",
+  },
+  { key: "export:run", category: "iam", description: "全データのエクスポートを実行する" },
+  {
+    key: "year_end_adjustment:manage",
+    category: "year-end",
+    description: "年末調整の提出状況を管理する",
+  },
+  {
+    key: "year_end_adjustment:read:all",
+    category: "year-end",
+    description: "全社の年末調整の提出状況を閲覧する",
+  },
   { key: "iam:manage_roles", category: "iam", description: "ロールと権限を管理する" },
   { key: "iam:assign_roles", category: "iam", description: "アカウントにロールを割り当てる" },
   {
