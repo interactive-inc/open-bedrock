@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   // portless のプロキシ経由（karte.open.localhost）で dev リソースと HMR を許可する
   allowedDevOrigins: ["karte.open.localhost"],
 
+  // CSP is set dynamically per request in proxy.ts with a nonce for script-src.
   async headers() {
     return [
       {
@@ -21,18 +22,6 @@ const nextConfig: NextConfig = {
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
-          },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "font-src 'self'",
-              "connect-src 'self'",
-              "frame-ancestors 'none'",
-            ].join("; "),
           },
         ],
       },
