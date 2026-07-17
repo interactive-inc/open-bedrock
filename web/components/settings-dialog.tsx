@@ -1,7 +1,7 @@
 "use client"
 
-import { LocaleField } from "@/app/(app)/settings/_components/locale-field"
-import { ThemeModeField } from "@/app/(app)/settings/_components/theme-mode-field"
+import { LocaleField } from "@/app/(app)/my/settings/_components/locale-field"
+import { ThemeModeField } from "@/app/(app)/my/settings/_components/theme-mode-field"
 import {
   Dialog,
   DialogContent,
