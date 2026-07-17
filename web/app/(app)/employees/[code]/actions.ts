@@ -25,7 +25,7 @@ function buildAction(form: FormData): Record<string, unknown> | Error {
     return {
       ...base,
       departmentCode: text(form, "department_code"),
-      positionTitle: text(form, "position_title"),
+      positionCode: text(form, "position_code"),
       managerEmployeeCode: text(form, "manager_employee_code"),
     }
   }
@@ -38,7 +38,7 @@ function buildAction(form: FormData): Record<string, unknown> | Error {
     return {
       ...base,
       departmentCode,
-      positionTitle: text(form, "position_title"),
+      positionCode: text(form, "position_code"),
       managerEmployeeCode: text(form, "manager_employee_code"),
     }
   }
@@ -59,10 +59,10 @@ function buildAction(form: FormData): Record<string, unknown> | Error {
     }
   }
   if (kind === "position_changed") {
-    const positionTitle = text(form, "position_title")
+    const positionCode = text(form, "position_code")
     const changeType = text(form, "change_type")
-    if (!positionTitle || !changeType) return new Error("役職名と変更区分が必要です")
-    return { ...base, departmentCode, assignmentType, positionTitle, changeType }
+    if (!positionCode || !changeType) return new Error("役職と変更区分が必要です")
+    return { ...base, departmentCode, assignmentType, positionCode, changeType }
   }
   return new Error("人事発令種別が不正です")
 }

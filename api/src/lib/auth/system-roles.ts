@@ -80,6 +80,7 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "rental:manage",
   "grade:manage",
   "grade:read:all",
+  "position:manage",
   "employee_event:manage",
   "employee_event:read:all",
   // 人事KPI(在籍・退職・評価分布)を扱うため経営ダッシュボードも閲覧できる。

@@ -5,8 +5,9 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { readSecretStdin } from "@/lib/input/read-secret-stdin"
 
-export const help = `karte employee register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-title <p>] [--manager-employee-code <c>]
+export const help = `karte employee register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
 
+役職は役職マスタの code を指定してください（自由入力ではありません）。
 初期パスワードはコマンド引数に含めず、標準入力から渡してください。`
 
 export default factory.createHandlers(
@@ -24,7 +25,7 @@ export default factory.createHandlers(
         .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional(),
       "department-code": z.string().optional(),
-      "position-title": z.string().optional(),
+      "position-code": z.string().optional(),
       "manager-employee-code": z.string().optional(),
     }),
   ),
@@ -55,7 +56,7 @@ export default factory.createHandlers(
       role: query.role,
       hire_on: query["hire-on"],
       department_code: query["department-code"] ?? null,
-      position_title: query["position-title"] ?? null,
+      position_code: query["position-code"] ?? null,
       manager_employee_code: query["manager-employee-code"] ?? null,
     }
 

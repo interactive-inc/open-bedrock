@@ -8,6 +8,7 @@ import type { EmployeeCreateFormState } from "@/app/(app)/employees/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import type { PositionResponse } from "@/lib/api/types/position-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: EmployeeCreateFormState = { ok: false, error: null }
@@ -17,7 +18,10 @@ const selectClassName =
 
 // 従業員登録フォーム。人物、入社発令、初期アカウントを一括作成する。
 // 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
-export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
+export function EmployeeCreateForm(props: {
+  canAssignRole: boolean
+  positions: ReadonlyArray<PositionResponse>
+}) {
   const router = useRouter()
 
   async function reduce(
@@ -161,13 +165,23 @@ export function EmployeeCreateForm(props: { canAssignRole: boolean }) {
         <Field>
           <FieldLabel htmlFor="employee-position">役職（任意）</FieldLabel>
 
-          <Input
+          <select
             id="employee-position"
-            name="position_title"
-            placeholder="例: Engineer…"
-            autoComplete="organization-title"
-            maxLength={FORM_CONSTRAINTS.employee.positionMax}
-          />
+            name="position_code"
+            defaultValue=""
+            className={selectClassName}
+            autoComplete="off"
+          >
+            <option value="">役職なし</option>
+            {props.positions.map((position) => (
+              <option key={position.id} value={position.code}>
+                {position.name}
+              </option>
+            ))}
+          </select>
+          <FieldDescription>
+            役職は配属先部署とあわせて指定します。役職マスタから選び、空欄は役職なしです。
+          </FieldDescription>
         </Field>
 
         <Field>

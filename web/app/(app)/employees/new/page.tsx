@@ -3,6 +3,7 @@ import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
+import { getPositionList } from "@/lib/api/get-position-list"
 import { canCreateEmployee } from "@/lib/employee/can-create-employee"
 import { notFound } from "next/navigation"
 
@@ -18,6 +19,8 @@ export default async function EmployeeNewPage() {
 
   const canAssignRole = currentUser.permissions.includes("employee:assign_role")
 
+  const positions = await getPositionList()
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -28,7 +31,10 @@ export default async function EmployeeNewPage() {
 
       <Card className="max-w-xl gap-0 p-0">
         <div className="p-6">
-          <EmployeeCreateForm canAssignRole={canAssignRole} />
+          <EmployeeCreateForm
+            canAssignRole={canAssignRole}
+            positions={positions instanceof Error ? [] : positions}
+          />
         </div>
       </Card>
     </div>

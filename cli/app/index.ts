@@ -86,6 +86,11 @@ import gradesUpdateHandler from "@/app/grades/update/route"
 import gradesDeleteHandler from "@/app/grades/delete/route"
 import gradesAssignmentsHandler from "@/app/grades/assignments/route"
 import gradesAssignHandler from "@/app/grades/assign/route"
+import positionsHandler from "@/app/positions/route"
+import positionsListHandler from "@/app/positions/list/route"
+import positionsCreateHandler from "@/app/positions/create/route"
+import positionsUpdateHandler from "@/app/positions/update/route"
+import positionsDeleteHandler from "@/app/positions/delete/route"
 import employeeEventsHandler from "@/app/employee-events/route"
 import employeeEventsListHandler from "@/app/employee-events/list/route"
 import employeeEventsRecordHandler from "@/app/employee-events/record/route"
@@ -559,6 +564,11 @@ routes.post("/grades/update", ...gradesUpdateHandler)
 routes.post("/grades/delete", ...gradesDeleteHandler)
 routes.post("/grades/assignments", ...gradesAssignmentsHandler)
 routes.post("/grades/assign", ...gradesAssignHandler)
+routes.post("/positions", ...positionsHandler)
+routes.post("/positions/list", ...positionsListHandler)
+routes.post("/positions/create", ...positionsCreateHandler)
+routes.post("/positions/update", ...positionsUpdateHandler)
+routes.post("/positions/delete", ...positionsDeleteHandler)
 
 routes.post("/employee-events", ...employeeEventsHandler)
 routes.post("/employee-events/list", ...employeeEventsListHandler)

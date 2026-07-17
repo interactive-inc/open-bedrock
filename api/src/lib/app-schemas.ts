@@ -992,6 +992,27 @@ export const zAppEmployeeGradeList = z.object({
 
 export type AppEmployeeGradeList = z.infer<typeof zAppEmployeeGradeList>
 
+// ===== position =====
+/** 役職マスタ 1 件のレスポンス。 */
+export const zAppPosition = z.object({
+  id: z.number(),
+  code: z.string(),
+  name: z.string(),
+  rank: z.number(),
+  description: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppPosition = z.infer<typeof zAppPosition>
+
+/** 役職マスタ一覧のレスポンス。 */
+export const zAppPositionList = z.object({
+  data: z.array(zAppPosition),
+  total: z.number(),
+})
+
+export type AppPositionList = z.infer<typeof zAppPositionList>
+
 // ===== employee-event =====
 /** 異動・在籍イベント 1 件のレスポンス。 */
 export const zAppEmployeeEvent = z.object({

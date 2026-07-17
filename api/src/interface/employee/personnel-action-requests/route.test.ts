@@ -12,7 +12,7 @@ const action = {
   eventOn: "2026-02-01",
   departmentCode: "D003",
   assignmentType: "primary",
-  positionTitle: "Principal Engineer",
+  positionCode: "SENIOR_ENGINEER",
   changeType: "promotion",
 } as const
 
@@ -140,7 +140,7 @@ describe("POST /personnel-action-requests", () => {
       await db
         .prepare(
           `SELECT COUNT(*) FROM org_assignment_period_versions
-           WHERE employee_id = 5 AND position_title = 'Principal Engineer'`,
+           WHERE employee_id = 5 AND position_title = 'Senior Engineer'`,
         )
         .first<number>("COUNT(*)"),
     ).toBe(1)
@@ -212,9 +212,19 @@ describe("POST /personnel-action-requests", () => {
       token: await token(1),
     })
     expect(candidateDetail.status).toBe(200)
+    // 保存されるのは役職 code をマスタ名へ解決したドメイン入力（positionTitle）。
+    const resolvedAction = {
+      kind: "position_changed",
+      employeeCode: "E005",
+      eventOn: "2026-02-01",
+      departmentCode: "D003",
+      assignmentType: "primary",
+      positionTitle: "Senior Engineer",
+      changeType: "promotion",
+    }
     expect(await candidateDetail.json()).toMatchObject({
       id,
-      action,
+      action: resolvedAction,
       requested_by_employee_code: "E004",
     })
 
@@ -297,7 +307,7 @@ describe("POST /personnel-action-requests", () => {
       employeeName: "Future Teammate",
       eventOn: "2026-02-01",
       departmentCode: "D003",
-      positionTitle: "Engineer",
+      positionCode: "ENGINEER",
       managerEmployeeCode: "E004",
     } as const
     const requested = await requestWithContext({
@@ -360,5 +370,53 @@ describe("POST /personnel-action-requests", () => {
         .bind(body.application_id)
         .first<number>("target_employee_id"),
     ).toBe(employeeId)
+    // positionCode "ENGINEER" は発令の assignment に解決後のマスタ名 "Engineer" で保存される。
+    expect(
+      await db
+        .prepare(
+          `SELECT position_title FROM org_assignment_period_versions
+           WHERE employee_id = ?1 AND is_void = 0 ORDER BY revision DESC LIMIT 1`,
+        )
+        .bind(employeeId)
+        .first<string>("position_title"),
+    ).toBe("Engineer")
+  })
+
+  test("rejects a hire that sets a position without a department with 422", async () => {
+    const db = await prepareDb()
+    const response = await requestWithContext({
+      db,
+      jwtSecret: lifecycleRouteJwtSecret,
+      path: "/personnel-action-requests",
+      method: "POST",
+      token: await token(4),
+      body: {
+        action: {
+          kind: "hire",
+          employeeCode: "E778",
+          employeeName: "No Department Teammate",
+          eventOn: "2026-02-01",
+          departmentCode: null,
+          positionCode: "ENGINEER",
+          managerEmployeeCode: null,
+        },
+        base_employee_revision: 0,
+        base_organization_revision: 0,
+      },
+    })
+    expect(response.status).toBe(422)
+    const body = (await response.json()) as { code?: string }
+    expect(body.code).toBe("position_requires_department")
+    // 拒否されたので hire の発令も申請の対象従業員も作られない。
+    expect(
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM personnel_actions WHERE kind = 'hire'")
+        .first<number>("count"),
+    ).toBe(0)
+    expect(
+      await db
+        .prepare("SELECT COUNT(*) AS count FROM employees WHERE code = 'E778'")
+        .first<number>("count"),
+    ).toBe(0)
   })
 })

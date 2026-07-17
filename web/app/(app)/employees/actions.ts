@@ -121,13 +121,13 @@ export async function createEmployeeAction(
     errors.push(departmentCode.message)
   }
 
-  const position = toOptionalText(formData.get("position_title"), {
-    label: "役職",
-    max: FORM_CONSTRAINTS.employee.positionMax,
+  const positionCode = toOptionalText(formData.get("position_code"), {
+    label: "役職コード",
+    max: FORM_CONSTRAINTS.employee.codeMax,
   })
 
-  if (position instanceof Error) {
-    errors.push(position.message)
+  if (positionCode instanceof Error) {
+    errors.push(positionCode.message)
   }
 
   const managerEmployeeCode = toOptionalText(formData.get("manager_employee_code"), {
@@ -135,6 +135,16 @@ export async function createEmployeeAction(
     max: FORM_CONSTRAINTS.employee.codeMax,
   })
   if (managerEmployeeCode instanceof Error) errors.push(managerEmployeeCode.message)
+
+  // 役職は配属先部署の発令に載るため、部署なしで役職だけ指定すると役職が保存されない。
+  if (
+    !(departmentCode instanceof Error) &&
+    !(positionCode instanceof Error) &&
+    departmentCode === null &&
+    positionCode !== null
+  ) {
+    errors.push("役職は配属先部署とあわせて指定してください")
+  }
 
   if (errors.length > 0) {
     return { ok: false, error: errors.join("、") }
@@ -149,7 +159,7 @@ export async function createEmployeeAction(
     role: role as EmployeeRole,
     hire_on: hireOn as string,
     department_code: departmentCode as string | null,
-    position_title: position as string | null,
+    position_code: positionCode as string | null,
     manager_employee_code: managerEmployeeCode as string | null,
   })
 

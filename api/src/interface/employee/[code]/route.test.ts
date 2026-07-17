@@ -13,6 +13,7 @@ import { factory } from "@/lib/factory"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
+import { seedPositions } from "@/infrastructure/seed/seed-positions"
 import { contextStorage } from "hono/context-storage"
 import { HTTPException } from "hono/http-exception"
 import { z } from "zod"
@@ -89,6 +90,19 @@ async function createTestDb(): Promise<D1Database> {
       department_code: membership.departmentCode,
       employee_code: membership.employeeCode,
       manager_employee_code: membership.managerEmployeeCode,
+    })),
+  )
+
+  await seedD1(
+    db,
+    "positions",
+    seedPositions.map((position) => ({
+      id: position.id,
+      code: position.code,
+      name: position.name,
+      rank: position.rank,
+      description: position.description,
+      created_at: position.createdAt,
     })),
   )
 
@@ -259,7 +273,7 @@ describe("POST /employees", () => {
     role: "member",
     hire_on: "2026-01-01",
     department_code: null,
-    position_title: null,
+    position_code: null,
     manager_employee_code: null,
   }
 
@@ -298,6 +312,26 @@ describe("POST /employees", () => {
     })
 
     expect(response.status).toBe(409)
+  })
+
+  test("returns 422 for an unknown position_code", async () => {
+    const response = await request("/employees", await adminToken(), "POST", {
+      ...newEmployee,
+      department_code: "D003",
+      position_code: "NO_SUCH_POSITION",
+    })
+
+    expect(response.status).toBe(422)
+  })
+
+  test("returns 422 when position_code is given without a department_code", async () => {
+    const response = await request("/employees", await adminToken(), "POST", {
+      ...newEmployee,
+      department_code: null,
+      position_code: "SENIOR_ENGINEER",
+    })
+
+    expect(response.status).toBe(422)
   })
 
   test("returns 400 when hire date is invalid", async () => {

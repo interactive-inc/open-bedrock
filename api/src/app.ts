@@ -127,6 +127,9 @@ import * as gradeCreateRoute from "@/interface/grade/grades/create-route"
 import * as gradeDetailRoute from "@/interface/grade/grades/[id]/route"
 import * as gradeAssignmentsRoute from "@/interface/grade/grades/assignments/route"
 import * as gradeListRoute from "@/interface/grade/grades/route"
+import * as positionCreateRoute from "@/interface/position/positions/create-route"
+import * as positionDetailRoute from "@/interface/position/positions/[id]/route"
+import * as positionListRoute from "@/interface/position/positions/route"
 import * as employeeEventsRoute from "@/interface/employee-event/employee-events/route"
 import * as governanceCapabilitiesRoute from "@/interface/governance/capabilities/route"
 import * as governanceDocumentDetailRoute from "@/interface/governance/documents/[code]/route"
@@ -446,6 +449,10 @@ export const app = factory
   .post("/grades", ...gradeCreateRoute.POST)
   .put("/grades/:id", ...gradeDetailRoute.PUT)
   .delete("/grades/:id", ...gradeDetailRoute.DELETE)
+  .get("/positions", ...positionListRoute.GET)
+  .post("/positions", ...positionCreateRoute.POST)
+  .put("/positions/:id", ...positionDetailRoute.PUT)
+  .delete("/positions/:id", ...positionDetailRoute.DELETE)
   .get("/employee-events", ...employeeEventsRoute.GET)
   .post("/employee-events", ...employeeEventsRoute.POST)
   .get("/governance/documents", ...governanceDocumentsRoute.GET)
