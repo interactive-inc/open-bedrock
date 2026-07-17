@@ -1,5 +1,6 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import { hasPermission } from "@/lib/auth/has-permission"
+import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/lib/factory"
@@ -14,7 +15,12 @@ import {
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+  UnprocessableEntityError,
+} from "@/interface/lib/errors"
 
 // GET /goals — 本人の目標一覧。
 // employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。
@@ -61,6 +67,37 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
 
     conditions.push(inArray(goals.employeeId, reportEmployeeIds))
+  } else if (requestedEmployeeId === null && scope === "department") {
+    const departmentCode = c.req.query("department_code") ?? null
+
+    if (departmentCode === null) {
+      throw new UnprocessableEntityError("department_code is required for scope=department")
+    }
+
+    const departmentEmployeeIds = await listDepartmentEmployeeIds({ c, departmentCode })
+
+    if (departmentEmployeeIds instanceof Error) {
+      throw new InternalError("failed to resolve department employees")
+    }
+
+    // 部署スコープは、全社閲覧権限があるか、自分がその部署に所属し部署閲覧権限を持つ場合だけ許可する。
+    const isMember = departmentEmployeeIds.includes(session.employeeId)
+
+    const allowed =
+      hasPermission(session, "goal:read:all") ||
+      (hasPermission(session, "goal:read:department") && isMember)
+
+    if (allowed === false) {
+      throw new ForbiddenError()
+    }
+
+    if (departmentEmployeeIds.length === 0) {
+      const emptyBody = zAppGoalList.parse({ data: [], total: 0 })
+
+      return c.json(emptyBody, 200)
+    }
+
+    conditions.push(inArray(goals.employeeId, departmentEmployeeIds))
   } else if (requestedEmployeeId === null && scope === "all") {
     if (hasPermission(session, "goal:read:all") === false) {
       throw new ForbiddenError()

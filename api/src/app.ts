@@ -59,6 +59,8 @@ import * as authLoginRoute from "@/interface/auth/login/route"
 import * as authLogoutRoute from "@/interface/auth/logout/route"
 import * as authMeRoute from "@/interface/auth/me/route"
 import * as authRefreshRoute from "@/interface/auth/refresh/route"
+import * as meDepartmentsRoute from "@/interface/me/departments/route"
+import * as meReportsRoute from "@/interface/me/reports/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/batch/migrate-password-hashes/route"
 import * as batchRoute from "@/interface/batch/route"
 import * as lifecycleMigrationPreflightRoute from "@/interface/batch/employee-lifecycle/preflight/route"
@@ -407,6 +409,8 @@ export const app = factory
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .get("/me", ...authMeRoute.GET)
+  .get("/me/departments", ...meDepartmentsRoute.GET)
+  .get("/me/reports", ...meReportsRoute.GET)
   .get("/audit-events", ...auditEventsRoute.GET)
   .get("/audit-events/:event_id", ...auditEventDetailRoute.GET)
   .post("/audit-event-exports", ...auditEventExportsRoute.POST)

@@ -2,6 +2,7 @@ import { resolveAttendanceSearchQuery } from "@/interface/attendance/resolve-att
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { hasPermission } from "@/lib/auth/has-permission"
+import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/interface/attendance/attendance-list-query"
 import {
@@ -23,6 +24,7 @@ import {
   ForbiddenError,
   InternalError,
   UnauthorizedError,
+  UnprocessableEntityError,
 } from "@/interface/lib/errors"
 
 // GET /attendance — 勤怠検索。
@@ -76,6 +78,37 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     }
 
     conditions.push(inArray(attendanceRecords.employeeId, reportEmployeeIds))
+  } else if (requestedEmployeeId === null && scope === "department") {
+    const departmentCode = c.req.query("department_code") ?? null
+
+    if (departmentCode === null) {
+      throw new UnprocessableEntityError("department_code is required for scope=department")
+    }
+
+    const departmentEmployeeIds = await listDepartmentEmployeeIds({ c, departmentCode })
+
+    if (departmentEmployeeIds instanceof Error) {
+      throw new InternalError("failed to resolve department employees")
+    }
+
+    // 部署スコープは、全社閲覧権限があるか、自分がその部署に所属し部署閲覧権限を持つ場合だけ許可する。
+    const isMember = departmentEmployeeIds.includes(session.employeeId)
+
+    const allowed =
+      hasPermission(session, "attendance:read:all") ||
+      (hasPermission(session, "attendance:read:department") && isMember)
+
+    if (allowed === false) {
+      throw new ForbiddenError()
+    }
+
+    if (departmentEmployeeIds.length === 0) {
+      const emptyBody = zAppAttendanceRecordList.parse({ data: [], total: 0 })
+
+      return c.json(emptyBody, 200)
+    }
+
+    conditions.push(inArray(attendanceRecords.employeeId, departmentEmployeeIds))
   } else if (requestedEmployeeId === null && scope === "all") {
     if (hasPermission(session, "attendance:read:all") === false) {
       throw new ForbiddenError()

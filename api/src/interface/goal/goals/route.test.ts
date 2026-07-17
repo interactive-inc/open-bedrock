@@ -350,3 +350,153 @@ describe("GET /goals?scope=reports", () => {
     expect(response.status).toBe(403)
   })
 })
+
+// scope=department 用に、D002 側の goal を足して部署ごとの分離を確認する。
+async function createDepartmentScopeTestDb(): Promise<D1Database> {
+  const db = await createScopeTestDb()
+
+  // 全社権限の検証用に admin(id 23、所属なし)を追加する。
+  await seedD1(db, "employees", [
+    {
+      id: 23,
+      code: "A023",
+      name: "Admin",
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    },
+  ])
+
+  await seedIamForEmployees(db, [
+    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "admin" },
+  ])
+
+  await seedD1(db, "goals", [
+    {
+      id: 102,
+      employee_id: 22,
+      period: "2025-H2",
+      title: "C goal",
+      kpi: null,
+      weight: 50,
+      status: "draft",
+    },
+  ])
+
+  return db
+}
+
+// goal:read:department だけを持つカスタムロールを対象アカウントへ付与する。
+async function grantDepartmentReader(db: D1Database, accountId: number): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO roles (id, key, name, description, is_system, created_at)
+       VALUES (900, 'dept_reader', 'dept reader', '', 0, 0)`,
+    )
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO role_permissions (role_id, permission_id)
+       SELECT 900, p.id FROM permissions p WHERE p.key = 'goal:read:department'`,
+    )
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+       VALUES (?1, 900, NULL, 0)`,
+    )
+    .bind(accountId)
+    .run()
+}
+
+describe("GET /goals?scope=department", () => {
+  test("admin lists only the requested department's goals", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=department&department_code=D001",
+      token: await tokenFor(23, "admin"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      const employeeIds = parsed.data.data.map((goal) => goal.employee_id).sort((a, b) => a - b)
+
+      expect(employeeIds).toEqual([20, 21])
+    }
+  })
+
+  test("department reader in the department lists its goals", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/goals?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(goalResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+    }
+  })
+
+  test("department reader outside the department is forbidden", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/goals?scope=department&department_code=D002",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("member without department permission is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("missing department_code is unprocessable", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/goals?scope=department",
+      token: await tokenFor(23, "admin"),
+    })
+
+    expect(response.status).toBe(422)
+  })
+})
