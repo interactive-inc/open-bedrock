@@ -98,7 +98,7 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 所有・記録
 - 実現主体: open-karte
-- 実装状態: 部分実装。表示項目と role はあるが、Kind と期間関係の分離が不完全
+- 実装状態: 部分実装。Position マスタ(positions テーブル)と CRUD、従業員登録・人事発令でのコード選択は実装済み。office / cost center / Job(職種)は未実装
 
 ### Project と外部関係者
 

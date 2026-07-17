@@ -1,10 +1,11 @@
 import { CreatePersonnelActionRequest } from "@/application/employee-lifecycle/create-personnel-action-request"
 import { listAccessiblePersonnelActionRequests } from "@/application/employee-lifecycle/personnel-action-request-access"
 import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { PositionRepository } from "@/infrastructure/position/position-repository"
+import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { ApplicationError } from "@/lib/errors"
+import { ApplicationError, ValidationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -71,9 +72,31 @@ export const POST = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
+
+    // positionTitle が含まれる発令はコードをマスタ名に解決する。
+    // マスタが空（未セットアップ）の場合はフリーテキストとしてそのまま通す。
+    const actionInput = { ...body.action }
+    if ("positionTitle" in actionInput && actionInput.positionTitle != null) {
+      const positionRepository = new PositionRepository(c)
+      const positionCount = await positionRepository.count()
+      if (positionCount instanceof Error) {
+        throw new InternalError("failed to validate position")
+      }
+      if (positionCount > 0) {
+        const position = await positionRepository.findByCode(actionInput.positionTitle)
+        if (position instanceof Error) {
+          throw new InternalError("failed to validate position")
+        }
+        if (position === null) {
+          throw toHttpException(new ValidationError("position not found", "position_not_found"))
+        }
+        actionInput.positionTitle = position.name
+      }
+    }
+
     const result = await new CreatePersonnelActionRequest(c).run({
       session,
-      input: body.action,
+      input: actionInput,
       baseEmployeeRevision: body.base_employee_revision,
       baseOrganizationRevision: body.base_organization_revision,
       createdAt: c.env.NOW ?? new Date().toISOString(),

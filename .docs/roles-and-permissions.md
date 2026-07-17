@@ -46,6 +46,8 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 
 適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため admin は保持する)。
 
+position:manage は hr / admin に付与し、役職マスタ(positions テーブル)の CRUD を行う。GET /positions はマスタ公開情報のため全認証者が参照可能(等級マスタと同じ方式)。
+
 一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests は employee_id 指定なしで scope=reports(配下全員分)または scope=all(全社)を受け付け、対応する permission が無ければ 403。
 
 残り: 部署の階層(下位部署を含めるか)の扱い。

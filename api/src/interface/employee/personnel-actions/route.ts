@@ -15,6 +15,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { nonCorrectionPersonnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
 import type { PersonnelActionRecord } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
+import { PositionRepository } from "@/infrastructure/position/position-repository"
 import { hasPermission } from "@/lib/auth/has-permission"
 import { ApplicationError, ValidationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
@@ -78,10 +79,32 @@ export const POST = factory.createHandlers(
         new ValidationError("Idempotency-Key が必要です", "personnel_action_stale"),
       )
     }
+
+    // positionTitle が含まれる発令はコードをマスタ名に解決する。
+    // マスタが空（未セットアップ）の場合はフリーテキストとしてそのまま通す。
+    const actionInput = { ...body.action }
+    if ("positionTitle" in actionInput && actionInput.positionTitle != null) {
+      const positionRepository = new PositionRepository(c)
+      const positionCount = await positionRepository.count()
+      if (positionCount instanceof Error) {
+        throw new InternalError("failed to validate position")
+      }
+      if (positionCount > 0) {
+        const position = await positionRepository.findByCode(actionInput.positionTitle)
+        if (position instanceof Error) {
+          throw new InternalError("failed to validate position")
+        }
+        if (position === null) {
+          throw toHttpException(new ValidationError("position not found", "position_not_found"))
+        }
+        actionInput.positionTitle = position.name
+      }
+    }
+
     const result = await new ApplyPersonnelAction(c).run({
       session,
       employeeId: employee.id,
-      input: body.action,
+      input: actionInput,
       idempotencyKey,
       expectedEmployeeRevision: body.expected_employee_revision,
       expectedOrganizationRevision: body.expected_organization_revision,

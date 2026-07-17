@@ -178,6 +178,7 @@ export const PERMISSION_CATALOG = [
     category: "grade",
     description: "レポートライン配下の等級を閲覧する",
   },
+  { key: "position:manage", category: "position", description: "役職マスタを管理する" },
   {
     key: "employee_event:manage",
     category: "employee",

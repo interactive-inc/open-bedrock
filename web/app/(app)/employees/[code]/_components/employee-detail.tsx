@@ -14,6 +14,7 @@ import { EmployeeLifecycleSummary } from "@/app/(app)/employees/[code]/_componen
 import { EmployeeLifecycleTimeline } from "@/app/(app)/employees/[code]/_components/employee-lifecycle-timeline"
 import { PersonnelActionForm } from "@/app/(app)/employees/[code]/_components/personnel-action-form"
 import { PersonnelActionRequestList } from "@/app/(app)/employees/[code]/_components/personnel-action-request-list"
+import { getPositionList } from "@/lib/api/get-position-list"
 import { listPersonnelActionRequests } from "@/lib/api/list-personnel-action-requests"
 
 type Props = {
@@ -26,12 +27,15 @@ type Props = {
 // 該当なしは notFound、取得失敗はエラーメッセージ。
 // permissions と現在のライフサイクル状態に応じて、編集・人事発令・アーカイブ導線を出す。
 export async function EmployeeDetail(props: Props) {
-  const [employee, lifecycleState, lifecycleEvents, lifecycleRequests] = await Promise.all([
-    getEmployeeByCode(props.code),
-    getEmployeeLifecycleState(props.code),
-    getEmployeeLifecycleEvents(props.code),
-    listPersonnelActionRequests(props.code),
-  ])
+  const [employee, lifecycleState, lifecycleEvents, lifecycleRequests, positionList] =
+    await Promise.all([
+      getEmployeeByCode(props.code),
+      getEmployeeLifecycleState(props.code),
+      getEmployeeLifecycleEvents(props.code),
+      listPersonnelActionRequests(props.code),
+      getPositionList(),
+    ])
+  const positions = positionList instanceof Error ? [] : positionList
 
   if (employee instanceof Error) {
     return <FetchError message="従業員情報の取得に失敗しました" />
@@ -74,6 +78,7 @@ export async function EmployeeDetail(props: Props) {
                     organizationRevision={lifecycleState.organization_revision}
                     canRequest={canRequestLifecycle}
                     canApply={canApplyLifecycle}
+                    positions={positions}
                   />
                 ) : null}
 

@@ -2,6 +2,7 @@
 
 import { submitPersonnelAction } from "@/app/(app)/employees/[code]/actions"
 import type { PersonnelActionFormState } from "@/app/(app)/employees/[code]/actions"
+import type { PositionResponse } from "@/lib/api/types/position-types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -43,6 +44,7 @@ export function PersonnelActionForm(props: {
   organizationRevision: number
   canRequest: boolean
   canApply: boolean
+  positions: ReadonlyArray<PositionResponse>
 }) {
   const [open, setOpen] = useState(false)
   const [kind, setKind] = useState<ActionKind>("transferred")
@@ -162,14 +164,32 @@ export function PersonnelActionForm(props: {
             {needsPosition ? (
               <Field>
                 <FieldLabel htmlFor="personnel-position">
-                  役職名{kind === "position_changed" ? "" : "（任意）"}
+                  役職{kind === "position_changed" ? "" : "（任意）"}
                 </FieldLabel>
-                <Input
-                  id="personnel-position"
-                  name="position_title"
-                  autoComplete="organization-title"
-                  required={kind === "position_changed"}
-                />
+                {props.positions.length > 0 ? (
+                  <select
+                    id="personnel-position"
+                    name="position_title"
+                    aria-label="役職"
+                    className={selectClassName}
+                    defaultValue=""
+                    required={kind === "position_changed"}
+                  >
+                    <option value="">未選択</option>
+                    {props.positions.map((position) => (
+                      <option key={position.id} value={position.code}>
+                        {position.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input
+                    id="personnel-position"
+                    name="position_title"
+                    autoComplete="organization-title"
+                    required={kind === "position_changed"}
+                  />
+                )}
               </Field>
             ) : null}
             {needsManager ? (

@@ -24,6 +24,7 @@
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 - `/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
+- `/positions` は役職マスタの一覧を確認し、管理者(`position:manage`)が作成、編集、削除する画面。
 - `/recruitment` は採用の募集一覧と候補者パイプラインを管理する画面(`recruitment:manage`)。
 - `/commendations` は表彰の一覧(社内公開)と管理者による記録を行う画面。
 - `/headcount-plans` は人員計画と実在籍数を比較する画面(`headcount_plan:read:all`)。

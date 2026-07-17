@@ -9,7 +9,7 @@ import {
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { ApplicationError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
@@ -24,6 +24,7 @@ import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { PositionRepository } from "@/infrastructure/position/position-repository"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 import { UnavailableError } from "@/lib/errors"
@@ -270,6 +271,33 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    // position_title にコードが送られた場合、マスタから名称を解決する。
+    // マスタが空（未セットアップ）の場合はフリーテキストとしてそのまま通す。
+    let positionTitle: string | null = json.position_title ?? null
+
+    if (positionTitle != null) {
+      const positionRepository = new PositionRepository(c)
+      const positionCount = await positionRepository.count()
+
+      if (positionCount instanceof Error) {
+        throw new InternalError("failed to validate position")
+      }
+
+      if (positionCount > 0) {
+        const position = await positionRepository.findByCode(positionTitle)
+
+        if (position instanceof Error) {
+          throw new InternalError("failed to validate position")
+        }
+
+        if (position === null) {
+          throw toHttpException(new ValidationError("position not found", "position_not_found"))
+        }
+
+        positionTitle = position.name
+      }
+    }
+
     const created = await new RegisterEmployee(c).run({
       session: session,
       employee: {
@@ -280,7 +308,7 @@ export const POST = factory.createHandlers(
         role: json.role,
         hireOn: json.hire_on,
         departmentCode: json.department_code ?? null,
-        positionTitle: json.position_title ?? null,
+        positionTitle,
         managerEmployeeCode: json.manager_employee_code ?? null,
       },
     })
