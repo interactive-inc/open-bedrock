@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs"
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
@@ -5,6 +6,13 @@ const nextConfig: NextConfig = {
 
   // portless のプロキシ経由（karte.open.localhost）で dev リソースと HMR を許可する
   allowedDevOrigins: ["karte.open.localhost"],
+
+  // Codex のローカル in-app browser は sandboxed frame から Server Action を送るため
+  // Origin が `null` になる。production では許可せず、通常の same-origin 検査を維持する。
+  experimental: {
+    serverActions:
+      process.env.NODE_ENV === "development" ? { allowedOrigins: ["null"] } : undefined,
+  },
 
   async headers() {
     return [
@@ -26,7 +34,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self'",
+              // Next.js の streaming SSR と hydration はインライン script($RC、__next_f)で
+              // 動くため 'unsafe-inline' が必須。script-src 'self' 単独だと全画面が
+              // スケルトンのまま止まる。nonce ベース CSP への移行は別課題。
+              process.env.NODE_ENV === "development"
+                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+                : "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "font-src 'self'",
@@ -40,4 +53,7 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  silent: process.env.CI !== "true",
+  tunnelRoute: "/monitoring",
+})

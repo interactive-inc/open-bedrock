@@ -4,12 +4,15 @@ import { LoginForm } from "@/components/login-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTranslator } from "@/lib/i18n/use-translator"
 
+type Props = {
+  onAuthenticated: () => void
+}
+
 /**
- * 未認証時に保護領域の layout（または認証切れ時の error boundary）から描画するログイン画面。
- * 画面全体を覆い、サインインしたら Server Action が `/` へ redirect する。
- * error.tsx（Next.js の規約で必ず Client Component）から import されるため Client Component。
+ * AuthError を受けた root error boundary が、現在の URL のまま表示するログイン画面。
+ * サインイン後は boundary を reset して同じページを再描画する。
  */
-export function LoginGate() {
+export function LoginPage(props: Props) {
   const t = useTranslator()
 
   return (
@@ -24,7 +27,7 @@ export function LoginGate() {
         </CardHeader>
 
         <CardContent>
-          <LoginForm />
+          <LoginForm onAuthenticated={props.onAuthenticated} />
         </CardContent>
       </Card>
     </div>

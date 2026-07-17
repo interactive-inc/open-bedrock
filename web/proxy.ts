@@ -4,7 +4,7 @@ import { postRefreshToken } from "@/lib/api/post-refresh-token"
 import { setSessionCookies } from "@/lib/auth/set-session-cookies"
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
 }
 
 // Mutex for refresh token rotation — prevents concurrent requests from triggering
@@ -24,58 +24,27 @@ function deduplicatedRefresh(
 }
 
 /**
- * 未認証の保護画面アクセスはログイン画面へ送り、access token cookie が無い場合は
- * refresh token を1回だけローテーションしてから元のリクエストを続行する。
+ * access token cookie が無い場合は refresh token を1回だけローテーションし、
+ * 新しい session を同じ URL のリクエストへ注入する。
+ * 認証できない場合もリダイレクトせず、API の AuthError を error boundary まで伝播させる。
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const isLoginPage = request.nextUrl.pathname === "/login"
-  // CSV proxy is an HTTP endpoint, not a page. Its Route Handler must preserve the API's
-  // 401 JSON/no-store contract instead of turning failures into an HTML login redirect.
-  const isAuditExportRoute = request.nextUrl.pathname === "/admin/audit-events/export"
-
   const sessionCookie = request.cookies.get("session")
 
   const refreshTokenCookie = request.cookies.get("refresh_token")
 
   if (sessionCookie !== undefined) {
-    return isLoginPage ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next()
+    return NextResponse.next()
   }
 
   if (refreshTokenCookie === undefined) {
-    return isLoginPage || isAuditExportRoute
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  if (isLoginPage) {
-    const refreshed = await deduplicatedRefresh(refreshTokenCookie.value)
-
-    if (refreshed instanceof Error) {
-      const response = NextResponse.next()
-
-      response.cookies.delete("session")
-      response.cookies.delete("refresh_token")
-
-      return response
-    }
-
-    const response = NextResponse.redirect(new URL("/", request.url))
-
-    setSessionCookies({
-      cookieStore: response.cookies,
-      accessToken: refreshed.access_token,
-      refreshToken: refreshed.refresh_token,
-    })
-
-    return response
+    return NextResponse.next()
   }
 
   const refreshed = await deduplicatedRefresh(refreshTokenCookie.value)
 
   if (refreshed instanceof Error) {
-    const response = isAuditExportRoute
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", request.url))
+    const response = NextResponse.next()
 
     response.cookies.delete("session")
     response.cookies.delete("refresh_token")
