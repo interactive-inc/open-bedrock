@@ -25,7 +25,7 @@ const fetchWithNetworkGuard: typeof fetch = async (input, init) => {
 export async function createClient(): Promise<ApiClient> {
   const token = await getServerSession()
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787"
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18787"
 
   const headers: Record<string, string> = {
     "X-Open-Karte-Client": "web",

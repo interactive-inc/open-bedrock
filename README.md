@@ -45,7 +45,7 @@ bun link          # karte コマンドを PATH に通す
 karte --help
 ```
 
-各コマンドは `~/.karte/config.json` のトークンで API を叩く。接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:8787`）で上書きできる。
+各コマンドは `~/.karte/config.json` のトークンで API を叩く。接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:18787`）で上書きできる。
 
 ```sh
 karte login --email you@example.com --password your_password_here

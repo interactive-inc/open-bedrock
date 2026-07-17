@@ -2,7 +2,7 @@ import { chmod, mkdir, writeFile } from "node:fs/promises"
 import { homedir } from "node:os"
 import { join } from "node:path"
 
-const DEFAULT_BASE_URL = process.env.KARTE_API ?? "http://127.0.0.1:8787"
+const DEFAULT_BASE_URL = process.env.KARTE_API ?? "http://127.0.0.1:18787"
 
 export type KarteConfig = {
   base_url: string

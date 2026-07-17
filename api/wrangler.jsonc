@@ -4,6 +4,10 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-05-24",
   "compatibility_flags": ["nodejs_compat"],
+  // wrangler デフォルトの 8787 は他プロジェクトの wrangler dev と衝突するため専用ポートに固定する。
+  "dev": {
+    "port": 18787,
+  },
   "d1_databases": [
     {
       "binding": "DB",

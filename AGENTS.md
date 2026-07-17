@@ -41,10 +41,10 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cp api/.dev.vars.example api/.dev.vars` で `JWT_SECRET` を用意する（無いとログインが 500 になる。`.dev.vars` は gitignore 済み）
-- リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://karte.open.localhost`、api は `https://api.karte.open.localhost`（実体は `localhost:8787`）。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
+- リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://karte.open.localhost`、api は `https://api.karte.open.localhost`（実体は `localhost:18787`）。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
-api 単体の疎通だけ見るなら `cd api && bun run dev`（= `wrangler dev`、ポート 8787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /auth/login` で access_token を取り `Authorization: Bearer` で叩く。
+api 単体の疎通だけ見るなら `cd api && bun run dev`（= `wrangler dev`、ポート 18787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /auth/login` で access_token を取り `Authorization: Bearer` で叩く。
 
 web↔api クライアントの約束:
 
@@ -60,7 +60,7 @@ web↔api クライアントの約束:
 
 ## ドキュメント
 
-- `.docs/index.md` を製品仕様の manifest とし、規範語、正本範囲、優先順位に従う
+- `.docs/` を変更する場合は `.docs/CLAUDE.md` に従う
 - 製品の意味、境界、不変条件は `.docs/` を正本とする。route、table、column、入出力型の現存確認はコード、migration、生成型を使う
 - 仕様と実装の差を暗黙に読み替えない。未解決の権限、状態、外部副作用は安全側へ拒否し、未実装差分として明示する
 - Markdown の書式は `.claude/rules/md.md` に従う

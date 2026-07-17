@@ -16,7 +16,7 @@ bun index.ts app inbox
 ```
 
 `karte` として bin 登録済み（`bun link` で PATH に通す）。
-接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:8787`）で上書きできる。
+接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:18787`）で上書きできる。
 
 ## 構成
 
