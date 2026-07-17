@@ -13,7 +13,8 @@ import {
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
-import { nonCorrectionPersonnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
+import { resolvePersonnelActionPosition } from "@/interface/employee-lifecycle/resolve-personnel-action-position"
+import { nonCorrectionWirePersonnelActionInputSchema } from "@/interface/employee-lifecycle/wire-personnel-action-input"
 import type { PersonnelActionRecord } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
 import { hasPermission } from "@/lib/auth/has-permission"
 import { ApplicationError, ValidationError } from "@/lib/errors"
@@ -34,7 +35,7 @@ export const personnelActionResponse = (action: PersonnelActionRecord) => ({
 
 const requestSchema = z
   .object({
-    action: nonCorrectionPersonnelActionInputSchema,
+    action: nonCorrectionWirePersonnelActionInputSchema,
     expected_employee_revision: z.number().int().nonnegative(),
     expected_organization_revision: z.number().int().nonnegative().nullable(),
   })
@@ -78,10 +79,12 @@ export const POST = factory.createHandlers(
         new ValidationError("Idempotency-Key が必要です", "personnel_action_stale"),
       )
     }
+    const input = await resolvePersonnelActionPosition(c, body.action)
+    if (input instanceof ApplicationError) throw toHttpException(input)
     const result = await new ApplyPersonnelAction(c).run({
       session,
       employeeId: employee.id,
-      input: body.action,
+      input,
       idempotencyKey,
       expectedEmployeeRevision: body.expected_employee_revision,
       expectedOrganizationRevision: body.expected_organization_revision,

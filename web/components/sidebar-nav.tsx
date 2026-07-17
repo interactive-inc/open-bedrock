@@ -332,6 +332,7 @@ const navGroups: ReadonlyArray<NavGroup> = [
         ],
       },
       { label: "等級", href: "/grades", icon: Award },
+      { label: "役職", href: "/positions", icon: Briefcase },
       {
         label: "採用",
         href: "/recruitment",

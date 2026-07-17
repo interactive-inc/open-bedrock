@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import type { PositionResponse } from "@/lib/api/types/position-types"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
@@ -43,6 +44,7 @@ export function PersonnelActionForm(props: {
   organizationRevision: number
   canRequest: boolean
   canApply: boolean
+  positions: ReadonlyArray<PositionResponse>
 }) {
   const [open, setOpen] = useState(false)
   const [kind, setKind] = useState<ActionKind>("transferred")
@@ -161,15 +163,25 @@ export function PersonnelActionForm(props: {
             ) : null}
             {needsPosition ? (
               <Field>
-                <FieldLabel htmlFor="personnel-position">
-                  役職名{kind === "position_changed" ? "" : "（任意）"}
+                <FieldLabel id="personnel-position-label" htmlFor="personnel-position">
+                  役職{kind === "position_changed" ? "" : "（任意）"}
                 </FieldLabel>
-                <Input
+                <select
                   id="personnel-position"
-                  name="position_title"
-                  autoComplete="organization-title"
+                  name="position_code"
+                  aria-labelledby="personnel-position-label"
+                  className={selectClassName}
+                  defaultValue=""
                   required={kind === "position_changed"}
-                />
+                >
+                  <option value="">役職なし</option>
+                  {props.positions.map((position) => (
+                    <option key={position.id} value={position.code}>
+                      {position.name}
+                    </option>
+                  ))}
+                </select>
+                <FieldDescription>役職マスタから選びます。</FieldDescription>
               </Field>
             ) : null}
             {needsManager ? (

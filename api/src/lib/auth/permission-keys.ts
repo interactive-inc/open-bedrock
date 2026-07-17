@@ -173,6 +173,7 @@ export const PERMISSION_CATALOG = [
   },
   { key: "grade:manage", category: "grade", description: "等級マスタと等級の割当を管理する" },
   { key: "grade:read:all", category: "grade", description: "全社の等級を閲覧する" },
+  { key: "position:manage", category: "position", description: "役職マスタを管理する" },
   {
     key: "grade:read:reports",
     category: "grade",

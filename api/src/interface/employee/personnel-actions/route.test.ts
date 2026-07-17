@@ -12,7 +12,7 @@ const action = {
   eventOn: "2026-01-01",
   departmentCode: "D003",
   assignmentType: "primary",
-  positionTitle: "Staff Engineer",
+  positionCode: "SENIOR_ENGINEER",
   changeType: "promotion",
 }
 
@@ -50,7 +50,7 @@ describe("POST /personnel-actions", () => {
     expect(await created.json()).toMatchObject({
       kind: "position_changed",
       replayed: false,
-      summary: { positionTitle: "Staff Engineer" },
+      summary: { positionTitle: "Senior Engineer" },
     })
     const replayed = await requestWithContext(props)
     expect(replayed.status).toBe(200)
@@ -87,5 +87,23 @@ describe("POST /personnel-actions", () => {
       body,
     })
     expect(missingKey.status).toBe(400)
+  })
+
+  test("rejects an unknown position code with 422", async () => {
+    const response = await requestWithContext({
+      db: await createLifecycleRouteDb(),
+      jwtSecret: lifecycleRouteJwtSecret,
+      path: "/personnel-actions",
+      method: "POST",
+      token: await token(1, "admin"),
+      body: {
+        action: { ...action, positionCode: "NO_SUCH_POSITION" },
+        expected_employee_revision: 0,
+        expected_organization_revision: 0,
+      },
+      headers: { "Idempotency-Key": "unknown-position-1" },
+      now: "2026-01-01T00:00:00.000Z",
+    })
+    expect(response.status).toBe(422)
   })
 })

@@ -1,6 +1,7 @@
 import { seedDepartments } from "@/infrastructure/seed/seed-departments"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
+import { seedPositions } from "@/infrastructure/seed/seed-positions"
 import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
 import { loadSchema } from "@/interface/shared/test/load-schema"
 import { seedD1 } from "@/interface/shared/test/seed-d1"
@@ -37,6 +38,18 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
       dept_name: employee.deptName,
       position: employee.position,
       status: employee.status,
+    })),
+  )
+  await seedD1(
+    db,
+    "positions",
+    seedPositions.map((position) => ({
+      id: position.id,
+      code: position.code,
+      name: position.name,
+      rank: position.rank,
+      description: position.description,
+      created_at: position.createdAt,
     })),
   )
   await seedIamForEmployees(db)

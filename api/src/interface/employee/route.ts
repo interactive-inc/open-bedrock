@@ -8,8 +8,10 @@ import {
   toBoundedInt,
 } from "@/interface/shared/to-bounded-int"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
+import { resolveEmployeePositionName } from "@/interface/employee/resolve-employee-position-name"
+import { positionRequiresDepartment } from "@/interface/employee-lifecycle/position-requires-department"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
@@ -257,7 +259,7 @@ export const POST = factory.createHandlers(
       role: employeeRoleSchema,
       hire_on: isoDate,
       department_code: codeSchema.nullable().optional(),
-      position_title: z.string().min(1).max(200).nullable().optional(),
+      position_code: codeSchema.nullable().optional(),
       manager_employee_code: codeSchema.nullable().optional(),
     }),
   ),
@@ -270,6 +272,21 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    if (positionRequiresDepartment(json.department_code ?? null, json.position_code ?? null)) {
+      throw toHttpException(
+        new UnprocessableError(
+          "役職は配属先部署とあわせて指定してください",
+          "position_requires_department",
+        ),
+      )
+    }
+
+    const positionTitle = await resolveEmployeePositionName(c, json.position_code ?? null)
+
+    if (positionTitle instanceof ApplicationError) {
+      throw toHttpException(positionTitle)
+    }
+
     const created = await new RegisterEmployee(c).run({
       session: session,
       employee: {
@@ -280,7 +297,7 @@ export const POST = factory.createHandlers(
         role: json.role,
         hireOn: json.hire_on,
         departmentCode: json.department_code ?? null,
-        positionTitle: json.position_title ?? null,
+        positionTitle,
         managerEmployeeCode: json.manager_employee_code ?? null,
       },
     })

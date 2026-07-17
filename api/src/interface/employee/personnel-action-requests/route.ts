@@ -1,6 +1,7 @@
 import { CreatePersonnelActionRequest } from "@/application/employee-lifecycle/create-personnel-action-request"
 import { listAccessiblePersonnelActionRequests } from "@/application/employee-lifecycle/personnel-action-request-access"
-import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
+import { resolvePersonnelActionPosition } from "@/interface/employee-lifecycle/resolve-personnel-action-position"
+import { wirePersonnelActionInputSchema } from "@/interface/employee-lifecycle/wire-personnel-action-input"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/shared/verify-bearer"
@@ -12,7 +13,7 @@ import { codeSchema } from "@/lib/schemas"
 
 const requestSchema = z
   .object({
-    action: personnelActionInputSchema,
+    action: wirePersonnelActionInputSchema,
     base_employee_revision: z.number().int().nonnegative(),
     base_organization_revision: z.number().int().nonnegative().nullable(),
   })
@@ -71,9 +72,11 @@ export const POST = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
+    const input = await resolvePersonnelActionPosition(c, body.action)
+    if (input instanceof ApplicationError) throw toHttpException(input)
     const result = await new CreatePersonnelActionRequest(c).run({
       session,
-      input: body.action,
+      input,
       baseEmployeeRevision: body.base_employee_revision,
       baseOrganizationRevision: body.base_organization_revision,
       createdAt: c.env.NOW ?? new Date().toISOString(),

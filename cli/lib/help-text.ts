@@ -118,6 +118,10 @@ commands:
   grades delete               等級を削除 (--id)
   grades assignments          等級の割当履歴 (--employee-id)
   grades assign               等級の割当を記録 (--employee-id --grade-id --effective-date [--reason --review-cycle-id])
+  positions list              役職マスタ一覧
+  positions create            役職を作成 (--code --name --rank [--description])
+  positions update            役職を更新 (--id --code --name --rank [--description])
+  positions delete            役職を削除 (--id)
   calendar list               会社カレンダー一覧 ([--year])
   calendar add                会社休日/振替出勤日を記録 (--date --kind [--name])
   calendar delete             会社カレンダーを削除 (--id)

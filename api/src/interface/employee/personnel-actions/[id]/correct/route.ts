@@ -1,5 +1,6 @@
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
-import { nonCorrectionPersonnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
+import { resolvePersonnelActionPosition } from "@/interface/employee-lifecycle/resolve-personnel-action-position"
+import { nonCorrectionWirePersonnelActionInputSchema } from "@/interface/employee-lifecycle/wire-personnel-action-input"
 import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
 import {
   appendLifecycleDeniedAudit,
@@ -26,7 +27,7 @@ const requestSchema = z
   .object({
     event_on: isoDate,
     reason: z.string().trim().min(1).max(2000),
-    replacement_action: nonCorrectionPersonnelActionInputSchema,
+    replacement_action: nonCorrectionWirePersonnelActionInputSchema,
     expected_employee_revision: z.number().int().nonnegative(),
     expected_organization_revision: z.number().int().nonnegative().nullable(),
   })
@@ -73,16 +74,18 @@ export const POST = factory.createHandlers(
       )
     }
     const body = c.req.valid("json")
+    const input = await resolvePersonnelActionPosition(c, {
+      kind: "corrected",
+      eventOn: body.event_on,
+      correctsActionId: original.id,
+      reason: body.reason,
+      replacementAction: body.replacement_action,
+    })
+    if (input instanceof ApplicationError) throw toHttpException(input)
     const result = await new ApplyPersonnelAction(c).run({
       session,
       employeeId: original.employeeId,
-      input: {
-        kind: "corrected",
-        eventOn: body.event_on,
-        correctsActionId: original.id,
-        reason: body.reason,
-        replacementAction: body.replacement_action,
-      },
+      input,
       idempotencyKey,
       expectedEmployeeRevision: body.expected_employee_revision,
       expectedOrganizationRevision: body.expected_organization_revision,

@@ -24,7 +24,7 @@ export type EmployeeCreateRequest = {
   role: "member" | "manager" | "hr" | "admin"
   hire_on: string
   department_code?: string | null
-  position_title?: string | null
+  position_code?: string | null
   manager_employee_code?: string | null
 }
 
