@@ -13,7 +13,7 @@ import {
   isAbortedByLivePermissionGuard,
   LivePermissionGuardError,
 } from "@/infrastructure/iam/live-permission-guard"
-import { eq, inArray } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 
 // IAM のロールと、その permission 割当を扱う。動的ロールの CRUD と permission 一括置換を担う。
 
@@ -129,21 +129,12 @@ export class RoleRepository {
 
   async permissionKeysOf(roleId: number): Promise<ReadonlyArray<string> | Error> {
     try {
-      const grants = await this.c.var.database
-        .select()
-        .from(rolePermissions)
-        .where(eq(rolePermissions.roleId, roleId))
-
-      const permissionIds = grants.map((row) => row.permissionId)
-
-      if (permissionIds.length === 0) {
-        return []
-      }
-
+      // permission 数が D1 のバインド変数上限(100)を超えるため join で解決する。
       const rows = await this.c.var.database
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.id, permissionIds))
+        .select({ key: permissions.key })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+        .where(eq(rolePermissions.roleId, roleId))
 
       return rows.map((row) => row.key)
     } catch (caught) {
@@ -200,13 +191,15 @@ export class RoleRepository {
         return null
       }
 
-      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）
+      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）。
+      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
       const drizzle = this.c.var.database
 
-      const permissionRows = await drizzle
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.key, [...permissionKeys]))
+      const requestedKeys = new Set(permissionKeys)
+
+      const allPermissionRows = await drizzle.select().from(permissions)
+
+      const permissionRows = allPermissionRows.filter((row) => requestedKeys.has(row.key))
 
       // DELETE と全 INSERT を同一 batch にまとめてアトミックに実行する
       await db.batch([
@@ -335,12 +328,12 @@ export class RoleRepository {
     permissionKeys: ReadonlyArray<string>,
   ): Promise<ReadonlyArray<number> | Error> {
     try {
-      const rows = await this.c.var.database
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.key, [...permissionKeys]))
+      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
+      const requestedKeys = new Set(permissionKeys)
 
-      return rows.map((row) => row.id)
+      const rows = await this.c.var.database.select().from(permissions)
+
+      return rows.filter((row) => requestedKeys.has(row.key)).map((row) => row.id)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve permission ids")
     }

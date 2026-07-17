@@ -106,22 +106,14 @@ export class AccountAuthRepository {
 
     const db = this.c.var.database
 
-    const grants = await db
-      .select()
+    // permission 数が D1 のバインド変数上限(100)を超えるため、permission ID の
+    // inArray ではなく join で解決する。バインド変数はロール数だけに依存する。
+    const grantRows = await db
+      .select({ key: permissions.key })
       .from(rolePermissions)
+      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
       .where(inArray(rolePermissions.roleId, [...roleIds]))
 
-    const permissionIds = grants.map((row) => row.permissionId)
-
-    if (permissionIds.length === 0) {
-      return []
-    }
-
-    const permissionRows = await db
-      .select()
-      .from(permissions)
-      .where(inArray(permissions.id, permissionIds))
-
-    return permissionRows.map((row) => row.key)
+    return grantRows.map((row) => row.key)
   }
 }
