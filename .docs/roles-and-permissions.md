@@ -5,7 +5,7 @@
 ## 仕組み
 
 - permission が認可の正。"domain:action" または "domain:action:scope" 形式の機械可読キーで、カタログはコードの permission-keys.ts が SSOT
-- ロールは permission を集めた集合であり、動的に作成・編集できる(web の /admin/roles、karte roles、POST /iam/roles)
+- ロールは permission を集めた集合であり、動的に作成・編集できる(web の /system/roles、karte roles、POST /iam/roles)
 - アカウントには複数ロールを割り当てられ、実効権限は全ロールの和集合
 - 判定は deny-by-default(fail-closed)。未知のキーや解決失敗は常に拒否
 - JWT に権限を載せない。リクエスト毎に DB から解決するため、ロール変更は即時反映される

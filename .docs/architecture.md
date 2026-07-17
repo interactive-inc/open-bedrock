@@ -56,6 +56,7 @@ Web と CLI は提供面であり、業務規則と認可を定義しない。
 - API の実行時 module を client bundle へ import しない。
 - CLI route は `cli/app/index.ts` へ登録する。
 - UI の非表示や CLI help は認可ではなく、API が最終判断する。
+- Web の画面 URL 規約は [Web routes](./sitemap.md) を定義元とする。
 
 ## 認証と認可
 
