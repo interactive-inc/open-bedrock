@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
 import type { InboxCounts } from "@/lib/api/types/inbox-types"
+import type { FlatDepartment } from "@/lib/org/flatten-org-tree"
+import type { MyDepartment } from "@/components/sidebar-nav"
 import type { Locale } from "@/lib/i18n/locale"
 
 type Props = {
@@ -21,6 +23,8 @@ type Props = {
   currentUser: MeResponse
   inboxCounts: InboxCounts
   locale: Locale
+  myDepartments: ReadonlyArray<MyDepartment>
+  allDepartments: ReadonlyArray<FlatDepartment>
   onLogout: () => void
   unreadNotificationCount: number
 }
@@ -42,11 +46,14 @@ export function AppShell(props: Props) {
 
       <Sidebar collapsible="offcanvas" className="border-none">
         <SidebarHeader>
-          <div className="flex flex-col gap-0.5 px-2 py-1">
+          <Link
+            href="/"
+            className="flex flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
+          >
             <span className="text-base font-semibold tracking-wider">KARTE</span>
 
             <span className="text-xs text-muted-foreground">{deptLabel}</span>
-          </div>
+          </Link>
         </SidebarHeader>
 
         <SidebarContent>
@@ -54,13 +61,15 @@ export function AppShell(props: Props) {
             inboxCounts={props.inboxCounts}
             unreadNotificationCount={props.unreadNotificationCount}
             permissions={props.currentUser.permissions}
+            myDepartments={props.myDepartments}
+            allDepartments={props.allDepartments}
           />
         </SidebarContent>
 
         <SidebarFooter className="border-t border-border/70 bg-muted/60">
           <div className="flex items-center gap-1">
             <Link
-              href="/settings"
+              href="/my/settings"
               className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md px-2 py-1 hover:bg-sidebar-accent"
             >
               <span className="truncate text-sm font-medium">{props.currentUser.name}</span>
