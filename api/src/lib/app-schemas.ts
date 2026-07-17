@@ -1394,6 +1394,38 @@ export const zAppOrgReportingLineList = z.array(zAppOrgReportingLineNode)
 
 export type AppOrgReportingLineList = z.infer<typeof zAppOrgReportingLineList>
 
+/** 直属部下 1 件のレスポンス。 */
+export const zAppMyReport = z.object({
+  code: z.string(),
+  name: z.string(),
+  dept_name: z.string().nullable(),
+  position: z.string().nullable(),
+})
+
+export type AppMyReport = z.infer<typeof zAppMyReport>
+
+/** 直属部下一覧のレスポンス（{ data }）。 */
+export const zAppMyReportList = z.object({
+  data: z.array(zAppMyReport),
+})
+
+export type AppMyReportList = z.infer<typeof zAppMyReportList>
+
+/** 本人の所属部署 1 件のレスポンス（主配属を先頭に並べる）。 */
+export const zAppMyDepartment = z.object({
+  code: z.string(),
+  name: z.string(),
+  assignment_type: z.enum(["primary", "concurrent"]),
+})
+
+export type AppMyDepartment = z.infer<typeof zAppMyDepartment>
+
+export const zAppMyDepartmentList = z.object({
+  data: z.array(zAppMyDepartment),
+})
+
+export type AppMyDepartmentList = z.infer<typeof zAppMyDepartmentList>
+
 /** 組織ツリーノード 1 件のレスポンス（children で再帰）。 */
 export type AppOrgTreeNode = {
   code: string

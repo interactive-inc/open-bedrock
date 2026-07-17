@@ -1,10 +1,16 @@
 import { CreateLeaveRequest } from "@/application/leave/create-leave-request"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+  UnprocessableEntityError,
+} from "@/interface/lib/errors"
 import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
 import { canReadLeaveOf } from "@/lib/leave/can-read-leave-of"
 import { hasPermission } from "@/lib/auth/has-permission"
+import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/lib/factory"
@@ -32,7 +38,8 @@ export const GET = factory.createHandlers(
     "query",
     z.object({
       employee_id: z.string().optional(),
-      scope: z.enum(["reports", "all"]).optional(),
+      scope: z.enum(["reports", "all", "department"]).optional(),
+      department_code: z.string().optional(),
       status: z.enum(["pending", "approved", "rejected"]).optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
@@ -76,6 +83,37 @@ export const GET = factory.createHandlers(
       }
 
       conditions.push(inArray(leaveRequests.employeeId, reportEmployeeIds))
+    } else if (requestedEmployeeId === null && query.scope === "department") {
+      const departmentCode = query.department_code ?? null
+
+      if (departmentCode === null) {
+        throw new UnprocessableEntityError("department_code is required for scope=department")
+      }
+
+      const departmentEmployeeIds = await listDepartmentEmployeeIds({ c, departmentCode })
+
+      if (departmentEmployeeIds instanceof Error) {
+        throw new InternalError("failed to resolve department employees")
+      }
+
+      // 部署スコープは、全社閲覧権限があるか、自分がその部署に所属し部署閲覧権限を持つ場合だけ許可する。
+      const isMember = departmentEmployeeIds.includes(session.employeeId)
+
+      const allowed =
+        hasPermission(session, "leave:read:all") ||
+        (hasPermission(session, "leave:read:department") && isMember)
+
+      if (allowed === false) {
+        throw new ForbiddenError()
+      }
+
+      if (departmentEmployeeIds.length === 0) {
+        const emptyBody = zAppLeaveRequestAdminList.parse({ data: [], total: 0 })
+
+        return c.json(emptyBody, 200)
+      }
+
+      conditions.push(inArray(leaveRequests.employeeId, departmentEmployeeIds))
     } else if (requestedEmployeeId === null && query.scope === "all") {
       if (hasPermission(session, "leave:read:all") === false) {
         throw new ForbiddenError()
