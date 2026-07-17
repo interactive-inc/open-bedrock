@@ -1,7 +1,9 @@
 "use client"
 
+import * as Sentry from "@sentry/nextjs"
 import Link from "next/link"
-import { LoginGate } from "@/components/login-gate"
+import { useEffect } from "react"
+import { LoginPage } from "@/components/login-page"
 import { Button } from "@/components/ui/button"
 import { isAuthErrorDigest } from "@/lib/api/auth-error"
 
@@ -17,8 +19,16 @@ type Props = {
  * AppShell（サイドバー）ごとアンマウントした状態で全画面のログイン画面にする。
  */
 export default function RootError(props: Props) {
-  if (isAuthErrorDigest(props.error.digest)) {
-    return <LoginGate />
+  const isAuthError = isAuthErrorDigest(props.error.digest)
+
+  useEffect(() => {
+    if (isAuthError === false) {
+      Sentry.captureException(props.error)
+    }
+  }, [isAuthError, props.error])
+
+  if (isAuthError) {
+    return <LoginPage onAuthenticated={props.reset} />
   }
 
   return (
