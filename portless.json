@@ -1,6 +1,6 @@
 {
   "apps": {
     "web": { "name": "karte.open" },
-    "api": { "name": "api.karte.open", "appPort": 8787 }
+    "api": { "name": "api.karte.open", "appPort": 18787 }
   }
 }
