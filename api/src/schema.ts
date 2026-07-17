@@ -608,11 +608,18 @@ export const employeeLifecycleRevisions = sqliteTable("employee_lifecycle_revisi
 
 export type EmployeeLifecycleRevisionRow = InferSelectModel<typeof employeeLifecycleRevisions>
 
-export const organizationLifecycleState = sqliteTable("organization_lifecycle_state", {
-  id: integer("id").primaryKey(),
-  revision: integer("revision").notNull().default(0),
-  updatedAt: integer("updated_at").notNull(),
-})
+export const organizationLifecycleState = sqliteTable(
+  "organization_lifecycle_state",
+  {
+    id: integer("id").primaryKey(),
+    revision: integer("revision").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    check("organization_lifecycle_state_singleton", sql`${table.id} = 1`),
+    check("organization_lifecycle_state_revision", sql`${table.revision} >= 0`),
+  ],
+)
 
 export type OrganizationLifecycleStateRow = InferSelectModel<typeof organizationLifecycleState>
 

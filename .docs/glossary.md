@@ -1,8 +1,4 @@
-# 製品用語
-
-規範性: 補助仕様。中核モデル間で共有する用語の短縮定義を定める。
-
-open-karte の model 名に共通する意味を定義する。各 model 文書が定める型、不変条件、関係が短縮定義より優先する。制度用語、手続き例、外部制度の調査情報はそれぞれ `references`、`notes`、`sources` に置き、製品概念の定義には使用しない。
+# 用語
 
 英語の model 名はコードと domain で同じ意味を保持する。画面表示の翻訳は許可するが、型の同一性、関係、不変条件を変更しない。
 
@@ -76,7 +72,7 @@ model から答えられなければならない具体的な問い。拡張の�
 
 ### LegalEntity
 
-法域の下で権利義務の主体となる Organization。
+法域の下で権利義務の主体となる Organization。外部の法人も LegalEntity として参照できる。
 
 ### OrgUnit
 
@@ -101,6 +97,22 @@ Person と OrganizationalOffice を結ぶ就任関係。
 ### ReportingRelation
 
 上司、部下、責任者を結ぶ期間付き関係。現在関係と過去 snapshot を区別する。
+
+### ResponsibilityRole
+
+組織、案件、能力または資源に対して期待する成果と継続責任を表す Role。
+
+### ResponsibilityAssignment
+
+ResponsibilityRole と対象範囲を OrganizationalOffice または CollectiveBody へ割り当てる期間付き関係。承認者と同一とは限らない。
+
+### Project
+
+有限の目的、責任主体、期間、状態を持つ事業上の取組。OrgUnit と同一ではない。
+
+### CostCenter
+
+費用の計画、帰属、責任範囲を識別する期間付き管理単位。法人、OrgUnit、外部会計 ID と同一ではない。
 
 ### Principal
 
@@ -167,6 +179,10 @@ Principal、purpose、DataCategory、ClassificationLevel に応じ、許可す�
 ### HumanAttestation
 
 HumanPrincipal が、固定された proposal digest、効果、対象、期限を確認した記録。login 済み、既読、AI の説明とは同義でない。
+
+### ExternalApprovalChannel
+
+固定された Proposal を外部 messaging 製品などへ表示し、人間の入力を API へ戻す提供面。認可境界または HumanAttestation の正本ではない。
 
 ### ExecutionAuthorization
 
@@ -287,6 +303,14 @@ system がその record を保持し、知っていた時間。
 ### PolicyTime
 
 根拠となる policy version が施行中だった時間。
+
+### MetricDefinition
+
+事業指標の入力、dimension、計算、単位、時間解釈、認可、版を定める InformationObject。
+
+### MetricObservation
+
+MetricDefinition の特定版と入力 snapshot から計算した、時点または期間付きの値。入力参照、as-of、計算時点、provenance を持つ。
 
 ## 資源
 

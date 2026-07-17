@@ -1,12 +1,10 @@
-# HTTP API 仕様
+# HTTP API
 
-規範性: 補助仕様。中核モデルを HTTP API へ写像する際の不変条件を定める。
+HTTP API は Principal、認可境界、resource、command、query、error、callback、client type の不変条件を保持する。
 
-HTTP API が保存する不変条件を定義する。対象は Principal、認可境界、resource、command、query、error、callback、client type である。
+実装済み route は `api/src/app.ts`、入出力は `api/src/interface`、生成 client type は `api/dist/app.d.ts` で確認する。未実装の Principal と実行認可も、実装時に同じ制約を満たす。
 
-実装済み route の正本は `api/src/app.ts`、入出力の正本は `api/src/interface`、生成 client type の正本は `api/dist/app.d.ts` とする。本書は route の完全な列挙でも、実装済みであることの証明でもない。未実装の Principal と実行認可に関する記述は、実装が満たすべき制約を表す。
-
-認可は permission ベース(deny-by-default)で、権限のないリクエストは 403 を返す。ロールと permission の設計は [[roles-and-permissions|ロールと権限]] を参照する。
+認可は permission ベース(deny-by-default)で、権限のないリクエストは 403 を返す。ロールと permission の設計は [ロールと権限](./roles-and-permissions.md) を参照する。
 
 ## Principal と認証
 
@@ -15,6 +13,8 @@ HTTP API が保存する不変条件を定義する。対象は Principal、認�
 token または request context は少なくとも principal ID、principal kind、account または credential ID、session または execution ID を識別可能にする。人間の on-behalf-of 操作では requester と executor を別に記録する。
 
 認証済みであることは操作許可を意味しない。permission、scope、field、state、case assignment、organizational authority、attestation を API が評価する。
+
+[Deployment と法人](./architecture.md#deployment-と法人) の境界を API にも適用する。現行 route と schema に、法人 ID または tenant ID による routing、認可、database partition はない。外部 Organization または外部 tenant の ID は、業務対象または connector namespace としてだけ受理する。
 
 ## Resource と operation
 
@@ -74,6 +74,10 @@ error body は機械可読な安定 code、利用者向け message、必要な c
 - domain application service による再認可または状態検査
 
 callback の到着だけで内部業務を無条件に確定しない。
+
+外部承認チャネルの callback は、送信された approver、proposal 内容、digest を正本として受理しない。署名と replay を検査し、外部利用者を HumanPrincipal へ解決し、一回限りの state token から proposal ID、revision、digest、対象 Principal、expiry を復元する。application service は Proposal、候補者、authority、RiskPolicy、state を再取得し、条件を満たす場合だけ HumanAttestation を作成する。
+
+チャネルの identity assurance が必要な step-up を満たさない場合は、callback から業務変更を行わず、再認証できる Web 提供面を案内する。詳細は [AI 自動化と人間承認](./automation-model.md) を参照する。
 
 ## Client type
 

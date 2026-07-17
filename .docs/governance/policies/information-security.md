@@ -42,9 +42,7 @@ controls:
 
 # 情報セキュリティ規程テンプレート
 
-規範性: 未施行テンプレート。導入組織の規程または認可根拠として使用しない。
-
-この文書は未施行の導入テンプレートである。導入組織は資産、脅威、法域、契約、外部委託、運用体制を評価し、責任者と専門家の review を経て別版を施行する。
+自社は資産、脅威、法域、契約、外部委託、運用体制を評価し、責任者と専門家の review を経て別版を施行する。施行までは規程または認可根拠として使用しない。
 
 ## 目的
 
@@ -52,7 +50,7 @@ controls:
 
 ## 適用対象
 
-導入組織の役員、従業員、AgentPrincipal、ServicePrincipal、ConnectorPrincipal、委託先、外部製品を含む。適用対象と責任は Principal kind、契約、組織関係ごとに定める。
+自社の役員、従業員、AgentPrincipal、ServicePrincipal、ConnectorPrincipal、委託先、外部製品を含む。適用対象と責任は Principal kind、契約、組織関係ごとに定める。
 
 AI や service を人間の account として扱わない。各 Principal に最小権限、目的、対象、期間を与え、requester と executor を分けて記録する。
 
@@ -117,6 +115,6 @@ security event と incident を区別し、報告、triage、containment、inves
 
 ## Record と review
 
-保持期間、review cadence、教育頻度をこの公開テンプレートへ固定しない。asset risk、法域、契約、記録カテゴリ、legal hold を入力に、導入組織の公開済み policy で定める。
+保持期間、review cadence、教育頻度をこの公開テンプレートへ固定しない。asset risk、法域、契約、記録カテゴリ、legal hold を入力に、自社の公開済み policy で定める。
 
 front matter の `controls` は ControlDefinition の宣言であり、ControlRun の実施証明ではない。control owner、対象、evidence、case mapping、適合 test が揃って初めて実施済みとみなす。

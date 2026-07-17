@@ -1,7 +1,5 @@
 # モデル適合と脆弱性検査
 
-規範性: 仕様正本。会社メタモデルから実装、外部 adapter、AI 自動化への写像に課す検証義務と release gate を定める。
-
 圏論は test case を導く構造として使用する。形式証明を実施していない性質を証明済みとして扱ってはならない。
 
 ## 検査対象
@@ -19,6 +17,8 @@
 ### 型保存
 
 source の Kind、Role、Relator、単位、時間、Principal kind を別概念へ写してはならない。外部 `user` を Person、Employee、Account のどれへ写すかを mapping contract へ明記する。
+
+内部 ID は Kind と namespace を伴って解釈し、表示 code、自然 key、外部 ID へ置換してはならない。archive または削除後の ID 再利用と、異なる Kind 間の ID 取り違えを検査する。
 
 ### 恒等射と合成の保存
 
@@ -99,6 +99,14 @@ TechnicalPermission を OrganizationalAuthority として扱う欠陥。両条�
 
 人間が確認した Proposal と実行 payload が異なる欠陥。共通 canonical representation、digest 一致、変更後の再承認を検査する。
 
+### Accountability collapse
+
+承認者を結果への継続責任主体として記録する欠陥。ResponsibilityAssignment、役職就任者または合議体、valid time、判断時 snapshot を独立に変化させて検査する。Agent、Service、Connector が decider または継続責任主体になる経路を拒否する。
+
+### Approval channel substitution
+
+外部チャネルの delivery、既読、reaction、button click、callback payload を HumanAttestation として扱う欠陥。外部 identity mapping、署名、nonce、replay、単回 state token、proposal digest、expiry、step-up、API での再評価を検査する。
+
 ### Confused deputy
 
 AI または connector が ExecutionGateway の強い credential で委任外操作を行う欠陥。ExecutionAuthorization が operation、tenant、target、field、expiry を制限することを検査する。
@@ -121,7 +129,15 @@ retry で支払、通知、付与、予約が重複する欠陥。idempotency ke
 
 ### Policy decoration
 
-文書または metadata の規則を技術的強制済みとみなす欠陥。PolicyRule から enforcement point と conformance test への trace を要求する。
+`PolicyRule` の宣言だけを技術的強制済みとみなす欠陥。`PolicyRule` から enforcement point と conformance test への trace を要求する。
+
+### Projection truth elevation
+
+dashboard の集計値を業務事実または外部正本として扱う欠陥。MetricDefinition の版、as-of、入力 provenance、再計算、訂正を検査する。aggregate と drill-down の認可差から非許可情報を推測できないことを検査する。
+
+### 法人選択の混入
+
+法人 ID または tenant ID を routing、内部認可、database partition に混入させる欠陥。外部 tenant を内部 scope へ昇格していないことと、別法人には別 deployment が必要なことを検査する。
 
 ## Test 種別
 
@@ -142,6 +158,8 @@ retry で支払、通知、付与、予約が重複する欠陥。idempotency ke
 - 能力質問と反例を定義する
 - Kind、Role、Relator、system of record、time、version を定義する
 - Principal、Permission、Authority、scope、field、attestation を定義する
+- 会社を拘束する操作では ResponsibilityAssignment と継続責任主体を定義する
+- 自社と外部 LegalEntity、外部 tenant の境界を定義する
 - 全 entry point を同じ application policy へ通す
 - Proposal と execution の digest 一致を test する
 - retry、duplicate、timeout、partial success、reconciliation を test する
@@ -162,5 +180,9 @@ retry で支払、通知、付与、予約が重複する欠陥。idempotency ke
 - ProcedureDefinition と ProcedureCase の分離
 - ControlDefinition と ControlRun の分離
 - external connector の outbox、inbox、idempotency、reconciliation
+- ResponsibilityAssignment と判断時 snapshot
+- 外部承認チャネルの identity mapping、state token、step-up
+- MetricDefinition、MetricObservation、集計と drill-down の共通認可
+- 自社 profile と LegalEntity record
 
 実装状態は [能力台帳](./capability-map.md)、コード、migration、テストを正とする。

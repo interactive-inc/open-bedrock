@@ -1,7 +1,5 @@
 # 外部連携モデル
 
-規範性: 仕様正本。外部 API、人間運用、専門家との境界、配送、照合、交換条件を定める。
-
 会社共通核とドメインを内部の意味の正本とする。外部 API、人間運用、専門家との接続には port、adapter、版付き接続契約を使う。外部製品のデータモデルへ会社概念を従属させてはならない。
 
 ## 境界
@@ -54,6 +52,8 @@ flowchart LR
 - reconciliation method と cadence
 - raw payload の保持、mask、retention
 - outage 中に受理する操作と状態
+
+connector の tenant は外部製品内の接続対象を識別する。法人の選択、内部認可 scope、database partition に使用してはならない。
 
 `bidirectional` だけを項目所有規則として使用してはならない。各項目を internal authoritative、external authoritative、human adjudicated、mergeable、immutable reference のいずれかに分類する。
 
