@@ -1,8 +1,6 @@
-# Web route 仕様
+# Web routes
 
-規範性: 実装写像。Web route と画面責務の実装 snapshot を示す。
-
-実装済み Web route と各 route の操作責務を列挙する。route の正本は `web/app` とし、動的 segment は `[param]` で表す。本書は route snapshot であり、API の提供、認可、業務不変条件を保証しない。未掲載 route と差異がある場合はコードを優先する。
+Web route は `web/app` に配置し、動的 segment は `[param]` で表す。画面の存在は API の提供、操作の認可、業務不変条件の充足を意味しない。
 
 ## 認証
 
@@ -24,7 +22,11 @@
 - `/org/departments/[code]/members` は部署に所属するメンバーを確認する画面。
 - `/org/reporting-line/[code]` は指定した従業員のレポートラインを確認する画面。
 - `/grades` は等級マスタの一覧を確認し、管理者(`grade:manage`)が作成、編集、削除する画面。
+- `/grades/new` は等級マスタの基本情報を登録する画面(`grade:manage`)。
+- `/positions` は役職マスタの一覧を確認し、管理者(`position:manage`)が作成、編集、削除する画面。一覧は全認証者が閲覧する。
+- `/positions/new` は役職マスタの基本情報を登録する画面(`position:manage`)。
 - `/recruitment` は採用の募集一覧と候補者パイプラインを管理する画面(`recruitment:manage`)。
+- `/recruitment/[id]` は募集ごとの応募者パイプラインを確認し、選考ステージを進める画面(`recruitment:manage`)。
 - `/commendations` は表彰の一覧(社内公開)と管理者による記録を行う画面。
 - `/headcount-plans` は人員計画と実在籍数を比較する画面(`headcount_plan:read:all`)。
 
@@ -34,7 +36,6 @@
 - `/admin/roles/new` は権限を選んで新しいロールを作成する画面。
 - `/admin/roles/[id]/edit` はロールの名称と権限の割当を変更する画面。
 - `/admin/accounts` はアカウントの状態確認、ロール割当、停止、パスワードリセットを行う管理画面(`account:manage`)。
-- `/admin/audit-logs` は監査ログを操作種別や対象で絞り込んで閲覧する管理画面(`audit_log:read`)。
 
 ## 申請ワークフロー
 
@@ -47,6 +48,7 @@
 - `/applications/templates/[code]` は申請テンプレートの詳細を確認し、テンプレートから申請を始める画面。
 - `/applications/templates/[code]/workflow` はテンプレートの多段承認、条件、期限、差戻し、代理承認可否を設定する管理画面。
 - `/applications/delegations` は期間と対象テンプレートを指定して代理承認を設定する画面。
+- `/applications/workflow-repairs` は候補者不足で停止した承認フローへ、監査理由付きで承認候補者を再割り当てする管理画面。
 
 ## 勤怠と休暇
 
@@ -80,7 +82,9 @@
 - `/knowledge/new` はナレッジ記事のタイトル、カテゴリ、本文を登録する画面。
 - `/knowledge/[id]` はナレッジ記事の本文とカテゴリを確認する画面。
 - `/announcements` は社内アナウンスの一覧と詳細を確認し、管理者(`announcement:manage`)が作成、公開する画面。
+- `/announcements/[id]` は社内アナウンスの本文を確認する画面。
 - `/regulations` は規程集の一覧と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
+- `/regulations/[code]` は規程の本文と版履歴を確認し、管理者(`regulation:manage`)が新版を追加する画面。
 - `/documents` は文書台帳(所在・期限)を確認、登録する画面(`document:read:all`)。
 
 ## 規程・手続き
@@ -226,9 +230,16 @@
 - `/decisions/new` は意思決定記録を ADR 形式で作成する画面(`decision:manage`)。
 - `/decisions/[id]` は意思決定記録の背景、決定、帰結を確認する画面。
 
+## 監査
+
+- `/admin/audit-events` は重要操作と認可判断の監査イベントを検索し、権限がある場合は検索結果を書き出す画面。
+- `/admin/audit-events/[eventId]` は監査イベントの認可情報、変更内容、request 情報を確認する画面。
+
 ## システム
 
 - `/batch` はバックグラウンドで実行されるバッチジョブの最新状況を確認する画面。
 - `/settings` は表示テーマや表示言語の個人設定を変更する画面。
 - `/licenses` はライセンス・SaaS 台帳を確認、管理する画面(`license:read:all`)。
+- `/licenses/new` は利用中の SaaS・ソフトウェアを台帳に登録する画面(`license:manage`)。
 - `/it-incidents` はインシデントの発生と解消を記録する画面(`it_incident:read:all`)。
+- `/it-incidents/new` は発生した障害・事故を記録する画面(`it_incident:manage`)。

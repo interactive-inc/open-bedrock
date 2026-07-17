@@ -1,7 +1,5 @@
 # 会社メタモデル
 
-規範性: 仕様正本。open-karte が企業一般を表現する共通語彙、公理、拡張規則を定め、導入組織固有の事業内容は定義しない。
-
 ## 開放性
 
 理論 `T` は次から成る。
@@ -110,6 +108,9 @@ flowchart LR
 - 人、アカウント、Principal、雇用関係を同一視しない
 - 組織、組織単位、一人役職、合議体を同一視しない
 - 資源種類、資源個体、資源能力、予約、割当、利用を同一視しない
+- 内部 ID は Kind と namespace の境界内で一意かつ不変とし、削除または archive 後も別の対象へ再利用しない
+- 表示 code、メールアドレス、外部 ID、自然 key を内部 ID の代わりに使用しない
+- 異なる Kind の内部 ID を同じ scalar 型として受け渡す場合も、target kind と namespace を検証する
 
 ### 出来事と情報
 
@@ -137,6 +138,8 @@ flowchart LR
 - TechnicalPermission を OrganizationalAuthority として扱わない
 - OrganizationalAuthority を TechnicalPermission として扱わない
 - AI は HumanAttestation を生成できない
+- AgentPrincipal、ServicePrincipal、ConnectorPrincipal を会社を拘束する Decision の decider または継続責任主体にしない
+- 会社を拘束する Decision は、有効な ResponsibilityAssignment と人間または CollectiveBody の判断を必要とする
 - 承認を変更不能な提案へ結び、実行直前に状態、版、期限を再検査する
 
 ### 外部実現
@@ -165,7 +168,10 @@ flowchart LR
 - `Employment`: Person と Organization の雇用関係
 - `Membership`: Party と OrgUnit または CollectiveBody の所属関係
 - `OfficeAssignment`: Person と OrganizationalOffice の就任関係
+- `ResponsibilityAssignment`: 対象範囲と成果への継続責任を OrganizationalOffice または CollectiveBody へ割り当てる関係
 - `Assignment`: Party または Principal と案件、責務、資源の割当関係
+- `ProjectAssignment`: Party、OrgUnit、OrganizationalOffice または Resource と Project を役割付きで結ぶ関係
+- `CostAttribution`: Commitment、BudgetEnvelope、Usage または domain record を Project または CostCenter へ根拠付きで配賦する関係
 - `ReportingRelation`: 上司、部下、責任者の期間付き関係
 - `Custody`: 資源の保管責任
 - `Loan`: 貸出者、借受者、資源個体、期間の関係
@@ -173,6 +179,13 @@ flowchart LR
 - `Delegation`: 権限またはタスクの限定移転
 
 関係は Relator として、当事者、意味、開始、終了、根拠、状態、来歴を持つ。外部キーの集合だけで表現してはならない。
+
+### 事業管理
+
+- `Project`: 有限の目的、責任主体、期間、状態を持つ事業上の取組
+- `CostCenter`: 費用の計画、帰属、責任範囲を識別する期間付き管理単位
+
+Project と CostCenter を法人または OrgUnit と同一視しない。ProjectAssignment と CostAttribution は対象、役割または配賦割合、有効期間、根拠、source を保持する。CostCenter を総勘定元帳の勘定科目または外部会計製品の ID として扱ってはならない。
 
 ### 能力と手続き
 
@@ -305,4 +318,4 @@ schema 関手 `F: S_old -> S_new` に対し、instance pullback `Δ_F: Inst(S_ne
 
 ## 現行実装差分
 
-本メタモデルは概念と実装の適合条件を定める。すべての型、写像、制約が実装済みとは限らない。実装状態は [能力台帳](./capability-map.md)、コード、migration、テストを正とし、未実装の概念を runtime の保証として使用してはならない。
+すべての型、写像、制約が実装済みとは限らない。実装状態は [能力台帳](./capability-map.md) に記録し、コード、migration、テストと一致させる。未実装の概念を runtime の保証として使用してはならない。

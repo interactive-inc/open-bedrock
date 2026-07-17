@@ -294,6 +294,16 @@ describe("employee lifecycle migration", () => {
         )
         .run(),
     ).rejects.toThrow()
+    expect(
+      db
+        .prepare(
+          "INSERT INTO organization_lifecycle_state (id, revision, updated_at) VALUES (2, 0, 0)",
+        )
+        .run(),
+    ).rejects.toThrow()
+    expect(
+      db.prepare("UPDATE organization_lifecycle_state SET revision = -1 WHERE id = 1").run(),
+    ).rejects.toThrow()
   })
 
   test("seeds lifecycle permissions into the intended system roles", async () => {
@@ -346,5 +356,18 @@ describe("employee lifecycle migration", () => {
       expect(getTableConfig(table).name.length).toBeGreaterThan(0)
       expect(Object.values(schema)).toContain(table)
     }
+  })
+
+  test("keeps the singleton organization state constraints in the Drizzle schema", () => {
+    const checkNames = getTableConfig(organizationLifecycleState).checks.map(
+      (constraint) => constraint.name,
+    )
+
+    expect(checkNames).toEqual(
+      expect.arrayContaining([
+        "organization_lifecycle_state_singleton",
+        "organization_lifecycle_state_revision",
+      ]),
+    )
   })
 })

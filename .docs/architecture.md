@@ -1,15 +1,13 @@
-# システムアーキテクチャ仕様
+# システムアーキテクチャ
 
-規範性: 補助仕様。中核モデルを実装する配置、依存方向、信頼境界を定める。
-
-実装済みの配置、依存方向、信頼境界と、未実装の要求構成を定義する。現行構成の正本は workspace の `package.json`、route、migration、deployment config とする。要求構成は設計制約であり、実装済みであることを意味しない。図は依存関係を定義し、runtime topology の完全な列挙を目的としない。
+実装済みの配置、依存方向、信頼境界は workspace の `package.json`、route、migration、deployment config に一致させる。要求構成は未実装部分にも適用する設計制約である。
 
 ## 現在の構成
 
 - `api`: Hono と Cloudflare Workers で動く HTTP API
 - `cli`: 引数を local Hono route で検証し、HTTP API を呼ぶ Bun CLI
 - `web`: Next.js、React、Tailwind、shadcn による Web UI
-- `D1`: SQLite 互換の永続化。migration SQL が schema の正本
+- `D1`: SQLite 互換の永続化。schema は migration SQL に従う
 
 ```mermaid
 flowchart LR
@@ -21,7 +19,19 @@ flowchart LR
   API --> KV[("KV・rate limit bindings")]
 ```
 
-実装されている route の正本は `api/src/app.ts` と `api/src/interface`、データ制約の正本は `api/migrations` である。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。
+実装されている route は `api/src/app.ts` と `api/src/interface`、データ制約は `api/migrations` で確認する。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。
+
+## Deployment と法人
+
+一つの deployment は一つの法人だけを扱う。法人は request ごとに選ぶ resource や scope ではなく、deployment 全体の固定前提である。別の法人を運用する場合は、database、identity、secret、connector credential、audit access を共有しない別 deployment を使用する。
+
+外部の取引先、専門家、委託先は Party または Organization として参照できる。ただし、外部法人はこの deployment が運用する法人にはならない。
+
+API、Web、CLI、AI に法人 selector を設けない。全社共通の table に `tenant_id` または `legal_entity_id` を partition key として追加しない。法的意味のために外部の LegalEntity を参照する record は、この制約の対象外とする。
+
+外部 tenant ID は connector namespace 内の外部識別子として扱い、内部認可 scope または database partition に使用しない。
+
+現行実装に法人 selector と tenant partition はない。自社 profile と LegalEntity record も未実装であるため、実装済みの法人台帳として表示してはならない。
 
 ## API の層
 
@@ -38,7 +48,7 @@ route は App Router 形式の directory に置き、`app.ts` が Hono path へ�
 
 ## Web と CLI
 
-Web と CLI は提供面であり、業務規則と認可の正本ではない。
+Web と CLI は提供面であり、業務規則と認可を定義しない。
 
 - Web の route 固有 component は `_components`、表示用純関数は `_lib` へ collocate する。
 - `web/components/ui` は shadcn 生成物とし、直接編集しない。
@@ -51,7 +61,7 @@ Web と CLI は提供面であり、業務規則と認可の正本ではない�
 
 現在は login で発行した token を Bearer として API へ送る。Web は httpOnly cookie、CLI は local config を使う。token の検証、session 失効、account 状態、permission、scope、案件資格は API が評価する。
 
-目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。現行実装は permission ベース(deny-by-default)で、verify-bearer が request ごとに account の permission 集合を DB から解決する。詳細は [認可モデル](./authorization-model.md) と [[roles-and-permissions|ロールと権限]] を参照する。
+目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。現行実装は permission ベース(deny-by-default)で、verify-bearer が request ごとに account の permission 集合を DB から解決する。詳細は [認可モデル](./authorization-model.md) と [ロールと権限](./roles-and-permissions.md) を参照する。
 
 ## データと transaction
 
@@ -123,7 +133,7 @@ flowchart TB
 - 外部 URL、redirect、webhook、file input を信頼境界として扱う。
 - 監査だけで防御したことにせず、認可と DB 制約で side effect を防ぐ。
 
-具体的な反復数、token 寿命、rate limit 値など運用可能な値はコードと deployment config を正とし、この恒久文書へ複製しない。
+具体的な反復数、token 寿命、rate limit 値など運用可能な値はコードと deployment config で管理する。
 
 ## 可換性による適合確認
 

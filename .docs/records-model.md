@@ -1,7 +1,5 @@
 # 記録・時間・来歴モデル
 
-規範性: 仕様正本。業務記録の意味、時間、版、来歴、訂正規則を定める。
-
 open-karte は、出来事、状態、観測、主張、評価、採用、判断、記録を別の概念として保持する。データベース行を現実そのものとして扱ってはならない。
 
 ## 基本型
@@ -21,6 +19,8 @@ open-karte は、出来事、状態、観測、主張、評価、採用、判断
 - `Evidence`: 主張または判断を支持、反証する情報
 - `Record`: 情報を保持する不変版
 - `Provenance`: 生成、変換、参照、責任主体の連鎖
+- `MetricDefinition`: 指標の意味、入力、計算、単位、時間、認可を定める版付き定義
+- `MetricObservation`: MetricDefinition の特定版と入力 snapshot から得た時点または期間付きの値
 
 外部の支払結果は `SettlementAssertion` として保存する。外部主体、署名、外部 ID、金額、通貨、対象、取得時刻を保持し、銀行の清算出来事と同一視してはならない。
 
@@ -86,11 +86,32 @@ flowchart LR
 - `requested_by`: 目的を依頼した主体
 - `proposed_by`: 変更案を作った主体
 - `approved_by`: 承認した人間または合議体
+- `accountable_assignment`: 結果への継続責任を持つ ResponsibilityAssignment と判断時 snapshot
+- `consulted`: 判断前に意見または専門判断を提供した主体
 - `executed_by`: command を実行した Principal
 - `on_behalf_of`: 委任元
 - `connector_principal`: 外部資格情報を使った接続主体
 
 同一 Principal が複数の役割を担う場合も、役割ごとに記録する。職務分離が必要な場合は同一 Principal を拒否する。
+
+## 投影と事業指標
+
+dashboard、一覧、集計、検索 index は、業務 record から生成する認可付き projection とする。projection を元の事実、判断、外部正本として扱ってはならない。
+
+`MetricDefinition` は次を持つ。
+
+- 安定した metric code と owner
+- 入力となる record kind、predicate、dimension
+- 集計方法、式、単位、currency、丸め
+- valid time、recorded time、policy time の解釈
+- definition version と施行期間
+- source of truth と外部 mapping version
+- freshness、再計算、訂正の規則
+- aggregate と drill-down に適用する scope と field policy
+
+`MetricObservation` は definition version、対象期間、as-of、dimension、入力 record の参照または digest、計算時点、provenance を保持する。入力または定義を訂正した場合は新しい observation を作り、過去値を根拠なしに上書きしてはならない。
+
+dashboard query は、集計値と drill-down の両方に認可を適用する。件数、dimension、欠損状態、更新時刻から認可対象外の情報を推測できる場合は、抑制、集約、非表示または拒否を行う。
 
 ## 訂正、取消、削除
 
@@ -103,7 +124,7 @@ flowchart LR
 
 ## 外部知識
 
-`.docs/sources` と `.docs/references` は実行規則ではない。日付、法域、参照先、確認主体を持たない法令要約を自動判定へ使用してはならない。最新性が必要な判断は外部専門家または更新管理された source へ依頼し、結果を出所付き `Assessment` として保存する。
+法令要約と参考資料を実行規則として扱ってはならない。日付、法域、参照先、確認主体を持たない法令要約を自動判定へ使用してはならない。最新性が必要な判断は外部専門家または更新管理された source へ依頼し、結果を出所付き `Assessment` として保存する。
 
 ## 禁止事項
 
@@ -118,4 +139,4 @@ flowchart LR
 
 ## 現行実装差分
 
-時間、版、来歴、監査の実装状態は [能力台帳](./capability-map.md)、各ドメインの schema、migration、テストを正とする。本モデルの型を文書に定義しただけで、履歴再構成または改変検出を実装済みとしてはならない。
+時間、版、来歴、監査の実装状態は [能力台帳](./capability-map.md) に記録し、各ドメインの schema、migration、テストと一致させる。履歴再構成と改変検出は、schema、migration、テストで検証する。

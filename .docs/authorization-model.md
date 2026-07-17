@@ -1,7 +1,5 @@
 # 認可モデル
 
-規範性: 仕様正本。Principal ごとの技術的認可、scope、項目制御、案件資格、実行時検査を定める。
-
 認可は、Principal、操作、対象、項目、状態、時点の組を評価する。会社を拘束する判断権限は [権限と意思決定モデル](./authority-model.md) が定める。技術的認可を会社上の権限として使用してはならない。
 
 ## Principal
@@ -69,6 +67,8 @@ scope は対象集合と有効時点を返す。少なくとも次を区別す�
 - organization
 - resource_custody
 - external_tenant
+
+`organization` は自社内の全社 scope を表す。`external_tenant` は connector が接続する外部製品内の対象であり、法人の選択に使用してはならない。
 
 複数 scope の和集合によって項目範囲または purpose を拡張してはならない。過去記録は、保存済み参加資格または履歴閲覧方針で評価する。現在の組織関係で評価してはならない。
 

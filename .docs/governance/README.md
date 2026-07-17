@@ -1,12 +1,10 @@
-# Governance Markdown 仕様
+# Governance Markdown
 
-規範性: 補助仕様。Governance Markdown の構造契約を定め、同梱テンプレートへ組織上の効力を与えない。
+Governance Markdown は文書型、metadata、状態、参照、公開制約を持つ。parser と保存処理は governance schema、route、migration に一致させる。自社の施行済み規程は非公開 deployment source で管理する。
 
-governance Markdown の文書型、metadata、状態、参照、公開制約を定義する。parser と保存処理の正本は governance schema、route、migration とする。本書は導入組織の施行済み規程を定義しない。
+公開リポジトリに同梱する文書は構造例であり、`effective_from: null` の未施行テンプレートとする。open-karte 開発元または利用者の自社に固有の内部規程、組織構造、決裁額、担当者を含めない。実在組織の規程は非公開 deployment source で管理する。
 
-公開リポジトリに同梱する文書は構造例であり、`effective_from: null` の未施行テンプレートとする。open-karte 開発元または導入組織の内部規程、組織構造、決裁額、担当者を含めない。実在組織の規程は非公開 deployment source で管理する。
-
-導入組織は、法域、定款、契約、組織構造、リスク、専門家の助言に合わせて内容を作成し、非公開の deployment source で管理する。公開 repository へ組織固有名、個人情報、秘密、実際の決裁金額を commit しない。
+自社は、法域、定款、契約、組織構造、リスク、専門家の助言に合わせて内容を作成し、非公開の deployment source で管理する。公開 repository へ法人固有名、個人情報、秘密、実際の決裁金額を commit しない。
 
 ## 状態の区別
 
@@ -14,7 +12,7 @@ governance Markdown の文書型、metadata、状態、参照、公開制約を�
 - synced: 検索用投影へ同期済みだが、承認済みではない
 - in_review: 公開候補版を固定して review 中
 - published: 内容 hash と decision が固定された版
-- effective: 施行期間と対象が一致し、導入組織の規範として有効
+- effective: 施行期間と対象が一致し、自社の規範として有効
 - superseded または expired: 過去版として保持するが新しい判断へ使わない
 - enforced: 対応する実装 mapping と適合 test があり、技術的に強制される rule
 
@@ -53,7 +51,7 @@ governance Markdown の文書型、metadata、状態、参照、公開制約を�
 
 ## 公開手順
 
-1. 導入組織の責任者と外部専門家が内容、法域、対象、保持、例外を確認する。
+1. 自社の責任者と外部専門家が内容、法域、対象、保持、例外を確認する。
 2. schema、参照、固定人名、組織 assignment、rule overlap を検証する。
 3. review 開始時に candidate、authority assignment、quorum、policy version を固定する。
 4. HumanPrincipal または合議体が不変版の content hash へ decision を記録する。
