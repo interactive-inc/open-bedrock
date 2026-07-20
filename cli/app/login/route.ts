@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { loadConfig, saveConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
+import { saveConfig } from "@/lib/config/save-config"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"

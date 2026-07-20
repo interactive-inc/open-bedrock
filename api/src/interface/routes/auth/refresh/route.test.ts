@@ -4,7 +4,7 @@ import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { requestWithContext } from "@/interface/test-helpers/request-with-context"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { z } from "zod"
 

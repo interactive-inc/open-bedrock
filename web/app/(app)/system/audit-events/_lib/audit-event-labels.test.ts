@@ -1,11 +1,9 @@
 import { describe, expect, test } from "vite-plus/test"
-import {
-  auditActionLabel,
-  auditClientLabel,
-  auditOutcomeLabel,
-  auditReasonLabel,
-  auditTargetTypeLabel,
-} from "@/app/(app)/system/audit-events/_lib/audit-event-labels"
+import { auditActionLabel } from "@/app/(app)/system/audit-events/_lib/audit-action-label"
+import { auditClientLabel } from "@/app/(app)/system/audit-events/_lib/audit-client-label"
+import { auditOutcomeLabel } from "@/app/(app)/system/audit-events/_lib/audit-outcome-label"
+import { auditReasonLabel } from "@/app/(app)/system/audit-events/_lib/audit-reason-label"
+import { auditTargetTypeLabel } from "@/app/(app)/system/audit-events/_lib/audit-target-type-label"
 
 describe("audit event labels", () => {
   test("labels managed vocabulary in Japanese", () => {

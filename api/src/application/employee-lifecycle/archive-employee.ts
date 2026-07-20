@@ -5,14 +5,9 @@ import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import {
-  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -20,7 +15,7 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export class ArchiveEmployee {
   constructor(private readonly c: Context) {}
@@ -123,7 +118,9 @@ export class ArchiveEmployee {
     )
     try {
       await this.c.env.DB.batch([
-        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(this.c.env.DB, employee.id),
+        new LastAdminGuard(this.c).abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(
+          employee.id,
+        ),
         this.c.env.DB.prepare(
           `UPDATE employees SET archived_at = ?2, archived_by_account_id = ?3
              WHERE id = ?1 AND archived_at IS NULL AND status = 'retired'
@@ -144,7 +141,7 @@ export class ArchiveEmployee {
       ])
       return { status: "archived" }
     } catch (cause) {
-      if (isAbortedByLastAdminGuard(cause)) {
+      if (LastAdminGuard.isAbortedBy(cause)) {
         return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
       }
       return isAbortedByGuard(cause)

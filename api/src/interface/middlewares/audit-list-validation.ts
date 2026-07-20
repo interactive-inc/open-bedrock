@@ -1,5 +1,5 @@
-import type { ParsedAuditListQuery } from "@/interface/utils/audit-route-contract"
-import { parseAuditListQuery, throwAuditRouteError } from "@/interface/utils/audit-route-contract"
+import { AuditListQuery } from "@/interface/utils/audit-list-query"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { factory } from "@/interface/utils/factory"
 
 type AuditListValidationInput = {
@@ -16,14 +16,14 @@ type AuditListValidationInput = {
       cursor?: string
     }
   }
-  out: { query: ParsedAuditListQuery }
+  out: { query: AuditListQuery }
 }
 
 /** Strict list validator placed after authentication and the permission gate. */
 export const auditListValidation = factory.createMiddleware<AuditListValidationInput>(
   async (c, next) => {
     try {
-      c.req.addValidatedData("query", parseAuditListQuery(c.req.url))
+      c.req.addValidatedData("query", AuditListQuery.parse(c.req.url))
     } catch (error) {
       throwAuditRouteError(error)
     }

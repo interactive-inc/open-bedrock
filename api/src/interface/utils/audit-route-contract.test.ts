@@ -1,14 +1,12 @@
 import { Session } from "@/lib/auth/session"
 import { describe, expect, test } from "bun:test"
 import type { ApiClient } from "@/app"
-import {
-  hashAuditFilters,
-  parseAuditEventId,
-  parseAuditExportRange,
-  parseAuditListQuery,
-  resolveAuditNow,
-  toAuditIsoString,
-} from "@/interface/utils/audit-route-contract"
+import { AuditExportRange } from "@/interface/utils/audit-export-range"
+import { AuditListQuery } from "@/interface/utils/audit-list-query"
+import { hashAuditFilters } from "@/interface/utils/hash-audit-filters"
+import { parseAuditEventId } from "@/interface/utils/parse-audit-event-id"
+import { resolveAuditNow } from "@/interface/utils/resolve-audit-now"
+import { toAuditIsoString } from "@/interface/utils/to-audit-iso-string"
 import { AuditTrail } from "@/interface/utils/audit-trail"
 import type { AuditEventFilters } from "@/infrastructure/audit/audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
@@ -112,10 +110,10 @@ describe("audit HTTP contract", () => {
   })
 
   test("accepts exact-second Z and offset instants and normalizes the same instant", () => {
-    const zulu = parseAuditListQuery(
+    const zulu = AuditListQuery.parse(
       "https://example.test/audit-events?from=2026-01-01T00:00:00Z&to=2026-01-02T00:00:00Z",
     )
-    const offset = parseAuditListQuery(
+    const offset = AuditListQuery.parse(
       "https://example.test/audit-events?from=2026-01-01T09:00:00%2B09:00&to=2026-01-02T09:00:00%2B09:00",
     )
 
@@ -134,23 +132,23 @@ describe("audit HTTP contract", () => {
     "2026-01-01T00:00:00+09:60",
   ])("rejects an invalid exact-second instant: %s", (value) => {
     expect(
-      codeOf(() => parseAuditListQuery(`https://example.test/audit-events?from=${value}`)),
+      codeOf(() => AuditListQuery.parse(`https://example.test/audit-events?from=${value}`)),
     ).toBe("audit_invalid_query")
   })
 
   test("keeps list time filters half-open and permits either endpoint alone", () => {
     expect(
-      parseAuditListQuery("https://example.test/audit-events?from=2026-01-01T00:00:00Z").filters,
+      AuditListQuery.parse("https://example.test/audit-events?from=2026-01-01T00:00:00Z").filters,
     ).toEqual({ fromEpoch: 1_767_225_600 })
     expect(
-      parseAuditListQuery("https://example.test/audit-events?to=2026-01-02T00:00:00Z").filters,
+      AuditListQuery.parse("https://example.test/audit-events?to=2026-01-02T00:00:00Z").filters,
     ).toEqual({ toEpoch: 1_767_312_000 })
 
     for (const query of [
       "from=2026-01-01T00:00:00Z&to=2026-01-01T00:00:00Z",
       "from=2026-01-02T00:00:00Z&to=2026-01-01T00:00:00Z",
     ]) {
-      expect(codeOf(() => parseAuditListQuery(`https://example.test/audit-events?${query}`))).toBe(
+      expect(codeOf(() => AuditListQuery.parse(`https://example.test/audit-events?${query}`))).toBe(
         "audit_invalid_query",
       )
     }
@@ -158,7 +156,7 @@ describe("audit HTTP contract", () => {
 
   test("accepts an exact 31-day export and rejects one second more", () => {
     expect(
-      parseAuditExportRange({
+      AuditExportRange.parse({
         from: "2026-01-01T00:00:00Z",
         to: "2026-02-01T00:00:00Z",
       }).filters,
@@ -166,7 +164,7 @@ describe("audit HTTP contract", () => {
 
     expect(
       codeOf(() =>
-        parseAuditExportRange({
+        AuditExportRange.parse({
           from: "2026-01-01T00:00:00Z",
           to: "2026-02-01T00:00:01Z",
         }),
@@ -179,14 +177,14 @@ describe("audit HTTP contract", () => {
     ["?limit=1", 1],
     ["?limit=100", 100],
   ])("parses canonical list limit %s", (suffix, expected) => {
-    expect(parseAuditListQuery(`https://example.test/audit-events${suffix}`).limit).toBe(expected)
+    expect(AuditListQuery.parse(`https://example.test/audit-events${suffix}`).limit).toBe(expected)
   })
 
   test.each(["0", "101", "1.0", "1e2", "%201", "+1", "01"])(
     "rejects a non-canonical list limit: %s",
     (limit) => {
       expect(
-        codeOf(() => parseAuditListQuery(`https://example.test/audit-events?limit=${limit}`)),
+        codeOf(() => AuditListQuery.parse(`https://example.test/audit-events?limit=${limit}`)),
       ).toBe("audit_invalid_query")
     },
   )
@@ -197,7 +195,7 @@ describe("audit HTTP contract", () => {
     ["41", 41],
   ])("accepts a signed safe actor account ID: %s", (value, expected) => {
     expect(
-      parseAuditListQuery(`https://example.test/audit-events?actor_account_id=${value}`).filters
+      AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`).filters
         .actorAccountId,
     ).toBe(expected)
   })
@@ -207,7 +205,7 @@ describe("audit HTTP contract", () => {
     (value) => {
       expect(
         codeOf(() =>
-          parseAuditListQuery(`https://example.test/audit-events?actor_account_id=${value}`),
+          AuditListQuery.parse(`https://example.test/audit-events?actor_account_id=${value}`),
         ),
       ).toBe("audit_invalid_query")
     },
@@ -231,7 +229,7 @@ describe("audit HTTP contract", () => {
     ]
 
     for (const query of cases) {
-      expect(codeOf(() => parseAuditListQuery(`https://example.test/audit-events?${query}`))).toBe(
+      expect(codeOf(() => AuditListQuery.parse(`https://example.test/audit-events?${query}`))).toBe(
         "audit_invalid_query",
       )
     }
@@ -266,7 +264,7 @@ describe("audit HTTP contract", () => {
       fromEpoch: 1_767_225_600,
       toEpoch: 1_767_312_000,
     }
-    const sameInstant = parseAuditListQuery(
+    const sameInstant = AuditListQuery.parse(
       "https://example.test/audit-events?actor_account_id=-41&action=legacy.action&target_type=legacy_target&target_id=private-target&outcome=succeeded&from=2026-01-01T09:00:00%2B09:00&to=2026-01-02T09:00:00%2B09:00&limit=1&cursor=opaque",
     ).filters
     const [first, second, changed] = await Promise.all([

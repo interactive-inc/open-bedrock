@@ -1,13 +1,11 @@
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import {
-  containsDate,
-  type LifecycleSchedule,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 type EmployeeProjectionRow = {
   id: number

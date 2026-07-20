@@ -11,9 +11,9 @@ import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignme
 import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
 import {
   type LifecycleEffect,
-  removeLifecycleTemplateBinding,
   updateLifecycleTemplateBinding,
 } from "@/lib/api/update-lifecycle-template-binding"
+import { removeLifecycleTemplateBinding } from "@/lib/api/remove-lifecycle-template-binding"
 import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"

@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/application/survey/create-survey"
 import { DeleteSurvey } from "@/application/survey/delete-survey"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { GetSurveyResponse } from "@/application/survey/get-survey-response"
 import { ListMySurveyResponses } from "@/application/survey/list-my-survey-responses"
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"

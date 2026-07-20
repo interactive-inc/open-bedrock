@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDate } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
 import type { EmployeeCertificationResponse } from "@/lib/api/types/certification-types"
 
 type Props = {

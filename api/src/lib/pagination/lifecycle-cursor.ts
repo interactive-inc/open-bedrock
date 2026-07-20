@@ -14,7 +14,7 @@ const wireSchema = z
   })
   .strict()
 
-export type LifecycleCursor = {
+export type LifecycleCursorValue = {
   version: 1
   filterFingerprint: string
   anchorRowId: number
@@ -30,13 +30,6 @@ function base64UrlEncode(bytes: Uint8Array): string {
   let binary = ""
   for (const byte of bytes) binary += String.fromCharCode(byte)
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "")
-}
-
-export async function fingerprintLifecycleFilter(value: unknown): Promise<string> {
-  const digest = new Uint8Array(
-    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(value))),
-  )
-  return base64UrlEncode(digest.slice(0, 12))
 }
 
 function base64UrlDecode(value: string): Uint8Array {
@@ -66,48 +59,50 @@ function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
   return difference === 0
 }
 
-export async function encodeLifecycleCursor(
-  cursor: LifecycleCursor,
-  secret: string,
-): Promise<string> {
-  const wire = wireSchema.parse({
-    v: cursor.version,
-    f: cursor.filterFingerprint,
-    a: cursor.anchorRowId,
-    p: [cursor.position.eventOn, cursor.position.recordedAt, cursor.position.id],
-    l: cursor.limit,
-  })
-  const payload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(wire)))
-  const encoded = `${payload}.${base64UrlEncode(await sign(payload, secret))}`
-  if (encoded.length > MAX_CURSOR_LENGTH) throw invalid()
-  return encoded
-}
+/**
+ * HMAC 署名付きの履歴スキャン位置。改竄・上限超過・不正形式を fail-closed で弾く
+ */
+export class LifecycleCursor {
+  static async encode(cursor: LifecycleCursorValue, secret: string): Promise<string> {
+    const wire = wireSchema.parse({
+      v: cursor.version,
+      f: cursor.filterFingerprint,
+      a: cursor.anchorRowId,
+      p: [cursor.position.eventOn, cursor.position.recordedAt, cursor.position.id],
+      l: cursor.limit,
+    })
+    const payload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(wire)))
+    const encoded = `${payload}.${base64UrlEncode(await sign(payload, secret))}`
+    if (encoded.length > MAX_CURSOR_LENGTH) throw invalid()
+    return encoded
+  }
 
-export async function decodeLifecycleCursor(
-  encoded: string,
-  secret: string,
-): Promise<LifecycleCursor | ValidationError> {
-  try {
-    if (encoded.length === 0 || encoded.length > MAX_CURSOR_LENGTH) return invalid()
-    const parts = encoded.split(".")
-    if (parts.length !== 2) return invalid()
-    const payload = parts[0]
-    const signature = parts[1]
-    if (payload === undefined || signature === undefined) return invalid()
-    const expected = await sign(payload, secret)
-    const actual = base64UrlDecode(signature)
-    if (!equalBytes(expected, actual)) return invalid()
-    const wire = wireSchema.parse(
-      JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(base64UrlDecode(payload))),
-    )
-    return {
-      version: wire.v,
-      filterFingerprint: wire.f,
-      anchorRowId: wire.a,
-      position: { eventOn: wire.p[0], recordedAt: wire.p[1], id: wire.p[2] },
-      limit: wire.l,
+  static async decode(
+    encoded: string,
+    secret: string,
+  ): Promise<LifecycleCursorValue | ValidationError> {
+    try {
+      if (encoded.length === 0 || encoded.length > MAX_CURSOR_LENGTH) return invalid()
+      const parts = encoded.split(".")
+      if (parts.length !== 2) return invalid()
+      const payload = parts[0]
+      const signature = parts[1]
+      if (payload === undefined || signature === undefined) return invalid()
+      const expected = await sign(payload, secret)
+      const actual = base64UrlDecode(signature)
+      if (!equalBytes(expected, actual)) return invalid()
+      const wire = wireSchema.parse(
+        JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(base64UrlDecode(payload))),
+      )
+      return {
+        version: wire.v,
+        filterFingerprint: wire.f,
+        anchorRowId: wire.a,
+        position: { eventOn: wire.p[0], recordedAt: wire.p[1], id: wire.p[2] },
+        limit: wire.l,
+      }
+    } catch (cause) {
+      return invalid(cause)
     }
-  } catch (cause) {
-    return invalid(cause)
   }
 }

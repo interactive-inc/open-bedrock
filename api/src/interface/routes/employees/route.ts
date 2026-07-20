@@ -21,11 +21,11 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
-import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
+import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { isoDate } from "@/lib/schemas"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { UnavailableError } from "@/lib/errors"
 
 export const GET = factory.createHandlers(

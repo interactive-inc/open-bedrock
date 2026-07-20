@@ -5,11 +5,11 @@ import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
-import { isAbortedByLivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { validatePasswordComplexity } from "@/application/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -124,7 +124,7 @@ export class RegisterEmployee {
     try {
       await this.c.env.DB.batch([...prepared.statements, ...accountStatements])
     } catch (cause) {
-      if (isAbortedByLivePermissionGuard(cause) || isAbortedByGuard(cause)) {
+      if (LivePermissionGuard.isAbortedBy(cause) || isAbortedByGuard(cause)) {
         return new ForbiddenError(
           "live permissions changed while registering employee",
           "role_escalation_forbidden",

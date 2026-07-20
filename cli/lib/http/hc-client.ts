@@ -1,6 +1,7 @@
 import type { AppType } from "api/app"
 import { hc } from "hono/client"
-import { loadConfig, saveConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
+import { saveConfig } from "@/lib/config/save-config"
 import { ApiError } from "@/lib/errors"
 
 let refreshAttempted = false

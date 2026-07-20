@@ -11,7 +11,9 @@ import { updateCareerSheet } from "@/lib/api/update-career-sheet"
 import { withdrawCareerApplication } from "@/lib/api/withdraw-career-application"
 import { requireAuth } from "@/lib/auth/require-auth"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
-import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type CareerSheetFormState = {

@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/errors"
-import { loadConfig, saveConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
+import { saveConfig } from "@/lib/config/save-config"
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE"
@@ -57,7 +58,7 @@ async function tryRefresh(
   }
 }
 
-export async function request<T = unknown>(
+async function request<T = unknown>(
   baseUrl: string,
   token: string | null,
   path: string,

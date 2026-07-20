@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { ReviewFormState } from "@/app/(app)/my/reviews/actions"

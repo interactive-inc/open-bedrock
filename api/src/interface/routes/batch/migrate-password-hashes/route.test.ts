@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"

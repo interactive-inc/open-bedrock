@@ -1,8 +1,8 @@
 import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { workflowReachableApprovalCountSql } from "@/infrastructure/application/application-workflow-repository"
-import { activateDueWorkflowEscalations } from "@/lib/application/ensure-workflow-step-escalation"
+import { workflowReachableApprovalCountSql } from "@/infrastructure/application/workflow-reachable-approval-count-sql"
+import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

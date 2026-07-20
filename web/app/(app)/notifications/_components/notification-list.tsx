@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { useActionState } from "react"
 import { toast } from "sonner"

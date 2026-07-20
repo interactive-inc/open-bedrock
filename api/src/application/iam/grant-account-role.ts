@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 
 export type Command = {
   session: Session

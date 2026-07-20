@@ -1,12 +1,10 @@
 import { FileClock } from "lucide-react"
 import Link from "next/link"
-import {
-  auditActionLabel,
-  auditClientLabel,
-  auditOutcomeLabel,
-  auditReasonLabel,
-  auditTargetTypeLabel,
-} from "@/app/(app)/system/audit-events/_lib/audit-event-labels"
+import { auditActionLabel } from "@/app/(app)/system/audit-events/_lib/audit-action-label"
+import { auditClientLabel } from "@/app/(app)/system/audit-events/_lib/audit-client-label"
+import { auditOutcomeLabel } from "@/app/(app)/system/audit-events/_lib/audit-outcome-label"
+import { auditReasonLabel } from "@/app/(app)/system/audit-events/_lib/audit-reason-label"
+import { auditTargetTypeLabel } from "@/app/(app)/system/audit-events/_lib/audit-target-type-label"
 import { formatAuditDateTime } from "@/app/(app)/system/audit-events/_lib/format-audit-date-time"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

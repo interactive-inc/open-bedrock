@@ -1,9 +1,9 @@
 import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import {
-  containsDate,
-  type LifecycleSchedule,
-  type LifecycleVersionMutation,
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type {
+  LifecycleSchedule,
+  LifecycleVersionMutation,
 } from "@/domain/employee-lifecycle/lifecycle-schedule"
 import {
   projectPersonnelAction,
@@ -17,10 +17,8 @@ import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
 } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -29,7 +27,7 @@ import {
   UnavailableError,
   ValidationError,
 } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { z } from "zod"
 
 export type DirectPersonnelActionCommand = {

@@ -7,11 +7,9 @@ import { ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import {
-  EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
-  replaceAccountRolesWithPermissionSets,
-  seedIamTestAccount,
-} from "@/interface/test-helpers/seed-effective-admin"
+import { EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-admin-test-permission-keys"
+import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
+import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
 
 describe("employee mutations preserve an effective administrator", () => {

@@ -1,4 +1,4 @@
-import { resolveGovernanceOrgRole } from "@/application/governance/governance-access"
+import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"

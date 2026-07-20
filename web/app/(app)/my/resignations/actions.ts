@@ -7,12 +7,10 @@ import { createResignation } from "@/lib/api/create-resignation"
 import { getMe } from "@/lib/api/get-me"
 import { rejectResignation } from "@/lib/api/reject-resignation"
 import { updateResignation } from "@/lib/api/update-resignation"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalIsoDate,
-  toOptionalText,
-  toRequiredIsoDate,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalIsoDate } from "@/lib/form/to-optional-iso-date"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIsoDate } from "@/lib/form/to-required-iso-date"
 import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 import { requireAuth } from "@/lib/auth/require-auth"
 

@@ -1,4 +1,5 @@
-import { loadConfig, saveConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
+import { saveConfig } from "@/lib/config/save-config"
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"

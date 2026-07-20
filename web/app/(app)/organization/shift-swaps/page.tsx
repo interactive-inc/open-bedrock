@@ -6,7 +6,8 @@ import { ShiftSwapAdminTable } from "@/app/(app)/organization/shift-swaps/_compo
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
+import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import {

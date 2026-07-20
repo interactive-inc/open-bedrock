@@ -1,18 +1,16 @@
-import {
-  abortWhenNoLoginEnabledEffectiveAdmin,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
+import type { Context } from "@/env"
+import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import {
-  EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
-  replaceAccountRolesWithPermissionSets,
-  seedIamTestAccount,
-} from "@/interface/test-helpers/seed-effective-admin"
+import { EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-admin-test-permission-keys"
+import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
+import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
 
-async function guardError(db: D1Database): Promise<unknown> {
+async function guardError(context: Context): Promise<unknown> {
   try {
-    await db.batch([abortWhenNoLoginEnabledEffectiveAdmin(db)])
+    await context.env.DB.batch([
+      new LastAdminGuard(context).abortWhenNoLoginEnabledEffectiveAdmin(),
+    ])
 
     return null
   } catch (error) {
@@ -22,7 +20,7 @@ async function guardError(db: D1Database): Promise<unknown> {
 
 describe("last effective admin guard", () => {
   test("accepts one active account whose required permissions are the union of dynamic roles", async () => {
-    const { context, db } = createTestContext()
+    const { context } = createTestContext()
     const accountId = await seedIamTestAccount(context, "E970")
 
     await replaceAccountRolesWithPermissionSets(context, accountId, "effective-admin-split", [
@@ -30,7 +28,7 @@ describe("last effective admin guard", () => {
       EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS.slice(2),
     ])
 
-    expect(await guardError(db)).toBeNull()
+    expect(await guardError(context)).toBeNull()
   })
 
   test("rejects a system admin role when its account lacks one required permission", async () => {
@@ -45,11 +43,11 @@ describe("last effective admin guard", () => {
       )
       .run()
 
-    expect(isAbortedByLastAdminGuard(await guardError(db))).toBe(true)
+    expect(LastAdminGuard.isAbortedBy(await guardError(context))).toBe(true)
   })
 
   test("does not combine required permissions held by different accounts", async () => {
-    const { context, db } = createTestContext()
+    const { context } = createTestContext()
     const firstId = await seedIamTestAccount(context, "E972")
     const secondId = await seedIamTestAccount(context, "E973")
 
@@ -60,6 +58,6 @@ describe("last effective admin guard", () => {
       EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS.slice(2),
     ])
 
-    expect(isAbortedByLastAdminGuard(await guardError(db))).toBe(true)
+    expect(LastAdminGuard.isAbortedBy(await guardError(context))).toBe(true)
   })
 })

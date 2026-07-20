@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm"
  * LIKE のワイルドカード文字（% _）とエスケープ文字（\）をエスケープする。
  * これをしないとユーザー入力の % で全件ヒット、_ で任意1文字マッチが発生する。
  */
-export function escapeLikeKeyword(keyword: string): string {
+function escapeLikeKeyword(keyword: string): string {
   return keyword.replace(/[\\%_]/g, "\\$&")
 }
 

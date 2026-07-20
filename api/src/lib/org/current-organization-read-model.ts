@@ -2,7 +2,7 @@ import type { Context } from "@/env"
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { departments, employees, orgDepartments, orgMemberships } from "@/schema"
 import { asc, eq, isNull } from "drizzle-orm"
 

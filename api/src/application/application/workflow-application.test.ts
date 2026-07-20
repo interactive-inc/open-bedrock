@@ -5,11 +5,8 @@ import { SubmitApplication } from "@/application/application/submit-application"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import {
-  ApplicationWorkflowRepository,
-  conditionalWorkflowStepSnapshotInsertStatements,
-  workflowStepSnapshotInsertStatements,
-} from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
@@ -154,8 +151,7 @@ describe("configured application workflow", () => {
     }
 
     expect(
-      workflowStepSnapshotInsertStatements({
-        db,
+      new WorkflowSql(db).insert({
         applicationId: 1,
         stepKey: "large",
         round: 1,
@@ -163,8 +159,7 @@ describe("configured application workflow", () => {
       }).length,
     ).toBeLessThanOrEqual(8)
     expect(
-      conditionalWorkflowStepSnapshotInsertStatements({
-        db,
+      new WorkflowSql(db).conditionalInsert({
         applicationId: 1,
         stepKey: "large",
         round: 1,
@@ -966,8 +961,7 @@ describe("configured application workflow", () => {
 
     for (const candidateEmployeeId of [2, 3]) {
       await setupResult.db.batch([
-        ...workflowStepSnapshotInsertStatements({
-          db: setupResult.db,
+        ...new WorkflowSql(setupResult.db).insert({
           applicationId: setupResult.applicationId,
           stepKey: "manager",
           round: 1,

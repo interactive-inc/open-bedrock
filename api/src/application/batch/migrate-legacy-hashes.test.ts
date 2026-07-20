@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { MigrateLegacyHashes } from "@/application/batch/migrate-legacy-hashes"
-import { toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"

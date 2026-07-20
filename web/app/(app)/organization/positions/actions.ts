@@ -5,12 +5,10 @@ import { createPosition } from "@/lib/api/create-position"
 import { deletePosition } from "@/lib/api/delete-position"
 import { getMe } from "@/lib/api/get-me"
 import { updatePosition } from "@/lib/api/update-position"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalText,
-  toRequiredIntInRange,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIntInRange } from "@/lib/form/to-required-int-in-range"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManagePositions } from "@/lib/position/can-manage-positions"
 
