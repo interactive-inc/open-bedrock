@@ -1,6 +1,6 @@
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import {
   applications,
   applicationTemplates,
@@ -10,7 +10,7 @@ import {
   thanksRedemptions,
 } from "@/schema"
 import { and, count, eq, ne } from "drizzle-orm"
-import { resolveApplicationInboxCondition } from "@/lib/application/resolve-application-inbox-condition"
+import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
 
 /**
  * GET /inbox/counts — 受信箱ごとの未処理件数を一括取得する。

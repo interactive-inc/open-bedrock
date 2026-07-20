@@ -1,4 +1,4 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppExpenseInboxList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -6,7 +6,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"

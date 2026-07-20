@@ -7,8 +7,8 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
 import { asc, count, eq, inArray } from "drizzle-orm"
 

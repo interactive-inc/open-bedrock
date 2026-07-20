@@ -10,7 +10,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/lib/thanks-points/period-of"
-import { toNonNegativePoints } from "@/lib/thanks-points/to-non-negative-points"
+import { toNonNegativePoints } from "@/application/thanks/to-non-negative-points"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"

@@ -7,7 +7,7 @@ import { EmployeeRepository } from "@/infrastructure/employee/employee-repositor
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
 import { isAbortedByLivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { validatePasswordComplexity } from "@/lib/auth/password-policy"
+import { validatePasswordComplexity } from "@/application/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
 import {
@@ -17,7 +17,7 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

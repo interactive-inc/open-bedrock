@@ -1,8 +1,8 @@
 import { resolveGovernanceOrgRole } from "@/application/governance/governance-access"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

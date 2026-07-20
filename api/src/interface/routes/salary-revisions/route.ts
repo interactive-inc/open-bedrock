@@ -1,12 +1,12 @@
 import { CreateSalaryRevision } from "@/application/salary-revision/create-salary-revision"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { SalaryRevisionRepository } from "@/infrastructure/salary-revision/salary-revision-repository"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
 import { ApplicationError } from "@/lib/errors"

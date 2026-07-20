@@ -1,10 +1,10 @@
 import { ResolveItIncident } from "@/application/it-incident/resolve-it-incident"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppItIncident } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
 /** POST /it-incidents/:id/resolve — インシデントを解消済みに倒す（it_incident:manage） */

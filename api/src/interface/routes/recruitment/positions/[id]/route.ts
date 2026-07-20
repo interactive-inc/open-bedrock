@@ -1,5 +1,5 @@
 import { UpdatePosition } from "@/application/recruitment/update-position"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import {
   ForbiddenError,
@@ -11,7 +11,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppRecruitmentPosition } from "@/lib/app-schemas"
 import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

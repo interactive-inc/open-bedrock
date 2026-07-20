@@ -1,6 +1,6 @@
 import { DeleteMyCareerSheet } from "@/application/career/delete-my-career-sheet"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { careerSheets } from "@/schema"
 import { eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"

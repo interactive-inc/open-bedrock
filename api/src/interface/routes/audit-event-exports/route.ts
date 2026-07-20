@@ -1,15 +1,12 @@
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import {
-  appendAuditExportSucceeded,
-  appendAuditExportTooLarge,
-  auditExportPermission,
-  auditExportValidation,
-  throwAuditRouteError,
-} from "@/interface/utils/audit-route-contract"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { AuditTrail } from "@/interface/utils/audit-trail"
+import { throwAuditRouteError } from "@/interface/utils/audit-route-contract"
+import { auditExportPermission } from "@/interface/middlewares/audit-export-permission"
+import { auditExportValidation } from "@/interface/middlewares/audit-export-validation"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { toAuditCsv } from "@/lib/audit/audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 
 export const POST = factory.createHandlers(
   verifyBearer,
@@ -25,7 +22,7 @@ export const POST = factory.createHandlers(
     } catch (error) {
       if (error instanceof PayloadTooLargeError) {
         try {
-          await appendAuditExportTooLarge(c, range.filters)
+          await new AuditTrail(c).appendExportTooLarge(range.filters)
         } catch (auditError) {
           throwAuditRouteError(auditError)
         }
@@ -34,7 +31,7 @@ export const POST = factory.createHandlers(
     }
 
     try {
-      await appendAuditExportSucceeded(c, range.filters, rows.length)
+      await new AuditTrail(c).appendExportSucceeded(range.filters, rows.length)
     } catch (error) {
       throwAuditRouteError(error)
     }

@@ -5,7 +5,7 @@ import type { Context } from "@/env"
 import type { AccountSummary } from "@/infrastructure/iam/account-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type AccountAccessSummary = AccountSummary & {
   canManage: boolean

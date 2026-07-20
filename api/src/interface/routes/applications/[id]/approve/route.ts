@@ -1,6 +1,6 @@
 import { DecideApplication } from "@/application/application/decide-application"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"

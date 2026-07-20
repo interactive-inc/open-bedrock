@@ -1,5 +1,5 @@
 import { CompanyCalendarDayRepository } from "@/infrastructure/calendar/company-calendar-day-repository"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppCompanyCalendarDayList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -7,7 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
 /** year クエリ（YYYY）を年始〜年末の日付範囲に変換する。未指定・不正は null。 */

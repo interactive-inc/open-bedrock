@@ -1,10 +1,10 @@
 import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/domain/review/review-form.entity"
-import { toReviewResultView } from "@/lib/review/to-review-result-view"
-import { factory } from "@/lib/factory"
+import { toReviewResultView } from "@/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
+import { factory } from "@/interface/utils/factory"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 import {

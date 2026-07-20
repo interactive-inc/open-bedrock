@@ -1,8 +1,8 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
-import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
+import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/schema"
 import {
@@ -11,7 +11,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import {

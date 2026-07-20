@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { assetLendings, assets, employees } from "@/schema"
 import { and, asc, count, eq, isNull } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"

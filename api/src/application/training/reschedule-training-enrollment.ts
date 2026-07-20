@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import { canModifyEnrollment } from "@/lib/training/can-modify-enrollment"
+import { canModifyEnrollment } from "@/application/training/can-modify-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"

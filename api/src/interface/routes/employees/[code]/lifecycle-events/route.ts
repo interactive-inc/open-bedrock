@@ -1,17 +1,13 @@
 import { ListLifecycleEvents } from "@/application/employee-lifecycle/list-lifecycle-events"
 import { GetEmployee } from "@/application/employee/get-employee"
-import {
-  appendLifecycleDeniedAudit,
-  appendLifecycleReadAudit,
-  lifecycleNoStore,
-  resolveLifecycleReadAuthorization,
-} from "@/interface/utils/lifecycle-route-contract"
+import { LifecycleAccess } from "@/interface/utils/lifecycle-access"
+import { lifecycleNoStore } from "@/interface/middlewares/lifecycle-no-store"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { fingerprintLifecycleFilter } from "@/lib/pagination/lifecycle-cursor"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -43,12 +39,12 @@ export const GET = factory.createHandlers(
       code: validateCodeParam(c.req.param("code"), "employee"),
     })
     if (employee instanceof ApplicationError) throw new NotFoundError("employee not found")
-    const authorization = await resolveLifecycleReadAuthorization(c, session, employee.id)
+    const authorization = await new LifecycleAccess({ c, session }).resolveReadAuthorization(
+      employee.id,
+    )
     if (authorization instanceof Error) throw new InternalError("failed to resolve lifecycle scope")
     if (authorization === null) {
-      await appendLifecycleDeniedAudit({
-        c,
-        session,
+      await new LifecycleAccess({ c, session }).appendDeniedAudit({
         targetEmployeeId: employee.id,
         permission: "employee:read",
         reasonCode: "lifecycle_scope_denied",
@@ -69,9 +65,7 @@ export const GET = factory.createHandlers(
       query.from ?? null,
       query.to ?? null,
     ])
-    await appendLifecycleReadAudit({
-      c,
-      session,
+    await new LifecycleAccess({ c, session }).appendReadAudit({
       action: authorization.auditAction,
       targetEmployeeId: employee.id,
       scope: authorization.scope,

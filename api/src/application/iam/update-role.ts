@@ -12,7 +12,7 @@ import type { Context } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

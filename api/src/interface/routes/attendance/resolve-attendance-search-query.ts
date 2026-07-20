@@ -1,6 +1,6 @@
 import type { Session } from "@/lib/auth/session"
 import type { AttendanceSearchQuery } from "@/interface/routes/attendance/attendance-search-query"
-import { canReadAttendanceOf } from "@/lib/attendance/can-read-attendance-of"
+import { canReadAttendanceOf } from "@/interface/routes/attendance/can-read-attendance-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { ForbiddenError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

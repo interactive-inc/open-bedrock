@@ -1,6 +1,6 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import { decoyPasswordHash } from "@/lib/auth/decoy-password-hash"
+import { decoyPasswordHash } from "@/application/auth/decoy-password-hash"
 import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"

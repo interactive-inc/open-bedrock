@@ -1,6 +1,6 @@
 import { CreateMeetingMinutes } from "@/application/meeting/create-meeting-minutes"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { ApplicationError } from "@/lib/errors"

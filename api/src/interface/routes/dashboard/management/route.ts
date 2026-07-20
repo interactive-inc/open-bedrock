@@ -3,8 +3,8 @@ import { ApplicationError } from "@/lib/errors"
 import { zAppManagementDashboard } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** GET /dashboard/management — 経営ダッシュボードの横断集計。management_dashboard:view のみ。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

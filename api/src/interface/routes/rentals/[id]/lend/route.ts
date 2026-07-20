@@ -3,9 +3,9 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppRentalReservation } from "@/lib/app-schemas"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** POST /rentals/:id/lend — 総務・人事が貸与品を貸出済みにする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

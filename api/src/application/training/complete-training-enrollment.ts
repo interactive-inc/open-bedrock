@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import { canCompleteEnrollment } from "@/lib/training/can-complete-enrollment"
+import { canCompleteEnrollment } from "@/application/training/can-complete-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"

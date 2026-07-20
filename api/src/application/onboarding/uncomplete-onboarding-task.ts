@@ -1,5 +1,5 @@
 import type { Session } from "@/lib/auth/session"
-import { canCompleteTask } from "@/lib/onboarding/can-complete-task"
+import { canCompleteTask } from "@/application/onboarding/can-complete-task"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"

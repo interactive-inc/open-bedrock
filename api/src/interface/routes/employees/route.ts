@@ -1,5 +1,5 @@
 import { RegisterEmployee } from "@/application/employee/register-employee"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { likeKeyword } from "@/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,
@@ -7,7 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { resolveEmployeePositionName } from "@/interface/routes/employees/resolve-employee-position-name"
 import { positionRequiresDepartment } from "@/interface/utils/position-requires-department"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"

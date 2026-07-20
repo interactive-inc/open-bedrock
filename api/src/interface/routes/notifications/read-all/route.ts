@@ -2,8 +2,8 @@ import { MarkAllNotificationsRead } from "@/application/notification/mark-all-no
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** POST /notifications/read-all — 本人宛ての未読通知をすべて既読にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

@@ -1,6 +1,6 @@
 import { Survey } from "@/domain/survey/survey.entity"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppSurveyList } from "@/lib/app-schemas"
 import { surveys } from "@/schema"
