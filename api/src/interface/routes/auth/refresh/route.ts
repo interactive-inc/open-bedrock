@@ -1,6 +1,6 @@
 import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/interface/lib/to-http-exception"

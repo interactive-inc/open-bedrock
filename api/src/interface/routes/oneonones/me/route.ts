@@ -1,5 +1,5 @@
 import { ListMyOneOnOnes } from "@/application/oneonone/list-my-one-on-ones"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOneList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -10,7 +10,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, oneOnOnes } from "@/schema"
 import { aliasedTable, count, eq, inArray, or } from "drizzle-orm"
 

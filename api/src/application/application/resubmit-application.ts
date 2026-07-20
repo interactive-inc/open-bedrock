@@ -23,7 +23,7 @@ import {
   UnresolvableWorkflowStepError,
 } from "@/lib/application/resolve-workflow-step-snapshot"
 import { applicableWorkflowSteps } from "@/lib/application/evaluate-workflow"
-import { validateAndNormalizeApplicationPayload } from "@/lib/application/validate-application-payload"
+import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
 
 export type ResubmittedApplication = {
   id: number

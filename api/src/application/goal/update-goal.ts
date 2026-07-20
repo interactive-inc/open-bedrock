@@ -2,7 +2,7 @@ import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
+import { hasFinalEvaluation } from "@/application/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 

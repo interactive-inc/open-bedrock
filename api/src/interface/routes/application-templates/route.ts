@@ -1,6 +1,6 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { applicationTemplates } from "@/schema"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import {
   DEFAULT_LIST_LIMIT,

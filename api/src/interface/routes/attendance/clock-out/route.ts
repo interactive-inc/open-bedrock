@@ -1,6 +1,6 @@
 import { ClockOut } from "@/application/attendance/clock-out"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"

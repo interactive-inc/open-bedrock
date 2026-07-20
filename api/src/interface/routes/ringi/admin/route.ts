@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { alias } from "drizzle-orm/sqlite-core"
 import { employees, ringiRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"

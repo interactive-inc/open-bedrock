@@ -4,7 +4,7 @@ import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { findUnknownApproverRoles } from "@/lib/application/validate-approver-roles"
+import { findUnknownApproverRoles } from "@/application/application/validate-approver-roles"
 
 export type Command = {
   session: Session

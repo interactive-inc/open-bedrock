@@ -1,10 +1,10 @@
 import { ManageGovernanceOrgRole } from "@/application/governance/manage-governance-org-role"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

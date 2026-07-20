@@ -5,7 +5,7 @@ import { ConflictError, ForbiddenError, UnexpectedError, UnprocessableError } fr
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { findUnknownApproverRoles } from "@/lib/application/validate-approver-roles"
+import { findUnknownApproverRoles } from "@/application/application/validate-approver-roles"
 
 export type Command = {
   session: Session

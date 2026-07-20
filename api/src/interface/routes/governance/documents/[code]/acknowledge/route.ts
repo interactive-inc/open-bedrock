@@ -1,10 +1,10 @@
 import { GovernancePublication } from "@/application/governance/governance-publication"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError, NotFoundError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { parseGovernanceCode } from "@/interface/routes/governance/governance-route-shared"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

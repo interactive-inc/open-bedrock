@@ -1,5 +1,5 @@
 import { Session } from "@/lib/auth/session"
-import { SYSTEM_ROLE_PERMISSIONS } from "@/lib/auth/system-roles"
+import { SYSTEM_ROLE_PERMISSIONS } from "@/interface/test-helpers/system-roles"
 
 /**
  * テスト用: system role(member/manager/hr/admin)と employeeId から Session を組み立てる。

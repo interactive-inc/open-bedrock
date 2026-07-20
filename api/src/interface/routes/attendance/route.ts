@@ -1,8 +1,8 @@
 import { resolveAttendanceSearchQuery } from "@/interface/routes/attendance/resolve-attendance-search-query"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
+import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/interface/routes/attendance/attendance-list-query"
 import {
   DEFAULT_LIST_LIMIT,
@@ -10,8 +10,8 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { zAppAttendanceRecordList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"

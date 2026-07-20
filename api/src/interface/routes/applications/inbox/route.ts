@@ -1,4 +1,4 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -6,7 +6,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { applications, applicationTemplates, employees } from "@/schema"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { asc, count, desc, eq } from "drizzle-orm"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
@@ -19,7 +19,7 @@ type SortKey = keyof typeof SORT_OPTIONS
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppApplicationInboxList } from "@/lib/app-schemas"
 import { InternalError } from "@/interface/lib/errors"
-import { resolveApplicationInboxCondition } from "@/lib/application/resolve-application-inbox-condition"
+import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
 
 /**
  * GET /applications/inbox — 承認待ちの申請一覧。

@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppMyReportList } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"

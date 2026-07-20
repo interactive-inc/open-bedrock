@@ -4,8 +4,8 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppNotification } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** POST /notifications/:id/read — 本人宛ての通知を既読にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

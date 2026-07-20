@@ -1,8 +1,8 @@
 import { CloseWorkAccident } from "@/application/work-accident/close-work-accident"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppWorkAccident } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 /** POST /work-accidents/:id/close — 発生記録を closed にする。work_accident:manage が必要。 */

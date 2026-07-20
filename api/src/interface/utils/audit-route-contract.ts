@@ -1,33 +1,18 @@
-import type { Session } from "@/lib/auth/session"
-import type {
-  AuditEventDetail,
-  AuditEventInput,
-  AuditEventSummary,
-} from "@/domain/audit/audit-event"
-import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context } from "@/env"
+import type { AuditEventDetail, AuditEventSummary } from "@/domain/audit/audit-event"
 import type {
   AuditEventFilters,
   AuditEventPage,
 } from "@/infrastructure/audit/audit-event-repository"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { AUDIT_CURSOR_MAX_LENGTH } from "@/lib/audit/audit-cursor"
 import { toStableAuditJson } from "@/lib/audit/stable-json"
-import {
-  ApplicationError,
-  ForbiddenError,
-  NotFoundError,
-  UnavailableError,
-  ValidationError,
-} from "@/lib/errors"
+import { ApplicationError, NotFoundError, UnavailableError, ValidationError } from "@/lib/errors"
 import { zAppAuditEventDetail, zAppAuditEventPage, zAppAuditEventSummary } from "@/lib/app-schemas"
 import type {
   AppAuditEventDetail,
   AppAuditEventPage,
   AppAuditEventSummary,
 } from "@/lib/app-schemas"
-import { factory } from "@/lib/factory"
 import { z } from "zod"
 
 const FILTER_HASH_PREFIX = "open-karte:audit:filters:v1\0"
@@ -70,44 +55,7 @@ export type ParsedAuditListQuery = {
 
 export type ParsedAuditExportRange = { filters: AuditEventFilters }
 
-type AuditListValidationInput = {
-  in: {
-    query?: {
-      actor_account_id?: string
-      action?: string
-      target_type?: string
-      target_id?: string
-      outcome?: "succeeded" | "denied" | "failed"
-      from?: string
-      to?: string
-      limit?: string
-      cursor?: string
-    }
-  }
-  out: { query: ParsedAuditListQuery }
-}
-
-type AuditDetailValidationInput = {
-  in: { param: { event_id: string } }
-  out: { param: { event_id: string } }
-}
-
-type AuditExportValidationInput = {
-  in: {
-    json: {
-      actor_account_id?: number
-      action?: string
-      target_type?: string
-      target_id?: string
-      outcome?: "succeeded" | "denied" | "failed"
-      from: string
-      to: string
-    }
-  }
-  out: { json: ParsedAuditExportRange }
-}
-
-function auditUnavailable(cause?: unknown): UnavailableError {
+export function auditUnavailable(cause?: unknown): UnavailableError {
   return new UnavailableError("audit events are unavailable", "audit_unavailable", { cause })
 }
 
@@ -356,225 +304,8 @@ export function toPublicAuditDetail(item: AuditEventDetail): AppAuditEventDetail
   }
 }
 
-function sessionOf(c: Context): Session {
-  const session = c.var.session
-  if (session === null) throw auditUnavailable(new Error("audit session is missing"))
-  return session
-}
-
-type ManagedAuditInput = Omit<AuditEventInput, "actorAccountId" | "actorEmployeeId" | "now">
-
-async function appendManagedAudit(c: Context, input: ManagedAuditInput): Promise<void> {
-  try {
-    const session = sessionOf(c)
-    const record = createAuditEvent(
-      {
-        ...input,
-        actorAccountId: session.accountId,
-        actorEmployeeId: session.employeeId,
-        now: resolveAuditNow(c.env.NOW),
-      },
-      c.var.auditContext,
-    )
-    await new AuditEventRepository(c).append(record)
-  } catch (error) {
-    throw auditUnavailable(error)
-  }
-}
-
-async function appendReadDenied(c: Context, kind: "search" | "detail"): Promise<void> {
-  await appendManagedAudit(c, {
-    action: kind === "search" ? "audit.event.searched" : "audit.event.read",
-    target: { type: "audit_event", id: null },
-    outcome: "denied",
-    reasonCode: "permission_denied",
-    authorization: { required_permission_keys: ["audit:read"] },
-    metadata: { format: "json" },
-  })
-}
-
-async function appendExportDenied(c: Context): Promise<void> {
-  await appendManagedAudit(c, {
-    action: "audit.event.exported",
-    target: { type: "audit_export", id: null },
-    outcome: "denied",
-    reasonCode: "permission_denied",
-    authorization: { required_permission_keys: ["audit:export"] },
-    metadata: { format: "csv" },
-  })
-}
-
-async function requireReadPermission(
-  c: Context,
-  kind: "search" | "detail",
-  next: () => Promise<void>,
-): Promise<void> {
-  let session: Session
-  try {
-    session = sessionOf(c)
-  } catch (error) {
-    throwAuditRouteError(error)
-  }
-  if (session.hasPermission("audit:read")) {
-    await next()
-    return
-  }
-
-  try {
-    await appendReadDenied(c, kind)
-  } catch (error) {
-    throwAuditRouteError(error)
-  }
-  throw toHttpException(new ForbiddenError("audit read is forbidden", "audit_read_forbidden"))
-}
-
-export const auditListPermission = factory.createMiddleware((c, next) =>
-  requireReadPermission(c, "search", next),
-)
-
-export const auditDetailPermission = factory.createMiddleware((c, next) =>
-  requireReadPermission(c, "detail", next),
-)
-
-export const auditExportPermission = factory.createMiddleware(async (c, next) => {
-  let session: Session
-  try {
-    session = sessionOf(c)
-  } catch (error) {
-    throwAuditRouteError(error)
-  }
-  if (session.hasPermission("audit:export")) {
-    await next()
-    return
-  }
-
-  try {
-    await appendExportDenied(c)
-  } catch (error) {
-    throwAuditRouteError(error)
-  }
-  throw toHttpException(new ForbiddenError("audit export is forbidden", "audit_export_forbidden"))
-})
-
-/** Strict list validator placed after authentication and the permission gate. */
-export const auditListValidation = factory.createMiddleware<AuditListValidationInput>(
-  async (c, next) => {
-    try {
-      c.req.addValidatedData("query", parseAuditListQuery(c.req.url))
-    } catch (error) {
-      throwAuditRouteError(error)
-    }
-    await next()
-  },
-)
-
-/** Canonical detail-path validator placed after authentication and the permission gate. */
-export const auditDetailValidation = factory.createMiddleware<AuditDetailValidationInput>(
-  async (c, next) => {
-    try {
-      c.req.addValidatedData("param", { event_id: parseAuditEventId(c.req.param("event_id")) })
-    } catch (error) {
-      throwAuditRouteError(error)
-    }
-    await next()
-  },
-)
-
-/** Bounded stream reader and strict JSON validator placed after the export permission gate. */
-export const auditExportValidation = factory.createMiddleware<AuditExportValidationInput>(
-  async (c, next) => {
-    try {
-      const body = await readBoundedAuditExportJson(c.req.raw)
-      c.req.addValidatedData("json", parseAuditExportRange(body))
-    } catch (error) {
-      throwAuditRouteError(error)
-    }
-    await next()
-  },
-)
-
-export async function appendAuditSearchSucceeded(
-  c: Context,
-  filters: AuditEventFilters,
-  requestedLimit: number,
-  resultCount: number,
-): Promise<void> {
-  const filterHash = await hashAuditFilters(filters)
-  await appendManagedAudit(c, {
-    action: "audit.event.searched",
-    target: { type: "audit_event", id: null },
-    outcome: "succeeded",
-    reasonCode: null,
-    authorization: { permission_keys: ["audit:read"] },
-    metadata: {
-      filter_hash: filterHash,
-      requested_limit: requestedLimit,
-      result_count: resultCount,
-      format: "json",
-    },
-  })
-}
-
-export async function appendAuditReadSucceeded(
-  c: Context,
-  eventId: string,
-  resultCount: 0 | 1,
-): Promise<void> {
-  await appendManagedAudit(c, {
-    action: "audit.event.read",
-    target: { type: "audit_event", id: eventId },
-    outcome: "succeeded",
-    reasonCode: null,
-    authorization: { permission_keys: ["audit:read"] },
-    metadata: { result_count: resultCount, format: "json" },
-  })
-}
-
-export async function appendAuditExportSucceeded(
-  c: Context,
-  filters: AuditEventFilters,
-  resultCount: number,
-): Promise<void> {
-  const filterHash = await hashAuditFilters(filters)
-  await appendManagedAudit(c, {
-    action: "audit.event.exported",
-    target: { type: "audit_export", id: null },
-    outcome: "succeeded",
-    reasonCode: null,
-    authorization: { permission_keys: ["audit:export"] },
-    metadata: { filter_hash: filterHash, result_count: resultCount, format: "csv" },
-  })
-}
-
-export async function appendAuditExportTooLarge(
-  c: Context,
-  filters: AuditEventFilters,
-): Promise<void> {
-  const filterHash = await hashAuditFilters(filters)
-  await appendManagedAudit(c, {
-    action: "audit.event.exported",
-    target: { type: "audit_export", id: null },
-    outcome: "failed",
-    reasonCode: "audit_export_too_large",
-    authorization: { permission_keys: ["audit:export"] },
-    metadata: { filter_hash: filterHash, format: "csv" },
-  })
-}
-
 /** Converts all route-boundary application errors while hiding non-application causes. */
 export function throwAuditRouteError(error: unknown): never {
   if (error instanceof ApplicationError) throw toHttpException(error)
   throw toHttpException(auditUnavailable(error))
 }
-
-function isAuditResponsePath(path: string): boolean {
-  return (
-    path === "/audit-events" || path.startsWith("/audit-events/") || path === "/audit-event-exports"
-  )
-}
-
-/** Overwrites cache policy after all inner middleware, including handled error responses. */
-export const auditNoStore = factory.createMiddleware(async (c, next) => {
-  await next()
-  if (isAuditResponsePath(c.req.path)) c.header("Cache-Control", "no-store")
-})

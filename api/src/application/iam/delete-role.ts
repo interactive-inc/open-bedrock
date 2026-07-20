@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

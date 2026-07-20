@@ -8,8 +8,8 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { reviewCycles } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"

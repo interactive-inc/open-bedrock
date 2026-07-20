@@ -11,7 +11,7 @@ import {
   resolveWorkflowStepSnapshot,
   UnresolvableWorkflowStepError,
 } from "@/lib/application/resolve-workflow-step-snapshot"
-import { validateAndNormalizeApplicationPayload } from "@/lib/application/validate-application-payload"
+import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
 
 export type Command = {
   applicantId: number

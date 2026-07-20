@@ -3,9 +3,9 @@ import { WithdrawPersonnelActionRequest } from "@/application/employee-lifecycle
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

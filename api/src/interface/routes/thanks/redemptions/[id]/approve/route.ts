@@ -1,5 +1,5 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
-import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
+import { toPositiveInt } from "@/interface/utils/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -9,8 +9,8 @@ import {
   ForbiddenError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 
 /** POST /thanks/redemptions/:id/approve — 交換申請を承認・確定する（承認権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

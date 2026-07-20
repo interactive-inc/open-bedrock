@@ -2,7 +2,6 @@ import { Session } from "@/lib/auth/session"
 import { describe, expect, test } from "bun:test"
 import type { ApiClient } from "@/app"
 import {
-  appendAuditSearchSucceeded,
   hashAuditFilters,
   parseAuditEventId,
   parseAuditExportRange,
@@ -10,6 +9,7 @@ import {
   resolveAuditNow,
   toAuditIsoString,
 } from "@/interface/utils/audit-route-contract"
+import { AuditTrail } from "@/interface/utils/audit-trail"
 import type { AuditEventFilters } from "@/infrastructure/audit/audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import type { AppAuditEventDetail, AppAuditEventPage } from "@/lib/app-schemas"
@@ -305,9 +305,9 @@ describe("audit HTTP contract", () => {
     })
     context.var.auditContext = { ...context.var.auditContext, requestId: "not-a-uuid" }
 
-    const error = await appendAuditSearchSucceeded(context, {}, 50, 0).catch(
-      (caught: unknown) => caught,
-    )
+    const error = await new AuditTrail(context)
+      .appendSearchSucceeded({}, 50, 0)
+      .catch((caught: unknown) => caught)
 
     expect(error).toBeInstanceOf(ApplicationError)
     expect((error as ApplicationError).code).toBe("audit_unavailable")

@@ -1,6 +1,6 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { workflowReachableApprovalCountSql } from "@/infrastructure/application/application-workflow-repository"
 import { activateDueWorkflowEscalations } from "@/lib/application/ensure-workflow-step-escalation"
 import {

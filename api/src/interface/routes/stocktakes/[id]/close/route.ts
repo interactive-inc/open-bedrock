@@ -1,6 +1,6 @@
 import { CloseStocktake } from "@/application/stocktake/close-stocktake"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"

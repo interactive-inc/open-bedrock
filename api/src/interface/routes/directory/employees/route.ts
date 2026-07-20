@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { likeKeyword } from "@/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,

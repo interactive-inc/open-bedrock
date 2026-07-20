@@ -1,9 +1,9 @@
 import { AnalyzeGovernanceImpact } from "@/application/governance/analyze-governance-impact"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

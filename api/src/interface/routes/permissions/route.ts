@@ -1,6 +1,6 @@
 import { PERMISSION_CATALOG } from "@/lib/auth/permission-keys"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppPermissionList } from "@/lib/app-schemas"
 

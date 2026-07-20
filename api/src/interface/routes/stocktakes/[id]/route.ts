@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
 import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppStocktake } from "@/lib/app-schemas"

@@ -1,11 +1,11 @@
 import { Survey } from "@/domain/survey/survey.entity"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
-import { toAnswerDistribution } from "@/lib/survey/to-answer-distribution"
-import { toAnswersList } from "@/lib/survey/to-answers-list"
-import { toTextAnswers } from "@/lib/survey/to-text-answers"
+import { toAnswerDistribution } from "@/interface/routes/surveys/[survey_id]/summary/to-answer-distribution"
+import { toAnswersList } from "@/interface/routes/surveys/[survey_id]/summary/to-answers-list"
+import { toTextAnswers } from "@/interface/routes/surveys/[survey_id]/summary/to-text-answers"
 import { SurveyResponse } from "@/domain/survey/survey-response.entity"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,

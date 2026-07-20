@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"

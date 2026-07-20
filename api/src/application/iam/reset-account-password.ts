@@ -1,12 +1,12 @@
 import type { Session } from "@/lib/auth/session"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { validatePasswordComplexity } from "@/lib/auth/password-policy"
+import { validatePasswordComplexity } from "@/application/auth/password-policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
   session: Session

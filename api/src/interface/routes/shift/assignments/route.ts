@@ -1,13 +1,13 @@
 import { codeSchema } from "@/lib/schemas"
 import { zAppShiftAssignmentList } from "@/lib/app-schemas"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, orgDepartments, shiftAssignments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"

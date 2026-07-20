@@ -1,11 +1,11 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingTaskList } from "@/lib/app-schemas"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
