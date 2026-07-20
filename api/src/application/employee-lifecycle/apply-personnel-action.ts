@@ -10,6 +10,8 @@ import {
   type PersonnelActionProjection,
 } from "@/domain/employee-lifecycle/project-personnel-action"
 import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
+import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
@@ -50,38 +52,6 @@ type CurrentLifecycleProjection = {
 
 const idempotencyKeySchema = z.string().min(1).max(200)
 const revisionSchema = z.number().int().nonnegative()
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonicalize)
-  }
-
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, child]) => [key, canonicalize(child)]),
-    )
-  }
-
-  return value
-}
-
-function stableJson(value: unknown): string {
-  return JSON.stringify(canonicalize(value))
-}
-
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
-}
-
-export function fingerprintPersonnelAction(
-  employeeId: number | string,
-  input: PersonnelActionInput,
-): Promise<string> {
-  return sha256(stableJson({ employeeId, input }))
-}
 
 export type PreparedPersonnelActionCompletion = {
   action: PersonnelActionRecord
@@ -377,7 +347,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         props.action.correctsActionId,
         props.action.operationId,
         props.action.payloadFingerprint,
-        stableJson(props.action.summary),
+        stableLifecycleJson(props.action.summary),
       ),
     abortWhenPreviousStatementChangedNoRows(db),
     ...props.projection.mutations.map((mutation) => mutationStatement(db, mutation)),
@@ -440,7 +410,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         .bind(
           props.action.id,
           props.action.kind,
-          stableJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
+          stableLifecycleJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
           props.action.recordedAt,
         ),
     )

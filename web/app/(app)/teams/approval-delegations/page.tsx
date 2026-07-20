@@ -2,7 +2,7 @@ import { DelegationManager } from "@/app/(app)/teams/approval-delegations/_compo
 import { BackButton } from "@/components/back-button"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
-import { getApprovalDelegations } from "@/lib/api/approval-delegations"
+import { getApprovalDelegations } from "@/lib/api/get-approval-delegations"
 
 export const metadata = { title: "代理承認" }
 

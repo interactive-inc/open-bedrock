@@ -11,7 +11,7 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { findAccessiblePersonnelActionRequest } from "@/application/employee-lifecycle/personnel-action-request-access"
+import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
 
 export class WithdrawPersonnelActionRequest {
   constructor(private readonly c: Context) {}
@@ -21,11 +21,10 @@ export class WithdrawPersonnelActionRequest {
     requestId: string
     withdrawnAt: string
   }): Promise<{ status: "withdrawn" } | ApplicationError> {
-    const request = await findAccessiblePersonnelActionRequest({
+    const request = await new PersonnelActionRequestAccess({
       c: this.c,
       session: command.session,
-      requestId: command.requestId,
-    })
+    }).find(command.requestId)
     if (request instanceof ApplicationError) return request
     if (request === null) {
       return new NotFoundError("人事変更申請が見つかりません", "personnel_action_request_not_found")

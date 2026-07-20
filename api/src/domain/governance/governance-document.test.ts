@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseGovernanceMarkdown, sha256Hex } from "./governance-document"
+import { parseGovernanceMarkdown } from "./governance-document"
 
 const base = `---
 id: procedure.access-lifecycle
@@ -76,9 +76,4 @@ describe("parseGovernanceMarkdown", () => {
       "procedure.security-incident-response",
     ])
   })
-})
-
-test("sha256Hex is deterministic", async () => {
-  expect(await sha256Hex("open-karte")).toHaveLength(64)
-  expect(await sha256Hex("open-karte")).toBe(await sha256Hex("open-karte"))
 })

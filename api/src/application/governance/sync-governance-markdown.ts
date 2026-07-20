@@ -1,10 +1,10 @@
 import type { Session } from "@/lib/auth/session"
 import {
   parseGovernanceMarkdown,
-  sha256Hex,
   type GovernanceReference,
   type ParsedGovernanceMarkdown,
 } from "@/domain/governance/governance-document"
+import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/infrastructure/governance/governance-repository"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
@@ -73,7 +73,7 @@ export class SyncGovernanceMarkdown {
             { cause: document },
           )
         }
-        return { input, parsed: document, contentHash: await sha256Hex(input.markdown) }
+        return { input, parsed: document, contentHash: await toSha256Hex(input.markdown) }
       }),
     )
     const parseError = parsed.find((item) => item instanceof Error)
