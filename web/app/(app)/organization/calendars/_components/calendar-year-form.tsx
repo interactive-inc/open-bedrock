@@ -6,7 +6,7 @@ type Props = {
   year: string | null
 }
 
-// 会社カレンダーの年絞り込みフォーム。native な GET フォームで ?year= へ遷移する。
+/** 会社カレンダーの年絞り込みフォーム。native な GET フォームで ?year= へ遷移する。 */
 export function CalendarYearForm(props: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">

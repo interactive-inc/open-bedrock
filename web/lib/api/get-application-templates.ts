@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /application-templates。任意で category で絞り込む申請テンプレ一覧。
+/** GET /application-templates。任意で category で絞り込む申請テンプレ一覧。 */
 export async function getApplicationTemplates(category: string | null) {
   const client = await createClient()
 

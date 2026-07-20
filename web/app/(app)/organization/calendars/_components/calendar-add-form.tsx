@@ -11,7 +11,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 const initialState: CalendarActionState = { ok: false, error: null }
 
-// 会社休日・振替出勤日の登録フォーム（calendar:manage 保持者にのみ表示する）。
+/** 会社休日・振替出勤日の登録フォーム（calendar:manage 保持者にのみ表示する）。 */
 export function CalendarAddForm() {
   async function reduce(
     previousState: CalendarActionState,

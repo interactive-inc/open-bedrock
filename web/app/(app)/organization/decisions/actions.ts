@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache"
 import { createDecision } from "@/lib/api/create-decision"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type DecisionActionState = {
   ok: boolean
   error: string | null
 }
 
-// 意思決定記録の作成 Server Action。title/decided_on/context/decision 必須。decision:manage が無いと api が 403。
+/** 意思決定記録の作成 Server Action。title/decided_on/context/decision 必須。decision:manage が無いと api が 403。 */
 export async function createDecisionAction(
   previousState: DecisionActionState,
   formData: FormData,
@@ -43,7 +43,7 @@ export async function createDecisionAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

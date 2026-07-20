@@ -33,7 +33,7 @@ type Props = {
   lifeEvents: ReadonlyArray<LifeEventResponse>
 }
 
-// 自分のライフイベント届出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分のライフイベント届出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyLifeEventsList(props: Props) {
   if (props.lifeEvents.length === 0) {
     return <EmptyState title="ライフイベント届出はありません" />
@@ -78,7 +78,7 @@ export function MyLifeEventsList(props: Props) {
   )
 }
 
-// ライフイベント届出変更フォームを Dialog で開く。種別・発生日・詳細を編集して送信する。
+/** ライフイベント届出変更フォームを Dialog で開く。種別・発生日・詳細を編集して送信する。 */
 function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -149,7 +149,7 @@ function UpdateLifeEventDialog(props: { lifeEvent: LifeEventResponse }) {
   )
 }
 
-// ライフイベント届出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** ライフイベント届出取消ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelLifeEventButton(props: { lifeEventId: string }) {
   const [_state, formAction, pending] = useFormAction(
     cancelLifeEventAction,

@@ -5,7 +5,7 @@ type Params = {
   offset?: number
 }
 
-// GET /applications/me。ログイン本人の申請一覧（payload を含む）。data と total を返す。
+/** GET /applications/me。ログイン本人の申請一覧（payload を含む）。data と total を返す。 */
 export async function listMyApplications(params: Params = {}) {
   const client = await createClient()
 

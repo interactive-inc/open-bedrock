@@ -6,7 +6,7 @@ type SeedAssetLending = {
   returnedAt: string | null
 }
 
-// lent 状態の資産には returnedAt:null の open レコードを対応させる。
+/** lent 状態の資産には returnedAt:null の open レコードを対応させる。 */
 export const seedAssetLendings: ReadonlyArray<SeedAssetLending> = [
   {
     id: 1,

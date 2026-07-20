@@ -6,7 +6,7 @@ type Props = {
   fiscalYear: number | undefined
 }
 
-// 健診実施記録一覧セクション。read:all を持つ閲覧者向けに全社の実施状況を取得する。
+/** 健診実施記録一覧セクション。read:all を持つ閲覧者向けに全社の実施状況を取得する。 */
 export async function HealthCheckupsSection(props: Props) {
   const records = await listHealthCheckups({ fiscalYear: props.fiscalYear })
 

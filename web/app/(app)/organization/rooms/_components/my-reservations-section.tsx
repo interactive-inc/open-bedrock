@@ -3,7 +3,7 @@ import { FetchError } from "@/components/fetch-error"
 import { getRoomList } from "@/lib/api/get-room-list"
 import { listMyRoomReservations } from "@/lib/api/list-my-room-reservations"
 
-// 自分の会議室予約を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の会議室予約を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyReservationsSection() {
   const reservations = await listMyRoomReservations()
 

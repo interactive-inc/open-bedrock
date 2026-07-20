@@ -11,16 +11,16 @@ import { ViewMyBalance } from "@/application/thanks-points/view-my-balance"
 import { ViewMyBudget } from "@/application/thanks-points/view-my-budget"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { eq } from "drizzle-orm"
 import { describe, expect, test } from "bun:test"
 
 type TestContext = ReturnType<typeof createTestContext>["context"]
 
-// 受領残高を作る。
+/** 受領残高を作る。 */
 async function seedBalance(
   context: TestContext,
   recipientEmployeeId: number,
@@ -35,7 +35,7 @@ async function seedBalance(
   })
 }
 
-// アクティブな報酬を作る。
+/** アクティブな報酬を作る。 */
 async function seedReward(
   context: TestContext,
   props: { pointCost: number; stock: number | null; isActive?: boolean },
@@ -59,8 +59,6 @@ async function seedReward(
 
   return row.id
 }
-
-// --- CreateReward ---
 
 describe("CreateReward", () => {
   test("creates a reward with valid inputs", async () => {
@@ -102,8 +100,6 @@ describe("CreateReward", () => {
     expectApplicationError(result, ValidationError, "invalid_reward")
   })
 })
-
-// --- UpdateReward ---
 
 describe("UpdateReward", () => {
   test("updates an existing reward", async () => {
@@ -157,8 +153,6 @@ describe("UpdateReward", () => {
   })
 })
 
-// --- ListRewards ---
-
 describe("ListRewards", () => {
   test("returns all rewards", async () => {
     const { context } = createTestContext()
@@ -198,8 +192,6 @@ describe("ListRewards", () => {
     expect(result.length).toBe(1)
   })
 })
-
-// --- RequestRedemption ---
 
 describe("RequestRedemption", () => {
   test("creates a redemption when balance and stock are sufficient", async () => {
@@ -332,8 +324,6 @@ describe("RequestRedemption", () => {
     expectApplicationError(result, ConflictError, "reward_inactive")
   })
 })
-
-// --- DecideRedemption ---
 
 describe("DecideRedemption", () => {
   test("approves a pending redemption and decrements stock", async () => {
@@ -593,8 +583,6 @@ describe("DecideRedemption", () => {
   })
 })
 
-// --- ListMyRedemptions ---
-
 describe("ListMyRedemptions", () => {
   test("returns only the employee's redemptions", async () => {
     const { context } = createTestContext()
@@ -635,8 +623,6 @@ describe("ListMyRedemptions", () => {
   })
 })
 
-// --- ListPendingRedemptions ---
-
 describe("ListPendingRedemptions", () => {
   test("returns only pending redemptions", async () => {
     const { context } = createTestContext()
@@ -674,8 +660,6 @@ describe("ListPendingRedemptions", () => {
     expect(result.length).toBe(0)
   })
 })
-
-// --- ViewMyBalance ---
 
 describe("ViewMyBalance", () => {
   test("returns the correct balance after receiving thanks", async () => {
@@ -728,8 +712,6 @@ describe("ViewMyBalance", () => {
     expect(balance).toBe(70)
   })
 })
-
-// --- ViewMyBudget ---
 
 describe("ViewMyBudget", () => {
   test("creates budget on first access", async () => {

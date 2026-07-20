@@ -22,7 +22,7 @@ type Props = {
   position: PositionResponse
 }
 
-// 役職一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる。
+/** 役職一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる。 */
 export function PositionRowActions(props: Props) {
   return (
     <div className="flex justify-end gap-2">
@@ -33,7 +33,7 @@ export function PositionRowActions(props: Props) {
   )
 }
 
-// 役職削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+/** 役職削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
 function DeletePositionButton(props: { positionId: number }) {
   async function reduce(previousState: { ok: boolean; error: string | null }, formData: FormData) {
     const result = await deletePositionAction(previousState, formData)

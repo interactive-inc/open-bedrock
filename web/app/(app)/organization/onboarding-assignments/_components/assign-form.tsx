@@ -15,8 +15,10 @@ type Props = {
 
 const initialState: AssignState = { ok: false, message: null }
 
-// 社員へオンボーディングテンプレートを割り当てるフォーム。
-// useActionState + native form。テンプレ選択は native select で FormData に乗せる。
+/**
+ * 社員へオンボーディングテンプレートを割り当てるフォーム。
+ * useActionState + native form。テンプレ選択は native select で FormData に乗せる。
+ */
 export function AssignForm(props: Props) {
   const action = useFormAction(
     assignOnboardingAction,

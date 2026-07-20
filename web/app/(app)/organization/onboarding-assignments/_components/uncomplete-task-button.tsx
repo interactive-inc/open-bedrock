@@ -11,8 +11,10 @@ type Props = {
 
 const initialState: CompleteState = { ok: false, message: null }
 
-// 完了済みタスクの完了を取り消すボタン。taskId を hidden input で Server Action へ送る。
-// 失敗時のみインラインでエラーを出す（成功時はサーバ再検証で行が更新される）。
+/**
+ * 完了済みタスクの完了を取り消すボタン。taskId を hidden input で Server Action へ送る。
+ * 失敗時のみインラインでエラーを出す（成功時はサーバ再検証で行が更新される）。
+ */
 export function UncompleteTaskButton(props: Props) {
   const action = useFormAction(
     uncompleteOnboardingTaskAction,

@@ -25,8 +25,10 @@ const initialState: SubmitSurveyResponseState = {
   message: null,
 }
 
-// アンケート回答フォーム。native form + Server Action + useActionState。
-// 送信結果はトースト(sonner)とフォーム下部のメッセージで知らせる。
+/**
+ * アンケート回答フォーム。native form + Server Action + useActionState。
+ * 送信結果はトースト(sonner)とフォーム下部のメッセージで知らせる。
+ */
 export function SurveyAnswerForm(props: Props) {
   // タプルは index 参照（destructuring 禁止）。
   const actionState = useActionState(actionWithToast, initialState)
@@ -87,8 +89,10 @@ export function SurveyAnswerForm(props: Props) {
   )
 }
 
-// Server Action をラップし、結果に応じてトーストを出す。
-// useEffect を使わず送信完了時点で副作用を発火させるための薄いラッパ。
+/**
+ * Server Action をラップし、結果に応じてトーストを出す。
+ * useEffect を使わず送信完了時点で副作用を発火させるための薄いラッパ。
+ */
 async function actionWithToast(
   previousState: SubmitSurveyResponseState,
   formData: FormData,

@@ -5,8 +5,10 @@ import type {
   RentalReservationUpdateRequest,
 } from "@/lib/api/types/rental-types"
 
-// PUT /rentals/:id。レンタル予約の品名・期間・用途を変更する。
-// 本人以外は 403 を api が返すため、戻りは Error になる。
+/**
+ * PUT /rentals/:id。レンタル予約の品名・期間・用途を変更する。
+ * 本人以外は 403 を api が返すため、戻りは Error になる。
+ */
 export async function updateRentalReservation(
   id: string,
   request: RentalReservationUpdateRequest,

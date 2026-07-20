@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /onboarding/me。トークン本人に割り当てられたタスク一覧を返す。
+/** GET /onboarding/me。トークン本人に割り当てられたタスク一覧を返す。 */
 export async function getOnboardingMe() {
   const client = await createClient()
 

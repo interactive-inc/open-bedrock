@@ -6,8 +6,10 @@ type Props = {
   status: string | null
 }
 
-// 物品の絞り込みフォーム。native な GET フォームで ?kind=&status= へ遷移する。
-// searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+/**
+ * 物品の絞り込みフォーム。native な GET フォームで ?kind=&status= へ遷移する。
+ * searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+ */
 export function AssetFilterForm(props: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">

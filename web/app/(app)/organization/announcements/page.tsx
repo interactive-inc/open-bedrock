@@ -19,7 +19,7 @@ import { canManageAnnouncements } from "@/lib/announcement/can-manage-announceme
 
 export const metadata = { title: "社内アナウンス" }
 
-// 社内アナウンス一覧画面。全員は公開分を閲覧し、管理者は下書き作成もできる。
+/** 社内アナウンス一覧画面。全員は公開分を閲覧し、管理者は下書き作成もできる。 */
 export default async function AnnouncementsPage() {
   const currentUser = await getMe()
 
@@ -39,7 +39,7 @@ export default async function AnnouncementsPage() {
   )
 }
 
-// /announcements を取得して一覧テーブルを描画する非同期 RSC。
+/** /announcements を取得して一覧テーブルを描画する非同期 RSC。 */
 async function AnnouncementsTable() {
   const announcements = await getAnnouncementList({ status: null })
 

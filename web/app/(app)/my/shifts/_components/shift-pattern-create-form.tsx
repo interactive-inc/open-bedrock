@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// シフトパターンの作成フォーム（特権ロール向け）。コード・名前・開始/終了時刻・休憩時間を送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す。成功時は /shift/patterns へ遷移する。
+/**
+ * シフトパターンの作成フォーム（特権ロール向け）。コード・名前・開始/終了時刻・休憩時間を送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す。成功時は /shift/patterns へ遷移する。
+ */
 export function ShiftPatternCreateForm() {
   const router = useRouter()
 

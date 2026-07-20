@@ -8,7 +8,7 @@ import { asc, eq } from "drizzle-orm"
 export class GradeRepository {
   constructor(private readonly c: Context) {}
 
-  // 等級マスタを rank の昇順で返す。
+  /** 等級マスタを rank の昇順で返す。 */
   async findAll(props: { limit: number; offset: number }): Promise<ReadonlyArray<Grade> | Error> {
     try {
       const rows = await this.c.var.database

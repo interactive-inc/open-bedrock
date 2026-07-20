@@ -13,12 +13,12 @@ type Props = {
   canManage: boolean
 }
 
-// status は一覧 API では生 string で返るため open/closed に正規化する。
+/** status は一覧 API では生 string で返るため open/closed に正規化する。 */
 function toPostingStatus(value: string): "open" | "closed" {
   return value === "closed" ? "closed" : "open"
 }
 
-// 1 件の公募を取得する。管理ロールは詳細 API（締切も含む）、それ以外は一覧から id で絞り込む。
+/** 1 件の公募を取得する。管理ロールは詳細 API（締切も含む）、それ以外は一覧から id で絞り込む。 */
 async function loadPosting(postingId: number, canManage: boolean): Promise<CareerPosting | Error> {
   if (canManage) {
     return getCareerPosting(postingId)
@@ -46,7 +46,7 @@ async function loadPosting(postingId: number, canManage: boolean): Promise<Caree
   }
 }
 
-// 公募詳細をサーバ取得して、応募フォーム（本人）と管理操作（管理ロール）を描画する非同期 RSC。
+/** 公募詳細をサーバ取得して、応募フォーム（本人）と管理操作（管理ロール）を描画する非同期 RSC。 */
 export async function CareerPostingDetailSection(props: Props) {
   const posting = await loadPosting(props.postingId, props.canManage)
 

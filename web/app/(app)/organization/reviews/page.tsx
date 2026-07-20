@@ -25,7 +25,7 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-// cycle_id と employee_code を query で受け取り、API が閲覧者向けに投影した結果を表示する。
+/** cycle_id と employee_code を query で受け取り、API が閲覧者向けに投影した結果を表示する。 */
 export default async function ReviewResultsPage(props: Props) {
   const searchParamsValue = await props.searchParams
 
@@ -53,7 +53,7 @@ type ResultsProps = {
   employeeCode: string
 }
 
-// 結果を認証付きで取得して描画する非同期 RSC。閲覧可否と表示範囲は API を正とする。
+/** 結果を認証付きで取得して描画する非同期 RSC。閲覧可否と表示範囲は API を正とする。 */
 async function Results(props: ResultsProps) {
   if (Number.isInteger(props.cycleId) === false || props.employeeCode === "") {
     return (

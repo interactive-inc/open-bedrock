@@ -10,10 +10,10 @@ import {
   conditionalWorkflowStepSnapshotInsertStatements,
   workflowStepSnapshotInsertStatements,
 } from "@/infrastructure/application/application-workflow-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 const firstStep = {

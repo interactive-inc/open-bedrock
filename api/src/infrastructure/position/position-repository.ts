@@ -8,7 +8,7 @@ import { asc, eq } from "drizzle-orm"
 export class PositionRepository {
   constructor(private readonly c: Context) {}
 
-  // 役職マスタを rank の昇順で返す。
+  /** 役職マスタを rank の昇順で返す。 */
   async findAll(props: {
     limit: number
     offset: number
@@ -69,7 +69,7 @@ export class PositionRepository {
     }
   }
 
-  // 役職名を現に使っている従業員（employees.position が一致）の件数を返す。
+  /** 役職名を現に使っている従業員（employees.position が一致）の件数を返す。 */
   async countEmployeesByPositionName(name: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database

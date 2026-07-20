@@ -14,7 +14,7 @@ type Props = {
   rows: ReadonlyArray<EmployeeCertificationResponse>
 }
 
-// 資格保有記録テーブル。取得日・有効期限を表示する（更新要否の判定はしない）。
+/** 資格保有記録テーブル。取得日・有効期限を表示する（更新要否の判定はしない）。 */
 export function EmployeeCertificationsTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="保有資格の記録がありません" />

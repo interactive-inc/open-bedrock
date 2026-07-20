@@ -1,6 +1,6 @@
 import { canEvaluateGoalOf } from "@/lib/goal/can-evaluate-goal-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const report: EmployeeRelation = { isSelf: false, isReport: true, isSameDepartment: false }

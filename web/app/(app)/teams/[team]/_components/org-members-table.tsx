@@ -15,7 +15,7 @@ type Props = {
   code: string
 }
 
-// /org/departments/:code/members を認証付きで取得し、メンバー一覧をテーブル描画する非同期 RSC。
+/** /org/departments/:code/members を認証付きで取得し、メンバー一覧をテーブル描画する非同期 RSC。 */
 export async function OrgMembersTable(props: Props) {
   const members = await getOrgDepartmentMembers(props.code)
 

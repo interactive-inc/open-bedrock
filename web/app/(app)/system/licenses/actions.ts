@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache"
 import { cancelLicense } from "@/lib/api/cancel-license"
 import { createLicense } from "@/lib/api/create-license"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type LicenseActionState = {
   ok: boolean
   error: string | null
 }
 
-// ライセンス台帳の登録 Server Action。name 必須。license:manage が無いと api が 403。
+/** ライセンス台帳の登録 Server Action。name 必須。license:manage が無いと api が 403。 */
 export async function createLicenseAction(
   previousState: LicenseActionState,
   formData: FormData,
@@ -40,7 +40,7 @@ export async function createLicenseAction(
   return { ok: true, error: null }
 }
 
-// ライセンス解約 Server Action。form の hidden input で id を渡す。license:manage が無いと api が 403。
+/** ライセンス解約 Server Action。form の hidden input で id を渡す。license:manage が無いと api が 403。 */
 export async function cancelLicenseAction(
   previousState: LicenseActionState,
   formData: FormData,
@@ -62,7 +62,7 @@ export async function cancelLicenseAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -71,7 +71,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData 値を整数へ。未入力や不正は null。
+/** FormData 値を整数へ。未入力や不正は null。 */
 function toInteger(value: FormDataEntryValue | null): number | null {
   const text = toText(value)
 
@@ -84,7 +84,7 @@ function toInteger(value: FormDataEntryValue | null): number | null {
   return Number.isInteger(parsed) ? parsed : null
 }
 
-// category の許容値だけを返す。それ以外は null。
+/** category の許容値だけを返す。それ以外は null。 */
 function toCategory(value: FormDataEntryValue | null): "saas" | "software" | "other" | null {
   const text = toText(value)
 

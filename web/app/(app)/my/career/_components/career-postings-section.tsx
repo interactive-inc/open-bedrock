@@ -9,9 +9,11 @@ type Props = {
   canManage: boolean
 }
 
-// 社内公募一覧をサーバ取得してカードで描画する非同期 RSC。
-// 各カードは詳細ページ /career/postings/[id] へのリンクで、応募は詳細ページで行う。
-// 管理ロールには締切のものも含めて表示する。
+/**
+ * 社内公募一覧をサーバ取得してカードで描画する非同期 RSC。
+ * 各カードは詳細ページ /career/postings/[id] へのリンクで、応募は詳細ページで行う。
+ * 管理ロールには締切のものも含めて表示する。
+ */
 export async function CareerPostingsSection(props: Props) {
   const postings = await getCareerPostings()
 

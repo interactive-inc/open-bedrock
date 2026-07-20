@@ -24,7 +24,7 @@ type Props = {
 
 const initialState: RoleDeleteFormState = { ok: false, error: null }
 
-// 動的ロールを削除するボタン。削除前に確認ダイアログを挟む。system role には表示しない。
+/** 動的ロールを削除するボタン。削除前に確認ダイアログを挟む。system role には表示しない。 */
 export function DeleteRoleButton(props: Props) {
   async function reduce(
     previousState: RoleDeleteFormState,

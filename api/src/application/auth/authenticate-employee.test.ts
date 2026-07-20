@@ -4,9 +4,9 @@ import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-pa
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
-import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
 import { UnavailableError } from "@/lib/errors"
 
 const jwtSecret = "authenticate-employee-test-secret"

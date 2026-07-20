@@ -66,7 +66,7 @@ type ReviewCyclesProps = {
   canAdminister: boolean
 }
 
-// /review-cycles を認証付きで取得してサイクル一覧を描画する非同期 RSC。
+/** /review-cycles を認証付きで取得してサイクル一覧を描画する非同期 RSC。 */
 async function ReviewCycles(props: ReviewCyclesProps) {
   const cycles = await getReviewCycles()
 
@@ -77,7 +77,7 @@ async function ReviewCycles(props: ReviewCyclesProps) {
   return <ReviewCycleList cycles={cycles} canAdminister={props.canAdminister} />
 }
 
-// /review-forms/me を認証付きで取得して自分の評価フォームを描画する非同期 RSC。
+/** /review-forms/me を認証付きで取得して自分の評価フォームを描画する非同期 RSC。 */
 async function MyForms() {
   const forms = await getMyReviewForms()
 

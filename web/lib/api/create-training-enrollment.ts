@@ -5,7 +5,7 @@ import type {
   TrainingEnrollmentResponse,
 } from "@/lib/api/types/training-types"
 
-// POST /training/enrollments。本人がコースの受講を申し込む。
+/** POST /training/enrollments。本人がコースの受講を申し込む。 */
 export async function createTrainingEnrollment(
   request: TrainingEnrollmentCreateRequest,
 ): Promise<TrainingEnrollmentResponse | Error> {

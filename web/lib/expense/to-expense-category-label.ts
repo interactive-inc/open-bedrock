@@ -1,6 +1,6 @@
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 
-// 経費カテゴリの enum 値を画面表示用の日本語ラベルへ変換する。
+/** 経費カテゴリの enum 値を画面表示用の日本語ラベルへ変換する。 */
 export function toExpenseCategoryLabel(category: ExpenseCategory): string {
   if (category === "transport") {
     return "交通費"

@@ -3,7 +3,7 @@ import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getOnboardingTemplates } from "@/lib/api/get-onboarding-templates"
 import { AssignForm } from "@/app/(app)/organization/onboarding-assignments/_components/assign-form"
 
-// 割当フォームへテンプレート・従業員の選択肢を供給する非同期 RSC ラッパー。
+/** 割当フォームへテンプレート・従業員の選択肢を供給する非同期 RSC ラッパー。 */
 export async function AssignFormSection() {
   const templates = await getOnboardingTemplates(null)
 

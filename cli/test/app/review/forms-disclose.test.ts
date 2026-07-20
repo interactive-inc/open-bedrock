@@ -1,9 +1,6 @@
 import { app } from "@/app/index"
 import { describe, expect, test } from "bun:test"
 
-// review forms / forms-bulk / disclose コマンドの到達性と引数検証を確認する。
-// help と引数検証は API 呼び出し前に返るため、実リクエストなしでテストできる。
-
 async function requestJson(path: string, body: unknown): Promise<Response> {
   return app.request(path, {
     method: "POST",
@@ -12,6 +9,10 @@ async function requestJson(path: string, body: unknown): Promise<Response> {
   })
 }
 
+/**
+ * review forms / forms-bulk / disclose コマンドの到達性と引数検証を確認する。
+ * help と引数検証は API 呼び出し前に返るため、実リクエストなしでテストできる
+ */
 describe("review forms/forms-bulk/disclose", () => {
   const helpRoutes: ReadonlyArray<{ path: string; help: string }> = [
     { path: "/review/forms", help: "review forms" },

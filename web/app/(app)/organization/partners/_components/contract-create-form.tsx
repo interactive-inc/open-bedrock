@@ -16,8 +16,10 @@ type Props = {
 
 const initialState: ContractCreateFormState = { ok: false, error: null }
 
-// 契約記録の追加フォーム。partner_id と code は hidden。契約日は必須、期間・更新期限は任意。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 契約記録の追加フォーム。partner_id と code は hidden。契約日は必須、期間・更新期限は任意。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function ContractCreateForm(props: Props) {
   const router = useRouter()
 

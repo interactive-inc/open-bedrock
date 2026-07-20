@@ -13,7 +13,7 @@ const statusOptions = [
   { value: "requested", label: "申請中" },
 ]
 
-// 全社の貸与品予約一覧を絞り込むフォーム。GET で querystring を更新する。
+/** 全社の貸与品予約一覧を絞り込むフォーム。GET で querystring を更新する。 */
 export function RentalAdminFilterForm(props: Props) {
   const hasActiveFilter = props.statusValue !== "" || props.employeeIdValue !== ""
 

@@ -1,7 +1,4 @@
-// certification ドメインの手書き型。api 側 zod スキーマと疎結合に保つため
-// z.infer を import せず、レスポンス/リクエストの shape をここで独立に定義する。
-
-// GET /certifications の要素。api は snake_case で返す。
+/** GET /certifications の要素。api は snake_case で返す。 */
 export type CertificationResponse = {
   id: number
   code: string
@@ -11,7 +8,7 @@ export type CertificationResponse = {
   created_at: string
 }
 
-// GET /employee-certifications の要素。
+/** GET /employee-certifications の要素。 */
 export type EmployeeCertificationResponse = {
   id: number
   employee_id: number

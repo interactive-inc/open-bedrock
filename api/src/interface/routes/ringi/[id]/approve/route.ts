@@ -1,0 +1,49 @@
+import { DecideRingi } from "@/application/ringi/decide-ringi"
+import { factory } from "@/lib/factory"
+import { ApplicationError } from "@/lib/errors"
+import { zAppRingiDecision } from "@/lib/app-schemas"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { validateIntParam } from "@/interface/utils/validate-int-param"
+import { zValidator } from "@hono/zod-validator"
+import { UnauthorizedError } from "@/interface/lib/errors"
+import { z } from "zod"
+
+/** POST /ringi/:id/approve — 稟議を承認する（指名された承認者本人のみ。コメント任意） */
+export const POST = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      comment: z.string().max(3_000).nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = c.var.session
+
+    if (session === null) {
+      throw new UnauthorizedError()
+    }
+
+    const ringiId = validateIntParam(c.req.param("id"), "ringi")
+
+    const body = c.req.valid("json")
+
+    const updated = await new DecideRingi(c).run({
+      session: session,
+      ringiId,
+      approverId: session.employeeId,
+      action: "approve",
+      comment: body.comment ?? null,
+      createdAt: c.env.NOW ?? new Date().toISOString(),
+    })
+
+    if (updated instanceof ApplicationError) {
+      throw toHttpException(updated)
+    }
+
+    const responseBody = zAppRingiDecision.parse({ status: updated.status })
+
+    return c.json(responseBody, 200)
+  },
+)

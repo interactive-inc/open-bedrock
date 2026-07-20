@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: StocktakeStartFormState = { ok: false, error: null, id: null }
 
-// 棚卸し開始フォーム。名称と対象日を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。成功時は詳細へ遷移する。
+/**
+ * 棚卸し開始フォーム。名称と対象日を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。成功時は詳細へ遷移する。
+ */
 export function StocktakeStartForm() {
   const router = useRouter()
 

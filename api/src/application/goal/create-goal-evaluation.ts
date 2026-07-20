@@ -125,7 +125,7 @@ export class CreateGoalEvaluation {
     return evaluation
   }
 
-  // self 評価は本人一致のみで判定するため org を引かない。manager/final のみ関係を解決する。
+  /** self 評価は本人一致のみで判定するため org を引かない。manager/final のみ関係を解決する。 */
   private async resolveRelation(
     kind: GoalEvaluationKind,
     goalEmployeeId: number,

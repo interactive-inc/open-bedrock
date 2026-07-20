@@ -7,8 +7,10 @@ type SeedPosition = {
   createdAt: string
 }
 
-// seed 従業員が使う役職名を rank 順（上位ほど小さい rank）で並べる。
-// name は employees.position の値と一致させる（発令・登録の code 参照で解決される先）。
+/**
+ * seed 従業員が使う役職名を rank 順（上位ほど小さい rank）で並べる。
+ * name は employees.position の値と一致させる（発令・登録の code 参照で解決される先）。
+ */
 export const seedPositions: ReadonlyArray<SeedPosition> = [
   {
     id: 1,

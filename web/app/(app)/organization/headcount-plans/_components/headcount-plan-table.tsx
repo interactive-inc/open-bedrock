@@ -15,7 +15,7 @@ type Props = {
   fiscalYear?: number
 }
 
-// GET /headcount-plans を認証付きで取得し、計画人数と実在籍数(active)を並べた比較テーブルを描画する RSC。
+/** GET /headcount-plans を認証付きで取得し、計画人数と実在籍数(active)を並べた比較テーブルを描画する RSC。 */
 export async function HeadcountPlanTable(props: Props) {
   const plans = await getHeadcountPlanList({ fiscalYear: props.fiscalYear })
 
@@ -79,7 +79,7 @@ export async function HeadcountPlanTable(props: Props) {
   )
 }
 
-// 実在籍数と計画人数の差分バッジ。過不足の向きを色で示す。
+/** 実在籍数と計画人数の差分バッジ。過不足の向きを色で示す。 */
 function GapBadge(props: { gap: number }) {
   if (props.gap === 0) {
     return <Badge variant="secondary">±0</Badge>

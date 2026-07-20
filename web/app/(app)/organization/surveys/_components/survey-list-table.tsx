@@ -14,8 +14,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// 実施中アンケートを取得してテーブル表示する非同期 RSC。
-// 各行から回答画面 (/surveys/:id) と集計画面 (/surveys/:id/summary) へ遷移できる。
+/**
+ * 実施中アンケートを取得してテーブル表示する非同期 RSC。
+ * 各行から回答画面 (/surveys/:id) と集計画面 (/surveys/:id/summary) へ遷移できる。
+ */
 export async function SurveyListTable(props: { canViewSummary: boolean }) {
   const surveys = await getSurveyList()
 

@@ -146,7 +146,7 @@ export class UpdateOrgDepartment {
     return false
   }
 
-  // 親コードが存在するか確認する。存在すれば null、不正なら返すべき ApplicationError を返す。
+  /** 親コードが存在するか確認する。存在すれば null、不正なら返すべき ApplicationError を返す。 */
   private async ensureParentExists(parentCode: string | null): Promise<ApplicationError | null> {
     if (parentCode === null) {
       return null

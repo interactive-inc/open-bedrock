@@ -1,5 +1,5 @@
 import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageAnnouncements", () => {

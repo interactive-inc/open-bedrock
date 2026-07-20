@@ -5,7 +5,7 @@ import type {
   BusinessTripUpdateRequest,
 } from "@/lib/api/types/business-trip-types"
 
-// PUT /business-trips/:id。出張申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+/** PUT /business-trips/:id。出張申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。 */
 export async function updateBusinessTrip(
   id: string,
   request: BusinessTripUpdateRequest,

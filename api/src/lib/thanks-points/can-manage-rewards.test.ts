@@ -1,5 +1,5 @@
 import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageRewards", () => {

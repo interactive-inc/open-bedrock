@@ -14,8 +14,10 @@ type Props = {
 
 const initialState: AssetReturnFormState = { ok: false, error: null }
 
-// 物品返却フォーム。貸与中の物品にだけ表示する想定。ボタン 1 つで返却する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 物品返却フォーム。貸与中の物品にだけ表示する想定。ボタン 1 つで返却する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function AssetReturnForm(props: Props) {
   async function reduce(
     previousState: AssetReturnFormState,

@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: TrainingFormState = { ok: false, error: null }
 
-// 研修コース作成フォーム（特権ロール向け）。code/title/category/所要時間/説明/必須フラグを native form で送る。
-// 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 研修コース作成フォーム（特権ロール向け）。code/title/category/所要時間/説明/必須フラグを native form で送る。
+ * 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function CreateCourseForm() {
   // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(async (previousState: TrainingFormState, formData: FormData) => {

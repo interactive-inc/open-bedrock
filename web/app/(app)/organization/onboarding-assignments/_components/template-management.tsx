@@ -29,7 +29,7 @@ type Props = {
   template: OnboardingTemplate
 }
 
-// テンプレート行の管理操作（変更 Dialog と削除）。管理権限にのみ表示する。
+/** テンプレート行の管理操作（変更 Dialog と削除）。管理権限にのみ表示する。 */
 export function TemplateManagement(props: Props) {
   return (
     <TableRowActions className="md:flex-wrap">
@@ -42,7 +42,7 @@ export function TemplateManagement(props: Props) {
   )
 }
 
-// テンプレート変更フォームを Dialog で開く。名称・種別・説明を編集する。code は変更しない。
+/** テンプレート変更フォームを Dialog で開く。名称・種別・説明を編集する。code は変更しない。 */
 function UpdateTemplateDialog(props: { template: OnboardingTemplate }) {
   const [open, setOpen] = useState(false)
 
@@ -165,7 +165,7 @@ function LifecycleBindingButton(props: { template: OnboardingTemplate }) {
   )
 }
 
-// テンプレートを削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
+/** テンプレートを削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。 */
 function DeleteTemplateButton(props: { code: string }) {
   const [state, formAction, pending] = useFormAction(
     deleteOnboardingTemplateAction,

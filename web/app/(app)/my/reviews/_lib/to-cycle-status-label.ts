@@ -6,7 +6,7 @@ const labels: Record<ReviewCycleStatus, string> = {
   closed: "終了",
 }
 
-// 評価サイクルのステータスを日本語ラベルに変換する。
+/** 評価サイクルのステータスを日本語ラベルに変換する。 */
 export function toCycleStatusLabel(status: ReviewCycleStatus): string {
   return labels[status]
 }

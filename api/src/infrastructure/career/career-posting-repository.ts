@@ -26,7 +26,7 @@ export class CareerPostingRepository {
     }
   }
 
-  // 新規公募を保存する。id は省略し DB の autoincrement に任せ、採番後の行を返す。
+  /** 新規公募を保存する。id は省略し DB の autoincrement に任せ、採番後の行を返す。 */
   async create(careerPosting: CareerPosting): Promise<CareerPosting | Error> {
     try {
       const rows = await this.c.var.database
@@ -50,7 +50,7 @@ export class CareerPostingRepository {
     }
   }
 
-  // 公募の内容と状態を更新し、更新後の行を返す。
+  /** 公募の内容と状態を更新し、更新後の行を返す。 */
   async update(careerPosting: CareerPosting): Promise<CareerPosting | null | Error> {
     try {
       if (careerPosting.id === null) {
@@ -77,9 +77,11 @@ export class CareerPostingRepository {
     }
   }
 
-  // status='applied' の応募がなければ公募と紐づく応募をアトミックに削除する。
-  // D1 batch でチェックと削除を単一トランザクションで実行し TOCTOU を防ぐ。
-  // 0 行削除（applied 応募が存在）なら null を返す。
+  /**
+   * status='applied' の応募がなければ公募と紐づく応募をアトミックに削除する。
+   * D1 batch でチェックと削除を単一トランザクションで実行し TOCTOU を防ぐ。
+   * 0 行削除（applied 応募が存在）なら null を返す。
+   */
   async deleteIfNoAppliedApplications(postingId: number): Promise<true | null | Error> {
     try {
       const db = this.c.env.DB

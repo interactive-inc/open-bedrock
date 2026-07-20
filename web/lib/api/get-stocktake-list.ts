@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { StocktakeStatus } from "@/lib/api/types/stocktake-types"
 
-// GET /stocktakes。棚卸しセッション一覧。status で絞り込み可能。
+/** GET /stocktakes。棚卸しセッション一覧。status で絞り込み可能。 */
 export async function getStocktakeList(status: StocktakeStatus | null) {
   const client = await createClient()
 

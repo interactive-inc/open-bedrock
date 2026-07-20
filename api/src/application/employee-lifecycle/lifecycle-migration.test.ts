@@ -3,7 +3,7 @@ import { PreflightLifecycleMigration } from "@/application/employee-lifecycle/pr
 import { RebuildLifecycleProjections } from "@/application/employee-lifecycle/rebuild-lifecycle-projections"
 import { VerifyLifecycleMigration } from "@/application/employee-lifecycle/verify-lifecycle-migration"
 import type { Context } from "@/env"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

@@ -5,8 +5,10 @@ import type {
   OnboardingTemplateDetail,
 } from "@/lib/api/types/onboarding-types"
 
-// POST /onboarding/templates。管理権限がテンプレートを作成する。
-// 権限不足は 403、コード重複は 409 を api が返すため、戻りは Error になる。
+/**
+ * POST /onboarding/templates。管理権限がテンプレートを作成する。
+ * 権限不足は 403、コード重複は 409 を api が返すため、戻りは Error になる。
+ */
 export async function createOnboardingTemplate(
   request: OnboardingTemplateCreateRequest,
 ): Promise<OnboardingTemplateDetail | Error> {

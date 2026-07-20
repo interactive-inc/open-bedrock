@@ -24,7 +24,7 @@ export function toAnswerDistribution(
   return distribution
 }
 
-// 回答値を分布キーへ変換する。文字列・数値・真偽以外（配列やオブジェクト）は null。
+/** 回答値を分布キーへ変換する。文字列・数値・真偽以外（配列やオブジェクト）は null。 */
 function toDistributionKey(answer: unknown): string | null {
   if (typeof answer === "string") {
     return answer

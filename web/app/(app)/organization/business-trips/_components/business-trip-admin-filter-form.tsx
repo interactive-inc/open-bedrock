@@ -15,7 +15,7 @@ const statusOptions = [
   { value: "rejected", label: "却下" },
 ]
 
-// 全社の出張申請一覧を絞り込むフォーム。GET で querystring を更新する。
+/** 全社の出張申請一覧を絞り込むフォーム。GET で querystring を更新する。 */
 export function BusinessTripAdminFilterForm(props: Props) {
   const hasActiveFilter = props.statusValue !== "" || props.employeeIdValue !== ""
 

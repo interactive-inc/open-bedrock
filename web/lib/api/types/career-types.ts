@@ -1,6 +1,3 @@
-// api/src/career の *-schema.ts と同形の手書き type。
-// api と疎結合にするため api 側から import しない。
-
 export type CareerSheet = {
   employee_id: number
   goals_text: string | null

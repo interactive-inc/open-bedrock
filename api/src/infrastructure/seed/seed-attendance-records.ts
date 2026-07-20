@@ -8,10 +8,12 @@ export type SeedAttendanceRecord = {
   status: string
 }
 
-// seed-employees の既存社員 id（5, 9 など member）に紐付ける。
-// status は "closed"（退勤済・workMinutes 確定）と
-// "open"（出勤中・退勤前なので clockOutAt/workMinutes は null）の2系統。
-// workDate は "YYYY-MM-DD"、clockInAt/clockOutAt は ISO8601。
+/**
+ * seed-employees の既存社員 id（5, 9 など member）に紐付ける。
+ * status は "closed"（退勤済・workMinutes 確定）と
+ * "open"（出勤中・退勤前なので clockOutAt/workMinutes は null）の2系統。
+ * workDate は "YYYY-MM-DD"、clockInAt/clockOutAt は ISO8601。
+ */
 export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   {
     id: 1,

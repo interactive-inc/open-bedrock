@@ -30,7 +30,7 @@ type Props = {
   canManage: boolean
 }
 
-// 全社の出張申請一覧テーブル。詳細は各申請のページへ、出張者 ID クリックで絞り込む。
+/** 全社の出張申請一覧テーブル。詳細は各申請のページへ、出張者 ID クリックで絞り込む。 */
 export function BusinessTripAdminTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="条件に一致する出張申請がありません" />

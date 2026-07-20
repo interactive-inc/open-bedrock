@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm"
 export class EmployeeEventRepository {
   constructor(private readonly c: Context) {}
 
-  // 社員の在籍イベント履歴を発効日の降順で返す。kind 指定で種別を絞り込む。
+  /** 社員の在籍イベント履歴を発効日の降順で返す。kind 指定で種別を絞り込む。 */
   async findByEmployeeId(props: {
     employeeId: number
     kind: string | null

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 
 export const metadata = { title: "取引先登録" }
 
-// 取引先登録画面。フォームは Client Component に切り出し、Server Action で POST /partners する。
+/** 取引先登録画面。フォームは Client Component に切り出し、Server Action で POST /partners する。 */
 export default function PartnerNewPage() {
   return (
     <div className="flex flex-col gap-6">

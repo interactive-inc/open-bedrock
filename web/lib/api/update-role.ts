@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// PATCH /roles/:id。ロールの名前・説明・権限を更新する（iam:manage_roles が必要）。
+/** PATCH /roles/:id。ロールの名前・説明・権限を更新する（iam:manage_roles が必要）。 */
 export async function updateRole(
   roleId: number,
   request: {

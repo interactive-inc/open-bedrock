@@ -2,7 +2,7 @@ import { getThanksBalance } from "@/lib/api/get-thanks-balance"
 import { getThanksBudget } from "@/lib/api/get-thanks-budget"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 
-// 当月の贈与原資の残量と受領残高をサーバ側 fetch して並べる非同期 RSC。
+/** 当月の贈与原資の残量と受領残高をサーバ側 fetch して並べる非同期 RSC。 */
 export async function ThanksSummary() {
   const budget = await getThanksBudget()
 

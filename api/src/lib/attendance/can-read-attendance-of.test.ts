@@ -1,7 +1,7 @@
 import { canReadAttendanceOf } from "@/lib/attendance/can-read-attendance-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { SessionPayload } from "@/env"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const self: EmployeeRelation = { isSelf: true, isReport: false, isSameDepartment: false }

@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /leave/requests?scope=reports。配下全員の休暇申請を取得する。
-// leave:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+/**
+ * GET /leave/requests?scope=reports。配下全員の休暇申請を取得する。
+ * leave:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+ */
 export async function getReportsLeaveRequests(params: { limit?: number } = {}) {
   const client = await createClient()
 

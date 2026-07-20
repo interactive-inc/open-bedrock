@@ -14,7 +14,7 @@ export type ParentNotFound = { reason: "parent_not_found" }
 export class OrgDepartmentRepository {
   constructor(private readonly c: Context) {}
 
-  // 部署ノードを表示順の昇順で返す。
+  /** 部署ノードを表示順の昇順で返す。 */
   async findAll(): Promise<ReadonlyArray<OrgDepartment> | Error> {
     try {
       const rows = await this.c.var.database
@@ -28,7 +28,7 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 部署コードで1件取得する。存在しなければ null。
+  /** 部署コードで1件取得する。存在しなければ null。 */
   async findByCode(code: string): Promise<OrgDepartment | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -45,7 +45,7 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 親コードを持つ部署が存在するかを返す。削除時の子ノード検査に使う。
+  /** 親コードを持つ部署が存在するかを返す。削除時の子ノード検査に使う。 */
   async hasChildren(parentCode: string): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
@@ -60,7 +60,7 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 部署に所属するメンバーが存在するかを返す。削除時の所属検査に使う。
+  /** 部署に所属するメンバーが存在するかを返す。削除時の所属検査に使う。 */
   async hasMembers(code: string): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
@@ -152,7 +152,7 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 親・部署マスタ・責任者・表示順を更新する。コードは主キーなので変更しない。
+  /** 親・部署マスタ・責任者・表示順を更新する。コードは主キーなので変更しない。 */
   async update(department: OrgDepartment): Promise<OrgDepartment | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -174,9 +174,11 @@ export class OrgDepartmentRepository {
     }
   }
 
-  // 子ノード・所属メンバーが存在しない場合のみ部署ノードを削除する。
-  // D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
-  // 0 行削除（子 or メンバーが存在）なら null を返す。
+  /**
+   * 子ノード・所属メンバーが存在しない場合のみ部署ノードを削除する。
+   * D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
+   * 0 行削除（子 or メンバーが存在）なら null を返す。
+   */
   async delete(code: string): Promise<true | null | Error> {
     try {
       await this.c.env.DB.batch([

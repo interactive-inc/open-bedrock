@@ -1,6 +1,4 @@
-// health-checkup ドメインの手書き型。結果カラムは持たない（実施情報のみ）。
-
-// GET /health-checkups の要素。api は snake_case で返す。
+/** GET /health-checkups の要素。api は snake_case で返す。 */
 export type HealthCheckupResponse = {
   id: number
   employee_id: number

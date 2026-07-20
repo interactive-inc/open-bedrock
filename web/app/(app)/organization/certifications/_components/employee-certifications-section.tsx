@@ -6,7 +6,7 @@ type Props = {
   canViewAll: boolean
 }
 
-// 自分の資格保有記録セクション。employee_id を渡さず本人分を取得する。
+/** 自分の資格保有記録セクション。employee_id を渡さず本人分を取得する。 */
 export async function EmployeeCertificationsSection(props: Props) {
   const records = await listEmployeeCertifications({})
 

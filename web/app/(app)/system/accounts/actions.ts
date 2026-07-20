@@ -20,10 +20,12 @@ export type AccountActionFormState = {
   error: string | null
 }
 
-// api の {error, code} 応答の code を、そのアクションの文脈に合った日本語文言へ変換する。
-// 同じ code でもアクションによって意味が変わる（last_admin は剥奪では「外せません」、
-// 停止では「停止できません」）ため、マップはアクションごとに分ける。
-// 未知の code や code の無い応答（ApiResponseError 以外の Error）は fallback を返す。
+/**
+ * api の {error, code} 応答の code を、そのアクションの文脈に合った日本語文言へ変換する。
+ * 同じ code でもアクションによって意味が変わる（last_admin は剥奪では「外せません」、
+ * 停止では「停止できません」）ため、マップはアクションごとに分ける。
+ * 未知の code や code の無い応答（ApiResponseError 以外の Error）は fallback を返す。
+ */
 function toActionErrorMessage(
   error: Error,
   messages: Record<string, string>,
@@ -40,7 +42,7 @@ function toActionErrorMessage(
   return fallback
 }
 
-// アカウントからロールを剥奪する。iam:assign_roles 権限が必要。
+/** アカウントからロールを剥奪する。iam:assign_roles 権限が必要。 */
 export async function revokeAccountRoleAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -81,7 +83,7 @@ export async function revokeAccountRoleAction(
   return { ok: true, error: null }
 }
 
-// 管理者がアカウントのパスワードを再設定する。account:manage 権限が必要。
+/** 管理者がアカウントのパスワードを再設定する。account:manage 権限が必要。 */
 export async function resetPasswordAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -127,7 +129,7 @@ export async function resetPasswordAction(
   return { ok: true, error: null }
 }
 
-// アカウントの状態を変更する（停止・有効化）。account:manage 権限が必要。
+/** アカウントの状態を変更する（停止・有効化）。account:manage 権限が必要。 */
 export async function setAccountStatusAction(
   _prevState: AccountActionFormState,
   formData: FormData,
@@ -178,7 +180,7 @@ function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "l
   return null
 }
 
-// FormData からアカウントへのロール付与を実行するサーバーアクション。iam:assign_roles 権限が必要。
+/** FormData からアカウントへのロール付与を実行するサーバーアクション。iam:assign_roles 権限が必要。 */
 export async function grantAccountRoleAction(
   _prevState: GrantRoleFormState,
   formData: FormData,

@@ -18,8 +18,10 @@ import { Badge } from "@/components/ui/badge"
 import { getAccounts } from "@/lib/api/get-accounts"
 import { getRoles } from "@/lib/api/get-roles"
 
-// GET /accounts を実行しアカウント一覧テーブルを描画する非同期 RSC。
-// 各行にロール付与フォームを置く。割当可能なロールは GET /roles から取得する。
+/**
+ * GET /accounts を実行しアカウント一覧テーブルを描画する非同期 RSC。
+ * 各行にロール付与フォームを置く。割当可能なロールは GET /roles から取得する。
+ */
 export async function AccountListSection(props: {
   canAssignRoles: boolean
   actorPermissionKeys: ReadonlyArray<string>

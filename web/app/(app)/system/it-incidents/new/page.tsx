@@ -8,7 +8,7 @@ import { canManageItIncidents } from "@/lib/it-incident/can-manage-it-incidents"
 
 export const metadata = { title: "インシデント記録" }
 
-// インシデント記録画面。it_incident:manage が無ければ notFound。
+/** インシデント記録画面。it_incident:manage が無ければ notFound。 */
 export default async function ItIncidentNewPage() {
   const me = await getMe()
 

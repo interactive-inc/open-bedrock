@@ -134,7 +134,7 @@ export class HeadcountPlanRepository {
     }
   }
 
-  // 部署コードごとの active 在籍数。org_memberships と employees(code) を突き合わせ status=active を数える。
+  /** 部署コードごとの active 在籍数。org_memberships と employees(code) を突き合わせ status=active を数える。 */
   async countActiveByDepartment(): Promise<Map<string, number> | Error> {
     try {
       const rows = await this.c.var.database
@@ -156,7 +156,7 @@ export class HeadcountPlanRepository {
     }
   }
 
-  // 全社の active 在籍数（department_code が null の計画の実績に添える）。
+  /** 全社の active 在籍数（department_code が null の計画の実績に添える）。 */
   async countActiveTotal(): Promise<number | Error> {
     try {
       const rows = await this.c.var.database

@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 
-// 交換カタログをサーバ側 fetch して並べる非同期 RSC。各景品に交換申請ボタンを添える。
+/** 交換カタログをサーバ側 fetch して並べる非同期 RSC。各景品に交換申請ボタンを添える。 */
 export async function ThanksRewards() {
   const rewards = await getThanksRewards()
 

@@ -4,10 +4,10 @@ import { UpdateApplicationTemplate } from "@/application/application/update-appl
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnprocessableError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 function seedExpense(db: D1Database): Promise<unknown> {

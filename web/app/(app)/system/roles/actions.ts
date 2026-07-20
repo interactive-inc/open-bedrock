@@ -17,7 +17,7 @@ export type RoleUpdateFormState = {
   error: string | null
 }
 
-// FormData からロール更新を実行するサーバーアクション。iam:manage_roles 権限が必要。
+/** FormData からロール更新を実行するサーバーアクション。iam:manage_roles 権限が必要。 */
 export async function updateRoleAction(
   _prevState: RoleUpdateFormState,
   formData: FormData,
@@ -84,7 +84,7 @@ export type RoleDeleteFormState = {
   error: string | null
 }
 
-// 動的ロールを削除する。iam:manage_roles 権限が必要。
+/** 動的ロールを削除する。iam:manage_roles 権限が必要。 */
 export async function deleteRoleAction(
   _prevState: RoleDeleteFormState,
   formData: FormData,
@@ -122,8 +122,10 @@ function toPositiveInt(value: FormDataEntryValue | null): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
-// FormData からロール作成を実行するサーバーアクション。iam:manage_roles 権限が必要。
-// permission_keys は同名の複数チェックボックスから配列で受け取る。
+/**
+ * FormData からロール作成を実行するサーバーアクション。iam:manage_roles 権限が必要。
+ * permission_keys は同名の複数チェックボックスから配列で受け取る。
+ */
 export async function createRoleAction(
   _prevState: RoleCreateFormState,
   formData: FormData,
@@ -166,7 +168,7 @@ export async function createRoleAction(
   return { ok: true, error: null }
 }
 
-// 空文字・非文字列を null に潰した文字列を返す。
+/** 空文字・非文字列を null に潰した文字列を返す。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
     return null

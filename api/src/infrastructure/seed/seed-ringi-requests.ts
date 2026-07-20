@@ -11,7 +11,7 @@ type SeedRingiRequest = {
   createdAt: string
 }
 
-// applicantId / approverId は seedEmployees に存在する社員に対応させる。
+/** applicantId / approverId は seedEmployees に存在する社員に対応させる。 */
 export const seedRingiRequests: ReadonlyArray<SeedRingiRequest> = [
   {
     id: 1,

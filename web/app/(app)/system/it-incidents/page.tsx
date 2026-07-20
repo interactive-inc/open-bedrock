@@ -16,7 +16,7 @@ type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-// /it-incidents インシデント記録の一覧。it_incident:read:all が無ければ notFound。
+/** /it-incidents インシデント記録の一覧。it_incident:read:all が無ければ notFound。 */
 export default async function ItIncidentsPage(props: Props) {
   const me = await getMe()
 

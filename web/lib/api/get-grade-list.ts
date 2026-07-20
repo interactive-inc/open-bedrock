@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /grades。等級マスタ一覧を取得する。誰でも参照できる公開情報。
+/** GET /grades。等級マスタ一覧を取得する。誰でも参照できる公開情報。 */
 export async function getGradeList() {
   const client = await createClient()
 

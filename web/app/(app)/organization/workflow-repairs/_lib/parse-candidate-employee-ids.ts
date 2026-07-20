@@ -1,6 +1,6 @@
 const MAX_CANDIDATES = 20
 
-// UI のカンマ・空白区切り入力を API の正整数配列に変換する。
+/** UI のカンマ・空白区切り入力を API の正整数配列に変換する。 */
 export function parseCandidateEmployeeIds(raw: string): ReadonlyArray<number> | null {
   const values = raw.trim().split(/[\s,]+/)
 

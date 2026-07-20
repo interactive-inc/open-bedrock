@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// GET /onboarding/templates を取得してテンプレート一覧テーブルを描画する非同期 RSC。
+/** GET /onboarding/templates を取得してテンプレート一覧テーブルを描画する非同期 RSC。 */
 export async function OnboardingTemplatesTable() {
   const templates = await getOnboardingTemplates(null)
 

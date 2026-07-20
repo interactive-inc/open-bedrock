@@ -4,13 +4,13 @@ import type { Context } from "@/env"
 import { thanksPointBudgets } from "@/schema"
 import { and, eq, gt, sql } from "drizzle-orm"
 
-// 原資消費の結果。consumed=消費を予約できた / insufficient=残量不足で予約できなかった。
+/** 原資消費の結果。consumed=消費を予約できた / insufficient=残量不足で予約できなかった。 */
 export type ConsumeOutcome = "consumed" | "insufficient"
 
 export class ThanksPointBudgetRepository {
   constructor(private readonly c: Context) {}
 
-  // 当月 period の原資レコードを取得する。無ければ null。
+  /** 当月 period の原資レコードを取得する。無ければ null。 */
   async find(props: {
     employeeId: number
     period: string
@@ -35,8 +35,10 @@ export class ThanksPointBudgetRepository {
     }
   }
 
-  // 当月 period の原資を取得し、無ければ既定額で遅延生成する（月初バッチに依存しない）。
-  // 一意制約により同時生成は片方が衝突するため、衝突時は再取得でフォールバックする。
+  /**
+   * 当月 period の原資を取得し、無ければ既定額で遅延生成する（月初バッチに依存しない）。
+   * 一意制約により同時生成は片方が衝突するため、衝突時は再取得でフォールバックする。
+   */
   async findOrCreate(props: {
     employeeId: number
     period: string
@@ -87,10 +89,12 @@ export class ThanksPointBudgetRepository {
     }
   }
 
-  // 原資の消費を 1 ステートメントで原子的に予約する。
-  // granted_points − consumed_points >= points のときだけ consumed_points を加算する。
-  // D1 は個々のステートメントを直列化するため、同月の同時送付でも合計が原資を超える分は必ず弾かれる。
-  // 0 行更新は残量不足。points<=0 は呼び出し側で除外する前提（消費不要）。
+  /**
+   * 原資の消費を 1 ステートメントで原子的に予約する。
+   * granted_points − consumed_points >= points のときだけ consumed_points を加算する。
+   * D1 は個々のステートメントを直列化するため、同月の同時送付でも合計が原資を超える分は必ず弾かれる。
+   * 0 行更新は残量不足。points<=0 は呼び出し側で除外する前提（消費不要）。
+   */
   async consume(props: {
     employeeId: number
     period: string
@@ -118,7 +122,7 @@ export class ThanksPointBudgetRepository {
     }
   }
 
-  // consume の補償。感謝の保存が失敗したときに予約した消費を戻す（下限 0 に丸める）。
+  /** consume の補償。感謝の保存が失敗したときに予約した消費を戻す（下限 0 に丸める）。 */
   async release(props: {
     employeeId: number
     period: string

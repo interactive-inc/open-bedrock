@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { canWriteCompanyGoal } from "@/lib/goal/can-write-company-goal"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 describe("canWriteCompanyGoal", () => {
   test("allows review administrators (hr/admin)", () => {

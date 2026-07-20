@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /accounts。アカウント一覧（account:manage が必要）。
+/** GET /accounts。アカウント一覧（account:manage が必要）。 */
 export async function getAccounts() {
   const client = await createClient()
 

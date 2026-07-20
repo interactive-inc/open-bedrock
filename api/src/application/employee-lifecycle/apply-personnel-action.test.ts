@@ -1,6 +1,6 @@
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import type { Context, SessionPayload } from "@/env"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

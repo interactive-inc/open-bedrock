@@ -49,7 +49,7 @@ export default factory.createHandlers(
   },
 )
 
-// --kind の文字列を許容値に絞る。不正値は null。
+/** --kind の文字列を許容値に絞る。不正値は null。 */
 function toKind(value: string): "pc" | "monitor" | "furniture" | "other" | null {
   if (value === "pc" || value === "monitor" || value === "furniture" || value === "other") {
     return value

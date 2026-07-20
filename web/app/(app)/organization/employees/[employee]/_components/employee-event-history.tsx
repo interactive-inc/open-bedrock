@@ -15,8 +15,10 @@ type Props = {
   code: string
 }
 
-// 従業員の異動・在籍履歴セクション。閲覧権限がない場合 api は 403 を返すため、
-// 取得が Error のときはセクション自体を描画しない（空表示ではなく非表示）。
+/**
+ * 従業員の異動・在籍履歴セクション。閲覧権限がない場合 api は 403 を返すため、
+ * 取得が Error のときはセクション自体を描画しない（空表示ではなく非表示）。
+ */
 export async function EmployeeEventHistory(props: Props) {
   const events = await getEmployeeEventList({ employeeCode: props.code, kind: null })
 

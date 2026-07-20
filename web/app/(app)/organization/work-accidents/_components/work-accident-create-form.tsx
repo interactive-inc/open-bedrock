@@ -17,8 +17,10 @@ import {
 
 const initialState: WorkAccidentActionState = { ok: false, error: null }
 
-// 労災・事故の発生記録を登録するフォーム。native form + Server Action を useActionState で呼ぶ。
-// 対象者が特定できない事故もあるため従業員 ID は任意。
+/**
+ * 労災・事故の発生記録を登録するフォーム。native form + Server Action を useActionState で呼ぶ。
+ * 対象者が特定できない事故もあるため従業員 ID は任意。
+ */
 export function WorkAccidentCreateForm() {
   async function reduce(
     previousState: WorkAccidentActionState,

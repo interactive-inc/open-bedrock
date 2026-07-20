@@ -10,7 +10,7 @@ type Params = {
   offset?: number
 }
 
-// GET /business-trips/admin。全社の出張申請を横断で取得する。business_trip:read:all が無いと 403。
+/** GET /business-trips/admin。全社の出張申請を横断で取得する。business_trip:read:all が無いと 403。 */
 export async function getBusinessTripAdminList(
   filter: BusinessTripAdminFilter,
   params: Params = {},

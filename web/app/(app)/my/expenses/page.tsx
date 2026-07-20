@@ -81,7 +81,7 @@ export default async function MyExpensesPage() {
   )
 }
 
-// /expenses/me を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /expenses/me を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function MyExpensesTable() {
   const expenses = await getMyExpenses(null)
 

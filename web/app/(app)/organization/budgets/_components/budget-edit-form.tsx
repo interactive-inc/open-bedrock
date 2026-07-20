@@ -27,8 +27,10 @@ type Props = {
 
 const initialState: BudgetUpdateFormState = { ok: false, error: null }
 
-// 予算編集フォームを Dialog で開く。金額・名称・メモを変更して送信する。部署・会計期間は変更しない。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 予算編集フォームを Dialog で開く。金額・名称・メモを変更して送信する。部署・会計期間は変更しない。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function BudgetEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

@@ -22,7 +22,7 @@ type Props = {
 
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
-// 経費詳細画面。params.expense で対象を取得し、詳細と承認・却下フォームを描画する RSC。
+/** 経費詳細画面。params.expense で対象を取得し、詳細と承認・却下フォームを描画する RSC。 */
 export default async function ExpenseDetailPage(props: Props) {
   const [params, currentUser] = await Promise.all([props.params, getMe()])
 
@@ -54,7 +54,7 @@ type ViewProps = {
   viewerEmployeeId: number | null
 }
 
-// /expenses/:id を認証付きで取得して詳細カードと意思決定フォームを描画する非同期 RSC。
+/** /expenses/:id を認証付きで取得して詳細カードと意思決定フォームを描画する非同期 RSC。 */
 async function ExpenseDetailView(props: ViewProps) {
   const expenseId = Number(props.id)
 

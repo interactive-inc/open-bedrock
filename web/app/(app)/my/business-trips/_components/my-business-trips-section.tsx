@@ -2,7 +2,7 @@ import { MyBusinessTripsList } from "@/app/(app)/my/business-trips/_components/m
 import { FetchError } from "@/components/fetch-error"
 import { listMyBusinessTrips } from "@/lib/api/list-my-business-trips"
 
-// 自分の出張申請を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の出張申請を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyBusinessTripsSection() {
   const businessTrips = await listMyBusinessTrips()
 

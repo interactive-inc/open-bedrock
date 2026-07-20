@@ -1,10 +1,7 @@
-// api/src/employee-event の *-schema.ts と同形の手書き type。
-// api と疎結合にするため api 側からは import しない（snake_case で受ける）。
-
-// 異動・在籍イベントの種別。join=入社 / transfer=異動 / leave_of_absence=休職 / return=復職 / retire=退職。
+/** 異動・在籍イベントの種別。join=入社 / transfer=異動 / leave_of_absence=休職 / return=復職 / retire=退職。 */
 export type EmployeeEventKind = "join" | "transfer" | "leave_of_absence" | "return" | "retire"
 
-// GET /employee-events のレスポンス要素。api は snake_case で返す。
+/** GET /employee-events のレスポンス要素。api は snake_case で返す。 */
 export type EmployeeEventResponse = {
   id: number
   employee_id: number
@@ -16,13 +13,13 @@ export type EmployeeEventResponse = {
   created_at: string
 }
 
-// GET /employee-events のクエリ。employee_code で対象を指定し、kind で絞り込める。
+/** GET /employee-events のクエリ。employee_code で対象を指定し、kind で絞り込める。 */
 export type EmployeeEventSearchQuery = {
   employeeCode: string
   kind: EmployeeEventKind | null
 }
 
-// POST /employee-events のリクエストボディ。
+/** POST /employee-events のリクエストボディ。 */
 export type EmployeeEventCreateRequest = {
   employee_id: number
   kind: EmployeeEventKind

@@ -3,7 +3,7 @@ import { Goal } from "@/domain/goal/goal.entity"
 import { buildGoalTree } from "@/lib/goal/build-goal-tree"
 import type { GoalOwnerType } from "@/domain/goal/goal.entity"
 
-// テスト用の目標を組み立てる。
+/** テスト用の目標を組み立てる。 */
 function goal(props: { id: number; ownerType: GoalOwnerType; parentGoalId: number | null }): Goal {
   return Goal.fromRow({
     id: props.id,

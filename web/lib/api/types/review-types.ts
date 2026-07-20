@@ -1,14 +1,11 @@
-// api/src/interface/review の route ハンドラのレスポンス/リクエストと同形の手書き type。
-// api と疎結合に保つため z.infer を import せずここで独立に定義する。
-
-// status / reviewer_type は API 上 DB の text 列をそのまま返すため string。
+/** status / reviewer_type は API 上 DB の text 列をそのまま返すため string。 */
 export type ReviewCycleStatus = string
 
 export type ReviewerType = string
 
 export type ReviewFormStatus = string
 
-// GET /review-cycles の各要素。POST /review-cycles, open/close のレスポンスも同形。
+/** GET /review-cycles の各要素。POST /review-cycles, open/close のレスポンスも同形。 */
 export type ReviewCycleResponse = {
   id: number
   title: string
@@ -17,7 +14,7 @@ export type ReviewCycleResponse = {
   due_date: string | null
 }
 
-// POST /review-cycles のリクエスト body（管理者が draft のサイクルを作成）。
+/** POST /review-cycles のリクエスト body（管理者が draft のサイクルを作成）。 */
 export type ReviewCycleCreateRequest = {
   title: string
   period: string
@@ -33,14 +30,14 @@ export type ReviewCyclePolicy = {
   peer_count: number
 }
 
-// PUT /review-cycles/:cycle_id のリクエスト body（管理者がサイクルの題目・期間・締切を更新）。
+/** PUT /review-cycles/:cycle_id のリクエスト body（管理者がサイクルの題目・期間・締切を更新）。 */
 export type ReviewCycleUpdateRequest = {
   title: string
   period: string
   dueDate: string | null
 }
 
-// GET /review-forms/me の各要素。POST /review-forms/:form_id/submit のレスポンスも同形。
+/** GET /review-forms/me の各要素。POST /review-forms/:form_id/submit のレスポンスも同形。 */
 export type ReviewFormResponse = {
   id: number
   cycle_id: number
@@ -53,14 +50,14 @@ export type ReviewFormResponse = {
   submitted_at: string | null
 }
 
-// POST /review-cycles/:cycle_id/forms/bulk のリクエスト各要素（被評価者と評価者種別の組）。
+/** POST /review-cycles/:cycle_id/forms/bulk のリクエスト各要素（被評価者と評価者種別の組）。 */
 export type ReviewFormBulkItem = {
   subject_employee_id: number
   reviewer_employee_id: number
   reviewer_type: "self" | "manager" | "peer" | "subordinate"
 }
 
-// POST /review-forms/:form_id/submit のリクエスト body。
+/** POST /review-forms/:form_id/submit のリクエスト body。 */
 export type ReviewFormSubmitRequest = {
   score: number | null
   // api 側の json バリデータは可変配列を要求するため readonly にしない。
@@ -68,7 +65,7 @@ export type ReviewFormSubmitRequest = {
   comment: string | null
 }
 
-// GET /review-cycles/:cycle_id/results/:employee_code のレスポンス（集計済みの評価結果）。
+/** GET /review-cycles/:cycle_id/results/:employee_code のレスポンス（集計済みの評価結果）。 */
 export type ReviewResultResponse = {
   cycle_id: number
   subject_employee_id: number

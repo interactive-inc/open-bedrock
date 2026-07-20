@@ -7,13 +7,13 @@ import { deleteApplicationTemplate } from "@/lib/api/delete-application-template
 import { getMe } from "@/lib/api/get-me"
 import { updateApplicationTemplate } from "@/lib/api/update-application-template"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ApplicationTemplateFormState = {
   ok: boolean
   error: string | null
 }
 
-// approver_roles はカンマ区切りのテキストから空要素を除いた配列にする。
+/** approver_roles はカンマ区切りのテキストから空要素を除いた配列にする。 */
 function parseApproverRoles(value: FormDataEntryValue | null): ReadonlyArray<string> {
   const text = typeof value === "string" ? value : ""
 
@@ -23,7 +23,7 @@ function parseApproverRoles(value: FormDataEntryValue | null): ReadonlyArray<str
     .filter((role) => role !== "")
 }
 
-// schema_json は JSON テキストを解析する。空文字は空オブジェクト。解析失敗は Error。
+/** schema_json は JSON テキストを解析する。空文字は空オブジェクト。解析失敗は Error。 */
 function parseSchemaJson(value: FormDataEntryValue | null): unknown {
   const text = typeof value === "string" ? value.trim() : ""
 
@@ -38,7 +38,7 @@ function parseSchemaJson(value: FormDataEntryValue | null): unknown {
   }
 }
 
-// テンプレート作成 Server Action（管理権限）。code/name/category 必須。
+/** テンプレート作成 Server Action（管理権限）。code/name/category 必須。 */
 export async function createApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
@@ -107,7 +107,7 @@ export async function createApplicationTemplateAction(
   return { ok: true, error: null }
 }
 
-// テンプレート変更 Server Action（管理権限）。code は hidden input、内容は各 input で受け取る。
+/** テンプレート変更 Server Action（管理権限）。code は hidden input、内容は各 input で受け取る。 */
 export async function updateApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,
@@ -175,7 +175,7 @@ export async function updateApplicationTemplateAction(
   return { ok: true, error: null }
 }
 
-// テンプレート削除 Server Action（管理権限）。code を hidden input で受け取る。
+/** テンプレート削除 Server Action（管理権限）。code を hidden input で受け取る。 */
 export async function deleteApplicationTemplateAction(
   _previousState: ApplicationTemplateFormState,
   formData: FormData,

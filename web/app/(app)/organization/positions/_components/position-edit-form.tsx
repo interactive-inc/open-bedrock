@@ -25,7 +25,7 @@ type Props = {
 
 const initialState: PositionActionState = { ok: false, error: null }
 
-// 役職編集フォームを Dialog で開く。コード・名称・ランク・説明を変更して送信する。
+/** 役職編集フォームを Dialog で開く。コード・名称・ランク・説明を変更して送信する。 */
 export function PositionEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

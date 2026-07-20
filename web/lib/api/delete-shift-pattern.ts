@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /shift/patterns/:id。特権ロールがシフトパターンを削除する。成功時は null。
+/** DELETE /shift/patterns/:id。特権ロールがシフトパターンを削除する。成功時は null。 */
 export async function deleteShiftPattern(id: number): Promise<null | Error> {
   const client = await createClient()
 

@@ -9,8 +9,10 @@ import { canManageShift } from "@/lib/shift/can-manage-shift"
 
 export const metadata = { title: "シフトを割り当て" }
 
-// シフト割当作成画面（特権ロールのみ）。作成後は /shift/manage へ redirect する。
-// 権限が無いユーザーには 404 を返し UI を露出しない。
+/**
+ * シフト割当作成画面（特権ロールのみ）。作成後は /shift/manage へ redirect する。
+ * 権限が無いユーザーには 404 を返し UI を露出しない。
+ */
 export default async function ShiftAssignmentNewPage() {
   const currentUser = await getMe()
 

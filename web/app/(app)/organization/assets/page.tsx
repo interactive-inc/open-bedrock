@@ -38,7 +38,7 @@ type Props = {
   searchParams: Promise<{ kind?: string; status?: string }>
 }
 
-// 物品一覧画面。種別/状態で絞り込み、RSC でサーバ取得してテーブル表示する。
+/** 物品一覧画面。種別/状態で絞り込み、RSC でサーバ取得してテーブル表示する。 */
 export default async function AssetsPage(props: Props) {
   const [searchParams, currentUser] = await Promise.all([props.searchParams, getMe()])
 
@@ -100,7 +100,7 @@ type TableProps = {
   status: AssetStatus | null
 }
 
-// /assets を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /assets を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function AssetsTable(props: TableProps) {
   const assets = await getAssetList({ kind: props.kind, status: props.status })
 

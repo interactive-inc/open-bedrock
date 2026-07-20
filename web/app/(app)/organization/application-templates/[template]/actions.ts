@@ -9,7 +9,7 @@ export type SubmitState = {
   error: string | null
 }
 
-// 入力 JSON 文字列を payload オブジェクトへ変換する。空文字は空オブジェクト扱い。
+/** 入力 JSON 文字列を payload オブジェクトへ変換する。空文字は空オブジェクト扱い。 */
 function toPayload(rawPayload: string): Record<string, unknown> | Error {
   const trimmed = rawPayload.trim()
 
@@ -32,7 +32,7 @@ function toPayload(rawPayload: string): Record<string, unknown> | Error {
   return { ...parsed }
 }
 
-// 申請提出 Server Action。useActionState から呼ばれ、成功時は作成された申請詳細へ redirect。
+/** 申請提出 Server Action。useActionState から呼ばれ、成功時は作成された申請詳細へ redirect。 */
 export async function submitApplicationAction(
   previousState: SubmitState,
   formData: FormData,

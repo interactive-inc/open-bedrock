@@ -12,12 +12,14 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: ResignationActionState = { ok: false, error: null }
 
-// 退職申請フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 退職申請フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function ResignationCreateForm() {
   const router = useRouter()
 
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: ResignationActionState,
     formData: FormData,

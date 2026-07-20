@@ -5,7 +5,7 @@ import { getLocale } from "@/lib/i18n/get-locale"
 
 export const metadata = { title: "設定" }
 
-// 個人設定画面。表示テーマ・表示言語など、端末やユーザーごとの表示設定を扱う。
+/** 個人設定画面。表示テーマ・表示言語など、端末やユーザーごとの表示設定を扱う。 */
 export default async function SettingsPage() {
   const locale = await getLocale()
 

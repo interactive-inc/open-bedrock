@@ -27,8 +27,10 @@ type Props = {
 
 const initialState: AssetUpdateFormState = { ok: false, error: null }
 
-// 物品編集フォームを Dialog で開く。名称・種別・シリアル・購入日を変更して送信する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 物品編集フォームを Dialog で開く。名称・種別・シリアル・購入日を変更して送信する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function AssetEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

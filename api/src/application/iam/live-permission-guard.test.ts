@@ -5,12 +5,12 @@ import { UpdateRole } from "@/application/iam/update-role"
 import type { Context, SessionPayload } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import {
   replaceAccountRolesWithPermissionSets,
   seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+} from "@/interface/test-helpers/seed-effective-admin"
 import { ForbiddenError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

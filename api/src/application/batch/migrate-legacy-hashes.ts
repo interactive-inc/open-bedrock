@@ -1,8 +1,3 @@
-// 旧形式ハッシュ（固定ソルト SHA-256）を PBKDF2 ラップ形式に一括移行するユースケース。
-// ユーザーの平文パスワード不要で実行できる hash-of-hash 方式。
-// 認証情報は identities.secret が正で、その password identity を対象にする。
-// 次回ログイン時に authenticate-employee が純正 PBKDF2 へ昇格する。
-
 import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
@@ -15,6 +10,12 @@ export type MigrationResult = {
   failed: number
 }
 
+/**
+ * 旧形式ハッシュ（固定ソルト SHA-256）を PBKDF2 ラップ形式に一括移行する。
+ * ユーザーの平文パスワード不要で実行できる hash-of-hash 方式。
+ * 認証情報は identities.secret が正で、その password identity を対象にする。
+ * 次回ログイン時に authenticate-employee が純正 PBKDF2 へ昇格する
+ */
 export class MigrateLegacyHashes {
   constructor(private readonly c: Context) {}
 

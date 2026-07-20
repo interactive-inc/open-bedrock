@@ -10,7 +10,7 @@ type Props = {
   limit: number
 }
 
-// 絞り込み条件で GET /employees を実行し、結果テーブルを描画する非同期 RSC。
+/** 絞り込み条件で GET /employees を実行し、結果テーブルを描画する非同期 RSC。 */
 export async function EmployeeListSection(props: Props) {
   const result = await getEmployeeList(props.filter, { limit: props.limit, offset: props.offset })
 

@@ -16,14 +16,16 @@ import {
 import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ResignationActionState = {
   ok: boolean
   error: string | null
 }
 
-// 人事が退職申請を受理する Server Action。resignation_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が退職申請を受理する Server Action。resignation_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function acceptResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
@@ -51,8 +53,10 @@ export async function acceptResignationAction(
   return { ok: true, error: null }
 }
 
-// 人事が退職申請を却下する Server Action。resignation_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が退職申請を却下する Server Action。resignation_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function rejectResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
@@ -80,7 +84,7 @@ export async function rejectResignationAction(
   return { ok: true, error: null }
 }
 
-// id 用の FormData 値を取り出す。未入力は null。
+/** id 用の FormData 値を取り出す。未入力は null。 */
 function toResignationIdText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -89,8 +93,10 @@ function toResignationIdText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// 退職申請作成 Server Action。resignation_date 必須、last_working_date と reason は任意。
-// 成功時は /resignations を revalidate して一覧へ反映する。
+/**
+ * 退職申請作成 Server Action。resignation_date 必須、last_working_date と reason は任意。
+ * 成功時は /resignations を revalidate して一覧へ反映する。
+ */
 export async function createResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
@@ -114,7 +120,7 @@ export async function createResignationAction(
   return { ok: true, error: null }
 }
 
-// 退職申請変更 Server Action。resignation_id 必須。本人以外の変更は api がエラーを返す。
+/** 退職申請変更 Server Action。resignation_id 必須。本人以外の変更は api がエラーを返す。 */
 export async function updateResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
@@ -144,7 +150,7 @@ export async function updateResignationAction(
   return { ok: true, error: null }
 }
 
-// 退職申請取消 Server Action。resignation_id 必須。成功時は /resignations を revalidate する。
+/** 退職申請取消 Server Action。resignation_id 必須。成功時は /resignations を revalidate する。 */
 export async function cancelResignationAction(
   previousState: ResignationActionState,
   formData: FormData,
@@ -174,7 +180,7 @@ type ResignationFields = {
   reason: string | null
 }
 
-// FormData から退職申請の共通フィールドを取り出して検証する。不正時は Error。
+/** FormData から退職申請の共通フィールドを取り出して検証する。不正時は Error。 */
 function toResignationFields(formData: FormData): ResignationFields | Error {
   const resignationDate = toRequiredIsoDate(formData.get("resignation_date"), "退職希望日")
 

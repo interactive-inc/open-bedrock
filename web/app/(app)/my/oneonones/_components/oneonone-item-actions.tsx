@@ -26,7 +26,7 @@ type Props = {
 
 const initialState: OneOnOneActionState = { ok: false, error: null }
 
-// 1on1 カードの操作群。記録内容の変更（Dialog）と削除ボタンを横並びにする client コンポーネント。
+/** 1on1 カードの操作群。記録内容の変更（Dialog）と削除ボタンを横並びにする client コンポーネント。 */
 export function OneOnOneItemActions(props: Props) {
   return (
     <TableRowActions>
@@ -37,7 +37,7 @@ export function OneOnOneItemActions(props: Props) {
   )
 }
 
-// 記録内容を変更する Dialog フォーム。topics / manager_note / next_action を編集して送信する。
+/** 記録内容を変更する Dialog フォーム。topics / manager_note / next_action を編集して送信する。 */
 function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
   const [open, setOpen] = useState(false)
 
@@ -124,7 +124,7 @@ function UpdateOneOnOneDialog(props: { oneOnOne: OneOnOne }) {
   )
 }
 
-// 1on1 削除ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 1on1 削除ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function DeleteOneOnOneButton(props: { oneOnOneId: string }) {
   async function reduce(
     previousState: OneOnOneActionState,

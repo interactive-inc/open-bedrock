@@ -208,7 +208,7 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // employee_id と templateCode の組み合わせで completed 以外の割り当てを探す。
+  /** employee_id と templateCode の組み合わせで completed 以外の割り当てを探す。 */
   async findActiveByEmployeeAndTemplate(
     employeeId: number,
     templateCode: string,
@@ -238,7 +238,7 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // 指定テンプレートコードに紐づく in_progress 状態の割り当て数を返す。
+  /** 指定テンプレートコードに紐づく in_progress 状態の割り当て数を返す。 */
   async countActiveByTemplateCode(templateCode: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
@@ -259,9 +259,11 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // タスク 1 件を完了にする。条件付き UPDATE で pending → done に変更し、
-  // assignment status を同一 batch 内の SQL 集計から再計算する。
-  // タスクが既に done の場合はガードで abort → null を返す。
+  /**
+   * タスク 1 件を完了にする。条件付き UPDATE で pending → done に変更し、
+   * assignment status を同一 batch 内の SQL 集計から再計算する。
+   * タスクが既に done の場合はガードで abort → null を返す。
+   */
   async completeTask(
     taskId: number,
     assignmentId: number,
@@ -298,9 +300,11 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // タスク 1 件の完了を取り消す。条件付き UPDATE で done → pending に変更し、
-  // assignment status を同一 batch 内の SQL 集計から再計算する。
-  // タスクが既に pending の場合はガードで abort → null を返す。
+  /**
+   * タスク 1 件の完了を取り消す。条件付き UPDATE で done → pending に変更し、
+   * assignment status を同一 batch 内の SQL 集計から再計算する。
+   * タスクが既に pending の場合はガードで abort → null を返す。
+   */
   async uncompleteTask(
     taskId: number,
     assignmentId: number,
@@ -336,8 +340,10 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  // 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
-  // assignment を先に DELETE し、ガード文で 0 行なら後続の tasks DELETE を abort する。
+  /**
+   * 割り当てとその配下タスクを削除する。status が completed のときは削除せず null を返す。
+   * assignment を先に DELETE し、ガード文で 0 行なら後続の tasks DELETE を abort する。
+   */
   async delete(assignmentId: number): Promise<true | null | Error> {
     try {
       const db = this.c.env.DB

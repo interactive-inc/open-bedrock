@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /expenses/:id/approve。任意コメント付きで経費を承認する。
+/** POST /expenses/:id/approve。任意コメント付きで経費を承認する。 */
 export async function approveExpense(id: number, comment: string | null) {
   const client = await createClient()
 

@@ -12,7 +12,7 @@ export type DocumentActionState = {
   error: string | null
 }
 
-// 文書登録 Server Action。title/location 必須、その他は任意。
+/** 文書登録 Server Action。title/location 必須、その他は任意。 */
 export async function registerDocumentAction(
   previousState: DocumentActionState,
   formData: FormData,
@@ -49,7 +49,7 @@ export async function registerDocumentAction(
   return { ok: true, error: null }
 }
 
-// 文書更新 Server Action。document_id/title/location 必須。
+/** 文書更新 Server Action。document_id/title/location 必須。 */
 export async function updateDocumentAction(
   previousState: DocumentActionState,
   formData: FormData,

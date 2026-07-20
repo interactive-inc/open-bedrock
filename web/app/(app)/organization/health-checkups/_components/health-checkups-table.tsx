@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
   declined: "辞退",
 }
 
-// 健診実施記録テーブル。結果は一切表示せず、種別・年度・実施日・受診状態のみを出す。
+/** 健診実施記録テーブル。結果は一切表示せず、種別・年度・実施日・受診状態のみを出す。 */
 export function HealthCheckupsTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="実施記録がありません" />

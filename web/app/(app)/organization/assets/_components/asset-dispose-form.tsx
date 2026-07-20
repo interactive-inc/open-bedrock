@@ -15,8 +15,10 @@ type Props = {
 
 const initialState: AssetDisposeFormState = { ok: false, error: null }
 
-// 物品廃棄フォーム。理由（必須）と廃棄日（任意）を送る。在庫の物品にだけ表示する想定。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 物品廃棄フォーム。理由（必須）と廃棄日（任意）を送る。在庫の物品にだけ表示する想定。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function AssetDisposeForm(props: Props) {
   async function reduce(
     previousState: AssetDisposeFormState,

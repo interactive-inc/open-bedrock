@@ -17,8 +17,10 @@ const levelOptions = Array.from(
   (_, index) => FORM_CONSTRAINTS.skill.levelMin + index,
 )
 
-// 本人のスキル登録/更新フォーム。useActionState で updateSkillAction を呼ぶ。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 本人のスキル登録/更新フォーム。useActionState で updateSkillAction を呼ぶ。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function SkillUpdateForm() {
   async function reduce(
     previousState: SkillUpdateState,

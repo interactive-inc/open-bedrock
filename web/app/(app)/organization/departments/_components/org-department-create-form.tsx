@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 
 const initialState: OrgDepartmentActionState = { ok: false, error: null }
 
-// 部署ノード作成フォーム。コード・マスタ ID・表示順は必須、親と責任者は任意。成功時は一覧へ遷移する。
+/** 部署ノード作成フォーム。コード・マスタ ID・表示順は必須、親と責任者は任意。成功時は一覧へ遷移する。 */
 export function OrgDepartmentCreateForm() {
   const router = useRouter()
 

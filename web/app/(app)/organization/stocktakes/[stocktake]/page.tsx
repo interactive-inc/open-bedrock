@@ -23,7 +23,7 @@ type Props = {
   params: Promise<{ stocktake: string }>
 }
 
-// 棚卸し詳細画面。RSC で 1 件取得し、対象資産ごとの確認状況と操作を表示する。
+/** 棚卸し詳細画面。RSC で 1 件取得し、対象資産ごとの確認状況と操作を表示する。 */
 export default async function StocktakeDetailPage(props: Props) {
   await requirePermission("asset:manage")
 

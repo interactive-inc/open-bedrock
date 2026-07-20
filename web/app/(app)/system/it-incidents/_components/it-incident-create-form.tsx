@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ItIncidentActionState = { ok: false, error: null }
 
-// インシデント記録フォーム。発生日時・タイトル・概要が必須。成功時は /it-incidents へ戻る。
+/** インシデント記録フォーム。発生日時・タイトル・概要が必須。成功時は /it-incidents へ戻る。 */
 export function ItIncidentCreateForm() {
   const router = useRouter()
 

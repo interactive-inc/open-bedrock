@@ -17,7 +17,7 @@ type Params = {
   sort?: ExpenseAdminSort
 }
 
-// GET /expenses/admin。全社の経費申請を横断で取得する。expense:read:all が無いと 403。
+/** GET /expenses/admin。全社の経費申請を横断で取得する。expense:read:all が無いと 403。 */
 export async function getExpenseAdminList(filter: ExpenseAdminFilter, params: Params = {}) {
   const client = await createClient()
 

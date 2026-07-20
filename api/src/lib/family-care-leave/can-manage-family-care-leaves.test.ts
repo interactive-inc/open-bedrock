@@ -1,5 +1,5 @@
 import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageFamilyCareLeaves", () => {

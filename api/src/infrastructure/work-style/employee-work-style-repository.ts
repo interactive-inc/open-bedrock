@@ -6,7 +6,7 @@ import { count, desc, eq } from "drizzle-orm"
 export class EmployeeWorkStyleRepository {
   constructor(private readonly c: Context) {}
 
-  // 従業員の勤務形態を開始日の降順で返す。
+  /** 従業員の勤務形態を開始日の降順で返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number

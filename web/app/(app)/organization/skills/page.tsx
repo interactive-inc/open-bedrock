@@ -12,8 +12,10 @@ type Props = {
   searchParams: Promise<{ q?: string; category?: string }>
 }
 
-// /skills スキル一覧画面。検索語 q とカテゴリ category を searchParams から受け取り、
-// 非同期テーブルは Suspense 境界で Skeleton をフォールバックにする。
+/**
+ * /skills スキル一覧画面。検索語 q とカテゴリ category を searchParams から受け取り、
+ * 非同期テーブルは Suspense 境界で Skeleton をフォールバックにする。
+ */
 export default async function SkillsPage(props: Props) {
   const params = await props.searchParams
 

@@ -13,8 +13,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// GET /onboarding/me を取得して自分のタスク一覧を描画する非同期 RSC。
-// pending のタスクには完了ボタン、done のタスクには取り消しボタンを出す。
+/**
+ * GET /onboarding/me を取得して自分のタスク一覧を描画する非同期 RSC。
+ * pending のタスクには完了ボタン、done のタスクには取り消しボタンを出す。
+ */
 export async function MyTasksList() {
   const tasks = await getOnboardingMe()
 

@@ -13,7 +13,7 @@ type Props = {
   rows: ReadonlyArray<GoalDoneRate>
 }
 
-// 期間別の目標達成（done）率を表で並べる。
+/** 期間別の目標達成（done）率を表で並べる。 */
 export function GoalDoneRateTable(props: Props) {
   if (props.rows.length === 0) {
     return <p className="text-sm text-muted-foreground">目標がありません。</p>

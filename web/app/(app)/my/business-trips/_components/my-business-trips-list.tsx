@@ -38,8 +38,10 @@ type Props = {
   businessTrips: ReadonlyArray<BusinessTripResponse>
 }
 
-// 自分の出張申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
-// モバイル幅ではテーブルではなく1件1カードの label:value レイアウトに切り替える。
+/**
+ * 自分の出張申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+ * モバイル幅ではテーブルではなく1件1カードの label:value レイアウトに切り替える。
+ */
 export function MyBusinessTripsList(props: Props) {
   const isMobile = useIsMobile()
 
@@ -125,7 +127,7 @@ export function MyBusinessTripsList(props: Props) {
   )
 }
 
-// カード表示内の label:value 行。
+/** カード表示内の label:value 行。 */
 function BusinessTripField(props: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-2">
@@ -135,7 +137,7 @@ function BusinessTripField(props: { label: string; children: React.ReactNode }) 
   )
 }
 
-// 出張申請変更フォームを Dialog で開く。行き先・期間・目的・概算費用を編集して送信する。
+/** 出張申請変更フォームを Dialog で開く。行き先・期間・目的・概算費用を編集して送信する。 */
 function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -230,7 +232,7 @@ function UpdateBusinessTripDialog(props: { businessTrip: BusinessTripResponse })
   )
 }
 
-// 出張申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 出張申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelBusinessTripButton(props: { businessTripId: string }) {
   const [_state, formAction, pending] = useFormAction(
     cancelBusinessTripAction,

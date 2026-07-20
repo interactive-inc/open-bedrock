@@ -4,7 +4,7 @@ import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { Card } from "@/components/ui/card"
 import { getLeaveBalanceMe } from "@/lib/api/get-leave-balance-me"
 
-// /leave/balance/me を認証付きで取得し、休暇種別ごとの残日数カードを描画する非同期 RSC。
+/** /leave/balance/me を認証付きで取得し、休暇種別ごとの残日数カードを描画する非同期 RSC。 */
 export async function LeaveBalanceCards() {
   const balances = await getLeaveBalanceMe()
 

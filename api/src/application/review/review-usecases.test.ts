@@ -9,11 +9,9 @@ import { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-
-// --- seed helpers ---
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
   const created = await new ReviewCycleRepository(context).create(
@@ -68,8 +66,6 @@ async function seedForm(
   return Number(formId)
 }
 
-// --- CreateReviewCycle ---
-
 describe("CreateReviewCycle", () => {
   test("creates a draft cycle with admin role", async () => {
     const { context } = createTestContext()
@@ -119,8 +115,6 @@ describe("CreateReviewCycle", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
-
-// --- DeleteReviewCycle ---
 
 describe("DeleteReviewCycle", () => {
   test("deletes a draft cycle", async () => {
@@ -213,8 +207,6 @@ describe("DeleteReviewCycle", () => {
     expectApplicationError(result, ConflictError, "not_deletable")
   })
 })
-
-// --- SetReviewCycleStatus ---
 
 describe("SetReviewCycleStatus", () => {
   test("transitions draft to open", async () => {
@@ -310,8 +302,6 @@ describe("SetReviewCycleStatus", () => {
   })
 })
 
-// --- UpdateReviewCycle ---
-
 describe("UpdateReviewCycle", () => {
   test("updates a draft cycle", async () => {
     const { context } = createTestContext()
@@ -403,8 +393,6 @@ describe("UpdateReviewCycle", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
-
-// --- SubmitReviewForm ---
 
 describe("SubmitReviewForm", () => {
   test("submits a pending form in an open cycle", async () => {

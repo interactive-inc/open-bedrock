@@ -6,7 +6,7 @@ import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"
 export class FamilyCareLeaveRepository {
   constructor(private readonly c: Context) {}
 
-  // 申出者本人の休業申出を開始日の昇順で返す。
+  /** 申出者本人の休業申出を開始日の昇順で返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number
@@ -27,10 +27,12 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 同一社員の未取消（requested）申出のうち、指定期間と重なるものを返す。
-  // 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
-  // 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
-  // excludeId を渡すと当該申出自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
+  /**
+   * 同一社員の未取消（requested）申出のうち、指定期間と重なるものを返す。
+   * 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
+   * 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
+   * excludeId を渡すと当該申出自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
+   */
   async findOverlapping(props: {
     employeeId: number
     startDate: string
@@ -57,7 +59,7 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 休業申出 id で1件取得する。存在しなければ null。
+  /** 休業申出 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<FamilyCareLeave | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -73,9 +75,11 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
-  // 同一社員の未取消（requested）申出と期間が重なる行があれば INSERT をスキップし null を返す。
-  // 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + inclusive）。
+  /**
+   * 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
+   * 同一社員の未取消（requested）申出と期間が重なる行があれば INSERT をスキップし null を返す。
+   * 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + inclusive）。
+   */
   async create(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
       const result = await this.c.var.database.run(
@@ -103,10 +107,12 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 重複チェックと UPDATE をアトミックに行い TOCTOU 競合を防ぐ。
-  // 自身を除外した同一社員の未取消（requested）申出と期間が重なる行があれば UPDATE をスキップし null を返す。
-  // status が "requested" でない行も 0 行更新で null。
-  // 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + 自身除外 + inclusive）。
+  /**
+   * 重複チェックと UPDATE をアトミックに行い TOCTOU 競合を防ぐ。
+   * 自身を除外した同一社員の未取消（requested）申出と期間が重なる行があれば UPDATE をスキップし null を返す。
+   * status が "requested" でない行も 0 行更新で null。
+   * 重複判定は findOverlapping と同一スコープ・同一比較（employee_id 一致 + status = 'requested' + 自身除外 + inclusive）。
+   */
   async updateIfNoOverlap(
     familyCareLeave: FamilyCareLeave,
   ): Promise<FamilyCareLeave | null | Error> {
@@ -139,7 +145,7 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 休業申出の種別・期間・備考を更新する。status が "requested" の行のみ対象。
+  /** 休業申出の種別・期間・備考を更新する。status が "requested" の行のみ対象。 */
   async update(familyCareLeave: FamilyCareLeave): Promise<FamilyCareLeave | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -166,7 +172,7 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -189,7 +195,7 @@ export class FamilyCareLeaveRepository {
     }
   }
 
-  // 休業申出を削除する。status が "requested" の行のみ対象。
+  /** 休業申出を削除する。status が "requested" の行のみ対象。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

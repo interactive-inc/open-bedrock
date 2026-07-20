@@ -14,7 +14,7 @@ export const metadata = { title: "申請" }
 
 type SearchParams = Promise<{ page?: string; size?: string }>
 
-// 自分の申請一覧画面。RSC でサーバ取得し、承認待ちは変更・取り下げ操作付きで表示する。
+/** 自分の申請一覧画面。RSC でサーバ取得し、承認待ちは変更・取り下げ操作付きで表示する。 */
 export default async function MyApplicationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 

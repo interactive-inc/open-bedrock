@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /ringi/inbox。承認者向けの承認待ち稟議一覧。
+/** GET /ringi/inbox。承認者向けの承認待ち稟議一覧。 */
 export async function getRingiInbox() {
   const client = await createClient()
 

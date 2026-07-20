@@ -19,7 +19,7 @@ const PAGE_SIZE = 20
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の貸与品予約を横断で確認する画面。rental:read:all を持つロールのみ表示できる。
+/** 全社の貸与品予約を横断で確認する画面。rental:read:all を持つロールのみ表示できる。 */
 export default async function AdminRentalsPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

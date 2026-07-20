@@ -15,7 +15,7 @@ type Props = {
 
 const initialState: FamilyCareLeaveActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。requested の申出を人事が承認/取消する。
+/** admin 一覧の行アクション。requested の申出を人事が承認/取消する。 */
 export function FamilyCareLeaveAdminActions(props: Props) {
   const approve = useActionState(approveFamilyCareLeaveAction, initialState)
 

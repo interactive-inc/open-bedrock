@@ -5,10 +5,10 @@ import { UpdateApplication } from "@/application/application/update-application"
 import { WithdrawApplication } from "@/application/application/withdraw-application"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import { describe, expect, test } from "bun:test"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 
 async function seedPending(
   repository: ApplicationRepository,

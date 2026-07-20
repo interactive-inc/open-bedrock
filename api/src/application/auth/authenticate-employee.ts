@@ -33,9 +33,11 @@ function auditUnavailable(cause: unknown): UnavailableError {
   return new UnavailableError("invalid email or password", "audit_unavailable", { cause })
 }
 
-// メールとパスワードを照合し、成功時にアクセストークンを発行する。
-// 認証は identities(provider=password, subject=正規化email) を正とし、account/employee を検証する。
-// 旧フォーマット（固定ソルト SHA-256）またはラップ済み旧形式は、新フォーマット（PBKDF2）で再ハッシュして書き戻す。
+/**
+ * メールとパスワードを照合し、成功時にアクセストークンを発行する。
+ * 認証は identities(provider=password, subject=正規化email) を正とし、account/employee を検証する。
+ * 旧フォーマット（固定ソルト SHA-256）またはラップ済み旧形式は、新フォーマット（PBKDF2）で再ハッシュして書き戻す。
+ */
 export class AuthenticateEmployee {
   constructor(private readonly c: Context) {}
 

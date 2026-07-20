@@ -2,7 +2,7 @@ import type { EmployeeStatus } from "@/lib/schemas"
 import type { schema } from "@/schema"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
-// Workers のバインディング（wrangler の vars / secrets / D1）。
+/** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
   DB: D1Database
   JWT_SECRET: string
@@ -30,8 +30,10 @@ export type RequestAuditContext = {
   externalRequestId: string | null
 }
 
-// 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
-// permissions/roleKeys が認可の正。認可判定は hasPermission(session, key) に委譲する。
+/**
+ * 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
+ * permissions/roleKeys が認可の正。認可判定は hasPermission(session, key) に委譲する。
+ */
 export type SessionPayload = {
   accountId: number
   employeeId: number
@@ -40,20 +42,20 @@ export type SessionPayload = {
   roleKeys: ReadonlyArray<string>
 }
 
-// リクエストスコープの変数。database に Drizzle、session に本人を載せる。
+/** リクエストスコープの変数。database に Drizzle、session に本人を載せる。 */
 export type Variables = {
   database: DrizzleD1Database<typeof schema>
   session: SessionPayload | null
   auditContext: RequestAuditContext
 }
 
-// Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。
+/** Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。 */
 export type HonoEnv = {
   Bindings: Bindings
   Variables: Variables
 }
 
-// リポジトリ・ユースケースが受け取る Context の最小型。
+/** リポジトリ・ユースケースが受け取る Context の最小型。 */
 export type Context = {
   var: Variables
   env: Bindings

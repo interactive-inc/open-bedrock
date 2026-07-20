@@ -13,8 +13,10 @@ type Props = {
 
 const initialState: ThanksActionState = { ok: false, error: null }
 
-// 1つの景品に対する交換申請ボタン。useActionState で requestRedemptionAction を呼ぶ。
-// reducer 内で結果に応じて toast() する（useEffect は使わない）。
+/**
+ * 1つの景品に対する交換申請ボタン。useActionState で requestRedemptionAction を呼ぶ。
+ * reducer 内で結果に応じて toast() する（useEffect は使わない）。
+ */
 export function RewardRedeemForm(props: Props) {
   async function reduce(
     previousState: ThanksActionState,

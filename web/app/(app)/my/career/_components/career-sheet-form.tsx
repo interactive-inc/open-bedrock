@@ -16,10 +16,12 @@ type Props = {
 
 const initialState: CareerSheetFormState = { ok: false, error: null }
 
-// 本人のキャリアシート編集フォーム。useActionState で更新 Server Action を呼ぶ。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 本人のキャリアシート編集フォーム。useActionState で更新 Server Action を呼ぶ。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function CareerSheetForm(props: Props) {
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: CareerSheetFormState,
     formData: FormData,

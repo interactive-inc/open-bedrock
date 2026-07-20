@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /licenses を session トークン付きで呼び、ライセンス・SaaS 台帳一覧を取得する。
+/** GET /licenses を session トークン付きで呼び、ライセンス・SaaS 台帳一覧を取得する。 */
 export async function getLicenseList(query: {
   status?: "active" | "cancelled"
   limit: number

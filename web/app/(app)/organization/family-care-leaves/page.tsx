@@ -22,7 +22,7 @@ const PAGE_SIZE = 20
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の産休・育休・介護休業の申出を横断で確認する画面。family_care_leave:read:all を持つロールのみ表示できる。
+/** 全社の産休・育休・介護休業の申出を横断で確認する画面。family_care_leave:read:all を持つロールのみ表示できる。 */
 export default async function AdminFamilyCareLeavesPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

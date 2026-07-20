@@ -43,7 +43,7 @@ export type AssetDisposeFormState = {
 
 const assetKinds: ReadonlyArray<AssetKind> = ["pc", "monitor", "furniture", "other"]
 
-// FormData の文字列を種別 enum へ検証付きで変換する。不正なら null。
+/** FormData の文字列を種別 enum へ検証付きで変換する。不正なら null。 */
 function toKind(value: FormDataEntryValue | null): AssetKind | null {
   if (typeof value !== "string") {
     return null
@@ -58,7 +58,7 @@ function toKind(value: FormDataEntryValue | null): AssetKind | null {
   return null
 }
 
-// 物品登録の Server Action。serial / purchased_on の空文字は値なし扱いで送らない。
+/** 物品登録の Server Action。serial / purchased_on の空文字は値なし扱いで送らない。 */
 export async function createAssetAction(
   previousState: AssetCreateFormState,
   formData: FormData,
@@ -117,7 +117,7 @@ export async function createAssetAction(
   return { ok: true, error: null }
 }
 
-// 物品貸与の Server Action。code は hidden、貸与先の従業員コードを受け取る。
+/** 物品貸与の Server Action。code は hidden、貸与先の従業員コードを受け取る。 */
 export async function lendAssetAction(
   previousState: AssetLendFormState,
   formData: FormData,
@@ -159,7 +159,7 @@ export async function lendAssetAction(
   return { ok: true, error: null }
 }
 
-// 物品返却の Server Action。code は hidden から受け取る。
+/** 物品返却の Server Action。code は hidden から受け取る。 */
 export async function returnAssetAction(
   previousState: AssetReturnFormState,
   formData: FormData,
@@ -193,7 +193,7 @@ export async function returnAssetAction(
   return { ok: true, error: null }
 }
 
-// 物品廃棄の Server Action。code は hidden、廃棄理由と任意の廃棄日を受け取る。
+/** 物品廃棄の Server Action。code は hidden、廃棄理由と任意の廃棄日を受け取る。 */
 export async function disposeAssetAction(
   previousState: AssetDisposeFormState,
   formData: FormData,
@@ -238,8 +238,10 @@ export async function disposeAssetAction(
   return { ok: true, error: null }
 }
 
-// 物品編集の Server Action。code は hidden、名称・種別・シリアル・購入日を更新する。
-// serial / purchased_on の空文字は値なし扱いで送らない。
+/**
+ * 物品編集の Server Action。code は hidden、名称・種別・シリアル・購入日を更新する。
+ * serial / purchased_on の空文字は値なし扱いで送らない。
+ */
 export async function updateAssetAction(
   previousState: AssetUpdateFormState,
   formData: FormData,
@@ -299,7 +301,7 @@ export async function updateAssetAction(
   return { ok: true, error: null }
 }
 
-// 物品削除の Server Action。code は hidden から受け取る。成功時は一覧へ遷移する。
+/** 物品削除の Server Action。code は hidden から受け取る。成功時は一覧へ遷移する。 */
 export async function deleteAssetAction(
   previousState: AssetDeleteFormState,
   formData: FormData,

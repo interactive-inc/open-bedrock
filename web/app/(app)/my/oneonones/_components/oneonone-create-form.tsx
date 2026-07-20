@@ -17,12 +17,14 @@ type Props = {
   employees: ReadonlyArray<{ code: string; name: string }>
 }
 
-// 1on1 記録の作成フォーム。useActionState で createOneOnOneAction を呼び、結果を sonner で通知する。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 1on1 記録の作成フォーム。useActionState で createOneOnOneAction を呼び、結果を sonner で通知する。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function OneOnOneCreateForm(props: Props) {
   const router = useRouter()
 
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: OneOnOneActionState,
     formData: FormData,

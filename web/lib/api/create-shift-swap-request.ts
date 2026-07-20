@@ -5,7 +5,7 @@ import type {
   ShiftSwapRequestResponse,
 } from "@/lib/api/types/shift-types"
 
-// POST /shift/swap-requests。本人が対象社員へシフト交代を申請する。
+/** POST /shift/swap-requests。本人が対象社員へシフト交代を申請する。 */
 export async function createShiftSwapRequest(
   request: ShiftSwapRequestCreateRequest,
 ): Promise<ShiftSwapRequestResponse | Error> {

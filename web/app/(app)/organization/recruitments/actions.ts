@@ -6,7 +6,7 @@ import type { CandidateStage } from "@/lib/api/advance-recruitment-candidate"
 import { createRecruitmentCandidate } from "@/lib/api/create-recruitment-candidate"
 import { createRecruitmentPosition } from "@/lib/api/create-recruitment-position"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type RecruitmentActionState = {
   ok: boolean
   error: string | null
@@ -21,7 +21,7 @@ const STAGES: ReadonlyArray<CandidateStage> = [
   "rejected",
 ]
 
-// 募集ポジションの作成 Server Action。title 必須。recruitment:manage が無いと api が 403。
+/** 募集ポジションの作成 Server Action。title 必須。recruitment:manage が無いと api が 403。 */
 export async function createPositionAction(
   previousState: RecruitmentActionState,
   formData: FormData,
@@ -47,7 +47,7 @@ export async function createPositionAction(
   return { ok: true, error: null }
 }
 
-// 応募者の登録 Server Action。position_id/name 必須。recruitment:manage が無いと api が 403。
+/** 応募者の登録 Server Action。position_id/name 必須。recruitment:manage が無いと api が 403。 */
 export async function createCandidateAction(
   previousState: RecruitmentActionState,
   formData: FormData,
@@ -77,7 +77,7 @@ export async function createCandidateAction(
   return { ok: true, error: null }
 }
 
-// 選考ステージの前進 Server Action。candidate_id/stage 必須。不正遷移は api が 409。
+/** 選考ステージの前進 Server Action。candidate_id/stage 必須。不正遷移は api が 409。 */
 export async function advanceCandidateAction(
   previousState: RecruitmentActionState,
   formData: FormData,
@@ -105,7 +105,7 @@ export async function advanceCandidateAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -114,7 +114,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData 値を正の整数へ。不正値は null。
+/** FormData 値を正の整数へ。不正値は null。 */
 function toPositiveInt(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
     return null
@@ -129,7 +129,7 @@ function toPositiveInt(value: FormDataEntryValue | null): number | null {
   return parsed
 }
 
-// FormData 値を許容ステージへ。未知値は null。
+/** FormData 値を許容ステージへ。未知値は null。 */
 function toStage(value: FormDataEntryValue | null): CandidateStage | null {
   if (typeof value !== "string") {
     return null

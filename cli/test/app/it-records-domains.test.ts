@@ -1,9 +1,11 @@
 import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
-// licenses / it-incidents / salary-revisions コマンド群の到達性と help を検証する。
-// 未登録だと catch-all に落ちて help が返らず実質使用不可になるため、基底パスへの
-// POST + help:1 で到達性を確かめる。
+/**
+ * licenses / it-incidents / salary-revisions コマンド群の到達性と help を検証する。
+ * 未登録だと catch-all に落ちて help が返らず実質使用不可になるため、基底パスへの
+ * POST + help:1 で到達性を確かめる。
+ */
 const paths: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/licenses", help: "karte licenses" },
   { path: "/licenses/list", help: "licenses list" },

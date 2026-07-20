@@ -39,7 +39,7 @@ export type ContractUpdateFormState = {
 
 const partnerCategories: ReadonlyArray<PartnerCategory> = ["customer", "supplier", "other"]
 
-// FormData の文字列を分類 enum へ検証付きで変換する。空文字・不正なら null。
+/** FormData の文字列を分類 enum へ検証付きで変換する。空文字・不正なら null。 */
 function toCategory(value: FormDataEntryValue | null): PartnerCategory | null {
   if (typeof value !== "string") {
     return null
@@ -54,17 +54,17 @@ function toCategory(value: FormDataEntryValue | null): PartnerCategory | null {
   return null
 }
 
-// FormData の文字列を取り出す。文字列でなければ空文字。
+/** FormData の文字列を取り出す。文字列でなければ空文字。 */
 function toStringValue(value: FormDataEntryValue | null): string {
   return typeof value === "string" ? value : ""
 }
 
-// FormData の任意文字列を取り出す。空文字は値なし扱いで undefined。
+/** FormData の任意文字列を取り出す。空文字は値なし扱いで undefined。 */
 function toOptionalString(value: FormDataEntryValue | null): string | undefined {
   return typeof value === "string" && value !== "" ? value : undefined
 }
 
-// 取引先登録の Server Action。category / corporate_number / note の空文字は送らない。
+/** 取引先登録の Server Action。category / corporate_number / note の空文字は送らない。 */
 export async function createPartnerAction(
   previousState: PartnerCreateFormState,
   formData: FormData,
@@ -104,7 +104,7 @@ export async function createPartnerAction(
   return { ok: true, error: null }
 }
 
-// 取引先編集の Server Action。id は hidden、名称・分類・法人番号・備考を更新する。
+/** 取引先編集の Server Action。id は hidden、名称・分類・法人番号・備考を更新する。 */
 export async function updatePartnerAction(
   previousState: PartnerUpdateFormState,
   formData: FormData,
@@ -149,7 +149,7 @@ export async function updatePartnerAction(
   return { ok: true, error: null }
 }
 
-// 取引先アーカイブの Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
+/** 取引先アーカイブの Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。 */
 export async function archivePartnerAction(
   previousState: PartnerArchiveFormState,
   formData: FormData,
@@ -177,7 +177,7 @@ export async function archivePartnerAction(
   redirect("/organization/partners")
 }
 
-// 契約記録作成の Server Action。partner_id と code は hidden。任意日付は空文字を送らない。
+/** 契約記録作成の Server Action。partner_id と code は hidden。任意日付は空文字を送らない。 */
 export async function createContractAction(
   previousState: ContractCreateFormState,
   formData: FormData,
@@ -229,7 +229,7 @@ export async function createContractAction(
   return { ok: true, error: null }
 }
 
-// 契約記録編集の Server Action。id・code は hidden。任意日付は空文字を送らない。
+/** 契約記録編集の Server Action。id・code は hidden。任意日付は空文字を送らない。 */
 export async function updateContractAction(
   previousState: ContractUpdateFormState,
   formData: FormData,

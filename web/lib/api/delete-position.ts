@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /positions/:id。役職マスタを削除する。成功時（204）は null、失敗時は Error。
+/** DELETE /positions/:id。役職マスタを削除する。成功時（204）は null、失敗時は Error。 */
 export async function deletePosition(positionId: number): Promise<null | Error> {
   const client = await createClient()
 

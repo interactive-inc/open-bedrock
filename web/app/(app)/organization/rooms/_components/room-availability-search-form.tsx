@@ -7,8 +7,10 @@ type Props = {
   search: RoomAvailabilitySearch
 }
 
-// 会議室の空き状況絞り込みフォーム。
-// method=get で /rooms に submit し、searchParams を更新する（クライアント JS 不要）。
+/**
+ * 会議室の空き状況絞り込みフォーム。
+ * method=get で /rooms に submit し、searchParams を更新する（クライアント JS 不要）。
+ */
 export function RoomAvailabilitySearchForm(props: Props) {
   return (
     <form method="get" action="/organization/rooms">

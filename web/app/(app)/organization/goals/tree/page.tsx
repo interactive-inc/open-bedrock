@@ -17,8 +17,10 @@ type Props = {
   searchParams: Promise<{ period?: string }>
 }
 
-// 目標ツリー画面。全社→部門→個人をインデントで表示する。
-// 全社・部門目標の作成フォームは権限を持つユーザーにのみ出す。
+/**
+ * 目標ツリー画面。全社→部門→個人をインデントで表示する。
+ * 全社・部門目標の作成フォームは権限を持つユーザーにのみ出す。
+ */
 export default async function GoalTreePage(props: Props) {
   const searchParams = await props.searchParams
 

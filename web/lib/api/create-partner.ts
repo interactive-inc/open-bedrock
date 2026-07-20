@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { PartnerCreateRequest } from "@/lib/api/types/partner-types"
 
-// POST /partners。取引先を新規登録する（partner:manage）。
+/** POST /partners。取引先を新規登録する（partner:manage）。 */
 export async function createPartner(request: PartnerCreateRequest) {
   const client = await createClient()
 

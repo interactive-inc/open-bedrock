@@ -16,7 +16,7 @@ type Props = {
   category: string | null
 }
 
-// 検索条件で GET /skills を認証付きに取得しテーブル描画する非同期 RSC。
+/** 検索条件で GET /skills を認証付きに取得しテーブル描画する非同期 RSC。 */
 export async function SkillTable(props: Props) {
   const skills = await getSkillList({ q: props.q, category: props.category })
 

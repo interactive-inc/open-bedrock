@@ -10,14 +10,16 @@ import { updateRentalReservation } from "@/lib/api/update-rental-reservation"
 import { canManageRentals } from "@/lib/rental/can-manage-rentals"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type RentalReservationActionState = {
   ok: boolean
   error: string | null
 }
 
-// 総務・人事が貸与品予約を貸出済みにする Server Action。reservation_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 総務・人事が貸与品予約を貸出済みにする Server Action。reservation_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function lendRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
@@ -45,8 +47,10 @@ export async function lendRentalReservationAction(
   return { ok: true, error: null }
 }
 
-// 総務・人事が貸与品予約を返却済みにする Server Action。reservation_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 総務・人事が貸与品予約を返却済みにする Server Action。reservation_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function returnRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
@@ -74,7 +78,7 @@ export async function returnRentalReservationAction(
   return { ok: true, error: null }
 }
 
-// id 用の FormData 値を取り出す。未入力は null。
+/** id 用の FormData 値を取り出す。未入力は null。 */
 function toReservationIdText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -83,8 +87,10 @@ function toReservationIdText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// レンタル予約申請 Server Action。item_name/start_date/end_date 必須、purpose は任意。
-// 成功時は /rentals を revalidate して一覧へ反映する。
+/**
+ * レンタル予約申請 Server Action。item_name/start_date/end_date 必須、purpose は任意。
+ * 成功時は /rentals を revalidate して一覧へ反映する。
+ */
 export async function createRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
@@ -129,8 +135,10 @@ export async function createRentalReservationAction(
   return { ok: true, error: null }
 }
 
-// レンタル予約変更 Server Action。reservation_id/item_name/start_date/end_date 必須、purpose は任意。
-// 本人以外の変更は api がエラーを返す。成功時は /rentals を revalidate する。
+/**
+ * レンタル予約変更 Server Action。reservation_id/item_name/start_date/end_date 必須、purpose は任意。
+ * 本人以外の変更は api がエラーを返す。成功時は /rentals を revalidate する。
+ */
 export async function updateRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
@@ -177,7 +185,7 @@ export async function updateRentalReservationAction(
   return { ok: true, error: null }
 }
 
-// レンタル予約取消 Server Action。reservation_id 必須。成功時は /rentals を revalidate する。
+/** レンタル予約取消 Server Action。reservation_id 必須。成功時は /rentals を revalidate する。 */
 export async function cancelRentalReservationAction(
   previousState: RentalReservationActionState,
   formData: FormData,
@@ -201,7 +209,7 @@ export async function cancelRentalReservationAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を trim した文字列へ。未入力や空文字は null。
+/** FormData 値を trim した文字列へ。未入力や空文字は null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

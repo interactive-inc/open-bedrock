@@ -65,7 +65,7 @@ export class UpdateShiftPattern {
     return saved
   }
 
-  // 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。
+  /** 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。 */
   private async findCodeConflict(
     code: string,
     patternId: number,

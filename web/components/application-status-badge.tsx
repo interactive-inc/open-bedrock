@@ -6,7 +6,7 @@ type Props = {
   returned?: boolean
 }
 
-// 申請ステータスを日本語ラベルと配色付きの Badge で表示する。
+/** 申請ステータスを日本語ラベルと配色付きの Badge で表示する。 */
 export function ApplicationStatusBadge(props: Props) {
   if (props.returned === true) {
     return <Badge variant="outline">差戻し</Badge>

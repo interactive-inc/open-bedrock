@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-// POST /accounts/:id/reset-password。管理者がアカウントのパスワードを再設定する（account:manage が必要）。
+/** POST /accounts/:id/reset-password。管理者がアカウントのパスワードを再設定する（account:manage が必要）。 */
 export async function resetAccountPassword(
   accountId: number,
   newPassword: string,

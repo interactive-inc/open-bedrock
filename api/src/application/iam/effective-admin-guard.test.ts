@@ -4,14 +4,14 @@ import { ConflictError } from "@/lib/errors"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import {
   EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
   replaceAccountRolesWithPermissionSets,
   seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+} from "@/interface/test-helpers/seed-effective-admin"
 import { describe, expect, test } from "bun:test"
 
 describe("effective administrator invariant", () => {

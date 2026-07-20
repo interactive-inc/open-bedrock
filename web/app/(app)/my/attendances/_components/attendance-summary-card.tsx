@@ -8,8 +8,10 @@ type Props = {
   month: string | null
 }
 
-// 本人の月次サマリをサーバ側 fetch してカード描画する非同期 RSC。
-// 勤務日数・総勤務時間を並べる。取得失敗時はメッセージ表示にフォールバックする。
+/**
+ * 本人の月次サマリをサーバ側 fetch してカード描画する非同期 RSC。
+ * 勤務日数・総勤務時間を並べる。取得失敗時はメッセージ表示にフォールバックする。
+ */
 export async function AttendanceSummaryCard(props: Props) {
   const summary = await getMyAttendanceSummary({ month: props.month })
 

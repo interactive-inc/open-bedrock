@@ -15,7 +15,7 @@ type Props = {
   params: Promise<{ meeting: string }>
 }
 
-// /meetings/:code 会議体詳細。会議体の情報・議事録一覧・議事録記録フォームを表示する。
+/** /meetings/:code 会議体詳細。会議体の情報・議事録一覧・議事録記録フォームを表示する。 */
 export default async function MeetingDetailPage(props: Props) {
   const params = await props.params
 

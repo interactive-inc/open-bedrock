@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /it-incidents を session トークン付きで呼び、インシデント記録一覧を取得する。
+/** GET /it-incidents を session トークン付きで呼び、インシデント記録一覧を取得する。 */
 export async function getItIncidentList(query: {
   status?: "open" | "resolved"
   limit: number

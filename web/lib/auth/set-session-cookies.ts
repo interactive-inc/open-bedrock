@@ -8,7 +8,7 @@ type CookieWriteOptions = {
   maxAge: number
 }
 
-// `cookies()`（Server Action）と `NextResponse.cookies`（Middleware）の両方が満たす最小限の形。
+/** `cookies()`（Server Action）と `NextResponse.cookies`（Middleware）の両方が満たす最小限の形。 */
 type WritableCookieStore = {
   set: (name: string, value: string, options: CookieWriteOptions) => unknown
 }

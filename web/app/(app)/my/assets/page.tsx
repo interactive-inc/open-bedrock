@@ -19,7 +19,7 @@ import { getMyLentAssets } from "@/lib/api/get-my-lent-assets"
 
 export const metadata = { title: "貸出中の備品" }
 
-// 自分の貸与品一覧画面。RSC で GET /assets/lent/me を取得してテーブル表示する。
+/** 自分の貸与品一覧画面。RSC で GET /assets/lent/me を取得してテーブル表示する。 */
 export default function MyLentAssetsPage() {
   return (
     <div className="flex flex-col gap-6">
@@ -36,7 +36,7 @@ export default function MyLentAssetsPage() {
   )
 }
 
-// /assets/lent/me を認証付きで取得して貸与品テーブルを描画する非同期 RSC。
+/** /assets/lent/me を認証付きで取得して貸与品テーブルを描画する非同期 RSC。 */
 async function MyLentAssetsTable() {
   const assets = await getMyLentAssets()
 

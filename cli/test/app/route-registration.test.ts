@@ -1,10 +1,12 @@
 import { app } from "@/app/index"
 import { describe, expect, test } from "bun:test"
 
-// #100: app/index.ts に未登録だったルートが到達可能（help が返る）ことを確認する。
-// 未登録だと catch-all に落ちて help が返らず、コマンドが実質使用不可になっていた。
-// 動的セグメント (:param?) は省略形でも一致する。help は param 解決前に返るため、
-// 基底パスへの POST + help:1 で全 62 ルートの到達性を検証する。
+/**
+ * #100: app/index.ts に未登録だったルートが到達可能（help が返る）ことを確認する。
+ * 未登録だと catch-all に落ちて help が返らず、コマンドが実質使用不可になっていた。
+ * 動的セグメント (:param?) は省略形でも一致する。help は param 解決前に返るため、
+ * 基底パスへの POST + help:1 で全 62 ルートの到達性を検証する。
+ */
 const previouslyUnregistered: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/1on1/delete", help: "1on1 delete" },
   { path: "/1on1/edit", help: "1on1 edit" },
@@ -92,7 +94,7 @@ const previouslyUnregistered: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/training/show", help: "training show" },
 ]
 
-// セキュリティ修正で追加されたルートの到達性テスト。
+/** セキュリティ修正で追加されたルートの到達性テスト。 */
 const securityRoutes: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/batch/migrate-password-hashes", help: "batch migrate-password-hashes" },
 ]

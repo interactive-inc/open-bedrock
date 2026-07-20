@@ -6,7 +6,7 @@ export type Props = {
   goals: ReadonlyArray<Goal>
 }
 
-// 目標 1 件を子なしのツリーノードに写す。
+/** 目標 1 件を子なしのツリーノードに写す。 */
 function toNode(goal: Goal): AppGoalTreeNode {
   return {
     id: goal.id ?? 0,
@@ -23,7 +23,7 @@ function toNode(goal: Goal): AppGoalTreeNode {
   }
 }
 
-// 親候補が存在し、かつ親が自分より上位の階層(company>department>individual)なら親 id を返す。
+/** 親候補が存在し、かつ親が自分より上位の階層(company>department>individual)なら親 id を返す。 */
 function toParentId(goal: Goal, nodesById: Map<number, AppGoalTreeNode>): number | null {
   if (goal.parentGoalId === null) {
     return null

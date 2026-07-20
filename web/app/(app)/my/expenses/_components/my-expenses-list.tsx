@@ -41,7 +41,7 @@ type Props = {
   expenses: ReadonlyArray<ExpenseMineResponse>
 }
 
-// 自分の経費一覧。pending の行のみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
+/** 自分の経費一覧。pending の行のみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。 */
 export function MyExpensesList(props: Props) {
   if (props.expenses.length === 0) {
     return <EmptyState title="申請済みの経費はまだありません" />
@@ -103,7 +103,7 @@ export function MyExpensesList(props: Props) {
   )
 }
 
-// 経費変更フォームを Dialog で開く。カテゴリ・金額・利用日・メモを編集して送信する。
+/** 経費変更フォームを Dialog で開く。カテゴリ・金額・利用日・メモを編集して送信する。 */
 function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -210,7 +210,7 @@ function UpdateExpenseDialog(props: { expense: ExpenseMineResponse }) {
   )
 }
 
-// 経費取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
+/** 経費取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
 function DeleteExpenseButton(props: { expenseId: number }) {
   async function reduce(
     previousState: ExpenseDeleteFormState,

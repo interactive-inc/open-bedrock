@@ -2,9 +2,6 @@ import type { Context } from "@/env"
 import { accounts, identities } from "@/schema"
 import { and, eq, inArray, isNotNull, like, not } from "drizzle-orm"
 
-// 認証フローが使う identity(ログイン手段)の検索と、紐づく account の取得。
-// password 認証は (provider="password", subject=正規化email) で引く。
-
 export type PasswordIdentity = {
   identityId: number
   accountId: number
@@ -14,14 +11,15 @@ export type PasswordIdentity = {
   employeeId: number | null
 }
 
-// レガシー secret 移行バッチが扱う 1 件。
+/** レガシー secret 移行バッチが扱う 1 件。 */
 export type LegacySecretIdentity = {
   identityId: number
   secret: string
 }
 
 /**
- * identity と紐づく account を扱う。
+ * 認証フローが使う identity(ログイン手段)の検索と、紐づく account の取得を扱う。
+ * password 認証は (provider="password", subject=正規化email) で引く。
  */
 export class IdentityRepository {
   constructor(private readonly c: Context) {

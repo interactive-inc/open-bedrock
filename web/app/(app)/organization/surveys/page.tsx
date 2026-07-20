@@ -9,8 +9,10 @@ import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
 export const metadata = { title: "サーベイ" }
 
-// アンケート一覧画面 (/surveys)。
-// 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
+/**
+ * アンケート一覧画面 (/surveys)。
+ * 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
+ */
 export default async function SurveysPage() {
   const currentUser = await getMe()
 

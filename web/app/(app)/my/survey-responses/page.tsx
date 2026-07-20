@@ -8,8 +8,10 @@ import { listMySurveyResponses } from "@/lib/api/list-my-survey-responses"
 
 export const metadata = { title: "自分の回答" }
 
-// 自分のアンケート回答一覧画面 (/surveys/responses)。
-// 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
+/**
+ * 自分のアンケート回答一覧画面 (/surveys/responses)。
+ * 一覧取得は非同期 RSC を Suspense 境界に包み、取得中は Skeleton を出す。
+ */
 export default function MySurveyResponsesPage() {
   return (
     <div className="flex flex-col gap-6">
@@ -22,7 +24,7 @@ export default function MySurveyResponsesPage() {
   )
 }
 
-// 回答一覧を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 回答一覧を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 async function MyResponsesSection() {
   const responses = await listMySurveyResponses()
 

@@ -66,7 +66,7 @@ export class OnboardingTemplateRepository {
     }
   }
 
-  // テンプレートの名称・種別・説明を更新する。code をキーに更新し、更新後の行を tasks 付きで返す。
+  /** テンプレートの名称・種別・説明を更新する。code をキーに更新し、更新後の行を tasks 付きで返す。 */
   async update(template: OnboardingTemplate): Promise<OnboardingTemplate | null | Error> {
     try {
       const code = await this.c.env.DB.prepare(
@@ -90,8 +90,10 @@ export class OnboardingTemplateRepository {
     }
   }
 
-  // テンプレートを削除する。紐づくタスク定義も合わせて削除する。
-  // アクティブ（in_progress）な割り当てが存在する場合は削除せず null を返す（TOCTOU 競合を防ぐ）。
+  /**
+   * テンプレートを削除する。紐づくタスク定義も合わせて削除する。
+   * アクティブ（in_progress）な割り当てが存在する場合は削除せず null を返す（TOCTOU 競合を防ぐ）。
+   */
   async delete(code: string): Promise<true | null | Error> {
     try {
       const db = this.c.env.DB

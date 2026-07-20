@@ -15,14 +15,16 @@ import {
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type GoalActionState = {
   ok: boolean
   error: string | null
 }
 
-// 目標作成 Server Action。period/title 必須、weight/kpi は任意。
-// 成功時は /goals を revalidate して一覧へ反映する。
+/**
+ * 目標作成 Server Action。period/title 必須、weight/kpi は任意。
+ * 成功時は /goals を revalidate して一覧へ反映する。
+ */
 export async function createGoalAction(
   previousState: GoalActionState,
   formData: FormData,
@@ -78,9 +80,11 @@ export async function createGoalAction(
   return { ok: true, error: null }
 }
 
-// 全社/部門目標の作成 Server Action。ownerType=company|department。
-// company は department_code 不要、department は department_code 必須。
-// 権限判定は api 側で行う（権限が無ければ 403 を error に載せて返す）。成功時は /goals/tree を revalidate する。
+/**
+ * 全社/部門目標の作成 Server Action。ownerType=company|department。
+ * company は department_code 不要、department は department_code 必須。
+ * 権限判定は api 側で行う（権限が無ければ 403 を error に載せて返す）。成功時は /goals/tree を revalidate する。
+ */
 export async function createStructuralGoalAction(
   previousState: GoalActionState,
   formData: FormData,
@@ -146,8 +150,10 @@ export async function createStructuralGoalAction(
   return { ok: true, error: null }
 }
 
-// 目標変更 Server Action。goalId/period/title 必須、weight/kpi は任意。
-// 本人以外や確定評価済みは api がエラーを返す。成功時は /goals を revalidate する。
+/**
+ * 目標変更 Server Action。goalId/period/title 必須、weight/kpi は任意。
+ * 本人以外や確定評価済みは api がエラーを返す。成功時は /goals を revalidate する。
+ */
 export async function updateGoalAction(
   previousState: GoalActionState,
   formData: FormData,
@@ -214,7 +220,7 @@ export async function updateGoalAction(
   return { ok: true, error: null }
 }
 
-// 目標削除 Server Action。goalId 必須。成功時は /goals を revalidate する。
+/** 目標削除 Server Action。goalId 必須。成功時は /goals を revalidate する。 */
 export async function deleteGoalAction(
   previousState: GoalActionState,
   formData: FormData,
@@ -239,8 +245,10 @@ export async function deleteGoalAction(
   return { ok: true, error: null }
 }
 
-// 評価登録 Server Action。kind 必須、score/comment は任意。goalId は hidden で渡す。
-// 成功時は /goals を revalidate して一覧のステータスへ反映する。
+/**
+ * 評価登録 Server Action。kind 必須、score/comment は任意。goalId は hidden で渡す。
+ * 成功時は /goals を revalidate して一覧のステータスへ反映する。
+ */
 export async function createGoalEvaluationAction(
   previousState: GoalActionState,
   formData: FormData,
@@ -293,7 +301,7 @@ export async function createGoalEvaluationAction(
   return { ok: true, error: null }
 }
 
-// 評価種別が許可値かを判定する型ガード。
+/** 評価種別が許可値かを判定する型ガード。 */
 function isEvaluationKind(value: string): value is GoalEvaluationKind {
   return value === "self" || value === "manager" || value === "final"
 }

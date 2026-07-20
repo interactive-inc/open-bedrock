@@ -21,8 +21,10 @@ export type StocktakeCounts = {
 export class StocktakeRepository {
   constructor(private readonly c: Context) {}
 
-  // 棚卸しセッションを作成し、廃棄されていない全資産を対象アイテムとして展開する。
-  // セッション作成とアイテム展開を D1 batch で同一トランザクションにまとめる。
+  /**
+   * 棚卸しセッションを作成し、廃棄されていない全資産を対象アイテムとして展開する。
+   * セッション作成とアイテム展開を D1 batch で同一トランザクションにまとめる。
+   */
   async createWithItems(stocktake: Stocktake): Promise<Stocktake | Error> {
     try {
       const targetAssets = await this.c.var.database
@@ -168,9 +170,11 @@ export class StocktakeRepository {
     }
   }
 
-  // セッションが open のときだけ、対象アイテムに現物確認を記録する。
-  // 更新できたら "checked"、対象アイテムが無ければ "item_not_found"、
-  // セッションが open でなければ "not_open" を返す。
+  /**
+   * セッションが open のときだけ、対象アイテムに現物確認を記録する。
+   * 更新できたら "checked"、対象アイテムが無ければ "item_not_found"、
+   * セッションが open でなければ "not_open" を返す。
+   */
   async checkItem(props: {
     stocktakeId: string
     assetCode: string
@@ -222,7 +226,7 @@ export class StocktakeRepository {
     }
   }
 
-  // open のセッションだけを closed に更新する。0 行更新なら null（open でない）。
+  /** open のセッションだけを closed に更新する。0 行更新なら null（open でない）。 */
   async closeIfOpen(props: { id: string; closedAt: string }): Promise<Stocktake | null | Error> {
     try {
       const result = await this.c.env.DB.prepare(

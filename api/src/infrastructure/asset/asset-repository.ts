@@ -80,9 +80,11 @@ export class AssetRepository {
     }
   }
 
-  // 貸出記録の追加と資産の貸出中への更新を D1 batch で同一トランザクションにまとめる。
-  // Cloudflare D1 は BEGIN TRANSACTION ではなく batch() で複数 statement の
-  // 順次実行と失敗時 rollback を提供する。in_stock でなければ全体を rollback して null。
+  /**
+   * 貸出記録の追加と資産の貸出中への更新を D1 batch で同一トランザクションにまとめる。
+   * Cloudflare D1 は BEGIN TRANSACTION ではなく batch() で複数 statement の
+   * 順次実行と失敗時 rollback を提供する。in_stock でなければ全体を rollback して null。
+   */
   async lendFromStock(props: {
     assetCode: string
     employeeId: number
@@ -147,8 +149,10 @@ export class AssetRepository {
     }
   }
 
-  // 資産の在庫戻しと open な貸出記録のクローズを D1 batch でまとめる。
-  // lent でなければ全体を rollback して null。open な貸出記録が無いケースは従来どおり許容する。
+  /**
+   * 資産の在庫戻しと open な貸出記録のクローズを D1 batch でまとめる。
+   * lent でなければ全体を rollback して null。open な貸出記録が無いケースは従来どおり許容する。
+   */
   async returnFromLent(props: {
     assetCode: string
     returnedAt: string
@@ -212,8 +216,10 @@ export class AssetRepository {
     }
   }
 
-  // 在庫中の資産を廃棄済みへ更新する。in_stock でなければ 0 行更新となり null を返す。
-  // 貸出中・廃棄済みは条件不一致で弾かれる（並行リクエストとの競合も条件付き write で防ぐ）。
+  /**
+   * 在庫中の資産を廃棄済みへ更新する。in_stock でなければ 0 行更新となり null を返す。
+   * 貸出中・廃棄済みは条件不一致で弾かれる（並行リクエストとの競合も条件付き write で防ぐ）。
+   */
   async disposeFromStock(props: {
     assetCode: string
     disposedOn: string
@@ -260,7 +266,7 @@ export class AssetRepository {
     }
   }
 
-  // 資産と貸出記録の削除を D1 batch でまとめる。lent のままなら全体を rollback して null。
+  /** 資産と貸出記録の削除を D1 batch でまとめる。lent のままなら全体を rollback して null。 */
   async deleteIfNotLent(code: string): Promise<"deleted" | null | Error> {
     try {
       try {

@@ -8,7 +8,7 @@ type SeedApplication = {
   createdAt: string
 }
 
-// applicantId は seedEmployees に存在する社員に対応させる。
+/** applicantId は seedEmployees に存在する社員に対応させる。 */
 export const seedApplications: ReadonlyArray<SeedApplication> = [
   {
     id: 1,

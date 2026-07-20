@@ -3,8 +3,8 @@ import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import { ClockIn } from "@/application/attendance/clock-in"
 import { AttendanceRecordRepository } from "@/infrastructure/attendance/attendance-record-repository"
 import { ApplicationError, ConflictError } from "@/lib/errors"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 
 describe("ClockIn", () => {
   test("creates an open attendance record", async () => {

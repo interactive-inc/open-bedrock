@@ -1,6 +1,8 @@
-// API への接続失敗・タイムアウトを、接続先を添えた実用的なメッセージに変換する。
-// 接続エラーと判定できない場合は null を返し、呼び出し側は元のメッセージを使う
-// （CLI 内部の実装バグを「接続できません」と誤表示しないため）。
+/**
+ * API への接続失敗・タイムアウトを、接続先を添えた実用的なメッセージに変換する。
+ * 接続エラーと判定できない場合は null を返し、呼び出し側は元のメッセージを使う
+ * （CLI 内部の実装バグを「接続できません」と誤表示しないため）。
+ */
 export function toConnectionErrorMessage(error: unknown, baseUrl: string): string | null {
   if (error instanceof Error === false) {
     return null
@@ -17,7 +19,7 @@ export function toConnectionErrorMessage(error: unknown, baseUrl: string): strin
   return null
 }
 
-// fetch がネットワーク層で失敗したときの代表的なメッセージを判定する。
+/** fetch がネットワーク層で失敗したときの代表的なメッセージを判定する。 */
 function isConnectionFailure(message: string): boolean {
   return /fetch failed|failed to fetch|unable to connect|connection refused|econnrefused/i.test(
     message,

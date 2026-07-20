@@ -8,7 +8,7 @@ import { canManageLicenses } from "@/lib/license/can-manage-licenses"
 
 export const metadata = { title: "ライセンス登録" }
 
-// ライセンス登録画面。license:manage が無ければ notFound。
+/** ライセンス登録画面。license:manage が無ければ notFound。 */
 export default async function LicenseNewPage() {
   const me = await getMe()
 

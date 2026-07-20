@@ -14,7 +14,7 @@ const statusOptions = [
   { value: "completed", label: "完了" },
 ]
 
-// 全社の退職手続き一覧を絞り込むフォーム。GET で querystring を更新する。
+/** 全社の退職手続き一覧を絞り込むフォーム。GET で querystring を更新する。 */
 export function ResignationAdminFilterForm(props: Props) {
   const hasActiveFilter = props.statusValue !== "" || props.employeeIdValue !== ""
 

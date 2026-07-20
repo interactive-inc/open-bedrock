@@ -9,7 +9,7 @@ type SeedExpense = {
   createdAt: string
 }
 
-// employeeId は seedEmployees に存在する社員に対応させる。
+/** employeeId は seedEmployees に存在する社員に対応させる。 */
 export const seedExpenses: ReadonlyArray<SeedExpense> = [
   {
     id: 1,

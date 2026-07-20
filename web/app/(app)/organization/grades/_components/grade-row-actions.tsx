@@ -22,7 +22,7 @@ type Props = {
   grade: GradeResponse
 }
 
-// 等級一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる。
+/** 等級一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる。 */
 export function GradeRowActions(props: Props) {
   return (
     <div className="flex justify-end gap-2">
@@ -33,7 +33,7 @@ export function GradeRowActions(props: Props) {
   )
 }
 
-// 等級削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+/** 等級削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
 function DeleteGradeButton(props: { gradeId: number }) {
   async function reduce(previousState: { ok: boolean; error: string | null }, formData: FormData) {
     const result = await deleteGradeAction(previousState, formData)

@@ -1,12 +1,10 @@
-// api の app-schemas（zAppPartner ほか）と同形の手書き type（api と疎結合に保つため別定義）。
-
-// 取引先の分類。POST /partners の category enum と一致させる。
+/** 取引先の分類。POST /partners の category enum と一致させる。 */
 export type PartnerCategory = "customer" | "supplier" | "other"
 
-// 取引先の状態。active=取引中, archived=終了。
+/** 取引先の状態。active=取引中, archived=終了。 */
 export type PartnerStatus = "active" | "archived"
 
-// GET /partners・GET /partners/:code の各要素（取引先。API は snake_case で返す）。
+/** GET /partners・GET /partners/:code の各要素（取引先。API は snake_case で返す）。 */
 export type PartnerResponse = {
   id: number
   code: string
@@ -18,13 +16,13 @@ export type PartnerResponse = {
   created_at: string
 }
 
-// GET /partners のクエリ。キーワード / status で絞り込む。値なしは null。
+/** GET /partners のクエリ。キーワード / status で絞り込む。値なしは null。 */
 export type PartnerSearchQuery = {
   q: string | null
   status: PartnerStatus | null
 }
 
-// POST /partners のリクエスト body。category / corporate_number / note は任意。
+/** POST /partners のリクエスト body。category / corporate_number / note は任意。 */
 export type PartnerCreateRequest = {
   code: string
   name: string
@@ -33,7 +31,7 @@ export type PartnerCreateRequest = {
   note?: string
 }
 
-// PUT /partners/:id のリクエスト body。category / corporate_number / note は任意。
+/** PUT /partners/:id のリクエスト body。category / corporate_number / note は任意。 */
 export type PartnerUpdateRequest = {
   name: string
   category?: PartnerCategory

@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: PartnerCreateFormState = { ok: false, error: null }
 
-// 取引先登録フォーム。コード・名称・任意の分類/法人番号/備考を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 取引先登録フォーム。コード・名称・任意の分類/法人番号/備考を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function PartnerCreateForm() {
   const router = useRouter()
 

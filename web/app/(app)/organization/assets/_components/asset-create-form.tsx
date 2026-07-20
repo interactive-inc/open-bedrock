@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: AssetCreateFormState = { ok: false, error: null }
 
-// 物品登録フォーム。コード・名称・種別・任意のシリアル/購入日を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 物品登録フォーム。コード・名称・種別・任意のシリアル/購入日を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function AssetCreateForm() {
   const router = useRouter()
 

@@ -15,7 +15,7 @@ type Props = {
 
 const initialState: ReviewFormState = { ok: false, error: null }
 
-// 評価フォームの一括開示フォーム（特権ロール向け）。サイクルを選び、その全フォームを本人に開示する。
+/** 評価フォームの一括開示フォーム（特権ロール向け）。サイクルを選び、その全フォームを本人に開示する。 */
 export function ReviewDiscloseForm(props: Props) {
   const action = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
     const next = await discloseReviewCycleAction(previousState, formData)

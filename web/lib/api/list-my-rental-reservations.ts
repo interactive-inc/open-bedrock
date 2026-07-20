@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { RentalReservationResponse } from "@/lib/api/types/rental-types"
 
-// GET /rentals/me。申請者本人のレンタル予約一覧を取得する。
+/** GET /rentals/me。申請者本人のレンタル予約一覧を取得する。 */
 export async function listMyRentalReservations(): Promise<
   ReadonlyArray<RentalReservationResponse> | Error
 > {

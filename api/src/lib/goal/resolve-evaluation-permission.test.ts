@@ -1,6 +1,6 @@
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const noRelation: EmployeeRelation = { isSelf: false, isReport: false, isSameDepartment: false }

@@ -12,8 +12,10 @@ type Props = {
   params: Promise<{ role: string }>
 }
 
-// ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:manage_roles が必要）。
-// 権限が無いユーザーには 404 を返す。
+/**
+ * ロール編集画面。現在のロールと権限カタログを取得してフォームに渡す（iam:manage_roles が必要）。
+ * 権限が無いユーザーには 404 を返す。
+ */
 export default async function AdminRoleEditPage(props: Props) {
   const [currentUser, params] = await Promise.all([getMe(), props.params])
 

@@ -6,7 +6,7 @@ import { and, desc, eq } from "drizzle-orm"
 export class CertificateRequestRepository {
   constructor(private readonly c: Context) {}
 
-  // 依頼者本人の証明書発行依頼を作成日時の降順で返す。
+  /** 依頼者本人の証明書発行依頼を作成日時の降順で返す。 */
   async findByRequesterId(props: {
     requesterId: number
     limit: number
@@ -27,7 +27,7 @@ export class CertificateRequestRepository {
     }
   }
 
-  // 証明書発行依頼 id で1件取得する。存在しなければ null。
+  /** 証明書発行依頼 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<CertificateRequest | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -62,7 +62,7 @@ export class CertificateRequestRepository {
     }
   }
 
-  // 証明書発行依頼の種別・提出先・希望日・備考を更新する。status が requested でなければ 0 行更新となり null を返す。
+  /** 証明書発行依頼の種別・提出先・希望日・備考を更新する。status が requested でなければ 0 行更新となり null を返す。 */
   async update(certificateRequest: CertificateRequest): Promise<CertificateRequest | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -89,7 +89,7 @@ export class CertificateRequestRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -117,7 +117,7 @@ export class CertificateRequestRepository {
     }
   }
 
-  // 証明書発行依頼を削除する。status が requested の行のみ対象とする。
+  /** 証明書発行依頼を削除する。status が requested の行のみ対象とする。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

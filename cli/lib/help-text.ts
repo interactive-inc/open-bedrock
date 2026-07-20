@@ -1,6 +1,8 @@
-// karte CLI のトップレベルヘルプ。引数なし・ルート直下 --help・未知コマンドの
-// フォールバック表示で使う。コマンド群の網羅は test/lib/help-text.test.ts で検証し、
-// 新しいコマンド群を追加して追記を忘れるとそのテストで落ちてドリフトを検知する。
+/**
+ * karte CLI のトップレベルヘルプ。引数なし・ルート直下 --help・未知コマンドの
+ * フォールバック表示で使う。コマンド群の網羅は test/lib/help-text.test.ts で検証し、
+ * 新しいコマンド群を追加して追記を忘れるとそのテストで落ちてドリフトを検知する。
+ */
 export const helpText = `karte — 社内事務手続きの CLI
 
 usage: karte [command]

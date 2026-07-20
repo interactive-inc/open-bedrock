@@ -8,8 +8,10 @@ type Props = {
   to: string | null
 }
 
-// 本人の勤怠一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
-// from / to で期間を絞り込む。取得失敗・0 件はメッセージ表示にフォールバックする。
+/**
+ * 本人の勤怠一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
+ * from / to で期間を絞り込む。取得失敗・0 件はメッセージ表示にフォールバックする。
+ */
 export async function MyAttendanceList(props: Props) {
   const records = await getMyAttendance({
     employeeId: null,

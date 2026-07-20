@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: ThanksActionState = { ok: false, error: null }
 
-// 景品登録フォーム（管理権限向け）。名前・交換コスト・在庫を native form で送る。
-// reducer 内で結果に応じて toast() する（useEffect は使わない）。
+/**
+ * 景品登録フォーム（管理権限向け）。名前・交換コスト・在庫を native form で送る。
+ * reducer 内で結果に応じて toast() する（useEffect は使わない）。
+ */
 export function RewardCreateForm() {
   async function reduce(
     previousState: ThanksActionState,

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewCycleUpdateRequest } from "@/lib/api/types/review-types"
 
-// PUT /review-cycles/:cycle_id。特権ロールがサイクルの題目・期間・締切を更新する。
+/** PUT /review-cycles/:cycle_id。特権ロールがサイクルの題目・期間・締切を更新する。 */
 export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpdateRequest) {
   const client = await createClient()
 

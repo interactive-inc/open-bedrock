@@ -19,8 +19,10 @@ type Props = {
   params: Promise<{ partner: string }>
 }
 
-// 取引先詳細画面。RSC で 1 件取得し、属性と契約記録セクションを表示する。
-// 契約記録は contract:read:all を持つ場合のみ表示する（api も 403 で守る）。
+/**
+ * 取引先詳細画面。RSC で 1 件取得し、属性と契約記録セクションを表示する。
+ * 契約記録は contract:read:all を持つ場合のみ表示する（api も 403 で守る）。
+ */
 export default async function PartnerDetailPage(props: Props) {
   const params = await props.params
 

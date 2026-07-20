@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /onboarding/tasks/:id/complete。タスクを完了にして更新後のタスクを返す。
+/** POST /onboarding/tasks/:id/complete。タスクを完了にして更新後のタスクを返す。 */
 export async function postOnboardingTaskComplete(taskId: number) {
   const client = await createClient()
 

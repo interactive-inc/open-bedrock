@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /goals?scope=reports。配下全員の目標を取得する。
-// goal:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+/**
+ * GET /goals?scope=reports。配下全員の目標を取得する。
+ * goal:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+ */
 export async function getReportsGoals() {
   const client = await createClient()
 

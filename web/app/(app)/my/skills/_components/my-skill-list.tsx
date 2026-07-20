@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// GET /skills/me を認証付きで取得し、本人の登録スキルをテーブル描画する非同期 RSC。
+/** GET /skills/me を認証付きで取得し、本人の登録スキルをテーブル描画する非同期 RSC。 */
 export async function MySkillList() {
   const mySkills = await getMySkillList()
 

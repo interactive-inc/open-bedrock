@@ -19,7 +19,7 @@ import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "保有状況" }
 
-// 保有状況一覧画面。現在貸出中の資産を「誰が何を持っているか」で横断表示する。管理者向け。
+/** 保有状況一覧画面。現在貸出中の資産を「誰が何を持っているか」で横断表示する。管理者向け。 */
 export default async function AssetHoldingsPage() {
   await requirePermission("asset:manage")
 
@@ -38,7 +38,7 @@ export default async function AssetHoldingsPage() {
   )
 }
 
-// /assets/holdings を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /assets/holdings を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function HoldingsTable() {
   const holdings = await getAssetHoldings()
 

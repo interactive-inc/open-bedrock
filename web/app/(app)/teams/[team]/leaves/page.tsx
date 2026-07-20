@@ -18,8 +18,10 @@ type Props = {
   params: Promise<{ team: string }>
 }
 
-// 部署ハブの休暇タブ。所属メンバー全員の休暇申請を一覧する。
-// 閲覧には leave:read:all、または本人が所属する部署への leave:read:department が必要。
+/**
+ * 部署ハブの休暇タブ。所属メンバー全員の休暇申請を一覧する。
+ * 閲覧には leave:read:all、または本人が所属する部署への leave:read:department が必要。
+ */
 export default async function DepartmentLeavesPage(props: Props) {
   const params = await props.params
 

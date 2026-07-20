@@ -14,7 +14,7 @@ type Props = {
   employees: ReadonlyArray<EmployeeListItem>
 }
 
-// 従業員一覧テーブル。各行は code セルの stretched link で詳細 /employees/:code へ遷移する。
+/** 従業員一覧テーブル。各行は code セルの stretched link で詳細 /employees/:code へ遷移する。 */
 export function EmployeeTable(props: Props) {
   if (props.employees.length === 0) {
     return <p className="text-sm text-muted-foreground">条件に一致する従業員がいません</p>

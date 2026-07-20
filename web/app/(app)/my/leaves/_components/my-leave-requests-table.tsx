@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table"
 import { getMyLeaveRequests } from "@/lib/api/get-my-leave-requests"
 
-// /leave/requests/me を認証付きで取得し、自分の休暇申請一覧テーブルを描画する非同期 RSC。
+/** /leave/requests/me を認証付きで取得し、自分の休暇申請一覧テーブルを描画する非同期 RSC。 */
 export async function MyLeaveRequestsTable() {
   const leaveRequests = await getMyLeaveRequests(null)
 

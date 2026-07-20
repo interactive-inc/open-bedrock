@@ -19,8 +19,10 @@ import { canReadReportsLeaves } from "@/lib/leave/can-read-reports-leaves"
 
 export const metadata = { title: "マイチーム" }
 
-// マイチーム。直属部下の一覧と、配下スコープの勤怠・休暇・目標を文脈導線としてまとめる。
-// 各スコープ節は対応する permission を持つ場合のみ描画する。
+/**
+ * マイチーム。直属部下の一覧と、配下スコープの勤怠・休暇・目標を文脈導線としてまとめる。
+ * 各スコープ節は対応する permission を持つ場合のみ描画する。
+ */
 export default async function MyReportsPage() {
   const currentUser = await getMe()
 
@@ -79,7 +81,7 @@ export default async function MyReportsPage() {
   )
 }
 
-// 直属部下のカード一覧。各人は従業員詳細へ遷移する。
+/** 直属部下のカード一覧。各人は従業員詳細へ遷移する。 */
 async function ReportsGrid() {
   const result = await getMyReports()
 
@@ -118,7 +120,7 @@ async function ReportsGrid() {
   )
 }
 
-// 配下の勤怠（直近）。件数と最新数件を要約する。
+/** 配下の勤怠（直近）。件数と最新数件を要約する。 */
 async function TeamAttendanceSection() {
   const records = await getReportsAttendance()
 
@@ -155,7 +157,7 @@ async function TeamAttendanceSection() {
   )
 }
 
-// 配下の休暇申請。申請者・期間・ステータスを一覧する。
+/** 配下の休暇申請。申請者・期間・ステータスを一覧する。 */
 async function TeamLeaveSection() {
   const result = await getReportsLeaveRequests({ limit: 10 })
 
@@ -190,7 +192,7 @@ async function TeamLeaveSection() {
   )
 }
 
-// 配下の目標。期間・タイトル・ステータスを一覧する。
+/** 配下の目標。期間・タイトル・ステータスを一覧する。 */
 async function TeamGoalSection() {
   const goals = await getReportsGoals()
 

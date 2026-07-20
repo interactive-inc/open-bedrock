@@ -2,7 +2,7 @@ import { MyCertificateRequestsList } from "@/app/(app)/my/certificate-requests/_
 import { FetchError } from "@/components/fetch-error"
 import { listMyCertificateRequests } from "@/lib/api/list-my-certificate-requests"
 
-// 自分の証明書発行依頼を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の証明書発行依頼を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyCertificateRequestsSection() {
   const certificateRequests = await listMyCertificateRequests()
 

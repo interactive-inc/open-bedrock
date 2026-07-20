@@ -1,16 +1,18 @@
-// api/src/knowledge/* のスキーマと同形の手書き type（API と疎結合に保つ）。
-
-// GET /knowledge のクエリ。未指定は null で表す。
-// api/src/knowledge/knowledge-search-request-schema.ts と同形。
+/**
+ * GET /knowledge のクエリ。未指定は null で表す。
+ * api/src/knowledge/knowledge-search-request-schema.ts と同形。
+ */
 export type KnowledgeSearchQuery = {
   q: string | null
   category: string | null
 }
 
-// GET /knowledge の一覧要素（レスポンスは { data, total } で包まれ data の各要素）。
-// api は snake_case で返し、interface/knowledge/route.ts の responseBody は
-// id/category/title/snippet に加えて author_id/created_at を含む。
-// id は knowledgeArticles.id（schema 上 integer）なので number。author_id も integer。
+/**
+ * GET /knowledge の一覧要素（レスポンスは { data, total } で包まれ data の各要素）。
+ * api は snake_case で返し、interface/knowledge/route.ts の responseBody は
+ * id/category/title/snippet に加えて author_id/created_at を含む。
+ * id は knowledgeArticles.id（schema 上 integer）なので number。author_id も integer。
+ */
 export type KnowledgeSearchResult = {
   id: number
   category: string
@@ -20,9 +22,11 @@ export type KnowledgeSearchResult = {
   created_at: string
 }
 
-// GET /knowledge/:id の詳細。tags は値が無いとき null。
-// interface/knowledge/[id]/route.ts の responseBody は id/title/category/tags/body_md に加えて
-// author_id/created_at を含む。author_id は integer（number）、created_at は text（string）。
+/**
+ * GET /knowledge/:id の詳細。tags は値が無いとき null。
+ * interface/knowledge/[id]/route.ts の responseBody は id/title/category/tags/body_md に加えて
+ * author_id/created_at を含む。author_id は integer（number）、created_at は text（string）。
+ */
 export type KnowledgeDetailResponse = {
   id: number
   title: string
@@ -33,8 +37,10 @@ export type KnowledgeDetailResponse = {
   created_at: string
 }
 
-// POST /knowledge のリクエストボディ。
-// api/src/interface/knowledge/route.ts の zValidator と同形。tags は省略可・null 可。
+/**
+ * POST /knowledge のリクエストボディ。
+ * api/src/interface/knowledge/route.ts の zValidator と同形。tags は省略可・null 可。
+ */
 export type KnowledgeCreateRequest = {
   title: string
   category: string
@@ -42,8 +48,10 @@ export type KnowledgeCreateRequest = {
   body_md: string
 }
 
-// PUT /knowledge/:id のリクエストボディ。作成時と同じ全項目を送る。
-// api/src/interface/knowledge/[id]/route.ts の zValidator と同形。
+/**
+ * PUT /knowledge/:id のリクエストボディ。作成時と同じ全項目を送る。
+ * api/src/interface/knowledge/[id]/route.ts の zValidator と同形。
+ */
 export type KnowledgeUpdateRequest = {
   title: string
   category: string

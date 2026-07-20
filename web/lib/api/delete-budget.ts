@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /budgets/:id。予算を削除する。budget:manage が無いと 403、不存在は 404。成功時は null。
+/** DELETE /budgets/:id。予算を削除する。budget:manage が無いと 403、不存在は 404。成功時は null。 */
 export async function deleteBudget(id: number): Promise<null | Error> {
   const client = await createClient()
 

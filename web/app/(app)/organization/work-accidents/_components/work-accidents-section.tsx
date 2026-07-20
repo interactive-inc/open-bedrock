@@ -7,7 +7,7 @@ type Props = {
   canManage: boolean
 }
 
-// 労災・事故の発生記録一覧セクション。read:all を持つ閲覧者向けに全社の記録を取得する。
+/** 労災・事故の発生記録一覧セクション。read:all を持つ閲覧者向けに全社の記録を取得する。 */
 export async function WorkAccidentsSection(props: Props) {
   const records = await listWorkAccidents({ status: props.status })
 

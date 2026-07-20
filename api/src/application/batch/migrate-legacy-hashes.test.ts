@@ -2,10 +2,10 @@ import { describe, expect, test } from "bun:test"
 import { MigrateLegacyHashes } from "@/application/batch/migrate-legacy-hashes"
 import { toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 
-// 認証情報(identities.secret)が移行対象。account と password identity を 1 組み立てる。
+/** 認証情報(identities.secret)が移行対象。account と password identity を 1 組み立てる。 */
 async function insertPasswordIdentity(
   db: D1Database,
   props: { id: number; secret: string },

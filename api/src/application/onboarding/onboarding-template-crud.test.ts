@@ -8,10 +8,10 @@ import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { employees } from "@/schema"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 async function seedTemplate(context: Context): Promise<void> {

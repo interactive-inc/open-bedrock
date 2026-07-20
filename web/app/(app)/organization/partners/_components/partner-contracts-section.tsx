@@ -16,8 +16,10 @@ type Props = {
   canManageContracts: boolean
 }
 
-// 取引先詳細の契約記録セクション。閲覧権限（contract:read:all）がない場合 api は 403 を返すため、
-// 取得が Error のときはセクション自体を描画しない（空表示ではなく非表示）。
+/**
+ * 取引先詳細の契約記録セクション。閲覧権限（contract:read:all）がない場合 api は 403 を返すため、
+ * 取得が Error のときはセクション自体を描画しない（空表示ではなく非表示）。
+ */
 export async function PartnerContractsSection(props: Props) {
   const contracts = await getContractList({ partnerId: props.partnerId, order: "renewal_near" })
 

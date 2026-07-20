@@ -11,8 +11,10 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: CareerPostingFormState = { ok: false, error: null }
 
-// 社内公募の作成フォーム（管理ロール向け）。title 必須、部署・必要スキル・状態は任意。
-// 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 社内公募の作成フォーム（管理ロール向け）。title 必須、部署・必要スキル・状態は任意。
+ * 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function CreatePostingForm() {
   const action = useActionState(
     async (previousState: CareerPostingFormState, formData: FormData) => {

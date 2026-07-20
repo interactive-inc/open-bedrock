@@ -12,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: BudgetCreateFormState = { ok: false, error: null }
 
-// 予算登録フォーム。部署・会計期間・期間・金額・名称・任意メモを native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
-// 成功時は予算一覧へ遷移する。
+/**
+ * 予算登録フォーム。部署・会計期間・期間・金額・名称・任意メモを native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ * 成功時は予算一覧へ遷移する。
+ */
 export function BudgetCreateForm() {
   const router = useRouter()
 

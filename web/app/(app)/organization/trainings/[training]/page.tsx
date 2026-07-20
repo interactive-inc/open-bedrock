@@ -14,8 +14,10 @@ type Props = {
   params: Promise<{ training: string }>
 }
 
-// 研修コース詳細ページ。動的セグメント [code] を受け取り RSC で取得して表示する。
-// active なコースには受講申込ボタンを、管理権限ユーザには編集リンクを出す。
+/**
+ * 研修コース詳細ページ。動的セグメント [code] を受け取り RSC で取得して表示する。
+ * active なコースには受講申込ボタンを、管理権限ユーザには編集リンクを出す。
+ */
 export default async function TrainingCourseDetailPage(props: Props) {
   const params = await props.params
 

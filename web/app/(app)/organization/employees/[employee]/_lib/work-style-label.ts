@@ -1,6 +1,6 @@
 import type { WorkStyle } from "@/lib/api/types/work-style-types"
 
-// 勤務形態の区分を表示用ラベルへ変換する純粋関数。
+/** 勤務形態の区分を表示用ラベルへ変換する純粋関数。 */
 export function toWorkStyleLabel(style: WorkStyle): string {
   if (style === "flextime") {
     return "フレックスタイム制"

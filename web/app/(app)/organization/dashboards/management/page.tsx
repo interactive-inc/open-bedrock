@@ -12,8 +12,10 @@ import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "経営ダッシュボード" }
 
-// 経営ダッシュボード。management_dashboard:view が無ければ notFound。
-// 在籍・入退社・勤怠・休暇・経費・評価・目標・申請の横断集計を表示する。
+/**
+ * 経営ダッシュボード。management_dashboard:view が無ければ notFound。
+ * 在籍・入退社・勤怠・休暇・経費・評価・目標・申請の横断集計を表示する。
+ */
 export default async function ManagementDashboardPage() {
   const me = await getMe()
 

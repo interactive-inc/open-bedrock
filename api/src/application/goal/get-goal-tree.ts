@@ -38,7 +38,7 @@ export class GetGoalTree {
     return buildGoalTree({ goals: visible })
   }
 
-  // 個人目標のうち閲覧スコープ外のものを除く。全社・部門目標は常に残す。
+  /** 個人目標のうち閲覧スコープ外のものを除く。全社・部門目標は常に残す。 */
   private async toVisibleGoals(
     goals: ReadonlyArray<Goal>,
     session: SessionPayload,

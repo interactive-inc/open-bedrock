@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache"
 import { createItIncident } from "@/lib/api/create-it-incident"
 import { resolveItIncident } from "@/lib/api/resolve-it-incident"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ItIncidentActionState = {
   ok: boolean
   error: string | null
 }
 
-// インシデント記録の登録 Server Action。it_incident:manage が無いと api が 403。
+/** インシデント記録の登録 Server Action。it_incident:manage が無いと api が 403。 */
 export async function createItIncidentAction(
   previousState: ItIncidentActionState,
   formData: FormData,
@@ -41,7 +41,7 @@ export async function createItIncidentAction(
   return { ok: true, error: null }
 }
 
-// インシデント解消 Server Action。form の hidden input で id を渡す。it_incident:manage が無いと api が 403。
+/** インシデント解消 Server Action。form の hidden input で id を渡す。it_incident:manage が無いと api が 403。 */
 export async function resolveItIncidentAction(
   previousState: ItIncidentActionState,
   formData: FormData,
@@ -63,7 +63,7 @@ export async function resolveItIncidentAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -72,7 +72,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData 値を整数へ。未入力や不正は null。
+/** FormData 値を整数へ。未入力や不正は null。 */
 function toInteger(value: FormDataEntryValue | null): number | null {
   const text = toText(value)
 
@@ -85,7 +85,7 @@ function toInteger(value: FormDataEntryValue | null): number | null {
   return Number.isInteger(parsed) ? parsed : null
 }
 
-// severity の許容値だけを返す。それ以外は null。
+/** severity の許容値だけを返す。それ以外は null。 */
 function toSeverity(
   value: FormDataEntryValue | null,
 ): "low" | "medium" | "high" | "critical" | null {

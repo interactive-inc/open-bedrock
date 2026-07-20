@@ -6,7 +6,7 @@ import { and, asc, eq, inArray, lte, gte, ne, sql } from "drizzle-orm"
 export class BusinessTripRepository {
   constructor(private readonly c: Context) {}
 
-  // 同一申請者で期間が重複する出張申請を返す。
+  /** 同一申請者で期間が重複する出張申請を返す。 */
   async findOverlapping(query: {
     travelerId: number
     startDate: string
@@ -35,7 +35,7 @@ export class BusinessTripRepository {
     }
   }
 
-  // 申請者本人の出張申請を開始日の昇順でページングして返す。
+  /** 申請者本人の出張申請を開始日の昇順でページングして返す。 */
   async findByTravelerId(props: {
     travelerId: number
     limit: number
@@ -56,7 +56,7 @@ export class BusinessTripRepository {
     }
   }
 
-  // 出張申請 id で1件取得する。存在しなければ null。
+  /** 出張申請 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<BusinessTrip | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -99,7 +99,7 @@ export class BusinessTripRepository {
     }
   }
 
-  // 出張申請の行き先・期間・目的・概算費用を更新する。status が requested のときのみ更新し、0 行更新は null を返す。
+  /** 出張申請の行き先・期間・目的・概算費用を更新する。status が requested のときのみ更新し、0 行更新は null を返す。 */
   async update(businessTrip: BusinessTrip): Promise<BusinessTrip | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -120,7 +120,7 @@ export class BusinessTripRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -141,7 +141,7 @@ export class BusinessTripRepository {
     }
   }
 
-  // 出張申請を削除する。status が requested のときのみ削除し、0 行削除は null を返す。
+  /** 出張申請を削除する。status が requested のときのみ削除し、0 行削除は null を返す。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

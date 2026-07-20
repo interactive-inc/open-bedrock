@@ -1,6 +1,6 @@
 import { canManageDisciplinaryActions } from "@/lib/disciplinary-action/can-manage-disciplinary-actions"
 import { canReadDisciplinaryActions } from "@/lib/disciplinary-action/can-read-disciplinary-actions"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("disciplinary action permissions", () => {

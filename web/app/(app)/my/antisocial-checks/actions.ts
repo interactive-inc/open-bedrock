@@ -6,14 +6,16 @@ import { createAntisocialCheck } from "@/lib/api/create-antisocial-check"
 import { updateAntisocialCheck } from "@/lib/api/update-antisocial-check"
 import { getMe } from "@/lib/api/get-me"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type AntisocialCheckActionState = {
   ok: boolean
   error: string | null
 }
 
-// 反社チェック申請作成 Server Action。partner_name 必須、所在地・代表者名は任意。
-// 成功時は /antisocial-checks を revalidate して一覧へ反映する。
+/**
+ * 反社チェック申請作成 Server Action。partner_name 必須、所在地・代表者名は任意。
+ * 成功時は /antisocial-checks を revalidate して一覧へ反映する。
+ */
 export async function createAntisocialCheckAction(
   previousState: AntisocialCheckActionState,
   formData: FormData,
@@ -35,7 +37,7 @@ export async function createAntisocialCheckAction(
   return { ok: true, error: null }
 }
 
-// 反社チェック申請変更 Server Action。antisocial_check_id 必須。本人以外の変更は api がエラーを返す。
+/** 反社チェック申請変更 Server Action。antisocial_check_id 必須。本人以外の変更は api がエラーを返す。 */
 export async function updateAntisocialCheckAction(
   previousState: AntisocialCheckActionState,
   formData: FormData,
@@ -63,7 +65,7 @@ export async function updateAntisocialCheckAction(
   return { ok: true, error: null }
 }
 
-// 反社チェック申請取消 Server Action。antisocial_check_id 必須。成功時は /antisocial-checks を revalidate する。
+/** 反社チェック申請取消 Server Action。antisocial_check_id 必須。成功時は /antisocial-checks を revalidate する。 */
 export async function cancelAntisocialCheckAction(
   previousState: AntisocialCheckActionState,
   formData: FormData,
@@ -85,7 +87,7 @@ export async function cancelAntisocialCheckAction(
   return { ok: true, error: null }
 }
 
-// 管理者が他者の申請へ判定結果を記録する。本人申請と権限不足は API でも拒否される。
+/** 管理者が他者の申請へ判定結果を記録する。本人申請と権限不足は API でも拒否される。 */
 export async function completeAntisocialCheckAction(
   previousState: AntisocialCheckActionState,
   formData: FormData,
@@ -140,7 +142,7 @@ type UpdateFields = {
   result: string | null
 }
 
-// FormData から作成用フィールドを取り出して検証する。不正時は Error。
+/** FormData から作成用フィールドを取り出して検証する。不正時は Error。 */
 function toCreateFields(formData: FormData): CreateFields | Error {
   const partnerName = formData.get("partner_name")
 
@@ -155,7 +157,7 @@ function toCreateFields(formData: FormData): CreateFields | Error {
   }
 }
 
-// FormData から変更用フィールドを取り出して検証する。不正時は Error。
+/** FormData から変更用フィールドを取り出して検証する。不正時は Error。 */
 function toUpdateFields(formData: FormData): UpdateFields | Error {
   const created = toCreateFields(formData)
 
@@ -171,7 +173,7 @@ function toUpdateFields(formData: FormData): UpdateFields | Error {
   }
 }
 
-// 任意テキストの FormData 値を整える。未入力や不正値は null。
+/** 任意テキストの FormData 値を整える。未入力や不正値は null。 */
 function toOptionalText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

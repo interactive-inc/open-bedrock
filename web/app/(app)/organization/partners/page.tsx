@@ -33,7 +33,7 @@ type Props = {
   searchParams: Promise<{ q?: string; status?: string }>
 }
 
-// 取引先一覧画面。キーワード・状態で絞り込み、RSC でサーバ取得してテーブル表示する。
+/** 取引先一覧画面。キーワード・状態で絞り込み、RSC でサーバ取得してテーブル表示する。 */
 export default async function PartnersPage(props: Props) {
   const searchParams = await props.searchParams
 
@@ -74,7 +74,7 @@ type TableProps = {
   status: PartnerStatus | null
 }
 
-// /partners を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /partners を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function PartnersTable(props: TableProps) {
   const partners = await getPartnerList({ q: props.q, status: props.status })
 

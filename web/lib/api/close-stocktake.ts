@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /stocktakes/:id/close。棚卸しセッションを締める（管理者ロールのみ）。
+/** POST /stocktakes/:id/close。棚卸しセッションを締める（管理者ロールのみ）。 */
 export async function closeStocktake(id: string) {
   const client = await createClient()
 

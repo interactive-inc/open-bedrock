@@ -11,7 +11,7 @@ type EmployeeSkillKey = {
 export class EmployeeSkillRepository {
   constructor(private readonly c: Context) {}
 
-  // 業務キー（employeeId×skillCode）で1件取得する。存在しなければ null。
+  /** 業務キー（employeeId×skillCode）で1件取得する。存在しなければ null。 */
   async findByEmployeeAndCode(key: EmployeeSkillKey): Promise<EmployeeSkill | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -32,7 +32,7 @@ export class EmployeeSkillRepository {
     }
   }
 
-  // 業務キー（employeeId×skillCode）で1件削除する。対象行が存在しない場合は null を返す。
+  /** 業務キー（employeeId×skillCode）で1件削除する。対象行が存在しない場合は null を返す。 */
   async delete(key: EmployeeSkillKey): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -51,7 +51,7 @@ export class EmployeeSkillRepository {
     }
   }
 
-  // 業務キー（employeeId×skillCode）で upsert する。
+  /** 業務キー（employeeId×skillCode）で upsert する。 */
   async save(employeeSkill: EmployeeSkill): Promise<EmployeeSkill | Error> {
     try {
       const rows = await this.c.var.database

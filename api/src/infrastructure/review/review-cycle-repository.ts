@@ -62,7 +62,7 @@ export class ReviewCycleRepository {
     }
   }
 
-  // status のみを更新する。title/period/dueDate の変更は updateDetails を使う。
+  /** status のみを更新する。title/period/dueDate の変更は updateDetails を使う。 */
   async updateStatus(
     reviewCycle: ReviewCycle,
     previousStatus: ReviewCycle["status"],

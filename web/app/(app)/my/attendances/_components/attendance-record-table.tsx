@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-// api の実レスポンス（snake_case）と同形の表示用レコード型。
+/** api の実レスポンス（snake_case）と同形の表示用レコード型。 */
 type AttendanceRecord = {
   id: number
   employee_id: number
@@ -28,8 +28,10 @@ type Props = {
   withEmployeeId: boolean
 }
 
-// 勤怠レコードをテーブル描画する表示専用コンポーネント。本人 / 管理者で共有する。
-// status はバッジ、勤務時間は分を Hh Mm へ整形して表示する。
+/**
+ * 勤怠レコードをテーブル描画する表示専用コンポーネント。本人 / 管理者で共有する。
+ * status はバッジ、勤務時間は分を Hh Mm へ整形して表示する。
+ */
 export function AttendanceRecordTable(props: Props) {
   return (
     <div className="overflow-x-auto">

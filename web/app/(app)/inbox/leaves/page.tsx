@@ -40,7 +40,7 @@ function toSort(raw: string | undefined): LeaveInboxSort {
   return "created_at_desc"
 }
 
-// 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。
+/** 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。 */
 export default async function LeaveInboxPage(props: { searchParams: SearchParams }) {
   await requirePermission("leave:approve")
 
@@ -72,8 +72,10 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
   )
 }
 
-// /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
-// 権限が無い場合は api が 403 を返すため Error として扱う。
+/**
+ * /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
+ * 権限が無い場合は api が 403 を返すため Error として扱う。
+ */
 async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: LeaveInboxSort }) {
   const result = await getLeaveInbox({
     limit: props.pageSize,

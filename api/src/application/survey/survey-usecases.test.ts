@@ -16,11 +16,9 @@ import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-
-// --- seed helpers ---
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedSurvey(context: Context, status: "open" | "closed"): Promise<number> {
   const created = await new SurveyRepository(context).create(
@@ -60,8 +58,6 @@ async function seedResponse(
 
   return created.id
 }
-
-// --- CreateSurvey ---
 
 describe("CreateSurvey", () => {
   test("creates a survey with admin role", async () => {
@@ -116,8 +112,6 @@ describe("CreateSurvey", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
-
-// --- DeleteSurvey ---
 
 describe("DeleteSurvey", () => {
   test("deletes a closed survey", async () => {
@@ -271,8 +265,6 @@ describe("DeleteSurvey", () => {
   })
 })
 
-// --- UpdateSurvey ---
-
 describe("UpdateSurvey", () => {
   test("updates title and status without changing questions", async () => {
     const { context } = createTestContext()
@@ -399,8 +391,6 @@ describe("UpdateSurvey", () => {
   })
 })
 
-// --- SubmitSurveyResponse ---
-
 describe("SubmitSurveyResponse", () => {
   test("submits a response to an open survey", async () => {
     const { context } = createTestContext()
@@ -468,8 +458,6 @@ describe("SubmitSurveyResponse", () => {
   })
 })
 
-// --- GetSurveyResponse ---
-
 describe("GetSurveyResponse", () => {
   test("returns the response for the respondent", async () => {
     const { context } = createTestContext()
@@ -517,8 +505,6 @@ describe("GetSurveyResponse", () => {
   })
 })
 
-// --- ListMySurveyResponses ---
-
 describe("ListMySurveyResponses", () => {
   test("returns responses for the respondent", async () => {
     const { context } = createTestContext()
@@ -556,8 +542,6 @@ describe("ListMySurveyResponses", () => {
     expect(result.length).toBe(0)
   })
 })
-
-// --- UpdateSurveyResponse ---
 
 describe("UpdateSurveyResponse", () => {
   test("updates the response content", async () => {
@@ -631,8 +615,6 @@ describe("UpdateSurveyResponse", () => {
     expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })
-
-// --- WithdrawSurveyResponse ---
 
 describe("WithdrawSurveyResponse", () => {
   test("withdraws a response from an open survey", async () => {

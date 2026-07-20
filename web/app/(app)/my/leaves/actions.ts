@@ -8,14 +8,16 @@ import type { LeaveType } from "@/lib/api/types/leave-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type LeaveActionState = {
   ok: boolean
   error: string | null
 }
 
-// 休暇申請作成 Server Action。leave_type/start_date/end_date 必須、reason は任意。
-// 成功時は /leave を revalidate して残日数と一覧へ反映する。
+/**
+ * 休暇申請作成 Server Action。leave_type/start_date/end_date 必須、reason は任意。
+ * 成功時は /leave を revalidate して残日数と一覧へ反映する。
+ */
 export async function createLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
@@ -65,8 +67,10 @@ export async function createLeaveRequestAction(
   return { ok: true, error: null }
 }
 
-// 休暇申請変更 Server Action。leave_request_id/leave_type/start_date/end_date 必須、reason は任意。
-// 成功時は /leave を revalidate して一覧へ反映する。
+/**
+ * 休暇申請変更 Server Action。leave_request_id/leave_type/start_date/end_date 必須、reason は任意。
+ * 成功時は /leave を revalidate して一覧へ反映する。
+ */
 export async function updateLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
@@ -122,8 +126,10 @@ export async function updateLeaveRequestAction(
   return { ok: true, error: null }
 }
 
-// 休暇申請取り下げ Server Action。leave_request_id 必須。
-// 成功時は /leave を revalidate して一覧へ反映する。
+/**
+ * 休暇申請取り下げ Server Action。leave_request_id 必須。
+ * 成功時は /leave を revalidate して一覧へ反映する。
+ */
 export async function cancelLeaveRequestAction(
   previousState: LeaveActionState,
   formData: FormData,
@@ -147,7 +153,7 @@ export async function cancelLeaveRequestAction(
   return { ok: true, error: null }
 }
 
-// leave_type の FormData 値を許可値へ。不正値は null。
+/** leave_type の FormData 値を許可値へ。不正値は null。 */
 function toLeaveType(value: FormDataEntryValue | null): LeaveType | null {
   if (value === "annual" || value === "special") {
     return value

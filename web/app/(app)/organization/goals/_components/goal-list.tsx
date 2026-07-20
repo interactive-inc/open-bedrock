@@ -18,8 +18,10 @@ type Props = {
   employeeId: string | null
 }
 
-// 目標一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
-// 各行は詳細 (/goals/[id]) へのリンクで、status はバッジ表示する。
+/**
+ * 目標一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
+ * 各行は詳細 (/goals/[id]) へのリンクで、status はバッジ表示する。
+ */
 export async function GoalList(props: Props) {
   const employeeId = props.employeeId !== null ? Number(props.employeeId) : null
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /grades/:id。等級マスタを削除する。成功時（204）は null、失敗時は Error。
+/** DELETE /grades/:id。等級マスタを削除する。成功時（204）は null、失敗時は Error。 */
 export async function deleteGrade(gradeId: number): Promise<null | Error> {
   const client = await createClient()
 

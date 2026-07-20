@@ -13,7 +13,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: PositionActionState = { ok: false, error: null }
 
-// 役職作成フォーム。code/name/rank 必須、説明は任意。成功時は /positions へ戻す。
+/** 役職作成フォーム。code/name/rank 必須、説明は任意。成功時は /positions へ戻す。 */
 export function PositionCreateForm() {
   const router = useRouter()
 

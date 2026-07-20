@@ -1,4 +1,4 @@
-// 異動・在籍イベント種別コードを日本語ラベルへ変換する。未知の値はコードをそのまま返す。
+/** 異動・在籍イベント種別コードを日本語ラベルへ変換する。未知の値はコードをそのまま返す。 */
 export function employeeEventKindLabel(kind: string): string {
   if (kind === "join") {
     return "入社"

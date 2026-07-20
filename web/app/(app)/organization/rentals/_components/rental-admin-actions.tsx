@@ -16,8 +16,10 @@ type Props = {
 
 const initialState: RentalReservationActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。requested は貸出、lent は返却へ進める。
-// status に応じて片方のボタンだけ表示する。
+/**
+ * admin 一覧の行アクション。requested は貸出、lent は返却へ進める。
+ * status に応じて片方のボタンだけ表示する。
+ */
 export function RentalAdminActions(props: Props) {
   const lend = useActionState(lendRentalReservationAction, initialState)
 

@@ -9,8 +9,10 @@ import { Suspense } from "react"
 
 export const metadata = { title: "ロール管理" }
 
-// ロール管理画面。system role と動的ロールの一覧を表示する（iam:manage_roles が必要）。
-// 権限が無いユーザーには 404 を返し、管理機能の存在を露出しない。
+/**
+ * ロール管理画面。system role と動的ロールの一覧を表示する（iam:manage_roles が必要）。
+ * 権限が無いユーザーには 404 を返し、管理機能の存在を露出しない。
+ */
 export default async function AdminRolesPage() {
   const currentUser = await getMe()
 

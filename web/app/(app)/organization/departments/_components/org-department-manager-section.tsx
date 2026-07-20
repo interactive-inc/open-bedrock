@@ -2,7 +2,7 @@ import { OrgDepartmentManagerList } from "@/app/(app)/organization/departments/_
 import { FetchError } from "@/components/fetch-error"
 import { listOrgDepartments } from "@/lib/api/list-org-departments"
 
-// 部署ノード管理セクション（GET /org/departments）。取得失敗時はメッセージを表示する。
+/** 部署ノード管理セクション（GET /org/departments）。取得失敗時はメッセージを表示する。 */
 export async function OrgDepartmentManagerSection() {
   const departments = await listOrgDepartments()
 

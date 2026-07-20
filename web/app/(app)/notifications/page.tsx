@@ -31,9 +31,11 @@ function filterToIsRead(filter: NotificationFilterValue): boolean | undefined {
   return undefined
 }
 
-// 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
-// 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
-// ?filter=unread|read で未読/既読の絞り込みができる。
+/**
+ * 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
+ * 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
+ * ?filter=unread|read で未読/既読の絞り込みができる。
+ */
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 

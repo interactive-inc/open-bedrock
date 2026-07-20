@@ -17,8 +17,10 @@ export type SkillUpdateState = {
   error: string | null
 }
 
-// スキル登録/更新フォームの Server Action。useActionState から呼ばれる。
-// 成功時は /skills/me を revalidate して一覧へ即時反映する。
+/**
+ * スキル登録/更新フォームの Server Action。useActionState から呼ばれる。
+ * 成功時は /skills/me を revalidate して一覧へ即時反映する。
+ */
 export async function updateSkillAction(
   previousState: SkillUpdateState,
   formData: FormData,
@@ -79,7 +81,7 @@ export async function updateSkillAction(
   return { ok: true, error: null }
 }
 
-// 登録スキル削除の Server Action。skill_code 必須。成功時は /skills/me を revalidate する。
+/** 登録スキル削除の Server Action。skill_code 必須。成功時は /skills/me を revalidate する。 */
 export async function removeSkillAction(
   previousState: SkillUpdateState,
   formData: FormData,

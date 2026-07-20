@@ -7,14 +7,16 @@ import { updateRoomReservation } from "@/lib/api/update-room-reservation"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type RoomReservationActionState = {
   ok: boolean
   error: string | null
 }
 
-// 会議室予約作成 Server Action。room_id/start_at/end_at 必須、purpose は任意。
-// 期間が重複すると api が 409 を返し Error になる。成功時は /rooms を revalidate して空き状況へ反映する。
+/**
+ * 会議室予約作成 Server Action。room_id/start_at/end_at 必須、purpose は任意。
+ * 期間が重複すると api が 409 を返し Error になる。成功時は /rooms を revalidate して空き状況へ反映する。
+ */
 export async function createRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
@@ -61,8 +63,10 @@ export async function createRoomReservationAction(
   return { ok: true, error: null }
 }
 
-// 会議室予約変更 Server Action。reservation_id/start_at/end_at 必須、purpose は任意。
-// 本人以外の変更や時間帯重複は api がエラーを返す。成功時は /rooms を revalidate する。
+/**
+ * 会議室予約変更 Server Action。reservation_id/start_at/end_at 必須、purpose は任意。
+ * 本人以外の変更や時間帯重複は api がエラーを返す。成功時は /rooms を revalidate する。
+ */
 export async function updateRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
@@ -106,7 +110,7 @@ export async function updateRoomReservationAction(
   return { ok: true, error: null }
 }
 
-// 会議室予約キャンセル Server Action。reservation_id 必須。成功時は /rooms を revalidate する。
+/** 会議室予約キャンセル Server Action。reservation_id 必須。成功時は /rooms を revalidate する。 */
 export async function cancelRoomReservationAction(
   previousState: RoomReservationActionState,
   formData: FormData,
@@ -130,7 +134,7 @@ export async function cancelRoomReservationAction(
   return { ok: true, error: null }
 }
 
-// purpose の FormData 値を文字列へ。未入力や不正値は null。
+/** purpose の FormData 値を文字列へ。未入力や不正値は null。 */
 function toPurpose(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

@@ -7,8 +7,10 @@ type Props = {
   status: string | null
 }
 
-// 取引先の絞り込みフォーム。native な GET フォームで ?q=&status= へ遷移する。
-// searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+/**
+ * 取引先の絞り込みフォーム。native な GET フォームで ?q=&status= へ遷移する。
+ * searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+ */
 export function PartnerFilterForm(props: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">

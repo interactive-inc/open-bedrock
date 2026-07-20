@@ -24,11 +24,13 @@ const evaluationKindLabels: Record<GoalEvaluationKind, string> = {
 
 const initialState: GoalActionState = { ok: false, error: null }
 
-// 評価登録フォーム。useActionState で createGoalEvaluationAction を呼び結果を sonner で通知する。
-// kind は native form と相性の良い select、score は number、comment は textarea。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 評価登録フォーム。useActionState で createGoalEvaluationAction を呼び結果を sonner で通知する。
+ * kind は native form と相性の良い select、score は number、comment は textarea。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function GoalEvaluationForm(props: Props) {
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: GoalActionState,
     formData: FormData,

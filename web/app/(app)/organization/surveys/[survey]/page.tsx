@@ -17,8 +17,10 @@ type Props = {
   params: Promise<{ survey: string }>
 }
 
-// アンケート回答画面 (/surveys/:surveyId)。
-// 専用の取得 API で対象アンケートを取得し、設問を回答フォームに渡す。
+/**
+ * アンケート回答画面 (/surveys/:surveyId)。
+ * 専用の取得 API で対象アンケートを取得し、設問を回答フォームに渡す。
+ */
 export default async function SurveyAnswerPage(props: Props) {
   const routeParams = await props.params
 

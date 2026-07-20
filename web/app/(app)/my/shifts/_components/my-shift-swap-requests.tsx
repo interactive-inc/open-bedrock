@@ -22,7 +22,7 @@ type Props = {
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// 自分が出したシフト交代申請の一覧。保留中の申請には取り下げボタンを出す。
+/** 自分が出したシフト交代申請の一覧。保留中の申請には取り下げボタンを出す。 */
 export function MyShiftSwapRequests(props: Props) {
   if (props.swapRequests.length === 0) {
     return <EmptyState title="交代申請はありません" />
@@ -75,7 +75,7 @@ export function MyShiftSwapRequests(props: Props) {
   )
 }
 
-// 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。
+/** 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。 */
 function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
   const [, formAction, pending] = useFormAction(
     cancelShiftSwapRequestAction,

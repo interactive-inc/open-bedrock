@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewCycleCreateRequest } from "@/lib/api/types/review-types"
 
-// POST /review-cycles。特権ロールが draft の評価サイクルを作成する。
+/** POST /review-cycles。特権ロールが draft の評価サイクルを作成する。 */
 export async function createReviewCycle(request: ReviewCycleCreateRequest) {
   const client = await createClient()
 

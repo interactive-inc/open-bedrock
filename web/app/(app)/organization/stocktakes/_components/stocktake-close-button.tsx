@@ -12,8 +12,10 @@ type Props = {
 
 const initialState: StocktakeCloseFormState = { ok: false, error: null }
 
-// 棚卸し締めボタン。ボタン 1 つでセッションを締める。実施中のセッションでのみ表示する想定。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 棚卸し締めボタン。ボタン 1 つでセッションを締める。実施中のセッションでのみ表示する想定。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function StocktakeCloseButton(props: Props) {
   async function reduce(
     previousState: StocktakeCloseFormState,

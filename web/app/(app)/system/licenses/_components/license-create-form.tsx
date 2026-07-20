@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 
 const initialState: LicenseActionState = { ok: false, error: null }
 
-// ライセンス登録フォーム。名称必須、その他は任意。成功時は /licenses へ戻る。
+/** ライセンス登録フォーム。名称必須、その他は任意。成功時は /licenses へ戻る。 */
 export function LicenseCreateForm() {
   const router = useRouter()
 

@@ -20,7 +20,7 @@ type Props = {
   canManage: boolean
 }
 
-// GET /licenses を認証付きで取得し、更新期限が近い順のライセンス台帳テーブルを描画する非同期 RSC。
+/** GET /licenses を認証付きで取得し、更新期限が近い順のライセンス台帳テーブルを描画する非同期 RSC。 */
 export async function LicenseList(props: Props) {
   const result = await getLicenseList({ limit: PAGE_SIZE, offset: props.offset })
 

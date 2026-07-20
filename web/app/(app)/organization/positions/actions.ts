@@ -14,13 +14,13 @@ import {
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManagePositions } from "@/lib/position/can-manage-positions"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type PositionActionState = {
   ok: boolean
   error: string | null
 }
 
-// フォーム入力を検証済みの PositionCreateRequest 相当へ変換する。失敗時は Error。
+/** フォーム入力を検証済みの PositionCreateRequest 相当へ変換する。失敗時は Error。 */
 function toPositionInput(formData: FormData) {
   const code = toRequiredText(formData.get("code"), {
     label: "コード",
@@ -62,7 +62,7 @@ function toPositionInput(formData: FormData) {
   return { code, name, rank, description: description ?? undefined }
 }
 
-// 役職作成 Server Action。code/name/rank 必須、description は任意。
+/** 役職作成 Server Action。code/name/rank 必須、description は任意。 */
 export async function createPositionAction(
   previousState: PositionActionState,
   formData: FormData,
@@ -90,7 +90,7 @@ export async function createPositionAction(
   return { ok: true, error: null }
 }
 
-// 役職変更 Server Action。positionId 必須。
+/** 役職変更 Server Action。positionId 必須。 */
 export async function updatePositionAction(
   previousState: PositionActionState,
   formData: FormData,
@@ -124,7 +124,7 @@ export async function updatePositionAction(
   return { ok: true, error: null }
 }
 
-// 役職削除 Server Action。positionId 必須。
+/** 役職削除 Server Action。positionId 必須。 */
 export async function deletePositionAction(
   previousState: PositionActionState,
   formData: FormData,

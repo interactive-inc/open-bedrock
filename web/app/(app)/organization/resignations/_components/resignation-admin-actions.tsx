@@ -15,7 +15,7 @@ type Props = {
 
 const initialState: ResignationActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。requested の退職申請を人事が受理/却下する。
+/** admin 一覧の行アクション。requested の退職申請を人事が受理/却下する。 */
 export function ResignationAdminActions(props: Props) {
   const accept = useActionState(acceptResignationAction, initialState)
 

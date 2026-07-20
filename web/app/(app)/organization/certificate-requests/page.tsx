@@ -22,7 +22,7 @@ const PAGE_SIZE = 20
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の証明書発行依頼を横断で確認する画面。certificate_request:read:all を持つロールのみ表示できる。
+/** 全社の証明書発行依頼を横断で確認する画面。certificate_request:read:all を持つロールのみ表示できる。 */
 export default async function AdminCertificateRequestsPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

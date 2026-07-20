@@ -11,7 +11,7 @@ export type DecisionState = {
   error: string | null
 }
 
-// 承認処理。コメント任意。
+/** 承認処理。コメント任意。 */
 async function approve(applicationId: number, comment: string | null): Promise<DecisionState> {
   const decided = await approveApplication(applicationId, comment)
 
@@ -22,7 +22,7 @@ async function approve(applicationId: number, comment: string | null): Promise<D
   return { ok: true, error: null }
 }
 
-// 却下処理。コメント必須。
+/** 却下処理。コメント必須。 */
 async function reject(applicationId: number, comment: string | null): Promise<DecisionState> {
   if (comment === null) {
     return { ok: false, error: "却下理由を入力してください" }
@@ -37,7 +37,7 @@ async function reject(applicationId: number, comment: string | null): Promise<De
   return { ok: true, error: null }
 }
 
-// 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。
+/** 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。 */
 export async function decideApplicationAction(
   previousState: DecisionState,
   formData: FormData,

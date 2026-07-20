@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache"
 import { createCommendation } from "@/lib/api/create-commendation"
 import { deleteCommendation } from "@/lib/api/delete-commendation"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type CommendationActionState = {
   ok: boolean
   error: string | null
 }
 
-// 表彰の記録の作成 Server Action。employee_id/title/reason/awarded_on 必須。commendation:manage が無いと api が 403。
+/** 表彰の記録の作成 Server Action。employee_id/title/reason/awarded_on 必須。commendation:manage が無いと api が 403。 */
 export async function createCommendationAction(
   previousState: CommendationActionState,
   formData: FormData,
@@ -43,7 +43,7 @@ export async function createCommendationAction(
   return { ok: true, error: null }
 }
 
-// 表彰の記録の削除 Server Action。commendation:manage が無いと api が 403。
+/** 表彰の記録の削除 Server Action。commendation:manage が無いと api が 403。 */
 export async function deleteCommendationAction(
   previousState: CommendationActionState,
   formData: FormData,
@@ -65,7 +65,7 @@ export async function deleteCommendationAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -74,7 +74,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData 値を正の整数へ。不正値は null。
+/** FormData 値を正の整数へ。不正値は null。 */
 function toPositiveInt(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
     return null

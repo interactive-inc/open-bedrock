@@ -1,8 +1,10 @@
 import { app } from "@/app/index"
 import { describe, expect, it } from "bun:test"
 
-// 人事の記録系3ドメイン（資格・健診・労災）の CLI コマンドが index.ts に登録され、
-// help が返る（catch-all に落ちない）ことを確認する。動的セグメント (:id?) は省略形でも一致する。
+/**
+ * 人事の記録系3ドメイン（資格・健診・労災）の CLI コマンドが index.ts に登録され、
+ * help が返る（catch-all に落ちない）ことを確認する。動的セグメント (:id?) は省略形でも一致する。
+ */
 const paths: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/certifications", help: "karte certifications" },
   { path: "/certifications/create", help: "certifications create" },

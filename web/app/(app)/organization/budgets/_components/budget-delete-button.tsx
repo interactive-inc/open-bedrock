@@ -14,7 +14,7 @@ type Props = {
 
 const initialState: BudgetDeleteFormState = { ok: false, error: null }
 
-// 予算削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
+/** 予算削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。 */
 export function BudgetDeleteButton(props: Props) {
   const router = useRouter()
 

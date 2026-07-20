@@ -15,13 +15,13 @@ import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { approveShiftSwapRequest } from "@/lib/api/approve-shift-swap-request"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ShiftFormState = {
   ok: boolean
   error: string | null
 }
 
-// シフト交代申請 Server Action（本人）。target_employee_code/date 必須、note 任意。
+/** シフト交代申請 Server Action（本人）。target_employee_code/date 必須、note 任意。 */
 export async function createShiftSwapRequestAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -63,8 +63,10 @@ export async function createShiftSwapRequestAction(
   return { ok: true, error: null }
 }
 
-// シフト割当作成 Server Action（特権ロール）。employee_code/pattern_code/date 必須、note 任意。
-// 成功時は /shift/manage へ redirect する。
+/**
+ * シフト割当作成 Server Action（特権ロール）。employee_code/pattern_code/date 必須、note 任意。
+ * 成功時は /shift/manage へ redirect する。
+ */
 export async function createShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -124,7 +126,7 @@ export async function createShiftAssignmentAction(
   return { ok: true, error: null }
 }
 
-// シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。
+/** シフト割当公開 Server Action（特権ロール）。hidden input の assignment_id を受け取る。 */
 export async function publishShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -154,8 +156,10 @@ export async function publishShiftAssignmentAction(
   return { ok: true, error: null }
 }
 
-// シフトパターン作成 Server Action（特権ロール）。code/name/start_time/end_time 必須、break_minutes 任意。
-// 成功時は /shift/patterns へ redirect する。
+/**
+ * シフトパターン作成 Server Action（特権ロール）。code/name/start_time/end_time 必須、break_minutes 任意。
+ * 成功時は /shift/patterns へ redirect する。
+ */
 export async function createShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -229,7 +233,7 @@ export async function createShiftPatternAction(
   return { ok: true, error: null }
 }
 
-// シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。
+/** シフト割当変更 Server Action（特権ロール）。assignment_id/date 必須、pattern_code/note 任意。 */
 export async function updateShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -269,7 +273,7 @@ export async function updateShiftAssignmentAction(
   return { ok: true, error: null }
 }
 
-// シフト割当削除 Server Action（特権ロール）。assignment_id 必須。
+/** シフト割当削除 Server Action（特権ロール）。assignment_id 必須。 */
 export async function deleteShiftAssignmentAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -299,7 +303,7 @@ export async function deleteShiftAssignmentAction(
   return { ok: true, error: null }
 }
 
-// シフトパターン変更 Server Action（特権ロール）。code/name/start_time/end_time 必須。
+/** シフトパターン変更 Server Action（特権ロール）。code/name/start_time/end_time 必須。 */
 export async function updateShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -335,7 +339,7 @@ export async function updateShiftPatternAction(
   return { ok: true, error: null }
 }
 
-// シフトパターン削除 Server Action（特権ロール）。pattern_id 必須。割当から参照中だと api が 409。
+/** シフトパターン削除 Server Action（特権ロール）。pattern_id 必須。割当から参照中だと api が 409。 */
 export async function deleteShiftPatternAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -365,7 +369,7 @@ export async function deleteShiftPatternAction(
   return { ok: true, error: null }
 }
 
-// シフト交代申請取り下げ Server Action（申請者本人）。swap_request_id 必須。承認済みは api が 409。
+/** シフト交代申請取り下げ Server Action（申請者本人）。swap_request_id 必須。承認済みは api が 409。 */
 export async function cancelShiftSwapRequestAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -389,7 +393,7 @@ export async function cancelShiftSwapRequestAction(
   return { ok: true, error: null }
 }
 
-// シフト交代承認。API は承認者が申請当事者でないことも検証する。
+/** シフト交代承認。API は承認者が申請当事者でないことも検証する。 */
 export async function approveShiftSwapRequestAction(
   _previousState: ShiftFormState,
   formData: FormData,
@@ -422,7 +426,7 @@ export async function approveShiftSwapRequestAction(
   return { ok: true, error: null }
 }
 
-// パターン編集フォームの必須フィールドを検証して取り出す。不足時は Error を返す。
+/** パターン編集フォームの必須フィールドを検証して取り出す。不足時は Error を返す。 */
 function toPatternFields(
   formData: FormData,
 ):
@@ -451,12 +455,12 @@ function toPatternFields(
   return { code, name, start_time: startTime, end_time: endTime, break_minutes: breakMinutes }
 }
 
-// FormData 値を trim した文字列に。未入力や非文字列は空文字。
+/** FormData 値を trim した文字列に。未入力や非文字列は空文字。 */
 function trimmedOrEmpty(value: FormDataEntryValue | null): string {
   return typeof value === "string" ? value.trim() : ""
 }
 
-// FormData 値を trim した文字列に。未入力や空は null。
+/** FormData 値を trim した文字列に。未入力や空は null。 */
 function trimmedOrNull(value: FormDataEntryValue | null): string | null {
   const trimmed = trimmedOrEmpty(value)
 

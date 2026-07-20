@@ -17,8 +17,10 @@ type Props = {
   enrolledCourseIds: ReadonlyArray<number>
 }
 
-// 研修コース一覧。コード・名前・カテゴリ・必須/状態をテーブルで表示する。
-// 受講申込済みのコースには申込済バッジを、未申込の active コースには受講申込ボタンを出す。
+/**
+ * 研修コース一覧。コード・名前・カテゴリ・必須/状態をテーブルで表示する。
+ * 受講申込済みのコースには申込済バッジを、未申込の active コースには受講申込ボタンを出す。
+ */
 export function CourseList(props: Props) {
   if (props.courses.length === 0) {
     return (

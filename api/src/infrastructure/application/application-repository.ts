@@ -6,13 +6,13 @@ import {
   isAbortedByGuard,
 } from "@/lib/d1/batch-abort-guard"
 import { applicationApprovals, applications } from "@/schema"
-import { DEFAULT_LIST_LIMIT } from "@/interface/shared/to-bounded-int"
+import { DEFAULT_LIST_LIMIT } from "@/interface/utils/to-bounded-int"
 import { and, count, desc, eq } from "drizzle-orm"
 
 export class ApplicationRepository {
   constructor(private readonly c: Context) {}
 
-  // 申請者本人の申請を作成日時の降順で返す。
+  /** 申請者本人の申請を作成日時の降順で返す。 */
   async findByApplicantId(
     applicantId: number,
     opts?: { limit: number; offset: number },
@@ -87,8 +87,10 @@ export class ApplicationRepository {
     }
   }
 
-  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
-  // 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。確定時は current_step も外す。
+  /**
+   * 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+   * 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。確定時は current_step も外す。
+   */
   async decideFromPending(props: {
     applicationId: number
     status: "approved" | "rejected"
@@ -108,8 +110,10 @@ export class ApplicationRepository {
     }
   }
 
-  // 申請内容（payload）を更新する。status や currentStep は変更しない。
-  // pending 以外の申請は更新できない（0 行更新で null を返す）。
+  /**
+   * 申請内容（payload）を更新する。status や currentStep は変更しない。
+   * pending 以外の申請は更新できない（0 行更新で null を返す）。
+   */
   async updatePayload(application: Application): Promise<Application | null | Error> {
     try {
       if (application.id === null) {
@@ -130,9 +134,11 @@ export class ApplicationRepository {
     }
   }
 
-  // 申請を削除する。承認記録も併せて削除する。
-  // pending 以外の申請は削除できない（0 行削除で null を返す）。
-  // D1 batch でアトミックに削除し、中途失敗による orphan を防ぐ。
+  /**
+   * 申請を削除する。承認記録も併せて削除する。
+   * pending 以外の申請は削除できない（0 行削除で null を返す）。
+   * D1 batch でアトミックに削除し、中途失敗による orphan を防ぐ。
+   */
   async delete(applicationId: number): Promise<true | null | Error> {
     try {
       await this.c.env.DB.batch([
@@ -160,7 +166,7 @@ export class ApplicationRepository {
     }
   }
 
-  // 指定テンプレートに紐づく pending 状態の申請数を返す。
+  /** 指定テンプレートに紐づく pending 状態の申請数を返す。 */
   async countPendingByTemplateId(templateId: number): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
@@ -174,7 +180,7 @@ export class ApplicationRepository {
     }
   }
 
-  // 承認/却下の記録は申請集約に属するため、申請リポジトリが永続化する。
+  /** 承認/却下の記録は申請集約に属するため、申請リポジトリが永続化する。 */
   async addApproval(approval: ApplicationApproval): Promise<ApplicationApproval | Error> {
     try {
       const rows = await this.c.var.database
@@ -198,8 +204,10 @@ export class ApplicationRepository {
     }
   }
 
-  // status の条件付き UPDATE と承認記録 INSERT を D1 batch でアトミックに行う。
-  // 決定済み（0 行更新）は null を返す。batch 全体が失敗すると rollback される。
+  /**
+   * status の条件付き UPDATE と承認記録 INSERT を D1 batch でアトミックに行う。
+   * 決定済み（0 行更新）は null を返す。batch 全体が失敗すると rollback される。
+   */
   async decideFromPendingWithApproval(props: {
     applicationId: number
     status: "approved" | "rejected"

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 export class KnowledgeArticleRepository {
   constructor(private readonly c: Context) {}
 
-  // 記事 id で1件取得する。存在しなければ null。
+  /** 記事 id で1件取得する。存在しなければ null。 */
   async findById(id: number): Promise<KnowledgeArticle | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -47,8 +47,10 @@ export class KnowledgeArticleRepository {
     }
   }
 
-  // 記事の表題・カテゴリ・タグ・本文を更新する。
-  // 該当行が存在しなかった場合は null を返す。
+  /**
+   * 記事の表題・カテゴリ・タグ・本文を更新する。
+   * 該当行が存在しなかった場合は null を返す。
+   */
   async update(article: KnowledgeArticle): Promise<KnowledgeArticle | null | Error> {
     try {
       if (article.id === null) {
@@ -74,7 +76,7 @@ export class KnowledgeArticleRepository {
     }
   }
 
-  // 記事を削除する。
+  /** 記事を削除する。 */
   async delete(id: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(knowledgeArticles).where(eq(knowledgeArticles.id, id))

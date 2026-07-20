@@ -29,8 +29,10 @@ export type CareerApplicationActionState = {
   error: string | null
 }
 
-// キャリアシート更新の Server Action。useActionState から呼ばれる。
-// 空文字は値なし (null) として送る。
+/**
+ * キャリアシート更新の Server Action。useActionState から呼ばれる。
+ * 空文字は値なし (null) として送る。
+ */
 export async function updateCareerSheetAction(
   previousState: CareerSheetFormState,
   formData: FormData,
@@ -69,7 +71,7 @@ export async function updateCareerSheetAction(
   return { ok: true, error: null }
 }
 
-// 社内公募への応募 Server Action。postingId は hidden フィールドから受け取る。
+/** 社内公募への応募 Server Action。postingId は hidden フィールドから受け取る。 */
 export async function applyCareerPostingAction(
   previousState: CareerApplyFormState,
   formData: FormData,
@@ -104,8 +106,10 @@ export async function applyCareerPostingAction(
   return { ok: true, error: null }
 }
 
-// 応募メッセージ変更の Server Action。application_id 必須、空文字は値なし (null)。
-// 選考確定済みは api が 409 を返し Error になる。
+/**
+ * 応募メッセージ変更の Server Action。application_id 必須、空文字は値なし (null)。
+ * 選考確定済みは api が 409 を返し Error になる。
+ */
 export async function updateCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
@@ -138,8 +142,10 @@ export async function updateCareerApplicationAction(
   return { ok: true, error: null }
 }
 
-// 応募取り下げの Server Action。application_id 必須。
-// 選考確定済みは api が 409 を返し Error になる。
+/**
+ * 応募取り下げの Server Action。application_id 必須。
+ * 選考確定済みは api が 409 を返し Error になる。
+ */
 export async function withdrawCareerApplicationAction(
   previousState: CareerApplicationActionState,
   formData: FormData,
@@ -163,13 +169,13 @@ export async function withdrawCareerApplicationAction(
   return { ok: true, error: null }
 }
 
-// 管理ロール向け公募操作の共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** 管理ロール向け公募操作の共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type CareerPostingFormState = {
   ok: boolean
   error: string | null
 }
 
-// 公募作成の Server Action（管理ロール）。title 必須、部署・必要スキルは任意。
+/** 公募作成の Server Action（管理ロール）。title 必須、部署・必要スキルは任意。 */
 export async function createCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
@@ -231,7 +237,7 @@ export async function createCareerPostingAction(
   return { ok: true, error: null }
 }
 
-// 公募変更の Server Action（管理ロール）。posting_id は hidden、内容は各 input で受け取る。
+/** 公募変更の Server Action（管理ロール）。posting_id は hidden、内容は各 input で受け取る。 */
 export async function updateCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
@@ -299,7 +305,7 @@ export async function updateCareerPostingAction(
   return { ok: true, error: null }
 }
 
-// 公募削除の Server Action（管理ロール）。posting_id を hidden で受け取る。
+/** 公募削除の Server Action（管理ロール）。posting_id を hidden で受け取る。 */
 export async function deleteCareerPostingAction(
   previousState: CareerPostingFormState,
   formData: FormData,
@@ -328,7 +334,7 @@ export async function deleteCareerPostingAction(
   return { ok: true, error: null }
 }
 
-// 文字列フィールドを取り出す。空文字や非文字列は null。
+/** 文字列フィールドを取り出す。空文字や非文字列は null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
     return null
@@ -339,7 +345,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return trimmed === "" ? null : trimmed
 }
 
-// 任意の整数 ID フィールド。未入力は null、整数でなければ "invalid"。
+/** 任意の整数 ID フィールド。未入力は null、整数でなければ "invalid"。 */
 function toOptionalId(value: FormDataEntryValue | null): number | null | "invalid" {
   const text = toText(value)
 
@@ -352,7 +358,7 @@ function toOptionalId(value: FormDataEntryValue | null): number | null | "invali
   return Number.isInteger(parsed) ? parsed : "invalid"
 }
 
-// status フィールドを open/closed に正規化する。closed 以外は open。
+/** status フィールドを open/closed に正規化する。closed 以外は open。 */
 function toPostingStatus(value: FormDataEntryValue | null): "open" | "closed" {
   return value === "closed" ? "closed" : "open"
 }

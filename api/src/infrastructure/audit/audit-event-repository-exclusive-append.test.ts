@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AuditEventRecord } from "@/domain/audit/audit-event"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ValidationError } from "@/lib/errors"
 
 const decisionId = "00000000-0000-4000-8000-000000000041"

@@ -10,8 +10,10 @@ type Props = {
   params: Promise<{ employee: string }>
 }
 
-// レポートライン画面（/org/reporting-line/:code）。
-// 動的セグメント params は Next.js 16 では Promise なので await して取り出す。
+/**
+ * レポートライン画面（/org/reporting-line/:code）。
+ * 動的セグメント params は Next.js 16 では Promise なので await して取り出す。
+ */
 export default async function OrgReportingLinePage(props: Props) {
   const params = await props.params
 

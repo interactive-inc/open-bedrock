@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { LifeEventResponse } from "@/lib/api/types/life-event-types"
 
-// GET /life-events/me。届出者本人のライフイベント届出一覧を取得する。
+/** GET /life-events/me。届出者本人のライフイベント届出一覧を取得する。 */
 export async function listMyLifeEvents(): Promise<ReadonlyArray<LifeEventResponse> | Error> {
   const client = await createClient()
 

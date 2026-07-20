@@ -47,7 +47,7 @@ type Props = {
   resignations: ReadonlyArray<ResignationResponse>
 }
 
-// 自分の退職申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分の退職申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyResignationsList(props: Props) {
   if (props.resignations.length === 0) {
     return <EmptyState title="退職申請はありません" />
@@ -92,7 +92,7 @@ export function MyResignationsList(props: Props) {
   )
 }
 
-// 退職申請変更フォームを Dialog で開く。退職希望日・最終出社日・理由を編集して送信する。
+/** 退職申請変更フォームを Dialog で開く。退職希望日・最終出社日・理由を編集して送信する。 */
 function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -163,7 +163,7 @@ function UpdateResignationDialog(props: { resignation: ResignationResponse }) {
   )
 }
 
-// 退職申請取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+/** 退職申請取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
 function CancelResignationButton(props: { resignationId: string }) {
   const [, formAction, pending] = useFormAction(
     cancelResignationAction,

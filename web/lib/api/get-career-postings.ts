@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// 募集中の社内公募一覧を取得する。GET /career/postings。
+/** 募集中の社内公募一覧を取得する。GET /career/postings。 */
 export async function getCareerPostings() {
   const client = await createClient()
 

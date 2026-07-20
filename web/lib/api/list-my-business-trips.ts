@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { BusinessTripResponse } from "@/lib/api/types/business-trip-types"
 
-// GET /business-trips/me。申請者本人の出張申請一覧を取得する。
+/** GET /business-trips/me。申請者本人の出張申請一覧を取得する。 */
 export async function listMyBusinessTrips(): Promise<ReadonlyArray<BusinessTripResponse> | Error> {
   const client = await createClient()
 

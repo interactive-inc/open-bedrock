@@ -11,7 +11,7 @@ import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { FORM_CONSTRAINTS, toRequiredText } from "@/lib/form/constraints"
 
-// アンケート作成・編集フォームの useActionState 結果。
+/** アンケート作成・編集フォームの useActionState 結果。 */
 export type SurveyFormState = {
   ok: boolean
   error: string | null
@@ -29,7 +29,7 @@ const questionsJsonSchema = z
   )
   .max(FORM_CONSTRAINTS.survey.questionsMax)
 
-// FormData の questions テキストを設問配列へ検証付きで変換する。空なら空配列、不正なら Error。
+/** FormData の questions テキストを設問配列へ検証付きで変換する。空なら空配列、不正なら Error。 */
 function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<SurveyQuestion> | Error {
   if (typeof value !== "string" || value.trim() === "") {
     return []
@@ -48,8 +48,10 @@ function toQuestionsJson(value: FormDataEntryValue | null): ReadonlyArray<Survey
   }
 }
 
-// アンケート作成の Server Action。タイトル・状態・設問 JSON を検証して POST する。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * アンケート作成の Server Action。タイトル・状態・設問 JSON を検証して POST する。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function createSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
@@ -97,8 +99,10 @@ export async function createSurveyAction(
   return { ok: true, error: null }
 }
 
-// アンケート編集の Server Action。id は hidden、タイトル・状態・設問 JSON を更新する。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * アンケート編集の Server Action。id は hidden、タイトル・状態・設問 JSON を更新する。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function updateSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,
@@ -155,8 +159,10 @@ export async function updateSurveyAction(
   return { ok: true, error: null }
 }
 
-// アンケート削除の Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * アンケート削除の Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function deleteSurveyAction(
   previousState: SurveyFormState,
   formData: FormData,

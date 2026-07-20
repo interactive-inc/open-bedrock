@@ -7,5 +7,5 @@ type SeedExpenseApproval = {
   createdAt: string
 }
 
-// 初期状態では承認記録なし。
+/** 初期状態では承認記録なし。 */
 export const seedExpenseApprovals: ReadonlyArray<SeedExpenseApproval> = []

@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { leaveBalances } from "@/schema"
 import { and, eq, gte, sql } from "drizzle-orm"
 
-// 残数消費の結果。consumed=消費できた / insufficient=残数不足で消費できなかった。
+/** 残数消費の結果。consumed=消費できた / insufficient=残数不足で消費できなかった。 */
 export type ConsumeOutcome = "consumed" | "insufficient"
 
 export class LeaveBalanceRepository {
@@ -35,10 +35,12 @@ export class LeaveBalanceRepository {
     }
   }
 
-  // 休暇残数の消費を 1 ステートメントで原子的に行う。
-  // remaining_days >= days のときだけ used_days を加算し remaining_days を減算する。
-  // D1 は個々のステートメントを直列化するため、同時承認でも合計が残数を超える分は必ず弾かれる。
-  // 0 行更新は残数不足。
+  /**
+   * 休暇残数の消費を 1 ステートメントで原子的に行う。
+   * remaining_days >= days のときだけ used_days を加算し remaining_days を減算する。
+   * D1 は個々のステートメントを直列化するため、同時承認でも合計が残数を超える分は必ず弾かれる。
+   * 0 行更新は残数不足。
+   */
   async consumeDays(props: {
     employeeId: number
     leaveType: "annual" | "special"

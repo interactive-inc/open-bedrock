@@ -1,5 +1,7 @@
-// api/src/auth の *-response-schema.ts と同形の手書き type。
-// api と疎結合にするため import しない。
+/**
+ * api/src/auth の *-response-schema.ts と同形の手書き type。
+ * api と疎結合にするため import しない。
+ */
 export type LoginRequest = {
   email: string
   password: string

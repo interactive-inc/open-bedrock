@@ -8,8 +8,10 @@ type Props = {
   children: React.ReactNode
 }
 
-// 受信箱の共通レイアウト。「受信箱」ヘッダと種類タブを全 /inbox/* ページで共有する。
-// permission の無い種類のタブは出さず、件数バッジは既存の /inbox/counts を使う。
+/**
+ * 受信箱の共通レイアウト。「受信箱」ヘッダと種類タブを全 /inbox/* ページで共有する。
+ * permission の無い種類のタブは出さず、件数バッジは既存の /inbox/counts を使う。
+ */
 export default async function InboxLayout(props: Props) {
   const [currentUser, countsResult] = await Promise.all([getMe(), getInboxCounts()])
 

@@ -5,7 +5,7 @@ import type {
   CertificateRequestUpdateRequest,
 } from "@/lib/api/types/certificate-request-types"
 
-// PUT /certificate-requests/:id。証明書発行依頼の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+/** PUT /certificate-requests/:id。証明書発行依頼の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。 */
 export async function updateCertificateRequest(
   id: string,
   request: CertificateRequestUpdateRequest,

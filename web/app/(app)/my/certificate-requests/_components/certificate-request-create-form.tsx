@@ -11,12 +11,14 @@ import { Input } from "@/components/ui/input"
 
 const initialState: CertificateRequestActionState = { ok: false, error: null }
 
-// 証明書発行依頼フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 証明書発行依頼フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function CertificateRequestCreateForm() {
   const router = useRouter()
 
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: CertificateRequestActionState,
     formData: FormData,

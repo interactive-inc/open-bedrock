@@ -9,7 +9,7 @@ type Props = {
   skillCode: string
 }
 
-// 登録スキルの削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+/** 登録スキルの削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。 */
 export function RemoveSkillButton(props: Props) {
   const [state, formAction, pending] = useFormAction(
     removeSkillAction,

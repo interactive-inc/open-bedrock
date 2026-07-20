@@ -6,7 +6,7 @@ import { desc, eq } from "drizzle-orm"
 export class MeetingMinutesRepository {
   constructor(private readonly c: Context) {}
 
-  // 議事録 id で1件取得する。存在しなければ null。
+  /** 議事録 id で1件取得する。存在しなければ null。 */
   async findById(id: number): Promise<MeetingMinutes | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -23,7 +23,7 @@ export class MeetingMinutesRepository {
     }
   }
 
-  // 会議体 id 配下の議事録を新しい順に取得する。
+  /** 会議体 id 配下の議事録を新しい順に取得する。 */
   async listByMeetingId(
     meetingId: number,
     limit: number,
@@ -69,7 +69,7 @@ export class MeetingMinutesRepository {
     }
   }
 
-  // 議事録の開催日・表題・出席者・本文を更新する。該当行が無ければ null。
+  /** 議事録の開催日・表題・出席者・本文を更新する。該当行が無ければ null。 */
   async update(minutes: MeetingMinutes): Promise<MeetingMinutes | null | Error> {
     try {
       if (minutes.id === null) {

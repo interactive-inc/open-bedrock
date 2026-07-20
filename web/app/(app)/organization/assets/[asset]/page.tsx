@@ -19,7 +19,7 @@ type Props = {
   params: Promise<{ asset: string }>
 }
 
-// 物品詳細画面。RSC で 1 件取得し、属性と貸与/返却の操作を表示する。
+/** 物品詳細画面。RSC で 1 件取得し、属性と貸与/返却の操作を表示する。 */
 export default async function AssetDetailPage(props: Props) {
   const params = await props.params
 

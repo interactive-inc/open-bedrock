@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /recruitment/positions。募集ポジションを登録する（recruitment:manage）。
+/** POST /recruitment/positions。募集ポジションを登録する（recruitment:manage）。 */
 export async function createRecruitmentPosition(request: {
   title: string
   department_code: string | null

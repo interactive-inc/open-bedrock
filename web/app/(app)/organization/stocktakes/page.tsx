@@ -20,7 +20,7 @@ import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "棚卸し" }
 
-// 棚卸しセッション一覧画面。RSC で取得し、確認進捗と状態を表示する。
+/** 棚卸しセッション一覧画面。RSC で取得し、確認進捗と状態を表示する。 */
 export default async function StocktakesPage() {
   await requirePermission("asset:manage")
 
@@ -47,7 +47,7 @@ export default async function StocktakesPage() {
   )
 }
 
-// /stocktakes を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /stocktakes を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function StocktakesTable() {
   const stocktakes = await getStocktakeList(null)
 

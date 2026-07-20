@@ -9,8 +9,10 @@ type Props = {
   params: Promise<{ team: string }>
 }
 
-// 部署ハブの勤怠タブ。所属メンバー全員の勤怠記録を一覧する。
-// 閲覧には attendance:read:all、または本人が所属する部署への attendance:read:department が必要。
+/**
+ * 部署ハブの勤怠タブ。所属メンバー全員の勤怠記録を一覧する。
+ * 閲覧には attendance:read:all、または本人が所属する部署への attendance:read:department が必要。
+ */
 export default async function DepartmentAttendancesPage(props: Props) {
   const params = await props.params
 

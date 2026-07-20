@@ -10,8 +10,10 @@ type Props = {
   canReadAll: boolean
 }
 
-// 時間外集計の絞り込みフォーム。native な GET フォームで ?month=&scope= へ遷移する。
-// scope の選択肢は権限に応じて出し分ける（本人のみ / 配下 / 全社）。
+/**
+ * 時間外集計の絞り込みフォーム。native な GET フォームで ?month=&scope= へ遷移する。
+ * scope の選択肢は権限に応じて出し分ける（本人のみ / 配下 / 全社）。
+ */
 export function OvertimeFilterForm(props: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">

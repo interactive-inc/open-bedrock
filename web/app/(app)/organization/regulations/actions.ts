@@ -12,7 +12,7 @@ export type RegulationActionState = {
   error: string | null
 }
 
-// 規程の新規登録 Server Action。code/title/body_md/effective_on 必須。
+/** 規程の新規登録 Server Action。code/title/body_md/effective_on 必須。 */
 export async function registerRegulationAction(
   previousState: RegulationActionState,
   formData: FormData,
@@ -53,7 +53,7 @@ export async function registerRegulationAction(
   return { ok: true, error: null }
 }
 
-// 規程へ新版を追加する Server Action。code は hidden。body_md/effective_on 必須。
+/** 規程へ新版を追加する Server Action。code は hidden。body_md/effective_on 必須。 */
 export async function addRegulationVersionAction(
   previousState: RegulationActionState,
   formData: FormData,
@@ -91,7 +91,7 @@ export async function addRegulationVersionAction(
   return { ok: true, error: null }
 }
 
-// 規程アーカイブ Server Action。code は hidden。
+/** 規程アーカイブ Server Action。code は hidden。 */
 export async function archiveRegulationAction(
   previousState: RegulationActionState,
   formData: FormData,

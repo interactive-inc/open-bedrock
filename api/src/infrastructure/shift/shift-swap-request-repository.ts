@@ -69,8 +69,10 @@ export class ShiftSwapRequestRepository {
     }
   }
 
-  // pending 重複がなければ INSERT し、既に pending があれば null を返す。
-  // INSERT ... SELECT ... WHERE NOT EXISTS でチェックと挿入をアトミックに行い TOCTOU を防ぐ。
+  /**
+   * pending 重複がなければ INSERT し、既に pending があれば null を返す。
+   * INSERT ... SELECT ... WHERE NOT EXISTS でチェックと挿入をアトミックに行い TOCTOU を防ぐ。
+   */
   async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
       const result = await this.c.var.database.run(

@@ -15,16 +15,18 @@ type Props = {
   tabs: ReadonlyArray<Tab>
 }
 
-// href が pathname にマッチするか（完全一致または配下パス）。
+/** href が pathname にマッチするか（完全一致または配下パス）。 */
 function matches(pathname: string, href: string): boolean {
   if (pathname === href) return true
 
   return pathname.startsWith(`${href}/`)
 }
 
-// マッチする中で最長の href を持つタブだけをアクティブにする。
-// これがないと、概要タブ（/departments/:d）の href が
-// メンバータブ（/departments/:d/members）の接頭辞になり、両方が同時にアクティブになる。
+/**
+ * マッチする中で最長の href を持つタブだけをアクティブにする。
+ * これがないと、概要タブ（/departments/:d）の href が
+ * メンバータブ（/departments/:d/members）の接頭辞になり、両方が同時にアクティブになる。
+ */
 function activeHref(pathname: string, tabs: ReadonlyArray<Tab>): string | null {
   let bestHref: string | null = null
 

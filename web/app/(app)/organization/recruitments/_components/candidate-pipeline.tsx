@@ -10,7 +10,7 @@ type Props = {
   positionId: number
 }
 
-// GET /recruitment/positions/:id/candidates を取得し、応募者ごとにステージと遷移操作を並べる RSC。
+/** GET /recruitment/positions/:id/candidates を取得し、応募者ごとにステージと遷移操作を並べる RSC。 */
 export async function CandidatePipeline(props: Props) {
   const candidates = await getRecruitmentCandidateList(props.positionId)
 

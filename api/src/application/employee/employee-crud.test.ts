@@ -5,9 +5,9 @@ import { UpdateEmployee } from "@/application/employee/update-employee"
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
 import {
   ApplicationError,
   ConflictError,
@@ -15,7 +15,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 async function seedEmployee(

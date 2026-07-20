@@ -8,15 +8,19 @@ import { fitsJsonStringifiedLength, FORM_CONSTRAINTS } from "@/lib/form/constrai
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState のタプル要素となるアクション結果。
-// status で成否を表し、message は画面のトースト/エラー表示に使う。
+/**
+ * useActionState のタプル要素となるアクション結果。
+ * status で成否を表し、message は画面のトースト/エラー表示に使う。
+ */
 export type SubmitSurveyResponseState = {
   status: "idle" | "success" | "error"
   message: string | null
 }
 
-// アンケート回答送信の Server Action。
-// FormData から questions の id 別回答を集めて answers_json を組み立て、API に送る。
+/**
+ * アンケート回答送信の Server Action。
+ * FormData から questions の id 別回答を集めて answers_json を組み立て、API に送る。
+ */
 export async function submitSurveyResponseAction(
   previousState: SubmitSurveyResponseState,
   formData: FormData,
@@ -65,15 +69,19 @@ export async function submitSurveyResponseAction(
   return { status: "success", message: "回答を送信しました" }
 }
 
-// my-responses-list の Dialog/取り下げフォームが使う useActionState の結果。
-// ok で成否を表し、error はフォーム内のエラー表示に使う。
+/**
+ * my-responses-list の Dialog/取り下げフォームが使う useActionState の結果。
+ * ok で成否を表し、error はフォーム内のエラー表示に使う。
+ */
 export type MyResponseActionState = {
   ok: boolean
   error: string | null
 }
 
-// アンケート回答変更の Server Action。
-// FormData の responseId と answer:* を集めて answers_json を組み立て、PUT に送る。
+/**
+ * アンケート回答変更の Server Action。
+ * FormData の responseId と answer:* を集めて answers_json を組み立て、PUT に送る。
+ */
 export async function updateSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,
@@ -120,8 +128,10 @@ export async function updateSurveyResponseAction(
   return { ok: true, error: null }
 }
 
-// アンケート回答取り下げの Server Action。
-// FormData の responseId を読み、DELETE に送る。
+/**
+ * アンケート回答取り下げの Server Action。
+ * FormData の responseId を読み、DELETE に送る。
+ */
 export async function withdrawSurveyResponseAction(
   previousState: MyResponseActionState,
   formData: FormData,

@@ -34,8 +34,10 @@ type Props = {
   goal: GoalResponse
 }
 
-// 目標一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる client コンポーネント。
-// id が null の目標は操作できないため何も描画しない。
+/**
+ * 目標一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる client コンポーネント。
+ * id が null の目標は操作できないため何も描画しない。
+ */
 export function GoalRowActions(props: Props) {
   const goalId = props.goal.id
 
@@ -52,7 +54,7 @@ export function GoalRowActions(props: Props) {
   )
 }
 
-// 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。
+/** 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。 */
 function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
   const [open, setOpen] = useState(false)
 
@@ -152,8 +154,10 @@ function UpdateGoalDialog(props: { goal: GoalResponse; goalId: number }) {
   )
 }
 
-// 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
-// 成功・失敗の通知は action の結果を見て toast() で出す。
+/**
+ * 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+ * 成功・失敗の通知は action の結果を見て toast() で出す。
+ */
 function DeleteGoalButton(props: { goalId: number }) {
   async function reduce(
     previousState: GoalActionState,

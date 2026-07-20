@@ -38,7 +38,7 @@ type Props = {
   applications: ReadonlyArray<ApplicationListItem>
 }
 
-// 自分の申請一覧。承認待ちの申請には変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
+/** 自分の申請一覧。承認待ちの申請には変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。 */
 export function MyApplicationsList(props: Props) {
   if (props.applications.length === 0) {
     return (
@@ -100,7 +100,7 @@ export function MyApplicationsList(props: Props) {
   )
 }
 
-// 承認待ちのときだけ変更・取り下げ操作を表示する。審査済みや未採番は操作不可。
+/** 承認待ちのときだけ変更・取り下げ操作を表示する。審査済みや未採番は操作不可。 */
 function ApplicationRowActions(props: { application: ApplicationListItem }) {
   const applicationId = props.application.id
 
@@ -123,8 +123,10 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
   )
 }
 
-// 申請内容の更新フォームを Dialog で開く。payload を JSON テキストで編集して送信する。
-// 編集途中で閉じようとした場合は confirm() で破棄確認を行う。
+/**
+ * 申請内容の更新フォームを Dialog で開く。payload を JSON テキストで編集して送信する。
+ * 編集途中で閉じようとした場合は confirm() で破棄確認を行う。
+ */
 function UpdateApplicationDialog(props: {
   application: ApplicationListItem
   applicationId: number
@@ -209,7 +211,7 @@ function UpdateApplicationDialog(props: {
   )
 }
 
-// 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function WithdrawApplicationButton(props: { applicationId: number }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawApplicationAction,

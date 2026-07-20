@@ -11,8 +11,10 @@ type Props = {
   params: Promise<{ employee: string }>
 }
 
-// 社員別オンボーディング画面（/onboarding/employee/:code）。
-// 動的セグメント params は Next.js 16 では Promise なので await して取り出す。
+/**
+ * 社員別オンボーディング画面（/onboarding/employee/:code）。
+ * 動的セグメント params は Next.js 16 では Promise なので await して取り出す。
+ */
 export default async function OnboardingEmployeePage(props: Props) {
   await requirePermission("onboarding:view:all")
 

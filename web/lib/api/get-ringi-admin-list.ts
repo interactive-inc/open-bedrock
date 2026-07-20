@@ -14,7 +14,7 @@ type Params = {
   sort?: RingiAdminSort
 }
 
-// GET /ringi/admin。全社の稟議を横断で取得する。ringi:read:all が無いと 403。
+/** GET /ringi/admin。全社の稟議を横断で取得する。ringi:read:all が無いと 403。 */
 export async function getRingiAdminList(filter: RingiAdminFilter, params: Params = {}) {
   const client = await createClient()
 

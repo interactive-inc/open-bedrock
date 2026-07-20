@@ -17,11 +17,13 @@ type Props = {
 
 const initialState: RoomReservationActionState = { ok: false, error: null }
 
-// 会議室予約フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
-// 検索した期間を開始/終了の初期値にし、空いている会議室のみを選択肢に出す。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 会議室予約フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
+ * 検索した期間を開始/終了の初期値にし、空いている会議室のみを選択肢に出す。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function RoomReservationCreateForm(props: Props) {
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: RoomReservationActionState,
     formData: FormData,

@@ -1,5 +1,5 @@
 import { resolveWorkflowApproverMatches } from "@/lib/application/resolve-workflow-approvers"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("resolveWorkflowApproverMatches", () => {

@@ -16,8 +16,10 @@ type Params = {
   sort?: ShiftSwapAdminSort
 }
 
-// GET /shift/swap-requests/admin。全社のシフト交代申請を横断で取得する。
-// shift_swap:read:all が無いと 403。
+/**
+ * GET /shift/swap-requests/admin。全社のシフト交代申請を横断で取得する。
+ * shift_swap:read:all が無いと 403。
+ */
 export async function getShiftSwapAdminList(filter: ShiftSwapAdminFilter, params: Params = {}) {
   const client = await createClient()
 

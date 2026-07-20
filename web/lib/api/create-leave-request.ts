@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { LeaveRequestCreateRequest } from "@/lib/api/types/leave-types"
 
-// POST /leave/requests。休暇申請を作成する。
+/** POST /leave/requests。休暇申請を作成する。 */
 export async function createLeaveRequest(request: LeaveRequestCreateRequest) {
   const client = await createClient()
 

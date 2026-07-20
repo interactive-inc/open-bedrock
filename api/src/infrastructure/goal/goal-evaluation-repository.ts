@@ -18,7 +18,7 @@ export type AlreadyFinalizedError = { reason: "already_finalized" }
 export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}
 
-  // 目標に紐づく評価を作成順（id 昇順）で返す。
+  /** 目標に紐づく評価を作成順（id 昇順）で返す。 */
   async findByGoalId(goalId: number): Promise<ReadonlyArray<GoalEvaluation> | Error> {
     try {
       const rows = await this.c.var.database
@@ -33,8 +33,10 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
-  // goal の status が 'done' の場合は 0 行挿入となり goal_done を返す。
+  /**
+   * UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
+   * goal の status が 'done' の場合は 0 行挿入となり goal_done を返す。
+   */
   async create(
     evaluation: GoalEvaluation,
   ): Promise<GoalEvaluation | AlreadyEvaluatedError | GoalDoneError | Error> {
@@ -90,9 +92,11 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
-  // UPDATE が 0 行（既に done）なら abortWhenPreviousStatementChangedNoRows で中断する。
-  // UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
+  /**
+   * final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
+   * UPDATE が 0 行（既に done）なら abortWhenPreviousStatementChangedNoRows で中断する。
+   * UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
+   */
   async createWithGoalCompletion(
     evaluation: GoalEvaluation,
     goal: Goal,
@@ -173,7 +177,7 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // 目標に紐づく評価をすべて削除する。
+  /** 目標に紐づく評価をすべて削除する。 */
   async deleteByGoalId(goalId: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.goalId, goalId))

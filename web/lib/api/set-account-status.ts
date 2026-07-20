@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-// POST /accounts/:id/status。アカウントの状態を変更する（account:manage が必要）。
+/** POST /accounts/:id/status。アカウントの状態を変更する（account:manage が必要）。 */
 export async function setAccountStatus(
   accountId: number,
   status: "active" | "suspended" | "locked",

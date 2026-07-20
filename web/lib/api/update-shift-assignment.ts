@@ -8,7 +8,7 @@ export type ShiftAssignmentUpdateRequest = {
   note: string | null
 }
 
-// PUT /shift/assignments/:id。特権ロールが割当のパターン・日付・備考を変更する。
+/** PUT /shift/assignments/:id。特権ロールが割当のパターン・日付・備考を変更する。 */
 export async function updateShiftAssignment(
   id: number,
   request: ShiftAssignmentUpdateRequest,

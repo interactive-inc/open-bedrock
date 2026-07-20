@@ -12,7 +12,7 @@ type Props = {
   params: Promise<{ decision: string }>
 }
 
-// id 文字列を正の整数へ変換する。無効なら null。
+/** id 文字列を正の整数へ変換する。無効なら null。 */
 function toDecisionId(rawId: string): number | null {
   const parsed = Number(rawId)
 
@@ -23,7 +23,7 @@ function toDecisionId(rawId: string): number | null {
   return parsed
 }
 
-// /decisions/:id 意思決定記録の詳細。ADR らしく背景・決定・帰結をセクションで分けて表示する。
+/** /decisions/:id 意思決定記録の詳細。ADR らしく背景・決定・帰結をセクションで分けて表示する。 */
 export default async function DecisionDetailPage(props: Props) {
   const params = await props.params
 
@@ -77,7 +77,7 @@ type SectionProps = {
   body: string
 }
 
-// ADR の 1 セクション（見出し + 本文原文）を表示する純粋なプレゼンテーション。
+/** ADR の 1 セクション（見出し + 本文原文）を表示する純粋なプレゼンテーション。 */
 function Section(props: SectionProps) {
   return (
     <div className="flex flex-col gap-2">

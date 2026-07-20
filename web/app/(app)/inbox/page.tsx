@@ -8,8 +8,10 @@ import { Inbox } from "lucide-react"
 
 export const metadata = { title: "受信箱" }
 
-// 受信箱トップ。種類別の対応待ち件数カードを並べる。件数 API を持つ種類は件数を、
-// 持たない種類は導線カードとして表示する。件数を持つ種類がすべて 0 なら空状態を出す。
+/**
+ * 受信箱トップ。種類別の対応待ち件数カードを並べる。件数 API を持つ種類は件数を、
+ * 持たない種類は導線カードとして表示する。件数を持つ種類がすべて 0 なら空状態を出す。
+ */
 export default async function InboxPage() {
   const [currentUser, countsResult] = await Promise.all([getMe(), getInboxCounts()])
 

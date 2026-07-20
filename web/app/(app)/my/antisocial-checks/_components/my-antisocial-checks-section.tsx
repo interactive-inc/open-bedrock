@@ -2,7 +2,7 @@ import { MyAntisocialChecksList } from "@/app/(app)/my/antisocial-checks/_compon
 import { FetchError } from "@/components/fetch-error"
 import { listMyAntisocialChecks } from "@/lib/api/list-my-antisocial-checks"
 
-// 自分の反社チェック申請を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の反社チェック申請を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyAntisocialChecksSection() {
   const antisocialChecks = await listMyAntisocialChecks()
 

@@ -15,8 +15,10 @@ type Props = {
 
 const initialState: CertificateRequestActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。requested の依頼を人事が発行/却下する。
-// 発行と却下でそれぞれ独立の Server Action を持ち、id を hidden で渡す。
+/**
+ * admin 一覧の行アクション。requested の依頼を人事が発行/却下する。
+ * 発行と却下でそれぞれ独立の Server Action を持ち、id を hidden で渡す。
+ */
 export function CertificateRequestAdminActions(props: Props) {
   const issue = useActionState(issueCertificateRequestAction, initialState)
 

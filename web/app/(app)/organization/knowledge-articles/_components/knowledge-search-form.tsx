@@ -8,8 +8,10 @@ type Props = {
   category: string | null
 }
 
-// ナレッジ検索フォーム。GET メソッドの native form で searchParams を更新する。
-// 値の確定は URL に委ねるため Client 状態は持たない。
+/**
+ * ナレッジ検索フォーム。GET メソッドの native form で searchParams を更新する。
+ * 値の確定は URL に委ねるため Client 状態は持たない。
+ */
 export function KnowledgeSearchForm(props: Props) {
   return (
     <form

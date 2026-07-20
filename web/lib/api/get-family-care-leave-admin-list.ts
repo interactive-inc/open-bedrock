@@ -10,7 +10,7 @@ type Params = {
   offset?: number
 }
 
-// GET /family-care-leaves/admin。全社の産休・育休・介護休業の申出を横断で取得する。family_care_leave:read:all が無いと 403。
+/** GET /family-care-leaves/admin。全社の産休・育休・介護休業の申出を横断で取得する。family_care_leave:read:all が無いと 403。 */
 export async function getFamilyCareLeaveAdminList(
   filter: FamilyCareLeaveAdminFilter,
   params: Params = {},

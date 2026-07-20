@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ExpenseSubmitRequest } from "@/lib/api/types/expense-types"
 
-// POST /expenses。経費を新規申請する。
+/** POST /expenses。経費を新規申請する。 */
 export async function submitExpense(request: ExpenseSubmitRequest) {
   const client = await createClient()
 
