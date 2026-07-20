@@ -1,6 +1,6 @@
 import { HTTPException } from "hono/http-exception"
 import { factory } from "@/factory"
-import { loadConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
 import { toConnectionErrorMessage } from "@/lib/http/to-connection-error-message"
 import appApproveHandler from "@/app/app/approve/[app_id]/route"
 import appHandler from "@/app/app/route"

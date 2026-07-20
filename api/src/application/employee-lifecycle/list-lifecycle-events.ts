@@ -4,13 +4,10 @@ import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
 import { ApplicationError, UnavailableError, ValidationError } from "@/lib/errors"
-import {
-  decodeLifecycleCursor,
-  encodeLifecycleCursor,
-  fingerprintLifecycleFilter,
-} from "@/lib/pagination/lifecycle-cursor"
+import { LifecycleCursor } from "@/lib/pagination/lifecycle-cursor"
+import { fingerprintLifecycleFilter } from "@/lib/pagination/fingerprint-lifecycle-filter"
 import { isoDate } from "@/lib/schemas"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { z } from "zod"
 
 const limitSchema = z.number().int().min(1).max(100)
@@ -68,7 +65,7 @@ export class ListLifecycleEvents {
     const decoded =
       props.cursor === null
         ? null
-        : await decodeLifecycleCursor(props.cursor, this.c.env.JWT_SECRET)
+        : await LifecycleCursor.decode(props.cursor, this.c.env.JWT_SECRET)
     if (decoded instanceof ApplicationError) return decoded
     const limit = props.limit ?? decoded?.limit ?? 25
     if (!limitSchema.safeParse(limit).success) return invalidCursor()
@@ -117,7 +114,7 @@ export class ListLifecycleEvents {
     const nextCursor =
       rows.length <= limit || last === undefined
         ? null
-        : await encodeLifecycleCursor(
+        : await LifecycleCursor.encode(
             {
               version: 1,
               filterFingerprint,

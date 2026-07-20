@@ -1,13 +1,13 @@
-import {
-  containsDate,
-  lifecycleBoundaryDates,
-  normalizeLifecycleSchedule,
-  periodContainsPeriod,
-  periodsOverlap,
-  type LifecyclePeriodBase,
-  type LifecycleSchedule,
-  type OrgAssignmentPeriod,
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import { lifecycleBoundaryDates } from "@/domain/employee-lifecycle/lifecycle-boundary-dates"
+import type {
+  LifecyclePeriodBase,
+  LifecycleSchedule,
+  OrgAssignmentPeriod,
 } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import { normalizeLifecycleSchedule } from "@/domain/employee-lifecycle/normalize-lifecycle-schedule"
+import { periodContainsPeriod } from "@/domain/employee-lifecycle/period-contains-period"
+import { periodsOverlap } from "@/domain/employee-lifecycle/periods-overlap"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 
 type ValidateLifecycleSchedulesProps = {

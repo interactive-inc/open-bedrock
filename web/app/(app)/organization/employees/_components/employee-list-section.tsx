@@ -1,6 +1,7 @@
 import { EmployeeTable } from "@/app/(app)/organization/employees/_components/employee-table"
 import { FetchError } from "@/components/fetch-error"
-import { PAGE_SIZE_OPTIONS, TablePagination } from "@/components/table-pagination"
+import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS } from "@/lib/pagination/parse-page-size"
 import { getEmployeeList } from "@/lib/api/get-employee-list"
 import type { EmployeeSearchFilter } from "@/lib/api/types/employee-search-filter"
 

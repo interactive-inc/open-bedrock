@@ -2,7 +2,7 @@ import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 
 export type LifecycleReadAuthorization = {
   scope: "self" | "organization" | "all"

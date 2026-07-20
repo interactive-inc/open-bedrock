@@ -2,7 +2,7 @@ import type { Session } from "@/lib/auth/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 
 type CompletionRow = {

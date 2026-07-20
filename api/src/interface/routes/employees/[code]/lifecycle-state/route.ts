@@ -9,7 +9,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { LifecycleAccess } from "@/interface/utils/lifecycle-access"
 import { lifecycleNoStore } from "@/interface/middlewares/lifecycle-no-store"
-import { fingerprintLifecycleFilter } from "@/lib/pagination/lifecycle-cursor"
+import { fingerprintLifecycleFilter } from "@/lib/pagination/fingerprint-lifecycle-filter"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

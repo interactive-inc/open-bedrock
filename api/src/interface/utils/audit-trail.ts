@@ -5,12 +5,10 @@ import type { Context } from "@/env"
 import type { AuditEventFilters } from "@/infrastructure/audit/audit-event-repository"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import {
-  auditUnavailable,
-  hashAuditFilters,
-  resolveAuditNow,
-  throwAuditRouteError,
-} from "@/interface/utils/audit-route-contract"
+import { auditUnavailable } from "@/interface/utils/audit-unavailable"
+import { hashAuditFilters } from "@/interface/utils/hash-audit-filters"
+import { resolveAuditNow } from "@/interface/utils/resolve-audit-now"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { ForbiddenError } from "@/lib/errors"
 
 type ManagedAuditInput = Omit<AuditEventInput, "actorAccountId" | "actorEmployeeId" | "now">

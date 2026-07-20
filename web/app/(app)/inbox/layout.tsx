@@ -2,7 +2,8 @@ import { PageHeader } from "@/components/page-header"
 import { PageTabs } from "@/components/page-tabs"
 import { getInboxCounts } from "@/lib/api/get-inbox-counts"
 import { getMe } from "@/lib/api/get-me"
-import { inboxCountFor, visibleInboxTypes } from "@/lib/inbox/inbox-types"
+import { inboxCountFor } from "@/lib/inbox/inbox-count-for"
+import { visibleInboxTypes } from "@/lib/inbox/visible-inbox-types"
 
 type Props = {
   children: React.ReactNode

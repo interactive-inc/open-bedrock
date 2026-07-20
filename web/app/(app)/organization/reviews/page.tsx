@@ -1,5 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
 import { toReviewerTypeLabel } from "@/app/(app)/my/reviews/_lib/to-reviewer-type-label"
 import { BackButton } from "@/components/back-button"

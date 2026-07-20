@@ -1,10 +1,7 @@
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
+import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
@@ -131,12 +128,14 @@ export class EmployeeRepository {
             employee.position,
             employee.status,
           ),
-        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(db, employee.id),
+        new LastAdminGuard(this.c).abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(
+          employee.id,
+        ),
       ])
 
       return await this.findByCode(employee.code)
     } catch (error) {
-      if (isAbortedByLastAdminGuard(error)) {
+      if (LastAdminGuard.isAbortedBy(error)) {
         return new LastAdminError()
       }
 

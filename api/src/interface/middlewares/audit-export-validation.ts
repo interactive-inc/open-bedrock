@@ -1,9 +1,5 @@
-import type { ParsedAuditExportRange } from "@/interface/utils/audit-route-contract"
-import {
-  parseAuditExportRange,
-  readBoundedAuditExportJson,
-  throwAuditRouteError,
-} from "@/interface/utils/audit-route-contract"
+import { AuditExportRange } from "@/interface/utils/audit-export-range"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { factory } from "@/interface/utils/factory"
 
 type AuditExportValidationInput = {
@@ -18,15 +14,14 @@ type AuditExportValidationInput = {
       to: string
     }
   }
-  out: { json: ParsedAuditExportRange }
+  out: { json: AuditExportRange }
 }
 
 /** Bounded stream reader and strict JSON validator placed after the export permission gate. */
 export const auditExportValidation = factory.createMiddleware<AuditExportValidationInput>(
   async (c, next) => {
     try {
-      const body = await readBoundedAuditExportJson(c.req.raw)
-      c.req.addValidatedData("json", parseAuditExportRange(body))
+      c.req.addValidatedData("json", await AuditExportRange.fromRequest(c.req.raw))
     } catch (error) {
       throwAuditRouteError(error)
     }

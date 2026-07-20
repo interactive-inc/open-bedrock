@@ -1,4 +1,5 @@
-import { parseAuditEventId, throwAuditRouteError } from "@/interface/utils/audit-route-contract"
+import { parseAuditEventId } from "@/interface/utils/parse-audit-event-id"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { factory } from "@/interface/utils/factory"
 
 type AuditDetailValidationInput = {

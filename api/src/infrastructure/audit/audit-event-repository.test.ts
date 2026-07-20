@@ -5,8 +5,9 @@ import { AuditEventRepository } from "@/infrastructure/audit/audit-event-reposit
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { decodeAuditCursor } from "@/lib/audit/audit-cursor"
-import { AUDIT_CSV_MAX_BYTES, toAuditCsv } from "@/lib/audit/audit-csv"
+import { AuditCursor } from "@/lib/audit/audit-cursor"
+import { toAuditCsv } from "@/lib/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
@@ -1203,7 +1204,7 @@ describe("AuditEventRepository search contract", () => {
     const page = await repository.search({ limit: 1, cursor: null, filters: {} })
 
     expect(page.items[0]?.eventId).toBe("legacy--7")
-    expect(decodeAuditCursor(page.nextCursor ?? "").sourceLast[1]).toBe(-7)
+    expect(AuditCursor.decode(page.nextCursor ?? "").sourceLast[1]).toBe(-7)
   })
 
   test("does not advertise a next page when exactly limit rows exist", async () => {

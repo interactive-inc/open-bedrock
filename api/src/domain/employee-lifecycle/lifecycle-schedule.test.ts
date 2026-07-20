@@ -1,11 +1,11 @@
-import {
-  applyLifecycleMutations,
-  containsDate,
-  normalizeLifecycleSchedule,
-  periodsOverlap,
-  type EmploymentPeriod,
-  type LifecycleSchedule,
+import { applyLifecycleMutations } from "@/domain/employee-lifecycle/apply-lifecycle-mutations"
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type {
+  EmploymentPeriod,
+  LifecycleSchedule,
 } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import { normalizeLifecycleSchedule } from "@/domain/employee-lifecycle/normalize-lifecycle-schedule"
+import { periodsOverlap } from "@/domain/employee-lifecycle/periods-overlap"
 import { describe, expect, test } from "bun:test"
 
 const employment = (overrides: Partial<EmploymentPeriod> = {}): EmploymentPeriod => ({

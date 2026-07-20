@@ -3,7 +3,7 @@ import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { UnavailableError } from "@/lib/errors"
 

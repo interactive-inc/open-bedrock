@@ -8,7 +8,8 @@ import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { SubPageHeader } from "@/components/sub-page-header"
 import { SortableTableHead } from "@/components/sortable-table-head"
-import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
+import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
 import { Button } from "@/components/ui/button"
 import {
   Table,

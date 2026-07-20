@@ -3,7 +3,7 @@ import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError, NotFoundError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { parseGovernanceCode } from "@/interface/routes/governance/governance-route-shared"
+import { parseGovernanceCode } from "@/interface/routes/governance/parse-governance-code"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

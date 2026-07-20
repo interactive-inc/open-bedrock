@@ -1,10 +1,5 @@
-import {
-  canManageGovernance,
-  canPublishGovernance,
-  canReadGovernanceDocument,
-  canReviewGovernance,
-  resolveGovernanceOrgRole,
-} from "@/application/governance/governance-access"
+import { GovernanceAccess } from "@/application/governance/governance-access"
+import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { factory } from "@/interface/utils/factory"
 import {
@@ -13,10 +8,8 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
-import {
-  parseGovernanceCode,
-  toGovernanceDocumentResponse,
-} from "@/interface/routes/governance/governance-route-shared"
+import { parseGovernanceCode } from "@/interface/routes/governance/parse-governance-code"
+import { toGovernanceDocumentResponse } from "@/interface/routes/governance/to-governance-document-response"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -25,15 +18,14 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const code = parseGovernanceCode(c.req.param("code"))
   if (code === null) throw new NotFoundError("governance document not found")
   const repository = new GovernanceRepository(c)
+  const governanceAccess = new GovernanceAccess({ c, session })
   const elevated =
-    canManageGovernance(session) || canReviewGovernance(session) || canPublishGovernance(session)
+    governanceAccess.canManage() || governanceAccess.canReview() || governanceAccess.canPublish()
   let record = await repository.findVisibleRecord({ code, includeDraft: elevated })
   if (record instanceof Error) throw new InternalError("failed to load governance document")
   if (record === null || record.version === null)
     throw new NotFoundError("governance document not found")
-  let allowed = await canReadGovernanceDocument({
-    c,
-    session,
+  let allowed = await governanceAccess.canReadDocument({
     metadata: record.version.metadata,
     isDraft: record.version.row.state !== "published",
   })
@@ -42,9 +34,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     record = await repository.findVisibleRecord({ code, includeDraft: false })
     if (record instanceof Error) throw new InternalError("failed to load governance document")
     if (record === null || record.version === null) throw new ForbiddenError()
-    allowed = await canReadGovernanceDocument({
-      c,
-      session,
+    allowed = await governanceAccess.canReadDocument({
       metadata: record.version.metadata,
       isDraft: false,
     })
@@ -60,7 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (response === null) throw new NotFoundError("governance document not found")
   const approvalEligibility = await Promise.all(
     response.approvals.map(async (approval) => {
-      if (!canReviewGovernance(session) || approval.status !== "pending") return false
+      if (!governanceAccess.canReview() || approval.status !== "pending") return false
       const assignees = await resolveGovernanceOrgRole({ c, code: approval.org_role_code })
       if (assignees instanceof Error)
         throw new InternalError("failed to resolve governance reviewer")

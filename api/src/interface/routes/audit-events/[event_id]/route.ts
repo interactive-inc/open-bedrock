@@ -1,10 +1,8 @@
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { AuditTrail } from "@/interface/utils/audit-trail"
-import {
-  auditEventNotFound,
-  throwAuditRouteError,
-  toPublicAuditDetail,
-} from "@/interface/utils/audit-route-contract"
+import { auditEventNotFound } from "@/interface/utils/audit-event-not-found"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
+import { toPublicAuditDetail } from "@/interface/utils/to-public-audit-detail"
 import { auditDetailPermission } from "@/interface/middlewares/audit-detail-permission"
 import { auditDetailValidation } from "@/interface/middlewares/audit-detail-validation"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"

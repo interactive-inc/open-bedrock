@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"

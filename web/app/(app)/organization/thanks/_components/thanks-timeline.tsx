@@ -5,7 +5,7 @@ import { useState, useTransition } from "react"
 import { loadMoreThanksAction } from "@/app/(app)/organization/thanks/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import type { ThanksResponse } from "@/lib/api/types/thanks-types"
 
 type Props = {

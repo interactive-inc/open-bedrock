@@ -6,10 +6,8 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
-import {
-  canReadAllOvertime,
-  canReadReportsOvertime,
-} from "@/lib/attendance/can-read-overtime-summary"
+import { canReadAllOvertime } from "@/lib/attendance/can-read-all-overtime"
+import { canReadReportsOvertime } from "@/lib/attendance/can-read-reports-overtime"
 import type { OvertimeScope } from "@/lib/api/types/overtime-types"
 
 export const metadata = { title: "時間外の集計" }

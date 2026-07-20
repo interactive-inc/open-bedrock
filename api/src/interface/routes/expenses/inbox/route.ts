@@ -10,7 +10,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
+import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"
 
 /** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

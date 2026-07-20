@@ -1,10 +1,10 @@
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { AuditTrail } from "@/interface/utils/audit-trail"
-import { throwAuditRouteError } from "@/interface/utils/audit-route-contract"
+import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { auditExportPermission } from "@/interface/middlewares/audit-export-permission"
 import { auditExportValidation } from "@/interface/middlewares/audit-export-validation"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { toAuditCsv } from "@/lib/audit/audit-csv"
+import { toAuditCsv } from "@/lib/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 

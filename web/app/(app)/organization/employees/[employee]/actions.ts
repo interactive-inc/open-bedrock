@@ -3,7 +3,7 @@
 import { applyPersonnelAction } from "@/lib/api/apply-personnel-action"
 import { createPersonnelActionRequest } from "@/lib/api/create-personnel-action-request"
 import { requireAuth } from "@/lib/auth/require-auth"
-import { toRequiredIsoDate } from "@/lib/form/constraints"
+import { toRequiredIsoDate } from "@/lib/form/to-required-iso-date"
 import { revalidatePath } from "next/cache"
 
 export type PersonnelActionFormState = { ok: boolean; error: string | null }

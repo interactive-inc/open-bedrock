@@ -1,9 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import { Notification } from "@/domain/notification/notification.entity"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"

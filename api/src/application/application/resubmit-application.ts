@@ -1,15 +1,11 @@
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import {
-  ApplicationWorkflowRepository,
-  workflowStepSnapshotInsertStatements,
-} from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ConflictError,
   ForbiddenError,
@@ -18,11 +14,9 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import {
-  resolveWorkflowStepSnapshot,
-  UnresolvableWorkflowStepError,
-} from "@/lib/application/resolve-workflow-step-snapshot"
-import { applicableWorkflowSteps } from "@/lib/application/evaluate-workflow"
+import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
+import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
 import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
 
 export type ResubmittedApplication = {
@@ -157,8 +151,7 @@ export class ResubmitApplication {
           `returned:${instance.currentStepKey}`,
         ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...workflowStepSnapshotInsertStatements({
-          db: this.c.env.DB,
+        ...new WorkflowSql(this.c.env.DB).insert({
           applicationId: command.applicationId,
           stepKey: restartStep.key,
           round: nextRound,

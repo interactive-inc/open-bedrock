@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import {
-  AUDIT_CURSOR_MAX_LENGTH,
-  decodeAuditCursor,
-  encodeAuditCursor,
-} from "@/lib/audit/audit-cursor"
+import { AuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorPosition } from "@/lib/audit/audit-cursor"
 import { ValidationError } from "@/lib/errors"
 
@@ -48,16 +44,16 @@ describe("audit cursor", () => {
       targetHasNext: true,
     })
 
-    const token = encodeAuditCursor(value)
+    const token = AuditCursor.encode(value)
 
-    expect(token.length).toBeLessThanOrEqual(AUDIT_CURSOR_MAX_LENGTH)
-    expect(decodeAuditCursor(token)).toEqual(value)
+    expect(token.length).toBeLessThanOrEqual(AuditCursor.MAX_LENGTH)
+    expect(AuditCursor.decode(token)).toEqual(value)
   })
 
   test("keeps worst-case safe signed anchors inside the cursor cap", () => {
     const maxEpochSeconds = 8_640_000_000_000
     const minEpochSeconds = -8_640_000_000_000
-    const token = encodeAuditCursor(
+    const token = AuditCursor.encode(
       position({
         snapshotMaxId: Number.MAX_SAFE_INTEGER,
         sourceFirst: [maxEpochSeconds, Number.MAX_SAFE_INTEGER],
@@ -69,23 +65,23 @@ describe("audit cursor", () => {
       }),
     )
 
-    expect(token.length).toBeLessThanOrEqual(AUDIT_CURSOR_MAX_LENGTH)
-    expect(decodeAuditCursor(token).sourceLast[1]).toBe(Number.MIN_SAFE_INTEGER)
+    expect(token.length).toBeLessThanOrEqual(AuditCursor.MAX_LENGTH)
+    expect(AuditCursor.decode(token).sourceLast[1]).toBe(Number.MIN_SAFE_INTEGER)
   })
 
   test("rejects reversed ranges, anchors beyond the snapshot, and unavailable directions", () => {
     expect(() =>
-      encodeAuditCursor(position({ sourceFirst: [99, 1], sourceLast: [100, 1] })),
+      AuditCursor.encode(position({ sourceFirst: [99, 1], sourceLast: [100, 1] })),
     ).toThrow(ValidationError)
-    expect(() => encodeAuditCursor(position({ sourceFirst: [100, 401] }))).toThrow(ValidationError)
-    expect(() => encodeAuditCursor(position({ sourceHasNext: false }))).toThrow(ValidationError)
+    expect(() => AuditCursor.encode(position({ sourceFirst: [100, 401] }))).toThrow(ValidationError)
+    expect(() => AuditCursor.encode(position({ sourceHasNext: false }))).toThrow(ValidationError)
   })
 
   test.each(["not+base64url", "eyJ2ZXJzaW9uIjoyfQ==", "a".repeat(257), "bm90LWpzb24", "_w"])(
     "rejects malformed token %s with the stable cursor error",
     (token) => {
       try {
-        decodeAuditCursor(token)
+        AuditCursor.decode(token)
         throw new Error("expected cursor rejection")
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError)
@@ -123,11 +119,11 @@ describe("audit cursor", () => {
     ],
     ['{"version":2}', "object payload"],
   ])("rejects a decoded payload with %s", (json) => {
-    expect(() => decodeAuditCursor(encodeRawJson(json))).toThrow(ValidationError)
+    expect(() => AuditCursor.decode(encodeRawJson(json))).toThrow(ValidationError)
   })
 
   test("rejects noncanonical JSON whitespace", () => {
-    const canonical = encodeAuditCursor(position())
+    const canonical = AuditCursor.encode(position())
     const decodedJson = new TextDecoder().decode(
       Uint8Array.from(
         atob(canonical.replaceAll("-", "+").replaceAll("_", "/") + "=="),
@@ -135,24 +131,24 @@ describe("audit cursor", () => {
       ),
     )
 
-    expect(() => decodeAuditCursor(encodeRawJson(` ${decodedJson}`))).toThrow(ValidationError)
+    expect(() => AuditCursor.decode(encodeRawJson(` ${decodedJson}`))).toThrow(ValidationError)
   })
 
   test("accepts next and previous as the two directions", () => {
     for (const direction of ["next", "previous"] as const) {
       const value = position({ direction, sourceHasPrevious: direction === "previous" })
-      expect(decodeAuditCursor(encodeAuditCursor(value))).toEqual(value)
+      expect(AuditCursor.decode(AuditCursor.encode(value))).toEqual(value)
     }
   })
 
   test("accepts a position change when the unsigned cursor is correctly re-encoded", () => {
-    const original = encodeAuditCursor(position())
-    const changed = encodeAuditCursor({
-      ...decodeAuditCursor(original),
+    const original = AuditCursor.encode(position())
+    const changed = AuditCursor.encode({
+      ...AuditCursor.decode(original),
       snapshotMaxId: 401,
       sourceFirst: [101, 401],
     })
 
-    expect(decodeAuditCursor(changed).sourceFirst).toEqual([101, 401])
+    expect(AuditCursor.decode(changed).sourceFirst).toEqual([101, 401])
   })
 })

@@ -1,16 +1,9 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/lib/schemas"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenNoLoginEnabledEffectiveAdmin,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
-import {
-  abortWhenActorCannotManageAccount,
-  abortWhenActorCannotManageRoleById,
-  isAbortedByLivePermissionGuard,
-  LivePermissionGuardError,
-} from "@/infrastructure/iam/live-permission-guard"
+import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { accountRoles, accounts, employees, roles } from "@/schema"
 import { eq, inArray, sql } from "drizzle-orm"
 
@@ -128,8 +121,7 @@ export class AccountRepository {
   }): Promise<null | Error> {
     try {
       await this.c.env.DB.batch([
-        abortWhenActorCannotManageRoleById({
-          db: this.c.env.DB,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
           actorAccountId: props.grantedBy,
           targetRoleId: props.roleId,
           requiredPermissionKeys: ["iam:assign_roles"],
@@ -144,7 +136,7 @@ export class AccountRepository {
 
       return null
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
 
@@ -180,8 +172,7 @@ export class AccountRepository {
   ): Promise<null | Error | LastAdminError> {
     try {
       await this.c.env.DB.batch([
-        abortWhenActorCannotManageRoleById({
-          db: this.c.env.DB,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
           actorAccountId,
           targetRoleId: roleId,
           requiredPermissionKeys: ["iam:assign_roles"],
@@ -189,7 +180,7 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
         ).bind(accountId, roleId),
-        abortWhenNoLoginEnabledEffectiveAdmin(this.c.env.DB),
+        new LastAdminGuard(this.c).abortWhenNoLoginEnabledEffectiveAdmin(),
         this.c.env.DB.prepare(
           "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
         ).bind(accountId, now),
@@ -197,11 +188,11 @@ export class AccountRepository {
 
       return null
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (isAbortedByLastAdminGuard(caught)) {
+      if (LastAdminGuard.isAbortedBy(caught)) {
         return new LastAdminError()
       }
 
@@ -221,8 +212,7 @@ export class AccountRepository {
   ): Promise<null | Error | LastAdminError> {
     try {
       await this.c.env.DB.batch([
-        abortWhenActorCannotManageAccount({
-          db: this.c.env.DB,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageAccount({
           actorAccountId,
           targetAccountId: accountId,
           requiredPermissionKeys: ["account:manage"],
@@ -230,16 +220,16 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
         ).bind(accountId, status, now),
-        abortWhenNoLoginEnabledEffectiveAdmin(this.c.env.DB),
+        new LastAdminGuard(this.c).abortWhenNoLoginEnabledEffectiveAdmin(),
       ])
 
       return null
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (isAbortedByLastAdminGuard(caught)) {
+      if (LastAdminGuard.isAbortedBy(caught)) {
         return new LastAdminError()
       }
 

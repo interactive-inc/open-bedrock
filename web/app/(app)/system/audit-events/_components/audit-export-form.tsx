@@ -2,7 +2,7 @@
 
 import { Download } from "lucide-react"
 import { useRef, useState } from "react"
-import { parseAuditExportSearchParams } from "@/app/(app)/system/audit-events/_lib/audit-query"
+import { parseAuditExportSearchParams } from "@/app/(app)/system/audit-events/_lib/parse-audit-export-search-params"
 import { Button } from "@/components/ui/button"
 import {
   Field,

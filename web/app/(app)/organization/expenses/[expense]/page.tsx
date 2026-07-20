@@ -1,4 +1,5 @@
-import { formatDate, formatDateTime } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
+import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
 import { ExpenseDecisionForm } from "@/app/(app)/my/expenses/_components/expense-decision-form"
 import { BackButton } from "@/components/back-button"

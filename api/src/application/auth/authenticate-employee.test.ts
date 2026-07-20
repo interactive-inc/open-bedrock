@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
-import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
+import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"

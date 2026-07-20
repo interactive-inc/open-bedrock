@@ -4,7 +4,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 

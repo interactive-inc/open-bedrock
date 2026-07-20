@@ -1,12 +1,8 @@
 import type { Session } from "@/lib/auth/session"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import {
-  canPublishGovernance,
-  canReviewGovernance,
-  isGovernanceAudienceMember,
-  resolveGovernanceOrgRole,
-} from "@/application/governance/governance-access"
+import { GovernanceAccess } from "@/application/governance/governance-access"
+import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 import {
   ConflictError,
   ForbiddenError,
@@ -80,7 +76,7 @@ export class GovernancePublication {
     decision: "approved" | "rejected"
     comment: string | null
   }): Promise<{ state: "approved" | "rejected" } | Error> {
-    if (!canReviewGovernance(props.session)) {
+    if (!new GovernanceAccess({ c: this.c, session: props.session }).canReview()) {
       return new ForbiddenError("規程版を審査する権限がありません", "governance_review_forbidden")
     }
     const loaded = await this.load(props.code, props.version)
@@ -134,7 +130,7 @@ export class GovernancePublication {
     code: string
     version: string
   }): Promise<{ state: "published"; version_id: string } | Error> {
-    if (!canPublishGovernance(props.session)) {
+    if (!new GovernanceAccess({ c: this.c, session: props.session }).canPublish()) {
       return new ForbiddenError("規程版を公開する権限がありません", "governance_publish_forbidden")
     }
     const loaded = await this.load(props.code, props.version)
@@ -202,11 +198,10 @@ export class GovernancePublication {
     if (record === null || record.version === null) {
       return new NotFoundError("公開済みの規程がありません", "governance_not_found")
     }
-    const audience = await isGovernanceAudienceMember({
+    const audience = await new GovernanceAccess({
       c: this.c,
       session: props.session,
-      metadata: record.version.metadata,
-    })
+    }).isAudienceMember(record.version.metadata)
     if (audience instanceof Error) {
       return new UnexpectedError("規程の適用対象を判定できません", { cause: audience })
     }

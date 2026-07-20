@@ -1,9 +1,7 @@
-import {
-  formatLifecycleDisplayStatus,
-  formatLifecycleDate,
-  formatLifecycleKind,
-  summarizeLifecycleEvent,
-} from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-event"
+import { formatLifecycleDate } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-date"
+import { formatLifecycleDisplayStatus } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-display-status"
+import { formatLifecycleKind } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-kind"
+import { summarizeLifecycleEvent } from "@/app/(app)/organization/employees/[employee]/_lib/summarize-lifecycle-event"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"

@@ -40,7 +40,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import type { WorkflowRepair } from "@/lib/api/get-workflow-repairs"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 
 const initialState: WorkflowRepairState = { ok: false, error: null }
 

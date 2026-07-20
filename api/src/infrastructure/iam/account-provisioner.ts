@@ -1,13 +1,9 @@
 import type { Context } from "@/env"
 import { accountRoles, accounts, identities, roles } from "@/schema"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
-import {
-  abortWhenActorCannotManageRoleByKey,
-  isAbortedByLivePermissionGuard,
-} from "@/infrastructure/iam/live-permission-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { RoleAssignmentGuardError } from "@/infrastructure/iam/role-assignment-guard-error"
 import { eq } from "drizzle-orm"
 
 export type ProvisionInput = {
@@ -41,14 +37,6 @@ export type PreparedProvisionInput = {
   roleKey: string
   grantedByAccountId: number
   now: number
-}
-
-/** requested role が存在しないか、付与者の実効権限を超えたため batch を中止した。 */
-export class RoleAssignmentGuardError extends Error {
-  constructor(options?: ErrorOptions) {
-    super("role assignment was rejected", options)
-    this.name = "RoleAssignmentGuardError"
-  }
 }
 
 /**
@@ -142,8 +130,7 @@ export class AccountProvisioner {
           input.now,
         ),
       abortWhenPreviousStatementChangedNoRows(db),
-      abortWhenActorCannotManageRoleByKey({
-        db,
+      new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
         actorAccountId: input.grantedByAccountId,
         targetRoleKey: input.roleKey,
         requiredPermissionKeys:
@@ -221,8 +208,7 @@ export class AccountProvisioner {
           ),
 
         // 4. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
-        abortWhenActorCannotManageRoleByKey({
-          db,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
           actorAccountId: input.grantedByAccountId,
           targetRoleKey: input.roleKey,
           requiredPermissionKeys:
@@ -258,7 +244,7 @@ export class AccountProvisioner {
 
       return employeeId
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught) || isAbortedByGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught) || isAbortedByGuard(caught)) {
         return new RoleAssignmentGuardError({ cause: caught })
       }
 

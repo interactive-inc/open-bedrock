@@ -1,10 +1,8 @@
 import { zApplicationWorkflow } from "@/domain/application/application-workflow"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import {
-  ApplicationWorkflowRepository,
-  WorkflowRevisionConflictError,
-} from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowRevisionConflictError } from "@/infrastructure/application/workflow-revision-conflict-error"
 import {
   ForbiddenError,
   InternalError,

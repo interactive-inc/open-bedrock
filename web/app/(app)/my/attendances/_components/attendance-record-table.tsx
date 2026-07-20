@@ -1,5 +1,5 @@
 import { toDurationLabel } from "@/app/(app)/my/attendances/_lib/to-duration-label"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { Badge } from "@/components/ui/badge"
 import { statusLabel } from "@/lib/status-label"
 import {

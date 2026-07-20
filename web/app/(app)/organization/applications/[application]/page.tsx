@@ -1,6 +1,6 @@
 import { CheckCircle2, Circle, Clock3, RotateCcw, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
