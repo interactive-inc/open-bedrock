@@ -1,5 +1,4 @@
 import { CompleteHealthCheckup } from "@/application/health-checkup/complete-health-checkup"
-import { canManageHealthCheckups } from "@/lib/health-checkup/can-manage-health-checkups"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup } from "@/lib/app-schemas"
@@ -20,7 +19,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageHealthCheckups(session) === false) {
+    if (session.hasPermission("health_checkup:manage") === false) {
       throw new ForbiddenError()
     }
 

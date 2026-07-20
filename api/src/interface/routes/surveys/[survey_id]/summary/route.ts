@@ -1,4 +1,3 @@
-import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey.entity"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
 import { toAnswerDistribution } from "@/lib/survey/to-answer-distribution"
@@ -33,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageSurveys(c.var.session) === false) {
+  if (c.var.session.hasPermission("survey:manage") === false) {
     throw new ForbiddenError()
   }
 

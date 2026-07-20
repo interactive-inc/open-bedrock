@@ -1,7 +1,7 @@
+import type { Session } from "@/lib/auth/session"
 import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
 import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
-import type { Context, SessionPayload } from "@/env"
-import { hasPermission } from "@/lib/auth/has-permission"
+import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 
 export type PersonnelActionRequestStatus = "pending" | "approved" | "rejected" | "withdrawn"
@@ -78,7 +78,7 @@ const selectSql = `SELECT request.id, request.application_id, request.target_emp
 
 export async function findAccessiblePersonnelActionRequest(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   requestId: string
 }): Promise<PersonnelActionRequestRecord | null | UnexpectedError> {
   try {
@@ -88,7 +88,7 @@ export async function findAccessiblePersonnelActionRequest(props: {
     )
       .bind(
         props.session.employeeId,
-        hasPermission(props.session, "employee:lifecycle:read:all") ? 1 : 0,
+        props.session.hasPermission("employee:lifecycle:read:all") ? 1 : 0,
         props.requestId,
       )
       .first<RequestRow>()
@@ -100,7 +100,7 @@ export async function findAccessiblePersonnelActionRequest(props: {
 
 export async function listAccessiblePersonnelActionRequests(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   targetEmployeeCode?: string
   status?: PersonnelActionRequestStatus
   limit: number
@@ -116,7 +116,7 @@ export async function listAccessiblePersonnelActionRequests(props: {
     )
       .bind(
         props.session.employeeId,
-        hasPermission(props.session, "employee:lifecycle:read:all") ? 1 : 0,
+        props.session.hasPermission("employee:lifecycle:read:all") ? 1 : 0,
         props.targetEmployeeCode ?? null,
         props.status ?? null,
         props.limit,

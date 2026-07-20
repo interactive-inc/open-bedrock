@@ -1,4 +1,3 @@
-import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { codeSchema } from "@/lib/schemas"
 import { zAppShiftAssignmentList } from "@/lib/app-schemas"
 import { factory } from "@/lib/factory"
@@ -38,7 +37,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageShift(session) === false) {
+    if (session.hasPermission("shift:manage") === false) {
       throw new ForbiddenError()
     }
 

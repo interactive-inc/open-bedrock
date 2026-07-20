@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import { Position } from "@/domain/position/position.entity"
-import { canManagePositions } from "@/lib/position/can-manage-positions"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { PositionRepository } from "@/infrastructure/position/position-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   name: string
   rank: number
@@ -24,7 +24,7 @@ export class CreatePosition {
   async run(command: Command): Promise<Position | ApplicationError> {
     const repository = new PositionRepository(this.c)
 
-    if (canManagePositions(command.session) === false) {
+    if (command.session.hasPermission("position:manage") === false) {
       return new ForbiddenError("cannot manage positions", "forbidden")
     }
 

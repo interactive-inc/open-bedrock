@@ -1,6 +1,6 @@
+import { Session } from "@/lib/auth/session"
 import { canReadAttendanceOf } from "@/lib/attendance/can-read-attendance-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { SessionPayload } from "@/env"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
@@ -12,14 +12,14 @@ const sameDept: EmployeeRelation = { isSelf: false, isReport: false, isSameDepar
 
 const stranger: EmployeeRelation = { isSelf: false, isReport: false, isSameDepartment: false }
 
-function sessionWith(permissions: ReadonlyArray<string>): SessionPayload {
-  return {
+function sessionWith(permissions: ReadonlyArray<string>): Session {
+  return new Session({
     accountId: 1,
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set(permissions),
     roleKeys: [],
-  }
+  })
 }
 
 describe("canReadAttendanceOf", () => {

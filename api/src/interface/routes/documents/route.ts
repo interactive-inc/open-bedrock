@@ -5,7 +5,6 @@ import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canReadDocuments } from "@/lib/document/can-read-documents"
 import { zAppDocument, zAppDocumentList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -36,7 +35,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canReadDocuments(session) === false) {
+    if (session.hasPermission("document:read:all") === false) {
       throw new ForbiddenError()
     }
 

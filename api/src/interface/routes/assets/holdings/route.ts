@@ -1,4 +1,3 @@
-import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { assetLendings, assets, employees } from "@/schema"
@@ -23,7 +22,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageAssets(session) === false) {
+  if (session.hasPermission("asset:manage") === false) {
     throw new ForbiddenError()
   }
 

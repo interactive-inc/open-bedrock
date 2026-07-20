@@ -1,13 +1,13 @@
-import { canManageRoles } from "@/lib/iam/can-manage-roles"
+import type { Session } from "@/lib/auth/session"
 import { permissionKeySchema } from "@/lib/auth/permission-keys"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import type { RoleRow } from "@/schema"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   key: string
   name: string
   description: string | null
@@ -23,7 +23,7 @@ export class CreateRole {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<RoleRow | ApplicationError> {
-    if (canManageRoles(command.session) === false) {
+    if (command.session.hasPermission("iam:manage_roles") === false) {
       return new ForbiddenError("cannot manage roles", "forbidden")
     }
 

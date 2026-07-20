@@ -1,5 +1,4 @@
-import type { SessionPayload } from "@/env"
-import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import type { Session } from "@/lib/auth/session"
 import type { AssetRow } from "@/schema"
 
 type AssetResponse = {
@@ -16,9 +15,9 @@ type AssetResponse = {
  * 資産カタログの共通レスポンスを組み立てる。
  * 管理権限者または現在の保有者以外には、台帳上の機微項目を返さない。
  */
-export function toAssetResponse(row: AssetRow, session: SessionPayload): AssetResponse {
+export function toAssetResponse(row: AssetRow, session: Session): AssetResponse {
   const canViewSensitiveFields =
-    canManageAssets(session) || row.holderEmployeeId === session.employeeId
+    session.hasPermission("asset:manage") || row.holderEmployeeId === session.employeeId
 
   return {
     code: row.code,

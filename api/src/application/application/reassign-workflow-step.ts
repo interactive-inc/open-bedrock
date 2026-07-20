@@ -1,11 +1,11 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import {
   ApplicationWorkflowRepository,
   workflowReachableApprovalCountSql,
   workflowStepSnapshotInsertStatements,
 } from "@/infrastructure/application/application-workflow-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
 import {
   abortWhenPreviousStatementChangedNoRows,
@@ -31,7 +31,7 @@ export class ReassignWorkflowStep {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     applicationId: number
     candidateEmployeeIds: ReadonlyArray<number>
     requiredApprovals?: number
@@ -39,8 +39,8 @@ export class ReassignWorkflowStep {
     reassignedAt: string
   }): Promise<ReassignedWorkflowStep | ApplicationError> {
     if (
-      hasPermission(command.session, "application:read:all") === false ||
-      hasPermission(command.session, "application_template:manage") === false
+      command.session.hasPermission("application:read:all") === false ||
+      command.session.hasPermission("application_template:manage") === false
     ) {
       return new ForbiddenError("cannot repair application workflows", "forbidden")
     }

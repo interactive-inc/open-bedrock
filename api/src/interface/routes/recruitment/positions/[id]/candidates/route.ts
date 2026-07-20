@@ -1,5 +1,4 @@
 import { RegisterCandidate } from "@/application/recruitment/register-candidate"
-import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
 import {
@@ -30,7 +29,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageRecruitment(session) === false) {
+  if (session.hasPermission("recruitment:manage") === false) {
     throw new ForbiddenError()
   }
 

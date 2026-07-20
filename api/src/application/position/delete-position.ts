@@ -1,11 +1,11 @@
-import { canManagePositions } from "@/lib/position/can-manage-positions"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { PositionRepository } from "@/infrastructure/position/position-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   positionId: number
 }
 
@@ -19,7 +19,7 @@ export class DeletePosition {
   async run(command: Command): Promise<null | ApplicationError> {
     const repository = new PositionRepository(this.c)
 
-    if (canManagePositions(command.session) === false) {
+    if (command.session.hasPermission("position:manage") === false) {
       return new ForbiddenError("cannot manage positions", "forbidden")
     }
 

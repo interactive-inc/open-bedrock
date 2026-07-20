@@ -1,4 +1,4 @@
-import { canManageOrg } from "@/lib/org/can-manage-org"
+import type { Session } from "@/lib/auth/session"
 import {
   ConflictError,
   ForbiddenError,
@@ -8,11 +8,11 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/domain/org/org-department.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   parentCode: string | null
   managerEmployeeCode?: string | null
@@ -29,7 +29,7 @@ export class UpdateOrgDepartment {
   async run(command: Command): Promise<OrgDepartment | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.session) === false) {
+    if (command.session.hasPermission("org:manage") === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 

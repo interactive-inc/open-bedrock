@@ -1,7 +1,6 @@
 import { resolveAttendanceSearchQuery } from "@/interface/routes/attendance/resolve-attendance-search-query"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { attendanceListQuerySchema } from "@/interface/routes/attendance/attendance-list-query"
@@ -60,7 +59,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const conditions: Array<SQL> = []
 
   if (requestedEmployeeId === null && scope === "reports") {
-    if (hasPermission(session, "attendance:read:reports") === false) {
+    if (session.hasPermission("attendance:read:reports") === false) {
       throw new ForbiddenError()
     }
 
@@ -97,8 +96,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     const isMember = departmentEmployeeIds.includes(session.employeeId)
 
     const allowed =
-      hasPermission(session, "attendance:read:all") ||
-      (hasPermission(session, "attendance:read:department") && isMember)
+      session.hasPermission("attendance:read:all") ||
+      (session.hasPermission("attendance:read:department") && isMember)
 
     if (allowed === false) {
       throw new ForbiddenError()
@@ -112,7 +111,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     conditions.push(inArray(attendanceRecords.employeeId, departmentEmployeeIds))
   } else if (requestedEmployeeId === null && scope === "all") {
-    if (hasPermission(session, "attendance:read:all") === false) {
+    if (session.hasPermission("attendance:read:all") === false) {
       throw new ForbiddenError()
     }
   } else {

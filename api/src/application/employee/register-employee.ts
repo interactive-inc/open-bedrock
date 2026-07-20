@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import type { Employee } from "@/domain/employee/employee.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
 import { isAbortedByLivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { validatePasswordComplexity } from "@/lib/auth/password-policy"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { isAbortedByGuard } from "@/lib/d1/batch-abort-guard"
@@ -20,7 +20,7 @@ import {
 import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employee: {
     code: string
     name: string
@@ -39,9 +39,9 @@ export class RegisterEmployee {
 
   async run(command: Command): Promise<Employee | ApplicationError> {
     if (
-      !hasPermission(command.session, "employee:create") ||
-      !hasPermission(command.session, "employee:lifecycle:apply") ||
-      !hasPermission(command.session, "account:manage")
+      !command.session.hasPermission("employee:create") ||
+      !command.session.hasPermission("employee:lifecycle:apply") ||
+      !command.session.hasPermission("account:manage")
     ) {
       return new ForbiddenError(
         "direct hire requires employee, lifecycle, and account permissions",
@@ -50,7 +50,7 @@ export class RegisterEmployee {
     }
     if (
       command.employee.role !== "member" &&
-      !hasPermission(command.session, "employee:assign_role")
+      !command.session.hasPermission("employee:assign_role")
     ) {
       return new ForbiddenError(
         "only authorized account managers can assign non-member roles",

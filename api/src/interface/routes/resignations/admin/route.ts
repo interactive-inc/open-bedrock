@@ -1,4 +1,3 @@
-import { canViewAllResignations } from "@/lib/resignation/can-view-all-resignations"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { resignations } from "@/schema"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllResignations(session) === false) {
+    if (session.hasPermission("resignation:read:all") === false) {
       throw new ForbiddenError()
     }
 

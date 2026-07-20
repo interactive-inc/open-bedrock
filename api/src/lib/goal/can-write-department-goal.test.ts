@@ -1,21 +1,21 @@
+import { Session } from "@/lib/auth/session"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/lib/goal/can-write-department-goal"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import type { SessionPayload } from "@/env"
 
 /**
  * review:administer を持たず goal:evaluate:reports だけを持つマネージャー相当のセッション。
  * system role の manager は review:administer も持つため、部門スコープの限定を確かめるには
  * この最小権限セッションを使う。
  */
-function reportsManagerSession(): SessionPayload {
-  return {
+function reportsManagerSession(): Session {
+  return new Session({
     accountId: 1,
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set<string>(["goal:evaluate:reports"]),
     roleKeys: ["custom"],
-  }
+  })
 }
 
 describe("canWriteDepartmentGoal", () => {

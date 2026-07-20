@@ -1,6 +1,6 @@
-import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
+import type { Session } from "@/lib/auth/session"
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
@@ -8,7 +8,7 @@ import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/fa
 export type Action = "approve" | "cancel"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   familyCareLeaveId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceFamilyCareLeave {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
-    if (canManageFamilyCareLeaves(command.session) === false) {
+    if (command.session.hasPermission("family_care_leave:manage") === false) {
       return new ForbiddenError("cannot manage family care leaves", "forbidden")
     }
 

@@ -1,5 +1,4 @@
 import { MigrateLegacyHashes } from "@/application/batch/migrate-legacy-hashes"
-import { canManageBatch } from "@/lib/batch/can-manage-batch"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { factory } from "@/lib/factory"
@@ -12,7 +11,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageBatch(session) === false) {
+  if (session.hasPermission("batch:view") === false) {
     throw new ForbiddenError()
   }
 

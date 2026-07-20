@@ -1,14 +1,14 @@
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { lifecycleEffectTemplateBindings } from "@/schema"
 import { eq } from "drizzle-orm"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
 }
 
@@ -24,7 +24,7 @@ export class DeleteOnboardingTemplate {
     const templateRepository = new OnboardingTemplateRepository(this.c)
     const assignmentRepository = new OnboardingAssignmentRepository(this.c)
 
-    if (canManageOnboarding(command.session) === false) {
+    if (command.session.hasPermission("onboarding:manage") === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

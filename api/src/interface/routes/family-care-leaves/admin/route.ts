@@ -1,4 +1,3 @@
-import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all-family-care-leaves"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { familyCareLeaves } from "@/schema"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllFamilyCareLeaves(session) === false) {
+    if (session.hasPermission("family_care_leave:read:all") === false) {
       throw new ForbiddenError()
     }
 

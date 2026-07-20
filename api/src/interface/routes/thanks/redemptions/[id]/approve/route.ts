@@ -1,5 +1,4 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
@@ -21,7 +20,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session) === false) {
+  if (session.hasPermission("thanks_redemption:approve") === false) {
     throw new ForbiddenError()
   }
 

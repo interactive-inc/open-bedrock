@@ -1,8 +1,7 @@
-import { hasPermission } from "@/lib/auth/has-permission"
-import type { SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
 
 export type Props = {
-  session: SessionPayload
+  session: Session
   /** 対象部門コード。 */
   departmentCode: string
   /** viewer が所属する部門コード(org_memberships 由来)。無所属なら null。 */
@@ -14,11 +13,11 @@ export type Props = {
  * レポートライン配下を評価できるマネージャー(goal:evaluate:reports)は自分の所属部門のみ扱える。
  */
 export function canWriteDepartmentGoal(props: Props): boolean {
-  if (hasPermission(props.session, "review:administer")) {
+  if (props.session.hasPermission("review:administer")) {
     return true
   }
 
-  if (hasPermission(props.session, "goal:evaluate:reports") === false) {
+  if (props.session.hasPermission("goal:evaluate:reports") === false) {
     return false
   }
 

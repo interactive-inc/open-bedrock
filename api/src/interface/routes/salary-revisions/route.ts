@@ -17,7 +17,6 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllSalaryRevisions } from "@/lib/salary-revision/can-view-all-salary-revisions"
 import { zAppSalaryRevision, zAppSalaryRevisionList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -34,7 +33,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewAllSalaryRevisions(session) === false) {
+  if (session.hasPermission("salary_revision:read:all") === false) {
     throw new ForbiddenError()
   }
 

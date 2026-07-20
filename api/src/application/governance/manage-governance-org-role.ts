@@ -1,4 +1,5 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 import {
@@ -15,7 +16,7 @@ export class ManageGovernanceOrgRole {
   constructor(private readonly c: Context) {}
 
   async assign(props: {
-    session: SessionPayload
+    session: Session
     orgRoleCode: string
     employeeCode: string
     departmentCode: string | null
@@ -119,7 +120,7 @@ export class ManageGovernanceOrgRole {
       : saved
   }
 
-  async revoke(props: { session: SessionPayload; assignmentId: number }) {
+  async revoke(props: { session: Session; assignmentId: number }) {
     if (!props.session.permissions.has("governance:manage")) {
       return new ForbiddenError("組織責任を解除する権限がありません", "governance_role_forbidden")
     }

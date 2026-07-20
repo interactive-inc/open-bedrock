@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import type { GovernanceMetadata } from "@/domain/governance/governance-document"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
@@ -13,23 +14,23 @@ export type GovernanceOrgRoleAssignee = {
   source: "manual_assignment" | "department_manager"
 }
 
-export function canManageGovernance(session: SessionPayload): boolean {
+export function canManageGovernance(session: Session): boolean {
   return session.permissions.has("governance:manage")
 }
 
-export function canReadGovernance(session: SessionPayload): boolean {
+export function canReadGovernance(session: Session): boolean {
   return session.permissions.has("governance:read")
 }
 
-export function canReadRestrictedGovernance(session: SessionPayload): boolean {
+export function canReadRestrictedGovernance(session: Session): boolean {
   return session.permissions.has("governance:read:restricted")
 }
 
-export function canReviewGovernance(session: SessionPayload): boolean {
+export function canReviewGovernance(session: Session): boolean {
   return session.permissions.has("governance:review")
 }
 
-export function canPublishGovernance(session: SessionPayload): boolean {
+export function canPublishGovernance(session: Session): boolean {
   return session.permissions.has("governance:publish")
 }
 
@@ -99,7 +100,7 @@ export async function resolveGovernanceOrgRole(props: {
 
 export async function isGovernanceAudienceMember(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   metadata: GovernanceMetadata
 }): Promise<boolean | Error> {
   if (props.session.employeeStatus !== "active" && props.session.employeeStatus !== "leave") {
@@ -135,7 +136,7 @@ export async function isGovernanceAudienceMember(props: {
 
 export async function canReadGovernanceDocument(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   metadata: GovernanceMetadata
   isDraft: boolean
 }): Promise<boolean | Error> {

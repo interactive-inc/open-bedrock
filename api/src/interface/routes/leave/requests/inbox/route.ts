@@ -1,4 +1,3 @@
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -11,7 +10,6 @@ import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/li
 import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees, leaveRequests } from "@/schema"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
@@ -32,11 +30,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideLeave(session) === false) {
+  if (session.hasPermission("leave:approve") === false) {
     throw new ForbiddenError()
   }
 
-  const managedEmployeeIds = hasPermission(session, "org:manage")
+  const managedEmployeeIds = session.hasPermission("org:manage")
     ? null
     : await listManagedEmployeeIds(c, session.employeeId)
 

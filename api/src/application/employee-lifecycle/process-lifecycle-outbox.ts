@@ -1,5 +1,5 @@
-import type { Context, SessionPayload } from "@/env"
-import { hasPermission } from "@/lib/auth/has-permission"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import {
   abortWhenPreviousStatementChangedNoRows,
   isAbortedByGuard,
@@ -41,12 +41,12 @@ export class ProcessLifecycleOutbox {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     limit?: number
   }): Promise<ProcessLifecycleOutboxResult | ApplicationError> {
     if (
-      !hasPermission(command.session, "batch:view") ||
-      !hasPermission(command.session, "employee:lifecycle:apply")
+      !command.session.hasPermission("batch:view") ||
+      !command.session.hasPermission("employee:lifecycle:apply")
     ) {
       return new ForbiddenError("lifecycle outbox processing is forbidden", "forbidden")
     }

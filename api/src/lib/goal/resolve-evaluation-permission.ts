@@ -1,7 +1,7 @@
+import type { Session } from "@/lib/auth/session"
 import { canEvaluateGoalOf } from "@/lib/goal/can-evaluate-goal-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
-import type { SessionPayload } from "@/env"
 
 export type Forbidden = { reason: "forbidden" }
 
@@ -9,7 +9,7 @@ export type Props = {
   kind: GoalEvaluationKind
   goalEmployeeId: number
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
   relation: EmployeeRelation
 }
 

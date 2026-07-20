@@ -1,5 +1,4 @@
 import { factory } from "@/lib/factory"
-import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
@@ -36,7 +35,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageAntisocialChecks(session) === false) {
+    if (session.hasPermission("antisocial_check:manage") === false) {
       throw new ForbiddenError()
     }
 

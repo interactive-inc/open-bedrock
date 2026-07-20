@@ -1,12 +1,12 @@
-import { canManageDecisions } from "@/lib/decision/can-manage-decisions"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { Decision } from "@/domain/decision/decision.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { DecisionRepository } from "@/infrastructure/decision/decision-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   title: string
   decidedOn: string
   context: string
@@ -24,7 +24,7 @@ export class CreateDecision {
   async run(command: Command): Promise<Decision | ApplicationError> {
     const decisionRepository = new DecisionRepository(this.c)
 
-    if (canManageDecisions(command.session) === false) {
+    if (command.session.hasPermission("decision:manage") === false) {
       return new ForbiddenError("cannot manage decisions", "forbidden")
     }
 

@@ -1,5 +1,4 @@
 import { UpdateReward } from "@/application/thanks-points/update-reward"
-import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
 import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
 import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -29,7 +28,7 @@ export const PATCH = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session) === false) {
+    if (session.hasPermission("thanks_reward:manage") === false) {
       throw new ForbiddenError()
     }
 

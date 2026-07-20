@@ -1,4 +1,3 @@
-import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { employees, expenses } from "@/schema"
@@ -55,7 +54,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllExpenses(session) === false) {
+    if (session.hasPermission("expense:read:all") === false) {
       throw new ForbiddenError()
     }
 

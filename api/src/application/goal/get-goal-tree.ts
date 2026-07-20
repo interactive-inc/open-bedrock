@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import type { Goal } from "@/domain/goal/goal.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
@@ -10,7 +11,7 @@ import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 
 export type Command = {
   period: string | null
-  session: SessionPayload
+  session: Session
 }
 
 /**
@@ -41,7 +42,7 @@ export class GetGoalTree {
   /** 個人目標のうち閲覧スコープ外のものを除く。全社・部門目標は常に残す。 */
   private async toVisibleGoals(
     goals: ReadonlyArray<Goal>,
-    session: SessionPayload,
+    session: Session,
   ): Promise<ReadonlyArray<Goal> | Error> {
     const visible: Array<Goal> = []
 

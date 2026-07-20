@@ -1,3 +1,4 @@
+import { Session } from "@/lib/auth/session"
 import { describe, expect, test } from "bun:test"
 import type { ApiClient } from "@/app"
 import {
@@ -295,13 +296,13 @@ describe("audit HTTP contract", () => {
 
   test("normalizes event-generation validation failures to audit_unavailable", async () => {
     const { context } = createTestContext()
-    context.var.session = {
+    context.var.session = new Session({
       accountId: 1,
       employeeId: 1,
       employeeStatus: "active",
       permissions: new Set(["audit:read"]),
       roleKeys: ["reader"],
-    }
+    })
     context.var.auditContext = { ...context.var.auditContext, requestId: "not-a-uuid" }
 
     const error = await appendAuditSearchSucceeded(context, {}, 50, 0).catch(

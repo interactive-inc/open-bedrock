@@ -1,7 +1,6 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { activateDueWorkflowEscalations } from "@/lib/application/ensure-workflow-step-escalation"
-import { canDecideApplication } from "@/lib/application/can-decide-application"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 import { applications, applicationTemplates } from "@/schema"
 import { and, eq, inArray, ne, or, sql, type SQL } from "drizzle-orm"
@@ -14,15 +13,15 @@ import { and, eq, inArray, ne, or, sql, type SQL } from "drizzle-orm"
  */
 export async function resolveApplicationInboxCondition(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   now: string
 }): Promise<SQL | Error> {
   const escalated = await activateDueWorkflowEscalations({ c: props.c, now: props.now })
   if (escalated instanceof Error) return escalated
 
-  const isPrivileged = canDecideApplication(props.session)
+  const isPrivileged = props.session.hasPermission("application:approve")
   const managedEmployeeIds =
-    isPrivileged === false || hasPermission(props.session, "org:manage")
+    isPrivileged === false || props.session.hasPermission("org:manage")
       ? null
       : await listManagedEmployeeIds(props.c, props.session.employeeId)
 

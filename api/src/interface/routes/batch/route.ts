@@ -1,4 +1,3 @@
-import { canManageBatch } from "@/lib/batch/can-manage-batch"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
@@ -29,7 +28,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBatch(session) === false) {
+    if (session.hasPermission("batch:view") === false) {
       throw new ForbiddenError()
     }
 

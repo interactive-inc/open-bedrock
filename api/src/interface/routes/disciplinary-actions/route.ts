@@ -1,5 +1,4 @@
 import { CreateDisciplinaryAction } from "@/application/disciplinary-action/create-disciplinary-action"
-import { canReadDisciplinaryActions } from "@/lib/disciplinary-action/can-read-disciplinary-actions"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -25,7 +24,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canReadDisciplinaryActions(session) === false) {
+  if (session.hasPermission("disciplinary_action:read:all") === false) {
     throw new ForbiddenError()
   }
 

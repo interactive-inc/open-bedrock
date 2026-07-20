@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import { Regulation } from "@/domain/regulation/regulation.entity"
 import { RegulationVersion } from "@/domain/regulation/regulation-version.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RegulationRepository } from "@/infrastructure/regulation/regulation-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { canManageRegulations } from "@/lib/regulation/can-manage-regulations"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   title: string
   category: string | null
@@ -32,7 +32,7 @@ export class RegisterRegulation {
   async run(command: Command): Promise<Registered | ApplicationError> {
     const regulationRepository = new RegulationRepository(this.c)
 
-    if (canManageRegulations(command.session) === false) {
+    if (command.session.hasPermission("regulation:manage") === false) {
       return new ForbiddenError("cannot manage regulations", "forbidden")
     }
 

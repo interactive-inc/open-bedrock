@@ -1,17 +1,17 @@
+import { Session } from "@/lib/auth/session"
 import { canReadLeaveOf } from "@/lib/leave/can-read-leave-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { SessionPayload } from "@/env"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
-function sessionWith(permissions: ReadonlyArray<string>): SessionPayload {
-  return {
+function sessionWith(permissions: ReadonlyArray<string>): Session {
+  return new Session({
     accountId: 1,
     employeeId: 1,
     employeeStatus: "active",
     permissions: new Set(permissions),
     roleKeys: [],
-  }
+  })
 }
 
 const self: EmployeeRelation = { isSelf: true, isReport: false, isSameDepartment: false }

@@ -1,4 +1,5 @@
 import { tokenPayloadSchema } from "@/lib/auth/token-payload"
+import { Session } from "@/lib/auth/session"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
@@ -52,13 +53,16 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   if (access === null || access instanceof Error)
     throw new UnauthorizedError("employee is unavailable")
 
-  c.set("session", {
-    accountId: account.accountId,
-    employeeId: account.employeeId,
-    employeeStatus: access.status,
-    permissions: account.permissions,
-    roleKeys: account.roleKeys,
-  })
+  c.set(
+    "session",
+    new Session({
+      accountId: account.accountId,
+      employeeId: account.employeeId,
+      employeeStatus: access.status,
+      permissions: account.permissions,
+      roleKeys: account.roleKeys,
+    }),
+  )
 
   await next()
 })

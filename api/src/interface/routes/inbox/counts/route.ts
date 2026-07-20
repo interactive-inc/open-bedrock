@@ -1,7 +1,3 @@
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
-import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
@@ -45,12 +41,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(pendingWithRole)
 
   // --- expenses ---
-  const expenseCountQuery = canDecideExpense(session)
+  const expenseCountQuery = session.hasPermission("expense:approve")
     ? c.var.database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending"))
     : null
 
   // --- leave requests ---
-  const leaveCountQuery = canDecideLeave(session)
+  const leaveCountQuery = session.hasPermission("leave:approve")
     ? c.var.database
         .select({ total: count() })
         .from(leaveRequests)
@@ -58,7 +54,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     : null
 
   // --- shift swap requests ---
-  const shiftCountQuery = canApproveShiftSwap(session)
+  const shiftCountQuery = session.hasPermission("shift_swap:approve")
     ? c.var.database
         .select({ total: count() })
         .from(shiftSwapRequests)
@@ -72,7 +68,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     : null
 
   // --- thanks redemptions ---
-  const thanksCountQuery = canDecideRedemption(session)
+  const thanksCountQuery = session.hasPermission("thanks_redemption:approve")
     ? c.var.database
         .select({ total: count() })
         .from(thanksRedemptions)

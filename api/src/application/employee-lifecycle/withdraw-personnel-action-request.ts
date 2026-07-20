@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import {
   abortWhenPreviousStatementChangedNoRows,
@@ -18,7 +19,7 @@ export class WithdrawPersonnelActionRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     requestId: string
     withdrawnAt: string
   }): Promise<{ status: "withdrawn" } | ApplicationError> {

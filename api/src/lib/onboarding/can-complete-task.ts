@@ -1,9 +1,8 @@
-import { hasPermission } from "@/lib/auth/has-permission"
-import type { SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
 
 export type Props = {
   taskEmployeeId: number
-  session: SessionPayload
+  session: Session
 }
 
 /** タスク完了の権限判定。本人か onboarding:manage 権限を持つ場合のみ許可する純粋関数。 */
@@ -14,5 +13,5 @@ export function canCompleteTask(props: Props): boolean {
     return true
   }
 
-  return hasPermission(props.session, "onboarding:manage")
+  return props.session.hasPermission("onboarding:manage")
 }

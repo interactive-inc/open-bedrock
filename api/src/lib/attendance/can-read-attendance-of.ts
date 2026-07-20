@@ -1,22 +1,21 @@
+import type { Session } from "@/lib/auth/session"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { SessionPayload } from "@/env"
-import { hasPermission } from "@/lib/auth/has-permission"
 
 /**
  * 対象従業員の勤怠を閲覧できるか、スコープ(self/reports/department/all)で判定する。
  */
-export function canReadAttendanceOf(session: SessionPayload, relation: EmployeeRelation): boolean {
+export function canReadAttendanceOf(session: Session, relation: EmployeeRelation): boolean {
   if (relation.isSelf) {
     return true
   }
 
-  if (hasPermission(session, "attendance:read:all")) {
+  if (session.hasPermission("attendance:read:all")) {
     return true
   }
 
-  if (relation.isReport && hasPermission(session, "attendance:read:reports")) {
+  if (relation.isReport && session.hasPermission("attendance:read:reports")) {
     return true
   }
 
-  return relation.isSameDepartment && hasPermission(session, "attendance:read:department")
+  return relation.isSameDepartment && session.hasPermission("attendance:read:department")
 }

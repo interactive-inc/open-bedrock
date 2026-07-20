@@ -1,16 +1,17 @@
+import { Session } from "@/lib/auth/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
-const session: SessionPayload = {
+const session = new Session({
   accountId: 1,
   employeeId: 1,
   employeeStatus: "active",
   permissions: new Set(["employee:lifecycle:apply"]),
   roleKeys: ["hr"],
-}
+})
 
 async function setupActiveEmployee(): Promise<{ context: Context; db: D1Database }> {
   const setup = createTestContext()
@@ -247,7 +248,13 @@ describe("ApplyPersonnelAction", () => {
     const { context, db } = await setupActiveEmployee()
     const denied = await new ApplyPersonnelAction(context).run({
       ...leaveCommand,
-      session: { ...session, permissions: new Set(["employee:update"]) },
+      session: new Session({
+        accountId: 1,
+        employeeId: 1,
+        employeeStatus: "active",
+        permissions: new Set(["employee:update"]),
+        roleKeys: ["hr"],
+      }),
     })
     expectCode(denied, "forbidden")
 

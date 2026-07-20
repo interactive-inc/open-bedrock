@@ -1,5 +1,4 @@
 import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
-import { canCreateOneOnOne } from "@/lib/oneonone/can-create-one-on-one"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
@@ -103,7 +102,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canCreateOneOnOne(session) === false) {
+    if (session.hasPermission("oneonone:create") === false) {
       throw new ForbiddenError()
     }
 

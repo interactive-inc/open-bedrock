@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
-import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
-  session: SessionPayload
+  session: Session
   partnerName: string
   partnerAddress: string | null
   representativeName: string | null
@@ -36,7 +36,7 @@ export class UpdateAntisocialCheck {
 
     const isOwner = current.requesterId === command.session.employeeId
 
-    const canManage = canManageAntisocialChecks(command.session)
+    const canManage = command.session.hasPermission("antisocial_check:manage")
 
     if (isOwner === false && canManage === false) {
       return new ForbiddenError("not the requester", "not_requester")

@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import { RecruitmentCandidate } from "@/domain/recruitment/recruitment-candidate.entity"
 import type { CandidateStage } from "@/domain/recruitment/recruitment-candidate.entity"
-import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   stage: CandidateStage
 }
@@ -19,7 +19,7 @@ export class AdvanceCandidate {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<RecruitmentCandidate | ApplicationError> {
-    if (canManageRecruitment(command.session) === false) {
+    if (command.session.hasPermission("recruitment:manage") === false) {
       return new ForbiddenError("cannot manage recruitment", "forbidden")
     }
 

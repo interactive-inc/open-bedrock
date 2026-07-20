@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import type { NotificationKind } from "@/domain/notification/notification.entity"
 import { Notification } from "@/domain/notification/notification.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { canSendNotification } from "@/lib/notification/can-send-notification"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   recipientEmployeeCode: string
   kind: NotificationKind
   title: string
@@ -29,7 +29,7 @@ export class SendNotification {
 
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canSendNotification(command.session) === false) {
+    if (command.session.hasPermission("notification:send") === false) {
       return new ForbiddenError("cannot send notification", "notification_forbidden")
     }
 

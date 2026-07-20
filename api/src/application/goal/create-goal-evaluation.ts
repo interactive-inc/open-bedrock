@@ -1,8 +1,9 @@
+import type { Session } from "@/lib/auth/session"
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/lib/goal/resolve-evaluation-permission"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
@@ -14,7 +15,7 @@ export type Command = {
   score: number | null
   comment: string | null
   evaluatorId: number
-  session: SessionPayload
+  session: Session
   createdAt: string
 }
 

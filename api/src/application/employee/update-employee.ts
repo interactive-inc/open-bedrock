@@ -1,14 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { Employee } from "@/domain/employee/employee.entity"
-import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   viewerEmployeeId: number
   code: string
   name: string
@@ -24,7 +23,7 @@ export class UpdateEmployee {
   async run(command: Command): Promise<Employee | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canUpdateEmployee(command.session) === false) {
+    if (command.session.hasPermission("employee:update") === false) {
       return new ForbiddenError("cannot manage employees", "forbidden")
     }
 
@@ -40,7 +39,7 @@ export class UpdateEmployee {
 
     const isSelf = employee.id === command.session.employeeId
 
-    if (isSelf === false && hasPermission(command.session, "org:manage") === false) {
+    if (isSelf === false && command.session.hasPermission("org:manage") === false) {
       const authority = await resolveOrganizationAuthority(
         this.c,
         command.session.employeeId,

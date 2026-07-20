@@ -1,4 +1,3 @@
-import { canViewAllRedemptions } from "@/lib/thanks-points/can-view-all-redemptions"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { employees, thanksRedemptions, thanksRewards } from "@/schema"
@@ -51,7 +50,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllRedemptions(session) === false) {
+    if (session.hasPermission("thanks_redemption:read:all") === false) {
       throw new ForbiddenError()
     }
 

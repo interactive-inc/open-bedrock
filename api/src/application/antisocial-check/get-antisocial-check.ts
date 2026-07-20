@@ -1,14 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
-import type { SessionPayload } from "@/env"
-import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
 import { AntisocialCheckRepository } from "@/infrastructure/antisocial-check/antisocial-check-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   antisocialCheckId: string
-  session: SessionPayload
+  session: Session
 }
 
 /**
@@ -32,7 +31,7 @@ export class GetAntisocialCheck {
 
     if (
       antisocialCheck.requesterId !== command.session.employeeId &&
-      canManageAntisocialChecks(command.session) === false
+      command.session.hasPermission("antisocial_check:manage") === false
     ) {
       return new ForbiddenError("not the requester", "not_requester")
     }

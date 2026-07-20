@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { ItIncident } from "@/domain/it-incident/it-incident.entity"
-import { canManageItIncidents } from "@/lib/it-incident/can-manage-it-incidents"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ItIncidentRepository } from "@/infrastructure/it-incident/it-incident-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   incident: {
     occurredAt: string
     title: string
@@ -23,7 +23,7 @@ export class CreateItIncident {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<ItIncident | ApplicationError> {
-    if (canManageItIncidents(command.session) === false) {
+    if (command.session.hasPermission("it_incident:manage") === false) {
       return new ForbiddenError("cannot manage it incidents", "forbidden")
     }
 

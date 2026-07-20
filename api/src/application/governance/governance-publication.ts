@@ -1,4 +1,5 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import {
   canPublishGovernance,
@@ -19,7 +20,7 @@ export class GovernancePublication {
   constructor(private readonly c: Context) {}
 
   async submitReview(props: {
-    session: SessionPayload
+    session: Session
     code: string
     version: string
   }): Promise<{ state: "in_review"; approver_org_roles: ReadonlyArray<string> } | Error> {
@@ -72,7 +73,7 @@ export class GovernancePublication {
   }
 
   async decideReview(props: {
-    session: SessionPayload
+    session: Session
     code: string
     version: string
     orgRoleCode: string
@@ -129,7 +130,7 @@ export class GovernancePublication {
   }
 
   async publish(props: {
-    session: SessionPayload
+    session: Session
     code: string
     version: string
   }): Promise<{ state: "published"; version_id: string } | Error> {
@@ -187,7 +188,7 @@ export class GovernancePublication {
   }
 
   async acknowledge(props: {
-    session: SessionPayload
+    session: Session
     code: string
   }): Promise<{ acknowledged_at: string; content_hash: string } | Error> {
     if (!props.session.permissions.has("governance:acknowledge")) {

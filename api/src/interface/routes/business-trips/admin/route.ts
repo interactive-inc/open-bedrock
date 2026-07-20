@@ -1,4 +1,3 @@
-import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-business-trips"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { businessTrips } from "@/schema"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllBusinessTrips(session) === false) {
+    if (session.hasPermission("business_trip:read:all") === false) {
       throw new ForbiddenError()
     }
 

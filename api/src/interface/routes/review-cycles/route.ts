@@ -1,5 +1,4 @@
 import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -20,7 +19,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const isAdmin = canAdministerCycle(session)
+  const isAdmin = session.hasPermission("review:administer")
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),

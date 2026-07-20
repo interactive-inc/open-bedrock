@@ -21,8 +21,6 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
-import { canReadEmployees } from "@/lib/employee/can-read-employees"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
@@ -50,7 +48,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canReadEmployees(session) === false) {
+    if (session.hasPermission("employee:read") === false) {
       throw new ForbiddenError()
     }
 
@@ -58,7 +56,7 @@ export const GET = factory.createHandlers(
 
     const conditions: Array<SQL> = []
 
-    if (hasPermission(session, "org:manage") === false) {
+    if (session.hasPermission("org:manage") === false) {
       const managedEmployeeIds = await listManagedEmployeeIds(c, session.employeeId)
 
       if (managedEmployeeIds instanceof Error) {

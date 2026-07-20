@@ -1,4 +1,3 @@
-import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { employees, leaveRequests } from "@/schema"
@@ -54,7 +53,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllLeaves(session) === false) {
+    if (session.hasPermission("leave:read:all") === false) {
       throw new ForbiddenError()
     }
 

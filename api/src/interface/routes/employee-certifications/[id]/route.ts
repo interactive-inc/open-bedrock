@@ -1,5 +1,4 @@
 import { DeleteEmployeeCertification } from "@/application/certification/delete-employee-certification"
-import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
 import { factory } from "@/lib/factory"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
@@ -13,7 +12,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageCertifications(session) === false) {
+  if (session.hasPermission("certification:manage") === false) {
     throw new ForbiddenError()
   }
 

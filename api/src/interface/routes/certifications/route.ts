@@ -1,6 +1,5 @@
 import { CreateCertification } from "@/application/certification/create-certification"
 import { CertificationRepository } from "@/infrastructure/certification/certification-repository"
-import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
 import { factory } from "@/lib/factory"
 import { zAppCertification, zAppCertificationList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -57,7 +56,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageCertifications(session) === false) {
+    if (session.hasPermission("certification:manage") === false) {
       throw new ForbiddenError()
     }
 

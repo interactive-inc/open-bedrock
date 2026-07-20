@@ -1,4 +1,3 @@
-import { canViewDashboard } from "@/lib/dashboard/can-view-dashboard"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
@@ -31,7 +30,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewDashboard(session) === false) {
+  if (session.hasPermission("dashboard:view") === false) {
     throw new ForbiddenError()
   }
 

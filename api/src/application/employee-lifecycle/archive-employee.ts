@@ -1,6 +1,7 @@
+import type { Session } from "@/lib/auth/session"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
@@ -8,7 +9,6 @@ import {
   abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
   isAbortedByLastAdminGuard,
 } from "@/infrastructure/iam/last-admin-guard"
-import { hasPermission } from "@/lib/auth/has-permission"
 import {
   abortWhenPreviousStatementChangedNoRows,
   isAbortedByGuard,
@@ -26,11 +26,11 @@ export class ArchiveEmployee {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     employeeCode: string
     archivedAt: string
   }): Promise<{ status: "archived" } | ApplicationError> {
-    if (!hasPermission(command.session, "employee:archive")) {
+    if (!command.session.hasPermission("employee:archive")) {
       return new ForbiddenError("従業員をアーカイブする権限がありません", "forbidden")
     }
     const employee = await new EmployeeRepository(this.c).findByCode(command.employeeCode)
