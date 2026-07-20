@@ -8,13 +8,9 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { EmptyState } from "@/components/empty-state"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  emptyFormSchema,
-  type FormField,
-  type FormFieldType,
-  type FormSchema,
-  toFormFieldTypeLabel,
-} from "@/lib/application/form-schema"
+import type { FormField, FormFieldType, FormSchema } from "@/lib/application/form-schema"
+import { emptyFormSchema } from "@/lib/application/empty-form-schema"
+import { toFormFieldTypeLabel } from "@/lib/application/to-form-field-type-label"
 
 /**
  * Google フォーム風のフォームビルダー。項目をユーザーが追加・削除・編集して並べ、

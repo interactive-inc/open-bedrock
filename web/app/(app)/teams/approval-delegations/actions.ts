@@ -1,7 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { createApprovalDelegation, deleteApprovalDelegation } from "@/lib/api/approval-delegations"
+import { createApprovalDelegation } from "@/lib/api/create-approval-delegation"
+import { deleteApprovalDelegation } from "@/lib/api/delete-approval-delegation"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
