@@ -1,8 +1,10 @@
 import type { InboxCounts } from "@/lib/api/types/inbox-types"
 
-// 受信箱の種類定義。inbox layout のタブとサイドバーの inbox children が同じ集合になるよう
-// ここを唯一の情報源にする。requiredPermission が未指定の種類は全員に表示する。
-// countKey を持つ種類だけ InboxCounts からバッジ件数を引ける（api の /inbox/counts が返す 5 種）。
+/**
+ * 受信箱の種類定義。inbox layout のタブとサイドバーの inbox children が同じ集合になるよう
+ * ここを唯一の情報源にする。requiredPermission が未指定の種類は全員に表示する。
+ * countKey を持つ種類だけ InboxCounts からバッジ件数を引ける（api の /inbox/counts が返す 5 種）。
+ */
 export type InboxType = {
   key: string
   label: string
@@ -59,7 +61,7 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
   },
 ]
 
-// 本人の permission で表示可能な受信箱の種類だけに絞り込む。
+/** 本人の permission で表示可能な受信箱の種類だけに絞り込む。 */
 export function visibleInboxTypes(permissions: ReadonlyArray<string>): ReadonlyArray<InboxType> {
   const permissionSet = new Set(permissions)
 
@@ -69,7 +71,7 @@ export function visibleInboxTypes(permissions: ReadonlyArray<string>): ReadonlyA
   )
 }
 
-// 種類の未処理件数を InboxCounts から引く。countKey を持たない種類は null。
+/** 種類の未処理件数を InboxCounts から引く。countKey を持たない種類は null。 */
 export function inboxCountFor(inboxType: InboxType, counts: InboxCounts): number | null {
   if (inboxType.countKey === undefined) return null
 

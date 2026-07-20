@@ -24,8 +24,10 @@ type Props = {
 
 const initialState: EmployeeUpdateFormState = { ok: false, error: null }
 
-// 人物台帳では氏名だけを編集する。所属・役職・在籍状態は人事発令で変更する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 人物台帳では氏名だけを編集する。所属・役職・在籍状態は人事発令で変更する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function EmployeeEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

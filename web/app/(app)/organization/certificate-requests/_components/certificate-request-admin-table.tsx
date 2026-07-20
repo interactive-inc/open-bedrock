@@ -29,7 +29,7 @@ type Props = {
   canManage: boolean
 }
 
-// 全社の証明書発行依頼一覧テーブル。詳細は各依頼のページへ、依頼者名クリックで絞り込む。
+/** 全社の証明書発行依頼一覧テーブル。詳細は各依頼のページへ、依頼者名クリックで絞り込む。 */
 export function CertificateRequestAdminTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="条件に一致する証明書発行依頼がありません" />

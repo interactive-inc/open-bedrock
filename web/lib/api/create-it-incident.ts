@@ -8,7 +8,7 @@ export type ItIncidentCreateRequest = {
   severity?: "low" | "medium" | "high" | "critical" | null
 }
 
-// POST /it-incidents。インシデント記録を新規登録する。失敗時は Error。
+/** POST /it-incidents。インシデント記録を新規登録する。失敗時は Error。 */
 export async function createItIncident(request: ItIncidentCreateRequest) {
   const client = await createClient()
 

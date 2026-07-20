@@ -7,8 +7,10 @@ export const config = {
   matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
 }
 
-// Mutex for refresh token rotation — prevents concurrent requests from triggering
-// simultaneous refreshes that cause token conflicts and unexpected logouts.
+/**
+ * Mutex for refresh token rotation — prevents concurrent requests from triggering
+ * simultaneous refreshes that cause token conflicts and unexpected logouts.
+ */
 let inflightRefresh: Promise<Awaited<ReturnType<typeof postRefreshToken>>> | null = null
 
 function deduplicatedRefresh(

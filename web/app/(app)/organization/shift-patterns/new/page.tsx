@@ -8,8 +8,10 @@ import { canManageShift } from "@/lib/shift/can-manage-shift"
 
 export const metadata = { title: "シフトパターンを作成" }
 
-// シフトパターン作成画面（特権ロールのみ）。作成後は /shift/patterns へ redirect する。
-// 権限が無いユーザーには 404 を返し UI を露出しない。
+/**
+ * シフトパターン作成画面（特権ロールのみ）。作成後は /shift/patterns へ redirect する。
+ * 権限が無いユーザーには 404 を返し UI を露出しない。
+ */
 export default async function ShiftPatternNewPage() {
   const currentUser = await getMe()
 

@@ -5,7 +5,7 @@ import type {
   ShiftAssignmentResponse,
 } from "@/lib/api/types/shift-types"
 
-// POST /shift/assignments。特権ロールが社員にシフトを割り当てる。
+/** POST /shift/assignments。特権ロールが社員にシフトを割り当てる。 */
 export async function createShiftAssignment(
   request: ShiftAssignmentCreateRequest,
 ): Promise<ShiftAssignmentResponse | Error> {

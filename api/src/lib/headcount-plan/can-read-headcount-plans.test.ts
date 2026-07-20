@@ -1,6 +1,6 @@
 import { canManageHeadcountPlans } from "@/lib/headcount-plan/can-manage-headcount-plans"
 import { canReadHeadcountPlans } from "@/lib/headcount-plan/can-read-headcount-plans"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("headcount plan permissions", () => {

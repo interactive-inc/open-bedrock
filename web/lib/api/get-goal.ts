@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /goals/:goal_id。1 件の目標詳細を取得する。
+/** GET /goals/:goal_id。1 件の目標詳細を取得する。 */
 export async function getGoal(id: number) {
   const client = await createClient()
 

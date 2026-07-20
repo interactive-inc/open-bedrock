@@ -5,7 +5,7 @@ import type {
   TrainingCourseResponse,
 } from "@/lib/api/types/training-types"
 
-// POST /training/courses。特権ロールが研修コースを作成する。
+/** POST /training/courses。特権ロールが研修コースを作成する。 */
 export async function createTrainingCourse(
   request: TrainingCourseCreateRequest,
 ): Promise<TrainingCourseResponse | Error> {

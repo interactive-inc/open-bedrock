@@ -5,7 +5,7 @@ type Props = {
   summary: ManagementDashboard
 }
 
-// 経営ダッシュボードの主要メトリクスをカードで並べる。集計値の表示のみ。
+/** 経営ダッシュボードの主要メトリクスをカードで並べる。集計値の表示のみ。 */
 export function ManagementMetricCards(props: Props) {
   const cards = [
     { label: "在籍者数", value: props.summary.employee_count },

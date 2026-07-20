@@ -11,8 +11,10 @@ import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
-// 新規従業員の登録に必要な値。id は DB が採番するため含めない。
-// 認証(email/password)・認可(role)は employees ではなく IAM(identities/account_roles)が正。
+/**
+ * 新規従業員の登録に必要な値。id は DB が採番するため含めない。
+ * 認証(email/password)・認可(role)は employees ではなく IAM(identities/account_roles)が正。
+ */
 export type NewEmployee = {
   code: string
   name: string
@@ -45,7 +47,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。
+  /** 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。 */
   async create(newEmployee: NewEmployee): Promise<Employee | Error> {
     try {
       const rows = await this.c.var.database
@@ -74,7 +76,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。
+  /** 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。 */
   async updateProfile(employee: Employee): Promise<Employee | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -103,7 +105,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。
+  /** 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。 */
   async updateProfileGuardingLastAdmin(
     employee: Employee,
   ): Promise<Employee | null | Error | LastAdminError> {
@@ -148,7 +150,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 従業員を削除する。
+  /** 従業員を削除する。 */
   async delete(code: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(employees).where(eq(employees.code, code))

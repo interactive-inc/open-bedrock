@@ -34,8 +34,10 @@ type Props = {
   departments: ReadonlyArray<OrgDepartmentResponse>
 }
 
-// 部署ノードの管理表。各行の変更（Dialog）・削除ボタンを置く。新規作成は /org/departments/new で行う。
-// 変更・削除はいずれも権限が必要で、権限不足時は api がエラーを返す。
+/**
+ * 部署ノードの管理表。各行の変更（Dialog）・削除ボタンを置く。新規作成は /org/departments/new で行う。
+ * 変更・削除はいずれも権限が必要で、権限不足時は api がエラーを返す。
+ */
 export function OrgDepartmentManagerList(props: Props) {
   return (
     <div className="flex flex-col gap-6">
@@ -86,7 +88,7 @@ export function OrgDepartmentManagerList(props: Props) {
   )
 }
 
-// 部署ノード変更フォームを Dialog で開く。親・責任者・表示順を編集して送信する。
+/** 部署ノード変更フォームを Dialog で開く。親・責任者・表示順を編集して送信する。 */
 function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -172,7 +174,7 @@ function UpdateDepartmentDialog(props: { department: OrgDepartmentResponse }) {
   )
 }
 
-// 部署ノード削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。
+/** 部署ノード削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
 function DeleteDepartmentButton(props: { code: string }) {
   async function reduce(
     previousState: OrgDepartmentActionState,

@@ -6,7 +6,7 @@ type Props = {
   templateCode: string
 }
 
-// POST /onboarding/assign。社員へテンプレートを割り当て、生成された assignment を返す。
+/** POST /onboarding/assign。社員へテンプレートを割り当て、生成された assignment を返す。 */
 export async function postOnboardingAssign(props: Props) {
   const client = await createClient()
 

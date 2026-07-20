@@ -20,7 +20,7 @@ type Props = {
 
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
-// 予算詳細画面。params.budget で対象を取得し、消化状況・編集・削除を描画する RSC。
+/** 予算詳細画面。params.budget で対象を取得し、消化状況・編集・削除を描画する RSC。 */
 export default async function BudgetDetailPage(props: Props) {
   await requirePermission("budget:manage")
 
@@ -44,7 +44,7 @@ type ViewProps = {
   id: string
 }
 
-// /budgets/:id を認証付きで取得して詳細カードと消化状況を描画する非同期 RSC。
+/** /budgets/:id を認証付きで取得して詳細カードと消化状況を描画する非同期 RSC。 */
 async function BudgetDetailView(props: ViewProps) {
   const budgetId = Number(props.id)
 

@@ -5,8 +5,10 @@ import { ThanksTimeline } from "@/app/(app)/organization/thanks/_components/than
 
 const INITIAL_LIMIT = 20
 
-// 感謝のタイムラインをサーバ側 fetch してカード描画する非同期 RSC。
-// 初回は最新 20 件を取得し、残りがあれば ThanksTimeline に「もっと読み込む」を委譲する。
+/**
+ * 感謝のタイムラインをサーバ側 fetch してカード描画する非同期 RSC。
+ * 初回は最新 20 件を取得し、残りがあれば ThanksTimeline に「もっと読み込む」を委譲する。
+ */
 export async function ThanksList() {
   const result = await getThanksList({ limit: INITIAL_LIMIT, offset: 0 })
 

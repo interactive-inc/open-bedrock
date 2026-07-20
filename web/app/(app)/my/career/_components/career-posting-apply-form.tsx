@@ -16,10 +16,12 @@ type Props = {
 
 const initialState: CareerApplyFormState = { ok: false, error: null }
 
-// 1 件の社内公募に対する応募フォーム。任意の応募メッセージを添えて送信する。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 1 件の社内公募に対する応募フォーム。任意の応募メッセージを添えて送信する。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function CareerPostingApplyForm(props: Props) {
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: CareerApplyFormState,
     formData: FormData,

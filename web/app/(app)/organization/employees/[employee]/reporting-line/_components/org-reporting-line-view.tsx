@@ -8,7 +8,7 @@ type Props = {
   code: string
 }
 
-// /org/reporting-line/:employee_code を認証付きで取得し、本人から上位への系列を縦に描画する非同期 RSC。
+/** /org/reporting-line/:employee_code を認証付きで取得し、本人から上位への系列を縦に描画する非同期 RSC。 */
 export async function OrgReportingLineView(props: Props) {
   const nodes = await getOrgReportingLine(props.code)
 

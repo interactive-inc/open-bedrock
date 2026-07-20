@@ -1,11 +1,11 @@
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import { FamilyCareLeaveRepository } from "@/infrastructure/family-care-leave/family-care-leave-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { familyCareLeaves } from "@/schema"
 import { describe, expect, test } from "bun:test"
 
 describe("FamilyCareLeaveRepository", () => {
-  // 新規の休業申出ドメインを組み立てる。invalid_date_range は致命なので throw する。
+  /** 新規の休業申出ドメインを組み立てる。invalid_date_range は致命なので throw する。 */
   function buildLeave(props: {
     employeeId: number
     startDate: string

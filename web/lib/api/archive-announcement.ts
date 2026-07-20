@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /announcements/:id/archive。アナウンスをアーカイブする（announcement:manage）。
+/** POST /announcements/:id/archive。アナウンスをアーカイブする（announcement:manage）。 */
 export async function archiveAnnouncement(id: number) {
   const client = await createClient()
 

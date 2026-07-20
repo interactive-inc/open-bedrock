@@ -10,13 +10,10 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
-// application 層が返した ApplicationError を HTTP セマンティクスへ翻訳する。
-// クラスで HTTP ステータスを決め、応答には安全な message と code だけを載せる。
-// UnexpectedError など未知のクラスは 500 に倒し、内部の cause は応答に出さない。
-
 /**
- * ApplicationError を Hono の HTTPException に変換する。
- * 応答ボディは onError が message を、ここで付与する code を返す
+ * application 層が返した ApplicationError を Hono の HTTPException（HTTP セマンティクス）へ翻訳する。
+ * クラスで HTTP ステータスを決め、応答ボディは onError が message を、ここで付与する code を返す。
+ * UnexpectedError など未知のクラスは 500 に倒し、内部の cause は応答に出さない
  */
 export function toHttpException(error: ApplicationError): HTTPException {
   const status = toStatus(error)

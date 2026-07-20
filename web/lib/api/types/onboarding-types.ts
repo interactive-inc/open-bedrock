@@ -1,12 +1,14 @@
-// api/src/onboarding/*-response-schema.ts と同形の手書き type（API と疎結合に保つ）。
+/** api/src/onboarding/*-response-schema.ts と同形の手書き type（API と疎結合に保つ）。 */
 export type OnboardingKind = "join" | "leave"
 
 export type OnboardingTaskStatus = "pending" | "done"
 
 export type OnboardingAssignmentStatus = "in_progress" | "completed"
 
-// GET /onboarding/templates の各要素。
-// kind は hc レスポンス（api 実型）が string のため、props 型側も string に合わせる。
+/**
+ * GET /onboarding/templates の各要素。
+ * kind は hc レスポンス（api 実型）が string のため、props 型側も string に合わせる。
+ */
 export type OnboardingTemplate = {
   code: string
   name: string
@@ -16,8 +18,10 @@ export type OnboardingTemplate = {
   lifecycle_effect: "hire" | "retired" | null
 }
 
-// GET /onboarding/templates/:code のレスポンス、POST /onboarding/templates・PUT のレスポンスも同形。
-// id は作成/更新ルートが整形して返すため number、未採番の保険として null を含める。
+/**
+ * GET /onboarding/templates/:code のレスポンス、POST /onboarding/templates・PUT のレスポンスも同形。
+ * id は作成/更新ルートが整形して返すため number、未採番の保険として null を含める。
+ */
 export type OnboardingTemplateDetail = {
   id: number | null
   code: string
@@ -26,7 +30,7 @@ export type OnboardingTemplateDetail = {
   description: string | null
 }
 
-// POST /onboarding/templates のリクエスト body（管理権限がテンプレートを作成する）。
+/** POST /onboarding/templates のリクエスト body（管理権限がテンプレートを作成する）。 */
 export type OnboardingTemplateCreateRequest = {
   code: string
   name: string
@@ -34,14 +38,14 @@ export type OnboardingTemplateCreateRequest = {
   description: string | null
 }
 
-// PUT /onboarding/templates/:code のリクエスト body（code は変更されない）。
+/** PUT /onboarding/templates/:code のリクエスト body（code は変更されない）。 */
 export type OnboardingTemplateUpdateRequest = {
   name: string
   kind: OnboardingKind
   description: string | null
 }
 
-// GET /onboarding/me / 各 assignment 配下のタスク。
+/** GET /onboarding/me / 各 assignment 配下のタスク。 */
 export type OnboardingTask = {
   id: number
   template_task_code: string
@@ -51,9 +55,11 @@ export type OnboardingTask = {
   completed_at: string | null
 }
 
-// POST /onboarding/assign / GET /onboarding/employee/:code の各要素。
-// template_name は assign(POST) / employee(GET一覧) には含まれるが、
-// assignments/:id の GET/PUT レスポンスには含まれないため任意とする。
+/**
+ * POST /onboarding/assign / GET /onboarding/employee/:code の各要素。
+ * template_name は assign(POST) / employee(GET一覧) には含まれるが、
+ * assignments/:id の GET/PUT レスポンスには含まれないため任意とする。
+ */
 export type OnboardingAssignment = {
   id: number
   employee_code: string

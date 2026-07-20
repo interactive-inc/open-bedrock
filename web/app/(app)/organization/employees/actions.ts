@@ -34,7 +34,7 @@ export type EmployeeArchiveFormState = {
 
 const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "admin"]
 
-// FormData の文字列をロール enum へ検証付きで変換する。不正なら null。
+/** FormData の文字列をロール enum へ検証付きで変換する。不正なら null。 */
 function toRole(value: FormDataEntryValue | null): EmployeeRole | null {
   if (typeof value !== "string") {
     return null
@@ -49,8 +49,10 @@ function toRole(value: FormDataEntryValue | null): EmployeeRole | null {
   return null
 }
 
-// 人物台帳、入社発令、初期アカウントを一括作成する Server Action。
-// バリデーションエラーは集約して一度に返す。
+/**
+ * 人物台帳、入社発令、初期アカウントを一括作成する Server Action。
+ * バリデーションエラーは集約して一度に返す。
+ */
 export async function createEmployeeAction(
   previousState: EmployeeCreateFormState,
   formData: FormData,
@@ -172,7 +174,7 @@ export async function createEmployeeAction(
   return { ok: true, error: null }
 }
 
-// 人物台帳の氏名更新。IAM と人事ライフサイクルの項目は専用操作でのみ変更する。
+/** 人物台帳の氏名更新。IAM と人事ライフサイクルの項目は専用操作でのみ変更する。 */
 export async function updateEmployeeAction(
   previousState: EmployeeUpdateFormState,
   formData: FormData,

@@ -28,7 +28,7 @@ type Props = {
   canManage: boolean
 }
 
-// 全社のライフイベント届一覧テーブル。詳細は各届出のページへ、従業員 ID クリックで絞り込む。
+/** 全社のライフイベント届一覧テーブル。詳細は各届出のページへ、従業員 ID クリックで絞り込む。 */
 export function LifeEventAdminTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="条件に一致するライフイベント届がありません" />

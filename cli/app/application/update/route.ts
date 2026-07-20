@@ -39,7 +39,7 @@ export default factory.createHandlers(
   },
 )
 
-// --payload の文字列を JSON へ。解析できなければ Error。
+/** --payload の文字列を JSON へ。解析できなければ Error。 */
 function toPayload(raw: string): unknown {
   try {
     return JSON.parse(raw)

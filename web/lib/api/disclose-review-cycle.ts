@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /review-cycles/:cycle_id/disclose。特権ロールがサイクル内の全フォームを一括開示する。
+/** POST /review-cycles/:cycle_id/disclose。特権ロールがサイクル内の全フォームを一括開示する。 */
 export async function discloseReviewCycle(cycleId: number) {
   const client = await createClient()
 

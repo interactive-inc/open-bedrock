@@ -2,7 +2,7 @@ type Props = {
   kind: string
 }
 
-// 物品の種別コードを日本語ラベルへ変換して表示する。未知の値はそのまま出す。
+/** 物品の種別コードを日本語ラベルへ変換して表示する。未知の値はそのまま出す。 */
 export function AssetKindLabel(props: Props) {
   if (props.kind === "pc") {
     return <span>PC</span>

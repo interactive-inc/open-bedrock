@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { GoalSearchQuery } from "@/lib/api/types/goal-types"
 
-// GET /goals。session トークンで目標一覧を取得する。
-// period / employeeId は絞り込みで、null のキーは送信されない。
+/**
+ * GET /goals。session トークンで目標一覧を取得する。
+ * period / employeeId は絞り込みで、null のキーは送信されない。
+ */
 export async function getGoalList(query: GoalSearchQuery) {
   const client = await createClient()
 

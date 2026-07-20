@@ -17,8 +17,10 @@ type Params = {
   sort?: ApplicationAdminSort
 }
 
-// GET /applications/admin。全社の申請を横断で取得する管理画面向け一覧。
-// application:read:all を持たない場合はサーバが 403 を返す。
+/**
+ * GET /applications/admin。全社の申請を横断で取得する管理画面向け一覧。
+ * application:read:all を持たない場合はサーバが 403 を返す。
+ */
 export async function getApplicationAdminList(filter: ApplicationAdminFilter, params: Params = {}) {
   const client = await createClient()
 

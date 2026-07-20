@@ -9,8 +9,10 @@ import { canManageNotifications } from "@/lib/notifications/can-manage-notificat
 
 export const metadata = { title: "通知を作成" }
 
-// 通知作成画面（特権ロールのみ）。作成後は /notifications へ redirect する。
-// 権限が無いユーザーには 404 を返し UI を露出しない。
+/**
+ * 通知作成画面（特権ロールのみ）。作成後は /notifications へ redirect する。
+ * 権限が無いユーザーには 404 を返し UI を露出しない。
+ */
 export default async function NotificationNewPage() {
   const currentUser = await getMe()
 

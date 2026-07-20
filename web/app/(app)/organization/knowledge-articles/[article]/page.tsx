@@ -12,7 +12,7 @@ type Props = {
   params: Promise<{ article: string }>
 }
 
-// id 文字列を正の整数へ変換する。無効なら null。
+/** id 文字列を正の整数へ変換する。無効なら null。 */
 function toKnowledgeId(rawId: string): number | null {
   const parsed = Number(rawId)
 
@@ -23,8 +23,10 @@ function toKnowledgeId(rawId: string): number | null {
   return parsed
 }
 
-// /knowledge/:id 記事詳細画面。RSC で 1 件取得し、本文（Markdown 原文）を表示する。
-// 無効な id や取得失敗・該当なしは notFound。
+/**
+ * /knowledge/:id 記事詳細画面。RSC で 1 件取得し、本文（Markdown 原文）を表示する。
+ * 無効な id や取得失敗・該当なしは notFound。
+ */
 export default async function KnowledgeDetailPage(props: Props) {
   const params = await props.params
 
@@ -69,7 +71,7 @@ export default async function KnowledgeDetailPage(props: Props) {
   )
 }
 
-// カンマ区切りの tags 文字列を配列へ。値が無い場合は空配列。
+/** カンマ区切りの tags 文字列を配列へ。値が無い場合は空配列。 */
 function toTags(rawTags: string | null): ReadonlyArray<string> {
   if (rawTags === null) {
     return []

@@ -1,5 +1,5 @@
 import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canViewAllShiftSwaps", () => {

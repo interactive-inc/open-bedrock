@@ -36,7 +36,7 @@ type Props = {
   reservations: ReadonlyArray<RentalReservationResponse>
 }
 
-// 自分のレンタル予約一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分のレンタル予約一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyReservationsList(props: Props) {
   if (props.reservations.length === 0) {
     return <EmptyState title="予約はありません" />
@@ -84,7 +84,7 @@ export function MyReservationsList(props: Props) {
   )
 }
 
-// 予約変更フォームを Dialog で開く。品名・期間・用途を編集して送信する。
+/** 予約変更フォームを Dialog で開く。品名・期間・用途を編集して送信する。 */
 function UpdateReservationDialog(props: { reservation: RentalReservationResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -164,7 +164,7 @@ function UpdateReservationDialog(props: { reservation: RentalReservationResponse
   )
 }
 
-// 予約取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 予約取消ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelReservationButton(props: { reservationId: string }) {
   const [, formAction, pending] = useFormAction(
     cancelRentalReservationAction,

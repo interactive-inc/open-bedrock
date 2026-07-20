@@ -16,7 +16,7 @@ type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-// /licenses ライセンス・SaaS 台帳の一覧。license:read:all が無ければ notFound。
+/** /licenses ライセンス・SaaS 台帳の一覧。license:read:all が無ければ notFound。 */
 export default async function LicensesPage(props: Props) {
   const me = await getMe()
 

@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
   closed: "対応完了",
 }
 
-// 労災・事故の発生記録テーブル。対象者不特定の事故は従業員 ID が空欄になる。
+/** 労災・事故の発生記録テーブル。対象者不特定の事故は従業員 ID が空欄になる。 */
 export function WorkAccidentsTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="発生記録がありません" />

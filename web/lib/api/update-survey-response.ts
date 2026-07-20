@@ -2,8 +2,10 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { SurveyResponseItem, UpdateSurveyResponseRequest } from "@/lib/api/types/survey-types"
 
-// PUT /surveys/responses/:id。自分のアンケート回答を差し替える。
-// 本人以外は 403、公開を終えたアンケートは 409 を api が返すため、戻りは Error になる。
+/**
+ * PUT /surveys/responses/:id。自分のアンケート回答を差し替える。
+ * 本人以外は 403、公開を終えたアンケートは 409 を api が返すため、戻りは Error になる。
+ */
 export async function updateSurveyResponse(
   id: number,
   request: UpdateSurveyResponseRequest,

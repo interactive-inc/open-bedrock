@@ -12,7 +12,7 @@ type Props = {
   canManage: boolean
 }
 
-// GET /commendations を認証付きで取得し、表彰カード一覧を描画する非同期 RSC。
+/** GET /commendations を認証付きで取得し、表彰カード一覧を描画する非同期 RSC。 */
 export async function CommendationList(props: Props) {
   const result = await getCommendationList({ limit: PAGE_SIZE, offset: props.offset })
 

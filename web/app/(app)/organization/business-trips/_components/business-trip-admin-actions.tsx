@@ -15,7 +15,7 @@ type Props = {
 
 const initialState: BusinessTripActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。requested の出張申請を人事が承認/却下する。
+/** admin 一覧の行アクション。requested の出張申請を人事が承認/却下する。 */
 export function BusinessTripAdminActions(props: Props) {
   const approve = useActionState(approveBusinessTripAction, initialState)
 

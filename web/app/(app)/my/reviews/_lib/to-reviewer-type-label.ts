@@ -11,7 +11,7 @@ function isReviewerType(value: string): value is ReviewerType {
   return value in labels
 }
 
-// 評価者の種別を日本語ラベルに変換する。未知の値はそのまま返す。
+/** 評価者の種別を日本語ラベルに変換する。未知の値はそのまま返す。 */
 export function toReviewerTypeLabel(reviewerType: string): string {
   if (isReviewerType(reviewerType)) {
     return labels[reviewerType]

@@ -6,7 +6,7 @@ import { and, desc, eq } from "drizzle-orm"
 export class AntisocialCheckRepository {
   constructor(private readonly c: Context) {}
 
-  // 申請者本人の反社チェック申請を作成日時の降順で返す。
+  /** 申請者本人の反社チェック申請を作成日時の降順で返す。 */
   async findByRequesterId(props: {
     requesterId: number
     limit: number
@@ -27,7 +27,7 @@ export class AntisocialCheckRepository {
     }
   }
 
-  // 反社チェック申請 id で1件取得する。存在しなければ null。
+  /** 反社チェック申請 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<AntisocialCheck | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -62,7 +62,7 @@ export class AntisocialCheckRepository {
     }
   }
 
-  // 反社チェック申請の取引先情報と判定結果を更新する。status が requested でなければ 0 行更新となり null を返す。
+  /** 反社チェック申請の取引先情報と判定結果を更新する。status が requested でなければ 0 行更新となり null を返す。 */
   async update(antisocialCheck: AntisocialCheck): Promise<AntisocialCheck | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -90,7 +90,7 @@ export class AntisocialCheckRepository {
     }
   }
 
-  // 反社チェック申請を削除する。status が requested の行のみ対象とする。
+  /** 反社チェック申請を削除する。status が requested の行のみ対象とする。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

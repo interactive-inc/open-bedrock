@@ -13,7 +13,7 @@ type Props = {
   params: Promise<{ recruitment: string }>
 }
 
-// /recruitment/:id 募集配下の応募者パイプライン。recruitment:manage が無ければ notFound。
+/** /recruitment/:id 募集配下の応募者パイプライン。recruitment:manage が無ければ notFound。 */
 export default async function RecruitmentPositionPage(props: Props) {
   const me = await getMe()
 

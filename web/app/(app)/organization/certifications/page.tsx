@@ -9,8 +9,10 @@ import { canViewAllCertifications } from "@/lib/certification/can-view-all-certi
 
 export const metadata = { title: "資格・免許" }
 
-// 資格・免許の台帳。マスタ一覧と自分の保有記録を表示する。
-// 管理操作（マスタ作成・保有記録の登録/削除）は certification:manage を持つロールにのみ出す。
+/**
+ * 資格・免許の台帳。マスタ一覧と自分の保有記録を表示する。
+ * 管理操作（マスタ作成・保有記録の登録/削除）は certification:manage を持つロールにのみ出す。
+ */
 export default async function CertificationsPage() {
   const currentUser = await getMe()
 

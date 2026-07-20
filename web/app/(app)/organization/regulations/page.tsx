@@ -19,7 +19,7 @@ import { canManageRegulations } from "@/lib/regulation/can-manage-regulations"
 
 export const metadata = { title: "規程集" }
 
-// 規程集一覧画面。全員が閲覧でき、管理者は新規登録もできる。
+/** 規程集一覧画面。全員が閲覧でき、管理者は新規登録もできる。 */
 export default async function RegulationsPage() {
   const currentUser = await getMe()
 
@@ -39,7 +39,7 @@ export default async function RegulationsPage() {
   )
 }
 
-// /regulations を取得して一覧テーブルを描画する非同期 RSC。
+/** /regulations を取得して一覧テーブルを描画する非同期 RSC。 */
 async function RegulationsTable() {
   const regulations = await getRegulationList({ status: null })
 

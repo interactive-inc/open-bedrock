@@ -1,17 +1,13 @@
 import type { PermissionKey } from "@/lib/auth/permission-keys"
 import { EFFECTIVE_ADMIN_PERMISSION_KEYS } from "@/lib/auth/effective-admin-permissions"
 
-// 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現する。
-// 移行で権限が広がらないことをテストで担保するための基準。backfill の role_permissions シードに使う。
-// 実態: 大半の can-* は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
-
-// 全従業員が持つガバナンスの基本権限。
+/** 全従業員が持つガバナンスの基本権限。 */
 const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "governance:read",
   "governance:acknowledge",
 ]
 
-// manager が member に加えて持つ permission(can-* が manager を許可するもの)。
+/** manager が member に加えて持つ permission(can-* が manager を許可するもの)。 */
 const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...MEMBER_PERMISSIONS,
   "dashboard:view",
@@ -45,7 +41,7 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "governance:review",
 ]
 
-// hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。
+/** hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。 */
 const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "application_template:manage",
   "review:administer",
@@ -110,7 +106,7 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "budget:manage",
 ]
 
-// admin が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。
+/** admin が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。 */
 const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...EFFECTIVE_ADMIN_PERMISSION_KEYS,
   "audit:read",
@@ -157,7 +153,10 @@ const ADMIN_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 
 /**
  * system role の key と、その role が持つ permission キー集合の対応。
- * member も公開済みガバナンス文書の閲覧・確認権限を持つ。
+ * 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現し、
+ * 移行で権限が広がらないことをテストで担保する基準。backfill の role_permissions シードに使う。
+ * 実態: 大半の can-* は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
+ * member も公開済みガバナンス文書の閲覧・確認権限を持つ
  */
 export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{
   key: string

@@ -10,7 +10,7 @@ type Params = {
   offset?: number
 }
 
-// GET /certificate-requests/admin。全社の証明書発行依頼を横断で取得する。certificate_request:read:all が無いと 403。
+/** GET /certificate-requests/admin。全社の証明書発行依頼を横断で取得する。certificate_request:read:all が無いと 403。 */
 export async function getCertificateRequestAdminList(
   filter: CertificateRequestAdminFilter,
   params: Params = {},

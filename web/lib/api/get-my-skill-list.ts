@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /skills/me を session トークン付きで呼び、本人の登録スキル一覧を取得する。
+/** GET /skills/me を session トークン付きで呼び、本人の登録スキル一覧を取得する。 */
 export async function getMySkillList() {
   const client = await createClient()
 

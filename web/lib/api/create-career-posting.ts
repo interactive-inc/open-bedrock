@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { CareerPosting, CareerPostingCreateRequest } from "@/lib/api/types/career-types"
 
-// POST /career/postings。管理ロールが社内公募を作成する。
-// 権限不足は 403 を api が返すため、戻りは Error になる。
+/**
+ * POST /career/postings。管理ロールが社内公募を作成する。
+ * 権限不足は 403 を api が返すため、戻りは Error になる。
+ */
 export async function createCareerPosting(
   request: CareerPostingCreateRequest,
 ): Promise<CareerPosting | Error> {

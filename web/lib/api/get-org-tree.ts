@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /org/tree を session トークン付きで呼び、部署ツリー（再帰ノード配列）を返す。
+/** GET /org/tree を session トークン付きで呼び、部署ツリー（再帰ノード配列）を返す。 */
 export async function getOrgTree() {
   const client = await createClient()
 

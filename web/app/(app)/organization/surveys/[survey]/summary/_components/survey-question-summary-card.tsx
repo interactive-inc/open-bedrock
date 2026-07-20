@@ -7,8 +7,10 @@ type Props = {
   question: SurveyQuestionSummary
 }
 
-// 設問 1 問の集計を表示するカード。
-// scale/choice は選択肢別の件数バー、text は自由記述の一覧を出す。
+/**
+ * 設問 1 問の集計を表示するカード。
+ * scale/choice は選択肢別の件数バー、text は自由記述の一覧を出す。
+ */
 export function SurveyQuestionSummaryCard(props: Props) {
   const distributionEntries = Object.entries(props.question.distribution)
 
@@ -43,7 +45,7 @@ type DistributionListProps = {
   maxCount: number
 }
 
-// 選択肢別の件数を横棒で表示する。
+/** 選択肢別の件数を横棒で表示する。 */
 function DistributionList(props: DistributionListProps) {
   if (props.entries.length === 0) {
     return <EmptyState title="回答がありません" />
@@ -75,7 +77,7 @@ type TextAnswerListProps = {
   answers: ReadonlyArray<string>
 }
 
-// 自由記述の回答を一覧表示する。
+/** 自由記述の回答を一覧表示する。 */
 function TextAnswerList(props: TextAnswerListProps) {
   if (props.answers.length === 0) {
     return <EmptyState title="回答がありません" />

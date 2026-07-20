@@ -14,7 +14,7 @@ type Props = {
   canManage: boolean
 }
 
-// 資格マスタ一覧テーブル。管理権限の有無で表示メッセージを出し分ける。
+/** 資格マスタ一覧テーブル。管理権限の有無で表示メッセージを出し分ける。 */
 export function CertificationsTable(props: Props) {
   if (props.rows.length === 0) {
     return (

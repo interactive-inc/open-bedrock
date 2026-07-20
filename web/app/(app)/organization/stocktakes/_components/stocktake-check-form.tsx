@@ -16,8 +16,10 @@ type Props = {
 
 const initialState: StocktakeCheckFormState = { ok: false, error: null }
 
-// 現物確認フォーム。所在メモ（任意）を添えて確認を記録する。実施中のセッションでのみ表示する想定。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 現物確認フォーム。所在メモ（任意）を添えて確認を記録する。実施中のセッションでのみ表示する想定。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function StocktakeCheckForm(props: Props) {
   async function reduce(
     previousState: StocktakeCheckFormState,

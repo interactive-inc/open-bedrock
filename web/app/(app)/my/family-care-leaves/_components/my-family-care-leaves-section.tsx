@@ -2,7 +2,7 @@ import { MyFamilyCareLeavesList } from "@/app/(app)/my/family-care-leaves/_compo
 import { FetchError } from "@/components/fetch-error"
 import { listMyFamilyCareLeaves } from "@/lib/api/list-my-family-care-leaves"
 
-// 自分の休業申出を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の休業申出を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyFamilyCareLeavesSection() {
   const familyCareLeaves = await listMyFamilyCareLeaves()
 

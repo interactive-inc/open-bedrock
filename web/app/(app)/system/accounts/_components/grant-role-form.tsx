@@ -16,7 +16,7 @@ const initialState: GrantRoleFormState = { ok: false, error: null }
 const selectClassName =
   "h-8 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
-// アカウント行のインライン: ロールを選んで付与する。割当可能なロール一覧から選択する。
+/** アカウント行のインライン: ロールを選んで付与する。割当可能なロール一覧から選択する。 */
 export function GrantRoleForm(props: Props) {
   async function reduce(
     previousState: GrantRoleFormState,

@@ -5,7 +5,7 @@ import { createCalendarDay } from "@/lib/api/create-calendar-day"
 import { deleteCalendarDay } from "@/lib/api/delete-calendar-day"
 import type { CalendarDayKind } from "@/lib/api/types/calendar-types"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type CalendarActionState = {
   ok: boolean
   error: string | null
@@ -13,7 +13,7 @@ export type CalendarActionState = {
 
 const NAME_MAX = 200
 
-// 会社休日・振替出勤日を登録する Server Action。calendar:manage が無いと api が 403 を返し Error になる。
+/** 会社休日・振替出勤日を登録する Server Action。calendar:manage が無いと api が 403 を返し Error になる。 */
 export async function createCalendarDayAction(
   previousState: CalendarActionState,
   formData: FormData,
@@ -51,7 +51,7 @@ export async function createCalendarDayAction(
   return { ok: true, error: null }
 }
 
-// 会社カレンダーの 1 日を削除する Server Action。id は hidden フィールドから受け取る。
+/** 会社カレンダーの 1 日を削除する Server Action。id は hidden フィールドから受け取る。 */
 export async function deleteCalendarDayAction(
   previousState: CalendarActionState,
   formData: FormData,
@@ -75,7 +75,7 @@ export async function deleteCalendarDayAction(
   return { ok: true, error: null }
 }
 
-// YYYY-MM-DD の必須日付を検証する。
+/** YYYY-MM-DD の必須日付を検証する。 */
 function toRequiredDate(value: FormDataEntryValue | null): string | Error {
   if (typeof value !== "string" || /^\d{4}-\d{2}-\d{2}$/.test(value) === false) {
     return new Error("日付を YYYY-MM-DD 形式で入力してください")
@@ -84,7 +84,7 @@ function toRequiredDate(value: FormDataEntryValue | null): string | Error {
   return value
 }
 
-// kind を holiday / workday に限定する。
+/** kind を holiday / workday に限定する。 */
 function toKind(value: FormDataEntryValue | null): CalendarDayKind | Error {
   if (value === "holiday" || value === "workday") {
     return value
@@ -93,7 +93,7 @@ function toKind(value: FormDataEntryValue | null): CalendarDayKind | Error {
   return new Error("種別を選択してください")
 }
 
-// name は任意。空文字は null、長すぎる場合はエラー。
+/** name は任意。空文字は null、長すぎる場合はエラー。 */
 function toName(value: FormDataEntryValue | null): string | null | Error {
   if (typeof value !== "string" || value === "") {
     return null

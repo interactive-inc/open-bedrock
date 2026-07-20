@@ -16,8 +16,10 @@ type Props = {
   params: Promise<{ team: string }>
 }
 
-// 部署ハブの目標タブ。所属メンバー全員の目標と部門目標を一覧する。
-// 閲覧には goal:read:all、または本人が所属する部署への goal:read:department が必要。
+/**
+ * 部署ハブの目標タブ。所属メンバー全員の目標と部門目標を一覧する。
+ * 閲覧には goal:read:all、または本人が所属する部署への goal:read:department が必要。
+ */
 export default async function DepartmentGoalsPage(props: Props) {
   const params = await props.params
 

@@ -7,7 +7,7 @@ export type ReassignWorkflowStepRequest = {
   reason: string
 }
 
-// POST /applications/:id/reassign-workflow-step。API の監査・競合・再検証をそのまま利用する。
+/** POST /applications/:id/reassign-workflow-step。API の監査・競合・再検証をそのまま利用する。 */
 export async function reassignWorkflowStep(
   applicationId: number,
   request: ReassignWorkflowStepRequest,

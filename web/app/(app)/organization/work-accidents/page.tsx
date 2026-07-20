@@ -12,8 +12,10 @@ export const metadata = { title: "労災・事故記録" }
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 労災・事故の発生記録一覧と登録。work_accident:read:all を持つロールのみ表示できる。
-// 権限が無ければ notFound。登録フォームは work_accident:manage を持つ場合のみ出す。
+/**
+ * 労災・事故の発生記録一覧と登録。work_accident:read:all を持つロールのみ表示できる。
+ * 権限が無ければ notFound。登録フォームは work_accident:manage を持つ場合のみ出す。
+ */
 export default async function WorkAccidentsPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

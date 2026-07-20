@@ -7,7 +7,7 @@ type Props = {
   code: string
 }
 
-// GET /meetings/:code/minutes を認証付きで取得し、議事録カード一覧を描画する非同期 RSC。
+/** GET /meetings/:code/minutes を認証付きで取得し、議事録カード一覧を描画する非同期 RSC。 */
 export async function MeetingMinutesList(props: Props) {
   const result = await getMeetingMinutesList(props.code)
 

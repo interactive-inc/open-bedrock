@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { BusinessTripCreateRequest } from "@/lib/api/types/business-trip-types"
 
-// POST /business-trips。出張申請を作成する。status は requested で登録される。
+/** POST /business-trips。出張申請を作成する。status は requested で登録される。 */
 export async function createBusinessTrip(request: BusinessTripCreateRequest) {
   const client = await createClient()
 

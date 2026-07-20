@@ -13,7 +13,7 @@ export type AnnouncementActionState = {
   error: string | null
 }
 
-// 社内アナウンス作成 Server Action。title/body_md 必須。成功時は /announcements を revalidate。
+/** 社内アナウンス作成 Server Action。title/body_md 必須。成功時は /announcements を revalidate。 */
 export async function createAnnouncementAction(
   previousState: AnnouncementActionState,
   formData: FormData,
@@ -43,7 +43,7 @@ export async function createAnnouncementAction(
   return { ok: true, error: null }
 }
 
-// アナウンス公開 Server Action。id は hidden。成功時は全社通知が飛ぶ。
+/** アナウンス公開 Server Action。id は hidden。成功時は全社通知が飛ぶ。 */
 export async function publishAnnouncementAction(
   previousState: AnnouncementActionState,
   formData: FormData,
@@ -73,7 +73,7 @@ export async function publishAnnouncementAction(
   return { ok: true, error: null }
 }
 
-// アナウンスアーカイブ Server Action。id は hidden。
+/** アナウンスアーカイブ Server Action。id は hidden。 */
 export async function archiveAnnouncementAction(
   previousState: AnnouncementActionState,
   formData: FormData,

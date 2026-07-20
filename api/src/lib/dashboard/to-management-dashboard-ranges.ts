@@ -5,7 +5,7 @@ export type ManagementDashboardRanges = {
   since: string
 }
 
-// ISO 文字列から日付部分(YYYY-MM-DD)を取り出す。
+/** ISO 文字列から日付部分(YYYY-MM-DD)を取り出す。 */
 function toDatePart(iso: string): string {
   return iso.slice(0, 10)
 }

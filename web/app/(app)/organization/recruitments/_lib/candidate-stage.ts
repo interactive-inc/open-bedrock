@@ -1,5 +1,4 @@
-// 選考ステージの表示名と、正順の1つ先ステージを求める純関数群。api の遷移規則と対応させる。
-
+/** 選考ステージ。表示名と遷移の純関数群は api の遷移規則と対応させる */
 export type CandidateStage = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected"
 
 const STAGE_LABELS = new Map<string, string>([

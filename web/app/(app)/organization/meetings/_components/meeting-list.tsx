@@ -12,8 +12,10 @@ type Props = {
   offset: number
 }
 
-// GET /meetings を認証付きで取得し、会議体カード一覧を描画する非同期 RSC。
-// 各カードは詳細 /meetings/:code へのリンク。
+/**
+ * GET /meetings を認証付きで取得し、会議体カード一覧を描画する非同期 RSC。
+ * 各カードは詳細 /meetings/:code へのリンク。
+ */
 export async function MeetingList(props: Props) {
   const result = await getMeetingList({ limit: PAGE_SIZE, offset: props.offset })
 

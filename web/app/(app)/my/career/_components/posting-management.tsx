@@ -38,7 +38,7 @@ type DeleteProps = {
   postingId: number | null
 }
 
-// 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。
+/** 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。 */
 function DeletePostingButton(props: DeleteProps) {
   const [state, formAction, pending] = useFormAction(
     deleteCareerPostingAction,

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { CareerApplication } from "@/lib/api/types/career-types"
 
-// GET /career/applications/me。応募者本人の公募応募一覧を取得する。
+/** GET /career/applications/me。応募者本人の公募応募一覧を取得する。 */
 export async function listMyCareerApplications(): Promise<
   ReadonlyArray<CareerApplication> | Error
 > {

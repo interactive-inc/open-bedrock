@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /review-cycles/:cycle_id/open。特権ロールがサイクルを open にする。
+/** POST /review-cycles/:cycle_id/open。特権ロールがサイクルを open にする。 */
 export async function openReviewCycle(cycleId: number) {
   const client = await createClient()
 

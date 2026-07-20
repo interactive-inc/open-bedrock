@@ -42,8 +42,10 @@ type Props = {
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// 横断のシフト割当一覧。未公開の割当には公開ボタン、特権ロールには変更・削除も出す。
-// 公開の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+/**
+ * 横断のシフト割当一覧。未公開の割当には公開ボタン、特権ロールには変更・削除も出す。
+ * 公開の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+ */
 export function ShiftAssignmentList(props: Props) {
   const publishAction = useActionState(
     async (previousState: ShiftFormState, formData: FormData) => {
@@ -132,8 +134,10 @@ export function ShiftAssignmentList(props: Props) {
   )
 }
 
-// 割当変更フォームを Dialog で開く。パターンコード・日付・備考を編集して送信する。
-// 成功・失敗の通知は action の結果を見て toast() で出す。
+/**
+ * 割当変更フォームを Dialog で開く。パターンコード・日付・備考を編集して送信する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す。
+ */
 function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -206,7 +210,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
   )
 }
 
-// 割当削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。
+/** 割当削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
 function DeleteAssignmentButton(props: { assignmentId: number | null }) {
   async function reduce(
     previousState: ShiftFormState,

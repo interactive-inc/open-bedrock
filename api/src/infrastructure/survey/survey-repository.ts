@@ -28,7 +28,7 @@ export class SurveyRepository {
     }
   }
 
-  // 指定アンケートに紐づく回答件数を返す。
+  /** 指定アンケートに紐づく回答件数を返す。 */
   async countResponsesBySurveyId(surveyId: number): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
@@ -42,7 +42,7 @@ export class SurveyRepository {
     }
   }
 
-  // アンケートを新規登録する。id は DB が採番し、登録後の行を返す。
+  /** アンケートを新規登録する。id は DB が採番し、登録後の行を返す。 */
   async create(survey: Survey): Promise<Survey | Error> {
     try {
       const rows = await this.c.var.database
@@ -62,8 +62,10 @@ export class SurveyRepository {
     }
   }
 
-  // アンケートの内容（タイトル・状態・設問）を id をキーに更新し、更新後の行を返す。
-  // 該当行がなければ null を返す。
+  /**
+   * アンケートの内容（タイトル・状態・設問）を id をキーに更新し、更新後の行を返す。
+   * 該当行がなければ null を返す。
+   */
   async update(survey: Survey): Promise<Survey | null | Error> {
     if (survey.id === null) {
       return new Error("survey id is required")
@@ -88,8 +90,10 @@ export class SurveyRepository {
     }
   }
 
-  // 回答が存在しない場合のみアンケートを更新する（設問変更時の TOCTOU 競合を防ぐ）。
-  // 回答が1件でもあれば 0 行更新となり null を返す。
+  /**
+   * 回答が存在しない場合のみアンケートを更新する（設問変更時の TOCTOU 競合を防ぐ）。
+   * 回答が1件でもあれば 0 行更新となり null を返す。
+   */
   async updateIfNoResponses(survey: Survey): Promise<Survey | null | Error> {
     if (survey.id === null) {
       return new Error("survey id is required")
@@ -128,7 +132,7 @@ export class SurveyRepository {
     }
   }
 
-  // アンケートを削除する。該当行がなければ null を返す。
+  /** アンケートを削除する。該当行がなければ null を返す。 */
   async delete(surveyId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -142,7 +146,7 @@ export class SurveyRepository {
     }
   }
 
-  // 指定アンケートに紐づく回答をすべて削除する。
+  /** 指定アンケートに紐づく回答をすべて削除する。 */
   async deleteResponsesBySurveyId(surveyId: number): Promise<null | Error> {
     try {
       await this.c.var.database
@@ -155,10 +159,12 @@ export class SurveyRepository {
     }
   }
 
-  // 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
-  // survey が open のときのみ INSERT する条件付き INSERT で TOCTOU 競合を防ぐ。
-  // UNIQUE 制約 (survey_id, respondent_id) に違反した場合は already_submitted を返す。
-  // survey が open でなく 0 行挿入の場合は survey_not_open を返す。
+  /**
+   * 回答はアンケート集約に属するため、アンケートリポジトリが永続化する。
+   * survey が open のときのみ INSERT する条件付き INSERT で TOCTOU 競合を防ぐ。
+   * UNIQUE 制約 (survey_id, respondent_id) に違反した場合は already_submitted を返す。
+   * survey が open でなく 0 行挿入の場合は survey_not_open を返す。
+   */
   async createResponse(
     response: SurveyResponse,
   ): Promise<SurveyResponse | AlreadySubmittedError | SurveyNotOpenError | Error> {
@@ -198,7 +204,7 @@ export class SurveyRepository {
     }
   }
 
-  // 回答 id で1件取得する。存在しなければ null。
+  /** 回答 id で1件取得する。存在しなければ null。 */
   async findResponseById(responseId: number): Promise<SurveyResponse | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -215,7 +221,7 @@ export class SurveyRepository {
     }
   }
 
-  // 回答者本人の回答を提出時刻の昇順で返す。
+  /** 回答者本人の回答を提出時刻の昇順で返す。 */
   async findResponsesByRespondentId(
     respondentId: number,
     limit: number,
@@ -248,9 +254,11 @@ export class SurveyRepository {
     }
   }
 
-  // 回答内容と提出時刻を更新する。該当行がなければ null を返す。
-  // survey が open のときのみ UPDATE する条件付き UPDATE で TOCTOU 競合を防ぐ。
-  // survey が open でなく 0 行更新の場合は survey_not_open を返す。
+  /**
+   * 回答内容と提出時刻を更新する。該当行がなければ null を返す。
+   * survey が open のときのみ UPDATE する条件付き UPDATE で TOCTOU 競合を防ぐ。
+   * survey が open でなく 0 行更新の場合は survey_not_open を返す。
+   */
   async updateResponse(
     response: SurveyResponse,
   ): Promise<SurveyResponse | null | SurveyNotOpenError | Error> {
@@ -302,9 +310,11 @@ export class SurveyRepository {
     }
   }
 
-  // 回答を削除する。該当行がなければ null を返す。
-  // survey が open のときのみ DELETE する条件付き DELETE で TOCTOU 競合を防ぐ。
-  // survey が open でなく 0 行削除の場合は survey_not_open を返す。
+  /**
+   * 回答を削除する。該当行がなければ null を返す。
+   * survey が open のときのみ DELETE する条件付き DELETE で TOCTOU 競合を防ぐ。
+   * survey が open でなく 0 行削除の場合は survey_not_open を返す。
+   */
   async deleteResponse(responseId: number): Promise<true | null | SurveyNotOpenError | Error> {
     try {
       const result = await this.c.var.database.run(

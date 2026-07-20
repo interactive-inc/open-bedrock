@@ -16,8 +16,10 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
 }
 
-// 従業員一覧画面。searchParams から絞り込み条件を組み立て、
-// フォーム + 非同期テーブルを Suspense 境界で描画する RSC。
+/**
+ * 従業員一覧画面。searchParams から絞り込み条件を組み立て、
+ * フォーム + 非同期テーブルを Suspense 境界で描画する RSC。
+ */
 export default async function EmployeesPage(props: Props) {
   await requirePermission("employee:read")
 
@@ -48,7 +50,7 @@ export default async function EmployeesPage(props: Props) {
   )
 }
 
-// searchParams の生の値を EmployeeSearchFilter に正規化する。
+/** searchParams の生の値を EmployeeSearchFilter に正規化する。 */
 function toFilter(params: {
   [key: string]: string | Array<string> | undefined
 }): EmployeeSearchFilter {
@@ -59,7 +61,7 @@ function toFilter(params: {
   }
 }
 
-// 配列・未定義・空文字を null に潰した単一文字列を返す。
+/** 配列・未定義・空文字を null に潰した単一文字列を返す。 */
 function toSingleValue(value: string | Array<string> | undefined): string | null {
   if (typeof value !== "string") {
     return null
@@ -72,7 +74,7 @@ function toSingleValue(value: string | Array<string> | undefined): string | null
   return value
 }
 
-// status を許可された enum のみに絞り込む。範囲外は null。
+/** status を許可された enum のみに絞り込む。範囲外は null。 */
 function toStatus(value: string | Array<string> | undefined): EmployeeStatusFilter | null {
   if (value === "active") {
     return "active"

@@ -24,7 +24,7 @@ export type StocktakeCloseFormState = {
   error: string | null
 }
 
-// 棚卸し開始の Server Action。名称と対象日を受け取り、成功時は詳細ページへ遷移する。
+/** 棚卸し開始の Server Action。名称と対象日を受け取り、成功時は詳細ページへ遷移する。 */
 export async function startStocktakeAction(
   previousState: StocktakeStartFormState,
   formData: FormData,
@@ -64,7 +64,7 @@ export async function startStocktakeAction(
   return { ok: true, error: null, id: started.id }
 }
 
-// 現物確認の Server Action。id と資産コードと任意の所在メモを受け取る。
+/** 現物確認の Server Action。id と資産コードと任意の所在メモを受け取る。 */
 export async function checkStocktakeItemAction(
   previousState: StocktakeCheckFormState,
   formData: FormData,
@@ -105,7 +105,7 @@ export async function checkStocktakeItemAction(
   return { ok: true, error: null }
 }
 
-// 棚卸し締めの Server Action。id を受け取りセッションを締める。
+/** 棚卸し締めの Server Action。id を受け取りセッションを締める。 */
 export async function closeStocktakeAction(
   previousState: StocktakeCloseFormState,
   formData: FormData,

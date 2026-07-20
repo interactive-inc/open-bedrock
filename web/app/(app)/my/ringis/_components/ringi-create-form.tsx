@@ -12,9 +12,11 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: RingiSubmitFormState = { ok: false, error: null }
 
-// 稟議起案フォーム。承認者 ID・件名・金額・理由を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
-// 成功時は自分の稟議一覧へ遷移し、起案がステータス付きで並んだことを見せる。
+/**
+ * 稟議起案フォーム。承認者 ID・件名・金額・理由を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ * 成功時は自分の稟議一覧へ遷移し、起案がステータス付きで並んだことを見せる。
+ */
 export function RingiCreateForm() {
   const router = useRouter()
 

@@ -15,8 +15,10 @@ type Props = {
 
 const initialState: AssetLendFormState = { ok: false, error: null }
 
-// 物品貸与フォーム。従業員コードを入力して貸与する。在庫の物品にだけ表示する想定。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 物品貸与フォーム。従業員コードを入力して貸与する。在庫の物品にだけ表示する想定。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function AssetLendForm(props: Props) {
   async function reduce(
     previousState: AssetLendFormState,

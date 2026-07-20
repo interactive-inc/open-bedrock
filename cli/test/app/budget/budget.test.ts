@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/app/index"
 
-// budget 各サブコマンドが app/index.ts に登録され、help が返る（catch-all に落ちない）ことを確認する。
+/** budget 各サブコマンドが app/index.ts に登録され、help が返る（catch-all に落ちない）ことを確認する。 */
 const routes: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/budget", help: "karte budget" },
   { path: "/budget/list", help: "budget list" },

@@ -12,7 +12,7 @@ type Props = {
 
 const initialState: LifeEventActionState = { ok: false, error: null }
 
-// admin 一覧の行アクション。submitted の届出を人事が承認/却下する。
+/** admin 一覧の行アクション。submitted の届出を人事が承認/却下する。 */
 export function LifeEventAdminActions(props: Props) {
   const approve = useActionState(approveLifeEventAction, initialState)
 

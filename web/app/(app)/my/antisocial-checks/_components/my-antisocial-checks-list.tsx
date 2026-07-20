@@ -36,7 +36,7 @@ type Props = {
   canManageResults: boolean
 }
 
-// 自分の反社チェック申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分の反社チェック申請一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyAntisocialChecksList(props: Props) {
   if (props.antisocialChecks.length === 0) {
     return <EmptyState title="反社チェック申請はありません" />
@@ -91,7 +91,7 @@ export function MyAntisocialChecksList(props: Props) {
   )
 }
 
-// 反社チェック申請変更フォームを Dialog で開く。取引先情報と判定結果を編集して送信する。
+/** 反社チェック申請変更フォームを Dialog で開く。取引先情報と判定結果を編集して送信する。 */
 function UpdateAntisocialCheckDialog(props: {
   antisocialCheck: AntisocialCheckResponse
   canManageResults: boolean
@@ -180,7 +180,7 @@ function UpdateAntisocialCheckDialog(props: {
   )
 }
 
-// 反社チェック申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 反社チェック申請取消ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelAntisocialCheckButton(props: { antisocialCheckId: string }) {
   const [_state, formAction, pending] = useFormAction(
     cancelAntisocialCheckAction,

@@ -1,8 +1,10 @@
 import { z } from "zod"
 import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
 
-// API の正規スキーマは api/src/domain/application/application-workflow.ts。
-// Web から API の実行時モジュールを取り込まず、同じ制約で編集途中の入力を安全に検証する。
+/**
+ * API の正規スキーマは api/src/domain/application/application-workflow.ts。
+ * Web から API の実行時モジュールを取り込まず、同じ制約で編集途中の入力を安全に検証する。
+ */
 const codeSchema = z
   .string()
   .min(1)

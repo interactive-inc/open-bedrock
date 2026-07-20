@@ -1,9 +1,9 @@
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import {
   replaceAccountRolesWithPermissionSets,
   seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+} from "@/interface/test-helpers/seed-effective-admin"
 import { describe, expect, test } from "bun:test"
 
 async function countRows(db: D1Database, table: string): Promise<number> {

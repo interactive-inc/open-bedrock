@@ -4,13 +4,13 @@ import { revalidatePath } from "next/cache"
 import { createMeeting } from "@/lib/api/create-meeting"
 import { createMeetingMinutes } from "@/lib/api/create-meeting-minutes"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type MeetingActionState = {
   ok: boolean
   error: string | null
 }
 
-// 会議体作成 Server Action。code/name 必須、cadence/description は任意。meeting:manage が無いと api が 403。
+/** 会議体作成 Server Action。code/name 必須、cadence/description は任意。meeting:manage が無いと api が 403。 */
 export async function createMeetingAction(
   previousState: MeetingActionState,
   formData: FormData,
@@ -39,7 +39,7 @@ export async function createMeetingAction(
   return { ok: true, error: null }
 }
 
-// 議事録記録 Server Action。meeting_code/held_on/title/body_md 必須。書けるのは全認証者。
+/** 議事録記録 Server Action。meeting_code/held_on/title/body_md 必須。書けるのは全認証者。 */
 export async function createMeetingMinutesAction(
   previousState: MeetingActionState,
   formData: FormData,
@@ -72,7 +72,7 @@ export async function createMeetingMinutesAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

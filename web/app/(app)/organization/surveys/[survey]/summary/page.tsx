@@ -15,8 +15,10 @@ type Props = {
   params: Promise<{ survey: string }>
 }
 
-// アンケート集計画面 (/surveys/:surveyId/summary)。
-// 回答件数と設問ごとの集計（スケール/選択肢は分布、自由記述は一覧）を表示する。
+/**
+ * アンケート集計画面 (/surveys/:surveyId/summary)。
+ * 回答件数と設問ごとの集計（スケール/選択肢は分布、自由記述は一覧）を表示する。
+ */
 export default async function SurveySummaryPage(props: Props) {
   await requirePermission("survey:manage")
 

@@ -16,8 +16,10 @@ const initialState: EmployeeCreateFormState = { ok: false, error: null }
 const selectClassName =
   "h-8 w-full min-w-0 rounded-2xl border border-transparent bg-input/50 px-2.5 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
 
-// 従業員登録フォーム。人物、入社発令、初期アカウントを一括作成する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 従業員登録フォーム。人物、入社発令、初期アカウントを一括作成する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function EmployeeCreateForm(props: {
   canAssignRole: boolean
   positions: ReadonlyArray<PositionResponse>

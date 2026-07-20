@@ -47,7 +47,7 @@ type Props = {
   familyCareLeaves: ReadonlyArray<FamilyCareLeaveResponse>
 }
 
-// 自分の休業申出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分の休業申出一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyFamilyCareLeavesList(props: Props) {
   if (props.familyCareLeaves.length === 0) {
     return <EmptyState title="休業申出はありません" />
@@ -95,7 +95,7 @@ export function MyFamilyCareLeavesList(props: Props) {
   )
 }
 
-// 休業申出変更フォームを Dialog で開く。種別・期間・備考を編集して送信する。
+/** 休業申出変更フォームを Dialog で開く。種別・期間・備考を編集して送信する。 */
 function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -183,7 +183,7 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
   )
 }
 
-// 休業申出取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
+/** 休業申出取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
 function CancelFamilyCareLeaveButton(props: { familyCareLeaveId: string }) {
   const [, formAction, pending] = useFormAction(
     cancelFamilyCareLeaveAction,

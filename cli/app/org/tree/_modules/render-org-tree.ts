@@ -1,4 +1,4 @@
-// /org/tree のレスポンス node（再帰構造）。api の OrgTreeNode と同形。
+/** /org/tree のレスポンス node（再帰構造）。api の OrgTreeNode と同形。 */
 type OrgTreeNode = {
   code: string
   name: string

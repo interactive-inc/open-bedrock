@@ -43,7 +43,7 @@ const statusLabels: Record<CareerApplication["status"], string> = {
   rejected: "不合格",
 }
 
-// 自分の公募応募一覧。選考中の応募だけ変更（Dialog）と取り下げを許可する表示コンポーネント。
+/** 自分の公募応募一覧。選考中の応募だけ変更（Dialog）と取り下げを許可する表示コンポーネント。 */
 export function MyApplicationsList(props: Props) {
   if (props.applications.length === 0) {
     return <EmptyState title="応募はありません" />
@@ -105,7 +105,7 @@ export function MyApplicationsList(props: Props) {
   )
 }
 
-// 応募メッセージ変更フォームを Dialog で開く。
+/** 応募メッセージ変更フォームを Dialog で開く。 */
 function UpdateApplicationDialog(props: { applicationId: number; application: CareerApplication }) {
   const [open, setOpen] = useState(false)
 
@@ -155,7 +155,7 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
   )
 }
 
-// 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function WithdrawApplicationButton(props: { applicationId: number }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawCareerApplicationAction,

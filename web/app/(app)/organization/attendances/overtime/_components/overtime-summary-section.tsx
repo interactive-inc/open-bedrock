@@ -17,8 +17,10 @@ type Props = {
   scope: OvertimeScope | null
 }
 
-// 時間外の参考集計をサーバ側 fetch して描画する非同期 RSC。
-// 集計値は法定判定ではない参考値であることを note として明示する。
+/**
+ * 時間外の参考集計をサーバ側 fetch して描画する非同期 RSC。
+ * 集計値は法定判定ではない参考値であることを note として明示する。
+ */
 export async function OvertimeSummarySection(props: Props) {
   const summary = await getOvertimeSummary({ month: props.month, scope: props.scope })
 

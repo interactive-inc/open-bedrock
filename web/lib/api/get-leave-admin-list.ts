@@ -21,7 +21,7 @@ type Params = {
   sort?: LeaveAdminSort
 }
 
-// GET /leave/requests/admin。全社の休暇申請を横断で取得する。leave:read:all が無いと 403。
+/** GET /leave/requests/admin。全社の休暇申請を横断で取得する。leave:read:all が無いと 403。 */
 export async function getLeaveAdminList(filter: LeaveAdminFilter, params: Params = {}) {
   const client = await createClient()
 

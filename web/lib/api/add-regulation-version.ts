@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { RegulationVersionRequest } from "@/lib/api/types/regulation-types"
 
-// POST /regulations/:code/versions。既存規程へ新しい改定版を追加する（regulation:manage）。
+/** POST /regulations/:code/versions。既存規程へ新しい改定版を追加する（regulation:manage）。 */
 export async function addRegulationVersion(code: string, request: RegulationVersionRequest) {
   const client = await createClient()
 

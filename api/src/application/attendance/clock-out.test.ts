@@ -3,8 +3,8 @@ import { AttendanceRecord } from "@/domain/attendance/attendance-record.entity"
 import { ClockIn } from "@/application/attendance/clock-in"
 import { ClockOut } from "@/application/attendance/clock-out"
 import { ApplicationError, ConflictError } from "@/lib/errors"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedOpenRecord(context: Context, employeeId: number): Promise<AttendanceRecord> {

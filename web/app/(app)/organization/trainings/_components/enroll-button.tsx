@@ -12,8 +12,10 @@ type Props = {
 
 const initialState: TrainingFormState = { ok: false, error: null }
 
-// 研修コースの受講を申し込むボタン。course_code を hidden input で Server Action へ送る。
-// 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 研修コースの受講を申し込むボタン。course_code を hidden input で Server Action へ送る。
+ * 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function EnrollButton(props: Props) {
   // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(async (previousState: TrainingFormState, formData: FormData) => {

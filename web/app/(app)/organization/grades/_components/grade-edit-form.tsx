@@ -25,7 +25,7 @@ type Props = {
 
 const initialState: GradeActionState = { ok: false, error: null }
 
-// 等級編集フォームを Dialog で開く。コード・名称・ランク・説明を変更して送信する。
+/** 等級編集フォームを Dialog で開く。コード・名称・ランク・説明を変更して送信する。 */
 export function GradeEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

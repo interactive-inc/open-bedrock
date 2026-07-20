@@ -25,9 +25,11 @@ const SORT_VALUES: ReadonlyArray<ApplicationAdminSort> = ["created_at_desc", "cr
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の申請を横断で管理する画面。application:read:all を持つロールのみ表示できる。
-// フィルタ(ステータス/テンプレート/申請者/期間)と並び替えを searchParams に持ち、
-// リロードや共有 URL でも同じ結果を再現できる。
+/**
+ * 全社の申請を横断で管理する画面。application:read:all を持つロールのみ表示できる。
+ * フィルタ(ステータス/テンプレート/申請者/期間)と並び替えを searchParams に持ち、
+ * リロードや共有 URL でも同じ結果を再現できる。
+ */
 export default async function AdminApplicationsPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

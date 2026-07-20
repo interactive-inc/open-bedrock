@@ -9,7 +9,7 @@ import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
 
 export const metadata = { title: "採用" }
 
-// /recruitment 募集と応募者のパイプライン。recruitment:manage が無ければ notFound（社外個人情報のため公開しない）。
+/** /recruitment 募集と応募者のパイプライン。recruitment:manage が無ければ notFound（社外個人情報のため公開しない）。 */
 export default async function RecruitmentPage() {
   const me = await getMe()
 

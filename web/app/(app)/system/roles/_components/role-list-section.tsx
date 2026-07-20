@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { getRoles } from "@/lib/api/get-roles"
 import Link from "next/link"
 
-// GET /roles を実行しロール一覧テーブルを描画する非同期 RSC。
+/** GET /roles を実行しロール一覧テーブルを描画する非同期 RSC。 */
 export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArray<string> }) {
   const actorPermissionKeys = new Set(props.actorPermissionKeys)
 

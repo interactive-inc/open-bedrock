@@ -38,13 +38,13 @@ type Props = {
   surveyTitleMap: Record<number, string>
 }
 
-// 回答内容を「設問 id: 値」のペア配列に正規化する。answers_json は unknown のため安全に絞り込む。
+/** 回答内容を「設問 id: 値」のペア配列に正規化する。answers_json は unknown のため安全に絞り込む。 */
 type AnswerEntry = {
   questionId: string
   value: string
 }
 
-// 自分のアンケート回答一覧。各行に変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
+/** 自分のアンケート回答一覧。各行に変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。 */
 export function MyResponsesList(props: Props) {
   if (props.responses.length === 0) {
     return <EmptyState title="提出済みの回答はありません" />
@@ -94,7 +94,7 @@ export function MyResponsesList(props: Props) {
   )
 }
 
-// 回答変更フォームを Dialog で開く。既存回答を設問ごとの入力に展開して送信する。
+/** 回答変更フォームを Dialog で開く。既存回答を設問ごとの入力に展開して送信する。 */
 function UpdateResponseDialog(props: { responseId: number; response: SurveyResponseItem }) {
   const [open, setOpen] = useState(false)
 
@@ -147,7 +147,7 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
   )
 }
 
-// 回答取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 回答取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function WithdrawResponseButton(props: { responseId: number }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawSurveyResponseAction,
@@ -172,7 +172,7 @@ function WithdrawResponseButton(props: { responseId: number }) {
   )
 }
 
-// answers_json (unknown) を設問 id/文字列値のペアに正規化する。非オブジェクトは空配列。
+/** answers_json (unknown) を設問 id/文字列値のペアに正規化する。非オブジェクトは空配列。 */
 function toAnswerEntries(answersJson: unknown): ReadonlyArray<AnswerEntry> {
   if (answersJson === null || typeof answersJson !== "object") {
     return []

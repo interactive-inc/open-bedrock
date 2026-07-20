@@ -10,7 +10,7 @@ type Props = {
   params: Promise<{ team: string }>
 }
 
-// 部署ハブの共通レイアウト。部署名・コード・責任者のヘッダとタブ（概要 / メンバー）を共有する。
+/** 部署ハブの共通レイアウト。部署名・コード・責任者のヘッダとタブ（概要 / メンバー）を共有する。 */
 export default async function DepartmentLayout(props: Props) {
   const params = await props.params
 

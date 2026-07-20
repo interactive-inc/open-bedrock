@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /dashboard を session トークン付きで呼び、横断サマリを取得する。
+/** GET /dashboard を session トークン付きで呼び、横断サマリを取得する。 */
 export async function getDashboard() {
   const client = await createClient()
 

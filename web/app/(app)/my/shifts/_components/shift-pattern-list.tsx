@@ -35,7 +35,7 @@ type Props = {
 
 const initialState: ShiftFormState = { ok: false, error: null }
 
-// シフトパターン一覧。特権ロールには各行に変更（Dialog）と削除ボタンを出す。
+/** シフトパターン一覧。特権ロールには各行に変更（Dialog）と削除ボタンを出す。 */
 export function ShiftPatternList(props: Props) {
   if (props.patterns.length === 0) {
     return <EmptyState title="シフトパターンはまだありません" />
@@ -83,7 +83,7 @@ export function ShiftPatternList(props: Props) {
   )
 }
 
-// パターン変更フォームを Dialog で開く。コード・名前・勤務時間・休憩を編集して送信する。
+/** パターン変更フォームを Dialog で開く。コード・名前・勤務時間・休憩を編集して送信する。 */
 function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -165,7 +165,7 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
   )
 }
 
-// パターン削除ボタン。割当から参照されているとサーバーが拒否し action がエラーを返す。
+/** パターン削除ボタン。割当から参照されているとサーバーが拒否し action がエラーを返す。 */
 function DeletePatternButton(props: { patternId: number | null }) {
   const [, formAction, pending] = useFormAction(
     deleteShiftPatternAction,

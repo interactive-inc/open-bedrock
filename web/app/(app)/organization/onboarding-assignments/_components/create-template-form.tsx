@@ -12,8 +12,10 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: TemplateMutationState = { ok: false, message: null }
 
-// オンボーディングテンプレート作成フォーム（管理権限向け）。code/name/kind/description を native form で送る。
-// 成功・失敗は action の結果を見て toast で出す。
+/**
+ * オンボーディングテンプレート作成フォーム（管理権限向け）。code/name/kind/description を native form で送る。
+ * 成功・失敗は action の結果を見て toast で出す。
+ */
 export function CreateTemplateForm() {
   const action = useActionState(
     async (previousState: TemplateMutationState, formData: FormData) => {

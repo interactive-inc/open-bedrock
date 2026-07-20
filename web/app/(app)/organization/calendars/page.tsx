@@ -13,7 +13,7 @@ type Props = {
   searchParams: Promise<{ year?: string }>
 }
 
-// 会社カレンダー画面。年ごとの会社休日・振替出勤日を一覧し、calendar:manage 保持者には追加・削除を出す RSC。
+/** 会社カレンダー画面。年ごとの会社休日・振替出勤日を一覧し、calendar:manage 保持者には追加・削除を出す RSC。 */
 export default async function CalendarPage(props: Props) {
   const searchParams = await props.searchParams
 

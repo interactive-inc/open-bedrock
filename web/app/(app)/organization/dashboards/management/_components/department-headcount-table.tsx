@@ -12,7 +12,7 @@ type Props = {
   rows: ReadonlyArray<DepartmentHeadcount>
 }
 
-// 部署別の在籍人数を表で並べる。
+/** 部署別の在籍人数を表で並べる。 */
 export function DepartmentHeadcountTable(props: Props) {
   if (props.rows.length === 0) {
     return <p className="text-sm text-muted-foreground">部署別の在籍者はいません。</p>

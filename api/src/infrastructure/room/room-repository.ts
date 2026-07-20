@@ -12,7 +12,7 @@ type NewRoom = {
 export class RoomRepository {
   constructor(private readonly c: Context) {}
 
-  // 会議室マスタを id の昇順で返す。
+  /** 会議室マスタを id の昇順で返す。 */
   async findAll(props: { limit: number; offset: number }): Promise<ReadonlyArray<Room> | Error> {
     try {
       const rows = await this.c.var.database
@@ -28,7 +28,7 @@ export class RoomRepository {
     }
   }
 
-  // 会議室 id で1件取得する。存在しなければ null。
+  /** 会議室 id で1件取得する。存在しなければ null。 */
   async findById(id: number): Promise<Room | null | Error> {
     try {
       const rows = await this.c.var.database.select().from(rooms).where(eq(rooms.id, id)).limit(1)
@@ -41,7 +41,7 @@ export class RoomRepository {
     }
   }
 
-  // id を渡さず insert し、DB autoincrement が採番した行から復元する。
+  /** id を渡さず insert し、DB autoincrement が採番した行から復元する。 */
   async create(room: NewRoom): Promise<Room | Error> {
     try {
       const rows = await this.c.var.database
@@ -57,7 +57,7 @@ export class RoomRepository {
     }
   }
 
-  // 会議室の名称・定員・所在地を更新する。
+  /** 会議室の名称・定員・所在地を更新する。 */
   async update(room: Room): Promise<Room | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -74,7 +74,7 @@ export class RoomRepository {
     }
   }
 
-  // 会議室を削除する。
+  /** 会議室を削除する。 */
   async delete(id: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(rooms).where(eq(rooms.id, id))

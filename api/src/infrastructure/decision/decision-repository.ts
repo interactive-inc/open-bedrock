@@ -6,7 +6,7 @@ import { and, count, desc, eq } from "drizzle-orm"
 export class DecisionRepository {
   constructor(private readonly c: Context) {}
 
-  // 決定 id で1件取得する。存在しなければ null。
+  /** 決定 id で1件取得する。存在しなければ null。 */
   async findById(id: number): Promise<Decision | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -72,7 +72,7 @@ export class DecisionRepository {
     }
   }
 
-  // 決定の表題・決定日・文脈・決定・帰結を更新する。該当行が無ければ null。
+  /** 決定の表題・決定日・文脈・決定・帰結を更新する。該当行が無ければ null。 */
   async update(decision: Decision): Promise<Decision | null | Error> {
     try {
       if (decision.id === null) {
@@ -99,8 +99,10 @@ export class DecisionRepository {
     }
   }
 
-  // active な決定だけを条件付きで superseded に遷移させる（TOCTOU 防止）。
-  // 更新された行を返す。既に superseded 等で対象外なら null。
+  /**
+   * active な決定だけを条件付きで superseded に遷移させる（TOCTOU 防止）。
+   * 更新された行を返す。既に superseded 等で対象外なら null。
+   */
   async supersede(id: number, supersededById: number): Promise<Decision | null | Error> {
     try {
       const rows = await this.c.var.database

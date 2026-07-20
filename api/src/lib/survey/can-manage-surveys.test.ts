@@ -1,5 +1,5 @@
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageSurveys", () => {

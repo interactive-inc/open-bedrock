@@ -4,8 +4,10 @@ import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-// config は KARTE_CONFIG_DIR を実行時に参照するので、一時ディレクトリへ隔離して検証する。
-// （os.homedir() は Bun が起動時にキャッシュするため実行時の HOME 変更では隔離できない）
+/**
+ * config は KARTE_CONFIG_DIR を実行時に参照するので、一時ディレクトリへ隔離して検証する。
+ * （os.homedir() は Bun が起動時にキャッシュするため実行時の HOME 変更では隔離できない）
+ */
 describe("config", () => {
   let originalConfigDir: string | undefined
 

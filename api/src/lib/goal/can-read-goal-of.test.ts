@@ -1,7 +1,7 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { SessionPayload } from "@/env"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 function sessionWith(permissions: ReadonlyArray<string>): SessionPayload {

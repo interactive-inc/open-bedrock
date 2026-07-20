@@ -43,8 +43,10 @@ type Props = {
 
 const initialState: ReviewFormState = { ok: false, error: null }
 
-// 評価サイクル一覧。各サイクルを Card で並べる。特権ロールには draft→open / open→closed の操作を出す。
-// 開閉・削除の結果は action のラッパ内で toast() 通知する（レンダー本体・useEffect は使わない）。
+/**
+ * 評価サイクル一覧。各サイクルを Card で並べる。特権ロールには draft→open / open→closed の操作を出す。
+ * 開閉・削除の結果は action のラッパ内で toast() 通知する（レンダー本体・useEffect は使わない）。
+ */
 export function ReviewCycleList(props: Props) {
   // 開始フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
   const openAction = useActionState(async (previousState: ReviewFormState, formData: FormData) => {

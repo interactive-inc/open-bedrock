@@ -22,8 +22,10 @@ type Props = {
 
 const initialState: ReviewFormState = { ok: false, error: null }
 
-// 自分の評価フォーム一覧。pending のフォームにはスコア・コメントの提出フォームを出す。
-// 提出の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+/**
+ * 自分の評価フォーム一覧。pending のフォームにはスコア・コメントの提出フォームを出す。
+ * 提出の結果は action の戻り値を見て toast で通知する（useEffect は使わない）。
+ */
 export function MyReviewForms(props: Props) {
   const submitAction = useActionState(
     async (previousState: ReviewFormState, formData: FormData) => {

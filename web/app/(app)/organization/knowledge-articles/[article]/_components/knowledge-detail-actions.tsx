@@ -25,7 +25,7 @@ type Props = {
   article: KnowledgeDetailResponse
 }
 
-// ナレッジ記事詳細の操作群。編集（Dialog フォーム）と削除ボタンを並べる。
+/** ナレッジ記事詳細の操作群。編集（Dialog フォーム）と削除ボタンを並べる。 */
 export function KnowledgeDetailActions(props: Props) {
   return (
     <div className="flex items-center gap-2">
@@ -36,7 +36,7 @@ export function KnowledgeDetailActions(props: Props) {
   )
 }
 
-// 記事編集フォームを Dialog で開く。タイトル・カテゴリ・タグ・本文を編集して送信する。
+/** 記事編集フォームを Dialog で開く。タイトル・カテゴリ・タグ・本文を編集して送信する。 */
 function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -103,7 +103,7 @@ function EditKnowledgeDialog(props: { article: KnowledgeDetailResponse }) {
   )
 }
 
-// 記事削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。
+/** 記事削除ボタン。Server Action を呼び、成功時は一覧が revalidate される。 */
 function DeleteKnowledgeButton(props: { articleId: number }) {
   const [state, formAction, pending] = useFormAction(
     deleteKnowledgeAction,

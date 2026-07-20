@@ -12,7 +12,7 @@ export type LeaveDecisionState = {
   error: string | null
 }
 
-// 承認処理。コメント任意。
+/** 承認処理。コメント任意。 */
 async function approve(
   leaveRequestId: number,
   comment: string | null,
@@ -26,7 +26,7 @@ async function approve(
   return { ok: true, error: null }
 }
 
-// 却下処理。コメント必須。
+/** 却下処理。コメント必須。 */
 async function reject(leaveRequestId: number, comment: string | null): Promise<LeaveDecisionState> {
   if (comment === null) {
     return { ok: false, error: "却下理由を入力してください" }
@@ -41,7 +41,7 @@ async function reject(leaveRequestId: number, comment: string | null): Promise<L
   return { ok: true, error: null }
 }
 
-// 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。
+/** 承認/却下を 1 つにまとめた Server Action。decision フィールドで分岐し、成功時は inbox を再検証する。 */
 export async function decideLeaveRequestAction(
   previousState: LeaveDecisionState,
   formData: FormData,

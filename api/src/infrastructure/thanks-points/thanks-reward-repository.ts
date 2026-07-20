@@ -3,7 +3,7 @@ import type { Context } from "@/env"
 import { thanksRewards } from "@/schema"
 import { and, desc, eq, gt, isNotNull, sql } from "drizzle-orm"
 
-// 在庫減算の結果。在庫を 1 減らせた / 無制限 / 在庫切れ / 失敗 を区別する。
+/** 在庫減算の結果。在庫を 1 減らせた / 無制限 / 在庫切れ / 失敗 を区別する。 */
 export type StockDecrementOutcome = "decremented" | "unlimited" | "out_of_stock"
 
 export class ThanksRewardRepository {
@@ -25,7 +25,7 @@ export class ThanksRewardRepository {
     }
   }
 
-  // カタログ一覧を新しい順で取得する。activeOnly=true なら有効なものだけ。
+  /** カタログ一覧を新しい順で取得する。activeOnly=true なら有効なものだけ。 */
   async findMany(props: {
     activeOnly: boolean
     limit: number
@@ -124,9 +124,11 @@ export class ThanksRewardRepository {
     }
   }
 
-  // 在庫を 1 だけ原子的に減らす。stock IS NOT NULL AND stock>0 のときだけ更新するため
-  // 同時承認でも在庫はマイナスにならない。無制限（stock=null）と在庫切れを区別して返す。
-  // SQL 例外は Error として返し、握りつぶさず呼び出し側で追跡できるようにする。
+  /**
+   * 在庫を 1 だけ原子的に減らす。stock IS NOT NULL AND stock>0 のときだけ更新するため
+   * 同時承認でも在庫はマイナスにならない。無制限（stock=null）と在庫切れを区別して返す。
+   * SQL 例外は Error として返し、握りつぶさず呼び出し側で追跡できるようにする。
+   */
   async decrementStock(rewardId: number): Promise<StockDecrementOutcome | Error> {
     try {
       const rows = await this.c.var.database

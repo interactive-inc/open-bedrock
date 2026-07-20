@@ -13,8 +13,10 @@ type Props = {
   searchParams: Promise<{ employee_id?: string; from?: string; to?: string }>
 }
 
-// 勤怠一覧（管理者）画面。employee_id / from / to で全体の勤怠を絞り込んで表示する RSC。
-// 権限がない場合は子の RSC 内でエラーメッセージにフォールバックする。
+/**
+ * 勤怠一覧（管理者）画面。employee_id / from / to で全体の勤怠を絞り込んで表示する RSC。
+ * 権限がない場合は子の RSC 内でエラーメッセージにフォールバックする。
+ */
 export default async function AttendanceAllPage(props: Props) {
   await requirePermission("attendance:read:all")
 

@@ -20,7 +20,7 @@ import { canManageDocuments } from "@/lib/document/can-manage-documents"
 
 export const metadata = { title: "文書台帳" }
 
-// 文書台帳一覧画面。document:read:all が無い場合は notFound で存在を隠す。
+/** 文書台帳一覧画面。document:read:all が無い場合は notFound で存在を隠す。 */
 export default async function DocumentsPage() {
   const currentUser = await getMe()
 
@@ -46,7 +46,7 @@ export default async function DocumentsPage() {
   )
 }
 
-// /documents を取得して一覧テーブルを描画する非同期 RSC。
+/** /documents を取得して一覧テーブルを描画する非同期 RSC。 */
 async function DocumentsTable() {
   const documents = await getDocumentList({ category: null })
 

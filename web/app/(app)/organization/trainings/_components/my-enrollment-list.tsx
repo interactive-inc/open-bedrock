@@ -19,8 +19,10 @@ type Props = {
   courses: Array<TrainingCourseResponse>
 }
 
-// 自分の受講一覧。コース名・状態・期限・完了日をテーブルで表示する。
-// enrolled の受講には完了ボタンを出す。コース名は courses から course_id で引く。
+/**
+ * 自分の受講一覧。コース名・状態・期限・完了日をテーブルで表示する。
+ * enrolled の受講には完了ボタンを出す。コース名は courses から course_id で引く。
+ */
 export function MyEnrollmentList(props: Props) {
   if (props.enrollments.length === 0) {
     return <EmptyState title="受講中・受講済みのコースはありません" />

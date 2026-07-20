@@ -7,14 +7,16 @@ import { resubmitApplication } from "@/lib/api/resubmit-application"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ApplicationActionState = {
   ok: boolean
   error: string | null
 }
 
-// 申請内容更新 Server Action。application_id と payload(JSON 文字列) が必須。
-// 審査済みや本人以外は api がエラーを返す。成功時は /applications を revalidate する。
+/**
+ * 申請内容更新 Server Action。application_id と payload(JSON 文字列) が必須。
+ * 審査済みや本人以外は api がエラーを返す。成功時は /applications を revalidate する。
+ */
 export async function updateApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
@@ -64,7 +66,7 @@ export async function resubmitApplicationAction(
   return { ok: true, error: null }
 }
 
-// 申請取り下げ Server Action。application_id が必須。成功時は /applications を revalidate する。
+/** 申請取り下げ Server Action。application_id が必須。成功時は /applications を revalidate する。 */
 export async function withdrawApplicationAction(
   previousState: ApplicationActionState,
   formData: FormData,
@@ -88,7 +90,7 @@ export async function withdrawApplicationAction(
   return { ok: true, error: null }
 }
 
-// payload の FormData 値(JSON 文字列) を unknown へ。解析できなければ Error。
+/** payload の FormData 値(JSON 文字列) を unknown へ。解析できなければ Error。 */
 function toPayload(value: FormDataEntryValue | null): unknown {
   if (typeof value !== "string" || value.trim() === "") {
     return new Error("payload is empty")

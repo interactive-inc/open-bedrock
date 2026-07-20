@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /recruitment/positions/:id/candidates。募集配下の応募者一覧（recruitment:manage）。
+/** GET /recruitment/positions/:id/candidates。募集配下の応募者一覧（recruitment:manage）。 */
 export async function getRecruitmentCandidateList(positionId: number) {
   const client = await createClient()
 

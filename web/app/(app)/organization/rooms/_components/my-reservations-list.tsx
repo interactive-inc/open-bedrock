@@ -37,7 +37,7 @@ type Props = {
   roomNameMap: Record<number, string>
 }
 
-// 自分の会議室予約一覧。各行に変更（Dialog フォーム）とキャンセルボタンを置く表示コンポーネント。
+/** 自分の会議室予約一覧。各行に変更（Dialog フォーム）とキャンセルボタンを置く表示コンポーネント。 */
 export function MyReservationsList(props: Props) {
   if (props.reservations.length === 0) {
     return <EmptyState title="予約はありません" />
@@ -84,7 +84,7 @@ export function MyReservationsList(props: Props) {
   )
 }
 
-// 予約変更フォームを Dialog で開く。開始・終了・用途を編集して送信する。
+/** 予約変更フォームを Dialog で開く。開始・終了・用途を編集して送信する。 */
 function UpdateReservationDialog(props: { reservation: RoomReservationResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -154,7 +154,7 @@ function UpdateReservationDialog(props: { reservation: RoomReservationResponse }
   )
 }
 
-// 予約キャンセルボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 予約キャンセルボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelReservationButton(props: { reservationId: string }) {
   const [_state, formAction, pending] = useFormAction(
     cancelRoomReservationAction,
@@ -179,7 +179,7 @@ function CancelReservationButton(props: { reservationId: string }) {
   )
 }
 
-// ISO 文字列を datetime-local input 用の "YYYY-MM-DDTHH:mm" へ整形する。
+/** ISO 文字列を datetime-local input 用の "YYYY-MM-DDTHH:mm" へ整形する。 */
 function toLocalInput(isoString: string): string {
   return isoString.slice(0, 16)
 }

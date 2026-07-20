@@ -7,8 +7,8 @@ import { UpdateFamilyCareLeave } from "@/application/family-care-leave/update-fa
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 async function seedLeave(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateFamilyCareLeave(context).run({

@@ -1,5 +1,5 @@
 import { canViewAllContracts } from "@/lib/contract/can-view-all-contracts"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canViewAllContracts", () => {

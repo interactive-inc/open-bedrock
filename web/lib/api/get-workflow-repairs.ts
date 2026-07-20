@@ -17,7 +17,7 @@ export type WorkflowRepairList = {
   total: number
 }
 
-// GET /applications/workflow-repairs。修復権限は API が二重 permission で検査する。
+/** GET /applications/workflow-repairs。修復権限は API が二重 permission で検査する。 */
 export async function getWorkflowRepairs(
   params: { limit?: number; offset?: number } = {},
 ): Promise<WorkflowRepairList | Error> {

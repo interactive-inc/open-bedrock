@@ -118,7 +118,7 @@ function isAllowed(gate: PermissionGate, permissions: ReadonlySet<string>): bool
   return true
 }
 
-// permission を持つ項目だけに絞り込み、空になったセクションは畳む。
+/** permission を持つ項目だけに絞り込み、空になったセクションは畳む。 */
 function filterSections(
   sections: ReadonlyArray<Section>,
   permissions: ReadonlySet<string>,
@@ -457,8 +457,10 @@ const systemSections: ReadonlyArray<Section> = [
   },
 ]
 
-// 選択中の部署のセクション。マイチーム（直属の部下）を最上部に置き、
-// 部署メンバーの一覧・目標・勤怠・休暇が続く。目標・勤怠・休暇は部署スコープ permission を持つ場合だけ出す。
+/**
+ * 選択中の部署のセクション。マイチーム（直属の部下）を最上部に置き、
+ * 部署メンバーの一覧・目標・勤怠・休暇が続く。目標・勤怠・休暇は部署スコープ permission を持つ場合だけ出す。
+ */
 function buildTeamSections(teamCode: string): ReadonlyArray<Section> {
   return [
     {
@@ -524,7 +526,7 @@ function spaceFromPath(pathname: string): SpaceKey | null {
   return null
 }
 
-// /teams 直下のうち部署コードでない固定ルート。部署 Select の対象にしない。
+/** /teams 直下のうち部署コードでない固定ルート。部署 Select の対象にしない。 */
 const teamStaticRoutes = new Set(["reports", "approval-delegations", "new"])
 
 function teamCodeFromPath(pathname: string): string | null {

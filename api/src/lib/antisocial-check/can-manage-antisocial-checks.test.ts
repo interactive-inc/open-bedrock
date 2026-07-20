@@ -1,5 +1,5 @@
 import { canManageAntisocialChecks } from "@/lib/antisocial-check/can-manage-antisocial-checks"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageAntisocialChecks", () => {

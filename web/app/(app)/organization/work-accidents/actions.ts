@@ -5,13 +5,13 @@ import { createWorkAccident } from "@/lib/api/create-work-accident"
 import { getMe } from "@/lib/api/get-me"
 import { canManageWorkAccidents } from "@/lib/work-accident/can-manage-work-accidents"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type WorkAccidentActionState = {
   ok: boolean
   error: string | null
 }
 
-// 労災・事故の発生記録を登録する Server Action。work_accident:manage を確認してから API を叩く。
+/** 労災・事故の発生記録を登録する Server Action。work_accident:manage を確認してから API を叩く。 */
 export async function createWorkAccidentAction(
   previousState: WorkAccidentActionState,
   formData: FormData,

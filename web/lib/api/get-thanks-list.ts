@@ -6,8 +6,10 @@ export type ThanksListResult = {
   total: number
 }
 
-// GET /thanks。全従業員に公開された感謝のタイムライン（新着順）を取得する。
-// API は { data: ThanksResponse[], total: number } を返す。
+/**
+ * GET /thanks。全従業員に公開された感謝のタイムライン（新着順）を取得する。
+ * API は { data: ThanksResponse[], total: number } を返す。
+ */
 export async function getThanksList(props?: {
   limit?: number
   offset?: number

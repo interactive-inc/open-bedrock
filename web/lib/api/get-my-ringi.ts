@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 
 type RingiStatus = "pending" | "approved" | "rejected"
 
-// GET /ringi/me。自分が起案した稟議の一覧。status で絞り込み可能。
+/** GET /ringi/me。自分が起案した稟議の一覧。status で絞り込み可能。 */
 export async function getMyRingi(status: RingiStatus | null) {
   const client = await createClient()
 

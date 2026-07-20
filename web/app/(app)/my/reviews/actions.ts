@@ -21,7 +21,7 @@ import {
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
-// reviewer_type の許可値。フォーム入力の検証に使う。
+/** reviewer_type の許可値。フォーム入力の検証に使う。 */
 const REVIEWER_TYPES = ["self", "manager", "peer", "subordinate"] as const
 
 type ReviewerType = (typeof REVIEWER_TYPES)[number]
@@ -36,13 +36,13 @@ function toReviewerType(value: FormDataEntryValue | null): ReviewerType | null {
   return matched ?? null
 }
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ReviewFormState = {
   ok: boolean
   error: string | null
 }
 
-// 評価サイクル作成 Server Action（特権ロール）。title/period 必須、due_date 任意。
+/** 評価サイクル作成 Server Action（特権ロール）。title/period 必須、due_date 任意。 */
 export async function createReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -110,7 +110,7 @@ export async function createReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価サイクル open Server Action。hidden input の cycle_id を受け取る。
+/** 評価サイクル open Server Action。hidden input の cycle_id を受け取る。 */
 export async function openReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -139,7 +139,7 @@ export async function openReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価サイクル close Server Action。hidden input の cycle_id を受け取る。
+/** 評価サイクル close Server Action。hidden input の cycle_id を受け取る。 */
 export async function closeReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -168,7 +168,7 @@ export async function closeReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価サイクル更新 Server Action（特権ロール）。cycle_id/title/period 必須、due_date 任意。
+/** 評価サイクル更新 Server Action（特権ロール）。cycle_id/title/period 必須、due_date 任意。 */
 export async function updateReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -225,7 +225,7 @@ export async function updateReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価サイクル削除 Server Action（特権ロール）。hidden input の cycle_id を受け取る。
+/** 評価サイクル削除 Server Action（特権ロール）。hidden input の cycle_id を受け取る。 */
 export async function deleteReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -254,7 +254,7 @@ export async function deleteReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価フォーム提出 Server Action。form_id 必須、score 任意、comment 任意。
+/** 評価フォーム提出 Server Action。form_id 必須、score 任意、comment 任意。 */
 export async function submitReviewFormAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -301,7 +301,7 @@ export async function submitReviewFormAction(
   return { ok: true, error: null }
 }
 
-// 評価フォーム一括開示 Server Action。hidden input の cycle_id を受け取る（特権ロール）。
+/** 評価フォーム一括開示 Server Action。hidden input の cycle_id を受け取る（特権ロール）。 */
 export async function discloseReviewCycleAction(
   _previousState: ReviewFormState,
   formData: FormData,
@@ -330,7 +330,7 @@ export async function discloseReviewCycleAction(
   return { ok: true, error: null }
 }
 
-// 評価フォーム一括作成 Server Action（360度評価）。被評価者・評価者・評価者種別を受け取る（特権ロール）。
+/** 評価フォーム一括作成 Server Action（360度評価）。被評価者・評価者・評価者種別を受け取る（特権ロール）。 */
 export async function createReviewFormsBulkAction(
   _previousState: ReviewFormState,
   formData: FormData,

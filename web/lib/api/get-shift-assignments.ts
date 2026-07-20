@@ -7,7 +7,7 @@ type Props = {
   deptCode: string | null
 }
 
-// GET /shift/assignments。特権ロールが部署単位でシフトを横断検索する。
+/** GET /shift/assignments。特権ロールが部署単位でシフトを横断検索する。 */
 export async function getShiftAssignments(
   props: Props,
 ): Promise<Array<ShiftAssignmentResponse> | Error> {

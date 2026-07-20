@@ -8,14 +8,16 @@ import { updateOrgDepartment } from "@/lib/api/update-org-department"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageOrg } from "@/lib/org/can-manage-org"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type OrgDepartmentActionState = {
   ok: boolean
   error: string | null
 }
 
-// 部署ノード作成 Server Action。code/department_id/order 必須、parent/manager は任意。
-// 権限不足やコード重複は api がエラーを返す。成功時は一覧へ redirect する。
+/**
+ * 部署ノード作成 Server Action。code/department_id/order 必須、parent/manager は任意。
+ * 権限不足やコード重複は api がエラーを返す。成功時は一覧へ redirect する。
+ */
 export async function createOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
@@ -65,8 +67,10 @@ export async function createOrgDepartmentAction(
   return { ok: true, error: null }
 }
 
-// 部署ノード変更 Server Action。code/order 必須、parent/manager は任意。
-// 権限不足・不存在・自身を親にする変更は api がエラーを返す。成功時は /org を revalidate する。
+/**
+ * 部署ノード変更 Server Action。code/order 必須、parent/manager は任意。
+ * 権限不足・不存在・自身を親にする変更は api がエラーを返す。成功時は /org を revalidate する。
+ */
 export async function updateOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
@@ -104,7 +108,7 @@ export async function updateOrgDepartmentAction(
   return { ok: true, error: null }
 }
 
-// 部署ノード削除 Server Action。code 必須。成功時は /org を revalidate する。
+/** 部署ノード削除 Server Action。code 必須。成功時は /org を revalidate する。 */
 export async function deleteOrgDepartmentAction(
   previousState: OrgDepartmentActionState,
   formData: FormData,
@@ -132,7 +136,7 @@ export async function deleteOrgDepartmentAction(
   return { ok: true, error: null }
 }
 
-// FormData 値を文字列へ。未入力や空白のみは null。
+/** FormData 値を文字列へ。未入力や空白のみは null。 */
 function toText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -141,7 +145,7 @@ function toText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// FormData 値を整数へ。未入力や不正値は null。
+/** FormData 値を整数へ。未入力や不正値は null。 */
 function toNumber(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string" || value === "") {
     return null

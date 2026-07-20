@@ -15,15 +15,13 @@ import {
 } from "@/infrastructure/iam/live-permission-guard"
 import { eq } from "drizzle-orm"
 
-// IAM のロールと、その permission 割当を扱う。動的ロールの CRUD と permission 一括置換を担う。
-
 export type RoleWithPermissions = {
   role: RoleRow
   permissionKeys: ReadonlyArray<string>
 }
 
 /**
- * roles と role_permissions を扱うリポジトリ。
+ * roles と role_permissions を扱うリポジトリ。動的ロールの CRUD と permission 一括置換を担う。
  */
 export class RoleRepository {
   constructor(private readonly c: Context) {

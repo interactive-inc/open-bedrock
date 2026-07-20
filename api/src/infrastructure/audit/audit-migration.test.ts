@@ -1,4 +1,4 @@
-import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { auditBatchDecisions, auditLogs } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"

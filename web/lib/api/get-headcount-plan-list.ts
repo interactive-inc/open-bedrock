@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /headcount-plans。人員計画一覧に実在籍数（active）を添えて返す（headcount_plan:read:all）。
+/** GET /headcount-plans。人員計画一覧に実在籍数（active）を添えて返す（headcount_plan:read:all）。 */
 export async function getHeadcountPlanList(query: { fiscalYear?: number }) {
   const client = await createClient()
 

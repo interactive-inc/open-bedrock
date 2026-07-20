@@ -5,7 +5,7 @@ import type {
   ResignationUpdateRequest,
 } from "@/lib/api/types/resignation-types"
 
-// PUT /resignations/:id。退職申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+/** PUT /resignations/:id。退職申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。 */
 export async function updateResignation(
   id: string,
   request: ResignationUpdateRequest,

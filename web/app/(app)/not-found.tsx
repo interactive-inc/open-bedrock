@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "ページが見つかりません" }
 
-// 保護領域内で notFound() が呼ばれた場合の 404 ページ。
+/** 保護領域内で notFound() が呼ばれた場合の 404 ページ。 */
 export default function AppNotFound() {
   return (
     <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center gap-6 text-center">

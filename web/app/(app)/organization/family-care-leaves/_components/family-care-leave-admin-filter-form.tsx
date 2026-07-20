@@ -15,7 +15,7 @@ const statusOptions = [
   { value: "cancelled", label: "取消" },
 ]
 
-// 全社の産休・育休・介護休業の申出一覧を絞り込むフォーム。GET で querystring を更新する。
+/** 全社の産休・育休・介護休業の申出一覧を絞り込むフォーム。GET で querystring を更新する。 */
 export function FamilyCareLeaveAdminFilterForm(props: Props) {
   const hasActiveFilter = props.statusValue !== "" || props.employeeIdValue !== ""
 

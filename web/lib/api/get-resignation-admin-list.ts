@@ -10,7 +10,7 @@ type Params = {
   offset?: number
 }
 
-// GET /resignations/admin。全社の退職手続きを横断で取得する。resignation:read:all が無いと 403。
+/** GET /resignations/admin。全社の退職手続きを横断で取得する。resignation:read:all が無いと 403。 */
 export async function getResignationAdminList(filter: ResignationAdminFilter, params: Params = {}) {
   const client = await createClient()
 

@@ -43,7 +43,7 @@ export default factory.createHandlers(
   },
 )
 
-// --stock を 0 以上の整数に変換する。未指定は null（在庫無制限）。
+/** --stock を 0 以上の整数に変換する。未指定は null（在庫無制限）。 */
 function toStock(raw: string | undefined): number | null | Error {
   if (raw === undefined) {
     return null

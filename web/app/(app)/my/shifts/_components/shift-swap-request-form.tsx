@@ -16,8 +16,10 @@ type Props = {
   employees: ReadonlyArray<{ code: string; name: string }>
 }
 
-// シフト交代の申請フォーム（本人向け）。交代相手・対象日・備考を native form で送る。
-// 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * シフト交代の申請フォーム（本人向け）。交代相手・対象日・備考を native form で送る。
+ * 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function ShiftSwapRequestForm(props: Props) {
   // action 実行時（送信時）に結果を見て toast する。レンダー中には副作用を起こさない。
   const action = useActionState(async (previousState: ShiftFormState, formData: FormData) => {

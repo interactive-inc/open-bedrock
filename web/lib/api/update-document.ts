@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { DocumentUpdateRequest } from "@/lib/api/types/document-types"
 
-// PUT /documents/:id。文書台帳のメタデータを更新する（document:manage）。
+/** PUT /documents/:id。文書台帳のメタデータを更新する（document:manage）。 */
 export async function updateDocument(id: number, request: DocumentUpdateRequest) {
   const client = await createClient()
 

@@ -58,7 +58,7 @@ export class PublishAnnouncement {
     return result
   }
 
-  // 公開されたアナウンスを全 active 従業員へ 1 通ずつ配信する。
+  /** 公開されたアナウンスを全 active 従業員へ 1 通ずつ配信する。 */
   private async notifyAllEmployees(announcement: Announcement): Promise<null | Error> {
     try {
       const recipients = await this.c.var.database

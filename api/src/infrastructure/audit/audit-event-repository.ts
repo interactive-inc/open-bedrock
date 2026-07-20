@@ -83,8 +83,10 @@ const SUMMARY_STORAGE_OK_SQL = `
   typeof(created_at) = 'integer'
 `
 
-// Exact summary reads return uppercase hex strings, so twice the stored text bytes plus a
-// conservative fixed envelope is a byte-faithful upper bound without invoking json_quote.
+/**
+ * Exact summary reads return uppercase hex strings, so twice the stored text bytes plus a
+ * conservative fixed envelope is a byte-faithful upper bound without invoking json_quote.
+ */
 const SUMMARY_WIRE_BYTES_SQL = `
   ${SUMMARY_ROW_WIRE_FIXED_BYTES} + 2 * (${SUMMARY_TEXT_RAW_BYTES_SQL}) +
   length(CAST(id AS BLOB)) +
@@ -165,7 +167,7 @@ const DETAIL_RAW_BYTES_SQL = `
   length(CAST(created_at AS BLOB))
 `
 
-// Normal detail reads return hex, whose payload is exactly two ASCII bytes per stored text byte.
+/** Normal detail reads return hex, whose payload is exactly two ASCII bytes per stored text byte. */
 const DETAIL_WIRE_BYTES_SQL = `
   ${DETAIL_ROW_WIRE_FIXED_BYTES} + 2 * (${DETAIL_TEXT_RAW_BYTES_SQL}) +
   length(CAST(id AS BLOB)) +
@@ -203,8 +205,10 @@ const DETAIL_COMPACT_STORAGE_OK_SQL = `
   ${DETAIL_TEXT_COLUMNS.map((column) => `${column}_layout_bytes >= -1`).join(" AND\n  ")}
 `
 
-// One compact raw row has 32 positional fields. This expression counts JSON array framing,
-// decimal integers, length sentinels and a transport margin; exact HEX bytes are added below.
+/**
+ * One compact raw row has 32 positional fields. This expression counts JSON array framing,
+ * decimal integers, length sentinels and a transport margin; exact HEX bytes are added below.
+ */
 const DETAIL_COMPACT_BASE_WIRE_BYTES_SQL = `
   ${2 + 31 + 4 + 1 + 64} +
   length(CAST(id AS BLOB)) +

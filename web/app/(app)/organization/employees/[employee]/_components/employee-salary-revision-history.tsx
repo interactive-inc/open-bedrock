@@ -13,8 +13,10 @@ type Props = {
   code: string
 }
 
-// 従業員の給与改定履歴セクション。最機微のため salary_revision:read:all が無いと api は 403 を返し、
-// その場合はセクション自体を描画しない（本人にも self 例外は無い）。
+/**
+ * 従業員の給与改定履歴セクション。最機微のため salary_revision:read:all が無いと api は 403 を返し、
+ * その場合はセクション自体を描画しない（本人にも self 例外は無い）。
+ */
 export async function EmployeeSalaryRevisionHistory(props: Props) {
   const revisions = await getSalaryRevisionList({ employeeCode: props.code })
 

@@ -13,7 +13,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: GradeActionState = { ok: false, error: null }
 
-// 等級作成フォーム。code/name/rank 必須、説明は任意。成功時は /grades へ戻す。
+/** 等級作成フォーム。code/name/rank 必須、説明は任意。成功時は /grades へ戻す。 */
 export function GradeCreateForm() {
   const router = useRouter()
 

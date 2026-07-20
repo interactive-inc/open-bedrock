@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /regulations/:code/archive。規程をアーカイブする（regulation:manage）。
+/** POST /regulations/:code/archive。規程をアーカイブする（regulation:manage）。 */
 export async function archiveRegulation(code: string) {
   const client = await createClient()
 

@@ -110,7 +110,7 @@ export class ShiftAssignmentRepository {
     }
   }
 
-  // 未公開（published_at IS NULL）の割当のみを公開済みにする。既に公開済みなら 0 行更新で null を返す。
+  /** 未公開（published_at IS NULL）の割当のみを公開済みにする。既に公開済みなら 0 行更新で null を返す。 */
   async markPublished(
     assignmentId: number,
     publishedAt: string,

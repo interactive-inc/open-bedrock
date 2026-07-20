@@ -10,10 +10,6 @@ import {
 } from "@/infrastructure/iam/live-permission-guard"
 import { eq } from "drizzle-orm"
 
-// 従業員に対応する account / password identity / 初期ロールを作成する。
-// 新規従業員登録(register-employee)が認証情報を identities へ書くために使う。
-// backfill(0005_iam_backfill.sql)のアプリ層版で、employees の認証列に依存しない。
-
 export type ProvisionInput = {
   employeeId: number
   email: string
@@ -57,6 +53,8 @@ export class RoleAssignmentGuardError extends Error {
 
 /**
  * 従業員のアカウント・identity・初期ロールを払い出す。
+ * 新規従業員登録(register-employee)が認証情報を identities へ書くために使う。
+ * backfill(0005_iam_backfill.sql)のアプリ層版で、employees の認証列に依存しない。
  */
 export class AccountProvisioner {
   constructor(private readonly c: Context) {

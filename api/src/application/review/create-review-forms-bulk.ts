@@ -73,7 +73,7 @@ export class CreateReviewFormsBulk {
     return created
   }
 
-  // 被評価者・評価者に実在しない社員 ID があれば 1 件返す。全て実在すれば null。
+  /** 被評価者・評価者に実在しない社員 ID があれば 1 件返す。全て実在すれば null。 */
   private async findMissingEmployeeId(
     forms: ReadonlyArray<BulkFormInput>,
   ): Promise<number | null | Error> {

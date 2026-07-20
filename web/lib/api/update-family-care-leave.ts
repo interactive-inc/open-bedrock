@@ -5,7 +5,7 @@ import type {
   FamilyCareLeaveUpdateRequest,
 } from "@/lib/api/types/family-care-leave-types"
 
-// PUT /family-care-leaves/:id。休業申出の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+/** PUT /family-care-leaves/:id。休業申出の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。 */
 export async function updateFamilyCareLeave(
   id: string,
   request: FamilyCareLeaveUpdateRequest,

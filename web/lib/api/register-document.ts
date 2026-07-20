@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { DocumentRegisterRequest } from "@/lib/api/types/document-types"
 
-// POST /documents。文書台帳へメタデータを登録する（document:manage）。
+/** POST /documents。文書台帳へメタデータを登録する（document:manage）。 */
 export async function registerDocument(request: DocumentRegisterRequest) {
   const client = await createClient()
 

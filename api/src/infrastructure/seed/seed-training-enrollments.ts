@@ -1,4 +1,4 @@
-// courseId は seed-training-courses、employeeId は seed-employees の id を指す。
+/** courseId は seed-training-courses、employeeId は seed-employees の id を指す。 */
 type SeedTrainingEnrollment = {
   id: number
   courseId: number

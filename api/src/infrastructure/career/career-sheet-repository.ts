@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 export class CareerSheetRepository {
   constructor(private readonly c: Context) {}
 
-  // 社員のキャリアシートを削除する。未登録でもエラーにしない。
+  /** 社員のキャリアシートを削除する。未登録でもエラーにしない。 */
   async deleteByEmployeeId(employeeId: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(careerSheets).where(eq(careerSheets.employeeId, employeeId))

@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input"
 
 const initialState: RoomCreateFormState = { ok: false, error: null }
 
-// 会議室登録フォーム。名称・定員・任意の所在地を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 会議室登録フォーム。名称・定員・任意の所在地を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function RoomCreateForm() {
   const router = useRouter()
 

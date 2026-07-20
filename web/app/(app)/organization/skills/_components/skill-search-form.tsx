@@ -8,8 +8,10 @@ type Props = {
   category: string | null
 }
 
-// スキル一覧の検索フォーム。GET メソッドの native form で searchParams を更新する。
-// 値の確定は URL に委ねるため Client 状態は持たない。
+/**
+ * スキル一覧の検索フォーム。GET メソッドの native form で searchParams を更新する。
+ * 値の確定は URL に委ねるため Client 状態は持たない。
+ */
 export function SkillSearchForm(props: Props) {
   return (
     <form method="get" action="/organization/skills" className="flex flex-wrap items-end gap-4">

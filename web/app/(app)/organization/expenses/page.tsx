@@ -28,7 +28,7 @@ const SORT_VALUES: ReadonlyArray<ExpenseAdminSort> = [
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の経費申請を横断で管理する画面。expense:read:all を持つロールのみ表示できる。
+/** 全社の経費申請を横断で管理する画面。expense:read:all を持つロールのみ表示できる。 */
 export default async function AdminExpensesPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

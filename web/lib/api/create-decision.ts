@@ -9,7 +9,7 @@ export type DecisionCreateRequest = {
   consequences?: string | null
 }
 
-// POST /decisions。意思決定記録を作成する。失敗時は Error。
+/** POST /decisions。意思決定記録を作成する。失敗時は Error。 */
 export async function createDecision(request: DecisionCreateRequest) {
   const client = await createClient()
 

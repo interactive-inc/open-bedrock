@@ -1,5 +1,5 @@
 import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageCertificateRequests", () => {

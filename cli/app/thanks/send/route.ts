@@ -41,7 +41,7 @@ export default factory.createHandlers(
   },
 )
 
-// --points を 0 以上の整数に変換する。未指定は null（メッセージのみの感謝）。
+/** --points を 0 以上の整数に変換する。未指定は null（メッセージのみの感謝）。 */
 function toPoints(raw: string | undefined): number | null | Error {
   if (raw === undefined) {
     return null

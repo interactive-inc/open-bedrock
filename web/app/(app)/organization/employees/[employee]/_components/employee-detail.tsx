@@ -23,9 +23,11 @@ type Props = {
   currentUserCode: string
 }
 
-// code 指定で従業員を取得し、詳細カードを描画する非同期 RSC。
-// 該当なしは notFound、取得失敗はエラーメッセージ。
-// permissions と現在のライフサイクル状態に応じて、編集・人事発令・アーカイブ導線を出す。
+/**
+ * code 指定で従業員を取得し、詳細カードを描画する非同期 RSC。
+ * 該当なしは notFound、取得失敗はエラーメッセージ。
+ * permissions と現在のライフサイクル状態に応じて、編集・人事発令・アーカイブ導線を出す。
+ */
 export async function EmployeeDetail(props: Props) {
   const [employee, lifecycleState, lifecycleEvents, lifecycleRequests, positions] =
     await Promise.all([

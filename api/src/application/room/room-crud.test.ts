@@ -11,8 +11,8 @@ import { GetRoomReservation } from "@/application/room/get-room-reservation"
 import { UpdateRoomReservation } from "@/application/room/update-room-reservation"
 import { CancelRoomReservation } from "@/application/room/cancel-room-reservation"
 import { ListMyRoomReservations } from "@/application/room/list-my-room-reservations"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import {
   ConflictError,
   ForbiddenError,
@@ -20,7 +20,7 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import type { Context } from "@/env"
 
 async function seedRoom(context: Context): Promise<Room> {

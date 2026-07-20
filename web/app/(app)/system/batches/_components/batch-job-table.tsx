@@ -15,8 +15,10 @@ type Props = {
   jobs: ReadonlyArray<BatchJobResponse>
 }
 
-// バッチジョブの状況をテーブル描画する表示専用コンポーネント。
-// ジョブ名 / 状態（バッジ）/ 最終実行（finished_at、無ければ started_at）を表示する。
+/**
+ * バッチジョブの状況をテーブル描画する表示専用コンポーネント。
+ * ジョブ名 / 状態（バッジ）/ 最終実行（finished_at、無ければ started_at）を表示する。
+ */
 export function BatchJobTable(props: Props) {
   return (
     <div className="overflow-x-auto">

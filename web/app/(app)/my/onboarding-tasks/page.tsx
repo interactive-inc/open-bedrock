@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export const metadata = { title: "自分のオンボーディング" }
 
-// 自分のオンボーディングタスク一覧画面（/onboarding/me）。
+/** 自分のオンボーディングタスク一覧画面（/onboarding/me）。 */
 export default function OnboardingMePage() {
   return (
     <div className="flex flex-col gap-6">

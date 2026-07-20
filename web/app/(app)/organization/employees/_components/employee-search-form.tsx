@@ -14,8 +14,10 @@ const statusOptions = [
   { value: "retired", label: "退職" },
 ]
 
-// 従業員一覧の絞り込みフォーム。
-// method=get で /employees に submit し、searchParams を更新する（クライアント JS 不要）。
+/**
+ * 従業員一覧の絞り込みフォーム。
+ * method=get で /employees に submit し、searchParams を更新する（クライアント JS 不要）。
+ */
 export function EmployeeSearchForm(props: Props) {
   return (
     <form method="get" action="/organization/employees">

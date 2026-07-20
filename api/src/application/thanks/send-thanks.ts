@@ -141,7 +141,7 @@ export class SendThanks {
     return created
   }
 
-  // 当月の原資レコードが存在しなければ既定額で遅延生成する（batch 前に存在を保証する）。
+  /** 当月の原資レコードが存在しなければ既定額で遅延生成する（batch 前に存在を保証する）。 */
   private async ensureBudget(props: {
     senderEmployeeId: number
     period: string
@@ -160,10 +160,12 @@ export class SendThanks {
       : null
   }
 
-  // ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
-  // batch は暗黙のトランザクションで包まれるため、INSERT が失敗しても consume は自動ロールバックされる。
-  // ポイント付きの場合、INSERT は「consume UPDATE が 1 行以上更新した」ことを条件に実行する
-  // （INSERT ... SELECT + EXISTS で条件分岐し、残量不足なら 0 行挿入で済ませる）。
+  /**
+   * ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
+   * batch は暗黙のトランザクションで包まれるため、INSERT が失敗しても consume は自動ロールバックされる。
+   * ポイント付きの場合、INSERT は「consume UPDATE が 1 行以上更新した」ことを条件に実行する
+   * （INSERT ... SELECT + EXISTS で条件分岐し、残量不足なら 0 行挿入で済ませる）。
+   */
   private async consumeAndInsert(props: {
     thanks: Thanks
     senderEmployeeId: number

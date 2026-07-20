@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /assets/:code/lend。物品を従業員へ貸与する（管理者ロールのみ）。
+/** POST /assets/:code/lend。物品を従業員へ貸与する（管理者ロールのみ）。 */
 export async function lendAsset(code: string, employeeCode: string) {
   const client = await createClient()
 

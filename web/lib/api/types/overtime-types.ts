@@ -1,10 +1,7 @@
-// api/src/interface/attendance/overtime-summary のレスポンスと同形の手書き type。
-// api と疎結合にするため api 側からは import しない（snake_case で受ける）。
-
-// 時間外の集計の参照範囲。reports=配下、all=全社。未指定は本人のみ。
+/** 時間外の集計の参照範囲。reports=配下、all=全社。未指定は本人のみ。 */
 export type OvertimeScope = "reports" | "all"
 
-// 従業員ごとの時間外の参考集計。overtime_minutes は 1 日 8 時間×営業日を超えた分（法定判定ではない）。
+/** 従業員ごとの時間外の参考集計。overtime_minutes は 1 日 8 時間×営業日を超えた分（法定判定ではない）。 */
 export type OvertimeSummaryEntry = {
   employee_id: number
   work_days: number
@@ -12,7 +9,7 @@ export type OvertimeSummaryEntry = {
   overtime_minutes: number
 }
 
-// GET /attendance/overtime-summary のレスポンス。note は「法定判定ではない参考集計」である旨の説明。
+/** GET /attendance/overtime-summary のレスポンス。note は「法定判定ではない参考集計」である旨の説明。 */
 export type OvertimeSummaryResponse = {
   month: string
   business_days: number
@@ -21,7 +18,7 @@ export type OvertimeSummaryResponse = {
   note: string
 }
 
-// GET /attendance/overtime-summary のクエリ。null のキーは送信されない。
+/** GET /attendance/overtime-summary のクエリ。null のキーは送信されない。 */
 export type OvertimeSummaryQuery = {
   month: string | null
   scope: OvertimeScope | null

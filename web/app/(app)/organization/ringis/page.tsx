@@ -30,7 +30,7 @@ const SORT_VALUES: ReadonlyArray<RingiAdminSort> = [
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 全社の稟議を横断で管理する画面。ringi:read:all を持つロールのみ表示できる。
+/** 全社の稟議を横断で管理する画面。ringi:read:all を持つロールのみ表示できる。 */
 export default async function AdminRingiPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

@@ -1,9 +1,7 @@
-// api の app-schemas（zAppAnnouncement ほか）と同形の手書き type（api と疎結合に保つため別定義）。
-
-// アナウンスの状態。draft=下書き, published=公開, archived=アーカイブ。
+/** アナウンスの状態。draft=下書き, published=公開, archived=アーカイブ。 */
 export type AnnouncementStatus = "draft" | "published" | "archived"
 
-// GET /announcements の各要素（API は snake_case で返す）。
+/** GET /announcements の各要素（API は snake_case で返す）。 */
 export type AnnouncementListItem = {
   id: number
   title: string
@@ -13,7 +11,7 @@ export type AnnouncementListItem = {
   created_at: string
 }
 
-// GET /announcements/:id の詳細（本文を含む）。
+/** GET /announcements/:id の詳細（本文を含む）。 */
 export type AnnouncementResponse = {
   id: number
   title: string
@@ -24,7 +22,7 @@ export type AnnouncementResponse = {
   created_at: string
 }
 
-// POST /announcements のリクエスト body。
+/** POST /announcements のリクエスト body。 */
 export type AnnouncementCreateRequest = {
   title: string
   body_md: string

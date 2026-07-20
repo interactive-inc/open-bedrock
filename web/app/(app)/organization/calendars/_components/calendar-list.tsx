@@ -18,8 +18,10 @@ type Props = {
   canManage: boolean
 }
 
-// 指定年の会社カレンダー（会社休日・振替出勤日）一覧をサーバ側 fetch して描画する非同期 RSC。
-// canManage が true のときのみ削除ボタンの列を出す。
+/**
+ * 指定年の会社カレンダー（会社休日・振替出勤日）一覧をサーバ側 fetch して描画する非同期 RSC。
+ * canManage が true のときのみ削除ボタンの列を出す。
+ */
 export async function CalendarList(props: Props) {
   const days = await getCalendar(props.year)
 

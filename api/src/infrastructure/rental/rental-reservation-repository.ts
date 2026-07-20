@@ -6,7 +6,7 @@ import { and, asc, eq, gte, lte, ne, sql } from "drizzle-orm"
 export class RentalReservationRepository {
   constructor(private readonly c: Context) {}
 
-  // 同一品名・期間が重複する requested 予約を返す。excludeId を指定すると自身を除外できる。
+  /** 同一品名・期間が重複する requested 予約を返す。excludeId を指定すると自身を除外できる。 */
   async findOverlapping(query: {
     itemName: string
     startDate: string
@@ -33,7 +33,7 @@ export class RentalReservationRepository {
     }
   }
 
-  // 申請者本人の予約を開始日の昇順で返す。
+  /** 申請者本人の予約を開始日の昇順で返す。 */
   async findByRequesterId(props: {
     requesterId: number
     limit: number
@@ -54,7 +54,7 @@ export class RentalReservationRepository {
     }
   }
 
-  // 予約 id で1件取得する。存在しなければ null。
+  /** 予約 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<RentalReservation | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -89,8 +89,10 @@ export class RentalReservationRepository {
     }
   }
 
-  // 重複予約がなければ INSERT し、競合があれば null を返す。チェックと INSERT をアトミックに行う。
-  // 重複判定は findOverlapping と同じく inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+  /**
+   * 重複予約がなければ INSERT し、競合があれば null を返す。チェックと INSERT をアトミックに行う。
+   * 重複判定は findOverlapping と同じく inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+   */
   async createIfNoOverlap(
     reservation: RentalReservation,
   ): Promise<RentalReservation | null | Error> {
@@ -119,8 +121,10 @@ export class RentalReservationRepository {
     }
   }
 
-  // 重複予約がなければ UPDATE し、競合があれば null を返す。チェックと UPDATE をアトミックに行う。
-  // 自身は重複判定から除外し、重複判定は inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+  /**
+   * 重複予約がなければ UPDATE し、競合があれば null を返す。チェックと UPDATE をアトミックに行う。
+   * 自身は重複判定から除外し、重複判定は inclusive 比較（start_date <= endDate AND end_date >= startDate）。
+   */
   async updateIfNoOverlap(
     reservation: RentalReservation,
   ): Promise<RentalReservation | null | Error> {
@@ -153,7 +157,7 @@ export class RentalReservationRepository {
     }
   }
 
-  // 予約の品名・期間・用途を更新する。status が requested でなければ 0 行更新となり null を返す。
+  /** 予約の品名・期間・用途を更新する。status が requested でなければ 0 行更新となり null を返す。 */
   async update(reservation: RentalReservation): Promise<RentalReservation | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -180,7 +184,7 @@ export class RentalReservationRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -205,8 +209,10 @@ export class RentalReservationRepository {
     }
   }
 
-  // 予約を削除する。status が requested の行のみ対象とする。
-  // 0 行削除（対象なし or status が requested でない）なら null を返す。
+  /**
+   * 予約を削除する。status が requested の行のみ対象とする。
+   * 0 行削除（対象なし or status が requested でない）なら null を返す。
+   */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

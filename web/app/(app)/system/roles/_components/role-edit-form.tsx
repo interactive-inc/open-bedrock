@@ -25,7 +25,7 @@ type Props = {
 
 const initialState: RoleUpdateFormState = { ok: false, error: null }
 
-// ロール編集フォーム。現在の名前・説明・権限を初期値に表示し、変更を PATCH する。
+/** ロール編集フォーム。現在の名前・説明・権限を初期値に表示し、変更を PATCH する。 */
 export function RoleEditForm(props: Props) {
   const router = useRouter()
 

@@ -8,7 +8,7 @@ type Params = {
   sort?: ApplicationInboxSort
 }
 
-// GET /applications/inbox。承認者向けの承認待ち申請一覧。data と total を併せて返す。
+/** GET /applications/inbox。承認者向けの承認待ち申請一覧。data と total を併せて返す。 */
 export async function getApplicationInbox(params: Params = {}) {
   const client = await createClient()
 

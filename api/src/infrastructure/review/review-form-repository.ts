@@ -5,7 +5,7 @@ import { and, asc, eq, inArray, ne } from "drizzle-orm"
 
 export type CycleNotOpenError = { reason: "cycle_not_open" }
 
-// 一括作成する評価フォームの下書き（未採番）。
+/** 一括作成する評価フォームの下書き（未採番）。 */
 export type ReviewFormDraft = {
   cycleId: number
   subjectEmployeeId: number
@@ -16,7 +16,7 @@ export type ReviewFormDraft = {
 export class ReviewFormRepository {
   constructor(private readonly c: Context) {}
 
-  // サイクル内の被評価者のフォームを id 昇順で返す。集計・本人開示の判定に使う。
+  /** サイクル内の被評価者のフォームを id 昇順で返す。集計・本人開示の判定に使う。 */
   async findByCycleAndSubject(props: {
     cycleId: number
     subjectEmployeeId: number
@@ -39,7 +39,7 @@ export class ReviewFormRepository {
     }
   }
 
-  // 被評価者のフォームを id 昇順で返す。cycleId 指定時はそのサイクルに絞る。
+  /** 被評価者のフォームを id 昇順で返す。cycleId 指定時はそのサイクルに絞る。 */
   async findBySubject(props: {
     subjectEmployeeId: number
     cycleId: number | null
@@ -69,7 +69,7 @@ export class ReviewFormRepository {
     }
   }
 
-  // 一括作成。新規作成のフォームは pending・hidden で始める（確定まで本人非公開）。
+  /** 一括作成。新規作成のフォームは pending・hidden で始める（確定まで本人非公開）。 */
   async createMany(
     drafts: ReadonlyArray<ReviewFormDraft>,
   ): Promise<ReadonlyArray<ReviewForm> | Error> {
@@ -102,7 +102,7 @@ export class ReviewFormRepository {
     }
   }
 
-  // サイクル内の全フォームを一括開示する。更新件数を返す。
+  /** サイクル内の全フォームを一括開示する。更新件数を返す。 */
   async discloseByCycleId(cycleId: number): Promise<number | Error> {
     try {
       const rows = await this.c.var.database

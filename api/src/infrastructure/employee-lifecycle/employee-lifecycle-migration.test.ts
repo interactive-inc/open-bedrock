@@ -1,5 +1,5 @@
-import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
-import { loadSchema } from "@/interface/shared/test/load-schema"
+import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
+import { loadSchema } from "@/interface/test-helpers/load-schema"
 import {
   applicationCompletionBindings,
   applicationSubjects,

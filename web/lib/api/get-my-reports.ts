@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /me/reports を session トークン付きで呼び、本人の直属部下一覧を返す。
+/** GET /me/reports を session トークン付きで呼び、本人の直属部下一覧を返す。 */
 export async function getMyReports() {
   const client = await createClient()
 

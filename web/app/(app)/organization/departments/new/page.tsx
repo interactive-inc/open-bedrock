@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "部署作成" }
 
-// 部署ノード作成画面。作成後は /org/departments へ redirect する（org:manage が必要）。
+/** 部署ノード作成画面。作成後は /org/departments へ redirect する（org:manage が必要）。 */
 export default async function OrgDepartmentNewPage() {
   await requirePermission("org:manage")
 

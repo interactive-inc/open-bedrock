@@ -16,14 +16,16 @@ import {
 } from "@/lib/form/constraints"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type BusinessTripActionState = {
   ok: boolean
   error: string | null
 }
 
-// 人事が出張申請を承認する Server Action。business_trip_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が出張申請を承認する Server Action。business_trip_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function approveBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
@@ -51,8 +53,10 @@ export async function approveBusinessTripAction(
   return { ok: true, error: null }
 }
 
-// 人事が出張申請を却下する Server Action。business_trip_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が出張申請を却下する Server Action。business_trip_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function rejectBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
@@ -80,7 +84,7 @@ export async function rejectBusinessTripAction(
   return { ok: true, error: null }
 }
 
-// id 用の FormData 値を取り出す。未入力は null。
+/** id 用の FormData 値を取り出す。未入力は null。 */
 function toBusinessTripIdText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -89,8 +93,10 @@ function toBusinessTripIdText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// 出張申請作成 Server Action。destination/start_date/end_date/purpose 必須、estimated_cost は任意。
-// 成功時は /business-trips を revalidate して一覧へ反映する。
+/**
+ * 出張申請作成 Server Action。destination/start_date/end_date/purpose 必須、estimated_cost は任意。
+ * 成功時は /business-trips を revalidate して一覧へ反映する。
+ */
 export async function createBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
@@ -114,7 +120,7 @@ export async function createBusinessTripAction(
   return { ok: true, error: null }
 }
 
-// 出張申請変更 Server Action。business_trip_id 必須。本人以外の変更は api がエラーを返す。
+/** 出張申請変更 Server Action。business_trip_id 必須。本人以外の変更は api がエラーを返す。 */
 export async function updateBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
@@ -144,7 +150,7 @@ export async function updateBusinessTripAction(
   return { ok: true, error: null }
 }
 
-// 出張申請取消 Server Action。business_trip_id 必須。成功時は /business-trips を revalidate する。
+/** 出張申請取消 Server Action。business_trip_id 必須。成功時は /business-trips を revalidate する。 */
 export async function cancelBusinessTripAction(
   previousState: BusinessTripActionState,
   formData: FormData,
@@ -176,7 +182,7 @@ type TripFields = {
   estimated_cost: number | null
 }
 
-// FormData から出張申請の共通フィールドを取り出して検証する。不正時は Error。
+/** FormData から出張申請の共通フィールドを取り出して検証する。不正時は Error。 */
 function toTripFields(formData: FormData): TripFields | Error {
   const destination = toRequiredText(formData.get("destination"), {
     label: "行き先",

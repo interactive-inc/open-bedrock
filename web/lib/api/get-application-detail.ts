@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /applications/:id。申請 1 件の詳細（payload を含む）。
+/** GET /applications/:id。申請 1 件の詳細（payload を含む）。 */
 export async function getApplicationDetail(id: number) {
   const client = await createClient()
 

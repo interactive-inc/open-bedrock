@@ -19,8 +19,10 @@ const initialState: ReviewFormState = { ok: false, error: null }
 
 const REVIEWER_TYPES = ["self", "manager", "peer", "subordinate"] as const
 
-// 評価フォームの一括作成フォーム（360度評価・特権ロール向け）。
-// サイクル・被評価者・評価者・評価者種別を選び、1 件のフォームを作成する。作成直後は本人非公開（hidden）。
+/**
+ * 評価フォームの一括作成フォーム（360度評価・特権ロール向け）。
+ * サイクル・被評価者・評価者・評価者種別を選び、1 件のフォームを作成する。作成直後は本人非公開（hidden）。
+ */
 export function ReviewFormsBulkCreateForm(props: Props) {
   const action = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
     const next = await createReviewFormsBulkAction(previousState, formData)

@@ -18,8 +18,10 @@ type Props = {
   searchParams: Promise<{ month?: string; scope?: string }>
 }
 
-// 時間外の集計画面。月・範囲で絞り込み、従業員ごとの参考集計を表示する RSC。
-// 範囲(scope)は権限に応じて出し分ける。集計は法定判定ではない参考値。
+/**
+ * 時間外の集計画面。月・範囲で絞り込み、従業員ごとの参考集計を表示する RSC。
+ * 範囲(scope)は権限に応じて出し分ける。集計は法定判定ではない参考値。
+ */
 export default async function OvertimeSummaryPage(props: Props) {
   const searchParams = await props.searchParams
 
@@ -61,7 +63,7 @@ export default async function OvertimeSummaryPage(props: Props) {
   )
 }
 
-// searchParams の scope を reports/all のみ許容し、それ以外は null（本人のみ）にする。
+/** searchParams の scope を reports/all のみ許容し、それ以外は null（本人のみ）にする。 */
 function toScope(raw: string | undefined): OvertimeScope | null {
   if (raw === "reports" || raw === "all") {
     return raw

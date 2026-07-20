@@ -8,7 +8,7 @@ import { count, desc, eq } from "drizzle-orm"
 export class EmployeeGradeRepository {
   constructor(private readonly c: Context) {}
 
-  // 社員の等級割当履歴を発効日の降順で返す。
+  /** 社員の等級割当履歴を発効日の降順で返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number

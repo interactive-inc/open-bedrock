@@ -8,7 +8,7 @@ import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint
 export class SalaryRevisionRepository {
   constructor(private readonly c: Context) {}
 
-  // 社員の給与改定履歴を適用日の降順で返す。
+  /** 社員の給与改定履歴を適用日の降順で返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number

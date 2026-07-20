@@ -16,7 +16,7 @@ export type RingiDecisionFormState = {
   error: string | null
 }
 
-// 稟議起案の Server Action。useActionState から呼ばれる。
+/** 稟議起案の Server Action。useActionState から呼ばれる。 */
 export async function submitRingiAction(
   previousState: RingiSubmitFormState,
   formData: FormData,
@@ -69,8 +69,10 @@ export async function submitRingiAction(
   return { ok: true, error: null }
 }
 
-// 稟議承認の Server Action。ringi_id は hidden フィールドから受け取る。
-// 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+/**
+ * 稟議承認の Server Action。ringi_id は hidden フィールドから受け取る。
+ * 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+ */
 export async function approveRingiAction(
   previousState: RingiDecisionFormState,
   formData: FormData,
@@ -98,8 +100,10 @@ export async function approveRingiAction(
   return { ok: true, error: null }
 }
 
-// 稟議却下の Server Action。ringi_id は hidden フィールドから受け取る。
-// 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+/**
+ * 稟議却下の Server Action。ringi_id は hidden フィールドから受け取る。
+ * 承認者本人かどうかの判定は api 側の権限判定に委ね、ここでは事前チェックしない。
+ */
 export async function rejectRingiAction(
   previousState: RingiDecisionFormState,
   formData: FormData,

@@ -35,7 +35,7 @@ type Props = {
   certificateRequests: ReadonlyArray<CertificateRequestResponse>
 }
 
-// 自分の証明書発行依頼一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。
+/** 自分の証明書発行依頼一覧。各行に変更（Dialog フォーム）と取消ボタンを置く表示コンポーネント。 */
 export function MyCertificateRequestsList(props: Props) {
   if (props.certificateRequests.length === 0) {
     return <EmptyState title="証明書発行依頼はありません" />
@@ -83,7 +83,7 @@ export function MyCertificateRequestsList(props: Props) {
   )
 }
 
-// 証明書発行依頼変更フォームを Dialog で開く。種別・提出先・希望日・備考を編集して送信する。
+/** 証明書発行依頼変更フォームを Dialog で開く。種別・提出先・希望日・備考を編集して送信する。 */
 function UpdateCertificateRequestDialog(props: { certificateRequest: CertificateRequestResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -162,7 +162,7 @@ function UpdateCertificateRequestDialog(props: { certificateRequest: Certificate
   )
 }
 
-// 証明書発行依頼取消ボタン。Server Action を呼び、成功時はリストが revalidate される。
+/** 証明書発行依頼取消ボタン。Server Action を呼び、成功時はリストが revalidate される。 */
 function CancelCertificateRequestButton(props: { certificateRequestId: string }) {
   const [_state, formAction, pending] = useFormAction(
     cancelCertificateRequestAction,

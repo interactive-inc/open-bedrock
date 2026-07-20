@@ -23,7 +23,7 @@ export type RoomDeleteFormState = {
   error: string | null
 }
 
-// FormData の文字列を正の整数へ検証付きで変換する。不正なら null。
+/** FormData の文字列を正の整数へ検証付きで変換する。不正なら null。 */
 function toCapacity(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
     return null
@@ -38,8 +38,10 @@ function toCapacity(value: FormDataEntryValue | null): number | null {
   return parsed
 }
 
-// 会議室登録の Server Action。location の空文字は値なし扱いにする。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * 会議室登録の Server Action。location の空文字は値なし扱いにする。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function createRoomAction(
   previousState: RoomCreateFormState,
   formData: FormData,
@@ -80,8 +82,10 @@ export async function createRoomAction(
   return { ok: true, error: null }
 }
 
-// 会議室編集の Server Action。id は hidden、名称・定員・所在地を更新する。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * 会議室編集の Server Action。id は hidden、名称・定員・所在地を更新する。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function updateRoomAction(
   previousState: RoomUpdateFormState,
   formData: FormData,
@@ -128,8 +132,10 @@ export async function updateRoomAction(
   return { ok: true, error: null }
 }
 
-// 会議室削除の Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
-// Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * 会議室削除の Server Action。id は hidden から受け取る。成功時は一覧へ遷移する。
+ * Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function deleteRoomAction(
   previousState: RoomDeleteFormState,
   formData: FormData,

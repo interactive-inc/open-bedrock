@@ -3,10 +3,6 @@ import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 
-// 全社申請一覧の絞り込みフォーム。GET submit で searchParams を更新する（クライアント JS 不要）。
-// applicant_id は EmployeeCombobox でなく数値入力で受ける（詳細画面「この人の申請」導線からは
-// searchParams 経由で流入する使い方を想定し、明示的にリセットもしやすい）。
-
 type TemplateOption = {
   code: string
   name: string
@@ -28,6 +24,11 @@ const statusOptions = [
   { value: "rejected", label: "却下" },
 ]
 
+/**
+ * 全社申請一覧の絞り込みフォーム。GET submit で searchParams を更新する（クライアント JS 不要）。
+ * applicant_id は EmployeeCombobox でなく数値入力で受ける（詳細画面「この人の申請」導線からは
+ * searchParams 経由で流入する使い方を想定し、明示的にリセットもしやすい）
+ */
 export function AdminApplicationsFilterForm(props: Props) {
   const hasActiveFilter =
     props.statusValue !== "" ||

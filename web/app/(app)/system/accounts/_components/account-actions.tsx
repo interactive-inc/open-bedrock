@@ -30,7 +30,7 @@ type RevokeProps = {
   roleKey: string
 }
 
-// アカウントから特定ロールを剥奪するボタン。
+/** アカウントから特定ロールを剥奪するボタン。 */
 export function RevokeRoleButton(props: RevokeProps) {
   async function reduce(
     previousState: AccountActionFormState,
@@ -72,7 +72,7 @@ type StatusProps = {
   status: string
 }
 
-// アカウントを停止/有効化するボタン。active なら停止、それ以外は有効化を出す。
+/** アカウントを停止/有効化するボタン。active なら停止、それ以外は有効化を出す。 */
 export function AccountStatusButton(props: StatusProps) {
   async function reduce(
     previousState: AccountActionFormState,
@@ -143,7 +143,7 @@ type ResetProps = {
   accountId: number
 }
 
-// アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。
+/** アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。 */
 export function ResetPasswordButton(props: ResetProps) {
   async function reduce(
     previousState: AccountActionFormState,

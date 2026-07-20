@@ -62,7 +62,7 @@ type TableProps = {
   fiscalPeriod: string
 }
 
-// GET /budgets/summary を認証付きで取得して部署ごとの消化状況テーブルを描画する非同期 RSC。
+/** GET /budgets/summary を認証付きで取得して部署ごとの消化状況テーブルを描画する非同期 RSC。 */
 async function BudgetSummaryTable(props: TableProps) {
   const rows = await getBudgetSummary(props.fiscalPeriod)
 

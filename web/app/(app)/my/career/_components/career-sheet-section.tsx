@@ -3,8 +3,10 @@ import { getCareerSheet } from "@/lib/api/get-career-sheet"
 import { CareerSheetForm } from "@/app/(app)/my/career/_components/career-sheet-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-// 本人のキャリアシートをサーバ取得して編集フォームを描画する非同期 RSC。
-// 未作成時 API は空シートを返すため、取得成功＝常にフォーム表示。
+/**
+ * 本人のキャリアシートをサーバ取得して編集フォームを描画する非同期 RSC。
+ * 未作成時 API は空シートを返すため、取得成功＝常にフォーム表示。
+ */
 export async function CareerSheetSection() {
   const sheet = await getCareerSheet()
 

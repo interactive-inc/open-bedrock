@@ -1,9 +1,9 @@
 import { ProcessLifecycleOutbox } from "@/application/employee-lifecycle/process-lifecycle-outbox"
 import { UpdateLifecycleTemplateBinding } from "@/application/onboarding/update-lifecycle-template-binding"
 import { RemoveLifecycleTemplateBinding } from "@/application/onboarding/remove-lifecycle-template-binding"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { ApplicationError, ForbiddenError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

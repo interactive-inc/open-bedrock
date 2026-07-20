@@ -477,8 +477,10 @@ base.onError(async (error, c) => {
   return c.text(error instanceof Error ? error.message : String(error), 500)
 })
 
-// すべて POST で登録する。位置引数は path param、`--flag value` は JSON body。
-// ファイル構造（routes/<path>/route.ts、Next.js App Router 記法）に対応する。
+/**
+ * すべて POST で登録する。位置引数は path param、`--flag value` は JSON body。
+ * ファイル構造（routes/<path>/route.ts、Next.js App Router 記法）に対応する。
+ */
 const routes = base
 
 routes.post("/login", ...loginHandler)
@@ -825,7 +827,6 @@ routes.post("/review/cycle/delete", ...reviewCycleDeleteHandler)
 routes.post("/review/cycle/open", ...reviewCycleOpenHandler)
 routes.post("/review/cycle/close", ...reviewCycleCloseHandler)
 
-// #100: 未登録だったルートを追加（ファイル構造から POST パスを導出）
 routes.post("/1on1/delete", ...cmd1on1DeleteHandler)
 routes.post("/1on1/edit", ...cmd1on1EditHandler)
 routes.post("/1on1/mine", ...cmd1on1MineHandler)

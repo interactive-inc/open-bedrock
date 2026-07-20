@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { InboxCounts } from "@/lib/api/types/inbox-types"
 
-// GET /inbox/counts。受信箱ごとの未処理件数を取得する。
+/** GET /inbox/counts。受信箱ごとの未処理件数を取得する。 */
 export async function getInboxCounts(): Promise<InboxCounts | Error> {
   const client = await createClient()
 

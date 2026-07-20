@@ -9,7 +9,7 @@ import { notFound } from "next/navigation"
 
 export const metadata = { title: "従業員登録" }
 
-// 従業員登録画面。フォームは Client Component に切り出し、Server Action で POST /employees する。
+/** 従業員登録画面。フォームは Client Component に切り出し、Server Action で POST /employees する。 */
 export default async function EmployeeNewPage() {
   const currentUser = await getMe()
 

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// 本人のキャリアシートを取得する。GET /career/sheet/me。
+/** 本人のキャリアシートを取得する。GET /career/sheet/me。 */
 export async function getCareerSheet() {
   const client = await createClient()
 

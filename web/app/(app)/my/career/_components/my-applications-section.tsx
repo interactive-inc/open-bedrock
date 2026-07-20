@@ -3,7 +3,7 @@ import { getCareerPostings } from "@/lib/api/get-career-postings"
 import { listMyCareerApplications } from "@/lib/api/list-my-career-applications"
 import { MyApplicationsList } from "@/app/(app)/my/career/_components/my-applications-list"
 
-// 自分の公募応募を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分の公募応募を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyApplicationsSection() {
   const applications = await listMyCareerApplications()
 

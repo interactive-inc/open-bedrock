@@ -68,8 +68,10 @@ export class TrainingCourseRepository {
     }
   }
 
-  // 研修コースの内容と状態を更新する。code をキーに更新し、更新後の行を返す。
-  // 0 行更新（該当なし）の場合は null を返す。
+  /**
+   * 研修コースの内容と状態を更新する。code をキーに更新し、更新後の行を返す。
+   * 0 行更新（該当なし）の場合は null を返す。
+   */
   async update(trainingCourse: TrainingCourse): Promise<TrainingCourse | null | Error> {
     try {
       const rows = await this.c.var.database

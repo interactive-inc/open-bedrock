@@ -11,7 +11,7 @@ export type LicenseCreateRequest = {
   note?: string | null
 }
 
-// POST /licenses。ライセンス台帳を新規登録する。失敗時は Error。
+/** POST /licenses。ライセンス台帳を新規登録する。失敗時は Error。 */
 export async function createLicense(request: LicenseCreateRequest) {
   const client = await createClient()
 

@@ -24,9 +24,11 @@ export type AssignState = {
   message: string | null
 }
 
-// オンボーディング割当の Server Action。useActionState から呼ばれる。
-// 成功時は employee 画面を再検証し、結果メッセージを state に返す。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * オンボーディング割当の Server Action。useActionState から呼ばれる。
+ * 成功時は employee 画面を再検証し、結果メッセージを state に返す。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function assignOnboardingAction(
   previousState: AssignState,
   formData: FormData,
@@ -69,8 +71,10 @@ export type CompleteState = {
   message: string | null
 }
 
-// タスク完了の Server Action。useActionState から呼ばれる。
-// taskId は hidden input で受け取り、成功時に自分のタスク画面を再検証する。
+/**
+ * タスク完了の Server Action。useActionState から呼ばれる。
+ * taskId は hidden input で受け取り、成功時に自分のタスク画面を再検証する。
+ */
 export async function completeOnboardingTaskAction(
   previousState: CompleteState,
   formData: FormData,
@@ -102,8 +106,10 @@ export async function completeOnboardingTaskAction(
   return { ok: true, message: `「${task.title}」を完了しました` }
 }
 
-// タスク完了取り消しの Server Action。task_id を hidden input で受け取る。
-// 成功時に自分のタスク画面と社員画面を再検証する。
+/**
+ * タスク完了取り消しの Server Action。task_id を hidden input で受け取る。
+ * 成功時に自分のタスク画面と社員画面を再検証する。
+ */
 export async function uncompleteOnboardingTaskAction(
   previousState: CompleteState,
   formData: FormData,
@@ -140,9 +146,11 @@ export type AssignmentMutationState = {
   message: string | null
 }
 
-// 割り当ての割当日を変更する Server Action。assignment_id と assigned_at を受け取る。
-// 成功時に該当社員の画面を再検証する。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * 割り当ての割当日を変更する Server Action。assignment_id と assigned_at を受け取る。
+ * 成功時に該当社員の画面を再検証する。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function rescheduleOnboardingAssignmentAction(
   previousState: AssignmentMutationState,
   formData: FormData,
@@ -188,8 +196,10 @@ export async function rescheduleOnboardingAssignmentAction(
   return { ok: true, message: "割当日を変更しました" }
 }
 
-// 割り当てを取り消す Server Action。assignment_id を受け取り、成功時に社員画面を再検証する。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * 割り当てを取り消す Server Action。assignment_id を受け取り、成功時に社員画面を再検証する。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function cancelOnboardingAssignmentAction(
   previousState: AssignmentMutationState,
   formData: FormData,
@@ -234,7 +244,7 @@ export type TemplateMutationState = {
   message: string | null
 }
 
-// kind の文字列を join / leave に正規化する。不正値は null。
+/** kind の文字列を join / leave に正規化する。不正値は null。 */
 function parseKind(value: FormDataEntryValue | null): OnboardingKind | null {
   if (value === "join") {
     return "join"
@@ -247,7 +257,7 @@ function parseKind(value: FormDataEntryValue | null): OnboardingKind | null {
   return null
 }
 
-// FormData から code / name / kind / description を取り出す。不足時は null。
+/** FormData から code / name / kind / description を取り出す。不足時は null。 */
 function readTemplateForm(formData: FormData): {
   code: string
   name: string
@@ -278,8 +288,10 @@ function readTemplateForm(formData: FormData): {
   }
 }
 
-// テンプレート作成の Server Action（管理権限）。成功時に一覧を再検証する。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * テンプレート作成の Server Action（管理権限）。成功時に一覧を再検証する。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function createOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,
@@ -309,8 +321,10 @@ export async function createOnboardingTemplateAction(
   return { ok: true, message: `${created.name} を作成しました` }
 }
 
-// テンプレート変更の Server Action（管理権限）。code は hidden input で受け取り変更しない。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * テンプレート変更の Server Action（管理権限）。code は hidden input で受け取り変更しない。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function updateOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,
@@ -344,8 +358,10 @@ export async function updateOnboardingTemplateAction(
   return { ok: true, message: `${updated.name} を変更しました` }
 }
 
-// テンプレート削除の Server Action（管理権限）。code を hidden input で受け取る。
-// Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+/**
+ * テンプレート削除の Server Action（管理権限）。code を hidden input で受け取る。
+ * Server Action は直接呼べるため認証と権限を二重に検査する（defense-in-depth）。
+ */
 export async function deleteOnboardingTemplateAction(
   previousState: TemplateMutationState,
   formData: FormData,

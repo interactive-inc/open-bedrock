@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// PUT /onboarding/assignments/:id。割当日を変更する。特権ロールのみ。
+/** PUT /onboarding/assignments/:id。割当日を変更する。特権ロールのみ。 */
 export async function updateOnboardingAssignment(id: number, assignedAt: string) {
   const client = await createClient()
 

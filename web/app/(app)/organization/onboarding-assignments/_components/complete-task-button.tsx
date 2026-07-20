@@ -11,8 +11,10 @@ type Props = {
 
 const initialState: CompleteState = { ok: false, message: null }
 
-// 自分のタスクを完了にするボタン。taskId を hidden input で Server Action へ送る。
-// 失敗時のみインラインでエラーを出す（成功時はサーバ再検証で行が更新される）。
+/**
+ * 自分のタスクを完了にするボタン。taskId を hidden input で Server Action へ送る。
+ * 失敗時のみインラインでエラーを出す（成功時はサーバ再検証で行が更新される）。
+ */
 export function CompleteTaskButton(props: Props) {
   const action = useFormAction(
     completeOnboardingTaskAction,

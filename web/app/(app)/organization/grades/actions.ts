@@ -14,13 +14,13 @@ import {
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageGrades } from "@/lib/grade/can-manage-grades"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type GradeActionState = {
   ok: boolean
   error: string | null
 }
 
-// フォーム入力を検証済みの GradeCreateRequest 相当へ変換する。失敗時は Error。
+/** フォーム入力を検証済みの GradeCreateRequest 相当へ変換する。失敗時は Error。 */
 function toGradeInput(formData: FormData) {
   const code = toRequiredText(formData.get("code"), {
     label: "コード",
@@ -62,7 +62,7 @@ function toGradeInput(formData: FormData) {
   return { code, name, rank, description: description ?? undefined }
 }
 
-// 等級作成 Server Action。code/name/rank 必須、description は任意。
+/** 等級作成 Server Action。code/name/rank 必須、description は任意。 */
 export async function createGradeAction(
   previousState: GradeActionState,
   formData: FormData,
@@ -90,7 +90,7 @@ export async function createGradeAction(
   return { ok: true, error: null }
 }
 
-// 等級変更 Server Action。gradeId 必須。
+/** 等級変更 Server Action。gradeId 必須。 */
 export async function updateGradeAction(
   previousState: GradeActionState,
   formData: FormData,
@@ -124,7 +124,7 @@ export async function updateGradeAction(
   return { ok: true, error: null }
 }
 
-// 等級削除 Server Action。gradeId 必須。
+/** 等級削除 Server Action。gradeId 必須。 */
 export async function deleteGradeAction(
   previousState: GradeActionState,
   formData: FormData,

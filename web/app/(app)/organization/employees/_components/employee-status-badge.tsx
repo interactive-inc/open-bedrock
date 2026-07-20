@@ -4,7 +4,7 @@ type Props = {
   status: string
 }
 
-// 従業員ステータスを日本語ラベル + 配色付き Badge で表示する。
+/** 従業員ステータスを日本語ラベル + 配色付き Badge で表示する。 */
 export function EmployeeStatusBadge(props: Props) {
   const label = toStatusLabel(props.status)
 
@@ -13,7 +13,7 @@ export function EmployeeStatusBadge(props: Props) {
   return <Badge variant={variant}>{label}</Badge>
 }
 
-// status コードを日本語ラベルに変換する。未知の値はそのまま返す。
+/** status コードを日本語ラベルに変換する。未知の値はそのまま返す。 */
 function toStatusLabel(status: string): string {
   if (status === "active") {
     return "在籍"
@@ -34,7 +34,7 @@ function toStatusLabel(status: string): string {
   return status
 }
 
-// status コードを Badge のバリアントに対応づける。
+/** status コードを Badge のバリアントに対応づける。 */
 function toStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
   if (status === "active") {
     return "default"

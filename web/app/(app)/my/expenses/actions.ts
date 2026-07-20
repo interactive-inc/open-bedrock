@@ -40,7 +40,7 @@ const expenseCategories: ReadonlyArray<ExpenseCategory> = [
   "other",
 ]
 
-// FormData の文字列をカテゴリ enum へ検証付きで変換する。不正なら null。
+/** FormData の文字列をカテゴリ enum へ検証付きで変換する。不正なら null。 */
 function toCategory(value: FormDataEntryValue | null): ExpenseCategory | null {
   if (typeof value !== "string") {
     return null
@@ -55,8 +55,10 @@ function toCategory(value: FormDataEntryValue | null): ExpenseCategory | null {
   return null
 }
 
-// 経費申請の Server Action。useActionState から呼ばれる。
-// note の空文字は値なし扱いで送らない。
+/**
+ * 経費申請の Server Action。useActionState から呼ばれる。
+ * note の空文字は値なし扱いで送らない。
+ */
 export async function submitExpenseAction(
   previousState: ExpenseSubmitFormState,
   formData: FormData,
@@ -107,7 +109,7 @@ export async function submitExpenseAction(
   return { ok: true, error: null }
 }
 
-// 経費承認の Server Action。expense_id は hidden フィールドから受け取る。
+/** 経費承認の Server Action。expense_id は hidden フィールドから受け取る。 */
 export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
@@ -143,7 +145,7 @@ export async function approveExpenseAction(
   return { ok: true, error: null }
 }
 
-// 経費却下の Server Action。理由コメントは必須。
+/** 経費却下の Server Action。理由コメントは必須。 */
 export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
@@ -183,8 +185,10 @@ export async function rejectExpenseAction(
   return { ok: true, error: null }
 }
 
-// 経費変更の Server Action。pending の経費のみ本人が編集できる。
-// note の空文字は値なし扱いで null を送る。
+/**
+ * 経費変更の Server Action。pending の経費のみ本人が編集できる。
+ * note の空文字は値なし扱いで null を送る。
+ */
 export async function updateExpenseAction(
   previousState: ExpenseUpdateFormState,
   formData: FormData,
@@ -243,7 +247,7 @@ export async function updateExpenseAction(
   return { ok: true, error: null }
 }
 
-// 経費取り下げの Server Action。pending の経費のみ本人が取り下げできる。
+/** 経費取り下げの Server Action。pending の経費のみ本人が取り下げできる。 */
 export async function deleteExpenseAction(
   previousState: ExpenseDeleteFormState,
   formData: FormData,

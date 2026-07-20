@@ -21,8 +21,10 @@ type Props = {
 
 const initialState: RoleCreateFormState = { ok: false, error: null }
 
-// 動的ロール作成フォーム。キー・名前・説明と、付与する権限をチェックボックスで選ぶ。
-// 権限はカテゴリごとにまとめて表示する。成功・失敗は toast で通知する。成功時は一覧へ遷移する。
+/**
+ * 動的ロール作成フォーム。キー・名前・説明と、付与する権限をチェックボックスで選ぶ。
+ * 権限はカテゴリごとにまとめて表示する。成功・失敗は toast で通知する。成功時は一覧へ遷移する。
+ */
 export function RoleCreateForm(props: Props) {
   const router = useRouter()
 

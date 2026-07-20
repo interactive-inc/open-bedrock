@@ -8,9 +8,9 @@ import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedPosting(context: Context): Promise<number> {
   const created = await new CreateCareerPosting(context).run({

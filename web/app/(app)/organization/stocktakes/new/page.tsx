@@ -6,7 +6,7 @@ import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "棚卸しを開始" }
 
-// 棚卸し開始画面。フォームは Client Component に切り出し、Server Action で POST /stocktakes する。
+/** 棚卸し開始画面。フォームは Client Component に切り出し、Server Action で POST /stocktakes する。 */
 export default async function StocktakeNewPage() {
   await requirePermission("asset:manage")
 

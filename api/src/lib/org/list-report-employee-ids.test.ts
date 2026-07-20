@@ -1,11 +1,13 @@
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
-// E001(top) < E004 < E005, E006  /  E001 < E002 < E003
-// E007/E008 は循環(相互参照)。E099 は membership なし。
+/**
+ * E001(top) < E004 < E005, E006  /  E001 < E002 < E003
+ * E007/E008 は循環(相互参照)。E099 は membership なし。
+ */
 const employeeRows = [
   { id: 1, code: "E001", name: "Top", status: "active" },
   { id: 2, code: "E002", name: "HeadHr", status: "active" },

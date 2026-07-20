@@ -14,7 +14,7 @@ type Props = {
 
 const initialState: SurveyFormState = { ok: false, error: null }
 
-// アンケート削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
+/** アンケート削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。 */
 export function SurveyDeleteButton(props: Props) {
   const router = useRouter()
 

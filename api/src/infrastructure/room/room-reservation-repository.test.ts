@@ -1,6 +1,6 @@
 import { RoomReservation } from "@/domain/room/room-reservation.entity"
 import { RoomReservationRepository } from "@/infrastructure/room/room-reservation-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function createReservation(props: Parameters<typeof RoomReservation.create>[0]): RoomReservation {

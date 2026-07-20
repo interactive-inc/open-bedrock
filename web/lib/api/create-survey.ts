@@ -2,8 +2,10 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { CreateSurveyRequest } from "@/lib/api/types/survey-types"
 
-// POST /surveys。アンケートを新規作成する（管理者ロールのみ）。
-// 権限不足は 403 を api が返すため、戻りは Error になる。
+/**
+ * POST /surveys。アンケートを新規作成する（管理者ロールのみ）。
+ * 権限不足は 403 を api が返すため、戻りは Error になる。
+ */
 export async function createSurvey(request: CreateSurveyRequest) {
   const client = await createClient()
 

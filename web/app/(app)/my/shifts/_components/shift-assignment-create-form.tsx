@@ -17,8 +17,10 @@ type Props = {
   employees: ReadonlyArray<{ code: string; name: string }>
 }
 
-// シフト割当の作成フォーム（特権ロール向け）。対象社員・パターンコード・対象日・備考を送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す。成功時は /shift/manage へ遷移する。
+/**
+ * シフト割当の作成フォーム（特権ロール向け）。対象社員・パターンコード・対象日・備考を送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す。成功時は /shift/manage へ遷移する。
+ */
 export function ShiftAssignmentCreateForm(props: Props) {
   const router = useRouter()
 

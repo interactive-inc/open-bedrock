@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /onboarding/employee/:code。社員コードの割当（assignment）一覧を返す。
+/** GET /onboarding/employee/:code。社員コードの割当（assignment）一覧を返す。 */
 export async function getOnboardingEmployee(code: string) {
   const client = await createClient()
 

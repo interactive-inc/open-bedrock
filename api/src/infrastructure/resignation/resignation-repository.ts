@@ -9,7 +9,7 @@ export type AlreadyRequestedError = { kind: "already_requested" }
 export class ResignationRepository {
   constructor(private readonly c: Context) {}
 
-  // 申請者本人の退職申請を退職希望日の昇順でページングして返す。
+  /** 申請者本人の退職申請を退職希望日の昇順でページングして返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number
@@ -30,7 +30,7 @@ export class ResignationRepository {
     }
   }
 
-  // 退職申請 id で1件取得する。存在しなければ null。
+  /** 退職申請 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<Resignation | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -46,7 +46,7 @@ export class ResignationRepository {
     }
   }
 
-  // 指定社員の PENDING（requested）状態の退職申請を1件返す。存在しなければ null。
+  /** 指定社員の PENDING（requested）状態の退職申請を1件返す。存在しなければ null。 */
   async findPendingByEmployeeId(employeeId: number): Promise<Resignation | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -62,7 +62,7 @@ export class ResignationRepository {
     }
   }
 
-  // UNIQUE 制約 (employee_id) WHERE status = 'requested' に違反した場合は already_requested を返す。
+  /** UNIQUE 制約 (employee_id) WHERE status = 'requested' に違反した場合は already_requested を返す。 */
   async create(resignation: Resignation): Promise<Resignation | AlreadyRequestedError | Error> {
     try {
       await this.c.var.database.insert(resignations).values({
@@ -84,7 +84,7 @@ export class ResignationRepository {
     }
   }
 
-  // 退職申請の退職希望日・最終出社日・理由を更新する。status が "requested" の行のみ対象。
+  /** 退職申請の退職希望日・最終出社日・理由を更新する。status が "requested" の行のみ対象。 */
   async update(resignation: Resignation): Promise<Resignation | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -105,7 +105,7 @@ export class ResignationRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -126,7 +126,7 @@ export class ResignationRepository {
     }
   }
 
-  // 退職申請を削除する。status が "requested" の行のみ対象。
+  /** 退職申請を削除する。status が "requested" の行のみ対象。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

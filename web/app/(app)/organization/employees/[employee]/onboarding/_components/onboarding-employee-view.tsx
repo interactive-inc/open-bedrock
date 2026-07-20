@@ -25,8 +25,10 @@ type Props = {
   code: string
 }
 
-// GET /onboarding/employee/:code を取得し、社員の割当ごとにタスクを描画する非同期 RSC。
-// 各割当には特権ロール向けの割当日変更・取り消し操作を出す。
+/**
+ * GET /onboarding/employee/:code を取得し、社員の割当ごとにタスクを描画する非同期 RSC。
+ * 各割当には特権ロール向けの割当日変更・取り消し操作を出す。
+ */
 export async function OnboardingEmployeeView(props: Props) {
   const assignments = await getOnboardingEmployee(props.code)
 

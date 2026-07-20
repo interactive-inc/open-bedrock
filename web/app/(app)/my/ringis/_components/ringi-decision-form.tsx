@@ -22,8 +22,10 @@ const initialRejectState: RingiDecisionFormState = {
   error: null,
 }
 
-// 1 件の稟議に対する承認・却下フォーム。承認・却下どちらもコメントは任意。
-// 承認と却下で別フォーム・別 action を持ち、結果を toast() で通知する。
+/**
+ * 1 件の稟議に対する承認・却下フォーム。承認・却下どちらもコメントは任意。
+ * 承認と却下で別フォーム・別 action を持ち、結果を toast() で通知する。
+ */
 export function RingiDecisionForm(props: Props) {
   // 承認フォームのラッパ。action を1回だけ実行し、結果を toast して次状態を返す。
   const approveAction = useActionState(

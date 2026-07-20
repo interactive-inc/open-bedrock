@@ -19,7 +19,7 @@ flowchart LR
   API --> KV[("KV・rate limit bindings")]
 ```
 
-実装されている route は `api/src/app.ts` と `api/src/interface`、データ制約は `api/migrations` で確認する。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。
+実装されている route は `api/src/app.ts` と `api/src/interface/routes`、データ制約は `api/migrations` で確認する。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため schema.ts にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは schema.ts にも反映する。
 
 ## Deployment と法人
 

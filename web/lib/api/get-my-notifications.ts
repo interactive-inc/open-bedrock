@@ -6,8 +6,10 @@ type NotificationListResult = {
   total: number
 }
 
-// GET /notifications/me。自分宛ての通知一覧（新着順）を取得する。
-// isRead を渡すと既読/未読で絞り込む（省略時はすべて）。
+/**
+ * GET /notifications/me。自分宛ての通知一覧（新着順）を取得する。
+ * isRead を渡すと既読/未読で絞り込む（省略時はすべて）。
+ */
 export async function getMyNotifications(props: {
   limit: number
   offset: number

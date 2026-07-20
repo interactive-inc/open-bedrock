@@ -92,9 +92,11 @@ export class ShiftPatternRepository {
     }
   }
 
-  // 割当から参照されていない場合のみ削除する。チェックと削除を atomic に行い、
-  // 競合状態でアサインが挿入されても参照整合性を壊さない。
-  // 0 行削除（アサインが存在した等）は null、1 行以上削除は true を返す。
+  /**
+   * 割当から参照されていない場合のみ削除する。チェックと削除を atomic に行い、
+   * 競合状態でアサインが挿入されても参照整合性を壊さない。
+   * 0 行削除（アサインが存在した等）は null、1 行以上削除は true を返す。
+   */
   async delete(patternId: number): Promise<true | null | Error> {
     try {
       const result = await this.c.var.database.run(

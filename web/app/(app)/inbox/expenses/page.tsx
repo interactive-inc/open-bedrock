@@ -23,7 +23,7 @@ export const metadata = { title: "承認待ちの経費" }
 
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
-// 経費承認 inbox 画面。承認者向けに承認待ちの経費を RSC で取得し一覧表示する。
+/** 経費承認 inbox 画面。承認者向けに承認待ちの経費を RSC で取得し一覧表示する。 */
 export default async function ExpenseInboxPage() {
   await requirePermission("expense:approve")
 
@@ -45,7 +45,7 @@ export default async function ExpenseInboxPage() {
   )
 }
 
-// /expenses/inbox を認証付きで取得して承認待ち一覧テーブルを描画する非同期 RSC。
+/** /expenses/inbox を認証付きで取得して承認待ち一覧テーブルを描画する非同期 RSC。 */
 async function ExpenseInboxTable() {
   const expenses = await getExpenseInbox()
 

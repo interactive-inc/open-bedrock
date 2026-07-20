@@ -1,5 +1,5 @@
 import { ListLifecycleEvents } from "@/application/employee-lifecycle/list-lifecycle-events"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { PersonnelActionRepository } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
 import { describe, expect, test } from "bun:test"
 

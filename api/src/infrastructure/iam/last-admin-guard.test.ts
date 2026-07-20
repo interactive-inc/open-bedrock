@@ -2,12 +2,12 @@ import {
   abortWhenNoLoginEnabledEffectiveAdmin,
   isAbortedByLastAdminGuard,
 } from "@/infrastructure/iam/last-admin-guard"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import {
   EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
   replaceAccountRolesWithPermissionSets,
   seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+} from "@/interface/test-helpers/seed-effective-admin"
 import { describe, expect, test } from "bun:test"
 
 async function guardError(db: D1Database): Promise<unknown> {

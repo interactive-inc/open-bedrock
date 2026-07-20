@@ -2,12 +2,14 @@ import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-pa
 import { base64ToBytes, derivePbkdf2 } from "@/lib/auth/to-password-hash"
 import { isWrappedLegacyHash, WRAPPED_LEGACY_PREFIX } from "@/lib/auth/wrap-legacy-hash"
 
-// 平文パスワードを既存ハッシュと突き合わせて一致を判定する。
-// 3 形式を判別する:
-//   - pbkdf2-wrapped-legacy: 旧形式ハッシュを PBKDF2 でラップした中間形式
-//   - pbkdf2: 新形式（ランダムソルト PBKDF2）
-//   - それ以外: 旧形式（固定ソルト SHA-256 の hex 文字列）
-// いずれも定数時間比較を維持する。
+/**
+ * 平文パスワードを既存ハッシュと突き合わせて一致を判定する。
+ * 3 形式を判別する:
+ *   - pbkdf2-wrapped-legacy: 旧形式ハッシュを PBKDF2 でラップした中間形式
+ *   - pbkdf2: 新形式（ランダムソルト PBKDF2）
+ *   - それ以外: 旧形式（固定ソルト SHA-256 の hex 文字列）
+ * いずれも定数時間比較を維持する。
+ */
 export async function verifyPassword(
   plainPassword: string,
   passwordHash: string,
@@ -62,8 +64,10 @@ type ParsedPbkdf2 = {
   hash: Uint8Array<ArrayBuffer>
 }
 
-// 保存フォーマット `pbkdf2:<iterations>:<base64(salt)>:<base64(hash)>` を分解する。
-// フォーマット不正は null を返し、verifyPassword 側で false 扱いにする。
+/**
+ * 保存フォーマット `pbkdf2:<iterations>:<base64(salt)>:<base64(hash)>` を分解する。
+ * フォーマット不正は null を返し、verifyPassword 側で false 扱いにする。
+ */
 function parsePbkdf2Hash(stored: string): ParsedPbkdf2 | null {
   const parts = stored.split(":")
 
@@ -92,8 +96,10 @@ function parsePbkdf2Hash(stored: string): ParsedPbkdf2 | null {
   }
 }
 
-// `pbkdf2-wrapped-legacy:<iterations>:<base64(salt)>:<base64(hash)>` を分解する。
-// プレフィックスにハイフンを含むため split(":") では 5 パートになる。
+/**
+ * `pbkdf2-wrapped-legacy:<iterations>:<base64(salt)>:<base64(hash)>` を分解する。
+ * プレフィックスにハイフンを含むため split(":") では 5 パートになる。
+ */
 function parseWrappedLegacyHash(stored: string): ParsedPbkdf2 | null {
   if (stored.startsWith(WRAPPED_LEGACY_PREFIX) === false) {
     return null
@@ -123,7 +129,7 @@ function parseWrappedLegacyHash(stored: string): ParsedPbkdf2 | null {
   }
 }
 
-// バイト列を定数時間で比較する（長さが異なる場合は即 false で OK）。
+/** バイト列を定数時間で比較する（長さが異なる場合は即 false で OK）。 */
 function constantTimeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) {
     return false
@@ -138,7 +144,7 @@ function constantTimeEqualBytes(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0
 }
 
-// 文字列を定数時間で比較する（旧形式の hex 突き合わせ用）。
+/** 文字列を定数時間で比較する（旧形式の hex 突き合わせ用）。 */
 function constantTimeEqualString(a: string, b: string): boolean {
   if (a.length !== b.length) {
     return false

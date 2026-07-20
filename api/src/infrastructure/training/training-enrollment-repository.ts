@@ -51,9 +51,11 @@ export class TrainingEnrollmentRepository {
     }
   }
 
-  // コースがアーカイブ済みでないことをアトミックに検証して INSERT する。
-  // UNIQUE 制約 (course_id, employee_id) 違反時は already_enrolled を返す。
-  // コースがアーカイブ済みの場合は course_archived を返す。
+  /**
+   * コースがアーカイブ済みでないことをアトミックに検証して INSERT する。
+   * UNIQUE 制約 (course_id, employee_id) 違反時は already_enrolled を返す。
+   * コースがアーカイブ済みの場合は course_archived を返す。
+   */
   async create(
     trainingEnrollment: TrainingEnrollment,
   ): Promise<TrainingEnrollment | AlreadyEnrolledError | CourseArchivedError | Error> {
@@ -92,7 +94,7 @@ export class TrainingEnrollmentRepository {
     }
   }
 
-  // enrolled 状態の受講登録を完了にする。status が enrolled でなければ 0 行更新（null）。
+  /** enrolled 状態の受講登録を完了にする。status が enrolled でなければ 0 行更新（null）。 */
   async completeEnrollment(
     trainingEnrollment: TrainingEnrollment,
   ): Promise<TrainingEnrollment | null | Error> {
@@ -125,7 +127,7 @@ export class TrainingEnrollmentRepository {
     }
   }
 
-  // enrolled 状態の受講登録の期限を変更する。status が enrolled でなければ 0 行更新（null）。
+  /** enrolled 状態の受講登録の期限を変更する。status が enrolled でなければ 0 行更新（null）。 */
   async rescheduleEnrollment(
     trainingEnrollment: TrainingEnrollment,
   ): Promise<TrainingEnrollment | null | Error> {
@@ -155,7 +157,7 @@ export class TrainingEnrollmentRepository {
     }
   }
 
-  // 完了・失敗以外の受講登録を削除する。完了・失敗済みは履歴保全のため削除不可（null）。
+  /** 完了・失敗以外の受講登録を削除する。完了・失敗済みは履歴保全のため削除不可（null）。 */
   async delete(enrollmentId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

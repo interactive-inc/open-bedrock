@@ -14,9 +14,6 @@ import {
 import { accountRoles, accounts, employees, roles } from "@/schema"
 import { eq, inArray, sql } from "drizzle-orm"
 
-// IAM のアカウント管理(一覧・取得・状態遷移・ロール割当)を扱う。
-// verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
-
 export type AccountSummary = {
   id: number
   employeeId: number | null
@@ -26,7 +23,8 @@ export type AccountSummary = {
 }
 
 /**
- * accounts の管理操作を扱うリポジトリ。
+ * accounts の管理操作(一覧・取得・状態遷移・ロール割当)を扱うリポジトリ。
+ * verify-bearer 用の AccountAuthRepository とは別に、管理画面向けの読み書きを担う。
  */
 export class AccountRepository {
   constructor(private readonly c: Context) {

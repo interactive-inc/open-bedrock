@@ -8,8 +8,10 @@ import { canManageOrg } from "@/lib/org/can-manage-org"
 
 export const metadata = { title: "組織" }
 
-// 組織図トップ（部署ツリー /org/tree）。ツリー取得は Suspense 境界で Skeleton をフォールバックにする。
-// 部署ノードの作成・変更・削除を行う管理セクションも併せて表示する。
+/**
+ * 組織図トップ（部署ツリー /org/tree）。ツリー取得は Suspense 境界で Skeleton をフォールバックにする。
+ * 部署ノードの作成・変更・削除を行う管理セクションも併せて表示する。
+ */
 export default async function OrgPage() {
   const currentUser = await getMe()
 

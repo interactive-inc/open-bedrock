@@ -14,7 +14,7 @@ type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-// /decisions 意思決定記録(ADR)の一覧。閲覧は全認証者、作成は decision:manage のみ導線を出す。
+/** /decisions 意思決定記録(ADR)の一覧。閲覧は全認証者、作成は decision:manage のみ導線を出す。 */
 export default async function DecisionsPage(props: Props) {
   const params = await props.searchParams
 

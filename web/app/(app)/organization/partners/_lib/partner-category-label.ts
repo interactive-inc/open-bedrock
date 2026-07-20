@@ -1,4 +1,4 @@
-// 取引先の分類コードを日本語ラベルへ変換する。未知の値・null はハイフンを返す。
+/** 取引先の分類コードを日本語ラベルへ変換する。未知の値・null はハイフンを返す。 */
 export function partnerCategoryLabel(category: string | null): string {
   if (category === "customer") {
     return "顧客"

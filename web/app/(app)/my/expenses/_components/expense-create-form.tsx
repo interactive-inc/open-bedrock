@@ -13,9 +13,11 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: ExpenseSubmitFormState = { ok: false, error: null }
 
-// 経費申請フォーム。カテゴリ・金額・利用日・任意メモを native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
-// 成功時は自分の経費一覧へ遷移し、申請がステータス付きで並んだことを見せる。
+/**
+ * 経費申請フォーム。カテゴリ・金額・利用日・任意メモを native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ * 成功時は自分の経費一覧へ遷移し、申請がステータス付きで並んだことを見せる。
+ */
 export function ExpenseCreateForm() {
   const router = useRouter()
 

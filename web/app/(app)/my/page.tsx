@@ -43,7 +43,7 @@ const resourceLinks: ReadonlyArray<ResourceLink> = [
   { label: "貸与品", href: "/my/assets", icon: Package },
 ]
 
-// マイページ。本人の基本情報と、今日の勤怠・休暇残・直近の申請の要約、各 /me リソースへの導線を並べる。
+/** マイページ。本人の基本情報と、今日の勤怠・休暇残・直近の申請の要約、各 /me リソースへの導線を並べる。 */
 export default async function MePage() {
   const currentUser = await getMe()
 
@@ -101,7 +101,7 @@ export default async function MePage() {
   )
 }
 
-// 今日の勤怠状態。本人の当日レコードから打刻状況を要約する。
+/** 今日の勤怠状態。本人の当日レコードから打刻状況を要約する。 */
 async function TodayAttendanceCard() {
   const today = toTokyoDate(new Date())
 
@@ -138,7 +138,7 @@ async function TodayAttendanceCard() {
   )
 }
 
-// 休暇残。年次有給の残日数を要約する。
+/** 休暇残。年次有給の残日数を要約する。 */
 async function LeaveBalanceCard() {
   const balances = await getLeaveBalanceMe()
 
@@ -172,7 +172,7 @@ async function LeaveBalanceCard() {
   )
 }
 
-// 直近の自分の申請。最新数件のステータスを要約する。
+/** 直近の自分の申請。最新数件のステータスを要約する。 */
 async function RecentApplicationsCard() {
   const result = await listMyApplications({ limit: 3 })
 
@@ -215,7 +215,7 @@ async function RecentApplicationsCard() {
   )
 }
 
-// Asia/Tokyo の当日を YYYY-MM-DD で返す（api の from/to は日付文字列を期待する）。
+/** Asia/Tokyo の当日を YYYY-MM-DD で返す（api の from/to は日付文字列を期待する）。 */
 function toTokyoDate(now: Date): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Tokyo",
@@ -227,7 +227,7 @@ function toTokyoDate(now: Date): string {
   return formatter.format(now)
 }
 
-// ISO 文字列から時刻（HH:mm）だけを Asia/Tokyo で取り出す。
+/** ISO 文字列から時刻（HH:mm）だけを Asia/Tokyo で取り出す。 */
 function formatTime(iso: string): string {
   const formatter = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",

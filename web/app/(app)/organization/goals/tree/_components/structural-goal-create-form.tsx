@@ -18,8 +18,10 @@ type Props = {
 
 const initialState: GoalActionState = { ok: false, error: null }
 
-// 全社/部門目標の作成フォーム。権限に応じて選べる種別を出し分ける。
-// department を選んだときだけ部門コード欄を出す（useState は許可、useEffect は使わない）。
+/**
+ * 全社/部門目標の作成フォーム。権限に応じて選べる種別を出し分ける。
+ * department を選んだときだけ部門コード欄を出す（useState は許可、useEffect は使わない）。
+ */
 export function StructuralGoalCreateForm(props: Props) {
   const router = useRouter()
 

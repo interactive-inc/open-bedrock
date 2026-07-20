@@ -8,8 +8,10 @@ type Props = {
   canFilterEmployee: boolean
 }
 
-// 一覧の絞り込みフォーム。native な GET フォームで /goals?period=&employee_id= へ遷移する。
-// searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+/**
+ * 一覧の絞り込みフォーム。native な GET フォームで /goals?period=&employee_id= へ遷移する。
+ * searchParams を更新するだけなので Server Action を使わず method="get" のままにする。
+ */
 export function GoalFilterForm(props: Props) {
   return (
     <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border p-4">

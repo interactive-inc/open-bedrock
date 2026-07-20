@@ -1,8 +1,6 @@
-// api の app-schemas（zAppRegulation ほか）と同形の手書き type（api と疎結合に保つため別定義）。
-
 export type RegulationStatus = "active" | "archived"
 
-// GET /regulations の各要素。
+/** GET /regulations の各要素。 */
 export type RegulationListItem = {
   id: number
   code: string
@@ -14,7 +12,7 @@ export type RegulationListItem = {
   created_at: string
 }
 
-// 規程の改定版。
+/** 規程の改定版。 */
 export type RegulationVersion = {
   id: number
   version: number
@@ -24,7 +22,7 @@ export type RegulationVersion = {
   created_at: string
 }
 
-// GET /regulations/:code の詳細（最新版＋版一覧）。
+/** GET /regulations/:code の詳細（最新版＋版一覧）。 */
 export type RegulationDetail = {
   id: number
   code: string
@@ -36,7 +34,7 @@ export type RegulationDetail = {
   versions: ReadonlyArray<RegulationVersion>
 }
 
-// POST /regulations のリクエスト body。
+/** POST /regulations のリクエスト body。 */
 export type RegulationRegisterRequest = {
   code: string
   title: string
@@ -46,7 +44,7 @@ export type RegulationRegisterRequest = {
   note?: string
 }
 
-// POST /regulations/:code/versions のリクエスト body。
+/** POST /regulations/:code/versions のリクエスト body。 */
 export type RegulationVersionRequest = {
   body_md: string
   effective_on: string

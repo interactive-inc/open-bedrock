@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /budgets/summary。会計期間を指定し、部署ごとの予算・消化額・残額を横断で取得する。
-// budget:manage が無いと 403。
+/**
+ * GET /budgets/summary。会計期間を指定し、部署ごとの予算・消化額・残額を横断で取得する。
+ * budget:manage が無いと 403。
+ */
 export async function getBudgetSummary(fiscalPeriod: string) {
   const client = await createClient()
 

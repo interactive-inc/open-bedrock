@@ -83,7 +83,7 @@ export class UpdateShiftAssignment {
     return saved
   }
 
-  // パターンコードを id に解決する。null は「パターン未指定」として patternId:null を返す。
+  /** パターンコードを id に解決する。null は「パターン未指定」として patternId:null を返す。 */
   private async resolvePatternId(
     patternCode: string | null,
   ): Promise<ResolvedPattern | ApplicationError> {

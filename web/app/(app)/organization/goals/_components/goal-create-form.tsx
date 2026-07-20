@@ -16,12 +16,14 @@ type Props = {
 
 const initialState: GoalActionState = { ok: false, error: null }
 
-// 目標作成フォーム。useActionState で createGoalAction を呼び、結果を sonner で通知する。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+/**
+ * 目標作成フォーム。useActionState で createGoalAction を呼び、結果を sonner で通知する。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ */
 export function GoalCreateForm(props: Props) {
   const router = useRouter()
 
-  // useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。
+  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
     previousState: GoalActionState,
     formData: FormData,

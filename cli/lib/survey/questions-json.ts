@@ -10,7 +10,7 @@ const surveyQuestionSchema = z.object({
 
 export type SurveyQuestionInput = z.infer<typeof surveyQuestionSchema>
 
-// --questions <file> を API と同じ設問配列として読む。未指定なら空配列。
+/** --questions <file> を API と同じ設問配列として読む。未指定なら空配列。 */
 export async function toQuestionsJson(
   filePath: string | undefined,
 ): Promise<ReadonlyArray<SurveyQuestionInput>> {

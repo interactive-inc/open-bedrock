@@ -18,7 +18,7 @@ type Props = {
   params: Promise<{ employee: string }>
 }
 
-// 従業員詳細画面。params.employee で対象を取得し、詳細カードを Suspense 境界で描画する RSC。
+/** 従業員詳細画面。params.employee で対象を取得し、詳細カードを Suspense 境界で描画する RSC。 */
 export default async function EmployeeDetailPage(props: Props) {
   const [params, currentUser] = await Promise.all([props.params, getMe()])
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /applications/:id/reject。コメント必須で申請を却下する。
+/** POST /applications/:id/reject。コメント必須で申請を却下する。 */
 export async function rejectApplication(id: number, comment: string) {
   const client = await createClient()
 

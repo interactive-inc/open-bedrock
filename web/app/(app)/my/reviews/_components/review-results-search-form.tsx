@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
-// FormData の値を文字列として安全に取り出す。File 等の非文字列は空文字に倒す。
+/** FormData の値を文字列として安全に取り出す。File 等の非文字列は空文字に倒す。 */
 function toTrimmedString(value: FormDataEntryValue | null): string {
   return typeof value === "string" ? value.trim() : ""
 }
 
-// 評価結果の検索フォーム（特権ロール向け）。サイクル ID と社員コードを受け取り
-// /review/results?cycle_id=...&employee_code=... へ遷移する。
+/**
+ * 評価結果の検索フォーム（特権ロール向け）。サイクル ID と社員コードを受け取り
+ * /review/results?cycle_id=...&employee_code=... へ遷移する。
+ */
 export function ReviewResultsSearchForm() {
   const router = useRouter()
 

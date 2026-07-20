@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { CareerApplyRequest } from "@/lib/api/types/career-types"
 
-// 指定の社内公募へ応募する。POST /career/postings/:posting_id/apply。
+/** 指定の社内公募へ応募する。POST /career/postings/:posting_id/apply。 */
 export async function applyCareerPosting(postingId: number, body: CareerApplyRequest) {
   const client = await createClient()
 

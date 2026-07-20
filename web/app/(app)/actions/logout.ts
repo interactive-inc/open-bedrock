@@ -3,11 +3,13 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-// ログアウト Server Action。
-// 1. サーバー側でリフレッシュトークンのファミリーを失効させる
-// 2. クライアント側の cookie を破棄する
-// 3. `/` を再描画し、AuthError の error boundary で LoginPage を表示する
-// API 呼び出しが失敗してもクライアント側のログアウトは必ず実行する。
+/**
+ * ログアウト Server Action。
+ * 1. サーバー側でリフレッシュトークンのファミリーを失効させる
+ * 2. クライアント側の cookie を破棄する
+ * 3. `/` を再描画し、AuthError の error boundary で LoginPage を表示する
+ * API 呼び出しが失敗してもクライアント側のログアウトは必ず実行する。
+ */
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies()
   const refreshToken = cookieStore.get("refresh_token")?.value

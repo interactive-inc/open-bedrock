@@ -5,7 +5,7 @@ import type {
   AntisocialCheckUpdateRequest,
 } from "@/lib/api/types/antisocial-check-types"
 
-// PUT /antisocial-checks/:id。反社チェック申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。
+/** PUT /antisocial-checks/:id。反社チェック申請の内容を変更する。本人以外は 403 を api が返すため、戻りは Error になる。 */
 export async function updateAntisocialCheck(
   id: string,
   request: AntisocialCheckUpdateRequest,

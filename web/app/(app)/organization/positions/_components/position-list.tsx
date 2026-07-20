@@ -15,7 +15,7 @@ type Props = {
   canManage: boolean
 }
 
-// 役職マスタ一覧テーブル。canManage のときだけ各行に変更・削除の操作列を出す。
+/** 役職マスタ一覧テーブル。canManage のときだけ各行に変更・削除の操作列を出す。 */
 export function PositionList(props: Props) {
   if (props.positions.length === 0) {
     return (

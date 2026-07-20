@@ -3,7 +3,7 @@ import type { AuditEventRecord } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 const nowEpoch = 1_767_225_600
 const oldTokenHash = "old-token-hash"

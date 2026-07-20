@@ -21,8 +21,10 @@ type Props = {
 
 const initialState: NotificationFormState = { ok: false, error: null }
 
-// 通知一覧。各通知を Card で並べ、未読には既読化ボタンを出す。
-// 既読化・全件既読の結果は reducer ラッパー内で toast する（render 本体で toast しない）。
+/**
+ * 通知一覧。各通知を Card で並べ、未読には既読化ボタンを出す。
+ * 既読化・全件既読の結果は reducer ラッパー内で toast する（render 本体で toast しない）。
+ */
 export function NotificationList(props: Props) {
   async function markReduce(
     previousState: NotificationFormState,

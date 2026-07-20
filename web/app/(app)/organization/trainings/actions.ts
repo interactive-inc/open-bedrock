@@ -11,13 +11,13 @@ import { updateTrainingCourse } from "@/lib/api/update-training-course"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageTraining } from "@/lib/training/can-manage-training"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type TrainingFormState = {
   ok: boolean
   error: string | null
 }
 
-// 受講申込 Server Action（本人）。course_code を hidden input で受け取る。
+/** 受講申込 Server Action（本人）。course_code を hidden input で受け取る。 */
 export async function createTrainingEnrollmentAction(
   _previousState: TrainingFormState,
   formData: FormData,
@@ -42,7 +42,7 @@ export async function createTrainingEnrollmentAction(
   return { ok: true, error: null }
 }
 
-// 受講完了 Server Action（本人）。enrollment_id を hidden input で受け取る。
+/** 受講完了 Server Action（本人）。enrollment_id を hidden input で受け取る。 */
 export async function completeTrainingEnrollmentAction(
   _previousState: TrainingFormState,
   formData: FormData,
@@ -73,7 +73,7 @@ export async function completeTrainingEnrollmentAction(
   return { ok: true, error: null }
 }
 
-// コース作成 Server Action（特権ロール）。code/title/category 必須、description/duration_minutes 任意。
+/** コース作成 Server Action（特権ロール）。code/title/category 必須、description/duration_minutes 任意。 */
 export async function createTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,
@@ -145,7 +145,7 @@ export async function createTrainingCourseAction(
   return { ok: true, error: null }
 }
 
-// 受講取消 Server Action（本人または管理権限）。enrollment_id を hidden input で受け取る。
+/** 受講取消 Server Action（本人または管理権限）。enrollment_id を hidden input で受け取る。 */
 export async function cancelTrainingEnrollmentAction(
   _previousState: TrainingFormState,
   formData: FormData,
@@ -176,7 +176,7 @@ export async function cancelTrainingEnrollmentAction(
   return { ok: true, error: null }
 }
 
-// コース変更 Server Action（管理権限）。code は hidden input、内容は各 input で受け取る。
+/** コース変更 Server Action（管理権限）。code は hidden input、内容は各 input で受け取る。 */
 export async function updateTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,
@@ -249,7 +249,7 @@ export async function updateTrainingCourseAction(
   return { ok: true, error: null }
 }
 
-// コースアーカイブ Server Action（管理権限）。code を hidden input で受け取る。
+/** コースアーカイブ Server Action（管理権限）。code を hidden input で受け取る。 */
 export async function archiveTrainingCourseAction(
   _previousState: TrainingFormState,
   formData: FormData,

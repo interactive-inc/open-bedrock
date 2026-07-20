@@ -20,7 +20,7 @@ type Props = {
   canManage: boolean
 }
 
-// GET /it-incidents を認証付きで取得し、発生日時の新しい順でインシデント記録テーブルを描画する非同期 RSC。
+/** GET /it-incidents を認証付きで取得し、発生日時の新しい順でインシデント記録テーブルを描画する非同期 RSC。 */
 export async function ItIncidentList(props: Props) {
   const result = await getItIncidentList({ limit: PAGE_SIZE, offset: props.offset })
 

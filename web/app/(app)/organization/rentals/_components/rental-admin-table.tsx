@@ -29,7 +29,7 @@ type Props = {
   canManage: boolean
 }
 
-// 全社の貸与品予約一覧テーブル。詳細は各予約のページへ、申請者 ID クリックで絞り込む。
+/** 全社の貸与品予約一覧テーブル。詳細は各予約のページへ、申請者 ID クリックで絞り込む。 */
 export function RentalAdminTable(props: Props) {
   if (props.rows.length === 0) {
     return <EmptyState title="条件に一致する貸与品予約がありません" />

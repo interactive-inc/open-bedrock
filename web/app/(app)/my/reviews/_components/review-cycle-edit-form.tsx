@@ -16,8 +16,10 @@ type Props = {
 
 const initialState: ReviewFormState = { ok: false, error: null }
 
-// 評価サイクルの編集フォーム（特権ロール向け）。題目・対象期間・締切日を native form で更新する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 評価サイクルの編集フォーム（特権ロール向け）。題目・対象期間・締切日を native form で更新する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function ReviewCycleEditForm(props: Props) {
   const action = useActionState(async (previousState: ReviewFormState, formData: FormData) => {
     const next = await updateReviewCycleAction(previousState, formData)

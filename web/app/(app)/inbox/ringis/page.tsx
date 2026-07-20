@@ -20,8 +20,10 @@ export const metadata = { title: "承認待ちの稟議" }
 
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
-// 稟議承認 inbox 画面。承認者向けに承認待ちの稟議を RSC で取得し一覧表示する。
-// 稟議には詳細ページが無いため、承認・却下フォームを各行に直接埋め込む。
+/**
+ * 稟議承認 inbox 画面。承認者向けに承認待ちの稟議を RSC で取得し一覧表示する。
+ * 稟議には詳細ページが無いため、承認・却下フォームを各行に直接埋め込む。
+ */
 export default function RingiInboxPage() {
   return (
     <div className="flex flex-col gap-6">
@@ -41,7 +43,7 @@ export default function RingiInboxPage() {
   )
 }
 
-// /ringi/inbox を認証付きで取得して承認待ち一覧テーブルを描画する非同期 RSC。
+/** /ringi/inbox を認証付きで取得して承認待ち一覧テーブルを描画する非同期 RSC。 */
 async function RingiInboxTable() {
   const ringiList = await getRingiInbox()
 

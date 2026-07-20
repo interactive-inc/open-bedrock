@@ -10,7 +10,7 @@ export type ShiftPatternUpdateRequest = {
   break_minutes: number
 }
 
-// PUT /shift/patterns/:id。特権ロールがシフトパターンの内容を変更する。
+/** PUT /shift/patterns/:id。特権ロールがシフトパターンの内容を変更する。 */
 export async function updateShiftPattern(
   id: number,
   request: ShiftPatternUpdateRequest,

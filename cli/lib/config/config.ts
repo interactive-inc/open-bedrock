@@ -10,8 +10,10 @@ export type KarteConfig = {
   refresh_token: string | null
 }
 
-// 設定ディレクトリ/ファイルのパスを都度解決する。
-// KARTE_CONFIG_DIR があれば優先（CI・コンテナでの再配置やテスト隔離に使う）。
+/**
+ * 設定ディレクトリ/ファイルのパスを都度解決する。
+ * KARTE_CONFIG_DIR があれば優先（CI・コンテナでの再配置やテスト隔離に使う）。
+ */
 function configPaths(): { dir: string; file: string } {
   const dir = process.env.KARTE_CONFIG_DIR ?? join(homedir(), ".karte")
   return { dir, file: join(dir, "config.json") }

@@ -1,8 +1,7 @@
-// api/src/oneonone の *-schema.ts と同形の手書き type。
-// api と疎結合にするため api 側からは import しない。
-
-// api/src/oneonone/one-on-one-response-schema.ts と同形。
-// GET /oneonone と POST /oneonone のレスポンス。フィールドは snake_case のまま受ける。
+/**
+ * api/src/oneonone/one-on-one-response-schema.ts と同形。
+ * GET /oneonone と POST /oneonone のレスポンス。フィールドは snake_case のまま受ける。
+ */
 export type OneOnOne = {
   id: string
   held_at: string
@@ -13,9 +12,11 @@ export type OneOnOne = {
   next_action: string | null
 }
 
-// POST /oneonone のリクエストボディ。
-// api/src/oneonone/one-on-one-create-request-schema.ts と同形。
-// member_employee_code 必須、それ以外は任意（未入力は送らない）。
+/**
+ * POST /oneonone のリクエストボディ。
+ * api/src/oneonone/one-on-one-create-request-schema.ts と同形。
+ * member_employee_code 必須、それ以外は任意（未入力は送らない）。
+ */
 export type OneOnOneCreateRequest = {
   member_employee_code: string
   topics: string | null
@@ -23,9 +24,11 @@ export type OneOnOneCreateRequest = {
   next_action: string | null
 }
 
-// PUT /oneonone/:id のリクエストボディ。
-// api/src/interface/oneonone/[id]/route.ts の PUT zValidator と同形。
-// topics / manager_note / next_action を変更する。未入力は null。
+/**
+ * PUT /oneonone/:id のリクエストボディ。
+ * api/src/interface/oneonone/[id]/route.ts の PUT zValidator と同形。
+ * topics / manager_note / next_action を変更する。未入力は null。
+ */
 export type OneOnOneUpdateRequest = {
   topics: string | null
   manager_note: string | null

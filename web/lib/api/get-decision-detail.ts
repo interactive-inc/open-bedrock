@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /decisions/:id を session トークン付きで呼び、意思決定記録詳細を取得する。
+/** GET /decisions/:id を session トークン付きで呼び、意思決定記録詳細を取得する。 */
 export async function getDecisionDetail(id: number) {
   const client = await createClient()
 

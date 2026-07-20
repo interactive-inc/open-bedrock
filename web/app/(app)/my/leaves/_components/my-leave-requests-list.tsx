@@ -34,7 +34,7 @@ type Props = {
   leaveRequests: ReadonlyArray<LeaveRequestMineResponse>
 }
 
-// 自分の休暇申請一覧。pending の行にのみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。
+/** 自分の休暇申請一覧。pending の行にのみ変更（Dialog フォーム）と取り下げボタンを置く表示コンポーネント。 */
 export function MyLeaveRequestsList(props: Props) {
   return (
     <div className="overflow-x-auto">
@@ -95,7 +95,7 @@ export function MyLeaveRequestsList(props: Props) {
   )
 }
 
-// 休暇申請変更フォームを Dialog で開く。種別・開始日・終了日・理由を編集して送信する。
+/** 休暇申請変更フォームを Dialog で開く。種別・開始日・終了日・理由を編集して送信する。 */
 function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineResponse }) {
   const [open, setOpen] = useState(false)
 
@@ -191,7 +191,7 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
   )
 }
 
-// 休暇申請取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。
+/** 休暇申請取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
 function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
   async function reduce(
     previousState: LeaveActionState,

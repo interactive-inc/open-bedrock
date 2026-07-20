@@ -69,7 +69,7 @@ export default async function MyRingiPage() {
   )
 }
 
-// /ringi/me を認証付きで取得して一覧テーブルを描画する非同期 RSC。
+/** /ringi/me を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function MyRingiTable() {
   const ringiList = await getMyRingi(null)
 

@@ -14,7 +14,7 @@ type Props = {
   searchParams: Promise<{ fiscal_year?: string }>
 }
 
-// /headcount-plans 人員計画と実在籍数の比較。headcount_plan:read:all が無ければ notFound。
+/** /headcount-plans 人員計画と実在籍数の比較。headcount_plan:read:all が無ければ notFound。 */
 export default async function HeadcountPlansPage(props: Props) {
   const me = await getMe()
 

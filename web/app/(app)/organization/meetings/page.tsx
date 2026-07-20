@@ -14,7 +14,7 @@ type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-// /meetings 会議体一覧。閲覧は全認証者、登録は meeting:manage のみ導線を出す。
+/** /meetings 会議体一覧。閲覧は全認証者、登録は meeting:manage のみ導線を出す。 */
 export default async function MeetingsPage(props: Props) {
   const params = await props.searchParams
 

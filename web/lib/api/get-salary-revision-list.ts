@@ -5,8 +5,10 @@ export type SalaryRevisionSearchQuery = {
   employeeId?: number
 }
 
-// GET /salary-revisions を session トークン付きで呼び、社員の給与改定履歴を取得する。
-// 最機微のため salary_revision:read:all が無ければ api が 403 を返し、ここでは Error を返す。
+/**
+ * GET /salary-revisions を session トークン付きで呼び、社員の給与改定履歴を取得する。
+ * 最機微のため salary_revision:read:all が無ければ api が 403 を返し、ここでは Error を返す。
+ */
 export async function getSalaryRevisionList(query: SalaryRevisionSearchQuery) {
   const client = await createClient()
 

@@ -5,8 +5,10 @@ import type {
   ApplicationTemplateUpdateRequest,
 } from "@/lib/api/types/application-template-types"
 
-// PUT /application-templates/:code。管理権限が申請テンプレートの内容を変更する。
-// 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。
+/**
+ * PUT /application-templates/:code。管理権限が申請テンプレートの内容を変更する。
+ * 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。
+ */
 export async function updateApplicationTemplate(
   code: string,
   request: ApplicationTemplateUpdateRequest,

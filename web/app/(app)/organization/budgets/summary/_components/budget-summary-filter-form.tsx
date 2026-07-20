@@ -6,7 +6,7 @@ type Props = {
   fiscalPeriodValue: string
 }
 
-// 会計期間で消化状況を絞り込む GET フォーム。summary は fiscal_period が必須。
+/** 会計期間で消化状況を絞り込む GET フォーム。summary は fiscal_period が必須。 */
 export function BudgetSummaryFilterForm(props: Props) {
   return (
     <form method="get" action="/organization/budgets/summary">

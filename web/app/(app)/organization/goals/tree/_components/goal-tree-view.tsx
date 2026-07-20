@@ -7,7 +7,7 @@ type Props = {
   roots: ReadonlyArray<GoalTreeNode>
 }
 
-// 目標ツリーをインデント付きの行で表示する。全社→部門→個人の順に深さで字下げする。
+/** 目標ツリーをインデント付きの行で表示する。全社→部門→個人の順に深さで字下げする。 */
 export function GoalTreeView(props: Props) {
   const rows = toFlatGoalRows(props.roots)
 

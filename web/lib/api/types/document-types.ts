@@ -1,6 +1,4 @@
-// api の app-schemas（zAppDocument ほか）と同形の手書き type（api と疎結合に保つため別定義）。
-
-// GET /documents の各要素。
+/** GET /documents の各要素。 */
 export type DocumentListItem = {
   id: number
   title: string
@@ -12,7 +10,7 @@ export type DocumentListItem = {
   created_at: string
 }
 
-// POST /documents のリクエスト body。
+/** POST /documents のリクエスト body。 */
 export type DocumentRegisterRequest = {
   title: string
   location: string
@@ -22,5 +20,5 @@ export type DocumentRegisterRequest = {
   note?: string
 }
 
-// PUT /documents/:id のリクエスト body。
+/** PUT /documents/:id のリクエスト body。 */
 export type DocumentUpdateRequest = DocumentRegisterRequest

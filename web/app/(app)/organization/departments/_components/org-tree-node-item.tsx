@@ -7,8 +7,10 @@ type Props = {
   depth: number
 }
 
-// 組織ツリーの 1 ノードを階層インデント付きで描画し、子ノードを再帰的に並べる。
-// 部署名をクリックするとその部署のハブ（概要）へ遷移する。
+/**
+ * 組織ツリーの 1 ノードを階層インデント付きで描画し、子ノードを再帰的に並べる。
+ * 部署名をクリックするとその部署のハブ（概要）へ遷移する。
+ */
 export function OrgTreeNodeItem(props: Props) {
   const indentStyle = { paddingInlineStart: `${props.depth * 1.5}rem` }
 

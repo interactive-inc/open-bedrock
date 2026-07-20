@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /stocktakes/:id/assets/:code/check。資産の現物確認を記録する（管理者ロールのみ）。
+/** POST /stocktakes/:id/assets/:code/check。資産の現物確認を記録する（管理者ロールのみ）。 */
 export async function checkStocktakeItem(id: string, assetCode: string, locationNote?: string) {
   const client = await createClient()
 

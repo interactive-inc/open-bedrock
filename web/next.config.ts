@@ -14,9 +14,11 @@ const nextConfig: NextConfig = {
       process.env.NODE_ENV === "development" ? { allowedOrigins: ["null"] } : undefined,
   },
 
-  // URL を RESTful に再編した第1弾のリダイレクト（ブックマーク・既存導線の互換維持）。
-  // 各ファミリーで具体的なサブパスを先に、base を後に置く（配列は先頭一致）。
-  // 動的セグメントは :param で受け、並べ替え系は順序を入れ替えて転送する。
+  /**
+   * URL を RESTful に再編した第1弾のリダイレクト（ブックマーク・既存導線の互換維持）。
+   * 各ファミリーで具体的なサブパスを先に、base を後に置く（配列は先頭一致）。
+   * 動的セグメントは :param で受け、並べ替え系は順序を入れ替えて転送する。
+   */
   async redirects() {
     // 空間再編(my / teams / organization / system)による移動。
     // 旧 URL からの転送はここで一括生成する。第一世代 URL は下の個別 redirects を

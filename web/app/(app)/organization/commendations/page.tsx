@@ -12,7 +12,7 @@ type Props = {
   searchParams: Promise<{ page?: string }>
 }
 
-// /commendations 表彰の記録。閲覧は全認証者（社内公開）、記録・削除は commendation:manage のみ。
+/** /commendations 表彰の記録。閲覧は全認証者（社内公開）、記録・削除は commendation:manage のみ。 */
 export default async function CommendationsPage(props: Props) {
   const params = await props.searchParams
 

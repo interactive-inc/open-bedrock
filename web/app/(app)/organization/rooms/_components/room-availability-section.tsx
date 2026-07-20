@@ -9,8 +9,10 @@ type Props = {
   search: RoomAvailabilitySearch
 }
 
-// 指定期間の空き状況を GET /rooms/availability で取得し、空きテーブルと予約フォームを描画する非同期 RSC。
-// 期間未指定のときは検索を促すだけにとどめる。
+/**
+ * 指定期間の空き状況を GET /rooms/availability で取得し、空きテーブルと予約フォームを描画する非同期 RSC。
+ * 期間未指定のときは検索を促すだけにとどめる。
+ */
 export async function RoomAvailabilitySection(props: Props) {
   if (props.search.startAt === null || props.search.endAt === null) {
     return (

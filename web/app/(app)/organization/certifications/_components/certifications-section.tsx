@@ -6,7 +6,7 @@ type Props = {
   canManage: boolean
 }
 
-// 資格マスタ一覧セクション。certification:manage を持つ場合のみ管理向けの案内を出す。
+/** 資格マスタ一覧セクション。certification:manage を持つ場合のみ管理向けの案内を出す。 */
 export async function CertificationsSection(props: Props) {
   const certifications = await listCertifications()
 

@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /attendance?scope=reports。直属含む配下全員の勤怠を取得する。
-// attendance:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+/**
+ * GET /attendance?scope=reports。直属含む配下全員の勤怠を取得する。
+ * attendance:read:reports が無いと api が 403 を返すため、戻りは Error になる。
+ */
 export async function getReportsAttendance(params: { from?: string; to?: string } = {}) {
   const client = await createClient()
 

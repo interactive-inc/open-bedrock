@@ -10,14 +10,16 @@ import { updateCertificateRequest } from "@/lib/api/update-certificate-request"
 import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type CertificateRequestActionState = {
   ok: boolean
   error: string | null
 }
 
-// 人事が証明書発行依頼を発行済みにする Server Action。certificate_request_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が証明書発行依頼を発行済みにする Server Action。certificate_request_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function issueCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
@@ -48,8 +50,10 @@ export async function issueCertificateRequestAction(
   return { ok: true, error: null }
 }
 
-// 人事が証明書発行依頼を却下する Server Action。certificate_request_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事が証明書発行依頼を却下する Server Action。certificate_request_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function rejectCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
@@ -80,7 +84,7 @@ export async function rejectCertificateRequestAction(
   return { ok: true, error: null }
 }
 
-// id 用の FormData 値を取り出す。未入力は null。
+/** id 用の FormData 値を取り出す。未入力は null。 */
 function toIdText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -89,8 +93,10 @@ function toIdText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// 証明書発行依頼作成 Server Action。certificate_type 必須、submit_to/needed_by/note は任意。
-// 成功時は /certificate-requests を revalidate して一覧へ反映する。
+/**
+ * 証明書発行依頼作成 Server Action。certificate_type 必須、submit_to/needed_by/note は任意。
+ * 成功時は /certificate-requests を revalidate して一覧へ反映する。
+ */
 export async function createCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
@@ -114,7 +120,7 @@ export async function createCertificateRequestAction(
   return { ok: true, error: null }
 }
 
-// 証明書発行依頼変更 Server Action。certificate_request_id 必須。本人以外の変更は api がエラーを返す。
+/** 証明書発行依頼変更 Server Action。certificate_request_id 必須。本人以外の変更は api がエラーを返す。 */
 export async function updateCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
@@ -144,7 +150,7 @@ export async function updateCertificateRequestAction(
   return { ok: true, error: null }
 }
 
-// 証明書発行依頼取消 Server Action。certificate_request_id 必須。成功時は /certificate-requests を revalidate する。
+/** 証明書発行依頼取消 Server Action。certificate_request_id 必須。成功時は /certificate-requests を revalidate する。 */
 export async function cancelCertificateRequestAction(
   previousState: CertificateRequestActionState,
   formData: FormData,
@@ -175,7 +181,7 @@ type RequestFields = {
   note: string | null
 }
 
-// FormData から証明書発行依頼の共通フィールドを取り出して検証する。不正時は Error。
+/** FormData から証明書発行依頼の共通フィールドを取り出して検証する。不正時は Error。 */
 function toRequestFields(formData: FormData): RequestFields | Error {
   const certificateType = formData.get("certificate_type")
 
@@ -191,7 +197,7 @@ function toRequestFields(formData: FormData): RequestFields | Error {
   }
 }
 
-// 任意テキストの FormData 値を取り出す。未入力は null。
+/** 任意テキストの FormData 値を取り出す。未入力は null。 */
 function toNullableText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null

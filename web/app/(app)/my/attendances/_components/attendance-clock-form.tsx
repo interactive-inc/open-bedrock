@@ -16,15 +16,17 @@ type Props = {
 
 const initialState: AttendanceActionState = { ok: false, error: null, clockedAt: null }
 
-// 打刻フォーム。mode に応じて出勤 / 退勤の Server Action を useActionState 経由で呼ぶ。
-// reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
-// 打刻成功時はフォーム内にチェックマークと時刻を表示して視覚フィードバックを強化する。
+/**
+ * 打刻フォーム。mode に応じて出勤 / 退勤の Server Action を useActionState 経由で呼ぶ。
+ * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
+ * 打刻成功時はフォーム内にチェックマークと時刻を表示して視覚フィードバックを強化する。
+ */
 export function AttendanceClockForm(props: Props) {
   const isClockIn = props.mode === "clock-in"
 
   const label = isClockIn ? "出勤" : "退勤"
 
-  // useActionState の reducer。mode に応じた Server Action を実行し結果を次の state にする。
+  /** useActionState の reducer。mode に応じた Server Action を実行し結果を次の state にする。 */
   async function reduce(
     previousState: AttendanceActionState,
     formData: FormData,

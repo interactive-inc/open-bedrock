@@ -21,7 +21,7 @@ type Props = {
   params: Promise<{ regulation: string }>
 }
 
-// /regulations/:code 詳細画面。最新版の本文と版履歴を表示し、管理者は新版追加・アーカイブができる。
+/** /regulations/:code 詳細画面。最新版の本文と版履歴を表示し、管理者は新版追加・アーカイブができる。 */
 export default async function RegulationDetailPage(props: Props) {
   const params = await props.params
 

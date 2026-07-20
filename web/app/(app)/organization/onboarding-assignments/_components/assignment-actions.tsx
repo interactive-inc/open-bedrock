@@ -29,7 +29,7 @@ type Props = {
 
 const initialState: AssignmentMutationState = { ok: false, message: null }
 
-// 割り当ての割当日変更と取り消しを行う操作群。特権ロールの社員画面で使う。
+/** 割り当ての割当日変更と取り消しを行う操作群。特権ロールの社員画面で使う。 */
 export function AssignmentActions(props: Props) {
   const reschedule = useFormAction(
     rescheduleOnboardingAssignmentAction,

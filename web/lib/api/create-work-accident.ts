@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { WorkAccidentCreateRequest } from "@/lib/api/types/work-accident-types"
 
-// POST /work-accidents。労災・事故の発生記録を登録する。失敗時は Error を返す。
+/** POST /work-accidents。労災・事故の発生記録を登録する。失敗時は Error を返す。 */
 export async function createWorkAccident(request: WorkAccidentCreateRequest) {
   const client = await createClient()
 

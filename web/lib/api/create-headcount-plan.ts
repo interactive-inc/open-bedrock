@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /headcount-plans。人員計画を登録する（headcount_plan:manage）。年度・部署の重複は 409。
+/** POST /headcount-plans。人員計画を登録する（headcount_plan:manage）。年度・部署の重複は 409。 */
 export async function createHeadcountPlan(request: {
   fiscal_year: number
   department_code: string | null

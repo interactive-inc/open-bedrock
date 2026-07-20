@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm"
 export class ItIncidentRepository {
   constructor(private readonly c: Context) {}
 
-  // 発生日時の新しい順で返す。status で絞り込める。
+  /** 発生日時の新しい順で返す。status で絞り込める。 */
   async findAll(props: {
     status: "open" | "resolved" | null
     limit: number

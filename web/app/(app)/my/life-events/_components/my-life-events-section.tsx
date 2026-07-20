@@ -2,7 +2,7 @@ import { MyLifeEventsList } from "@/app/(app)/my/life-events/_components/my-life
 import { FetchError } from "@/components/fetch-error"
 import { listMyLifeEvents } from "@/lib/api/list-my-life-events"
 
-// 自分のライフイベント届出を取得して一覧コンポーネントへ渡す非同期 RSC。
+/** 自分のライフイベント届出を取得して一覧コンポーネントへ渡す非同期 RSC。 */
 export async function MyLifeEventsSection() {
   const lifeEvents = await listMyLifeEvents()
 

@@ -13,7 +13,7 @@ type Props = {
   availabilities: ReadonlyArray<RoomAvailability>
 }
 
-// 各会議室の空き状況テーブル。空きは緑バッジ、重複ありは衝突予約の用途を表示する。
+/** 各会議室の空き状況テーブル。空きは緑バッジ、重複ありは衝突予約の用途を表示する。 */
 export function RoomAvailabilityTable(props: Props) {
   return (
     <div className="overflow-x-auto">
@@ -55,7 +55,7 @@ export function RoomAvailabilityTable(props: Props) {
   )
 }
 
-// 衝突予約の用途を結合した表示用文字列。重複が無い場合はダッシュ。
+/** 衝突予約の用途を結合した表示用文字列。重複が無い場合はダッシュ。 */
 function toConflictLabel(availability: RoomAvailability): string {
   if (availability.conflicts.length === 0) {
     return "—"

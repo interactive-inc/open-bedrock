@@ -12,8 +12,10 @@ type Props = {
   params: Promise<{ team: string }>
 }
 
-// 部署メンバー画面（部署ハブのメンバータブ）。
-// 直接発令の権限を持つ利用者は、この部署を対象にした配属（主配属・兼務）をここから登録できる。
+/**
+ * 部署メンバー画面（部署ハブのメンバータブ）。
+ * 直接発令の権限を持つ利用者は、この部署を対象にした配属（主配属・兼務）をここから登録できる。
+ */
 export default async function OrgDepartmentMembersPage(props: Props) {
   const params = await props.params
 

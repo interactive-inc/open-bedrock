@@ -1,5 +1,5 @@
 import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 describe("canManageBusinessTrips", () => {

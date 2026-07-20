@@ -10,8 +10,10 @@ export const metadata = { title: "健康診断" }
 
 type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
 
-// 健診・ストレスチェックの実施記録一覧（人事向け）。要配慮情報のため health_checkup:read:all を
-// 持つロール(hr / admin)のみ表示できる。権限が無ければ notFound。結果は一切表示しない（実施情報のみ）。
+/**
+ * 健診・ストレスチェックの実施記録一覧（人事向け）。要配慮情報のため health_checkup:read:all を
+ * 持つロール(hr / admin)のみ表示できる。権限が無ければ notFound。結果は一切表示しない（実施情報のみ）。
+ */
 export default async function HealthCheckupsPage(props: { searchParams: SearchParams }) {
   const currentUser = await getMe()
 

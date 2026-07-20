@@ -1,6 +1,6 @@
 import { LeaveBalanceRepository } from "@/infrastructure/leave/leave-balance-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { LeaveBalance } from "@/domain/leave/leave-balance.entity"
 import { describe, expect, test } from "bun:test"
 

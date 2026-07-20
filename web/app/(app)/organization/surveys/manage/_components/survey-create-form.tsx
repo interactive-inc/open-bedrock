@@ -14,8 +14,10 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: SurveyFormState = { ok: false, error: null }
 
-// アンケート登録フォーム。タイトル・状態・設問 JSON を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * アンケート登録フォーム。タイトル・状態・設問 JSON を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function SurveyCreateForm() {
   const router = useRouter()
 

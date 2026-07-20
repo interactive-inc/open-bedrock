@@ -1,5 +1,5 @@
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("loadCurrentOrganization", () => {

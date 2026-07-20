@@ -15,7 +15,7 @@ type Props = {
   canManage: boolean
 }
 
-// 等級マスタ一覧テーブル。canManage のときだけ各行に変更・削除の操作列を出す。
+/** 等級マスタ一覧テーブル。canManage のときだけ各行に変更・削除の操作列を出す。 */
 export function GradeList(props: Props) {
   if (props.grades.length === 0) {
     return (

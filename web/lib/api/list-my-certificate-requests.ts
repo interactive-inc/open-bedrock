@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { CertificateRequestResponse } from "@/lib/api/types/certificate-request-types"
 
-// GET /certificate-requests/me。依頼者本人の証明書発行依頼一覧を取得する。
+/** GET /certificate-requests/me。依頼者本人の証明書発行依頼一覧を取得する。 */
 export async function listMyCertificateRequests(): Promise<
   ReadonlyArray<CertificateRequestResponse> | Error
 > {

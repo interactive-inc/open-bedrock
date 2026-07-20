@@ -1,10 +1,10 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { thanks, thanksRewards } from "@/schema"
 import { describe, expect, test } from "bun:test"
 
-// 受領残高を作る（recipient に points を贈る thanks 行を直接挿入する）。
+/** 受領残高を作る（recipient に points を贈る thanks 行を直接挿入する）。 */
 async function seedBalance(
   context: ReturnType<typeof createTestContext>["context"],
   recipientEmployeeId: number,

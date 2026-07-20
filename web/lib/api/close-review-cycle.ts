@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /review-cycles/:cycle_id/close。特権ロールがサイクルを closed にする。
+/** POST /review-cycles/:cycle_id/close。特権ロールがサイクルを closed にする。 */
 export async function closeReviewCycle(cycleId: number) {
   const client = await createClient()
 

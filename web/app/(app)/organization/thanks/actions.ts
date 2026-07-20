@@ -9,14 +9,16 @@ import { sendThanks } from "@/lib/api/send-thanks"
 import { requireAuth } from "@/lib/auth/require-auth"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type ThanksActionState = {
   ok: boolean
   error: string | null
 }
 
-// 感謝送付 Server Action。recipient_employee_code と message が必須、points は任意。
-// 送り手は token から解決される。成功時は /thanks を revalidate してタイムラインへ反映する。
+/**
+ * 感謝送付 Server Action。recipient_employee_code と message が必須、points は任意。
+ * 送り手は token から解決される。成功時は /thanks を revalidate してタイムラインへ反映する。
+ */
 export async function sendThanksAction(
   previousState: ThanksActionState,
   formData: FormData,
@@ -57,7 +59,7 @@ export async function sendThanksAction(
   return { ok: true, error: null }
 }
 
-// 交換申請 Server Action。reward_id が必須。成功時は /thanks を revalidate して残高へ反映する。
+/** 交換申請 Server Action。reward_id が必須。成功時は /thanks を revalidate して残高へ反映する。 */
 export async function requestRedemptionAction(
   previousState: ThanksActionState,
   formData: FormData,
@@ -84,8 +86,10 @@ export async function requestRedemptionAction(
   return { ok: true, error: null }
 }
 
-// 景品登録 Server Action（管理権限向け）。name と point_cost が必須、stock は任意。
-// UI 側でも非表示にするが、Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+/**
+ * 景品登録 Server Action（管理権限向け）。name と point_cost が必須、stock は任意。
+ * UI 側でも非表示にするが、Server Action は直接呼べるため getMe のロールで二重に弾く（defense-in-depth）。
+ */
 export async function createRewardAction(
   previousState: ThanksActionState,
   formData: FormData,
@@ -126,8 +130,10 @@ export async function createRewardAction(
   return { ok: true, error: null }
 }
 
-// 感謝タイムラインの追加読み込み Server Action。
-// offset を受け取り、次のページを取得して返す。
+/**
+ * 感謝タイムラインの追加読み込み Server Action。
+ * offset を受け取り、次のページを取得して返す。
+ */
 export async function loadMoreThanksAction(offset: number): Promise<ThanksListResult | null> {
   await requireAuth()
 
@@ -140,7 +146,7 @@ export async function loadMoreThanksAction(offset: number): Promise<ThanksListRe
   return result
 }
 
-// 交換コストを正の整数に変換する。
+/** 交換コストを正の整数に変換する。 */
 function toPositiveInt(raw: FormDataEntryValue | null): number | Error {
   const parsed = typeof raw === "string" ? Number(raw) : Number.NaN
 
@@ -151,7 +157,7 @@ function toPositiveInt(raw: FormDataEntryValue | null): number | Error {
   return parsed
 }
 
-// 在庫を 0 以上の整数 or null に変換する。空欄は null（在庫無制限）。
+/** 在庫を 0 以上の整数 or null に変換する。空欄は null（在庫無制限）。 */
 function toStock(raw: FormDataEntryValue | null): number | null | Error {
   if (typeof raw !== "string" || raw.trim() === "") {
     return null
@@ -166,7 +172,7 @@ function toStock(raw: FormDataEntryValue | null): number | null | Error {
   return parsed
 }
 
-// フォームのポイント入力を 0 以上の整数 or null に変換する。空欄は null（ポイント無し）。
+/** フォームのポイント入力を 0 以上の整数 or null に変換する。空欄は null（ポイント無し）。 */
 function toPoints(raw: FormDataEntryValue | null): number | null | Error {
   if (typeof raw !== "string" || raw.trim() === "") {
     return null

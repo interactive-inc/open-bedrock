@@ -16,7 +16,7 @@ type Props = {
   oneOnOnes: ReadonlyArray<OneOnOneItem>
 }
 
-// 1on1 履歴をカード描画する。自由記述が長いためテーブルでなくカードで並べる。
+/** 1on1 履歴をカード描画する。自由記述が長いためテーブルでなくカードで並べる。 */
 export function OneOnOneList(props: Props) {
   if (props.oneOnOnes.length === 0) {
     return (

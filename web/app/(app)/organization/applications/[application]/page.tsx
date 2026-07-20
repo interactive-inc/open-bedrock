@@ -18,7 +18,7 @@ type Props = {
   params: Promise<{ application: string }>
 }
 
-// id 文字列を正の整数へ変換する。無効なら null。
+/** id 文字列を正の整数へ変換する。無効なら null。 */
 function toApplicationId(rawId: string): number | null {
   const parsed = Number(rawId)
 
@@ -29,7 +29,7 @@ function toApplicationId(rawId: string): number | null {
   return parsed
 }
 
-// 申請詳細画面。RSC で 1 件取得し、ステータスと payload を表示する。
+/** 申請詳細画面。RSC で 1 件取得し、ステータスと payload を表示する。 */
 export default async function ApplicationDetailPage(props: Props) {
   const params = await props.params
 
@@ -193,7 +193,7 @@ function workflowStatusLabel(status: ApplicationWorkflowProgress["steps"][number
   }[status]
 }
 
-// 申請への承認/却下アクションの履歴。古い順に並べる。
+/** 申請への承認/却下アクションの履歴。古い順に並べる。 */
 function ApprovalHistory(props: { approvals: ReadonlyArray<ApplicationApprovalEntry> }) {
   if (props.approvals.length === 0) {
     return null

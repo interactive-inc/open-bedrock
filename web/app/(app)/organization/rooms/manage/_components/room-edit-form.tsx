@@ -26,8 +26,10 @@ type Props = {
 
 const initialState: RoomUpdateFormState = { ok: false, error: null }
 
-// 会議室編集フォームを Dialog で開く。名称・定員・所在地を変更して送信する。
-// 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+/**
+ * 会議室編集フォームを Dialog で開く。名称・定員・所在地を変更して送信する。
+ * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
+ */
 export function RoomEditForm(props: Props) {
   const [open, setOpen] = useState(false)
 

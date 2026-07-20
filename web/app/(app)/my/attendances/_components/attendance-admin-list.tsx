@@ -9,8 +9,10 @@ type Props = {
   to: string | null
 }
 
-// 管理者向けの全体勤怠一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
-// 権限不足は api が 403 を返すため、その場合はエラーメッセージにフォールバックする。
+/**
+ * 管理者向けの全体勤怠一覧をサーバ側 fetch してテーブル描画する非同期 RSC。
+ * 権限不足は api が 403 を返すため、その場合はエラーメッセージにフォールバックする。
+ */
 export async function AttendanceAdminList(props: Props) {
   const employeeId = props.employeeId !== null ? Number(props.employeeId) : null
 

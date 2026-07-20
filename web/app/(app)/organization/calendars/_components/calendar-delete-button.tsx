@@ -13,7 +13,7 @@ type Props = {
 
 const initialState: CalendarActionState = { ok: false, error: null }
 
-// 会社カレンダーの 1 日を削除するボタン（calendar:manage 保持者にのみ表示する）。
+/** 会社カレンダーの 1 日を削除するボタン（calendar:manage 保持者にのみ表示する）。 */
 export function CalendarDeleteButton(props: Props) {
   async function reduce(
     previousState: CalendarActionState,

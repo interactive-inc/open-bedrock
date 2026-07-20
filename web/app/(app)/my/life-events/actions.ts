@@ -16,14 +16,16 @@ import {
 import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
 import { requireAuth } from "@/lib/auth/require-auth"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type LifeEventActionState = {
   ok: boolean
   error: string | null
 }
 
-// 人事がライフイベント届出を承認する Server Action。life_event_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事がライフイベント届出を承認する Server Action。life_event_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function approveLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
@@ -51,8 +53,10 @@ export async function approveLifeEventAction(
   return { ok: true, error: null }
 }
 
-// 人事がライフイベント届出を却下する Server Action。life_event_id 必須。
-// permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+/**
+ * 人事がライフイベント届出を却下する Server Action。life_event_id 必須。
+ * permission を確認してから API を叩き、成功時は admin 一覧を revalidate する。
+ */
 export async function rejectLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
@@ -80,7 +84,7 @@ export async function rejectLifeEventAction(
   return { ok: true, error: null }
 }
 
-// id 用の FormData 値を取り出す。未入力は null。
+/** id 用の FormData 値を取り出す。未入力は null。 */
 function toLifeEventIdText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string" || value.trim() === "") {
     return null
@@ -89,8 +93,10 @@ function toLifeEventIdText(value: FormDataEntryValue | null): string | null {
   return value.trim()
 }
 
-// ライフイベント届出作成 Server Action。event_type/event_date 必須、detail は任意。
-// 成功時は /life-events を revalidate して一覧へ反映する。
+/**
+ * ライフイベント届出作成 Server Action。event_type/event_date 必須、detail は任意。
+ * 成功時は /life-events を revalidate して一覧へ反映する。
+ */
 export async function createLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
@@ -114,7 +120,7 @@ export async function createLifeEventAction(
   return { ok: true, error: null }
 }
 
-// ライフイベント届出変更 Server Action。life_event_id 必須。本人以外の変更は api がエラーを返す。
+/** ライフイベント届出変更 Server Action。life_event_id 必須。本人以外の変更は api がエラーを返す。 */
 export async function updateLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
@@ -144,7 +150,7 @@ export async function updateLifeEventAction(
   return { ok: true, error: null }
 }
 
-// ライフイベント届出取消 Server Action。life_event_id 必須。成功時は /life-events を revalidate する。
+/** ライフイベント届出取消 Server Action。life_event_id 必須。成功時は /life-events を revalidate する。 */
 export async function cancelLifeEventAction(
   previousState: LifeEventActionState,
   formData: FormData,
@@ -174,7 +180,7 @@ type EventFields = {
   detail: string | null
 }
 
-// FormData からライフイベント届出の共通フィールドを取り出して検証する。不正時は Error。
+/** FormData からライフイベント届出の共通フィールドを取り出して検証する。不正時は Error。 */
 function toEventFields(formData: FormData): EventFields | Error {
   const eventType = toRequiredText(formData.get("event_type"), {
     label: "種別",
