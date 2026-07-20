@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"
 import {
   ApplicationWorkflowRepository,
@@ -41,7 +42,7 @@ export async function decideWorkflowApplication(props: {
   payload: unknown
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
@@ -219,7 +220,7 @@ async function resolveStepAuthorization(props: {
   c: Context
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   templateCode: string
   createdAt: string
   step: ApplicationWorkflowStep
@@ -265,7 +266,7 @@ async function persistApproval(props: {
   applicantEmployeeId: number
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   representedApprover: number
   delegationId: number | null
   comment: string | null

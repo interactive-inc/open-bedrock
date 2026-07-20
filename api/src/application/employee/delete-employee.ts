@@ -1,11 +1,11 @@
-import { canDeleteEmployee } from "@/lib/employee/can-delete-employee"
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   viewerEmployeeId: number
   code: string
 }
@@ -20,7 +20,7 @@ export class DeleteEmployee {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    if (canDeleteEmployee(command.session) === false) {
+    if (command.session.hasPermission("employee:delete") === false) {
       return new ForbiddenError("cannot delete employees", "forbidden")
     }
     const employee = await new EmployeeRepository(this.c).findByCode(command.code)

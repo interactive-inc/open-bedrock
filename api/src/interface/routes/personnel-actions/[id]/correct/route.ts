@@ -16,7 +16,6 @@ import {
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { ApplicationError, ValidationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
@@ -45,7 +44,7 @@ export const POST = factory.createHandlers(
     const original = await new PersonnelActionRepository(c).findById(actionId)
     if (original instanceof ApplicationError) throw toHttpException(original)
     if (original === null) throw new NotFoundError("action not found")
-    if (!hasPermission(session, "employee:lifecycle:apply")) {
+    if (!session.hasPermission("employee:lifecycle:apply")) {
       await appendLifecycleDeniedAudit({
         c,
         session,

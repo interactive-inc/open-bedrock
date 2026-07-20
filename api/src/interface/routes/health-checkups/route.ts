@@ -1,7 +1,5 @@
 import { CreateHealthCheckup } from "@/application/health-checkup/create-health-checkup"
 import { HealthCheckupRepository } from "@/infrastructure/health-checkup/health-checkup-repository"
-import { canManageHealthCheckups } from "@/lib/health-checkup/can-manage-health-checkups"
-import { canViewAllHealthCheckups } from "@/lib/health-checkup/can-view-all-health-checkups"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup, zAppHealthCheckupList } from "@/lib/app-schemas"
@@ -39,7 +37,7 @@ export const GET = factory.createHandlers(
 
     const query = c.req.valid("query")
 
-    const canViewAll = canViewAllHealthCheckups(session)
+    const canViewAll = session.hasPermission("health_checkup:read:all")
 
     // employee_id 指定なし: read:all は全社を、それ以外は本人分を見る。
     // employee_id 指定あり: 本人分 or read:all のみ許可する。
@@ -118,7 +116,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageHealthCheckups(session) === false) {
+    if (session.hasPermission("health_checkup:manage") === false) {
       throw new ForbiddenError()
     }
 

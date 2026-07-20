@@ -1,5 +1,4 @@
 import { CreateHeadcountPlan } from "@/application/headcount-plan/create-headcount-plan"
-import { canReadHeadcountPlans } from "@/lib/headcount-plan/can-read-headcount-plans"
 import { factory } from "@/lib/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -24,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canReadHeadcountPlans(session) === false) {
+  if (session.hasPermission("headcount_plan:read:all") === false) {
     throw new ForbiddenError()
   }
 

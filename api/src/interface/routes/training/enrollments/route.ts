@@ -1,4 +1,3 @@
-import { canManageTraining } from "@/lib/training/can-manage-training"
 import type { Variables } from "@/env"
 import { codeSchema } from "@/lib/schemas"
 import { factory } from "@/lib/factory"
@@ -48,7 +47,7 @@ export const GET = factory.createHandlers(
 
     const requestsOthers = query.employee_id !== undefined || query.employee_code !== undefined
 
-    if (requestsOthers === true && canManageTraining(session) === false) {
+    if (requestsOthers === true && session.hasPermission("training:manage") === false) {
       throw new ForbiddenError()
     }
 

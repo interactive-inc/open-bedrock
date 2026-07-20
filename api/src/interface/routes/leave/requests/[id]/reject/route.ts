@@ -1,6 +1,5 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { ApplicationError } from "@/lib/errors"
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppLeaveRequest } from "@/lib/app-schemas"
@@ -26,7 +25,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canDecideLeave(session) === false) {
+    if (session.hasPermission("leave:approve") === false) {
       throw new ForbiddenError()
     }
 

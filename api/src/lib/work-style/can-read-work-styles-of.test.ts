@@ -1,18 +1,15 @@
+import { Session } from "@/lib/auth/session"
 import { canReadWorkStylesOf } from "@/lib/work-style/can-read-work-styles-of"
-import type { SessionPayload } from "@/env"
 import { describe, expect, test } from "bun:test"
 
-function sessionWith(props: {
-  employeeId: number
-  permissions: ReadonlyArray<string>
-}): SessionPayload {
-  return {
+function sessionWith(props: { employeeId: number; permissions: ReadonlyArray<string> }): Session {
+  return new Session({
     accountId: 1,
     employeeId: props.employeeId,
     employeeStatus: "active",
     permissions: new Set(props.permissions),
     roleKeys: [],
-  }
+  })
 }
 
 describe("canReadWorkStylesOf", () => {

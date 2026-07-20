@@ -1,4 +1,4 @@
-import type { EmployeeStatus } from "@/lib/schemas"
+import type { Session } from "@/lib/auth/session"
 import type { schema } from "@/schema"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
@@ -30,22 +30,10 @@ export type RequestAuditContext = {
   externalRequestId: string | null
 }
 
-/**
- * 認証済みの本人（セッション）。verify-bearer が JWT 検証後に DB から権限を解決して載せる。
- * permissions/roleKeys が認可の正。認可判定は hasPermission(session, key) に委譲する。
- */
-export type SessionPayload = {
-  accountId: number
-  employeeId: number
-  employeeStatus: EmployeeStatus
-  permissions: ReadonlySet<string>
-  roleKeys: ReadonlyArray<string>
-}
-
-/** リクエストスコープの変数。database に Drizzle、session に本人を載せる。 */
+/** リクエストスコープの変数。database に Drizzle、session に本人（Session。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
   database: DrizzleD1Database<typeof schema>
-  session: SessionPayload | null
+  session: Session | null
   auditContext: RequestAuditContext
 }
 

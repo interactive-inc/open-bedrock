@@ -1,4 +1,3 @@
-import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-view-all-certificate-requests"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { certificateRequests } from "@/schema"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllCertificateRequests(session) === false) {
+    if (session.hasPermission("certificate_request:read:all") === false) {
       throw new ForbiddenError()
     }
 

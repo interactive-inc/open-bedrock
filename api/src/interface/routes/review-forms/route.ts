@@ -1,4 +1,3 @@
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { filterFormsForSubjectViewer } from "@/lib/review/filter-forms-for-subject-viewer"
 import { toReviewerTypeSummary } from "@/lib/review/to-reviewer-type-summary"
 import { factory } from "@/lib/factory"
@@ -30,7 +29,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("subject_employee_id is required")
   }
 
-  const isAdministrator = canAdministerCycle(session)
+  const isAdministrator = session.hasPermission("review:administer")
 
   const isSubjectSelf = subjectEmployeeId === session.employeeId
 

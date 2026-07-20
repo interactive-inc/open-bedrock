@@ -2,8 +2,8 @@ import { z } from "zod"
 
 /**
  * 全 permission のカタログ。認可の唯一の正(SSOT)で、key とカテゴリ(UI グルーピング用)の対応。
- * permission は "<domain>:<action>[:<scope>]" 形式の機械可読キーで、既存の can-* ゲートと
- * インライン判定を正規化したもの。permissions テーブルは UI 用の写しで、起動時にこの集合の
+ * permission は "<domain>:<action>[:<scope>]" 形式の機械可読キー。
+ * permissions テーブルは UI 用の写しで、起動時にこの集合の
  * subset であることを検証する。self スコープ(本人==操作対象)は permission に載せず、
  * 所有者判定としてコードの不変条件に残す
  */

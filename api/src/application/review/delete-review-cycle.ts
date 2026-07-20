@@ -1,5 +1,5 @@
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import {
   abortWhenPreviousStatementChangedNoRows,
   isAbortedByGuard,
@@ -9,7 +9,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   cycleId: number
 }
 
@@ -23,7 +23,7 @@ export class DeleteReviewCycle {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<Deleted | ApplicationError> {
-    if (canAdministerCycle(input.session) === false) {
+    if (input.session.hasPermission("review:administer") === false) {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 

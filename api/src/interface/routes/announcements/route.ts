@@ -5,7 +5,6 @@ import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
 import { zAppAnnouncement, zAppAnnouncementList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -29,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const canManage = canManageAnnouncements(session)
+  const canManage = session.hasPermission("announcement:manage")
 
   const statusQuery = c.req.query("status") ?? null
 

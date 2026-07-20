@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import type { Contract } from "@/domain/contract/contract.entity"
-import { canManageContracts } from "@/lib/contract/can-manage-contracts"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ContractRepository } from "@/infrastructure/contract/contract-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   details: {
     title: string
@@ -27,7 +27,7 @@ export class UpdateContract {
   async run(command: Command): Promise<Contract | ApplicationError> {
     const contractRepository = new ContractRepository(this.c)
 
-    if (canManageContracts(command.session) === false) {
+    if (command.session.hasPermission("contract:manage") === false) {
       return new ForbiddenError("cannot manage contracts", "forbidden")
     }
 

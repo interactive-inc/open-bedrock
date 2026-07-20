@@ -1,7 +1,7 @@
-import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import type { AccountSummary } from "@/infrastructure/iam/account-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
@@ -13,7 +13,7 @@ export type AccountAccessSummary = AccountSummary & {
 }
 
 export type Command = {
-  session: SessionPayload
+  session: Session
 }
 
 /**
@@ -23,7 +23,7 @@ export class ListAccounts {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<ReadonlyArray<AccountAccessSummary> | ApplicationError> {
-    if (canManageAccounts(command.session) === false) {
+    if (command.session.hasPermission("account:manage") === false) {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 

@@ -11,7 +11,6 @@ import { LicenseRepository } from "@/infrastructure/license/license-repository"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllLicenses } from "@/lib/license/can-view-all-licenses"
 import { zAppLicense, zAppLicenseList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -35,7 +34,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllLicenses(session) === false) {
+    if (session.hasPermission("license:read:all") === false) {
       throw new ForbiddenError()
     }
 

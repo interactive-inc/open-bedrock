@@ -1,9 +1,8 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { factory } from "@/lib/factory"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { canReadEmployees } from "@/lib/employee/can-read-employees"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 
 export type LifecycleReadAuthorization = {
@@ -13,16 +12,16 @@ export type LifecycleReadAuthorization = {
 
 export async function resolveLifecycleReadAuthorization(
   c: Context,
-  session: SessionPayload,
+  session: Session,
   targetEmployeeId: number,
 ): Promise<LifecycleReadAuthorization | null | Error> {
   if (session.employeeId === targetEmployeeId) {
     return { scope: "self", auditAction: "employee.lifecycle.read" }
   }
-  if (hasPermission(session, "employee:lifecycle:read:all")) {
+  if (session.hasPermission("employee:lifecycle:read:all")) {
     return { scope: "all", auditAction: "employee.lifecycle.read_all" }
   }
-  if (!canReadEmployees(session)) return null
+  if (!session.hasPermission("employee:read")) return null
   const authority = await resolveOrganizationAuthority(c, session.employeeId, targetEmployeeId)
   if (authority instanceof Error) return authority
   return authority.managementChain || authority.departmentManager
@@ -32,11 +31,11 @@ export async function resolveLifecycleReadAuthorization(
 
 export async function resolveLifecycleApplyScope(
   c: Context,
-  session: SessionPayload,
+  session: Session,
   targetEmployeeId: number,
 ): Promise<"all" | "organization" | null | Error> {
-  if (!hasPermission(session, "employee:lifecycle:apply")) return null
-  if (hasPermission(session, "employee:lifecycle:read:all")) return "all"
+  if (!session.hasPermission("employee:lifecycle:apply")) return null
+  if (session.hasPermission("employee:lifecycle:read:all")) return "all"
   const authority = await resolveOrganizationAuthority(c, session.employeeId, targetEmployeeId)
   if (authority instanceof Error) return authority
   return authority.managementChain || authority.departmentManager ? "organization" : null
@@ -44,7 +43,7 @@ export async function resolveLifecycleApplyScope(
 
 export async function appendLifecycleReadAudit(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   action: "employee.lifecycle.read" | "employee.lifecycle.read_all"
   targetEmployeeId: number
   scope: LifecycleReadAuthorization["scope"]
@@ -74,7 +73,7 @@ export async function appendLifecycleReadAudit(props: {
 
 export async function appendLifecycleDeniedAudit(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   targetEmployeeId: number | null
   permission: "employee:lifecycle:apply" | "employee:lifecycle:read:all" | "employee:read"
   reasonCode: string

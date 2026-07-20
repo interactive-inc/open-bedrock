@@ -1,11 +1,11 @@
-import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
 }
 
@@ -22,7 +22,7 @@ export class DeleteApplicationTemplate {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
-    if (canManageApplicationTemplates(command.session) === false) {
+    if (command.session.hasPermission("application_template:manage") === false) {
       return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 

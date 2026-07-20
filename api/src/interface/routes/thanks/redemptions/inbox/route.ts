@@ -1,4 +1,3 @@
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
@@ -22,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session) === false) {
+  if (session.hasPermission("thanks_redemption:approve") === false) {
     throw new ForbiddenError()
   }
 

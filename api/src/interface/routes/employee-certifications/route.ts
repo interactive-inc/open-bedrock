@@ -1,7 +1,5 @@
 import { CreateEmployeeCertification } from "@/application/certification/create-employee-certification"
 import { EmployeeCertificationRepository } from "@/infrastructure/certification/employee-certification-repository"
-import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
-import { canViewAllCertifications } from "@/lib/certification/can-view-all-certifications"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppEmployeeCertification, zAppEmployeeCertificationList } from "@/lib/app-schemas"
@@ -43,7 +41,7 @@ export const GET = factory.createHandlers(
 
     const isSelf = requestedId === session.employeeId
 
-    if (isSelf === false && canViewAllCertifications(session) === false) {
+    if (isSelf === false && session.hasPermission("certification:read:all") === false) {
       throw new ForbiddenError()
     }
 
@@ -90,7 +88,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageCertifications(session) === false) {
+    if (session.hasPermission("certification:manage") === false) {
       throw new ForbiddenError()
     }
 

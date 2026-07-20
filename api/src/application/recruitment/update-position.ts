@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { RecruitmentPosition } from "@/domain/recruitment/recruitment-position.entity"
-import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RecruitmentRepository } from "@/infrastructure/recruitment/recruitment-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   title: string
   departmentCode: string | null
@@ -21,7 +21,7 @@ export class UpdatePosition {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<RecruitmentPosition | ApplicationError> {
-    if (canManageRecruitment(command.session) === false) {
+    if (command.session.hasPermission("recruitment:manage") === false) {
       return new ForbiddenError("cannot manage recruitment", "forbidden")
     }
 

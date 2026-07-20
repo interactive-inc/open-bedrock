@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import { CompanyCalendarDay } from "@/domain/calendar/company-calendar-day.entity"
-import { canManageCalendar } from "@/lib/calendar/can-manage-calendar"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { CalendarDayKind } from "@/lib/schemas"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/infrastructure/calendar/company-calendar-day-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   calendarDate: string
   kind: CalendarDayKind
   name: string | null
@@ -22,7 +22,7 @@ export class CreateCompanyCalendarDay {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<CompanyCalendarDay | ApplicationError> {
-    if (canManageCalendar(command.session) === false) {
+    if (command.session.hasPermission("calendar:manage") === false) {
       return new ForbiddenError("cannot manage calendar", "forbidden")
     }
 

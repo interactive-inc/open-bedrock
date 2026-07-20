@@ -1,4 +1,3 @@
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
 import { factory } from "@/lib/factory"
 import { zAppExpenseInboxList } from "@/lib/app-schemas"
 import {
@@ -11,7 +10,6 @@ import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { employees, expenses } from "@/schema"
 import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
 
 /** GET /expenses/inbox — 承認待ちの経費一覧（承認権限が必要） */
@@ -22,11 +20,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideExpense(session) === false) {
+  if (session.hasPermission("expense:approve") === false) {
     throw new ForbiddenError()
   }
 
-  const managedEmployeeIds = hasPermission(session, "org:manage")
+  const managedEmployeeIds = session.hasPermission("org:manage")
     ? null
     : await listManagedEmployeeIds(c, session.employeeId)
 

@@ -1,6 +1,6 @@
-import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
+import type { Session } from "@/lib/auth/session"
 import { LifeEvent } from "@/domain/life-event/life-event.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
@@ -8,7 +8,7 @@ import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repo
 export type Action = "approve" | "reject"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   lifeEventId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceLifeEvent {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
-    if (canManageLifeEvents(command.session) === false) {
+    if (command.session.hasPermission("life_event:manage") === false) {
       return new ForbiddenError("cannot manage life events", "forbidden")
     }
 

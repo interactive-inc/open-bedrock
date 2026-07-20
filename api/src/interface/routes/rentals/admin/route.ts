@@ -1,4 +1,3 @@
-import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-reservations"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { rentalReservations } from "@/schema"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllRentalReservations(session) === false) {
+    if (session.hasPermission("rental:read:all") === false) {
       throw new ForbiddenError()
     }
 

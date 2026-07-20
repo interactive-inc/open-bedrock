@@ -7,7 +7,7 @@ const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "governance:acknowledge",
 ]
 
-/** manager が member に加えて持つ permission(can-* が manager を許可するもの)。 */
+/** manager が member に加えて持つ permission(旧ロール判定で manager 以上に許可されていたもの)。 */
 const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...MEMBER_PERMISSIONS,
   "dashboard:view",
@@ -41,7 +41,7 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "governance:review",
 ]
 
-/** hr が manager に加えて持つ permission(can-* が ["hr","admin"] のもの)。 */
+/** hr が manager に加えて持つ permission(旧ロール判定で hr/admin のみに許可されていたもの)。 */
 const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "application_template:manage",
   "review:administer",
@@ -155,7 +155,7 @@ const ADMIN_PERMISSIONS: ReadonlyArray<PermissionKey> = [
  * system role の key と、その role が持つ permission キー集合の対応。
  * 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現し、
  * 移行で権限が広がらないことをテストで担保する基準。backfill の role_permissions シードに使う。
- * 実態: 大半の can-* は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
+ * 実態: 大半の管理系 permission は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
  * member も公開済みガバナンス文書の閲覧・確認権限を持つ
  */
 export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{

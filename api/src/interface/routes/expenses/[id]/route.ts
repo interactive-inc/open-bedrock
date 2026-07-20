@@ -1,8 +1,5 @@
 import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
-import { canViewAllExpenses } from "@/lib/expense/can-view-all-expenses"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 import type { Expense } from "@/domain/expense/expense.entity"
 import { factory } from "@/lib/factory"
@@ -62,12 +59,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const isOwner = row.expense.employeeId === session.employeeId
 
-  if (isOwner === false && canViewAllExpenses(session) === false) {
-    if (canDecideExpense(session) === false) {
+  if (isOwner === false && session.hasPermission("expense:read:all") === false) {
+    if (session.hasPermission("expense:approve") === false) {
       throw new ForbiddenError()
     }
 
-    if (hasPermission(session, "org:manage") === false) {
+    if (session.hasPermission("org:manage") === false) {
       const organizationAuthority = await resolveOrganizationAuthority(
         c,
         session.employeeId,

@@ -2,7 +2,6 @@ import { CreateGoal } from "@/application/goal/create-goal"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoal } from "@/lib/app-schemas"
-import { canWriteCompanyGoal } from "@/lib/goal/can-write-company-goal"
 import { canWriteDepartmentGoal } from "@/lib/goal/can-write-department-goal"
 import { resolveEmployeeDepartmentCode } from "@/lib/org/resolve-employee-department-code"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -40,7 +39,7 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     if (json.owner_type === "company") {
-      if (canWriteCompanyGoal(session) === false) {
+      if (session.hasPermission("review:administer") === false) {
         throw new ForbiddenError()
       }
     }

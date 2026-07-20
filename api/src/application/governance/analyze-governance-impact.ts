@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import { resolveGovernanceOrgRole } from "@/application/governance/governance-access"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { PERMISSION_KEYS } from "@/lib/auth/permission-keys"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
@@ -26,7 +27,7 @@ export type GovernanceImpactReport = {
 export class AnalyzeGovernanceImpact {
   constructor(private readonly c: Context) {}
 
-  async run(session: SessionPayload): Promise<GovernanceImpactReport | Error> {
+  async run(session: Session): Promise<GovernanceImpactReport | Error> {
     if (!session.permissions.has("governance:manage")) {
       return new ForbiddenError(
         "規程の影響検査を実行する権限がありません",

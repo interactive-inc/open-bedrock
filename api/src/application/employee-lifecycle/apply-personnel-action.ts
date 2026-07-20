@@ -1,3 +1,4 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import {
   containsDate,
@@ -9,14 +10,13 @@ import {
   type PersonnelActionProjection,
 } from "@/domain/employee-lifecycle/project-personnel-action"
 import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
 } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import {
   abortWhenPreviousStatementChangedNoRows,
   isAbortedByGuard,
@@ -33,7 +33,7 @@ import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
 import { z } from "zod"
 
 export type DirectPersonnelActionCommand = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   input: PersonnelActionInput
   idempotencyKey: string
@@ -460,7 +460,7 @@ export class ApplyPersonnelAction {
   async run(
     command: DirectPersonnelActionCommand,
   ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
-    if (!hasPermission(command.session, "employee:lifecycle:apply")) {
+    if (!command.session.hasPermission("employee:lifecycle:apply")) {
       return new ForbiddenError("人事発令を確定する権限がありません", "forbidden")
     }
 
@@ -639,7 +639,7 @@ export class ApplyPersonnelAction {
   }
 
   async prepareApplicationCompletion(command: {
-    session: SessionPayload
+    session: Session
     employeeId: number | null
     input: PersonnelActionInput
     sourceApplicationId: number | null
@@ -835,7 +835,7 @@ export class ApplyPersonnelAction {
   }
 
   async prepareDirectProspectiveHire(command: {
-    session: SessionPayload
+    session: Session
     input: Extract<PersonnelActionInput, { kind: "hire" }>
     idempotencyKey: string
     expectedOrganizationRevision: number

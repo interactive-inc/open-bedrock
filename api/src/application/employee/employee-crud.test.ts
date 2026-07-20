@@ -1,3 +1,4 @@
+import { Session } from "@/lib/auth/session"
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { GetEmployee } from "@/application/employee/get-employee"
 import { RegisterEmployee } from "@/application/employee/register-employee"
@@ -106,8 +107,10 @@ describe("RegisterEmployee", () => {
       ForbiddenError,
       "forbidden",
     )
-    const limited = {
-      ...makeTestSession("member"),
+    const limited = new Session({
+      accountId: 1,
+      employeeId: 1,
+      employeeStatus: "active",
       permissions: new Set([
         "employee:create",
         "employee:assign_role",
@@ -115,8 +118,7 @@ describe("RegisterEmployee", () => {
         "account:manage",
       ]),
       roleKeys: ["employee-provisioner"],
-      role: "employee-provisioner",
-    }
+    })
     expectApplicationError(
       await new RegisterEmployee(context).run({
         session: limited,

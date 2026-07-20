@@ -1,4 +1,3 @@
-import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { employees, shiftSwapRequests } from "@/schema"
@@ -54,7 +53,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllShiftSwaps(session) === false) {
+    if (session.hasPermission("shift_swap:read:all") === false) {
       throw new ForbiddenError()
     }
 

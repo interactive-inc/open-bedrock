@@ -2,7 +2,6 @@ import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-re
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppShiftSwapRequest, zAppShiftSwapRequestPendingList } from "@/lib/app-schemas"
-import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import { factory } from "@/lib/factory"
 import { isoDate } from "@/lib/schemas"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
@@ -28,7 +27,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canApproveShiftSwap(session) === false) {
+  if (session.hasPermission("shift_swap:approve") === false) {
     throw new ForbiddenError()
   }
 

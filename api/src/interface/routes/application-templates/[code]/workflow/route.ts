@@ -14,7 +14,6 @@ import {
 } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import { factory } from "@/lib/factory"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -58,7 +57,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
   if (session === null) throw new UnauthorizedError()
-  if (canManageApplicationTemplates(session) === false) throw new ForbiddenError()
+  if (session.hasPermission("application_template:manage") === false) throw new ForbiddenError()
 
   const code = validateCodeParam(c.req.param("code"), "template")
   const template = await loadTemplate(c, code)
@@ -89,7 +88,7 @@ export const PUT = factory.createHandlers(
     const session = c.var.session
 
     if (session === null) throw new UnauthorizedError()
-    if (canManageApplicationTemplates(session) === false) throw new ForbiddenError()
+    if (session.hasPermission("application_template:manage") === false) throw new ForbiddenError()
 
     const code = validateCodeParam(c.req.param("code"), "template")
     const template = await loadTemplate(c, code)

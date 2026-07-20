@@ -1,6 +1,6 @@
-import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
+import type { Session } from "@/lib/auth/session"
 import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { CertificateRequestRepository } from "@/infrastructure/certificate-request/certificate-request-repository"
@@ -8,7 +8,7 @@ import { CertificateRequestRepository } from "@/infrastructure/certificate-reque
 export type Action = "issue" | "reject"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   certificateRequestId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceCertificateRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
-    if (canManageCertificateRequests(command.session) === false) {
+    if (command.session.hasPermission("certificate_request:manage") === false) {
       return new ForbiddenError("cannot manage certificate requests", "forbidden")
     }
 

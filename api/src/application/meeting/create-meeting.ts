@@ -1,12 +1,12 @@
-import { canManageMeetings } from "@/lib/meeting/can-manage-meetings"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { Meeting } from "@/domain/meeting/meeting.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { MeetingRepository } from "@/infrastructure/meeting/meeting-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   name: string
   cadence: string | null
@@ -23,7 +23,7 @@ export class CreateMeeting {
   async run(command: Command): Promise<Meeting | ApplicationError> {
     const meetingRepository = new MeetingRepository(this.c)
 
-    if (canManageMeetings(command.session) === false) {
+    if (command.session.hasPermission("meeting:manage") === false) {
       return new ForbiddenError("cannot manage meetings", "forbidden")
     }
 

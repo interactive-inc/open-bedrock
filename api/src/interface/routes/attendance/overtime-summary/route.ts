@@ -1,7 +1,6 @@
 import { countBusinessDays } from "@/interface/routes/attendance/overtime-summary/count-business-days"
 import { toOvertimeEntries } from "@/interface/routes/attendance/overtime-summary/to-overtime-entries"
 import { toMonthRange } from "@/interface/routes/attendance/to-month-range"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { factory } from "@/lib/factory"
@@ -54,11 +53,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   ]
 
   if (scope === "all") {
-    if (hasPermission(session, "attendance:read:all") === false) {
+    if (session.hasPermission("attendance:read:all") === false) {
       throw new ForbiddenError()
     }
   } else if (scope === "reports") {
-    if (hasPermission(session, "attendance:read:reports") === false) {
+    if (session.hasPermission("attendance:read:reports") === false) {
       throw new ForbiddenError()
     }
 

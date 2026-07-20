@@ -15,8 +15,6 @@ import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { canReadEmployees } from "@/lib/employee/can-read-employees"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
@@ -68,11 +66,11 @@ export const GET = factory.createHandlers(
     }
 
     if (employee.id !== session.employeeId) {
-      if (canReadEmployees(session) === false) {
+      if (session.hasPermission("employee:read") === false) {
         throw new NotFoundError("employee not found")
       }
 
-      if (hasPermission(session, "org:manage") === false) {
+      if (session.hasPermission("org:manage") === false) {
         const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
 
         if (authority instanceof Error) {

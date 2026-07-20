@@ -1,5 +1,4 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
@@ -49,7 +48,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const conditions: Array<SQL> = []
 
   if (requestedEmployeeId === null && scope === "reports") {
-    if (hasPermission(session, "goal:read:reports") === false) {
+    if (session.hasPermission("goal:read:reports") === false) {
       throw new ForbiddenError()
     }
 
@@ -86,8 +85,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     const isMember = departmentEmployeeIds.includes(session.employeeId)
 
     const allowed =
-      hasPermission(session, "goal:read:all") ||
-      (hasPermission(session, "goal:read:department") && isMember)
+      session.hasPermission("goal:read:all") ||
+      (session.hasPermission("goal:read:department") && isMember)
 
     if (allowed === false) {
       throw new ForbiddenError()
@@ -101,7 +100,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     conditions.push(inArray(goals.employeeId, departmentEmployeeIds))
   } else if (requestedEmployeeId === null && scope === "all") {
-    if (hasPermission(session, "goal:read:all") === false) {
+    if (session.hasPermission("goal:read:all") === false) {
       throw new ForbiddenError()
     }
   } else {

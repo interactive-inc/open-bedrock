@@ -1,17 +1,17 @@
+import type { Session } from "@/lib/auth/session"
 import type {
   AuditEventDetail,
   AuditEventInput,
   AuditEventSummary,
 } from "@/domain/audit/audit-event"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import type {
   AuditEventFilters,
   AuditEventPage,
 } from "@/infrastructure/audit/audit-event-repository"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { AUDIT_CURSOR_MAX_LENGTH } from "@/lib/audit/audit-cursor"
 import { toStableAuditJson } from "@/lib/audit/stable-json"
 import {
@@ -356,7 +356,7 @@ export function toPublicAuditDetail(item: AuditEventDetail): AppAuditEventDetail
   }
 }
 
-function sessionOf(c: Context): SessionPayload {
+function sessionOf(c: Context): Session {
   const session = c.var.session
   if (session === null) throw auditUnavailable(new Error("audit session is missing"))
   return session
@@ -409,13 +409,13 @@ async function requireReadPermission(
   kind: "search" | "detail",
   next: () => Promise<void>,
 ): Promise<void> {
-  let session: SessionPayload
+  let session: Session
   try {
     session = sessionOf(c)
   } catch (error) {
     throwAuditRouteError(error)
   }
-  if (hasPermission(session, "audit:read")) {
+  if (session.hasPermission("audit:read")) {
     await next()
     return
   }
@@ -437,13 +437,13 @@ export const auditDetailPermission = factory.createMiddleware((c, next) =>
 )
 
 export const auditExportPermission = factory.createMiddleware(async (c, next) => {
-  let session: SessionPayload
+  let session: Session
   try {
     session = sessionOf(c)
   } catch (error) {
     throwAuditRouteError(error)
   }
-  if (hasPermission(session, "audit:export")) {
+  if (session.hasPermission("audit:export")) {
     await next()
     return
   }

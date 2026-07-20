@@ -1,5 +1,4 @@
 import { CreateBudget } from "@/application/budget/create-budget"
-import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBudget, zAppBudgetList } from "@/lib/app-schemas"
@@ -30,7 +29,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBudgets(session) === false) {
+    if (session.hasPermission("budget:manage") === false) {
       throw new ForbiddenError()
     }
 
@@ -112,7 +111,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBudgets(session) === false) {
+    if (session.hasPermission("budget:manage") === false) {
       throw new ForbiddenError()
     }
 

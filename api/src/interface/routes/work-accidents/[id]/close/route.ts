@@ -1,5 +1,4 @@
 import { CloseWorkAccident } from "@/application/work-accident/close-work-accident"
-import { canManageWorkAccidents } from "@/lib/work-accident/can-manage-work-accidents"
 import { factory } from "@/lib/factory"
 import { zAppWorkAccident } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -14,7 +13,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageWorkAccidents(session) === false) {
+  if (session.hasPermission("work_accident:manage") === false) {
     throw new ForbiddenError()
   }
 

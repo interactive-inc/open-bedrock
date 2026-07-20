@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import { EmployeeWorkStyle } from "@/domain/work-style/employee-work-style.entity"
-import { canManageWorkStyles } from "@/lib/work-style/can-manage-work-styles"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/lib/schemas"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeWorkStyleRepository } from "@/infrastructure/work-style/employee-work-style-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   style: WorkStyle
   startsOn: string
@@ -23,7 +23,7 @@ export class CreateEmployeeWorkStyle {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<EmployeeWorkStyle | ApplicationError> {
-    if (canManageWorkStyles(command.session) === false) {
+    if (command.session.hasPermission("work_style:manage") === false) {
       return new ForbiddenError("cannot manage work styles", "forbidden")
     }
 

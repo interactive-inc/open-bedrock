@@ -1,5 +1,4 @@
 import { BuildBudgetSummaryView } from "@/application/budget/budget-summary-view"
-import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
 import { factory } from "@/lib/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBudgetSummary } from "@/lib/app-schemas"
@@ -28,7 +27,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBudgets(session) === false) {
+    if (session.hasPermission("budget:manage") === false) {
       throw new ForbiddenError()
     }
 

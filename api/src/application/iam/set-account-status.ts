@@ -1,4 +1,4 @@
-import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
+import type { Session } from "@/lib/auth/session"
 import { accountStatusSchema } from "@/lib/schemas"
 import {
   ConflictError,
@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
@@ -16,7 +16,7 @@ import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-g
 import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   accountId: number
   status: string
   now: number
@@ -32,7 +32,7 @@ export class SetAccountStatus {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Updated | ApplicationError> {
-    if (canManageAccounts(command.session) === false) {
+    if (command.session.hasPermission("account:manage") === false) {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 

@@ -1,15 +1,15 @@
-import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
+import type { Session } from "@/lib/auth/session"
 import {
   abortWhenPreviousStatementChangedNoRows,
   isAbortedByGuard,
 } from "@/lib/d1/batch-abort-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   surveyId: number
 }
 
@@ -23,7 +23,7 @@ export class DeleteSurvey {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    if (canManageSurveys(command.session) === false) {
+    if (command.session.hasPermission("survey:manage") === false) {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 

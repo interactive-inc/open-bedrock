@@ -13,7 +13,6 @@ import type { SQL } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllContracts } from "@/lib/contract/can-view-all-contracts"
 import { zAppContract, zAppContractList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -50,7 +49,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllContracts(session) === false) {
+    if (session.hasPermission("contract:read:all") === false) {
       throw new ForbiddenError()
     }
 

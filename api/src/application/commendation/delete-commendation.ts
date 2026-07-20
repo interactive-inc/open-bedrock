@@ -1,11 +1,11 @@
-import { canManageCommendations } from "@/lib/commendation/can-manage-commendations"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { CommendationRepository } from "@/infrastructure/commendation/commendation-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
 }
 
@@ -16,7 +16,7 @@ export class DeleteCommendation {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<true | ApplicationError> {
-    if (canManageCommendations(command.session) === false) {
+    if (command.session.hasPermission("commendation:manage") === false) {
       return new ForbiddenError("cannot manage commendations", "forbidden")
     }
 

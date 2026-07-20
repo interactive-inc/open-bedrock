@@ -1,5 +1,4 @@
 import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/domain/review/review-form.entity"
 import { toReviewResultView } from "@/lib/review/to-review-result-view"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
-  const canAdminister = canAdministerCycle(session)
+  const canAdminister = session.hasPermission("review:administer")
   let visibleFormRows = formRows
 
   if (canAdminister === false) {

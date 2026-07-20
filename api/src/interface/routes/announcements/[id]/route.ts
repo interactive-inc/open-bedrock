@@ -6,7 +6,6 @@ import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
 import { zAppAnnouncement } from "@/lib/app-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
@@ -34,7 +33,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("announcement not found")
   }
 
-  if (row.status !== "published" && canManageAnnouncements(session) === false) {
+  if (row.status !== "published" && session.hasPermission("announcement:manage") === false) {
     throw new NotFoundError("announcement not found")
   }
 

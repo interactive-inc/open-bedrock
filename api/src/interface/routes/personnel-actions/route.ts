@@ -16,7 +16,6 @@ import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { resolvePersonnelActionPosition } from "@/interface/utils/resolve-personnel-action-position"
 import { nonCorrectionWirePersonnelActionInputSchema } from "@/interface/utils/wire-personnel-action-input"
 import type { PersonnelActionRecord } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { ApplicationError, ValidationError } from "@/lib/errors"
 import { factory } from "@/lib/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -51,7 +50,7 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
     const employee = await new GetEmployee(c).run({ code: body.action.employeeCode })
     if (employee instanceof ApplicationError) throw new NotFoundError("employee not found")
-    if (!hasPermission(session, "employee:lifecycle:apply")) {
+    if (!session.hasPermission("employee:lifecycle:apply")) {
       await appendLifecycleDeniedAudit({
         c,
         session,

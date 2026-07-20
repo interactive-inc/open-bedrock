@@ -1,5 +1,4 @@
 import { GetManagementDashboard } from "@/application/dashboard/get-management-dashboard"
-import { canViewManagementDashboard } from "@/lib/dashboard/can-view-management-dashboard"
 import { ApplicationError } from "@/lib/errors"
 import { zAppManagementDashboard } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -15,7 +14,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewManagementDashboard(session) === false) {
+  if (session.hasPermission("management_dashboard:view") === false) {
     throw new ForbiddenError()
   }
 

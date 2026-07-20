@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { Asset } from "@/domain/asset/asset.entity"
-import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   employeeCode: string
   now: string
@@ -25,7 +25,7 @@ export class LendAsset {
 
     const employeeRepository = new EmployeeRepository(this.c)
 
-    if (canManageAssets(command.session) === false) {
+    if (command.session.hasPermission("asset:manage") === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")
     }
 

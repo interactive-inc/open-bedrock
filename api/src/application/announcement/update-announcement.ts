@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import type { Announcement } from "@/domain/announcement/announcement.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/infrastructure/announcement/announcement-repository"
-import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   announcementId: number
   title: string
   bodyMd: string
@@ -21,7 +21,7 @@ export class UpdateAnnouncement {
   async run(command: Command): Promise<Announcement | ApplicationError> {
     const announcementRepository = new AnnouncementRepository(this.c)
 
-    if (canManageAnnouncements(command.session) === false) {
+    if (command.session.hasPermission("announcement:manage") === false) {
       return new ForbiddenError("cannot manage announcements", "forbidden")
     }
 

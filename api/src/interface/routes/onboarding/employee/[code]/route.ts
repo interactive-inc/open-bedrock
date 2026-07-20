@@ -1,4 +1,3 @@
-import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingAssignmentList } from "@/lib/app-schemas"
 import {
@@ -21,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewEmployeeOnboarding(session) === false) {
+  if (session.hasPermission("onboarding:view:all") === false) {
     throw new ForbiddenError()
   }
 

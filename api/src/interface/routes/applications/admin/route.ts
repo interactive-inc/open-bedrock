@@ -1,4 +1,3 @@
-import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
 import { applications, applicationTemplates, employees } from "@/schema"
@@ -52,7 +51,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllApplications(session) === false) {
+    if (session.hasPermission("application:read:all") === false) {
       throw new ForbiddenError()
     }
 
