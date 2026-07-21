@@ -188,3 +188,180 @@ describe("POST /oneonones", () => {
     expect(response.status).toBe(404)
   })
 })
+
+function tokenFor(employeeId: number, role: string): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId,
+    email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
+    role,
+  })
+}
+
+const scopeEmployeeRows = [
+  { id: 2, code: "M002", name: "Mgr", email: "you+m002@example.com", role: "manager" },
+  { id: 20, code: "R020", name: "ReportA", email: "you+r020@example.com", role: "member" },
+  { id: 21, code: "R021", name: "ReportB", email: "you+r021@example.com", role: "member" },
+  { id: 22, code: "S022", name: "Solo", email: "you+s022@example.com", role: "manager" },
+]
+
+async function createDepartmentScopeTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    })),
+  )
+
+  await seedIamForEmployees(
+    db,
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
+    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
+    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
+    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
+  ])
+
+  await seedD1(db, "one_on_ones", [
+    {
+      id: "dept-001",
+      member_id: 20,
+      manager_id: 2,
+      held_at: "2026-06-01T05:00:00Z",
+      topics: "D001 session A",
+      manager_note: "internal note A",
+      next_action: "action A",
+    },
+    {
+      id: "dept-002",
+      member_id: 21,
+      manager_id: 2,
+      held_at: "2026-06-08T05:00:00Z",
+      topics: "D001 session B",
+      manager_note: "internal note B",
+      next_action: "action B",
+    },
+    {
+      id: "dept-003",
+      member_id: 22,
+      manager_id: 22,
+      held_at: "2026-06-10T05:00:00Z",
+      topics: "D002 session",
+      manager_note: null,
+      next_action: null,
+    },
+  ])
+
+  return db
+}
+
+async function grantDepartmentReader(db: D1Database, accountId: number): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO roles (id, key, name, description, is_system, created_at)
+       VALUES (900, 'dept_reader', 'dept reader', '', 0, 0)`,
+    )
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO role_permissions (role_id, permission_id)
+       SELECT 900, p.id FROM permissions p WHERE p.key = 'oneonone:read:department'`,
+    )
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+       VALUES (?1, 900, NULL, 0)`,
+    )
+    .bind(accountId)
+    .run()
+}
+
+describe("GET /oneonones?scope=department", () => {
+  test("department reader in the department lists its 1on1s", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/oneonones?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(oneOnOneResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      // 部署スコープでは manager_note は null になる。
+      expect(parsed.data.data.every((row) => row.manager_note === null)).toBe(true)
+    }
+  })
+
+  test("department reader outside the department is forbidden", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/oneonones?scope=department&department_code=D002",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("member without department permission is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/oneonones?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("missing department_code is unprocessable", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20)
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/oneonones?scope=department",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(422)
+  })
+})
