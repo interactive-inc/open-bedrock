@@ -1,11 +1,18 @@
+import { hasPermission } from "@/lib/auth/has-permission"
+import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
 import { factory } from "@/lib/factory"
 import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { applications, applicationTemplates } from "@/schema"
+import { applications, applicationTemplates, employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, eq } from "drizzle-orm"
+import { and, count, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { UnauthorizedError } from "@/interface/lib/errors"
-import { zAppApplicationList } from "@/lib/app-schemas"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+  UnprocessableEntityError,
+} from "@/interface/lib/errors"
+import { zAppApplicationAdminList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -14,13 +21,18 @@ import {
 } from "@/interface/utils/to-bounded-int"
 import { z } from "zod"
 
-/** GET /applications — 本人の申請一覧（ステータスで絞り込み可） */
+/**
+ * GET /applications — 本人の申請一覧（ステータスで絞り込み可）。
+ * scope=department&department_code= で部署メンバー全員分を一覧する(対応 permission 必須)。
+ */
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
     "query",
     z.object({
       status: z.enum(["pending", "approved", "rejected"]).optional(),
+      scope: z.enum(["department"]).optional(),
+      department_code: z.string().optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
@@ -48,23 +60,63 @@ export const GET = factory.createHandlers(
       max: MAX_LIST_OFFSET,
     })
 
-    const conditions: Array<SQL> = [eq(applications.applicantId, session.employeeId)]
+    const conditions: Array<SQL> = []
+
+    if (query.scope === "department") {
+      const departmentCode = query.department_code ?? null
+
+      if (departmentCode === null) {
+        throw new UnprocessableEntityError("department_code is required for scope=department")
+      }
+
+      const departmentEmployeeIds = await listDepartmentEmployeeIds({ c, departmentCode })
+
+      if (departmentEmployeeIds instanceof Error) {
+        throw new InternalError("failed to resolve department employees")
+      }
+
+      // 部署スコープは、全社閲覧権限があるか、自分がその部署に所属し部署閲覧権限を持つ場合だけ許可する。
+      const isMember = departmentEmployeeIds.includes(session.employeeId)
+
+      const allowed =
+        hasPermission(session, "application:read:all") ||
+        (hasPermission(session, "application:read:department") && isMember)
+
+      if (allowed === false) {
+        throw new ForbiddenError()
+      }
+
+      if (departmentEmployeeIds.length === 0) {
+        const emptyBody = zAppApplicationAdminList.parse({ data: [], total: 0 })
+
+        return c.json(emptyBody, 200)
+      }
+
+      conditions.push(inArray(applications.applicantId, departmentEmployeeIds))
+    } else {
+      conditions.push(eq(applications.applicantId, session.employeeId))
+    }
 
     if (query.status !== undefined) {
       conditions.push(eq(applications.status, query.status))
     }
 
-    // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
     const rows = await c.var.database
       .select({
         id: applications.id,
+        applicantId: applications.applicantId,
+        applicantName: employees.name,
+        applicantDeptName: employees.deptName,
         status: applications.status,
         currentStep: applications.currentStep,
         createdAt: applications.createdAt,
+        templateCode: applicationTemplates.code,
         templateName: applicationTemplates.name,
+        templateCategory: applicationTemplates.category,
       })
       .from(applications)
       .leftJoin(applicationTemplates, eq(applicationTemplates.id, applications.templateId))
+      .leftJoin(employees, eq(employees.id, applications.applicantId))
       .where(and(...conditions))
       .limit(limit)
       .offset(offset)
@@ -74,12 +126,17 @@ export const GET = factory.createHandlers(
       .from(applications)
       .where(and(...conditions))
 
-    const responseBody = zAppApplicationList.parse({
+    const responseBody = zAppApplicationAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
+        template_code: row.templateCode ?? "",
         template_name: row.templateName ?? "",
-        status: row.status,
+        template_category: row.templateCategory ?? "",
+        applicant_id: row.applicantId,
+        applicant_name: row.applicantName ?? "",
+        applicant_dept_name: row.applicantDeptName,
         current_step: row.currentStep,
+        status: row.status,
         created_at: row.createdAt,
       })),
       total: totalRows.at(0)?.total ?? 0,

@@ -46,6 +46,11 @@ export const PERMISSION_CATALOG = [
     description: "全社の申請を横断で閲覧する",
   },
   {
+    key: "application:read:department",
+    category: "application",
+    description: "同じ部署の申請を閲覧する",
+  },
+  {
     key: "application_template:manage",
     category: "application",
     description: "申請テンプレートを管理する",
@@ -57,6 +62,11 @@ export const PERMISSION_CATALOG = [
   { key: "leave:read:all", category: "leave", description: "全社の休暇申請を横断で閲覧する" },
   { key: "notification:send", category: "notification", description: "通知を送信する" },
   { key: "oneonone:create", category: "oneonone", description: "1on1 を作成する" },
+  {
+    key: "oneonone:read:department",
+    category: "oneonone",
+    description: "同じ部署の 1on1 を閲覧する",
+  },
   { key: "review:administer", category: "review", description: "評価サイクルを運営する" },
   {
     key: "career_posting:manage",
