@@ -101,7 +101,7 @@ describe("GET /work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/work-styles?employee_id=5",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -125,7 +125,7 @@ describe("POST /work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/work-styles",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         employee_id: 5,
@@ -165,7 +165,7 @@ describe("POST /work-styles", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/work-styles",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { employee_id: 5, style: "remote", starts_on: "2026-07-01" },
     })

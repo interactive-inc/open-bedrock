@@ -141,7 +141,7 @@ describe("GET /onboarding/me", () => {
   })
 
   test("returns an empty list for an employee without tasks", async () => {
-    const response = await request({ path: "/onboarding/me", token: await token(1, "admin") })
+    const response = await request({ path: "/onboarding/me", token: await token(1, "root") })
 
     expect(response.status).toBe(200)
 

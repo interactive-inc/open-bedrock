@@ -98,7 +98,7 @@ describe("GET /shift/assignments", () => {
   test("privileged role lists department shifts by dept_code", async () => {
     const response = await request({
       path: "/shift/assignments?dept_code=D003",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

@@ -124,7 +124,7 @@ describe("GET /budgets/:id", () => {
     // dept 3(Engineering)は seed-expenses の approved 経費(id:2, 3300)のみが消化に入る。
     const response = await request({
       path: "/budgets/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -145,7 +145,7 @@ describe("GET /budgets/:id", () => {
     // dept 4(Sales)の seed-expenses は id:3 のみで status は pending → 消化 0。
     const response = await request({
       path: "/budgets/2",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -163,7 +163,7 @@ describe("GET /budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/budgets/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -183,7 +183,7 @@ describe("PATCH /budgets/:id", () => {
   test("updates amount, name and note", async () => {
     const response = await request({
       path: "/budgets/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PATCH",
       body: { amount: 1200000, name: "Engineering FY2026 (revised)", note: "raised" },
     })
@@ -201,7 +201,7 @@ describe("PATCH /budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/budgets/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PATCH",
       body: { amount: 1, name: "x" },
     })
@@ -225,7 +225,7 @@ describe("DELETE /budgets/:id", () => {
   test("returns 204 and removes the budget", async () => {
     const response = await request({
       path: "/budgets/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -235,7 +235,7 @@ describe("DELETE /budgets/:id", () => {
   test("returns 404 for a missing budget", async () => {
     const response = await request({
       path: "/budgets/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

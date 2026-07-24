@@ -24,7 +24,7 @@ async function createTestDb(): Promise<TestDb> {
     { id: 4, code: "E004", name: "Member", status: "active" },
   ])
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "admin" },
+    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "root" },
     { id: 2, email: "you+e002@example.com", passwordHash: "hash", role: "member" },
     { id: 3, email: "you+e003@example.com", passwordHash: "hash", role: "member" },
     { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "member" },
@@ -147,7 +147,7 @@ describe("GET /audit-events", () => {
     expect((await request(db, "/audit-events", await token(1))).status).toBe(200)
     expect((await request(db, "/audit-events", await token(2))).status).toBe(200)
     expect((await request(db, "/audit-events", await token(3))).status).toBe(403)
-    expect((await request(db, "/audit-events", await token(4, "admin"))).status).toBe(403)
+    expect((await request(db, "/audit-events", await token(4, "root"))).status).toBe(403)
   })
 
   test("applies grants and revocations after token issuance", async () => {

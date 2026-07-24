@@ -5,7 +5,7 @@ import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
@@ -118,7 +118,7 @@ export class ArchiveEmployee {
     )
     try {
       await this.c.env.DB.batch([
-        new LastAdminGuard(this.c).abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(
+        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
           employee.id,
         ),
         this.c.env.DB.prepare(
@@ -141,7 +141,7 @@ export class ArchiveEmployee {
       ])
       return { status: "archived" }
     } catch (cause) {
-      if (LastAdminGuard.isAbortedBy(cause)) {
+      if (LastRootGuard.isAbortedBy(cause)) {
         return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
       }
       return isAbortedByGuard(cause)

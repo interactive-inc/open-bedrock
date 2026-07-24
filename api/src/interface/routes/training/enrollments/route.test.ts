@@ -100,7 +100,7 @@ describe("GET /training/enrollments", () => {
   test("a privileged role views another's status by employee_code", async () => {
     const response = await request(
       "/training/enrollments?employee_code=E005",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -125,7 +125,7 @@ describe("GET /training/enrollments", () => {
   test("returns 404 for an unknown employee_code", async () => {
     const response = await request(
       "/training/enrollments?employee_code=E999",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(404)
@@ -134,17 +134,14 @@ describe("GET /training/enrollments", () => {
   test("returns 404 for an unknown employee_id", async () => {
     const response = await request(
       "/training/enrollments?employee_id=9999",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(404)
   })
 
   test("a privileged role views another's status by employee_id", async () => {
-    const response = await request(
-      "/training/enrollments?employee_id=5",
-      await tokenFor(1, "admin"),
-    )
+    const response = await request("/training/enrollments?employee_id=5", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 

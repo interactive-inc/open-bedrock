@@ -44,7 +44,7 @@ async function createAction(db: D1Database): Promise<number> {
     db,
     jwtSecret,
     path: "/disciplinary-actions",
-    token: await tokenFor(1, "admin"),
+    token: await tokenFor(1, "root"),
     method: "POST",
     body: { employee_id: 5, kind: "warning", summary: "policy breach", decided_on: "2026-06-01" },
   })
@@ -66,7 +66,7 @@ describe("disciplinary actions", () => {
       db,
       jwtSecret,
       path: "/disciplinary-actions",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(list.status).toBe(200)

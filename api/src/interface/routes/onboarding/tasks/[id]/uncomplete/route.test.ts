@@ -158,7 +158,7 @@ describe("POST /onboarding/tasks/:id/uncomplete", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/onboarding/tasks/9999/uncomplete",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
     })
 
@@ -170,7 +170,7 @@ describe("POST /onboarding/tasks/:id/uncomplete", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/onboarding/tasks/abc/uncomplete",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
     })
 

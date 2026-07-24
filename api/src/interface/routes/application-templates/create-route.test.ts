@@ -82,7 +82,7 @@ async function request(
 
 describe("POST /application-templates", () => {
   test("privileged role creates a template and returns 201", async () => {
-    const response = await request("/application-templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "root"), {
       method: "POST",
       body: {
         code: "new_template",
@@ -115,7 +115,7 @@ describe("POST /application-templates", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/application-templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "root"), {
       method: "POST",
       body: { code: "paid_leave", name: "Duplicate", category: "attendance", schema_json: {} },
     })
@@ -124,7 +124,7 @@ describe("POST /application-templates", () => {
   })
 
   test("returns 400 when a required field is missing", async () => {
-    const response = await request("/application-templates", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates", await tokenFor(1, "root"), {
       method: "POST",
       body: { name: "No Code", category: "general", schema_json: {} },
     })

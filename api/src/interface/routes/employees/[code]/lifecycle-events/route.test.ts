@@ -29,7 +29,7 @@ describe("GET /employees/:code/lifecycle-events", () => {
     const cases = [
       [5, "member", "employee.lifecycle.read"],
       [4, "manager", "employee.lifecycle.read"],
-      [1, "admin", "employee.lifecycle.read_all"],
+      [1, "root", "employee.lifecycle.read_all"],
     ] as const
     for (const [employeeId, role, auditAction] of cases) {
       const db = await createLifecycleRouteDb()

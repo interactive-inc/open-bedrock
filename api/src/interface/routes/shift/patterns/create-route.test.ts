@@ -85,7 +85,7 @@ describe("POST /shift/patterns", () => {
   test("privileged role creates a pattern and returns 201", async () => {
     const response = await request({
       path: "/shift/patterns",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         code: "SPLIT",
@@ -122,7 +122,7 @@ describe("POST /shift/patterns", () => {
   test("duplicate code returns 409", async () => {
     const response = await request({
       path: "/shift/patterns",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "EARLY", name: "Duplicate", start_time: "07:00", end_time: "16:00" },
     })
@@ -133,7 +133,7 @@ describe("POST /shift/patterns", () => {
   test("returns 400 when code is missing", async () => {
     const response = await request({
       path: "/shift/patterns",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { name: "Split", start_time: "06:00", end_time: "20:00" },
     })

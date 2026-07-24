@@ -33,7 +33,7 @@ async function createTestDb(): Promise<D1Database> {
 }
 
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
+  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "root" })
 }
 
 function memberToken(): Promise<string> {
@@ -81,7 +81,7 @@ describe("GET /accounts", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBeGreaterThan(0)
 
-      const adminAccount = parsed.data.data.find((account) => account.role_keys.includes("admin"))
+      const adminAccount = parsed.data.data.find((account) => account.role_keys.includes("root"))
 
       expect(adminAccount).toBeDefined()
       expect(adminAccount?.can_manage).toBe(true)

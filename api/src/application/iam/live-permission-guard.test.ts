@@ -20,7 +20,7 @@ describe("atomic IAM live-permission boundary", () => {
   test("role update fails closed when the target role is elevated before its batch", async () => {
     const { context, db } = createTestContext()
 
-    await seedIamTestAccount(context, "E980", "admin")
+    await seedIamTestAccount(context, "E980", "root")
     const actorAccountId = await seedLimitedActor(context, "E981", [
       "iam:manage_roles",
       BASE_PERMISSION,
@@ -53,7 +53,7 @@ describe("atomic IAM live-permission boundary", () => {
   test("role revocation fails closed when the target role is elevated before its batch", async () => {
     const { context, db } = createTestContext()
 
-    await seedIamTestAccount(context, "E982", "admin")
+    await seedIamTestAccount(context, "E982", "root")
     const actorAccountId = await seedLimitedActor(context, "E983", [
       "iam:assign_roles",
       BASE_PERMISSION,
@@ -84,7 +84,7 @@ describe("atomic IAM live-permission boundary", () => {
   test("role grant fails closed when the target role is elevated before its batch", async () => {
     const { context, db } = createTestContext()
 
-    await seedIamTestAccount(context, "E985", "admin")
+    await seedIamTestAccount(context, "E985", "root")
     const actorAccountId = await seedLimitedActor(context, "E986", [
       "iam:assign_roles",
       BASE_PERMISSION,
@@ -112,7 +112,7 @@ describe("atomic IAM live-permission boundary", () => {
   test("account status change fails closed when the target account is elevated before its batch", async () => {
     const { context, db } = createTestContext()
 
-    await seedIamTestAccount(context, "E988", "admin")
+    await seedIamTestAccount(context, "E988", "root")
     const actorAccountId = await seedLimitedActor(context, "E989", [
       "account:manage",
       BASE_PERMISSION,
@@ -143,7 +143,7 @@ describe("atomic IAM live-permission boundary", () => {
   test("role grant rechecks the actor action permission from the live database", async () => {
     const { context, db } = createTestContext()
 
-    await seedIamTestAccount(context, "E991", "admin")
+    await seedIamTestAccount(context, "E991", "root")
     const actorAccountId = await seedIamTestAccount(context, "E992")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,

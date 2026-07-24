@@ -37,7 +37,7 @@ const managementDashboardSchema = z.object({
 })
 
 const managementEmployees = [
-  { id: 1, code: "E001", name: "Admin", email: "you+e001@example.com", role: "admin", dept: "HR" },
+  { id: 1, code: "E001", name: "Admin", email: "you+e001@example.com", role: "root", dept: "HR" },
   {
     id: 2,
     code: "E002",
@@ -327,7 +327,7 @@ describe("GET /dashboard/management", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/dashboard/management",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       now,
     })
 

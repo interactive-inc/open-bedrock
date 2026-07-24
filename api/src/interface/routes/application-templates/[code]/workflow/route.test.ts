@@ -106,7 +106,7 @@ async function request(
 describe("application template workflow route", () => {
   test("admin saves and reads a revisioned workflow", async () => {
     const db = await setup()
-    const saved = await request(db, "admin", 1, "PUT", {
+    const saved = await request(db, "root", 1, "PUT", {
       ...definition,
       expected_revision: 0,
     })
@@ -117,7 +117,7 @@ describe("application template workflow route", () => {
       updated_at: now,
     })
 
-    const response = await request(db, "admin", 1, "GET")
+    const response = await request(db, "root", 1, "GET")
     expect(response.status).toBe(200)
     const result = (await response.json()) as {
       workflow: { steps: Array<{ key: string }> }
@@ -130,7 +130,7 @@ describe("application template workflow route", () => {
   })
 
   test("requires the caller's expected revision", async () => {
-    expect((await request(await setup(), "admin", 1, "PUT", definition)).status).toBe(400)
+    expect((await request(await setup(), "root", 1, "PUT", definition)).status).toBe(400)
   })
 
   test("manager cannot change company-wide workflow settings", async () => {
@@ -150,14 +150,14 @@ describe("application template workflow route", () => {
       steps: [{ ...definition.steps[0], approvers: [{ type: "role", role_key: "missing_role" }] }],
       expected_revision: 0,
     }
-    expect((await request(await setup(), "admin", 1, "PUT", invalid)).status).toBe(422)
+    expect((await request(await setup(), "root", 1, "PUT", invalid)).status).toBe(422)
   })
 
   test("records the authenticated account rather than the linked employee as actor", async () => {
     const db = await setup()
     expect(
       (
-        await request(db, "admin", 1, "PUT", {
+        await request(db, "root", 1, "PUT", {
           ...definition,
           expected_revision: 0,
         })
@@ -192,7 +192,7 @@ describe("application template workflow route", () => {
 
   test("allows only one parallel writer and records the winning actor and immutable revision", async () => {
     const db = await setup()
-    const created = await request(db, "admin", 1, "PUT", {
+    const created = await request(db, "root", 1, "PUT", {
       ...definition,
       expected_revision: 0,
     })
@@ -202,7 +202,7 @@ describe("application template workflow route", () => {
       {
         actorAccountId: 1,
         employeeId: 1,
-        role: "admin",
+        role: "root",
         name: "Admin revision",
       },
       {
@@ -290,7 +290,7 @@ describe("application template workflow route", () => {
     const db = await setup()
     expect(
       (
-        await request(db, "admin", 1, "PUT", {
+        await request(db, "root", 1, "PUT", {
           ...definition,
           expected_revision: 0,
         })
@@ -305,7 +305,7 @@ describe("application template workflow route", () => {
       .bind(now)
       .run()
 
-    const failed = await request(db, "admin", 1, "PUT", {
+    const failed = await request(db, "root", 1, "PUT", {
       ...definition,
       steps: [{ ...definition.steps[0], name: "Must roll back" }],
       expected_revision: 1,

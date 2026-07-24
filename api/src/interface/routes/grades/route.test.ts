@@ -104,7 +104,7 @@ describe("POST /grades", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "G4", name: "Lead", rank: 4 },
     })
@@ -139,7 +139,7 @@ describe("POST /grades", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "G1", name: "Duplicate", rank: 9 },
     })
@@ -154,7 +154,7 @@ describe("PUT /grades/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { code: "G1", name: "Associate II", rank: 1, description: "updated" },
     })
@@ -189,7 +189,7 @@ describe("PUT /grades/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { code: "GX", name: "Ghost", rank: 9 },
     })
@@ -204,7 +204,7 @@ describe("DELETE /grades/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/3",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

@@ -19,7 +19,7 @@ import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {
   const result = await new CreateOrgDepartment(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     department: {
       code: code,
       departmentId: 100,
@@ -41,7 +41,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -83,7 +83,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -99,7 +99,7 @@ describe("CreateOrgDepartment", () => {
   test("requires a personnel action for the initial department responsibility", async () => {
     const { context } = createTestContext()
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -117,7 +117,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "CORP")
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -158,7 +158,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: undefined,
@@ -179,7 +179,7 @@ describe("UpdateOrgDepartment", () => {
     const { context } = createTestContext()
     await seedDepartment(context, "DEV")
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: "E001",
@@ -210,7 +210,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: "DEV",
       managerEmployeeCode: null,
@@ -224,7 +224,7 @@ describe("UpdateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
       parentCode: null,
       managerEmployeeCode: null,
@@ -243,7 +243,7 @@ describe("DeleteOrgDepartment", () => {
     await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
 
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
     })
 
@@ -268,7 +268,7 @@ describe("DeleteOrgDepartment", () => {
       UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
     `)
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
     })
     expectApplicationError(result, ConflictError, "department_in_use")
@@ -291,7 +291,7 @@ describe("DeleteOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
     })
 

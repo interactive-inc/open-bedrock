@@ -21,7 +21,7 @@ describe("system role audit permissions", () => {
   test("grants both audit permissions to admin only", () => {
     for (const role of SYSTEM_ROLE_PERMISSIONS) {
       for (const permission of auditPermissions) {
-        expect(role.permissions.includes(permission)).toBe(role.key === "admin")
+        expect(role.permissions.includes(permission)).toBe(role.key === "root")
       }
     }
   })
@@ -39,7 +39,7 @@ describe("system role lifecycle permissions", () => {
       for (const permission of lifecyclePermissions) {
         const expected =
           role.key === "hr" ||
-          role.key === "admin" ||
+          role.key === "root" ||
           (role.key === "manager" && permission === "employee:lifecycle:request")
 
         expect(role.permissions.includes(permission)).toBe(expected)

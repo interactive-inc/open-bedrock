@@ -157,7 +157,7 @@ describe("GET /partners/:code", () => {
 
 describe("POST /partners", () => {
   test("creates a partner as admin", async () => {
-    const response = await request("/partners", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/partners", await tokenFor(1, "root"), "POST", {
       code: "P9001",
       name: "New Partner",
       category: "customer",
@@ -185,7 +185,7 @@ describe("POST /partners", () => {
   })
 
   test("returns 409 for a duplicate code", async () => {
-    const response = await request("/partners", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/partners", await tokenFor(1, "root"), "POST", {
       code: "P0001",
       name: "Duplicate",
     })
@@ -196,7 +196,7 @@ describe("POST /partners", () => {
 
 describe("PUT /partners/:id", () => {
   test("updates a partner as admin", async () => {
-    const response = await request("/partners/1", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/partners/1", await tokenFor(1, "root"), "PUT", {
       name: "Renamed Acme",
       category: "supplier",
     })
@@ -223,7 +223,7 @@ describe("PUT /partners/:id", () => {
 
 describe("POST /partners/:id/archive", () => {
   test("archives a partner as admin", async () => {
-    const response = await request("/partners/1/archive", await tokenFor(1, "admin"), "POST")
+    const response = await request("/partners/1/archive", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(204)
   })
@@ -235,7 +235,7 @@ describe("POST /partners/:id/archive", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/partners/9999/archive", await tokenFor(1, "admin"), "POST")
+    const response = await request("/partners/9999/archive", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(404)
   })

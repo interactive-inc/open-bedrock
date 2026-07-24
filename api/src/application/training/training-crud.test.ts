@@ -19,7 +19,7 @@ import type { Context } from "@/env"
 
 async function seedCourse(context: Context, code: string): Promise<TrainingCourse> {
   const result = await new CreateTrainingCourse(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     code: code,
     title: "Test Course",
     category: "engineering",
@@ -75,7 +75,7 @@ describe("CreateTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new CreateTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
       title: "TypeScript Basics",
       category: "engineering",
@@ -116,7 +116,7 @@ describe("CreateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new CreateTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
       title: "Another Course",
       category: "other",
@@ -156,7 +156,7 @@ describe("UpdateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new UpdateTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
       title: "Updated Title",
       category: "management",
@@ -199,12 +199,12 @@ describe("UpdateTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     await new ArchiveTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
     })
 
     const result = await new UpdateTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
       title: "Too late",
       category: "other",
@@ -220,7 +220,7 @@ describe("UpdateTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
       title: "Missing",
       category: "other",
@@ -240,7 +240,7 @@ describe("ArchiveTrainingCourse", () => {
     await seedCourse(context, "TS101")
 
     const result = await new ArchiveTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "TS101",
     })
 
@@ -264,7 +264,7 @@ describe("ArchiveTrainingCourse", () => {
     const { context } = createTestContext()
 
     const result = await new ArchiveTrainingCourse(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
     })
 
@@ -394,7 +394,7 @@ describe("GetTrainingEnrollment", () => {
     const result = await new GetTrainingEnrollment(context).run({
       enrollmentId: 9999,
       viewerEmployeeId: 1,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expectApplicationError(result, NotFoundError, "enrollment_not_found")

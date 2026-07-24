@@ -19,7 +19,7 @@ async function createTestDb(): Promise<D1Database> {
     { id: 4, code: "E004", name: "Member", status: "active" },
   ])
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "admin" },
+    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "root" },
     { id: 2, email: "you+e002@example.com", passwordHash: "hash", role: "member" },
     { id: 3, email: "you+e003@example.com", passwordHash: "hash", role: "member" },
     { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "member" },

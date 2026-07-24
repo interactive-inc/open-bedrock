@@ -71,7 +71,7 @@ export class BootstrapAccountRepository {
              SELECT a.id, r.id, NULL, ?2
              FROM accounts a
              JOIN employees e ON e.id = a.employee_id
-             JOIN roles r ON r.key = 'admin' AND r.is_system = 1
+             JOIN roles r ON r.key = 'root' AND r.is_system = 1
              WHERE e.code = ?1`,
           )
           .bind(props.code, props.now),

@@ -14,7 +14,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("employee / account / identity / account_role が全てアトミックに作成される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E499", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E499", "root")
 
     const result = await provisioner.provisionWithEmployee({
       employee: {
@@ -66,7 +66,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("employee code 重複時は全体が rollback される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E498", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E498", "root")
 
     // 先に同じ code の employee を作っておく
     await db
@@ -102,7 +102,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("存在しない role key では全体が rollback される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E497", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E497", "root")
 
     const result = await provisioner.provisionWithEmployee({
       employee: {
@@ -147,7 +147,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
       },
       email: "you+e503@example.com",
       passwordHash: "hashed-password",
-      roleKey: "admin",
+      roleKey: "root",
       grantedByAccountId: actorAccountId,
       now: 1000,
     })

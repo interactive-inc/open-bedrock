@@ -19,7 +19,7 @@ export default factory.createHandlers(
       name: z.string().optional(),
       email: z.string().optional(),
       "password-stdin": z.string().optional(),
-      role: z.enum(["member", "manager", "hr", "admin"]).optional(),
+      role: z.enum(["member", "manager", "hr", "root"]).optional(),
       "hire-on": z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)

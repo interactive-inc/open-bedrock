@@ -98,7 +98,7 @@ describe("ApplicationTemplateRepository", () => {
         category: "accounting",
         description: "更新",
         schemaJson: { type: "object" },
-        approverRoles: ["admin"],
+        approverRoles: ["root"],
       }),
     )
 
@@ -109,7 +109,7 @@ describe("ApplicationTemplateRepository", () => {
     }
 
     expect(updated.name).toBe("経費精算")
-    expect(updated.approverRoles).toEqual(["admin"])
+    expect(updated.approverRoles).toEqual(["root"])
   })
 
   test("delete removes the template", async () => {

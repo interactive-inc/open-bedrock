@@ -154,9 +154,14 @@ export async function resolveWorkflowApproverMatches(props: {
   targetDepartmentCode?: string | null
 }): Promise<ReadonlyArray<WorkflowApproverMatch> | Error> {
   try {
-    const employeeRows = await props.c.var.database
+    const rawEmployeeRows = await props.c.var.database
       .select({ id: employees.id, code: employees.code })
       .from(employees)
+
+    // code=null（外部プロビジョニング）の従業員は組織図・承認者候補に含めない。
+    const employeeRows = rawEmployeeRows.filter(
+      (employee): employee is { id: number; code: string } => employee.code !== null,
+    )
 
     const applicantCode = employeeRows.find(
       (employee) => employee.id === props.applicantEmployeeId,

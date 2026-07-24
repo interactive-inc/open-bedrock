@@ -73,7 +73,7 @@ describe("resolveEvaluationPermission", () => {
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 20,
-      session: makeTestSession("admin", 20),
+      session: makeTestSession("root", 20),
       relation: noRelation,
     })
 
@@ -121,7 +121,7 @@ describe("resolveEvaluationPermission", () => {
       kind: "manager",
       goalEmployeeId: 10,
       viewerEmployeeId: 10,
-      session: makeTestSession("admin", 10),
+      session: makeTestSession("root", 10),
       relation: noRelation,
     })
 
@@ -133,7 +133,7 @@ describe("resolveEvaluationPermission", () => {
       kind: "final",
       goalEmployeeId: 10,
       viewerEmployeeId: 10,
-      session: makeTestSession("admin", 10),
+      session: makeTestSession("root", 10),
       relation: noRelation,
     })
 

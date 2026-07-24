@@ -22,7 +22,7 @@ describe("canWriteDepartmentGoal", () => {
   test("review administrator can write any department goal", () => {
     // admin/hr は review:administer を持つので所属に関係なく許可。
     const result = canWriteDepartmentGoal({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       departmentCode: "D003",
       viewerDepartmentCode: "D001",
     })

@@ -34,7 +34,7 @@ async function createTestDb(): Promise<D1Database> {
 }
 
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
+  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "root" })
 }
 
 function senderToken(): Promise<string> {

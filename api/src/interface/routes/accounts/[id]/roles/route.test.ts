@@ -33,7 +33,7 @@ async function createTestDb(): Promise<D1Database> {
 
 /** E001 は admin(iam:assign_roles 保有)、E005 は member、account.id = employee.id。 */
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
+  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "root" })
 }
 
 function memberToken(): Promise<string> {

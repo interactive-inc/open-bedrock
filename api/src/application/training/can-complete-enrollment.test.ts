@@ -38,7 +38,7 @@ describe("canCompleteEnrollment", () => {
       canCompleteEnrollment({
         enrollmentEmployeeId: 5,
         viewerEmployeeId: 6,
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
       }),
     ).toBe(true)
   })

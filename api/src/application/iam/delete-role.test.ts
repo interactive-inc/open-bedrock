@@ -59,7 +59,7 @@ describe("DeleteRole", () => {
 
     const usecase = new DeleteRole(context)
     const result = await usecase.run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roleId: roleId,
     })
 
@@ -93,7 +93,7 @@ describe("DeleteRole", () => {
 
     const usecase = new DeleteRole(context)
     const result = await usecase.run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roleId: roleId,
     })
 

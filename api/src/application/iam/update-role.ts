@@ -10,7 +10,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
@@ -81,7 +81,7 @@ export class UpdateRole {
       permissionKeys: command.permissionKeys,
     })
 
-    if (updated instanceof LastAdminError) {
+    if (updated instanceof LastRootError) {
       return new ConflictError("cannot remove the last effective admin", "last_admin")
     }
 

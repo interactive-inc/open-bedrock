@@ -148,7 +148,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
       db,
       jwtSecret,
       path: "/goals?employee_id=5&period=2026-H1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     const parsed = z
@@ -208,7 +208,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/goals/9999/evaluations",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { kind: "final", score: 90 },
     })
@@ -286,7 +286,7 @@ describe("POST /goals/:goal_id/evaluations", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/goals/4/evaluations",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { kind: "bogus" },
     })

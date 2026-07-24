@@ -7,7 +7,8 @@ import { redirect } from "next/navigation"
  * ログアウト Server Action。
  * 1. サーバー側でリフレッシュトークンのファミリーを失効させる
  * 2. クライアント側の cookie を破棄する
- * 3. `/` を再描画し、AuthError の error boundary で LoginPage を表示する
+ * 3. LOGOUT_REDIRECT_URL（未設定なら "/"）へ遷移する。ログイン画面を外部に
+ *    持つ構成では、そのログイン入口の URL を設定する
  * API 呼び出しが失敗してもクライアント側のログアウトは必ず実行する。
  */
 export async function logoutAction(): Promise<void> {
@@ -32,5 +33,5 @@ export async function logoutAction(): Promise<void> {
 
   cookieStore.delete("refresh_token")
 
-  redirect("/")
+  redirect(process.env.LOGOUT_REDIRECT_URL ?? "/")
 }

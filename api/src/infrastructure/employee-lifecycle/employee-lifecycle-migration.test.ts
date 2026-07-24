@@ -323,15 +323,15 @@ describe("employee lifecycle migration", () => {
     ).results
 
     expect(rows).toEqual([
-      { role_key: "admin", permission_key: "employee:archive" },
-      { role_key: "admin", permission_key: "employee:lifecycle:apply" },
-      { role_key: "admin", permission_key: "employee:lifecycle:read:all" },
-      { role_key: "admin", permission_key: "employee:lifecycle:request" },
       { role_key: "hr", permission_key: "employee:archive" },
       { role_key: "hr", permission_key: "employee:lifecycle:apply" },
       { role_key: "hr", permission_key: "employee:lifecycle:read:all" },
       { role_key: "hr", permission_key: "employee:lifecycle:request" },
       { role_key: "manager", permission_key: "employee:lifecycle:request" },
+      { role_key: "root", permission_key: "employee:archive" },
+      { role_key: "root", permission_key: "employee:lifecycle:apply" },
+      { role_key: "root", permission_key: "employee:lifecycle:read:all" },
+      { role_key: "root", permission_key: "employee:lifecycle:request" },
     ])
   })
 

@@ -124,7 +124,7 @@ describe("POST /calendar/days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/calendar/days",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "holiday", name: "こどもの日" },
     })
@@ -159,7 +159,7 @@ describe("POST /calendar/days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/calendar/days",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { calendar_date: "2026-01-01", kind: "holiday", name: "重複" },
     })
@@ -172,7 +172,7 @@ describe("POST /calendar/days", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/calendar/days",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { calendar_date: "2026-05-05", kind: "weekend", name: null },
     })
@@ -187,7 +187,7 @@ describe("DELETE /calendar/days/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/calendar/days/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -211,7 +211,7 @@ describe("DELETE /calendar/days/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/calendar/days/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

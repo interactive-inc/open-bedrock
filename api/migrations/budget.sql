@@ -15,11 +15,12 @@ CREATE INDEX IF NOT EXISTS idx_budgets_department ON budgets (department_id);
 
 CREATE INDEX IF NOT EXISTS idx_budgets_fiscal_period ON budgets (fiscal_period);
 
--- budget:manage 権限を追加し、hr / admin に付与する。0004_iam_seed.sql と同じく INSERT OR IGNORE で冪等に追加する。
+-- budget:manage 権限を追加し、hr / root に付与する。0004_iam_seed.sql と同じく INSERT OR IGNORE で冪等に追加する。
+-- このファイルは 0030_rename_admin_role_to_root.sql の後に適用されるため、改名後の key(root)を参照する。
 INSERT OR IGNORE INTO permissions (key, description, category) VALUES
   ('budget:manage', '部署予算を管理する', 'budget');
 
 INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
   SELECT r.id, p.id FROM roles r, permissions p
-  WHERE r.key IN ('hr', 'admin')
+  WHERE r.key IN ('hr', 'root')
     AND p.key = 'budget:manage';
