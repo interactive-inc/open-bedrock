@@ -9,6 +9,7 @@ usage: karte [command]
 
 commands:
   login                       ログインしてトークンを取得 (--email --password [--base-url])
+  bootstrap                   初期 ROOT を1度だけ作成 (--email --password --name [--code --token])
   whoami                      自分の情報を表示
   employee search             社員検索 (--q --dept --status)
   employee register           社員を登録

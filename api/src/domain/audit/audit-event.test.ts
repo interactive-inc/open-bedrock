@@ -20,6 +20,7 @@ const actions = [
   "auth.session.refreshed",
   "auth.session.logout",
   "auth.session.reuse_detected",
+  "auth.bootstrap.completed",
   "iam.role.created",
   "iam.role.updated",
   "iam.role.deleted",

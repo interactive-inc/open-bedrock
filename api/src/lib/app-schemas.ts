@@ -412,6 +412,16 @@ export const zAppAuthToken = z.object({
 
 export type AppAuthToken = z.infer<typeof zAppAuthToken>
 
+/** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
+export const zAppBootstrapResult = z.object({
+  account_id: z.number(),
+  employee_id: z.number(),
+  email: z.string(),
+})
+
+export type AppBootstrapResult = z.infer<typeof zAppBootstrapResult>
+
+
 /** 認証済み本人の社員情報（GET /me）。 */
 export const zAppAuthMe = z.object({
   id: z.number(),

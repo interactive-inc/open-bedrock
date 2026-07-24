@@ -55,6 +55,7 @@ import * as calendarListRoute from "@/interface/routes/calendar/route"
 import * as calendarDayCreateRoute from "@/interface/routes/calendar/days/create-route"
 import * as calendarDayDetailRoute from "@/interface/routes/calendar/days/[id]/route"
 import * as workStyleRoute from "@/interface/routes/work-styles/route"
+import * as bootstrapRoute from "@/interface/routes/bootstrap/route"
 import * as authLoginRoute from "@/interface/routes/auth/login/route"
 import * as authLogoutRoute from "@/interface/routes/auth/logout/route"
 import * as authMeRoute from "@/interface/routes/me/route"
@@ -409,6 +410,7 @@ export const app = factory
     return c.json({ error: "internal server error" }, 500)
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
+  .post("/bootstrap", ...bootstrapRoute.POST)
   .post("/auth/login", ...authLoginRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
