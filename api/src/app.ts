@@ -55,11 +55,13 @@ import * as calendarListRoute from "@/interface/routes/calendar/route"
 import * as calendarDayCreateRoute from "@/interface/routes/calendar/days/create-route"
 import * as calendarDayDetailRoute from "@/interface/routes/calendar/days/[id]/route"
 import * as workStyleRoute from "@/interface/routes/work-styles/route"
+import * as authIdentityLoginRoute from "@/interface/routes/auth/identity/login/route"
 import * as bootstrapRoute from "@/interface/routes/bootstrap/route"
 import * as authLoginRoute from "@/interface/routes/auth/login/route"
 import * as authLogoutRoute from "@/interface/routes/auth/logout/route"
 import * as authMeRoute from "@/interface/routes/me/route"
 import * as authRefreshRoute from "@/interface/routes/auth/refresh/route"
+import * as provisioningIdentitiesRoute from "@/interface/routes/provisioning/identities/route"
 import * as meDepartmentsRoute from "@/interface/routes/me/departments/route"
 import * as meReportsRoute from "@/interface/routes/me/reports/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/routes/batch/migrate-password-hashes/route"
@@ -412,8 +414,10 @@ export const app = factory
   .get("/health", (c) => c.json({ status: "ok" }, 200))
   .post("/bootstrap", ...bootstrapRoute.POST)
   .post("/auth/login", ...authLoginRoute.POST)
+  .post("/auth/identity/login", ...authIdentityLoginRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
+  .post("/provisioning/identities", ...provisioningIdentitiesRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/me/departments", ...meDepartmentsRoute.GET)
   .get("/me/reports", ...meReportsRoute.GET)

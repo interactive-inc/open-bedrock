@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
-import { accounts, identities } from "@/schema"
+import type { IdentityProvider } from "@/lib/schemas"
+import { accounts, employees, identities } from "@/schema"
 import { and, eq, inArray, isNotNull, like, not } from "drizzle-orm"
 
 export type PasswordIdentity = {
@@ -9,6 +10,17 @@ export type PasswordIdentity = {
   accountStatus: string
   tokenVersion: number
   employeeId: number | null
+}
+
+/** provider+subject で引いた identity と、紐づく account の認証状態。 */
+export type ProviderIdentity = {
+  identityId: number
+  accountId: number
+  accountStatus: string
+  tokenVersion: number
+  employeeId: number | null
+  email: string | null
+  employeeName: string | null
 }
 
 /** レガシー secret 移行バッチが扱う 1 件。 */
@@ -69,6 +81,119 @@ export class IdentityRepository {
       }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find identity")
+    }
+  }
+
+  /**
+   * (provider, subject) の identity と、紐づく account の認証状態を引く。不在は null。
+   * 外部 identity ログイン（sub で引く）と、プロビジョニングの冪等 upsert で使う。
+   */
+  async findByProviderSubject(
+    provider: IdentityProvider,
+    subject: string,
+  ): Promise<ProviderIdentity | null | Error> {
+    try {
+      const db = this.c.var.database
+
+      const identityRows = await db
+        .select()
+        .from(identities)
+        .where(and(eq(identities.provider, provider), eq(identities.subject, subject)))
+        .limit(1)
+
+      const identity = identityRows.at(0)
+
+      if (identity === undefined) {
+        return null
+      }
+
+      const accountRows = await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.id, identity.accountId))
+        .limit(1)
+
+      const account = accountRows.at(0)
+
+      if (account === undefined) {
+        return null
+      }
+
+      let employeeName: string | null = null
+      if (account.employeeId !== null) {
+        const employeeRows = await db
+          .select({ name: employees.name })
+          .from(employees)
+          .where(eq(employees.id, account.employeeId))
+          .limit(1)
+
+        employeeName = employeeRows.at(0)?.name ?? null
+      }
+
+      return {
+        identityId: identity.id,
+        accountId: account.id,
+        accountStatus: account.status,
+        tokenVersion: account.tokenVersion,
+        employeeId: account.employeeId,
+        email: identity.email,
+        employeeName,
+      }
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find identity")
+    }
+  }
+
+  /**
+   * email(大小無視)に一致する identity から、紐づく account の id を引く。不在は null。
+   * プロビジョニングで「既存従業員を email で探して紐づける」判定に使う。
+   */
+  async findAccountIdByEmail(email: string): Promise<number | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({ accountId: identities.accountId })
+        .from(identities)
+        .where(eq(identities.email, email))
+        .limit(1)
+
+      return rows.at(0)?.accountId ?? null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find identity by email")
+    }
+  }
+
+  /**
+   * identity の email を更新し、紐づく account の従業員名も揃える（プロビジョニングの冪等更新）。
+   * employeeId が null(システムアカウント等)の場合は名前更新をスキップする。
+   */
+  async updateProvisionedIdentity(
+    identityId: number,
+    employeeId: number | null,
+    email: string,
+    name: string,
+  ): Promise<null | Error> {
+    try {
+      const statements: D1PreparedStatement[] = [
+        this.c.env.DB.prepare("UPDATE identities SET email = ?2 WHERE id = ?1").bind(
+          identityId,
+          email,
+        ),
+      ]
+
+      if (employeeId !== null) {
+        statements.push(
+          this.c.env.DB.prepare("UPDATE employees SET name = ?2 WHERE id = ?1").bind(
+            employeeId,
+            name,
+          ),
+        )
+      }
+
+      await this.c.env.DB.batch(statements)
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to update provisioned identity")
     }
   }
 

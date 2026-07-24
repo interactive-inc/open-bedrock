@@ -29,7 +29,7 @@ async function loadReviewPopulation(c: Context): Promise<{
   if (migrationStatus instanceof ApplicationError) throw migrationStatus
 
   if (migrationStatus !== "verified") {
-    const [employeeRows, membershipRows] = await Promise.all([
+    const [rawEmployeeRows, membershipRows] = await Promise.all([
       c.var.database
         .select({ id: employees.id, code: employees.code })
         .from(employees)
@@ -37,6 +37,10 @@ async function loadReviewPopulation(c: Context): Promise<{
         .orderBy(asc(employees.id)),
       c.var.database.select().from(orgMemberships),
     ])
+    // code=null（外部プロビジョニング）の従業員は組織メンバーシップを持たず、評価対象母集団に含めない。
+    const employeeRows = rawEmployeeRows.filter(
+      (employee): employee is ReviewEmployee => employee.code !== null,
+    )
     return { employeeRows, membershipRows }
   }
 
@@ -56,7 +60,9 @@ async function loadReviewPopulation(c: Context): Promise<{
   )
   if (states instanceof ApplicationError) throw states
 
-  const employeeRows = allEmployees.filter((employee) => {
+  const employeeRows = allEmployees.filter((employee): employee is ReviewEmployee => {
+    // code=null（外部プロビジョニング）の従業員は組織図・評価母集団に含めない。
+    if (employee.code === null) return false
     const state = states.get(employee.id)
     return state?.status === "active" && state.archived === false
   })
