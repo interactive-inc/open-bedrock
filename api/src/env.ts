@@ -21,6 +21,16 @@ export type Bindings = {
   // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（Workers Rate Limiting binding）。
   // wrangler.jsonc の ratelimits で設定する。未設定（ローカル開発・テスト）ではスキップする。
   API_RATE_LIMITER?: RateLimit
+  // プロビジョニング（外部 identity の同期）エンドポイント専用の machine API キー。
+  // `wrangler secret put PROVISIONING_API_KEY` で登録する。未設定なら全リクエストを拒否する。
+  PROVISIONING_API_KEY?: string
+  // 外部 identity provider が発行する短命ログイントークン（HS256 JWT）の検証共有シークレット。
+  // `wrangler secret put IDENTITY_JWT_SECRET` で登録する。未設定なら identity ログインを拒否する。
+  IDENTITY_JWT_SECRET?: string
+  // 外部 identity トークンに期待する iss（発行者）。未設定なら identity ログインを拒否する。
+  IDENTITY_ISSUER?: string
+  // 外部 identity トークンに期待する aud（想定受信者）。未設定時は "open-karte" を既定とする。
+  IDENTITY_AUDIENCE?: string
   // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
   // 未設定時は機能無効（POST /bootstrap は 404 を返す）。
   BOOTSTRAP_TOKEN?: string

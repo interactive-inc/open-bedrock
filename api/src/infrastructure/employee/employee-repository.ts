@@ -85,7 +85,7 @@ export class EmployeeRepository {
           position: employee.position,
           status: employee.status,
         })
-        .where(eq(employees.code, employee.code))
+        .where(eq(employees.id, employee.id))
         .returning()
 
       const row = rows.at(0)
@@ -118,10 +118,10 @@ export class EmployeeRepository {
                  dept_name = ?4,
                  position = ?5,
                  status = ?6
-             WHERE code = ?1`,
+             WHERE id = ?1`,
           )
           .bind(
-            employee.code,
+            employee.id,
             employee.name,
             employee.deptId,
             employee.deptName,
@@ -133,7 +133,7 @@ export class EmployeeRepository {
         ),
       ])
 
-      return await this.findByCode(employee.code)
+      return await this.findById(employee.id)
     } catch (error) {
       if (LastRootGuard.isAbortedBy(error)) {
         return new LastRootError()

@@ -28,6 +28,10 @@ const actions = [
   "iam.account.role_revoked",
   "iam.account.status_changed",
   "iam.account.password_reset",
+  "iam.identity.provisioned",
+  "iam.identity.provision_updated",
+  "auth.session.identity_login_succeeded",
+  "auth.session.identity_login_denied",
   "employee.account.registered",
   "employee.account.retired",
   "employee.account.deleted",
@@ -62,6 +66,7 @@ const targetTypes = [
   "session",
   "role",
   "account",
+  "identity",
   "employee",
   "application_workflow",
   "application",
@@ -119,7 +124,7 @@ describe("audit event vocabulary", () => {
     expect(() => auditActionSchema.parse("free.form.action")).toThrow()
   })
 
-  test("accepts exactly the 12 managed target types", () => {
+  test("accepts exactly the 13 managed target types", () => {
     expect(auditTargetTypeSchema.options).toEqual([...targetTypes])
     for (const targetType of targetTypes) {
       expect(auditTargetTypeSchema.parse(targetType)).toBe(targetType)
