@@ -29,8 +29,10 @@ function deduplicatedRefresh(
  * access token cookie が無い場合は refresh token を1回だけローテーションし、
  * 新しい session を同じ URL のリクエストへ注入する。
  * 認証できない場合もリダイレクトせず、API の AuthError を error boundary まで伝播させる。
+ * Next 16 の proxy.ts(Node runtime)は OpenNext Cloudflare 未対応のため、
+ * Edge で動く middleware.ts 記法を維持する。
  */
-export async function proxy(request: NextRequest): Promise<NextResponse> {
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   const sessionCookie = request.cookies.get("session")
 
   const refreshTokenCookie = request.cookies.get("refresh_token")
