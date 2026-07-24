@@ -40,7 +40,7 @@ async function database(): Promise<D1Database> {
       id,
       email: `you+e00${id}@example.com`,
       passwordHash: "fixture",
-      role: id === 1 ? "admin" : "member",
+      role: id === 1 ? "root" : "member",
     })),
   )
   return db

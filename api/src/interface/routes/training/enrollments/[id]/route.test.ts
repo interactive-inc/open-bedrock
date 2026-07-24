@@ -109,7 +109,7 @@ describe("GET /training/enrollments/:id", () => {
   })
 
   test("a privileged role reads another's enrollment and returns 200", async () => {
-    const response = await request("/training/enrollments/1", await tokenFor(1, "admin"))
+    const response = await request("/training/enrollments/1", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
   })

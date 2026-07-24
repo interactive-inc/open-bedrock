@@ -854,7 +854,7 @@ describe("AuditEventRepository write contract", () => {
       await rejectionOf(
         db.batch([
           db.prepare(
-            "INSERT INTO roles (key, name, is_system, created_at) VALUES ('admin', 'x', 0, 0)",
+            "INSERT INTO roles (key, name, is_system, created_at) VALUES ('root', 'x', 0, 0)",
           ),
           ...repository.prepareAppend(record({ eventId: "must-not-remain" })),
         ]),

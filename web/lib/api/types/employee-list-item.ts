@@ -3,7 +3,7 @@
  * 共有 types/employee-types.ts とは別に employees ドメイン専用で持ち、API と疎結合にする。
  */
 export type EmployeeListItem = {
-  code: string
+  code: string | null
   name: string
   deptName: string | null
   position: string | null

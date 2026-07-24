@@ -12,7 +12,7 @@ import type { Context } from "@/env"
 
 async function seedPartner(context: Context): Promise<Partner> {
   const result = await new RegisterPartner(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     partner: {
       code: "P0001",
       name: "Acme Supplies",
@@ -32,7 +32,7 @@ async function seedPartner(context: Context): Promise<Partner> {
 
 async function seedContract(context: Context, partnerId: number): Promise<Contract> {
   const result = await new CreateContract(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     contract: {
       partnerId: partnerId,
       title: "Supply Agreement",
@@ -59,7 +59,7 @@ describe("CreateContract", () => {
     const partner = await seedPartner(context)
 
     const result = await new CreateContract(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       contract: {
         partnerId: partner.id ?? 0,
         title: "Supply Agreement",
@@ -109,7 +109,7 @@ describe("CreateContract", () => {
     const { context } = createTestContext()
 
     const result = await new CreateContract(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       contract: {
         partnerId: 9999,
         title: "Ghost Contract",
@@ -139,7 +139,7 @@ describe("UpdateContract", () => {
     }
 
     const result = await new UpdateContract(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: contract.id,
       details: {
         title: "Amended Agreement",
@@ -192,7 +192,7 @@ describe("UpdateContract", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateContract(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: 9999,
       details: {
         title: "Missing",

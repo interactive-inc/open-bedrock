@@ -108,7 +108,7 @@ describe("GET /oneonones", () => {
     const token = await createTestToken(jwtSecret, {
       employeeId: 1,
       email: "you+e001@example.com",
-      role: "admin",
+      role: "root",
     })
 
     const response = await getRequest(token)

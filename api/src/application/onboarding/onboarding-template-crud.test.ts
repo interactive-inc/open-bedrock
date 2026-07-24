@@ -71,7 +71,7 @@ describe("CreateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "engineer-join",
       name: "Engineer Onboarding",
       kind: "join",
@@ -108,7 +108,7 @@ describe("CreateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const created = await new CreateOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
       name: "別の名称",
       kind: "join",
@@ -139,7 +139,7 @@ describe("GetOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const found = await new GetOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "unknown",
     })
 
@@ -167,7 +167,7 @@ describe("UpdateOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
       name: "更新後の名称",
       kind: "leave",
@@ -187,7 +187,7 @@ describe("UpdateOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "unknown",
       name: "x",
       kind: "join",
@@ -207,7 +207,7 @@ describe("UpdateOnboardingTemplate", () => {
     ).run()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
       name: "変更後",
       kind: "leave",
@@ -225,7 +225,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedTemplate(context)
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
     })
 
@@ -246,7 +246,7 @@ describe("DeleteOnboardingTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "unknown",
     })
 
@@ -263,7 +263,7 @@ describe("DeleteOnboardingTemplate", () => {
     ).run()
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
     })
 
@@ -290,7 +290,7 @@ describe("DeleteOnboardingTemplate", () => {
     await seedInProgressAssignment(context, "join-default")
 
     const result = await new DeleteOnboardingTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "join-default",
     })
 

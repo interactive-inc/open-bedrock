@@ -15,12 +15,12 @@
 
 ## システムロール
 
-member / manager / hr / admin の4つ。is_system=1 で編集不可。移行互換のためのベースラインであり、新しい職能はプリセットロールか独自ロールで表現する。
+member / manager / hr / root の4つ。is_system=1 で編集不可。移行互換のためのベースラインであり、新しい職能はプリセットロールか独自ロールで表現する。root は最強のシステムロールで、表示名は「システム管理者」。
 
 - member: permission なし。自分のデータと全員公開の情報のみ
 - manager: 承認と大半の管理。目標・評価・勤怠はレポートライン配下(:reports)のみで、全社は見えない
 - hr: manager に加えて組織管理・従業員削除・全社横断閲覧(:all)
-- admin: 全権。IAM とアカウント管理を含む
+- root: 全権。IAM とアカウント管理を含む
 
 ## プリセットロール
 
@@ -32,7 +32,7 @@ migration の seed(0021_role_presets.sql と 0025_management_and_partner_permiss
 - 監査(auditor): 全ドメインの横断閲覧のみ。承認も変更もできない。ただし健診・給与改定・懲戒は監査にも見せない(最機微)
 - 経営(executive): 経営の記録(稟議・会議体・意思決定)と会社状態の俯瞰(経営ダッシュボード・全社目標・契約・予算・人員計画)。個別の人事操作は持たない
 
-推奨の使い分け。一般従業員は member のまま、部下を持ったら manager を足す。人事部門は hr、評価の確定は review_admin だけに絞る。管理部門の担当には general_affairs、システム管理者には it_admin を与え、admin は最小人数に留める。
+推奨の使い分け。一般従業員は member のまま、部下を持ったら manager を足す。人事部門は hr、評価の確定は review_admin だけに絞る。管理部門の担当には general_affairs、システム管理者には it_admin を与え、root は最小人数に留める。
 
 ## スコープ設計
 
@@ -45,7 +45,7 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 
 判定は次のカスケード。self → :all 保持 → 配下かつ :reports 保持 → 同部署かつ :department 保持 → 拒否。関係解決(org の走査)は他者のデータに触るときだけ実行する。
 
-適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため admin は保持する)。
+適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため root は保持する)。
 
 一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests は employee_id 指定なしで scope=reports(配下全員分)または scope=all(全社)を受け付け、対応する permission が無ければ 403。
 
@@ -55,7 +55,7 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 - web の出し分けも /auth/me の permissions を使う(web/lib 配下の can- ヘルパー)。ロール名での判定は動的ロールに追従できないため禁止
 - permission を追加したら permission-keys.ts と migration の seed の両方に書く(起動時に subset チェックで乖離を検出)
 - 機微項目は従業員台帳のカラムに追加せず、別資源のドメインに分離して権限を貼る。等級は grade ドメインの割当履歴として持ち、権限が無ければ API も画面も見えない
-- 役職マスタの管理 `position:manage` は grade:manage と同じく hr と admin に付与する(0028_position_master_permission.sql)。マスタ一覧の閲覧に専用 permission は設けず、全認証者が読める。役職の割当履歴は持たず、期間付き履歴は人事発令に一元化する
+- 役職マスタの管理 `position:manage` は grade:manage と同じく hr と root に付与する(0028_position_master_permission.sql)。マスタ一覧の閲覧に専用 permission は設けず、全認証者が読める。役職の割当履歴は持たず、期間付き履歴は人事発令に一元化する
 
 ## 既知リスク
 
@@ -64,6 +64,6 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 - D1 に外部キー制約がなく、孤児行はアプリ層の検査、index、監査で防ぐ
 - permission catalog は code(SSOT)と DB 投影で二重定義になるため、起動時の subset 検査で同期ズレを検出する
 - per-template の approver_roles に未知の role key が混ざる可能性があり、突合で検出する
-- admin の実効全許可を code に固定するため、柔軟性と硬直がトレードオフになる
+- root の実効全許可を code に固定するため、柔軟性と硬直がトレードオフになる
 - 認可解決は request ごとに account と role を join するため、レイテンシ増を許容する
 - permission の OR 結合は deny を表現できないため、禁止は scope と field policy で表す

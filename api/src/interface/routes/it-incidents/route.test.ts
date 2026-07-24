@@ -80,7 +80,7 @@ async function request(
 
 describe("GET /it-incidents", () => {
   test("returns 200 with all incidents for a read:all viewer (admin)", async () => {
-    const response = await request("/it-incidents", await tokenFor(1, "admin"))
+    const response = await request("/it-incidents", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -94,7 +94,7 @@ describe("GET /it-incidents", () => {
   })
 
   test("filters by status=open", async () => {
-    const response = await request("/it-incidents?status=open", await tokenFor(1, "admin"))
+    const response = await request("/it-incidents?status=open", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -117,7 +117,7 @@ describe("GET /it-incidents", () => {
 
 describe("POST /it-incidents", () => {
   test("creates an incident as admin", async () => {
-    const response = await request("/it-incidents", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/it-incidents", await tokenFor(1, "root"), "POST", {
       occurred_at: "2026-03-01T10:00:00Z",
       title: "Disk full",
       summary: "A server ran out of disk space.",
@@ -149,7 +149,7 @@ describe("POST /it-incidents", () => {
 
 describe("POST /it-incidents/:id/resolve", () => {
   test("resolves an open incident as admin", async () => {
-    const response = await request("/it-incidents/2/resolve", await tokenFor(1, "admin"), "POST")
+    const response = await request("/it-incidents/2/resolve", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(200)
 
@@ -164,7 +164,7 @@ describe("POST /it-incidents/:id/resolve", () => {
   })
 
   test("returns 409 when already resolved", async () => {
-    const response = await request("/it-incidents/1/resolve", await tokenFor(1, "admin"), "POST")
+    const response = await request("/it-incidents/1/resolve", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(409)
   })

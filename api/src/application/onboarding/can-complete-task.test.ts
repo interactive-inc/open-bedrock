@@ -18,7 +18,7 @@ describe("canCompleteTask", () => {
   })
 
   test("non-owner with admin role can complete", () => {
-    expect(canCompleteTask({ taskEmployeeId: 5, session: makeTestSession("admin", 6) })).toBe(true)
+    expect(canCompleteTask({ taskEmployeeId: 5, session: makeTestSession("root", 6) })).toBe(true)
   })
 
   test("non-owner with member role cannot complete", () => {

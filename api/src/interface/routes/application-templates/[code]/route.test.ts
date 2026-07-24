@@ -81,7 +81,7 @@ async function request(
 
 describe("GET /application-templates/:code", () => {
   test("returns 200 with the template detail", async () => {
-    const response = await request("/application-templates/paid_leave", await tokenFor(1, "admin"))
+    const response = await request("/application-templates/paid_leave", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -91,12 +91,12 @@ describe("GET /application-templates/:code", () => {
 
     if (parsed.success) {
       expect(parsed.data.code).toBe("paid_leave")
-      expect(parsed.data.approver_roles).toEqual(["manager", "admin"])
+      expect(parsed.data.approver_roles).toEqual(["manager", "root"])
     }
   })
 
   test("returns 404 for an unknown code", async () => {
-    const response = await request("/application-templates/missing", await tokenFor(1, "admin"))
+    const response = await request("/application-templates/missing", await tokenFor(1, "root"))
 
     expect(response.status).toBe(404)
   })

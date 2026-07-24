@@ -33,7 +33,7 @@ async function createTestDb(): Promise<D1Database> {
 
 /** E001 = admin、E005 = member。account.id = employee.id。 */
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
+  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "root" })
 }
 
 function accountToken(accountId: number): Promise<string> {
@@ -139,7 +139,7 @@ describe("DELETE /accounts/:id/roles/:roleKey (ロール剥奪)", () => {
 
   test("最後の admin は剥奪できない (last_admin)", async () => {
     const response = await request({
-      path: "/accounts/1/roles/admin",
+      path: "/accounts/1/roles/root",
       method: "DELETE",
       token: await adminToken(),
     })

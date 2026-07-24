@@ -135,7 +135,7 @@ export function EmployeeCreateForm(props: {
               <option value="member">標準利用者</option>
               <option value="manager">業務管理者</option>
               <option value="hr">人事管理者</option>
-              <option value="admin">システム管理者</option>
+              <option value="root">システム管理者</option>
             </select>
           ) : (
             <>

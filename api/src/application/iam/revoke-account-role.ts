@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
@@ -55,14 +55,14 @@ export class RevokeAccountRole {
     const accountRepository = new AccountRepository(this.c)
 
     // ロール名にかかわらず、剥奪と実効管理者検査を同じ batch で確定する。
-    const revoked = await accountRepository.revokeRoleGuardingLastAdmin(
+    const revoked = await accountRepository.revokeRoleGuardingLastRoot(
       command.accountId,
       role.id,
       command.now,
       command.session.accountId,
     )
 
-    if (revoked instanceof LastAdminError) {
+    if (revoked instanceof LastRootError) {
       return new ConflictError("cannot remove the last effective admin", "last_admin")
     }
 

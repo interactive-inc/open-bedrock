@@ -49,7 +49,7 @@ flowchart TD
 
 - Permission は API operation の上限を表す安定 key とする
 - ロールは Permission の集合とする
-- 業務コードで `admin`、`hr` などのロール名を直接判定しない
+- 業務コードで `root`、`hr` などのロール名を直接判定しない
 - Permission だけで対象範囲、決裁権限、案件資格を付与しない
 - ロールの付与と剥奪へ認可、職務分離、監査を適用する
 - 最後の実効管理者を失う変更は transaction 内で拒否する

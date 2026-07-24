@@ -39,7 +39,7 @@ async function createTestDb(): Promise<D1Database> {
 
   // 移行対象は identities.secret。E002 にレガシー secret を持たせる。
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+admin@example.com", passwordHash: modernHash, role: "admin" },
+    { id: 1, email: "you+admin@example.com", passwordHash: modernHash, role: "root" },
     { id: 2, email: "you+legacy@example.com", passwordHash: legacyHash, role: "member" },
   ])
 
@@ -50,7 +50,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+admin@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

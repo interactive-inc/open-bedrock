@@ -4,7 +4,8 @@ import type {
 } from "@/domain/application/application-workflow"
 
 export type WorkflowApplicant = {
-  code: string
+  /** 社員コード。外部プロビジョニングで作られた申請者は持たない（null）。条件照合では null は不一致になる。 */
+  code: string | null
   id: number
   dept_id: number | null
   dept_name: string | null

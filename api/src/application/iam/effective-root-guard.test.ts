@@ -2,12 +2,12 @@ import { RevokeAccountRole } from "@/application/iam/revoke-account-role"
 import { UpdateRole } from "@/application/iam/update-role"
 import { ConflictError } from "@/lib/errors"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-admin-test-permission-keys"
+import { EFFECTIVE_ROOT_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-root-test-permission-keys"
 import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
 import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
@@ -16,10 +16,10 @@ describe("effective administrator invariant", () => {
   test("rolls back a role update that would remove the last effective administrator", async () => {
     const { context, db } = createTestContext()
 
-    const accountId = await seedIamTestAccount(context, "E974", "admin")
+    const accountId = await seedIamTestAccount(context, "E974", "root")
 
     const roleRepository = new RoleRepository(context)
-    const adminRole = await roleRepository.findByKey("admin")
+    const adminRole = await roleRepository.findByKey("root")
 
     if (adminRole === null || adminRole instanceof Error) {
       throw new Error("admin role not found")
@@ -32,7 +32,7 @@ describe("effective administrator invariant", () => {
     }
 
     const result = await new UpdateRole(context).run({
-      session: makeTestSession("admin", accountId),
+      session: makeTestSession("root", accountId),
       roleId: adminRole.id,
       name: "Unsafe administrator",
       description: "must be rolled back",
@@ -65,8 +65,8 @@ describe("effective administrator invariant", () => {
     const [effectiveRole] = await replaceAccountRolesWithPermissionSets(
       context,
       accountId,
-      "effective-admin-revoke",
-      [EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS],
+      "effective-root-revoke",
+      [EFFECTIVE_ROOT_TEST_PERMISSION_KEYS],
     )
 
     if (effectiveRole === undefined) {
@@ -74,7 +74,7 @@ describe("effective administrator invariant", () => {
     }
 
     const result = await new RevokeAccountRole(context).run({
-      session: makeTestSession("admin", accountId),
+      session: makeTestSession("root", accountId),
       accountId: accountId,
       roleKey: effectiveRole.key,
       now: 10,
@@ -99,19 +99,19 @@ describe("effective administrator invariant", () => {
     const { context, db } = createTestContext()
     const accountId = await seedIamTestAccount(context, "E976")
 
-    await replaceAccountRolesWithPermissionSets(context, accountId, "effective-admin-status", [
-      EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
+    await replaceAccountRolesWithPermissionSets(context, accountId, "effective-root-status", [
+      EFFECTIVE_ROOT_TEST_PERMISSION_KEYS,
     ])
 
     // Application 層は自己停止を先に拒否するため、repository の最終防御を直接検証する。
-    const result = await new AccountRepository(context).setStatusGuardingLastAdmin(
+    const result = await new AccountRepository(context).setStatusGuardingLastRoot(
       accountId,
       "suspended",
       10,
       accountId,
     )
 
-    expect(result).toBeInstanceOf(LastAdminError)
+    expect(result).toBeInstanceOf(LastRootError)
 
     const account = await db
       .prepare("SELECT status, token_version FROM accounts WHERE id = ?1")

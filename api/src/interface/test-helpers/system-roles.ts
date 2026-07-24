@@ -1,5 +1,5 @@
 import type { PermissionKey } from "@/lib/auth/permission-keys"
-import { EFFECTIVE_ADMIN_PERMISSION_KEYS } from "@/lib/auth/effective-admin-permissions"
+import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/lib/auth/effective-root-permissions"
 
 /** 全従業員が持つガバナンスの基本権限。 */
 const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
@@ -106,16 +106,16 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "budget:manage",
 ]
 
-/** admin が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。 */
-const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
-  ...EFFECTIVE_ADMIN_PERMISSION_KEYS,
+/** root が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。 */
+const ROOT_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  ...EFFECTIVE_ROOT_PERMISSION_KEYS,
   "audit:read",
   "audit:export",
   "governance:read:restricted",
   "governance:manage",
   "governance:publish",
   // どのプリセットにも実務付与しない department スコープも、escalation guard
-  // （付与するロールの権限 ⊆ 付与者の権限）を通すため admin は保持する。
+  // （付与するロールの権限 ⊆ 付与者の権限）を通すため root は保持する。
   "goal:read:department",
   "attendance:read:department",
   "leave:read:department",
@@ -126,7 +126,7 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "contract:read:all",
   "meeting:manage",
   "decision:manage",
-  // 総務・情シス・経営の記録系。実務はプリセットが担うが admin は全キーを保持する。
+  // 総務・情シス・経営の記録系。実務はプリセットが担うが root は全キーを保持する。
   "document:manage",
   "document:read:all",
   "license:manage",
@@ -135,7 +135,7 @@ const ADMIN_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "it_incident:read:all",
   "budget:manage",
   "budget:read:all",
-  // 基盤の運用系。トークン発行とエクスポートは admin に限定する。
+  // 基盤の運用系。トークン発行とエクスポートは root に限定する。
   "api_token:manage",
   "access_review:view",
   "export:run",
@@ -146,16 +146,16 @@ const HR_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...HR_EXTRA_PERMISSIONS,
 ]
 
-const ADMIN_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+const ROOT_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   ...HR_PERMISSIONS,
-  ...ADMIN_EXTRA_PERMISSIONS,
+  ...ROOT_EXTRA_PERMISSIONS,
 ]
 
 /**
  * system role の key と、その role が持つ permission キー集合の対応。
- * 既存の role 4値(member/manager/hr/admin)を permission 集合として厳密再現し、
+ * 既存の role 4値(member/manager/hr/root)を permission 集合として厳密再現し、
  * 移行で権限が広がらないことをテストで担保する基準。backfill の role_permissions シードに使う。
- * 実態: 大半の管理系 permission は ["manager","hr","admin"]、employee:delete/org:manage/thanks_* は ["hr","admin"]。
+ * 実態: 大半の管理系 permission は ["manager","hr","root"]、employee:delete/org:manage/thanks_* は ["hr","root"]。
  * member も公開済みガバナンス文書の閲覧・確認権限を持つ
  */
 export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{
@@ -166,5 +166,5 @@ export const SYSTEM_ROLE_PERMISSIONS: ReadonlyArray<{
   { key: "member", name: "標準利用者", permissions: MEMBER_PERMISSIONS },
   { key: "manager", name: "業務管理者", permissions: MANAGER_PERMISSIONS },
   { key: "hr", name: "人事管理者", permissions: HR_PERMISSIONS },
-  { key: "admin", name: "システム管理者", permissions: ADMIN_PERMISSIONS },
+  { key: "root", name: "システム管理者", permissions: ROOT_PERMISSIONS },
 ]

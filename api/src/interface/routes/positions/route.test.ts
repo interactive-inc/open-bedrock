@@ -106,7 +106,7 @@ describe("POST /positions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/positions",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "LEAD", name: "Lead", rank: 20 },
     })
@@ -141,7 +141,7 @@ describe("POST /positions", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/positions",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "CTO", name: "Duplicate", rank: 99 },
     })
@@ -156,7 +156,7 @@ describe("PUT /positions/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/positions/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { code: "CTO", name: "Chief Technology Officer", rank: 1, description: "updated" },
     })
@@ -191,7 +191,7 @@ describe("PUT /positions/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/positions/999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { code: "GHOST", name: "Ghost", rank: 99 },
     })
@@ -208,7 +208,7 @@ describe("DELETE /positions/:id", () => {
       db,
       jwtSecret,
       path: "/positions",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { code: "UNUSED", name: "Unused Role", rank: 30 },
     })
@@ -219,7 +219,7 @@ describe("DELETE /positions/:id", () => {
       db,
       jwtSecret,
       path: `/positions/${createdId}`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -243,7 +243,7 @@ describe("DELETE /positions/:id", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/positions/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

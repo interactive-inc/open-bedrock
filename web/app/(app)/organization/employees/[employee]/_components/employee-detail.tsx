@@ -20,7 +20,7 @@ import { getPositionList } from "@/lib/api/get-position-list"
 type Props = {
   code: string
   permissions: ReadonlyArray<string>
-  currentUserCode: string
+  currentUserCode: string | null
 }
 
 /**

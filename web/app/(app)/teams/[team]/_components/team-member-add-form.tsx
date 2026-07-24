@@ -53,7 +53,7 @@ export function TeamMemberAddForm(props: Props) {
 
     setRevisions(null)
 
-    if (selected !== null) {
+    if (selected !== null && selected.code !== null) {
       getAssignmentBaseRevisionsAction(selected.code).then((result) => {
         setRevisions(result)
       })

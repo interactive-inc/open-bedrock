@@ -98,6 +98,8 @@ export async function loadCurrentOrganization(
       const employeesByCode = new Map<string, CurrentOrganizationEmployee>()
       for (const employee of employeeRows) {
         if (employee.archivedAt !== null || employee.status === "retired") continue
+        // code=null（外部プロビジョニング）の従業員は組織メンバーシップを持たず、組織図に載らない。
+        if (employee.code === null) continue
         const employeeMemberships = membershipsByEmployee.get(employee.code) ?? []
         if (employeeMemberships.length === 0) continue
         const primary = employeeMemberships.at(0)
@@ -147,6 +149,8 @@ export async function loadCurrentOrganization(
     const employeesByCode = new Map<string, CurrentOrganizationEmployee>()
     const managerByDepartmentCode = new Map<string, string>()
     for (const employee of employeeRows) {
+      // code=null（外部プロビジョニング）の従業員は組織図に載らない。
+      if (employee.code === null) continue
       const state = states.get(employee.id)
       if (
         state === undefined ||

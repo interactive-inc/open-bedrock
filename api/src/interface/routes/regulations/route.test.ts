@@ -191,7 +191,7 @@ describe("GET /regulations/:code", () => {
 
 describe("POST /regulations", () => {
   test("admin creates a regulation with an initial version", async () => {
-    const response = await request("/regulations", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/regulations", await tokenFor(1, "root"), "POST", {
       code: "REG-100",
       title: "New Policy",
       body_md: "the policy body",
@@ -222,7 +222,7 @@ describe("POST /regulations", () => {
   })
 
   test("duplicate code conflicts", async () => {
-    const response = await request("/regulations", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/regulations", await tokenFor(1, "root"), "POST", {
       code: "REG-001",
       title: "Dup",
       body_md: "dup",
@@ -237,7 +237,7 @@ describe("POST /regulations/:code/versions", () => {
   test("admin adds the next version", async () => {
     const response = await request(
       "/regulations/REG-002/versions",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
       "POST",
       {
         body_md: "revised travel rules",
@@ -274,7 +274,7 @@ describe("POST /regulations/:code/archive", () => {
   test("admin archives a regulation", async () => {
     const response = await request(
       "/regulations/REG-001/archive",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
       "POST",
     )
 

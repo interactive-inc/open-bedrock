@@ -139,7 +139,7 @@ describe("GET /onboarding/employee/:code", () => {
   test("a privileged role sees the employee assignments with tasks", async () => {
     const response = await request({
       path: "/onboarding/employee/E005",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -169,7 +169,7 @@ describe("GET /onboarding/employee/:code", () => {
   test("returns 404 for an unknown employee", async () => {
     const response = await request({
       path: "/onboarding/employee/E999",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -178,7 +178,7 @@ describe("GET /onboarding/employee/:code", () => {
   test("limit=1 returns at most one assignment", async () => {
     const response = await request({
       path: "/onboarding/employee/E005?limit=1",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -193,7 +193,7 @@ describe("GET /onboarding/employee/:code", () => {
   test("offset beyond the assignment count returns an empty list", async () => {
     const response = await request({
       path: "/onboarding/employee/E005?offset=1",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)

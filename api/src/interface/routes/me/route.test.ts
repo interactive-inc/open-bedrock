@@ -50,7 +50,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 
@@ -68,7 +68,7 @@ describe("GET /me", () => {
       expect(parsed.data.id).toBe(1)
       expect(parsed.data.code).toBe("E001")
       expect(parsed.data.email).toBe("you+e001@example.com")
-      expect(parsed.data.role).toBe("admin")
+      expect(parsed.data.role).toBe("root")
     }
   })
 
@@ -87,7 +87,7 @@ describe("GET /me", () => {
   test("returns 401 for an expired token", async () => {
     const expiredToken = await createTestToken(
       jwtSecret,
-      { employeeId: 1, email: "you+e001@example.com", role: "admin" },
+      { employeeId: 1, email: "you+e001@example.com", role: "root" },
       // 1 秒前に切れる exp（絶対 epoch 秒）。
       { expirationTime: Math.floor(Date.now() / 1000) - 1 },
     )

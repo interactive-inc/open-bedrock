@@ -22,7 +22,7 @@ async function database(): Promise<D1Database> {
       ('D001', 'E001', NULL), ('D001', 'E002', 'E001');
   `)
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+admin@example.com", passwordHash: "fixture", role: "admin" },
+    { id: 1, email: "you+admin@example.com", passwordHash: "fixture", role: "root" },
     { id: 2, email: "you+member@example.com", passwordHash: "fixture", role: "member" },
   ])
   return db

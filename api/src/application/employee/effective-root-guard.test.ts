@@ -7,7 +7,7 @@ import { ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
-import { EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-admin-test-permission-keys"
+import { EFFECTIVE_ROOT_TEST_PERMISSION_KEYS } from "@/interface/test-helpers/effective-root-test-permission-keys"
 import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
 import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
@@ -17,12 +17,12 @@ describe("employee mutations preserve an effective administrator", () => {
     const { context } = createTestContext()
     const employeeId = await seedIamTestAccount(context, "E977")
 
-    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-admin-retire", [
-      EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
+    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-root-retire", [
+      EFFECTIVE_ROOT_TEST_PERMISSION_KEYS,
     ])
 
     const result = await new UpdateEmployee(context).run({
-      session: makeTestSession("admin", 999),
+      session: makeTestSession("root", 999),
       viewerEmployeeId: 999,
       code: "E977",
       name: "Sam Rivers Updated",
@@ -44,12 +44,12 @@ describe("employee mutations preserve an effective administrator", () => {
     const { context, db } = createTestContext()
     const employeeId = await seedIamTestAccount(context, "E978")
 
-    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-admin-delete", [
-      EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
+    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-root-delete", [
+      EFFECTIVE_ROOT_TEST_PERMISSION_KEYS,
     ])
 
     const result = await new DeleteEmployee(context).run({
-      session: makeTestSession("admin", 999),
+      session: makeTestSession("root", 999),
       viewerEmployeeId: 999,
       code: "E978",
     })
@@ -76,8 +76,8 @@ describe("employee mutations preserve an effective administrator", () => {
   test("rolls back archiving the last effective administrator and keeps IAM active", async () => {
     const { context, db } = createTestContext()
     const employeeId = await seedIamTestAccount(context, "E979")
-    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-admin-archive", [
-      EFFECTIVE_ADMIN_TEST_PERMISSION_KEYS,
+    await replaceAccountRolesWithPermissionSets(context, employeeId, "effective-root-archive", [
+      EFFECTIVE_ROOT_TEST_PERMISSION_KEYS,
     ])
     await db.exec(`
       UPDATE employees SET status = 'retired' WHERE id = ${employeeId};
@@ -95,7 +95,7 @@ describe("employee mutations preserve an effective administrator", () => {
     `)
 
     const result = await new ArchiveEmployee(context).run({
-      session: makeTestSession("admin", 999),
+      session: makeTestSession("root", 999),
       employeeCode: "E979",
       archivedAt: "2026-01-01T00:00:00.000Z",
     })

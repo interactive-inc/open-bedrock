@@ -170,7 +170,7 @@ describe("POST /goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/goals",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { period: "2026-H1", title: "Company OKR", owner_type: "company" },
     })

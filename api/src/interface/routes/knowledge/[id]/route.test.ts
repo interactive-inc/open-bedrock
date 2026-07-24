@@ -60,7 +60,7 @@ function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

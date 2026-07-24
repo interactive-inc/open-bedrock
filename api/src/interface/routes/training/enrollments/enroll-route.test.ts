@@ -143,7 +143,7 @@ describe("POST /training/enrollments", () => {
   })
 
   test("a privileged role assigns to another employee_code", async () => {
-    const response = await request("/training/enrollments", await tokenFor(1, "admin"), {
+    const response = await request("/training/enrollments", await tokenFor(1, "root"), {
       method: "POST",
       body: { course_code: "TR-MGR-01", employee_code: "E005" },
     })
@@ -165,7 +165,7 @@ describe("POST /training/enrollments", () => {
   })
 
   test("assigning an unknown employee_code returns 404", async () => {
-    const response = await request("/training/enrollments", await tokenFor(1, "admin"), {
+    const response = await request("/training/enrollments", await tokenFor(1, "root"), {
       method: "POST",
       body: { course_code: "TR-MGR-01", employee_code: "E999" },
     })

@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import type { AccountStatus } from "@/lib/schemas"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { accountRoles, accounts, employees, roles } from "@/schema"
@@ -162,14 +162,14 @@ export class AccountRepository {
 
   /**
    * ロールを剥奪し tokenVersion を増やす。剥奪の結果ログイン可能な実効管理者が 0 件に
-   * なる場合は batch ごと rollback して LastAdminError を返す。
+   * なる場合は batch ごと rollback して LastRootError を返す。
    */
-  async revokeRoleGuardingLastAdmin(
+  async revokeRoleGuardingLastRoot(
     accountId: number,
     roleId: number,
     now: number,
     actorAccountId: number,
-  ): Promise<null | Error | LastAdminError> {
+  ): Promise<null | Error | LastRootError> {
     try {
       await this.c.env.DB.batch([
         new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
@@ -180,7 +180,7 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "DELETE FROM account_roles WHERE account_id = ?1 AND role_id = ?2",
         ).bind(accountId, roleId),
-        new LastAdminGuard(this.c).abortWhenNoLoginEnabledEffectiveAdmin(),
+        new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
         this.c.env.DB.prepare(
           "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
         ).bind(accountId, now),
@@ -192,8 +192,8 @@ export class AccountRepository {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (LastAdminGuard.isAbortedBy(caught)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(caught)) {
+        return new LastRootError()
       }
 
       return caught instanceof Error ? caught : new Error("failed to revoke role")
@@ -202,14 +202,14 @@ export class AccountRepository {
 
   /**
    * アカウントを非アクティブ化し tokenVersion を増やす。結果ログイン可能な実効管理者が
-   * 0 件になる場合は batch ごと rollback して LastAdminError を返す（TOCTOU 防止）。
+   * 0 件になる場合は batch ごと rollback して LastRootError を返す（TOCTOU 防止）。
    */
-  async setStatusGuardingLastAdmin(
+  async setStatusGuardingLastRoot(
     accountId: number,
     status: AccountStatus,
     now: number,
     actorAccountId: number,
-  ): Promise<null | Error | LastAdminError> {
+  ): Promise<null | Error | LastRootError> {
     try {
       await this.c.env.DB.batch([
         new LivePermissionGuard(this.c).abortWhenActorCannotManageAccount({
@@ -220,7 +220,7 @@ export class AccountRepository {
         this.c.env.DB.prepare(
           "UPDATE accounts SET status = ?2, token_version = token_version + 1, updated_at = ?3 WHERE id = ?1",
         ).bind(accountId, status, now),
-        new LastAdminGuard(this.c).abortWhenNoLoginEnabledEffectiveAdmin(),
+        new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
       ])
 
       return null
@@ -229,8 +229,8 @@ export class AccountRepository {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (LastAdminGuard.isAbortedBy(caught)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(caught)) {
+        return new LastRootError()
       }
 
       return caught instanceof Error ? caught : new Error("failed to set account status")

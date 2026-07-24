@@ -30,7 +30,7 @@ export type EmployeeArchiveFormState = {
   error: string | null
 }
 
-const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "admin"]
+const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "root"]
 
 /** FormData の文字列をロール enum へ検証付きで変換する。不正なら null。 */
 function toRole(value: FormDataEntryValue | null): EmployeeRole | null {

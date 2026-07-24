@@ -97,7 +97,7 @@ describe("GET /shift/patterns/:id", () => {
   test("privileged role reads a pattern and returns 200", async () => {
     const response = await request({
       path: "/shift/patterns/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -123,7 +123,7 @@ describe("GET /shift/patterns/:id", () => {
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
       path: "/shift/patterns/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -140,7 +140,7 @@ describe("PUT /shift/patterns/:id", () => {
   test("privileged role updates a pattern and returns 200", async () => {
     const response = await request({
       path: "/shift/patterns/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: {
         code: "EARLY",
@@ -167,7 +167,7 @@ describe("PUT /shift/patterns/:id", () => {
   test("returns 409 when renaming to an existing code", async () => {
     const response = await request({
       path: "/shift/patterns/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: {
         code: "LATE",
@@ -201,7 +201,7 @@ describe("PUT /shift/patterns/:id", () => {
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
       path: "/shift/patterns/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: {
         code: "ZZZZ",
@@ -220,7 +220,7 @@ describe("DELETE /shift/patterns/:id", () => {
   test("deletes an unreferenced pattern and returns 204", async () => {
     const response = await request({
       path: "/shift/patterns/3",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -230,7 +230,7 @@ describe("DELETE /shift/patterns/:id", () => {
   test("returns 409 for a pattern referenced by assignments", async () => {
     const response = await request({
       path: "/shift/patterns/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -250,7 +250,7 @@ describe("DELETE /shift/patterns/:id", () => {
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
       path: "/shift/patterns/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

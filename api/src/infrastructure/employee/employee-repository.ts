@@ -1,7 +1,7 @@
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import { LastAdminGuard } from "@/infrastructure/iam/last-admin-guard"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
@@ -103,9 +103,9 @@ export class EmployeeRepository {
   }
 
   /** 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。 */
-  async updateProfileGuardingLastAdmin(
+  async updateProfileGuardingLastRoot(
     employee: Employee,
-  ): Promise<Employee | null | Error | LastAdminError> {
+  ): Promise<Employee | null | Error | LastRootError> {
     try {
       const db = this.c.env.DB
 
@@ -128,15 +128,15 @@ export class EmployeeRepository {
             employee.position,
             employee.status,
           ),
-        new LastAdminGuard(this.c).abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(
+        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
           employee.id,
         ),
       ])
 
       return await this.findByCode(employee.code)
     } catch (error) {
-      if (LastAdminGuard.isAbortedBy(error)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(error)) {
+        return new LastRootError()
       }
 
       if (isUniqueConstraintError(error)) {

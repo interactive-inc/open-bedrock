@@ -3,11 +3,11 @@
  * 実効管理者ガードを原子的に行う repository メソッドが返す。application 層はこれを検知して
  * ConflictError("last_admin") に変換する。
  */
-export class LastAdminError extends Error {
+export class LastRootError extends Error {
   constructor() {
     super("operation would remove the last effective admin")
 
-    this.name = "LastAdminError"
+    this.name = "LastRootError"
 
     Object.freeze(this)
   }

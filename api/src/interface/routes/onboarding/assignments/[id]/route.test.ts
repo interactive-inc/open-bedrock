@@ -156,7 +156,7 @@ describe("GET /onboarding/assignments/:id", () => {
   test("a privileged role sees another employee's assignment", async () => {
     const response = await request({
       path: "/onboarding/assignments/100",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -174,7 +174,7 @@ describe("GET /onboarding/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/onboarding/assignments/9999",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -183,7 +183,7 @@ describe("GET /onboarding/assignments/:id", () => {
   test("returns 404 for a non-integer assignment id", async () => {
     const response = await request({
       path: "/onboarding/assignments/abc",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -200,7 +200,7 @@ describe("PUT /onboarding/assignments/:id", () => {
   test("a privileged role reschedules the assignment", async () => {
     const response = await request({
       path: "/onboarding/assignments/100",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
     })
@@ -230,7 +230,7 @@ describe("PUT /onboarding/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/onboarding/assignments/9999",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
     })
@@ -241,7 +241,7 @@ describe("PUT /onboarding/assignments/:id", () => {
   test("rejects a non-ISO-datetime assigned_at with 400", async () => {
     const response = await request({
       path: "/onboarding/assignments/100",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { assigned_at: "2026-06-01" },
     })
@@ -279,7 +279,7 @@ describe("DELETE /onboarding/assignments/:id", () => {
       db,
       jwtSecret,
       path: "/onboarding/assignments/100",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "DELETE",
     })
 
@@ -289,7 +289,7 @@ describe("DELETE /onboarding/assignments/:id", () => {
       db,
       jwtSecret,
       path: "/onboarding/assignments/100",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(getResponse.status).toBe(404)
@@ -308,7 +308,7 @@ describe("DELETE /onboarding/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/onboarding/assignments/9999",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "DELETE",
     })
 

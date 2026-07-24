@@ -42,9 +42,9 @@ export async function resolveOrganizationAuthority(
     const actorCode = codeById.get(actorEmployeeId)
     const targetCode = codeById.get(targetEmployeeId)
 
-    if (actorCode === undefined || targetCode === undefined) {
-      return noAuthority
-    }
+    // どちらかが社員コードを持たない（code=null）なら組織図に載らず、管理関係は成立しない。
+    if (actorCode === undefined || actorCode === null) return noAuthority
+    if (targetCode === undefined || targetCode === null) return noAuthority
 
     const [membershipRows, departmentRows] = await Promise.all([
       c.var.database.select().from(orgMemberships),

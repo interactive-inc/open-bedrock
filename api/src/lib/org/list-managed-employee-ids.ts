@@ -22,7 +22,8 @@ export async function listManagedEmployeeIds(
 
     const actorCode = employeeRows.find((employee) => employee.id === actorEmployeeId)?.code
 
-    if (actorCode === undefined) {
+    // 社員コードを持たない actor（外部プロビジョニングの code=null）は組織図に載らず、誰も管理しない。
+    if (actorCode === undefined || actorCode === null) {
       return []
     }
 
@@ -57,6 +58,11 @@ export async function listManagedEmployeeIds(
     return employeeRows
       .filter((employee) => {
         if (employee.id === actorEmployeeId) {
+          return false
+        }
+
+        // code=null の従業員は組織メンバーシップを持たず、管理対象になり得ない。
+        if (employee.code === null) {
           return false
         }
 

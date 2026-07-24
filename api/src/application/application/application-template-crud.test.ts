@@ -46,7 +46,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "leave",
       name: "休暇申請",
       category: "attendance",
@@ -80,7 +80,7 @@ describe("CreateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new CreateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
       name: "別の経費申請",
       category: "expense",
@@ -96,7 +96,7 @@ describe("CreateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new CreateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "unknown_role",
       name: "Unknown role",
       category: "general",
@@ -116,13 +116,13 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
       name: "経費精算",
       category: "accounting",
       description: "更新",
       schemaJson: { type: "object" },
-      approverRoles: ["admin"],
+      approverRoles: ["root"],
     })
 
     expect(result).toBeInstanceOf(ApplicationTemplate)
@@ -154,7 +154,7 @@ describe("UpdateApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "missing",
       name: "X",
       category: "general",
@@ -171,7 +171,7 @@ describe("UpdateApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new UpdateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
       name: "Changed",
       category: "expense",
@@ -189,7 +189,7 @@ describe("UpdateApplicationTemplate", () => {
   test("allows display edits but locks system template structure", async () => {
     const { context } = createTestContext()
     const displayEdit = await new UpdateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "personnel_action_request",
       name: "Employee Lifecycle Change",
       category: "employee",
@@ -200,13 +200,13 @@ describe("UpdateApplicationTemplate", () => {
     expect(displayEdit).toBeInstanceOf(ApplicationTemplate)
 
     const structuralEdit = await new UpdateApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "personnel_action_request",
       name: "Employee Lifecycle Change",
       category: "general",
       description: null,
       schemaJson: {},
-      approverRoles: ["admin"],
+      approverRoles: ["root"],
     })
     expectApplicationError(structuralEdit, UnprocessableError, "system_template_structure_locked")
   })
@@ -219,7 +219,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedExpense(db)
 
     const result = await new DeleteApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
     })
 
@@ -253,7 +253,7 @@ describe("DeleteApplicationTemplate", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "missing",
     })
 
@@ -267,7 +267,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedApplication(db, 1, "pending")
 
     const result = await new DeleteApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
     })
 
@@ -281,7 +281,7 @@ describe("DeleteApplicationTemplate", () => {
     await seedApplication(db, 1, "approved")
 
     const result = await new DeleteApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "expense",
     })
 
@@ -296,7 +296,7 @@ describe("DeleteApplicationTemplate", () => {
   test("never deletes a system-bound template", async () => {
     const { context } = createTestContext()
     const result = await new DeleteApplicationTemplate(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "personnel_action_request",
     })
     expectApplicationError(result, ConflictError, "system_template_locked")

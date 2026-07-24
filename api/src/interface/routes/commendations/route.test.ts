@@ -44,7 +44,7 @@ async function createCommendation(db: D1Database): Promise<number> {
     db,
     jwtSecret,
     path: "/commendations",
-    token: await tokenFor(1, "admin"),
+    token: await tokenFor(1, "root"),
     method: "POST",
     body: {
       employee_id: 5,
@@ -138,7 +138,7 @@ describe("commendations", () => {
       db,
       jwtSecret,
       path: `/commendations/${id}`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

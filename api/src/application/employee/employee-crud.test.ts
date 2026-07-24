@@ -62,9 +62,9 @@ describe("RegisterEmployee", () => {
   test("registers employee and IAM records atomically for a privileged role", async () => {
     const { context, db } = createTestContext()
     await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
-    const adminId = await seedEmployee(context, "E899", { role: "admin" })
+    const adminId = await seedEmployee(context, "E899", { role: "root" })
     const result = await new RegisterEmployee(context).run({
-      session: makeTestSession("admin", adminId),
+      session: makeTestSession("root", adminId),
       employee: newEmployeeInput,
     })
     expect(result).toBeInstanceOf(Employee)
@@ -122,7 +122,7 @@ describe("RegisterEmployee", () => {
     expectApplicationError(
       await new RegisterEmployee(context).run({
         session: limited,
-        employee: { ...newEmployeeInput, role: "admin" },
+        employee: { ...newEmployeeInput, role: "root" },
       }),
       ForbiddenError,
       "role_escalation_forbidden",
@@ -130,7 +130,7 @@ describe("RegisterEmployee", () => {
     await seedEmployee(context, "E900")
     expectApplicationError(
       await new RegisterEmployee(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         employee: newEmployeeInput,
       }),
       ConflictError,
@@ -138,7 +138,7 @@ describe("RegisterEmployee", () => {
     )
     expectApplicationError(
       await new RegisterEmployee(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         employee: { ...newEmployeeInput, code: "E901", password: "short7!" },
       }),
       ValidationError,
@@ -165,7 +165,7 @@ describe("UpdateEmployee", () => {
     const { context } = createTestContext()
     await seedEmployee(context, "E902")
     const result = await new UpdateEmployee(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       viewerEmployeeId: 0,
       code: "E902",
       name: "Renamed",
@@ -190,7 +190,7 @@ describe("UpdateEmployee", () => {
     )
     expectApplicationError(
       await new UpdateEmployee(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         viewerEmployeeId: 0,
         code: "E999",
         name: "Renamed",
@@ -212,7 +212,7 @@ describe("DeleteEmployee", () => {
       .bind(id)
       .run()
     const result = await new DeleteEmployee(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       viewerEmployeeId: id + 1,
       code: "E905",
     })
@@ -246,7 +246,7 @@ describe("DeleteEmployee", () => {
     )
     expectApplicationError(
       await new DeleteEmployee(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         viewerEmployeeId: 1,
         code: "E999",
       }),

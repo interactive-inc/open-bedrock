@@ -186,7 +186,7 @@ describe("POST /bootstrap", () => {
       )
       .bind(body.account_id)
       .first<{ role_key: string; is_system: number }>()
-    expect(roleRow).toEqual({ role_key: "admin", is_system: 1 })
+    expect(roleRow).toEqual({ role_key: "root", is_system: 1 })
 
     const audit = await db
       .prepare(

@@ -62,7 +62,7 @@ describe("DecideApplication", () => {
     const templateRepository = new ApplicationTemplateRepository(context)
     const applicationRepository = new ApplicationRepository(context)
 
-    const template = await seedTemplate(templateRepository, "role_test_1", ["accountant", "admin"])
+    const template = await seedTemplate(templateRepository, "role_test_1", ["accountant", "root"])
 
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 

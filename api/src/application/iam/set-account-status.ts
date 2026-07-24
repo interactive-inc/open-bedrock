@@ -11,7 +11,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
@@ -63,14 +63,14 @@ export class SetAccountStatus {
     }
 
     // live permission・状態変更・実効管理者検査を同じ batch で確定する。
-    const updated = await accountRepository.setStatusGuardingLastAdmin(
+    const updated = await accountRepository.setStatusGuardingLastRoot(
       command.accountId,
       parsedStatus.data,
       command.now,
       command.session.accountId,
     )
 
-    if (updated instanceof LastAdminError) {
+    if (updated instanceof LastRootError) {
       return new ConflictError("cannot deactivate the last effective admin", "last_admin")
     }
 

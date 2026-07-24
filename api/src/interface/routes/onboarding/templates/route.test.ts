@@ -136,7 +136,7 @@ describe("GET /onboarding/templates", () => {
   test("returns 200 with the template response shape", async () => {
     const response = await request({
       path: "/onboarding/templates",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -163,7 +163,7 @@ describe("GET /onboarding/templates", () => {
   test("filters templates by kind", async () => {
     const response = await request({
       path: "/onboarding/templates?kind=leave",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -183,7 +183,7 @@ describe("GET /onboarding/templates", () => {
   test("returns 400 for an invalid kind", async () => {
     const response = await request({
       path: "/onboarding/templates?kind=bogus",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(400)
@@ -192,7 +192,7 @@ describe("GET /onboarding/templates", () => {
   test("returns only 1 template when limit=1 and task_count reflects that template", async () => {
     const response = await request({
       path: "/onboarding/templates?limit=1",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -243,7 +243,7 @@ describe("/onboarding/templates/:code/lifecycle-binding", () => {
   test("sets and removes a compatible lifecycle binding", async () => {
     const updated = await request({
       path: "/onboarding/templates/common_leave/lifecycle-binding",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { effect_type: "retired" },
     })
@@ -255,7 +255,7 @@ describe("/onboarding/templates/:code/lifecycle-binding", () => {
 
     const removed = await request({
       path: "/onboarding/templates/engineer_join/lifecycle-binding",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "DELETE",
     })
     expect(removed.status).toBe(204)
@@ -264,7 +264,7 @@ describe("/onboarding/templates/:code/lifecycle-binding", () => {
   test("rejects incompatible kinds and callers without management permission", async () => {
     const incompatible = await request({
       path: "/onboarding/templates/common_leave/lifecycle-binding",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { effect_type: "hire" },
     })

@@ -45,7 +45,7 @@ async function createPosition(db: D1Database): Promise<number> {
     db,
     jwtSecret,
     path: "/recruitment/positions",
-    token: await tokenFor(1, "admin"),
+    token: await tokenFor(1, "root"),
     method: "POST",
     body: { title: "Backend Engineer", department_code: "D003" },
   })
@@ -67,7 +67,7 @@ describe("recruitment positions", () => {
       db,
       jwtSecret,
       path: "/recruitment/positions",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(list.status).toBe(200)
@@ -82,7 +82,7 @@ describe("recruitment positions", () => {
       db,
       jwtSecret,
       path: `/recruitment/positions/${positionId}`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { title: "Backend Engineer", status: "closed" },
     })
@@ -140,7 +140,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment/positions/${positionId}/candidates`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { name: "Applicant One", email: "applicant@example.com" },
     })
@@ -155,7 +155,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment/candidates/${candidate.id}/advance`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { stage: "screening" },
     })
@@ -176,7 +176,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment/positions/${positionId}/candidates`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { name: "Applicant Two" },
     })
@@ -188,7 +188,7 @@ describe("recruitment candidates", () => {
       db,
       jwtSecret,
       path: `/recruitment/candidates/${candidate.id}/advance`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { stage: "interview" },
     })

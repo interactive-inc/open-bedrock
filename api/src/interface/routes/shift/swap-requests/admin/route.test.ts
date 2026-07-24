@@ -86,7 +86,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /shift/swap-requests/admin", () => {
   test("returns 200 with all swap requests for admin", async () => {
-    const response = await request("/shift/swap-requests/admin", await tokenFor(1, "admin"))
+    const response = await request("/shift/swap-requests/admin", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -125,7 +125,7 @@ describe("GET /shift/swap-requests/admin", () => {
   test("filters by status", async () => {
     const response = await request(
       "/shift/swap-requests/admin?status=pending",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -142,7 +142,7 @@ describe("GET /shift/swap-requests/admin", () => {
   test("filters by requester_id", async () => {
     const response = await request(
       "/shift/swap-requests/admin?requester_id=5",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -159,7 +159,7 @@ describe("GET /shift/swap-requests/admin", () => {
   test("filters by date range", async () => {
     const response = await request(
       "/shift/swap-requests/admin?from=2026-06-01&to=2026-06-01",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)

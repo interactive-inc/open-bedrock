@@ -87,7 +87,7 @@ describe("POST /shift/assignments/:id/publish", () => {
   test("privileged role publishes a draft assignment and returns 200", async () => {
     const response = await request({
       path: "/shift/assignments/2/publish",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
     })
 
@@ -105,7 +105,7 @@ describe("POST /shift/assignments/:id/publish", () => {
   test("returns 409 when already published", async () => {
     const response = await request({
       path: "/shift/assignments/1/publish",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
     })
 
@@ -115,7 +115,7 @@ describe("POST /shift/assignments/:id/publish", () => {
   test("returns 404 for a missing assignment", async () => {
     const response = await request({
       path: "/shift/assignments/9999/publish",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
     })
 

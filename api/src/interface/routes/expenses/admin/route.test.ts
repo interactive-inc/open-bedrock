@@ -84,7 +84,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /expenses/admin", () => {
   test("returns 200 with all expenses for admin", async () => {
-    const response = await request("/expenses/admin", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -121,7 +121,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request("/expenses/admin?status=approved", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin?status=approved", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -135,7 +135,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("filters by category", async () => {
-    const response = await request("/expenses/admin?category=transport", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin?category=transport", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -149,7 +149,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("filters by applicant_id", async () => {
-    const response = await request("/expenses/admin?applicant_id=5", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin?applicant_id=5", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -163,7 +163,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("sorts by amount desc", async () => {
-    const response = await request("/expenses/admin?sort=amount_desc", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin?sort=amount_desc", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -181,7 +181,7 @@ describe("GET /expenses/admin", () => {
   })
 
   test("respects limit", async () => {
-    const response = await request("/expenses/admin?limit=1", await tokenFor(1, "admin"))
+    const response = await request("/expenses/admin?limit=1", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
