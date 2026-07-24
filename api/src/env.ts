@@ -21,6 +21,9 @@ export type Bindings = {
   // ログイン以外の全エンドポイントの IP 単位グローバルレート制限（Workers Rate Limiting binding）。
   // wrangler.jsonc の ratelimits で設定する。未設定（ローカル開発・テスト）ではスキップする。
   API_RATE_LIMITER?: RateLimit
+  // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
+  // 未設定時は機能無効（POST /bootstrap は 404 を返す）。
+  BOOTSTRAP_TOKEN?: string
 }
 
 export type RequestAuditContext = {

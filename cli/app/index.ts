@@ -105,6 +105,7 @@ import leaveMineHandler from "@/app/leave/mine/route"
 import leaveRejectHandler from "@/app/leave/reject/[leave_id]/route"
 import leaveRequestHandler from "@/app/leave/request/route"
 import loginHandler from "@/app/login/route"
+import bootstrapHandler from "@/app/bootstrap/route"
 import notifyCountHandler from "@/app/notify/count/route"
 import notifyHandler from "@/app/notify/route"
 import notifyListHandler from "@/app/notify/list/route"
@@ -484,6 +485,7 @@ base.onError(async (error, c) => {
 const routes = base
 
 routes.post("/login", ...loginHandler)
+routes.post("/bootstrap", ...bootstrapHandler)
 routes.post("/whoami", ...whoamiHandler)
 
 routes.post("/governance", ...governanceHandler)

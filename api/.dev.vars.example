@@ -1,3 +1,4 @@
 JWT_SECRET="local-dev-secret-change-me"
 AUDIT_HMAC_SECRET="local-dev-audit-hmac-secret-change-me"
 COMPANY_TIME_ZONE="Asia/Tokyo"
+BOOTSTRAP_TOKEN="local-dev-bootstrap-token-change-me"
