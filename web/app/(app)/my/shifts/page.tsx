@@ -134,7 +134,9 @@ async function ShiftSwapSection() {
   const employees =
     employeeResult instanceof Error
       ? []
-      : employeeResult.items.flatMap((e) => (e.code === null ? [] : [{ code: e.code, name: e.name }]))
+      : employeeResult.items.flatMap((e) =>
+          e.code === null ? [] : [{ code: e.code, name: e.name }],
+        )
 
   return (
     <Card>

@@ -183,9 +183,7 @@ export class AccountProvisioner {
 
       return employeeId
     } catch (caught) {
-      return caught instanceof Error
-        ? caught
-        : new Error("failed to provision external employee")
+      return caught instanceof Error ? caught : new Error("failed to provision external employee")
     }
   }
 

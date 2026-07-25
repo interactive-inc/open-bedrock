@@ -36,7 +36,9 @@ export default async function AssetDetailPage(props: Props) {
   const employees =
     employeeResult === null || employeeResult instanceof Error
       ? []
-      : employeeResult.items.flatMap((e) => (e.code === null ? [] : [{ code: e.code, name: e.name }]))
+      : employeeResult.items.flatMap((e) =>
+          e.code === null ? [] : [{ code: e.code, name: e.name }],
+        )
 
   return (
     <div className="flex flex-col gap-6">

@@ -157,8 +157,7 @@ export class SyncExternalIdentities {
     }
 
     const created = await identityRepository.findByProviderSubject(EXTERNAL_PROVIDER, input.subject)
-    const createdAccountId =
-      created instanceof Error || created === null ? null : created.accountId
+    const createdAccountId = created instanceof Error || created === null ? null : created.accountId
 
     const auditError = await this.audit(
       "iam.identity.provisioned",
