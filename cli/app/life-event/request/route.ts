@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte life-event request --type <s> --date <date> [--detail <s>]`
+export const help = `bedrock life-event request --type <s> --date <date> [--detail <s>]`
 
 export default factory.createHandlers(
   zValidator(

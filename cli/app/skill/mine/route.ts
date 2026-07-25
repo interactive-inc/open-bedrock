@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte skill mine — 自分のスキル`
+export const help = `bedrock skill mine — 自分のスキル`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

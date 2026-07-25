@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte calendar add --date <YYYY-MM-DD> --kind <holiday|workday> [--name <n>]`
+export const help = `bedrock calendar add --date <YYYY-MM-DD> --kind <holiday|workday> [--name <n>]`
 
 export default factory.createHandlers(
   zValidator(

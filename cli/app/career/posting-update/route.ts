@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte career posting-update --id <id> --title <t> [--dept-id <n>] [--dept-name <d>] [--skills <s>] [--status open|closed]`
+export const help = `bedrock career posting-update --id <id> --title <t> [--dept-id <n>] [--dept-name <d>] [--skills <s>] [--status open|closed]`
 
 export default factory.createHandlers(
   zValidator(

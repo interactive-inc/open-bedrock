@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte meetings update <code> --name <n> [--cadence <cd>] [--description <d>]`
+export const help = `bedrock meetings update <code> --name <n> [--cadence <cd>] [--description <d>]`
 
 export default factory.createHandlers(
   zValidator(

@@ -9,11 +9,11 @@ export function toConnectionErrorMessage(error: unknown, baseUrl: string): strin
   }
 
   if (error.name === "TimeoutError" || error.name === "AbortError") {
-    return `API (${baseUrl}) への接続がタイムアウトしました。サーバの起動状態や接続先（環境変数 KARTE_API）を確認してください。`
+    return `API (${baseUrl}) への接続がタイムアウトしました。サーバの起動状態や接続先（環境変数 BEDROCK_API）を確認してください。`
   }
 
   if (isConnectionFailure(error.message)) {
-    return `API (${baseUrl}) に接続できませんでした。サーバが起動しているか、接続先（環境変数 KARTE_API）を確認してください。`
+    return `API (${baseUrl}) に接続できませんでした。サーバが起動しているか、接続先（環境変数 BEDROCK_API）を確認してください。`
   }
 
   return null

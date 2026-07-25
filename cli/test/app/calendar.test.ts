@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/calendar", help: "karte calendar" },
+  { path: "/calendar", help: "bedrock calendar" },
   { path: "/calendar/list", help: "calendar list" },
   { path: "/calendar/add", help: "calendar add" },
   { path: "/calendar/delete", help: "calendar delete" },

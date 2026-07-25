@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte leave reject <id> --comment <c>`
+export const help = `bedrock leave reject <id> --comment <c>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), comment: z.string().optional() })),

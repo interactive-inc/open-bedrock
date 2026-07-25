@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte review forms --subject-employee-id <id> [--cycle-id <id>]
+export const help = `bedrock review forms --subject-employee-id <id> [--cycle-id <id>]
   被評価者ごとのフォームと提出状況（360度評価）。本人は開示済みのみ、管理者は全件。`
 
 export default factory.createHandlers(

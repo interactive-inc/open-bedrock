@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte thanks reward-add --name <n> --cost <pt> [--stock <n>] — カタログ登録（管理者）`
+export const help = `bedrock thanks reward-add --name <n> --cost <pt> [--stock <n>] — カタログ登録（管理者）`
 
 export default factory.createHandlers(
   zValidator(

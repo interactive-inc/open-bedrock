@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte kb search [q] [--category <c>]`
+export const help = `bedrock kb search [q] [--category <c>]`
 
 export default factory.createHandlers(
   zValidator(

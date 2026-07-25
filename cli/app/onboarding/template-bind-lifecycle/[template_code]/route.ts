@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { createClient } from "@/lib/http/hc-client"
 
-export const help = `karte onboarding template-bind-lifecycle <template_code> --effect <hire|retired>`
+export const help = `bedrock onboarding template-bind-lifecycle <template_code> --effect <hire|retired>`
 
 export default factory.createHandlers(
   zValidator(

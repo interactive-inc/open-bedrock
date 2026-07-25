@@ -5,7 +5,7 @@ import { readJsonFile } from "@/lib/io/read-json"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte survey answer <id> --data <file>`
+export const help = `bedrock survey answer <id> --data <file>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), data: z.string().optional() })),

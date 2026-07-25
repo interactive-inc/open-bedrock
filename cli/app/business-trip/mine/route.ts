@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte business-trip mine`
+export const help = `bedrock business-trip mine`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

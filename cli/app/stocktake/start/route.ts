@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte stocktake start --name <n> --target-date <d>`
+export const help = `bedrock stocktake start --name <n> --target-date <d>`
 
 export default factory.createHandlers(
   zValidator(

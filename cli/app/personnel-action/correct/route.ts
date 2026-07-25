@@ -5,7 +5,7 @@ import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte personnel-action correct --action-id <id> --payload <json-file> --reason <text> --idempotency-key <key>`
+export const help = `bedrock personnel-action correct --action-id <id> --payload <json-file> --reason <text> --idempotency-key <key>`
 
 export default factory.createHandlers(
   zValidator(

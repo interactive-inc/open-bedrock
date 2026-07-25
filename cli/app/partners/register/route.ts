@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte partners register --code <c> --name <n> [--category customer|supplier|other] [--corporate-number <cn>] [--note <t>]`
+export const help = `bedrock partners register --code <c> --name <n> [--category customer|supplier|other] [--corporate-number <cn>] [--note <t>]`
 
 export default factory.createHandlers(
   zValidator(

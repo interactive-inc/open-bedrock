@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app template-delete --code <code> — 申請テンプレートを削除`
+export const help = `bedrock app template-delete --code <code> — 申請テンプレートを削除`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), code: z.string().optional() })),

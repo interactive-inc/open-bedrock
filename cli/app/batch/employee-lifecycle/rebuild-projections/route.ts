@@ -3,7 +3,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte batch employee-lifecycle rebuild-projections`
+export const help = `bedrock batch employee-lifecycle rebuild-projections`
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),
   async (c) => {

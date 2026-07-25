@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
-export const help = `karte app delegation-delete <id>`
+export const help = `bedrock app delegation-delete <id>`
 export default factory.createHandlers(async (c) => {
   const id = c.req.param("id")
   if (!id) throw new UsageError("id が必要です")

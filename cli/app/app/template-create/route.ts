@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app template-create --code <c> --name <n> --category <cat> [--description <d>] [--schema <json>] [--approvers <r,r>]`
+export const help = `bedrock app template-create --code <c> --name <n> --category <cat> [--description <d>] [--schema <json>] [--approvers <r,r>]`
 
 function parseApprovers(value: string | undefined): string[] {
   if (value === undefined) return []

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte health-checkups complete <id> --conducted <date> — 実施記録を完了にし実施日を記録`
+export const help = `bedrock health-checkups complete <id> --conducted <date> — 実施記録を完了にし実施日を記録`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), conducted: z.string().optional() })),

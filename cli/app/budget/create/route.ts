@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte budget create --department-id <n> --fiscal-period <p> --period-start <d> --period-end <d> --amount <n> --name <s> [--note <m>]`
+export const help = `bedrock budget create --department-id <n> --fiscal-period <p> --period-start <d> --period-end <d> --amount <n> --name <s> [--note <m>]`
 
 export default factory.createHandlers(
   zValidator(

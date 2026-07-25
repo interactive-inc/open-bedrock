@@ -1,9 +1,9 @@
-# cli (karte)
+# cli (bedrock)
 
 社内事務手続きのための CLI。Hono + bun 製。
 
 引数をすべて POST のローカル HTTP リクエストに変換し、`cli/app` の Hono アプリを
-`app.request()` で処理する。各ハンドラは `~/.karte/config.json` のトークンで api を叩く。
+`app.request()` で処理する。各ハンドラは `~/.config/bedrock/settings.json` のトークンで api を叩く。
 
 ## 使い方
 
@@ -15,8 +15,8 @@ bun index.ts whoami
 bun index.ts app inbox
 ```
 
-`karte` として bin 登録済み（`bun link` で PATH に通す）。
-接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:18787`）で上書きできる。
+`bedrock` として bin 登録済み（`bun link` で PATH に通す）。
+接続先は環境変数 `BEDROCK_API`（既定 `http://127.0.0.1:18787`）で上書きできる。接続先ごとにトークンを保存する。
 
 ## 構成
 

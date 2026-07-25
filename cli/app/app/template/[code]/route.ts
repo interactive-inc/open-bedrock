@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app template <code>`
+export const help = `bedrock app template <code>`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 

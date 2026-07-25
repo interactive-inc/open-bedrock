@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte work-accidents [--status <s>] [--employee-id <id>] — 労災・事故の発生記録一覧（work_accident:read:all）`
+export const help = `bedrock work-accidents [--status <s>] [--employee-id <id>] — 労災・事故の発生記録一覧（work_accident:read:all）`
 
 export default factory.createHandlers(
   zValidator(

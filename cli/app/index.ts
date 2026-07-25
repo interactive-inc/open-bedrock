@@ -449,12 +449,12 @@ const base = factory.createApp()
 base.onError(async (error, c) => {
   // ハンドラに到達して投げられたエラーであることを示すマーカー。
   // 未登録パスで Hono が返す素の 404 と、ハンドラ由来の 404 を index.ts で区別する。
-  c.header("x-karte-handler-error", "1")
+  c.header("x-bedrock-handler-error", "1")
 
   if (error instanceof HTTPException) {
     if (error.status === 401) {
       return c.text(
-        `${error.message}\n認証されていません。'karte login' でログインしてください。`,
+        `${error.message}\n認証されていません。'bedrock login' でログインしてください。`,
         error.status,
       )
     }

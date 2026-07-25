@@ -5,7 +5,7 @@ import { UsageError } from "@/lib/errors"
 import { createClient } from "@/lib/http/hc-client"
 import { ensureOk } from "@/lib/http/ensure-ok"
 
-export const help = `karte app workflow-repair reassign <app_id> --candidates <id,id,...> --reason <text> [--required-approvals <n>]`
+export const help = `bedrock app workflow-repair reassign <app_id> --candidates <id,id,...> --reason <text> [--required-approvals <n>]`
 
 const MAX_CANDIDATES = 20
 
