@@ -1,0 +1,375 @@
+import { describe, expect, test } from "bun:test"
+import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
+import { createIdentityToken } from "@/interface/test-helpers/create-identity-token"
+import { loadSchema } from "@/interface/test-helpers/load-schema"
+import { requestWithContext } from "@/interface/test-helpers/request-with-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
+import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
+
+const jwtSecret = "cli-callback-route-jwt-secret"
+const identityJwtSecret = "cli-callback-route-identity-secret"
+const identityIssuer = "https://identity-provider.example/"
+const apiOrigin = "https://api.example.com"
+const now = "2026-01-01T00:00:00.000Z"
+const nowEpoch = 1_767_225_600
+// audience は callback URL 自身の origin（GET /auth/cli/callback が検証に使う値）。
+const callbackAudience = "https://api.example.com/auth/cli/callback"
+
+async function createTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+  await seedD1(
+    db,
+    "employees",
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: employee.deptId,
+      dept_name: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+  await seedIamForEmployees(db)
+  return db
+}
+
+/** GET /auth/cli/login が発行するはずの one-time state を直接 seed する。 */
+async function seedCliLoginState(
+  db: D1Database,
+  state: string,
+  port: number,
+  cliState: string,
+  expiresAt: number = nowEpoch + 600,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO cli_login_states (state, port, cli_state, expires_at) VALUES (?1, ?2, ?3, ?4)`,
+    )
+    .bind(state, port, cliState, expiresAt)
+    .run()
+}
+
+async function seedExternalIdentity(
+  db: D1Database,
+  accountId: number,
+  subject: string,
+  email: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO identities (account_id, provider, subject, secret, email, email_verified, created_at)
+       VALUES (?1, 'oidc', ?2, NULL, ?3, 1, 0)`,
+    )
+    .bind(accountId, subject, email)
+    .run()
+}
+
+function getCliCallback(db: D1Database, query: string): Promise<Response> {
+  return requestWithContext({
+    db,
+    jwtSecret,
+    path: `/auth/cli/callback${query}`,
+    token: null,
+    method: "GET",
+    now,
+    identityJwtSecret,
+    identityIssuer,
+    apiOrigin,
+  })
+}
+
+async function auditRows(
+  db: D1Database,
+): Promise<Array<{ action: string; reason_code: string | null }>> {
+  return (
+    await db
+      .prepare("SELECT action, reason_code FROM audit_logs ORDER BY id")
+      .all<{ action: string; reason_code: string | null }>()
+  ).results
+}
+
+describe("GET /auth/cli/callback", () => {
+  test("consumes the state, resolves the account, and redirects to the loopback with a one-time code (no session issued yet)", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-1", 51820, "cli-opaque-state-1")
+
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "external-subject-1",
+      jti: "cli-callback-jti-1",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-1`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    expect(location).not.toBeNull()
+    if (location === null) throw new Error("missing Location header")
+
+    const url = new URL(location)
+    expect(`${url.origin}${url.pathname}`).toBe("http://127.0.0.1:51820/callback")
+    expect(url.searchParams.get("state")).toBe("cli-opaque-state-1")
+    const code = url.searchParams.get("code")
+    expect(code).not.toBeNull()
+    expect(url.searchParams.get("error")).toBeNull()
+
+    // state は 1 回で消費され、テーブルから消える。
+    const stateRow = await db
+      .prepare("SELECT state FROM cli_login_states WHERE state = 'broker-state-1'")
+      .first()
+    expect(stateRow).toBeNull()
+
+    // code は解決済み account/employee の id だけを保持し、トークンは一切保存しない。
+    const codeRow = await db
+      .prepare("SELECT code_hash, account_id, employee_id FROM cli_login_codes")
+      .first<{ code_hash: string; account_id: number; employee_id: number }>()
+    expect(codeRow).toEqual({ code_hash: codeRow?.code_hash ?? "", account_id: 1, employee_id: 1 })
+    const persisted = JSON.stringify(codeRow)
+    expect(persisted).not.toContain(code)
+
+    // セッション発行（ログイン成功の監査）はまだ行われていない。POST /auth/cli/token が行う。
+    expect(await auditRows(db)).toEqual([])
+  })
+
+  // regression: cli_login_codes は以前 access_token/refresh_token を平文で保持していた。
+  // トークンを保存領域に置かない設計に変更したため、テーブル自体にトークン用の列が存在せず、
+  // 保存されている行の中身にもトークンらしき文字列が一切含まれないことを固定する。
+  test("never persists access/refresh tokens in cli_login_codes", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-no-token-storage", 51828, "cli-opaque-state-no-token")
+
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "external-subject-1",
+      jti: "cli-callback-jti-no-token-storage",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-no-token-storage`,
+    )
+    expect(response.status).toBe(302)
+
+    // テーブルの列自体にトークン用カラムが存在しない。
+    const columns = (
+      await db.prepare("PRAGMA table_info(cli_login_codes)").all<{ name: string }>()
+    ).results.map((column) => column.name)
+    expect(columns.sort()).toEqual(["account_id", "code_hash", "employee_id", "expires_at"])
+    expect(columns).not.toContain("access_token")
+    expect(columns).not.toContain("refresh_token")
+
+    // 行の中身にも JWT らしき文字列（access token は "." 区切りの3セグメント JWT）は含まれない。
+    const rows = await db.prepare("SELECT * FROM cli_login_codes").all()
+    const persisted = JSON.stringify(rows.results)
+    expect(persisted).not.toMatch(/^.*[\w-]+\.[\w-]+\.[\w-]+.*$/)
+  })
+
+  test("auto-provisions a new employee when no identity matches the subject", async () => {
+    const db = createD1TestDatabase(loadSchema())
+    await seedCliLoginState(db, "broker-state-provision", 51821, "cli-opaque-state-provision")
+
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "cli-new-subject",
+      email: "you+clinew@example.com",
+      name: "CLI New Hire",
+      jti: "cli-callback-jti-provision",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-provision`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(url.searchParams.get("code")).not.toBeNull()
+
+    const employee = await db
+      .prepare("SELECT id, code FROM employees WHERE name = 'CLI New Hire'")
+      .first<{ id: number; code: string | null }>()
+    expect(employee?.code).toBeNull()
+
+    const identity = await db
+      .prepare("SELECT provider, subject FROM identities WHERE subject = 'cli-new-subject'")
+      .first<{ provider: string; subject: string }>()
+    expect(identity).toEqual({ provider: "oidc", subject: "cli-new-subject" })
+
+    // プロビジョニング監査のみ記録される。ログイン成功の監査は POST /auth/cli/token に移った。
+    expect(await auditRows(db)).toEqual([{ action: "iam.identity.provisioned", reason_code: null }])
+  })
+
+  test("redirects to the loopback with error=<broker error> when the broker reports one", async () => {
+    const db = await createTestDb()
+    await seedCliLoginState(db, "broker-state-error", 51822, "cli-opaque-state-error")
+
+    const response = await getCliCallback(db, "?state=broker-state-error&error=access_denied")
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(`${url.origin}${url.pathname}`).toBe("http://127.0.0.1:51822/callback")
+    expect(url.searchParams.get("state")).toBe("cli-opaque-state-error")
+    expect(url.searchParams.get("error")).toBe("access_denied")
+  })
+
+  test("redirects to the loopback with error=invalid_token when the identity token is invalid", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-bad-token", 51823, "cli-opaque-state-bad-token")
+
+    const token = await createIdentityToken("wrong-secret", nowEpoch, {
+      sub: "external-subject-1",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-bad-token`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(url.searchParams.get("error")).toBe("invalid_token")
+    expect((await auditRows(db))[0]).toEqual({
+      action: "auth.session.cli_login_denied",
+      reason_code: "invalid_token",
+    })
+  })
+
+  test("rejects an audience that does not match the callback origin", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-bad-aud", 51824, "cli-opaque-state-bad-aud")
+
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "external-subject-1",
+      issuer: identityIssuer,
+      audience: "https://some-other-app.example/",
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-bad-aud`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(url.searchParams.get("error")).toBe("invalid_token")
+  })
+
+  test("returns 401 when the state is missing, unknown, or already consumed", async () => {
+    const db = await createTestDb()
+
+    const missing = await getCliCallback(db, "?token=whatever")
+    expect(missing.status).toBe(401)
+
+    const unknown = await getCliCallback(db, "?token=whatever&state=never-issued")
+    expect(unknown.status).toBe(401)
+
+    await seedCliLoginState(db, "broker-state-reuse", 51825, "cli-opaque-state-reuse")
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "external-subject-1",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+      jti: "cli-callback-jti-reuse",
+    })
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    const first = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-reuse`,
+    )
+    expect(first.status).toBe(302)
+
+    const second = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-reuse`,
+    )
+    expect(second.status).toBe(401)
+  })
+
+  test("denies the login and does not issue a code when the audit write itself fails", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-audit-down", 51827, "cli-opaque-state-audit-down")
+
+    // audit_logs への INSERT を強制的に失敗させる（監査書き込みが不可能な状態を模す）。
+    await db.exec(`
+      CREATE TRIGGER reject_test_audit_insert
+      BEFORE INSERT ON audit_logs
+      BEGIN
+        SELECT RAISE(ABORT, 'forced audit insert failure');
+      END;
+    `)
+
+    // 無効な token による invalid_token 拒否パス（denyAndLoopback 経由）で検証する。
+    const token = await createIdentityToken("wrong-secret", nowEpoch, {
+      sub: "external-subject-1",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-audit-down`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(`${url.origin}${url.pathname}`).toBe("http://127.0.0.1:51827/callback")
+    expect(url.searchParams.get("state")).toBe("cli-opaque-state-audit-down")
+    // reasonCode(invalid_token) ではなく audit_unavailable が載る。ログインは拒否されたまま。
+    expect(url.searchParams.get("error")).toBe("audit_unavailable")
+    expect(url.searchParams.get("code")).toBeNull()
+
+    // one-time code は発行されていない。
+    const codeRows = await db
+      .prepare("SELECT COUNT(*) AS count FROM cli_login_codes")
+      .first<number>("count")
+    expect(codeRows).toBe(0)
+
+    // 監査行自体は書き込みに失敗しているので残らない。
+    expect(await auditRows(db)).toEqual([])
+  })
+
+  test("rejects when cli login is not configured (missing IDENTITY_JWT_SECRET/API_ORIGIN)", async () => {
+    const db = await createTestDb()
+    await seedCliLoginState(db, "broker-state-unconfigured", 51826, "cli-opaque-state-unconfigured")
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/auth/cli/callback?token=whatever&state=broker-state-unconfigured",
+      token: null,
+      method: "GET",
+      now,
+      // identityJwtSecret / apiOrigin を渡さない = 未設定。
+    })
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(url.searchParams.get("error")).toBe("cli_login_not_configured")
+  })
+})
