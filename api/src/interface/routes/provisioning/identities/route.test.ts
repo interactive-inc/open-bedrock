@@ -58,7 +58,11 @@ describe("POST /provisioning/identities", () => {
     })
 
     expect(response.status).toBe(200)
-    expect(summarySchema.parse(await response.json())).toEqual({ created: 1, updated: 0, skipped: 0 })
+    expect(summarySchema.parse(await response.json())).toEqual({
+      created: 1,
+      updated: 0,
+      skipped: 0,
+    })
 
     const employee = await db
       .prepare("SELECT code, name FROM employees WHERE name = 'External Hundred'")
@@ -66,8 +70,16 @@ describe("POST /provisioning/identities", () => {
     expect(employee?.code).toBeNull()
 
     const identity = await db
-      .prepare("SELECT provider, subject, secret, email, email_verified FROM identities WHERE subject = 'ext-100'")
-      .first<{ provider: string; subject: string; secret: string | null; email: string; email_verified: number }>()
+      .prepare(
+        "SELECT provider, subject, secret, email, email_verified FROM identities WHERE subject = 'ext-100'",
+      )
+      .first<{
+        provider: string
+        subject: string
+        secret: string | null
+        email: string
+        email_verified: number
+      }>()
     expect(identity).toEqual({
       provider: "oidc",
       subject: "ext-100",
@@ -115,7 +127,11 @@ describe("POST /provisioning/identities", () => {
       name: "New Name",
     })
 
-    expect(summarySchema.parse(await response.json())).toEqual({ created: 0, updated: 1, skipped: 0 })
+    expect(summarySchema.parse(await response.json())).toEqual({
+      created: 0,
+      updated: 1,
+      skipped: 0,
+    })
 
     const identity = await db
       .prepare("SELECT email FROM identities WHERE subject = 'ext-300'")
@@ -142,7 +158,11 @@ describe("POST /provisioning/identities", () => {
       { subject: "ext-401", email: "e401@example.com", name: "FourOne" }, // create
     ])
 
-    expect(summarySchema.parse(await response.json())).toEqual({ created: 1, updated: 0, skipped: 1 })
+    expect(summarySchema.parse(await response.json())).toEqual({
+      created: 1,
+      updated: 0,
+      skipped: 1,
+    })
     expect(await count(db, "identities", "subject IN ('ext-400', 'ext-401')")).toBe(2)
   })
 

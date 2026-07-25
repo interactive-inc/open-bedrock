@@ -20,7 +20,9 @@ describe("session refresh middleware", () => {
   })
 
   test("keeps the current URL when no session or refresh token exists", async () => {
-    const response = await middleware(new NextRequest("https://karte.open.localhost/admin/audit-events"))
+    const response = await middleware(
+      new NextRequest("https://karte.open.localhost/admin/audit-events"),
+    )
     expect(response.headers.get("location")).toBeNull()
     expect(response.headers.get("x-middleware-next")).toBe("1")
   })

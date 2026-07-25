@@ -19,7 +19,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const loginResult = await postIdentityLogin({ token })
 
   if (loginResult instanceof Error) {
-    const reason = loginResult.message === "account_not_found" ? "account_not_found" : "login_failed"
+    const reason =
+      loginResult.message === "account_not_found" ? "account_not_found" : "login_failed"
 
     return redirectToError(request, reason)
   }
