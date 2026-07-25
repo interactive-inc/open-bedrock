@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte work-styles add --employee-id <id> --style <regular|flextime|discretionary|shift> --starts-on <YYYY-MM-DD> [--ends-on <d>] [--note <n>]`
+export const help = `bedrock work-styles add --employee-id <id> --style <regular|flextime|discretionary|shift> --starts-on <YYYY-MM-DD> [--ends-on <d>] [--note <n>]`
 
 export default factory.createHandlers(
   zValidator(

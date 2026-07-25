@@ -5,7 +5,7 @@ import { readJsonFile } from "@/lib/io/read-json"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte career sheet-update --data <file>`
+export const help = `bedrock career sheet-update --data <file>`
 
 /** --data の JSON は unknown のため、API の PUT body 形に検証してから渡す。 */
 const careerSheetUpdateSchema = z.object({

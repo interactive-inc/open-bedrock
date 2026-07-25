@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte thanks redeem --reward <id> — 受領残高から交換を申請`
+export const help = `bedrock thanks redeem --reward <id> — 受領残高から交換を申請`
 
 export default factory.createHandlers(
   zValidator(

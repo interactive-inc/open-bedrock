@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte 1on1 list — 1on1 履歴`
+export const help = `bedrock 1on1 list — 1on1 履歴`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

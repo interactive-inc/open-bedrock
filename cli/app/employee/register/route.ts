@@ -5,7 +5,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { readSecretStdin } from "@/lib/input/read-secret-stdin"
 
-export const help = `karte employee register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
+export const help = `bedrock employee register --code <c> --name <n> --hire-on <YYYY-MM-DD> --email <e> --role <r> --password-stdin [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
 
 役職は役職マスタの code を指定してください（自由入力ではありません）。
 初期パスワードはコマンド引数に含めず、標準入力から渡してください。`

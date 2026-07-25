@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte training courses [--category <c>] [--status <s>] — 研修コース一覧`
+export const help = `bedrock training courses [--category <c>] [--status <s>] — 研修コース一覧`
 
 export default factory.createHandlers(
   zValidator(

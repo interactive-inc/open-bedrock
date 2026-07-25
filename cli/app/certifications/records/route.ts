@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte certifications records [--employee-id <id>] — 資格保有記録一覧（本人 or certification:read:all）`
+export const help = `bedrock certifications records [--employee-id <id>] — 資格保有記録一覧（本人 or certification:read:all）`
 
 export default factory.createHandlers(
   zValidator(

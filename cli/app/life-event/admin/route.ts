@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte life-event admin [--employee-id <id>] [--status <s>] [--limit <n>] [--offset <n>]`
+export const help = `bedrock life-event admin [--employee-id <id>] [--status <s>] [--limit <n>] [--offset <n>]`
 
 export default factory.createHandlers(
   zValidator(

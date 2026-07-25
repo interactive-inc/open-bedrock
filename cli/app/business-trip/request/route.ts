@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte business-trip request --destination <s> --start <date> --end <date> --purpose <s> [--cost <n>]`
+export const help = `bedrock business-trip request --destination <s> --start <date> --end <date> --purpose <s> [--cost <n>]`
 
 export default factory.createHandlers(
   zValidator(

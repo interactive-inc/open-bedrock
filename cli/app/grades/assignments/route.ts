@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte grades assignments [--employee-id <id>]   (employee-id は数値の社員 ID)`
+export const help = `bedrock grades assignments [--employee-id <id>]   (employee-id は数値の社員 ID)`
 
 export default factory.createHandlers(
   zValidator(

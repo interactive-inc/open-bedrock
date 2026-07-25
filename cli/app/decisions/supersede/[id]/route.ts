@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte decisions supersede <id> --by <new_id>`
+export const help = `bedrock decisions supersede <id> --by <new_id>`
 
 export default factory.createHandlers(
   zValidator(

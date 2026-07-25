@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte regulations add-version <code> --body <md> --effective-on <d> [--note <n>]`
+export const help = `bedrock regulations add-version <code> --body <md> --effective-on <d> [--note <n>]`
 
 export default factory.createHandlers(
   zValidator(

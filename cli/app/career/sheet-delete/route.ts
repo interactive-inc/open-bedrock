@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte career sheet-delete — 自分のキャリアシートを削除`
+export const help = `bedrock career sheet-delete — 自分のキャリアシートを削除`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

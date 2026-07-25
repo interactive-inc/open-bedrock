@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte room avail --start <iso> --end <iso> [--capacity <n>]`
+export const help = `bedrock room avail --start <iso> --end <iso> [--capacity <n>]`
 
 export default factory.createHandlers(
   zValidator(

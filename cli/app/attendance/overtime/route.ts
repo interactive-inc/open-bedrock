@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte attendance overtime [--month <YYYY-MM>] [--scope <reports|all>]   時間外の参考集計（法定判定ではない）`
+export const help = `bedrock attendance overtime [--month <YYYY-MM>] [--scope <reports|all>]   時間外の参考集計（法定判定ではない）`
 
 export default factory.createHandlers(
   zValidator(

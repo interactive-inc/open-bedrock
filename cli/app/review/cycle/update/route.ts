@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte review cycle update --id <id> --title <t> --period <p> [--due <d>]`
+export const help = `bedrock review cycle update --id <id> --title <t> --period <p> [--due <d>]`
 
 export default factory.createHandlers(
   zValidator(

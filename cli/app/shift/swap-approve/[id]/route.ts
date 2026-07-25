@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte shift swap-approve <id> — シフト交代申請を承認`
+export const help = `bedrock shift swap-approve <id> — シフト交代申請を承認`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

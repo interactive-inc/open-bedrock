@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte attendance summary [--month <m>]`
+export const help = `bedrock attendance summary [--month <m>]`
 
 export default factory.createHandlers(
   zValidator(

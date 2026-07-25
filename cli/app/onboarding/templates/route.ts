@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte onboarding templates [--kind join|leave]`
+export const help = `bedrock onboarding templates [--kind join|leave]`
 
 export default factory.createHandlers(
   zValidator(

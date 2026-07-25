@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
-export const help = `karte app delegate --employee <code> --start <iso> --end <iso> [--template <code>]`
+export const help = `bedrock app delegate --employee <code> --start <iso> --end <iso> [--template <code>]`
 export default factory.createHandlers(
   zValidator(
     "json",

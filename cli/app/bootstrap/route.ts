@@ -4,10 +4,10 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte bootstrap — 初期 ROOT アカウントを 1 度だけ作成する
+export const help = `bedrock bootstrap — 初期 ROOT アカウントを 1 度だけ作成する
 
 usage:
-  karte bootstrap --email <email> --password <password> --name <name> [--code <code>] [--token <token>] [--base-url <url>]
+  bedrock bootstrap --email <email> --password <password> --name <name> [--code <code>] [--token <token>] [--base-url <url>]
 
 --token 省略時は環境変数 BOOTSTRAP_TOKEN を使う。--code 省略時は E001。`
 

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte recruitment position-create --title <t> [--department-code <c>] [--status open|closed] [--note <t>]`
+export const help = `bedrock recruitment position-create --title <t> [--department-code <c>] [--status open|closed] [--note <t>]`
 
 export default factory.createHandlers(
   zValidator(

@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
-export const help = `karte review cycle policy --cycle-id <id> [--definition '<json>']`
+export const help = `bedrock review cycle policy --cycle-id <id> [--definition '<json>']`
 type PolicyEndpoint = {
   $get(input: { param: { cycle_id: string } }): Promise<Response>
   $put(input: { param: { cycle_id: string }; json: unknown }): Promise<Response>

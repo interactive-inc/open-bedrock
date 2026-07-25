@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte budget list [--department-id <n>] [--fiscal-period <p>]`
+export const help = `bedrock budget list [--department-id <n>] [--fiscal-period <p>]`
 
 export default factory.createHandlers(
   zValidator(

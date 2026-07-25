@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/work-styles", help: "karte work-styles" },
+  { path: "/work-styles", help: "bedrock work-styles" },
   { path: "/work-styles/list", help: "work-styles list" },
   { path: "/work-styles/add", help: "work-styles add" },
 ]

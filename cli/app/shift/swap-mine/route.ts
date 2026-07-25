@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte shift swap-mine — 自分が出したシフト交代申請の一覧`
+export const help = `bedrock shift swap-mine — 自分が出したシフト交代申請の一覧`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

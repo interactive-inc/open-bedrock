@@ -15,7 +15,7 @@ describe("ringi commands", () => {
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("karte ringi")
+    expect(await response.text()).toContain("bedrock ringi")
   })
 
   it("submit shows help", async () => {

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte budget summary --fiscal-period <p>`
+export const help = `bedrock budget summary --fiscal-period <p>`
 
 export default factory.createHandlers(
   zValidator(

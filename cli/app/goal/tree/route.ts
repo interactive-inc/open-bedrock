@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte goal tree [--period <p>]   全社→部門→個人の目標ツリー`
+export const help = `bedrock goal tree [--period <p>]   全社→部門→個人の目標ツリー`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), period: z.string().optional() })),

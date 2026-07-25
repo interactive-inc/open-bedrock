@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte employee archive --code <code>`
+export const help = `bedrock employee archive --code <code>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), code: z.string().optional() })),

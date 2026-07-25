@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte certifications record-add --employee-id <id> --certification-id <id> --acquired <date> [--expires <date>] [--note <n>]`
+export const help = `bedrock certifications record-add --employee-id <id> --certification-id <id> --acquired <date> [--expires <date>] [--note <n>]`
 
 export default factory.createHandlers(
   zValidator(

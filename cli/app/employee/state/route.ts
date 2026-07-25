@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte employee state --code <code> [--as-of <YYYY-MM-DD>]`
+export const help = `bedrock employee state --code <code> [--as-of <YYYY-MM-DD>]`
 
 export default factory.createHandlers(
   zValidator(

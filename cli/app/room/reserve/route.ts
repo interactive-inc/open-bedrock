@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte room reserve --room-id <n> --start <iso> --end <iso> [--purpose <p>]`
+export const help = `bedrock room reserve --room-id <n> --start <iso> --end <iso> [--purpose <p>]`
 
 export default factory.createHandlers(
   zValidator(

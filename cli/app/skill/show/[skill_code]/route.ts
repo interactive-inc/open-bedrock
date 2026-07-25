@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte skill show <code> — 自分の登録スキルを1件表示`
+export const help = `bedrock skill show <code> — 自分の登録スキルを1件表示`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

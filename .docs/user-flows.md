@@ -25,7 +25,7 @@ API、CLI、Web の提供範囲は一致を前提としない。操作はコー�
 ### 規程・手続きを運用する
 
 1. 自社の非公開 source で版、対象、責任、ProcedureDefinition、公開 review を定義する
-2. `karte governance sync` で draft を同期し、参照、role assignment、期限、rule overlap 候補を検査する
+2. `bedrock governance sync` で draft を同期し、参照、role assignment、期限、rule overlap 候補を検査する
 3. 公開 review が必要な版は権限ある人間が review し、公開権限者が承認済み content hash を publish する
 4. 現行実装では published status と audience が一致する文書を従業員が閲覧し、必要な文書は acknowledgement を記録する
 5. 現行実装は施行期間による表示制御、合議体 quorum、review candidate snapshot を持たないため、それらを必要とする正式運用には使わない

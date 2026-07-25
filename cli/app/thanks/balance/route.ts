@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte thanks balance — 受領残高（受領 − 確定交換）`
+export const help = `bedrock thanks balance — 受領残高（受領 − 確定交換）`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

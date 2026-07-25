@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte work-accidents create --occurred <date> --summary <s> [--employee-id <id>] [--location <l>] [--severity <minor|serious>]`
+export const help = `bedrock work-accidents create --occurred <date> --summary <s> [--employee-id <id>] [--location <l>] [--severity <minor|serious>]`
 
 export default factory.createHandlers(
   zValidator(

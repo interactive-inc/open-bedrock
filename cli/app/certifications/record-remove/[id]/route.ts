@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte certifications record-remove <id> — 資格保有記録を削除`
+export const help = `bedrock certifications record-remove <id> — 資格保有記録を削除`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte room update --id <reservation-id> --start <iso> --end <iso> [--purpose <p>]`
+export const help = `bedrock room update --id <reservation-id> --start <iso> --end <iso> [--purpose <p>]`
 
 export default factory.createHandlers(
   zValidator(

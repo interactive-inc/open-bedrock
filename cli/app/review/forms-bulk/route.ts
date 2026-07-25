@@ -5,7 +5,7 @@ import { readJsonFile } from "@/lib/io/read-json"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte review forms-bulk --cycle-id <id> --forms <file>
+export const help = `bedrock review forms-bulk --cycle-id <id> --forms <file>
   被評価者と評価者種別の組を一括作成（360度評価・管理者）。
   --forms は [{ "subject_employee_id": n, "reviewer_employee_id": n, "reviewer_type": "self|manager|peer|subordinate" }] 形式の JSON ファイル。`
 

@@ -16,7 +16,7 @@ describe("bootstrap command", () => {
     const response = await postBootstrap({ help: "1" })
 
     expect(response.status).toBe(200)
-    expect(await response.text()).toContain("karte bootstrap")
+    expect(await response.text()).toContain("bedrock bootstrap")
   })
 
   it("requires --email, --password, and --name", async () => {
