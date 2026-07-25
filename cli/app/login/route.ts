@@ -1,15 +1,17 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { loadConfig } from "@/lib/config/load-config"
-import { saveConfig } from "@/lib/config/save-config"
+import { resolveBaseUrl } from "@/lib/config/resolve-base-url"
+import { SettingsFile } from "@/lib/config/settings-file"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte login — ログインしてトークンを取得
+export const help = `bedrock login — ログインしてトークンを取得
 
 usage:
-  karte login --email <email> --password <password> [--base-url <url>]`
+  bedrock login --email <email> --password <password> [--base-url <url>]
+
+接続先は --base-url ?? 環境変数 BEDROCK_API ?? 既定。接続先ごとにトークンを保存する。`
 
 export default factory.createHandlers(
   zValidator(
@@ -30,11 +32,9 @@ export default factory.createHandlers(
       throw new UsageError("--email と --password が必要です")
     }
 
-    const config = await loadConfig()
+    const baseUrl = resolveBaseUrl(query["base-url"])
 
-    if (query["base-url"]) config.base_url = query["base-url"]
-
-    const client = await createClient(config.base_url)
+    const client = await createClient(baseUrl)
 
     // createClient の fetch ラッパーが 4xx/5xx を ApiError として throw するため、
     // ここに来た時点で response は必ず成功。手動の ok チェックは不要。
@@ -49,12 +49,35 @@ export default factory.createHandlers(
       })
       .parse(await response.json())
 
-    config.token = result.access_token
+    const name = await fetchName(baseUrl, result.access_token)
 
-    config.refresh_token = result.refresh_token ?? null
+    await new SettingsFile().saveLogin(
+      baseUrl,
+      { token: result.access_token, refresh_token: result.refresh_token },
+      query.email,
+      name,
+    )
 
-    await saveConfig(config)
-
-    return c.text(`ログイン成功 base_url=${config.base_url}`)
+    return c.text(`ログイン成功 base_url=${baseUrl}`)
   },
 )
+
+/**
+ * ログイン直後の access_token で /me を叩き name を取得する。失敗しても "" を返しログインは通す。
+ */
+async function fetchName(baseUrl: string, accessToken: string): Promise<string> {
+  try {
+    const client = await createClient(baseUrl)
+
+    const response = await client.me.$get(
+      {},
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    )
+
+    const me = z.object({ name: z.string() }).parse(await response.json())
+
+    return me.name
+  } catch {
+    return ""
+  }
+}
