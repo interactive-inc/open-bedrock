@@ -34,6 +34,14 @@ export type Bindings = {
   // 初期 ROOT 作成用。`wrangler secret put BOOTSTRAP_TOKEN` で登録し、初期化完了後は削除を推奨。
   // 未設定時は機能無効（POST /bootstrap は 404 を返す）。
   BOOTSTRAP_TOKEN?: string
+  // CLI（ネイティブアプリ）ログインで、本人確認を委ねる外部 identity provider（ブローカー）のログイン URL。
+  // GET /auth/cli/login はこの URL へ `?callback=<API_ORIGIN>/auth/cli/callback&state=...` を付けて 302 する。
+  // 未設定なら CLI ログインを一律拒否する。
+  IDENTITY_LOGIN_URL?: string
+  // この API 自身の外部公開 origin（例: "https://api.example.com"）。
+  // ブローカーへ渡す callback URL の組み立てと、identity トークンの audience 検証に使う。
+  // 未設定なら CLI ログインを一律拒否する。
+  API_ORIGIN?: string
 }
 
 export type RequestAuditContext = {
