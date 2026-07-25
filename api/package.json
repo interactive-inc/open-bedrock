@@ -17,7 +17,8 @@
     "db:migrate:local": "wrangler d1 migrations apply open-karte --local",
     "db:migrate": "wrangler d1 migrations apply open-karte --remote",
     "db:seed:local": "bash scripts/seed.sh --local",
-    "db:seed": "bash scripts/seed.sh --remote"
+    "db:seed": "bash scripts/seed.sh --remote",
+    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260702.1",
     "@types/bun": "^1.3.14",
+    "dts-bundle-generator": "9.5.1",
     "typescript": "^5.9.3",
     "wrangler": "^4.107.0"
   }
