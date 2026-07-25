@@ -15,6 +15,8 @@ export type Props = {
   identityJwtSecret?: string
   identityIssuer?: string
   identityAudience?: string
+  identityLoginUrl?: string
+  apiOrigin?: string
 }
 
 /**
@@ -49,6 +51,8 @@ export function requestWithContext(props: Props): Promise<Response> {
     IDENTITY_JWT_SECRET: props.identityJwtSecret,
     IDENTITY_ISSUER: props.identityIssuer,
     IDENTITY_AUDIENCE: props.identityAudience,
+    IDENTITY_LOGIN_URL: props.identityLoginUrl,
+    API_ORIGIN: props.apiOrigin,
   }
 
   return Promise.resolve(
