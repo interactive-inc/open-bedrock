@@ -91,7 +91,7 @@ async function auditRows(
 }
 
 describe("GET /auth/cli/callback", () => {
-  test("consumes the state, issues a session, and redirects to the loopback with a one-time code", async () => {
+  test("consumes the state, resolves the account, and redirects to the loopback with a one-time code (no session issued yet)", async () => {
     const db = await createTestDb()
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
     await seedCliLoginState(db, "broker-state-1", 51820, "cli-opaque-state-1")
@@ -126,15 +126,51 @@ describe("GET /auth/cli/callback", () => {
       .first()
     expect(stateRow).toBeNull()
 
-    // code はハッシュとして保存され、生の code はテーブルに残らない。
-    const codeRows = await db.prepare("SELECT code_hash FROM cli_login_codes").all()
-    expect(codeRows.results.length).toBe(1)
-    const persisted = JSON.stringify(codeRows.results)
+    // code は解決済み account/employee の id だけを保持し、トークンは一切保存しない。
+    const codeRow = await db
+      .prepare("SELECT code_hash, account_id, employee_id FROM cli_login_codes")
+      .first<{ code_hash: string; account_id: number; employee_id: number }>()
+    expect(codeRow).toEqual({ code_hash: codeRow?.code_hash ?? "", account_id: 1, employee_id: 1 })
+    const persisted = JSON.stringify(codeRow)
     expect(persisted).not.toContain(code)
 
-    expect(await auditRows(db)).toEqual([
-      { action: "auth.session.cli_login_succeeded", reason_code: null },
-    ])
+    // セッション発行（ログイン成功の監査）はまだ行われていない。POST /auth/cli/token が行う。
+    expect(await auditRows(db)).toEqual([])
+  })
+
+  // regression: cli_login_codes は以前 access_token/refresh_token を平文で保持していた。
+  // トークンを保存領域に置かない設計に変更したため、テーブル自体にトークン用の列が存在せず、
+  // 保存されている行の中身にもトークンらしき文字列が一切含まれないことを固定する。
+  test("never persists access/refresh tokens in cli_login_codes", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-no-token-storage", 51828, "cli-opaque-state-no-token")
+
+    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+      sub: "external-subject-1",
+      jti: "cli-callback-jti-no-token-storage",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-no-token-storage`,
+    )
+    expect(response.status).toBe(302)
+
+    // テーブルの列自体にトークン用カラムが存在しない。
+    const columns = (
+      await db.prepare("PRAGMA table_info(cli_login_codes)").all<{ name: string }>()
+    ).results.map((column) => column.name)
+    expect(columns.sort()).toEqual(["account_id", "code_hash", "employee_id", "expires_at"])
+    expect(columns).not.toContain("access_token")
+    expect(columns).not.toContain("refresh_token")
+
+    // 行の中身にも JWT らしき文字列（access token は "." 区切りの3セグメント JWT）は含まれない。
+    const rows = await db.prepare("SELECT * FROM cli_login_codes").all()
+    const persisted = JSON.stringify(rows.results)
+    expect(persisted).not.toMatch(/^.*[\w-]+\.[\w-]+\.[\w-]+.*$/)
   })
 
   test("auto-provisions a new employee when no identity matches the subject", async () => {
@@ -171,10 +207,8 @@ describe("GET /auth/cli/callback", () => {
       .first<{ provider: string; subject: string }>()
     expect(identity).toEqual({ provider: "oidc", subject: "cli-new-subject" })
 
-    expect(await auditRows(db)).toEqual([
-      { action: "iam.identity.provisioned", reason_code: null },
-      { action: "auth.session.cli_login_succeeded", reason_code: null },
-    ])
+    // プロビジョニング監査のみ記録される。ログイン成功の監査は POST /auth/cli/token に移った。
+    expect(await auditRows(db)).toEqual([{ action: "iam.identity.provisioned", reason_code: null }])
   })
 
   test("redirects to the loopback with error=<broker error> when the broker reports one", async () => {

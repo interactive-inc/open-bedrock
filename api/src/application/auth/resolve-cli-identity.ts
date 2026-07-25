@@ -1,5 +1,3 @@
-import type { AccessTokenView } from "@/application/auth/access-token-view"
-import { IssueEmployeeSession } from "@/application/auth/issue-employee-session"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
@@ -14,17 +12,16 @@ const EXTERNAL_PROVIDER = "oidc" as const
 /** CLI ログイン経由で新規払い出しする従業員の初期ロール（seed の標準メンバーロール）。 */
 const DEFAULT_ROLE_KEY = "member"
 
-export type CliIdentityLoginCommand = {
+export type ResolveCliIdentityCommand = {
   /** 検証済み外部トークンの sub。identity の subject に対応する。 */
   subject: string
   email: string
   name: string
-  jwtSecret: string
-  userAgent: string | null
   now: Date
 }
 
-export type AuthenticatedCliSession = AccessTokenView & {
+/** セッション発行に必要な、解決済みアカウントの最小情報。POST /auth/cli/token が消費する。 */
+export type ResolvedCliAccount = {
   accountId: number
   employeeId: number
 }
@@ -32,29 +29,24 @@ export type AuthenticatedCliSession = AccessTokenView & {
 /** アカウントは存在するが停止・失効等でログインさせない。 */
 export type CliIdentityLoginDenied = { reason: "account_inactive" }
 
-/** セッション発行に必要な、解決済みアカウントの最小情報。既存 identity・新規プロビジョニング共通の形。 */
-type ResolvedAccount = {
-  accountId: number
-  employeeId: number | null
-  tokenVersion: number
-  accountStatus: string
-}
-
 /**
- * 検証済みの外部 identity(sub)に対応するアカウントへアクセストークンを発行する。CLI ログイン専用。
+ * 検証済みの外部 identity(sub)に対応するアカウントを解決する。CLI ログイン専用。
+ *
+ * セッション発行は行わない（GET /auth/cli/callback はここまでを行い、実際の
+ * IssueEmployeeSession は POST /auth/cli/token が one-time code を消費した時点で実行する。
+ * access/refresh トークンを平文で保存領域に置かないための二段構え）。
  *
  * 既存の identity ログイン（AuthenticateIdentity）と異なり、対応するアカウントが無い場合は
  * その場で自動プロビジョニングする（email で既存従業員に紐付け、それも無ければ新規に払い出す）。
  * `gh auth login` 相当の体験として、初回 CLI ログインだけで社内アカウントが使えるようにする意図。
  * account が active でない・従業員が在籍でない場合は account_inactive として拒否する。
- * トークン発行は password ログインと同じ IssueEmployeeSession を再利用する。
  */
-export class AuthenticateCliIdentity {
+export class ResolveCliIdentity {
   constructor(private readonly c: Context) {}
 
   async run(
-    command: CliIdentityLoginCommand,
-  ): Promise<AuthenticatedCliSession | CliIdentityLoginDenied | ApplicationError> {
+    command: ResolveCliIdentityCommand,
+  ): Promise<ResolvedCliAccount | CliIdentityLoginDenied | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
 
     const identity = await identityRepository.findByProviderSubject(
@@ -71,7 +63,6 @@ export class AuthenticateCliIdentity {
         : {
             accountId: identity.accountId,
             employeeId: identity.employeeId,
-            tokenVersion: identity.tokenVersion,
             accountStatus: identity.accountStatus,
           }
 
@@ -91,15 +82,7 @@ export class AuthenticateCliIdentity {
       return { reason: "account_inactive" }
     }
 
-    return new IssueEmployeeSession(this.c).run({
-      accountId: resolved.accountId,
-      employeeId: resolved.employeeId,
-      tokenVersion: resolved.tokenVersion,
-      jwtSecret: command.jwtSecret,
-      userAgent: command.userAgent,
-      now: command.now,
-      successAction: "auth.session.cli_login_succeeded",
-    })
+    return { accountId: resolved.accountId, employeeId: resolved.employeeId }
   }
 
   /**
@@ -108,8 +91,10 @@ export class AuthenticateCliIdentity {
    * 同じ規則（email 一致優先、無ければ新規payout）を踏襲する。
    */
   private async provision(
-    command: CliIdentityLoginCommand,
-  ): Promise<ResolvedAccount | ApplicationError> {
+    command: ResolveCliIdentityCommand,
+  ): Promise<
+    { accountId: number; employeeId: number | null; accountStatus: string } | ApplicationError
+  > {
     const identityRepository = new IdentityRepository(this.c)
     const provisioner = new AccountProvisioner(this.c)
     const nowEpoch = Math.floor(command.now.getTime() / 1_000)
@@ -183,7 +168,6 @@ export class AuthenticateCliIdentity {
     return {
       accountId: provisioned.accountId,
       employeeId: provisioned.employeeId,
-      tokenVersion: provisioned.tokenVersion,
       accountStatus: provisioned.accountStatus,
     }
   }
