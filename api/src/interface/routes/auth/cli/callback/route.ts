@@ -54,6 +54,17 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   }
   const loopbackError = (reasonCode: string): Response => loopback("error", reasonCode)
 
+  /**
+   * CLI ログインの拒否を監査に記録したうえでループバックへ返す。
+   * 監査書き込み自体が失敗した場合は「監査に書けなければログインさせない」規約
+   * （auth/identity/login の denyIdentityLogin と同じ）を守り、reasonCode ではなく
+   * audit_unavailable でループバックへ返す（CLI を待たせないため 503 では止めない）。
+   */
+  const denyAndLoopback = async (reasonCode: string): Promise<Response> => {
+    const audited = await denyCliLogin(c, now, reasonCode)
+    return loopbackError(audited ? reasonCode : "audit_unavailable")
+  }
+
   if (brokerError !== undefined) {
     return loopbackError(brokerError)
   }
@@ -86,13 +97,11 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   })
 
   if ("reason" in claims) {
-    await denyCliLogin(c, now, "invalid_token")
-    return loopbackError("invalid_token")
+    return denyAndLoopback("invalid_token")
   }
 
   if (claims.email_verified !== true) {
-    await denyCliLogin(c, now, "email_unverified")
-    return loopbackError("email_unverified")
+    return denyAndLoopback("email_unverified")
   }
 
   // replay 対策: jti を使用済みとして原子的に記録する。二重使用は拒否する。
@@ -102,8 +111,7 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     return c.json({ error: "cli login is unavailable", code: "audit_unavailable" }, 503)
   }
   if (marked === "replayed") {
-    await denyCliLogin(c, now, "token_replayed")
-    return loopbackError("token_replayed")
+    return denyAndLoopback("token_replayed")
   }
 
   const result = await new AuthenticateCliIdentity(c).run({
@@ -120,8 +128,7 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   }
 
   if ("reason" in result) {
-    await denyCliLogin(c, now, result.reason)
-    return loopbackError(result.reason)
+    return denyAndLoopback(result.reason)
   }
 
   if (result.refreshToken === null) {
@@ -143,8 +150,12 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   return loopback("code", rawCode)
 })
 
-/** CLI ログインの拒否を監査に記録する。書き込み失敗時も呼び出し側でループバックへ倒す。 */
-async function denyCliLogin(c: Context<HonoEnv>, now: Date, reasonCode: string): Promise<void> {
+/**
+ * CLI ログインの拒否を監査に記録する。書き込みに成功したら true、失敗したら false を返す。
+ * 呼び出し側（denyAndLoopback）は false のとき reasonCode の代わりに audit_unavailable を
+ * ループバックへ載せ、「監査に書けなければログインさせない」規約を守る。
+ */
+async function denyCliLogin(c: Context<HonoEnv>, now: Date, reasonCode: string): Promise<boolean> {
   try {
     const record = createAuditEvent(
       {
@@ -159,7 +170,8 @@ async function denyCliLogin(c: Context<HonoEnv>, now: Date, reasonCode: string):
       c.var.auditContext,
     )
     await new AuditEventRepository(c).append(record)
+    return true
   } catch {
-    // 監査書き込み失敗はループバックへの返却を優先する（CLI を待たせないため）。呼び出し側で loopback する。
+    return false
   }
 }
