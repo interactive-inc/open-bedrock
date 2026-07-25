@@ -1,41 +1,20 @@
-import { homedir } from "node:os"
-import { join } from "node:path"
+import { resolveBaseUrl } from "@/lib/config/resolve-base-url"
+import { SettingsFile } from "@/lib/config/settings-file"
 
-const DEFAULT_BASE_URL = process.env.KARTE_API ?? "http://127.0.0.1:18787"
-
-export type KarteConfig = {
+export type BedrockConfig = {
   base_url: string
   token: string | null
   refresh_token: string | null
 }
 
 /**
- * 設定ディレクトリ/ファイルのパスを都度解決する。
- * KARTE_CONFIG_DIR があれば優先（CI・コンテナでの再配置やテスト隔離に使う）。
+ * アクティブな接続先（--base-url ?? BEDROCK_API ?? 既定）のトークンを settings.json から導出する。
+ * エントリが無ければ token / refresh_token は null。消費側の変更を最小にするための薄いアダプタ。
  */
-export function configPaths(): { dir: string; file: string } {
-  const dir = process.env.KARTE_CONFIG_DIR ?? join(homedir(), ".karte")
-  return { dir, file: join(dir, "config.json") }
-}
+export async function loadConfig(baseUrlOverride?: string | null): Promise<BedrockConfig> {
+  const baseUrl = resolveBaseUrl(baseUrlOverride)
 
-export async function loadConfig(): Promise<KarteConfig> {
-  const file = Bun.file(configPaths().file)
-  if (await file.exists()) {
-    try {
-      return (await file.json()) as KarteConfig
-    } catch (error) {
-      // JSON パース失敗のみ既定値にフォールバックする。読み取り権限・I/O エラーは
-      // 「JSON 解析失敗」と誤表示して握り潰さないよう、そのまま伝播させる。
-      if (error instanceof SyntaxError === false) {
-        throw error
-      }
+  const tokens = await new SettingsFile().tokensFor(baseUrl)
 
-      // 壊れた設定でも CLI を起動できるよう既定値で続行し、raw stack trace でなく警告を出す。
-      process.stderr.write(
-        `warning: ${configPaths().file} を解析できませんでした。既定設定で続行します\n`,
-      )
-      return { base_url: DEFAULT_BASE_URL, token: null, refresh_token: null }
-    }
-  }
-  return { base_url: DEFAULT_BASE_URL, token: null, refresh_token: null }
+  return { base_url: baseUrl, token: tokens.token, refresh_token: tokens.refresh_token }
 }
