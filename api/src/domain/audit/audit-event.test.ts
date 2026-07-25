@@ -32,6 +32,8 @@ const actions = [
   "iam.identity.provision_updated",
   "auth.session.identity_login_succeeded",
   "auth.session.identity_login_denied",
+  "auth.session.cli_login_succeeded",
+  "auth.session.cli_login_denied",
   "employee.account.registered",
   "employee.account.retired",
   "employee.account.deleted",
@@ -116,7 +118,7 @@ function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
 }
 
 describe("audit event vocabulary", () => {
-  test("accepts exactly the 40 managed actions", () => {
+  test("accepts exactly the 47 managed actions", () => {
     expect(auditActionSchema.options).toEqual([...actions])
     for (const action of actions) {
       expect(auditActionSchema.parse(action)).toBe(action)
