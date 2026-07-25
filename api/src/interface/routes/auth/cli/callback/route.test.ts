@@ -13,8 +13,8 @@ const identityIssuer = "https://identity-provider.example/"
 const apiOrigin = "https://api.example.com"
 const now = "2026-01-01T00:00:00.000Z"
 const nowEpoch = 1_767_225_600
-// audience は callback URL 自身の origin（GET /auth/cli/callback が検証に使う値）。
-const callbackAudience = "https://api.example.com/auth/cli/callback"
+// audience は callback URL の origin（ブローカーは origin だけを aud に入れる）。
+const callbackAudience = "https://api.example.com"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

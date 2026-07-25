@@ -96,8 +96,8 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     token,
     secret,
     issuer,
-    // callback URL の origin を audience として検証する（ブローカーはこの callback 宛にトークンを発行する）。
-    audience: `${apiOrigin}/auth/cli/callback`,
+    // ブローカーは callback URL の origin を aud に入れて発行する（パスは含まない）。
+    audience: apiOrigin,
     now,
   })
 
