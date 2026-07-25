@@ -1,6 +1,6 @@
 import { AuthenticateIdentity } from "@/application/auth/authenticate-identity"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { HonoEnv } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { IdentityLoginJtiRepository } from "@/infrastructure/auth/identity-login-jti-repository"
 import { ApplicationError, UnavailableError } from "@/lib/errors"
@@ -11,7 +11,6 @@ import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { LoginRateLimiter } from "@/interface/utils/login-rate-limiter"
-import type { Context } from "hono"
 import { z } from "zod"
 
 const DEFAULT_AUDIENCE = "open-karte"
@@ -121,7 +120,7 @@ export const POST = factory.createHandlers(
  * 監査書き込みに失敗した場合は 503（audit_unavailable）へ倒す。
  */
 async function denyIdentityLogin(
-  c: Context<HonoEnv>,
+  c: Context,
   limiter: LoginRateLimiter | null,
   ip: string,
   now: Date,
