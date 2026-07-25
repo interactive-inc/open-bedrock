@@ -22,6 +22,8 @@ export const auditActionSchema = z.enum([
   "iam.identity.provision_updated",
   "auth.session.identity_login_succeeded",
   "auth.session.identity_login_denied",
+  "auth.session.cli_login_succeeded",
+  "auth.session.cli_login_denied",
   "employee.account.registered",
   "employee.account.retired",
   "employee.account.deleted",
