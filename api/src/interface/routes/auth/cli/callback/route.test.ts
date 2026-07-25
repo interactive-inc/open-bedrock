@@ -272,6 +272,52 @@ describe("GET /auth/cli/callback", () => {
     expect(second.status).toBe(401)
   })
 
+  test("denies the login and does not issue a code when the audit write itself fails", async () => {
+    const db = await createTestDb()
+    await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
+    await seedCliLoginState(db, "broker-state-audit-down", 51827, "cli-opaque-state-audit-down")
+
+    // audit_logs への INSERT を強制的に失敗させる（監査書き込みが不可能な状態を模す）。
+    await db.exec(`
+      CREATE TRIGGER reject_test_audit_insert
+      BEFORE INSERT ON audit_logs
+      BEGIN
+        SELECT RAISE(ABORT, 'forced audit insert failure');
+      END;
+    `)
+
+    // 無効な token による invalid_token 拒否パス（denyAndLoopback 経由）で検証する。
+    const token = await createIdentityToken("wrong-secret", nowEpoch, {
+      sub: "external-subject-1",
+      issuer: identityIssuer,
+      audience: callbackAudience,
+    })
+
+    const response = await getCliCallback(
+      db,
+      `?token=${encodeURIComponent(token)}&state=broker-state-audit-down`,
+    )
+
+    expect(response.status).toBe(302)
+    const location = response.headers.get("Location")
+    if (location === null) throw new Error("missing Location header")
+    const url = new URL(location)
+    expect(`${url.origin}${url.pathname}`).toBe("http://127.0.0.1:51827/callback")
+    expect(url.searchParams.get("state")).toBe("cli-opaque-state-audit-down")
+    // reasonCode(invalid_token) ではなく audit_unavailable が載る。ログインは拒否されたまま。
+    expect(url.searchParams.get("error")).toBe("audit_unavailable")
+    expect(url.searchParams.get("code")).toBeNull()
+
+    // one-time code は発行されていない。
+    const codeRows = await db
+      .prepare("SELECT COUNT(*) AS count FROM cli_login_codes")
+      .first<number>("count")
+    expect(codeRows).toBe(0)
+
+    // 監査行自体は書き込みに失敗しているので残らない。
+    expect(await auditRows(db)).toEqual([])
+  })
+
   test("rejects when cli login is not configured (missing IDENTITY_JWT_SECRET/API_ORIGIN)", async () => {
     const db = await createTestDb()
     await seedCliLoginState(db, "broker-state-unconfigured", 51826, "cli-opaque-state-unconfigured")
