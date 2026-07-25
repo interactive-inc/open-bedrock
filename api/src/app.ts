@@ -56,6 +56,9 @@ import * as calendarDayCreateRoute from "@/interface/routes/calendar/days/create
 import * as calendarDayDetailRoute from "@/interface/routes/calendar/days/[id]/route"
 import * as workStyleRoute from "@/interface/routes/work-styles/route"
 import * as authIdentityLoginRoute from "@/interface/routes/auth/identity/login/route"
+import * as authCliLoginRoute from "@/interface/routes/auth/cli/login/route"
+import * as authCliCallbackRoute from "@/interface/routes/auth/cli/callback/route"
+import * as authCliTokenRoute from "@/interface/routes/auth/cli/token/route"
 import * as bootstrapRoute from "@/interface/routes/bootstrap/route"
 import * as authLoginRoute from "@/interface/routes/auth/login/route"
 import * as authLogoutRoute from "@/interface/routes/auth/logout/route"
@@ -415,6 +418,9 @@ export const app = factory
   .post("/bootstrap", ...bootstrapRoute.POST)
   .post("/auth/login", ...authLoginRoute.POST)
   .post("/auth/identity/login", ...authIdentityLoginRoute.POST)
+  .get("/auth/cli/login", ...authCliLoginRoute.GET)
+  .get("/auth/cli/callback", ...authCliCallbackRoute.GET)
+  .post("/auth/cli/token", ...authCliTokenRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .post("/provisioning/identities", ...provisioningIdentitiesRoute.POST)

@@ -1829,6 +1829,44 @@ export const identityLoginJti = sqliteTable(
 
 export type IdentityLoginJtiRow = InferSelectModel<typeof identityLoginJti>
 
+/**
+ * CLI（ネイティブアプリ）ログインの one-time state。
+ * GET /auth/cli/login が発行し、broker から返ってきた GET /auth/cli/callback で 1 回だけ引いて消費する。
+ */
+export const cliLoginStates = sqliteTable(
+  "cli_login_states",
+  {
+    state: text("state").primaryKey(),
+    port: integer("port").notNull(),
+    cliState: text("cli_state").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_states_expires").on(table.expiresAt)],
+)
+
+export type CliLoginStateRow = InferSelectModel<typeof cliLoginStates>
+
+/**
+ * CLI（ネイティブアプリ）ログインの one-time code。
+ * GET /auth/cli/callback が identity 検証・プロビジョニング成功後に払い出し、
+ * POST /auth/cli/token が 1 回だけ消費してセッションを発行する。
+ * トークンは持たず、解決済みの account/employee の id のみを保持する
+ * （access/refresh トークンを平文で保存領域に置かないため）。code 自体は主キーに持たずハッシュ
+ * （code_hash）で照合する。
+ */
+export const cliLoginCodes = sqliteTable(
+  "cli_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_codes_expires").on(table.expiresAt)],
+)
+
+export type CliLoginCodeRow = InferSelectModel<typeof cliLoginCodes>
+
 /** IAM: ロール。system role は is_system=1 で key 改名・削除不可。 */
 export const roles = sqliteTable("roles", {
   id: integer("id").primaryKey(),
@@ -2228,6 +2266,8 @@ export const schema = {
   accounts,
   identities,
   identityLoginJti,
+  cliLoginStates,
+  cliLoginCodes,
   roles,
   permissions,
   rolePermissions,
