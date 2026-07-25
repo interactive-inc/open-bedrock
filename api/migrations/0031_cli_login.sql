@@ -2,8 +2,10 @@
 -- 1) cli_login_states: GET /auth/cli/login が発行する one-time state。
 --    broker に渡す state をキーに、ループバック先のポートと CLI 側 state を保持する。
 --    callback で 1 回引いたら削除する（再利用不可）。
--- 2) cli_login_codes: GET /auth/cli/callback がセッション発行後に払い出す one-time code。
---    code 自体は主キーに使わずハッシュを保存し、POST /auth/cli/token で 1 回だけ引き換える。
+-- 2) cli_login_codes: GET /auth/cli/callback が identity 検証・プロビジョニング成功後に
+--    払い出す one-time code。トークンは持たず、解決済みの account/employee の id のみを保持する
+--    （access/refresh トークンを平文で保存領域に置かないため）。セッションの発行自体は
+--    POST /auth/cli/token が code を消費した時点で行う。
 
 CREATE TABLE cli_login_states (
   state TEXT PRIMARY KEY,
@@ -16,8 +18,8 @@ CREATE INDEX idx_cli_login_states_expires ON cli_login_states (expires_at);
 
 CREATE TABLE cli_login_codes (
   code_hash TEXT PRIMARY KEY,
-  access_token TEXT NOT NULL,
-  refresh_token TEXT NOT NULL,
+  account_id INTEGER NOT NULL,
+  employee_id INTEGER NOT NULL,
   expires_at INTEGER NOT NULL
 );
 

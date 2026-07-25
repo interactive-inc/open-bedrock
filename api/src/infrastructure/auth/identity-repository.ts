@@ -29,6 +29,14 @@ export type LegacySecretIdentity = {
   secret: string
 }
 
+/** account を id で直接引いたときの認証に必要な最小情報。 */
+export type AccountAuthState = {
+  accountId: number
+  accountStatus: string
+  tokenVersion: number
+  employeeId: number | null
+}
+
 /**
  * 認証フローが使う identity(ログイン手段)の検索と、紐づく account の取得を扱う。
  * password 認証は (provider="password", subject=正規化email) で引く。
@@ -159,6 +167,36 @@ export class IdentityRepository {
       return rows.at(0)?.accountId ?? null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to find identity by email")
+    }
+  }
+
+  /**
+   * account を id で直接引き、認証に必要な最小情報（status・tokenVersion・employeeId）を返す。不在は null。
+   * CLI ログインのように「先に account を解決し、後続のリクエストでセッションを発行する」二段構えの
+   * フローで、発行直前に最新状態を再取得する用途に使う。
+   */
+  async findAccountById(accountId: number): Promise<AccountAuthState | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(accounts)
+        .where(eq(accounts.id, accountId))
+        .limit(1)
+
+      const account = rows.at(0)
+
+      if (account === undefined) {
+        return null
+      }
+
+      return {
+        accountId: account.id,
+        accountStatus: account.status,
+        tokenVersion: account.tokenVersion,
+        employeeId: account.employeeId,
+      }
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to find account")
     }
   }
 

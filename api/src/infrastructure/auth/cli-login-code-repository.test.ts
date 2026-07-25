@@ -9,13 +9,13 @@ describe("CliLoginCodeRepository", () => {
 
     const created = await repository.create(
       "code-hash-1",
-      { accessToken: "access-1", refreshToken: "refresh-1" },
+      { accountId: 1, employeeId: 1 },
       1_767_225_900,
     )
     expect(created).toBeNull()
 
     const first = await repository.consume("code-hash-1", 1_767_225_600)
-    expect(first).toEqual({ accessToken: "access-1", refreshToken: "refresh-1" })
+    expect(first).toEqual({ accountId: 1, employeeId: 1 })
 
     const second = await repository.consume("code-hash-1", 1_767_225_600)
     expect(second).toBeNull()
@@ -25,11 +25,7 @@ describe("CliLoginCodeRepository", () => {
     const { context } = createTestContext()
     const repository = new CliLoginCodeRepository(context)
 
-    await repository.create(
-      "code-hash-expired",
-      { accessToken: "a", refreshToken: "r" },
-      1_767_225_600,
-    )
+    await repository.create("code-hash-expired", { accountId: 1, employeeId: 1 }, 1_767_225_600)
 
     const result = await repository.consume("code-hash-expired", 1_767_225_600)
     expect(result).toBeNull()

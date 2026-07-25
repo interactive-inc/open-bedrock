@@ -1,4 +1,4 @@
-import { AuthenticateCliIdentity } from "@/application/auth/authenticate-cli-identity"
+import { ResolveCliIdentity } from "@/application/auth/resolve-cli-identity"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { HonoEnv } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
@@ -27,6 +27,11 @@ const querySchema = z.object({
  * state を one-time 消費して CLI のループバックポートを特定し、以降のあらゆる失敗も
  * `http://127.0.0.1:<port>/callback?state=...&error=...` へ 302 で返す（CLI を待たせない）。
  * state 自体が検証できない場合のみ、返す先が無いため 401 を直接返す。
+ *
+ * ここでは identity 検証・自動プロビジョニング・拒否監査までを行い、セッション（access/refresh
+ * トークン）は発行しない。one-time code には解決済みの account/employee の id だけを載せて
+ * ループバックへ返し、実際のセッション発行は POST /auth/cli/token が code を消費した時点で行う。
+ * トークンを平文で保存領域（cli_login_codes）に置かないための二段構え。
  */
 export const GET = factory.createHandlers(zValidator("query", querySchema), async (c) => {
   const { token, state: brokerState, error: brokerError } = c.req.valid("query")
@@ -114,12 +119,10 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     return denyAndLoopback("token_replayed")
   }
 
-  const result = await new AuthenticateCliIdentity(c).run({
+  const result = await new ResolveCliIdentity(c).run({
     subject: claims.sub,
     email: claims.email,
     name: claims.name,
-    jwtSecret: c.env.JWT_SECRET,
-    userAgent: c.req.header("User-Agent") ?? null,
     now,
   })
 
@@ -131,16 +134,12 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     return denyAndLoopback(result.reason)
   }
 
-  if (result.refreshToken === null) {
-    return c.json({ error: "cli login is unavailable", code: "unexpected" }, 503)
-  }
-
   const rawCode = crypto.randomUUID()
   const codeHash = await cliLoginCodeHash(rawCode)
 
   const codeCreated = await new CliLoginCodeRepository(c).create(
     codeHash,
-    { accessToken: result.accessToken, refreshToken: result.refreshToken },
+    { accountId: result.accountId, employeeId: result.employeeId },
     nowEpoch + CODE_TTL_SECONDS,
   )
   if (codeCreated instanceof Error) {
