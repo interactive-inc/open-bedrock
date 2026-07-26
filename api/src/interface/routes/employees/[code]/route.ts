@@ -8,7 +8,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { toPrimaryRole } from "@/interface/utils/to-primary-role"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
@@ -85,6 +85,19 @@ export const GET = factory.createHandlers(
 
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
     if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+
+    // as_of は確定済みライフサイクル履歴を引く指定。移行未完了の legacy 経路では基準日を
+    // 適用できないため、黙って無視せず 422 で拒否する（無視すると呼び出し側が現在時点の
+    // 台帳を「基準日時点の姿」として誤読する）
+    if (c.req.valid("query").as_of !== undefined && migrationStatus !== "verified") {
+      throw toHttpException(
+        new UnprocessableError(
+          "as_of は人事ライフサイクル移行の完了後にのみ指定できます",
+          "lifecycle_migration_incomplete",
+        ),
+      )
+    }
+
     const state =
       migrationStatus === "verified"
         ? await new GetLifecycleState(c).run({

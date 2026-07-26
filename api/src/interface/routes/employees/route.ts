@@ -96,6 +96,18 @@ export const GET = factory.createHandlers(
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
     if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
 
+    // as_of は確定済みライフサイクル履歴を引く指定。移行未完了の legacy 経路では基準日を
+    // 適用できないため、黙って無視せず 422 で拒否する（無視すると呼び出し側が現在時点の
+    // 一覧を「基準日で絞り込んだ結果」として誤読する）
+    if (query.as_of !== undefined && migrationStatus !== "verified") {
+      throw toHttpException(
+        new UnprocessableError(
+          "as_of は人事ライフサイクル移行の完了後にのみ指定できます",
+          "lifecycle_migration_incomplete",
+        ),
+      )
+    }
+
     if (migrationStatus === "verified") {
       const resolvedDate =
         query.as_of ??

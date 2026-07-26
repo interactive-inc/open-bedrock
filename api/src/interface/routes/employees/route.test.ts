@@ -259,6 +259,66 @@ describe("GET /employees", () => {
     expect(response.status).toBe(401)
   })
 
+  test("returns 422 when as_of is given but lifecycle data is not verified", async () => {
+    const response = await request("/employees?as_of=2026-01-01", await adminToken())
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ code: "lifecycle_migration_incomplete" })
+  })
+
+  test("keeps serving the legacy path with 200 when as_of is omitted", async () => {
+    const response = await request("/employees", await adminToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("honors as_of instead of rejecting it once lifecycle data is verified", async () => {
+    // E005 の在籍は 2026-04-01 で終了。基準日がその前なら active で一覧に残り、
+    // 後なら retired になる。as_of が本当に読まれていることを日付の差で確かめる。
+    // 認証者 E001 は現在時点でも在籍していないと 401 になるため、終了日を持たせない。
+    async function verifiedDb(): Promise<D1Database> {
+      const db = await createTestDb()
+      await db.exec(`
+        INSERT INTO employment_period_versions
+          (period_id, revision, employee_id, starts_on, ends_on, is_void,
+           recorded_by_action_id, recorded_at) VALUES
+          ('employment-1', 1, 1, '2025-01-01', NULL, 0, 'fixture', 1),
+          ('employment-5', 1, 5, '2025-01-01', '2026-04-01', 0, 'fixture', 1);
+        INSERT INTO employee_status_period_versions
+          (period_id, revision, employment_period_id, employee_id, status, starts_on,
+           ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
+          ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
+          ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', '2026-04-01', 0, 'fixture', 1);
+        UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      `)
+      return db
+    }
+
+    const listSchema = z.object({ data: z.array(employeeResponseSchema), total: z.number() })
+
+    const before = await requestWithContext({
+      db: await verifiedDb(),
+      jwtSecret,
+      path: "/employees?as_of=2026-01-01",
+      token: await adminToken(),
+    })
+
+    expect(before.status).toBe(200)
+    const beforeBody = listSchema.parse(await before.json())
+    expect(beforeBody.data.find((employee) => employee.code === "E005")?.status).toBe("active")
+
+    const after = await requestWithContext({
+      db: await verifiedDb(),
+      jwtSecret,
+      path: "/employees?as_of=2026-06-01",
+      token: await adminToken(),
+    })
+
+    expect(after.status).toBe(200)
+    const afterBody = listSchema.parse(await after.json())
+    expect(afterBody.data.find((employee) => employee.code === "E005")?.status).toBe("retired")
+  })
+
   test("returns 403 without employee:read", async () => {
     const response = await request("/employees", await memberToken())
 

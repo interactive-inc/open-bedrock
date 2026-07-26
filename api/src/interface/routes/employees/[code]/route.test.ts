@@ -264,6 +264,37 @@ describe("GET /employees/:code", () => {
 
     expect(response.status).toBe(401)
   })
+
+  // このテスト用アプリの onError は message だけを返すため code は検証しない（status のみ）
+  test("returns 422 when as_of is given but lifecycle data is not verified", async () => {
+    const response = await request("/employees/E001?as_of=2026-01-01", await adminToken())
+
+    expect(response.status).toBe(422)
+  })
+
+  test("keeps serving the legacy path with 200 when as_of is omitted", async () => {
+    const response = await request("/employees/E001", await adminToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("honors as_of instead of rejecting it once lifecycle data is verified", async () => {
+    const response = await request(
+      "/employees/E001?as_of=2026-01-01",
+      await adminToken(),
+      undefined,
+      undefined,
+      enableVerifiedLifecycleForAdmin,
+    )
+
+    expect(response.status).toBe(200)
+  })
+
+  test("conceals lifecycle migration state from an out-of-scope caller instead of returning 422", async () => {
+    const response = await request("/employees/E009?as_of=2026-01-01", await managerToken())
+
+    expect(response.status).toBe(404)
+  })
 })
 
 describe("POST /employees", () => {
