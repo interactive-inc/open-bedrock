@@ -22,10 +22,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
+const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "KARTE"
+
 export const metadata: Metadata = {
   title: {
-    default: "KARTE",
-    template: "%s | KARTE",
+    default: appName,
+    template: `%s | ${appName}`,
   },
   description: "社内事務手続きのためのセルフホスト基盤",
 }
