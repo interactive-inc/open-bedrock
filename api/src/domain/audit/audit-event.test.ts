@@ -34,6 +34,7 @@ const actions = [
   "auth.session.identity_login_denied",
   "auth.session.cli_login_succeeded",
   "auth.session.cli_login_denied",
+  "auth.session.browser_login_succeeded",
   "employee.account.registered",
   "employee.account.retired",
   "employee.account.deleted",

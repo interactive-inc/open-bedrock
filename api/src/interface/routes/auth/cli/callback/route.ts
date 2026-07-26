@@ -5,7 +5,7 @@ import { AuditEventRepository } from "@/infrastructure/audit/audit-event-reposit
 import { CliLoginCodeRepository } from "@/infrastructure/auth/cli-login-code-repository"
 import { CliLoginStateRepository } from "@/infrastructure/auth/cli-login-state-repository"
 import { IdentityLoginJtiRepository } from "@/infrastructure/auth/identity-login-jti-repository"
-import { cliLoginCodeHash } from "@/lib/auth/cli-login-code-hash"
+import { loginCodeHash } from "@/lib/auth/login-code-hash"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 import { verifyIdentityToken } from "@/lib/auth/verify-identity-token"
@@ -135,7 +135,7 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
   }
 
   const rawCode = crypto.randomUUID()
-  const codeHash = await cliLoginCodeHash(rawCode)
+  const codeHash = await loginCodeHash(rawCode)
 
   const codeCreated = await new CliLoginCodeRepository(c).create(
     codeHash,

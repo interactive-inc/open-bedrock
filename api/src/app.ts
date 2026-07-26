@@ -59,6 +59,8 @@ import * as authIdentityLoginRoute from "@/interface/routes/auth/identity/login/
 import * as authCliLoginRoute from "@/interface/routes/auth/cli/login/route"
 import * as authCliCallbackRoute from "@/interface/routes/auth/cli/callback/route"
 import * as authCliTokenRoute from "@/interface/routes/auth/cli/token/route"
+import * as authBrowserCodeRoute from "@/interface/routes/auth/browser/code/route"
+import * as authBrowserTokenRoute from "@/interface/routes/auth/browser/token/route"
 import * as bootstrapRoute from "@/interface/routes/bootstrap/route"
 import * as authLoginRoute from "@/interface/routes/auth/login/route"
 import * as authLogoutRoute from "@/interface/routes/auth/logout/route"
@@ -421,6 +423,8 @@ export const app = factory
   .get("/auth/cli/login", ...authCliLoginRoute.GET)
   .get("/auth/cli/callback", ...authCliCallbackRoute.GET)
   .post("/auth/cli/token", ...authCliTokenRoute.POST)
+  .post("/auth/browser/code", ...authBrowserCodeRoute.POST)
+  .post("/auth/browser/token", ...authBrowserTokenRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
   .post("/provisioning/identities", ...provisioningIdentitiesRoute.POST)
