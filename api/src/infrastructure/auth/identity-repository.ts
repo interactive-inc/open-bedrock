@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/lib/schemas"
 import { accounts, employees, identities } from "@/schema"
-import { and, eq, inArray, isNotNull, like, not } from "drizzle-orm"
+import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
 export type PasswordIdentity = {
   identityId: number
@@ -260,7 +260,12 @@ export class IdentityRepository {
   }
 
   /**
-   * 従業員 id 群について、password identity の email を解決する。表示用の写し。
+   * 従業員 id 群について、identity の email を解決する。表示用の写し。
+   *
+   * provider は絞らない。password を持たない外部 IdP 専用アカウント(oidc のみ)でも
+   * email を解決できるようにするため。1 従業員が複数 identity を持つ場合は
+   * password を優先し、同 provider 内では identity.id の小さい方(先に作られた方)を採る。
+   * ORDER BY で優先度を固定し、Map へは未設定のときだけ書き込むことで結果を決定的にする。
    */
   async findEmailsByEmployeeIds(
     employeeIds: ReadonlyArray<number>,
@@ -271,19 +276,34 @@ export class IdentityRepository {
       }
 
       const rows = await this.c.var.database
-        .select({ employeeId: accounts.employeeId, email: identities.email })
+        .select({
+          employeeId: accounts.employeeId,
+          email: identities.email,
+          identityId: identities.id,
+          provider: identities.provider,
+        })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
-        .where(
-          and(eq(identities.provider, "password"), inArray(accounts.employeeId, [...employeeIds])),
+        .where(inArray(accounts.employeeId, [...employeeIds]))
+        .orderBy(
+          // password を先に、次に作成順(id 昇順)。同一従業員の複数 identity で結果を揺らさない。
+          sql`CASE WHEN ${identities.provider} = 'password' THEN 0 ELSE 1 END`,
+          asc(identities.id),
         )
 
       const result = new Map<number, string>()
 
       for (const row of rows) {
-        if (row.employeeId !== null && row.email !== null) {
-          result.set(row.employeeId, row.email)
+        if (row.employeeId === null || row.email === null || row.email.length === 0) {
+          continue
         }
+
+        // 先に来た行(優先度の高い identity)を勝たせる。
+        if (result.has(row.employeeId)) {
+          continue
+        }
+
+        result.set(row.employeeId, row.email)
       }
 
       return result
