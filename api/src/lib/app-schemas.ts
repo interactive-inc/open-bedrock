@@ -413,6 +413,14 @@ export const zAppAuthToken = z.object({
 
 export type AppAuthToken = z.infer<typeof zAppAuthToken>
 
+/** ブラウザへログインを受け渡すための one-time code と、その残り有効秒数。 */
+export const zAppBrowserLoginCode = z.object({
+  code: z.string(),
+  expires_in: z.number(),
+})
+
+export type AppBrowserLoginCode = z.infer<typeof zAppBrowserLoginCode>
+
 /** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
 export const zAppBootstrapResult = z.object({
   account_id: z.number(),
