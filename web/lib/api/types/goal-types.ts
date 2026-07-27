@@ -23,14 +23,14 @@ export type GoalEvaluation = {
 /** 評価の種別。self=自己評価 / manager=上長評価 / final=確定評価。 */
 export type GoalEvaluationKind = "self" | "manager" | "final"
 
-/** GET /goals のクエリ。未指定は本人の目標を返す。 */
+/** GET /performance-goals のクエリ。未指定は本人の目標を返す。 */
 export type GoalSearchQuery = {
   period: string | null
   employeeId: number | null
 }
 
 /**
- * GET /goals/:goalId と PUT /goals/:goalId のレスポンス。api は snake_case で返す。
+ * GET /performance-goals/:goalId と PUT /performance-goals/:goalId のレスポンス。api は snake_case で返す。
  * id は api の型上 number | null になりうる。
  */
 export type GoalResponse = {
@@ -44,7 +44,7 @@ export type GoalResponse = {
 }
 
 /**
- * POST /goals のリクエストボディ。weight 未指定時は api 側で 10 が入る。kpi は未指定可。
+ * POST /performance-goals のリクエストボディ。weight 未指定時は api 側で 10 が入る。kpi は未指定可。
  * 目標の所有主体。individual=個人 / department=部門 / company=全社。
  */
 export type GoalOwnerType = "individual" | "department" | "company"
@@ -59,7 +59,7 @@ export type GoalCreateRequest = {
   parent_goal_id?: number
 }
 
-/** PUT /goals/:goalId のリクエストボディ。 */
+/** PUT /performance-goals/:goalId のリクエストボディ。 */
 export type GoalUpdateRequest = {
   period: string
   title: string
@@ -68,7 +68,7 @@ export type GoalUpdateRequest = {
   kpi?: string
 }
 
-/** POST /goals/:goalId/evaluations のリクエストボディ。 */
+/** POST /performance-goals/:goalId/evaluations のリクエストボディ。 */
 export type GoalEvaluationCreateRequest = {
   kind: GoalEvaluationKind
   score: number | null

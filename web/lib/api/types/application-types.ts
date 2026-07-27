@@ -22,7 +22,7 @@ export type ApplicationTemplateDetail = {
   approver_roles: ReadonlyArray<string>
 }
 
-/** GET /applications の各要素（自分の申請一覧）。 */
+/** GET /application-requests の各要素（自分の申請一覧）。 */
 export type ApplicationMineResponse = {
   id: number
   template_name: string
@@ -44,7 +44,7 @@ export type ApplicationListItem = {
   payload?: unknown
 }
 
-/** GET /applications/inbox の各要素（承認待ち一覧）。 */
+/** GET /application-requests/inbox の各要素（承認待ち一覧）。 */
 export type ApplicationInboxResponse = {
   id: number
   template_name: string
@@ -56,7 +56,7 @@ export type ApplicationInboxResponse = {
 
 export type ApplicationApprovalAction = "approve" | "reject"
 
-/** 申請への承認/却下アクション 1 件。GET /applications/:id の approvals[] に並ぶ。 */
+/** 申請への承認/却下アクション 1 件。GET /application-requests/:id の approvals[] に並ぶ。 */
 export type ApplicationApprovalEntry = {
   id: number
   approver_name: string
@@ -65,7 +65,7 @@ export type ApplicationApprovalEntry = {
   created_at: string
 }
 
-/** GET /applications/:id および POST /applications のレスポンス。 */
+/** GET /application-requests/:id および POST /application-requests のレスポンス。 */
 export type ApplicationDetailResponse = {
   id: number
   template_code: string
@@ -105,12 +105,12 @@ export type ApplicationWorkflowProgress = {
   }>
 }
 
-/** POST /applications/:id/approve|reject のレスポンス。 */
+/** POST /application-requests/:id/approve|reject のレスポンス。 */
 export type ApplicationDecisionResponse = {
   status: ApplicationStatus
 }
 
-/** POST /applications のリクエスト body。 */
+/** POST /application-requests のリクエスト body。 */
 export type ApplicationSubmitRequest = {
   template_code: string
   payload: unknown

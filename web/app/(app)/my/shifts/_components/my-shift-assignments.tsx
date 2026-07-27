@@ -15,7 +15,7 @@ type Props = {
 
 /**
  * 本人の担当シフト一覧。日付・パターン・時間帯・備考をテーブルで表示する。
- * GET /shift/assignments/me は公開済みのみ返すため、公開状態列は持たない。
+ * GET /shift-assignments/me は公開済みのみ返すため、公開状態列は持たない。
  */
 export function MyShiftAssignments(props: Props) {
   if (props.assignments.length === 0) {

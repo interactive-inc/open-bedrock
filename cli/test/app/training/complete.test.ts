@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("training complete", () => {
   it("shows help", async () => {
-    const response = await app.request("/training/complete", {
+    const response = await app.request("/training-enrollments/complete", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,11 +13,11 @@ describe("training complete", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("training complete")
+    expect(text).toContain("training-enrollments complete")
   })
 
   it("errors without id", async () => {
-    const response = await app.request("/training/complete", {
+    const response = await app.request("/training-enrollments/complete", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ score: "80" }),

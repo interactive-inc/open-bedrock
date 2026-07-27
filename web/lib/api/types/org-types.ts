@@ -35,7 +35,7 @@ export type OrgDepartmentResponse = {
 }
 
 /**
- * POST /org/departments のリクエスト本体。
+ * POST /departments のリクエスト本体。
  * parent_code / manager_employee_code は api 側 zValidator が .nullable().optional()
  * のため省略可・null 可（departments/route.ts）。
  */
@@ -48,7 +48,7 @@ export type OrgDepartmentCreateRequest = {
 }
 
 /**
- * PUT /org/departments/:code のリクエスト本体。
+ * PUT /departments/:code のリクエスト本体。
  * parent_code / manager_employee_code は api 側 zValidator が .nullable().optional()
  * のため省略可・null 可（departments/[code]/route.ts）。
  */

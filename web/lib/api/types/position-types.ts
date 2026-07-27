@@ -1,4 +1,4 @@
-/** GET /positions のレスポンス要素。api は snake_case で返す。 */
+/** GET /position-definitions のレスポンス要素。api は snake_case で返す。 */
 export type PositionResponse = {
   id: number
   code: string
@@ -8,7 +8,7 @@ export type PositionResponse = {
   created_at: string
 }
 
-/** POST /positions のリクエストボディ。description は未指定可。 */
+/** POST /position-definitions のリクエストボディ。description は未指定可。 */
 export type PositionCreateRequest = {
   code: string
   name: string
@@ -16,7 +16,7 @@ export type PositionCreateRequest = {
   description?: string
 }
 
-/** PUT /positions/:id のリクエストボディ。 */
+/** PUT /position-definitions/:id のリクエストボディ。 */
 export type PositionUpdateRequest = {
   code: string
   name: string

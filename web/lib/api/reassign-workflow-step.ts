@@ -7,13 +7,13 @@ export type ReassignWorkflowStepRequest = {
   reason: string
 }
 
-/** POST /applications/:id/reassign-workflow-step。API の監査・競合・再検証をそのまま利用する。 */
+/** POST /application-requests/:id/reassign-workflow-step。API の監査・競合・再検証をそのまま利用する。 */
 export async function reassignWorkflowStep(
   applicationId: number,
   request: ReassignWorkflowStepRequest,
 ) {
   const client = await createClient()
-  const response = await client.applications[":id"]["reassign-workflow-step"].$post({
+  const response = await client["application-requests"][":id"]["reassign-workflow-step"].$post({
     param: { id: String(applicationId) },
     json: {
       candidate_employee_ids: [...request.candidate_employee_ids],

@@ -3,28 +3,30 @@ import { describe, expect, test } from "bun:test"
 
 describe("app workflow-repair commands", () => {
   test("registers the list command", async () => {
-    const response = await request("/app/workflow-repair/list", { help: "1" })
+    const response = await request("/application-requests/workflow-repair/list", { help: "1" })
 
     expect(response.status).toBe(200)
-    expect(await response.text()).toContain("app workflow-repair list")
+    expect(await response.text()).toContain("application-requests workflow-repair list")
   })
 
   test("registers the reassign command", async () => {
-    const response = await request("/app/workflow-repair/reassign", { help: "1" })
+    const response = await request("/application-requests/workflow-repair/reassign", { help: "1" })
 
     expect(response.status).toBe(200)
-    expect(await response.text()).toContain("app workflow-repair reassign")
+    expect(await response.text()).toContain("application-requests workflow-repair reassign")
   })
 
   test("requires an application id, candidates, and reason", async () => {
-    const response = await request("/app/workflow-repair/reassign", { candidates: "2,3" })
+    const response = await request("/application-requests/workflow-repair/reassign", {
+      candidates: "2,3",
+    })
 
     expect(response.status).toBe(400)
     expect(await response.text()).toContain("app_id と --candidates と --reason が必要です")
   })
 
   test("rejects invalid candidate IDs before calling the API", async () => {
-    const response = await request("/app/workflow-repair/reassign/42", {
+    const response = await request("/application-requests/workflow-repair/reassign/42", {
       candidates: "2,invalid",
       reason: "restore approvers",
     })
@@ -34,7 +36,7 @@ describe("app workflow-repair commands", () => {
   })
 
   test("rejects an invalid explicit quorum before calling the API", async () => {
-    const response = await request("/app/workflow-repair/reassign/42", {
+    const response = await request("/application-requests/workflow-repair/reassign/42", {
       candidates: "2,3",
       reason: "restore approvers",
       "required-approvals": "0",

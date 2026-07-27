@@ -6,7 +6,7 @@ export type OnboardingTaskStatus = "pending" | "done"
 export type OnboardingAssignmentStatus = "in_progress" | "completed"
 
 /**
- * GET /onboarding/templates の各要素。
+ * GET /onboarding-templates の各要素。
  * kind は hc レスポンス（api 実型）が string のため、props 型側も string に合わせる。
  */
 export type OnboardingTemplate = {
@@ -19,7 +19,7 @@ export type OnboardingTemplate = {
 }
 
 /**
- * GET /onboarding/templates/:code のレスポンス、POST /onboarding/templates・PUT のレスポンスも同形。
+ * GET /onboarding-templates/:code のレスポンス、POST /onboarding-templates・PUT のレスポンスも同形。
  * id は作成/更新ルートが整形して返すため number、未採番の保険として null を含める。
  */
 export type OnboardingTemplateDetail = {
@@ -30,7 +30,7 @@ export type OnboardingTemplateDetail = {
   description: string | null
 }
 
-/** POST /onboarding/templates のリクエスト body（管理権限がテンプレートを作成する）。 */
+/** POST /onboarding-templates のリクエスト body（管理権限がテンプレートを作成する）。 */
 export type OnboardingTemplateCreateRequest = {
   code: string
   name: string
@@ -38,14 +38,14 @@ export type OnboardingTemplateCreateRequest = {
   description: string | null
 }
 
-/** PUT /onboarding/templates/:code のリクエスト body（code は変更されない）。 */
+/** PUT /onboarding-templates/:code のリクエスト body（code は変更されない）。 */
 export type OnboardingTemplateUpdateRequest = {
   name: string
   kind: OnboardingKind
   description: string | null
 }
 
-/** GET /onboarding/me / 各 assignment 配下のタスク。 */
+/** GET /onboarding-assignments/me / 各 assignment 配下のタスク。 */
 export type OnboardingTask = {
   id: number
   template_task_code: string
@@ -56,7 +56,7 @@ export type OnboardingTask = {
 }
 
 /**
- * POST /onboarding/assign / GET /onboarding/employee/:code の各要素。
+ * POST /onboarding-assignments / GET /onboarding-assignments/employees/:code の各要素。
  * template_name は assign(POST) / employee(GET一覧) には含まれるが、
  * assignments/:id の GET/PUT レスポンスには含まれないため任意とする。
  */

@@ -17,8 +17,8 @@ type Props = {
 }
 
 /**
- * 目標詳細画面。GET /goals/:goal_id で単一目標を取得する RSC。
- * 詳細表示に加えて評価登録フォーム (POST /goals/:id/evaluations) を置く。
+ * 目標詳細画面。GET /performance-goals/:goal_id で単一目標を取得する RSC。
+ * 詳細表示に加えて評価登録フォーム (POST /performance-goals/:id/evaluations) を置く。
  */
 export default async function GoalDetailPage(props: Props) {
   const params = await props.params
