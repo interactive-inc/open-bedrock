@@ -3,7 +3,7 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export async function revokeGovernanceOrgRole(assignmentId: number): Promise<null | Error> {
   const client = await createClient()
-  const response = await client.governance["org-roles"].assignments[":id"].$delete({
+  const response = await client["governance-org-roles"].assignments[":id"].$delete({
     param: { id: String(assignmentId) },
   })
   if (response.status >= 400) {

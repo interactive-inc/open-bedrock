@@ -2,7 +2,15 @@
 
 テーブル、URL、CLI コマンドの名前を全面的に定める。旧名は温存せず、別名も設けない。
 
-このうちテーブル名だけが実装済みである。「URL」節と「CLI コマンド」節が挙げる名前は未実装であり、現行の経路は `/applications` のように旧名のままである。実装済みの経路は `api/src/interface/routes` と `.docs/sitemap.md` を正とする。
+テーブル名、URL、CLI コマンドはいずれも実装済みである。実装の現況は `api/src/interface/routes`、`cli/app`、`.docs/sitemap.md` を正とする。
+
+URL と CLI の実装で本書から外れた点が三つある。いずれも本書の意図を保ったまま、実装上の制約に合わせたものである。
+
+レポートラインは `/employees/:code/reporting-line` とした。本書は `:employee_code` を挙げるが、`/employees` 配下の既存経路が `:code` を使っており、同じ位置のセグメントに二つの名前を与えないことを優先した。
+
+サンクスの残高と予算は一本化せず、`/thanks-point-budgets/me`（当月の贈与原資）と `/thanks-point-budgets/me/balance`（受領残高）の二本を維持した。両者は同じ表を読むが応答の形が異なり、統合すると受領残高を取る手段が失われる。「未決リスト」の `thanks` の節が示すとおり、統合はオーナーのプロダクト判断を待つ。
+
+`/governance-documents/impact` は `/governance-documents/:code` より先に登録した。`impact` を documents 配下へ移したことで動的セグメントに飲まれるためで、経路の名前そのものは本書のとおりである。
 
 ## 命名原則
 

@@ -9,11 +9,11 @@ export type DecisionCreateRequest = {
   consequences?: string | null
 }
 
-/** POST /decisions。意思決定記録を作成する。失敗時は Error。 */
+/** POST /decision-records。意思決定記録を作成する。失敗時は Error。 */
 export async function createDecision(request: DecisionCreateRequest) {
   const client = await createClient()
 
-  const response = await client.decisions.$post({ json: request })
+  const response = await client["decision-records"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

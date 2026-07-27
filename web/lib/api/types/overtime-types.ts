@@ -9,7 +9,7 @@ export type OvertimeSummaryEntry = {
   overtime_minutes: number
 }
 
-/** GET /attendance/overtime-summary のレスポンス。note は「法定判定ではない参考集計」である旨の説明。 */
+/** GET /attendance-records/overtime-summary のレスポンス。note は「法定判定ではない参考集計」である旨の説明。 */
 export type OvertimeSummaryResponse = {
   month: string
   business_days: number
@@ -18,7 +18,7 @@ export type OvertimeSummaryResponse = {
   note: string
 }
 
-/** GET /attendance/overtime-summary のクエリ。null のキーは送信されない。 */
+/** GET /attendance-records/overtime-summary のクエリ。null のキーは送信されない。 */
 export type OvertimeSummaryQuery = {
   month: string | null
   scope: OvertimeScope | null

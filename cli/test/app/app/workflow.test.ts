@@ -3,14 +3,14 @@ import { describe, expect, test } from "bun:test"
 
 describe("app workflow command", () => {
   test("documents the revision required for an update", async () => {
-    const response = await request("/app/workflow/paid_leave", { help: "1" })
+    const response = await request("/application-requests/workflow/paid_leave", { help: "1" })
 
     expect(response.status).toBe(200)
     expect(await response.text()).toContain("--expected-revision")
   })
 
   test("requires an expected revision before sending a definition", async () => {
-    const response = await request("/app/workflow/paid_leave", {
+    const response = await request("/application-requests/workflow/paid_leave", {
       definition: '{"version":1,"steps":[]}',
     })
 

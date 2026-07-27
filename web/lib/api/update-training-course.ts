@@ -6,7 +6,7 @@ import type {
 } from "@/lib/api/types/training-types"
 
 /**
- * PUT /training/courses/:code。管理権限が研修コースの内容を変更する。
+ * PUT /training-courses/:code。管理権限が研修コースの内容を変更する。
  * 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。
  */
 export async function updateTrainingCourse(
@@ -15,7 +15,7 @@ export async function updateTrainingCourse(
 ): Promise<TrainingCourseResponse | Error> {
   const client = await createClient()
 
-  const response = await client.training.courses[":code"].$put({
+  const response = await client["training-courses"][":code"].$put({
     param: { code: code },
     json: {
       title: request.title,

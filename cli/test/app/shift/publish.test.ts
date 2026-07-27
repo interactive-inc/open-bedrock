@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift publish", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/publish", {
+    const response = await app.request("/shift-assignments/publish", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -17,7 +17,7 @@ describe("shift publish", () => {
   })
 
   it("errors without id", async () => {
-    const response = await app.request("/shift/publish", {
+    const response = await app.request("/shift-assignments/publish", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({}),

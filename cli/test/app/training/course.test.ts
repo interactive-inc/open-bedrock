@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("training course", () => {
   it("shows help", async () => {
-    const response = await app.request("/training/course", {
+    const response = await app.request("/training-courses/show", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,11 +13,11 @@ describe("training course", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("training course")
+    expect(text).toContain("training-courses show")
   })
 
   it("errors without code", async () => {
-    const response = await app.request("/training/course", {
+    const response = await app.request("/training-courses/show", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({}),

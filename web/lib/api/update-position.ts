@@ -3,13 +3,13 @@ import { toResponseError } from "@/lib/api/to-response-error"
 import type { PositionUpdateRequest } from "@/lib/api/types/position-types"
 
 /**
- * PUT /positions/:id。役職マスタを更新する。
+ * PUT /position-definitions/:id。役職マスタを更新する。
  * 戻りは更新された Position or Error。呼び出し元は instanceof Error で判別する。
  */
 export async function updatePosition(positionId: number, request: PositionUpdateRequest) {
   const client = await createClient()
 
-  const response = await client.positions[":id"].$put({
+  const response = await client["position-definitions"][":id"].$put({
     param: { id: String(positionId) },
     json: request,
   })

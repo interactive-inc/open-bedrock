@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { getRecruitmentPositionList } from "@/lib/api/get-recruitment-position-list"
 
 /**
- * GET /recruitment/positions を認証付きで取得し、募集ポジションのカード一覧を描画する RSC。
+ * GET /job-openings を認証付きで取得し、募集ポジションのカード一覧を描画する RSC。
  * 各カードは応募者パイプライン /recruitment/:id へのリンク。
  */
 export async function PositionList() {

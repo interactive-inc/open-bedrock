@@ -10,14 +10,14 @@ export type ShiftPatternUpdateRequest = {
   break_minutes: number
 }
 
-/** PUT /shift/patterns/:id。特権ロールがシフトパターンの内容を変更する。 */
+/** PUT /shift-patterns/:id。特権ロールがシフトパターンの内容を変更する。 */
 export async function updateShiftPattern(
   id: number,
   request: ShiftPatternUpdateRequest,
 ): Promise<ShiftPatternResponse | Error> {
   const client = await createClient()
 
-  const response = await client.shift.patterns[":id"].$put({
+  const response = await client["shift-patterns"][":id"].$put({
     param: { id: String(id) },
     json: request,
   })

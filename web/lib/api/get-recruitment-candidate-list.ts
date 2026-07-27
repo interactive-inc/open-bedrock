@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /recruitment/positions/:id/candidates。募集配下の応募者一覧（recruitment:manage）。 */
+/** GET /job-openings/:job_opening_id/candidates。募集配下の応募者一覧（recruitment:manage）。 */
 export async function getRecruitmentCandidateList(positionId: number) {
   const client = await createClient()
 
-  const response = await client.recruitment.positions[":id"].candidates.$get({
-    param: { id: String(positionId) },
+  const response = await client["job-openings"][":job_opening_id"].candidates.$get({
+    param: { job_opening_id: String(positionId) },
   })
 
   if (response.status >= 400) {

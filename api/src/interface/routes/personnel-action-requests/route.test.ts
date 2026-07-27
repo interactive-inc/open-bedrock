@@ -104,7 +104,7 @@ describe("POST /personnel-action-requests", () => {
     const approved = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
-      path: `/applications/${applicationId}/approve`,
+      path: `/application-requests/${applicationId}/approve`,
       method: "POST",
       token: await token(1),
       body: { comment: "approved" },
@@ -160,7 +160,7 @@ describe("POST /personnel-action-requests", () => {
     const response = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
-      path: `/applications/${applicationId}/approve`,
+      path: `/application-requests/${applicationId}/approve`,
       method: "POST",
       token: await token(1),
       body: { comment: null },
@@ -287,7 +287,7 @@ describe("POST /personnel-action-requests", () => {
     const rejected = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
-      path: `/applications/${applicationId}/reject`,
+      path: `/application-requests/${applicationId}/reject`,
       method: "POST",
       token: await token(1),
       body: { comment: "not approved" },
@@ -342,7 +342,7 @@ describe("POST /personnel-action-requests", () => {
     const approved = await requestWithContext({
       db,
       jwtSecret: lifecycleRouteJwtSecret,
-      path: `/applications/${body.application_id}/approve`,
+      path: `/application-requests/${body.application_id}/approve`,
       method: "POST",
       token: await token(6),
       body: { comment: null },

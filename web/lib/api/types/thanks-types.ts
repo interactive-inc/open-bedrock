@@ -1,4 +1,4 @@
-/** GET /thanks の各要素・POST /thanks のレスポンス（感謝のタイムライン要素）。 */
+/** GET /thanks-messages の各要素・POST /thanks-messages のレスポンス（感謝のタイムライン要素）。 */
 export type ThanksResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
   id: number | null
@@ -13,7 +13,7 @@ export type ThanksResponse = {
 }
 
 /**
- * POST /thanks のリクエスト body。送り手は token から解決されるため指定しない。
+ * POST /thanks-messages のリクエスト body。送り手は token から解決されるため指定しない。
  * points は任意。未指定はメッセージのみの感謝。
  */
 export type ThanksCreateRequest = {

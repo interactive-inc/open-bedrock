@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-/** DELETE /shift/assignments/:id。特権ロールが割当を削除する。成功時は null。 */
+/** DELETE /shift-assignments/:id。特権ロールが割当を削除する。成功時は null。 */
 export async function deleteShiftAssignment(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.shift.assignments[":id"].$delete({
+  const response = await client["shift-assignments"][":id"].$delete({
     param: { id: String(id) },
   })
 

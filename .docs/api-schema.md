@@ -18,10 +18,10 @@ token または request context は少なくとも principal ID、principal kind
 
 ## Resource と operation
 
-- resource collection は複数形名詞にする。例は `/employees`、`/applications`、`/oneonones`
+- resource collection は複数形名詞にする。例は `/employees`、`/application-requests`、`/one-on-ones`
 - 自分の resource は `/me` subresource にする。
 - 承認待ちや担当案件は `/inbox` など関係が分かる subresource にする。
-- 状態遷移は resource 配下の action POST にする。例は `/applications/:id/approve`
+- 状態遷移は resource 配下の action POST にする。例は `/application-requests/:id/approve`
 - 外部 provider 名を domain path と type へ埋め込まない。
 - route 名だけで権限を決めず、application command に必要な policy を結ぶ。
 

@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/work-styles", help: "bedrock work-styles" },
-  { path: "/work-styles/list", help: "work-styles list" },
-  { path: "/work-styles/add", help: "work-styles add" },
+  { path: "/employee-work-styles", help: "bedrock employee-work-styles" },
+  { path: "/employee-work-styles/list", help: "employee-work-styles list" },
+  { path: "/employee-work-styles/add", help: "employee-work-styles add" },
 ]
 
 describe("work-styles commands", () => {
@@ -23,7 +23,7 @@ describe("work-styles commands", () => {
   }
 
   it("work-styles add requires --employee-id, --style, --starts-on", async () => {
-    const response = await app.request("/work-styles/add", {
+    const response = await app.request("/employee-work-styles/add", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ style: "flextime" }),

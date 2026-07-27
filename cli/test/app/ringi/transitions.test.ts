@@ -11,18 +11,18 @@ async function helpText(path: string): Promise<Response> {
 
 describe("ringi transitions", () => {
   it("approve shows help", async () => {
-    const response = await helpText("/ringi/approve")
+    const response = await helpText("/ringi-requests/approve")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("ringi approve")
+    expect(await response.text()).toContain("ringi-requests approve")
   })
 
   it("reject shows help", async () => {
-    const response = await helpText("/ringi/reject")
+    const response = await helpText("/ringi-requests/reject")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("ringi reject")
+    expect(await response.text()).toContain("ringi-requests reject")
   })
 })

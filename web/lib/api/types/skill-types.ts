@@ -15,7 +15,7 @@ export type EmployeeSkillResponse = {
   note: string | null
 }
 
-/** PUT /skills/me のリクエストボディ。api/src/skill/set-skill-request-schema.ts と同形。 */
+/** PUT /employee-skills/me のリクエストボディ。api/src/skill/set-skill-request-schema.ts と同形。 */
 export type SetSkillRequest = {
   skill_code: string
   level: number
@@ -23,7 +23,7 @@ export type SetSkillRequest = {
   note: string | null
 }
 
-/** GET /skills のクエリ。未指定は null で表す。 */
+/** GET /skill-definitions のクエリ。未指定は null で表す。 */
 export type SkillSearchQuery = {
   q: string | null
   category: string | null
