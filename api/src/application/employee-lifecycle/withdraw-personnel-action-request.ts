@@ -60,7 +60,7 @@ export class WithdrawPersonnelActionRequest {
              SET withdrawn_at = ?2, withdrawn_by_employee_id = ?3
              WHERE id = ?1 AND withdrawn_at IS NULL AND applied_action_id IS NULL
                AND EXISTS (
-                 SELECT 1 FROM applications
+                 SELECT 1 FROM application_requests
                  WHERE id = personnel_action_requests.application_id
                    AND status = 'pending' AND applicant_id = ?3
                )
@@ -68,7 +68,7 @@ export class WithdrawPersonnelActionRequest {
         ).bind(command.requestId, seconds, command.session.employeeId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         this.c.env.DB.prepare(
-          `UPDATE applications SET status = 'rejected', current_step = NULL
+          `UPDATE application_requests SET status = 'rejected', current_step = NULL
              WHERE id = ?1 AND status = 'pending' RETURNING id`,
         ).bind(request.applicationId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),

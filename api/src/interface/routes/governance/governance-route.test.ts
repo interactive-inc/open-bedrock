@@ -178,7 +178,7 @@ describe("governance documents", () => {
       acknowledged: true,
     })
     const audits = await db
-      .prepare("SELECT action FROM audit_logs WHERE action LIKE 'governance.%' ORDER BY id")
+      .prepare("SELECT action FROM audit_events WHERE action LIKE 'governance.%' ORDER BY id")
       .all<{ action: string }>()
     expect(audits.results.map((row) => row.action)).toEqual([
       "governance.document.synced",

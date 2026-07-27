@@ -41,7 +41,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "applications",
+    "application_requests",
     seedApplications.map((application) => ({
       id: application.id,
       template_id: application.templateId,
@@ -186,7 +186,7 @@ describe("GET /applications/inbox", () => {
         due_at: null,
       },
     ])
-    await db.prepare("UPDATE applications SET current_step = 'manager' WHERE id = 1").run()
+    await db.prepare("UPDATE application_requests SET current_step = 'manager' WHERE id = 1").run()
 
     const response = await requestWithContext({
       db,
@@ -253,7 +253,7 @@ describe("GET /applications/inbox", () => {
     const ids = Array.from({ length: 100 }, (_, index) => index + 1_000)
     await seedD1(
       db,
-      "applications",
+      "application_requests",
       ids.map((id) => ({
         id,
         template_id: 100,
@@ -349,7 +349,7 @@ describe("GET /applications/inbox", () => {
       },
     ])
 
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 100,
         template_id: 10,

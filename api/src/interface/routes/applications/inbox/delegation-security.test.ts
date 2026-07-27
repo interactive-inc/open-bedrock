@@ -33,7 +33,7 @@ async function setup() {
       approver_roles: "[]",
     },
   ])
-  await seedD1(db, "applications", [
+  await seedD1(db, "application_requests", [
     {
       id: 500,
       template_id: 500,
@@ -211,7 +211,7 @@ describe("workflow delegation inbox security", () => {
   test("removes a returned workflow from both the inbox list and count", async () => {
     const db = await setup()
     await db
-      .prepare("UPDATE applications SET current_step = 'returned:approval' WHERE id = 500")
+      .prepare("UPDATE application_requests SET current_step = 'returned:approval' WHERE id = 500")
       .run()
 
     expect([await inboxIds(db, 2), await applicationInboxCount(db, 2)]).toEqual([[], 0])

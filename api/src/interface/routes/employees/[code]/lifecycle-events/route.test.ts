@@ -48,7 +48,7 @@ describe("GET /employees/:code/lifecycle-events", () => {
       })
       expect(
         await db
-          .prepare("SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1")
+          .prepare("SELECT action FROM audit_events ORDER BY id DESC LIMIT 1")
           .first<string>("action"),
       ).toBe(auditAction)
     }
@@ -60,7 +60,7 @@ describe("GET /employees/:code/lifecycle-events", () => {
     expect(response.status).toBe(404)
     expect(
       await db
-        .prepare("SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1")
+        .prepare("SELECT action FROM audit_events ORDER BY id DESC LIMIT 1")
         .first<string>("action"),
     ).toBe("employee.lifecycle.denied")
   })

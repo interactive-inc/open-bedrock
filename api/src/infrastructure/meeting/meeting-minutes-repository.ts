@@ -91,7 +91,7 @@ export class MeetingMinutesRepository {
 
       return row === undefined ? null : MeetingMinutes.fromRow(row)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update meeting_minutes")
+      return error instanceof Error ? error : new Error("failed to update meeting_minutes_records")
     }
   }
 }

@@ -25,7 +25,7 @@ async function organizationFixture() {
        ends_on, is_void, recorded_by_action_id, recorded_at)
     SELECT 'status-' || id, 1, 'employment-' || id, id, 'active', '2026-01-01',
            NULL, 0, 'fixture', 1 FROM employees;
-    INSERT INTO org_assignment_period_versions
+    INSERT INTO employee_org_assignment_period_versions
       (period_id, revision, employment_period_id, employee_id, department_code,
        assignment_type, position_title, manager_employee_id, starts_on, ends_on,
        is_void, recorded_by_action_id, recorded_at) VALUES
@@ -34,12 +34,12 @@ async function organizationFixture() {
       ('assignment-2-new', 1, 'employment-2', 2, 'D002', 'primary', 'Manager', 4, '2027-01-01', NULL, 0, 'fixture', 1),
       ('assignment-3', 1, 'employment-3', 3, 'D001', 'primary', 'Member', 2, '2026-01-01', NULL, 0, 'fixture', 1),
       ('assignment-4', 1, 'employment-4', 4, 'D002', 'primary', 'Director', NULL, '2026-01-01', NULL, 0, 'fixture', 1);
-    INSERT INTO org_responsibility_period_versions
+    INSERT INTO employee_org_responsibility_period_versions
       (period_id, revision, department_code, responsibility_type, employee_id,
        starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
     VALUES ('responsibility-1', 1, 'D001', 'department_manager', 1,
             '2026-01-01', '2027-01-01', 0, 'fixture', 1);
-    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
   `)
   return setup
 }
@@ -77,7 +77,7 @@ describe("lifecycle organization authority", () => {
   test("fails closed for a corrupt cycle and excludes archived departments", async () => {
     const { context, db } = await organizationFixture()
     await db.exec(`
-      INSERT INTO org_assignment_period_versions
+      INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at)

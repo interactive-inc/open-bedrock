@@ -8,7 +8,7 @@ describe("SkillRepository", () => {
   test("findByCode returns the seeded skill", async () => {
     const { context, db } = createTestContext()
 
-    await seedD1(db, "skills", [
+    await seedD1(db, "skill_definitions", [
       {
         code: "TYPESCRIPT",
         name: "TypeScript",

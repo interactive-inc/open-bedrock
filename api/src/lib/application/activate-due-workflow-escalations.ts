@@ -18,7 +18,7 @@ export async function activateDueWorkflowEscalations(props: {
              AND EXISTS (
                SELECT 1
                FROM application_workflow_instances workflow_instance
-               INNER JOIN applications application
+               INNER JOIN application_requests application
                  ON application.id = workflow_instance.application_id
                WHERE workflow_instance.application_id = snapshot.application_id
                  AND workflow_instance.current_step_key = snapshot.step_key

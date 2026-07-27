@@ -92,7 +92,7 @@ export class ThanksRewardRepository {
 
       return row === undefined ? null : ThanksReward.fromRow(row)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update thanks reward")
+      return error instanceof Error ? error : new Error("failed to update thanks_messages reward")
     }
   }
 
@@ -120,7 +120,7 @@ export class ThanksRewardRepository {
 
       return row === undefined ? null : ThanksReward.fromRow(row)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update thanks reward")
+      return error instanceof Error ? error : new Error("failed to update thanks_messages reward")
     }
   }
 

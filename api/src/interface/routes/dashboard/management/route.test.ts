@@ -228,7 +228,7 @@ async function createTestDb(): Promise<D1Database> {
   ])
 
   // 目標: 2026-H1 は 3 件中 done 1 (rate 1/3)、2025-H2 は 1 件中 done 1 (rate 1)。
-  await seedD1(db, "goals", [
+  await seedD1(db, "performance_goals", [
     {
       id: 1,
       employee_id: 2,
@@ -280,7 +280,7 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
-  await seedD1(db, "applications", [
+  await seedD1(db, "application_requests", [
     {
       id: 1,
       template_id: 1,

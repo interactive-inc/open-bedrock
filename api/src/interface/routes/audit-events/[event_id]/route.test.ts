@@ -59,7 +59,7 @@ async function grantPermission(
 async function seedDetail(db: D1Database, eventId: string, createdAt: number): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
        (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
@@ -86,14 +86,14 @@ function request(db: D1Database, eventId: string, bearer: string | null): Promis
 }
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
-  const row = await db.prepare("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 1").first()
+  const row = await db.prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT 1").first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
 }
 
 async function failSelfAudit(db: D1Database): Promise<void> {
   await db.exec(`CREATE TRIGGER fail_audit_self_insert
-    BEFORE INSERT ON audit_logs
+    BEFORE INSERT ON audit_events
     WHEN NEW.action LIKE 'audit.event.%'
     BEGIN SELECT RAISE(ABORT, 'self audit disabled'); END;`)
 }

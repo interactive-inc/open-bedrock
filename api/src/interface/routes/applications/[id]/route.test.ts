@@ -43,7 +43,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "applications",
+    "application_requests",
     seedApplications.map((application) => ({
       id: application.id,
       template_id: application.templateId,
@@ -108,7 +108,9 @@ async function request(
 
 async function seedCompletedWorkflow(db: D1Database): Promise<void> {
   await db
-    .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+    .prepare(
+      "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = 1",
+    )
     .run()
   await seedD1(db, "application_workflow_instances", [
     {
@@ -231,7 +233,7 @@ describe("GET /applications/:id", () => {
 
     await seedD1(
       db,
-      "applications",
+      "application_requests",
       seedApplications.map((application) => ({
         id: application.id,
         template_id: application.templateId,
@@ -269,7 +271,9 @@ describe("GET /applications/:id", () => {
       { id: 200, email: "you+e200@example.com", passwordHash: "hash", role: "hr" },
     ])
     await db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = 1",
+      )
       .run()
 
     const response = await requestWithContext({
@@ -286,7 +290,7 @@ describe("GET /applications/:id", () => {
     test(`does not grant ${status} instance-less legacy history to a manager assigned later`, async () => {
       const db = await createTestDb()
       await db
-        .prepare("UPDATE applications SET status = ?2, current_step = NULL WHERE id = ?1")
+        .prepare("UPDATE application_requests SET status = ?2, current_step = NULL WHERE id = ?1")
         .bind(1, status)
         .run()
       await db
@@ -317,7 +321,9 @@ describe("GET /applications/:id", () => {
   test("keeps completed instance-less legacy history visible to its persisted participant", async () => {
     const db = await createTestDb()
     await db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = 1",
+      )
       .run()
     await seedD1(db, "application_approvals", [
       {
@@ -350,7 +356,9 @@ describe("GET /applications/:id", () => {
   test("does not grant completed legacy history to a manager assigned after completion", async () => {
     const db = await createTestDb()
     await db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = 1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = 1",
+      )
       .run()
     await db
       .prepare(

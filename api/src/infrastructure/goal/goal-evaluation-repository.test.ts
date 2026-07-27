@@ -8,7 +8,7 @@ describe("GoalEvaluationRepository", () => {
   test("create persists the evaluation and assigns an id", async () => {
     const { context, db } = createTestContext()
 
-    await seedD1(db, "goals", [
+    await seedD1(db, "performance_goals", [
       {
         id: 1,
         employee_id: 2,

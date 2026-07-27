@@ -59,7 +59,7 @@ export class BackfillLifecycleMigration {
     try {
       const state = await this.c.env.DB.prepare(
         `SELECT status, baseline_on, company_time_zone, legacy_source_fingerprint
-           FROM lifecycle_migration_state WHERE id = 1`,
+           FROM lifecycle_migration_states WHERE id = 1`,
       ).first<MigrationState>()
       if (state === null) {
         return new UnexpectedError("移行状態が見つかりません")
@@ -174,7 +174,7 @@ export class BackfillLifecycleMigration {
           for (const [index, assignment] of assignments.entries()) {
             statements.push(
               this.c.env.DB.prepare(
-                `INSERT OR IGNORE INTO org_assignment_period_versions
+                `INSERT OR IGNORE INTO employee_org_assignment_period_versions
                      (period_id, revision, employment_period_id, employee_id, department_code,
                       assignment_type, position_title, manager_employee_id, starts_on, ends_on,
                       is_void, recorded_by_action_id, recorded_at)
@@ -202,7 +202,7 @@ export class BackfillLifecycleMigration {
           for (const [index, responsibility] of responsibilities.entries()) {
             statements.push(
               this.c.env.DB.prepare(
-                `INSERT OR IGNORE INTO org_responsibility_period_versions
+                `INSERT OR IGNORE INTO employee_org_responsibility_period_versions
                      (period_id, revision, department_code, responsibility_type, employee_id,
                       starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
                    VALUES (?1, 1, ?2, 'department_manager', ?3, ?4, NULL, 0, ?5, ?6)`,
@@ -225,7 +225,7 @@ export class BackfillLifecycleMigration {
       }
 
       await this.c.env.DB.prepare(
-        `UPDATE lifecycle_migration_state
+        `UPDATE lifecycle_migration_states
            SET status = 'backfilled', baseline_on = ?1, company_time_zone = ?2,
                legacy_source_fingerprint = ?3, employee_count = ?4, department_count = ?5,
                backfilled_at = ?6, verified_at = NULL

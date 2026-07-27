@@ -21,6 +21,14 @@ flowchart LR
 
 実装されている route は `api/src/app.ts` と `api/src/interface/routes`、データ制約は `api/migrations` で確認する。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため schema.ts にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは schema.ts にも反映する。
 
+## migration の命名
+
+migration は `NNNN_<対象>_<操作>.sql` の形とし、4 桁の連番を前置する。連番は追加順に採番し、欠番と重複を作らない。表を作る migration と、その表を変更する migration が別ファイルになる場合、後者の番号を必ず大きくする。内容部分には対象と操作を書き、`asset_dispose.sql` のような操作名だけの命名は避ける。区切りは下線に揃える。
+
+連番は依存順序を名前で保証するために必要である。`wrangler d1 migrations apply` は連番を持つファイルを持たないファイルより先に適用し（`compareSegments` が数値前置を優先する）、テストの replay も同じ順序を使う。連番を持たないファイルが混在すると、新しい連番ファイルが依存先より先に走る。
+
+`d1_migrations` は適用済みかどうかをファイル名で判定する。したがって適用済みの migration を改名すると、その migration は未適用と見なされて再実行される。改名する場合は `d1_migrations` の名前も同時に書き換える。`api/scripts/repair-migration-history.sql` がこの書き換えを行い、`db:migrate` と `db:migrate:local` が `migrations apply` の前に実行する。
+
 ## Deployment と法人
 
 一つの deployment は一つの法人だけを扱う。法人は request ごとに選ぶ resource や scope ではなく、deployment 全体の固定前提である。別の法人を運用する場合は、database、identity、secret、connector credential、audit access を共有しない別 deployment を使用する。

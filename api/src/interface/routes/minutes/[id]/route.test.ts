@@ -58,7 +58,7 @@ async function createTestDb(): Promise<D1Database> {
   ])
 
   // author は E002(member)。
-  await seedD1(db, "meeting_minutes", [
+  await seedD1(db, "meeting_minutes_records", [
     {
       id: 1,
       meeting_id: 1,

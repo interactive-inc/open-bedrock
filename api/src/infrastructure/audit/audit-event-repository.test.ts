@@ -77,7 +77,7 @@ async function insertLegacyRow(
   const id = overrides.id ?? -1
   await db
     .prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
          (id, event_id, request_id, actor_account_id, actor_employee_id, action,
           target_type, target_id, outcome, reason_code, authorization_json,
           before_json, after_json, metadata_json, client_ip, client_name, created_at)
@@ -483,7 +483,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
       UNION ALL
       SELECT value + 1 FROM sequence WHERE value < ${count}
     )
-    INSERT INTO audit_logs
+    INSERT INTO audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, 'bulk-' || value, 'bulk-request-' || value,
            'legacy.bulk', 'succeeded', 'api', value
@@ -501,7 +501,7 @@ async function insertMinimalRemoteMetadataRows(
   },
 ): Promise<void> {
   const statement = db.prepare(
-    `INSERT INTO audit_logs
+    `INSERT INTO audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )
@@ -524,7 +524,7 @@ async function insertMinimalTinyRows(
       UNION ALL
       SELECT value + 1 FROM sequence WHERE value < ${lastId}
     )
-    INSERT INTO audit_logs
+    INSERT INTO audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, CAST(value AS TEXT), 'r', 'a', 'succeeded', 'api', value
     FROM sequence
@@ -543,7 +543,7 @@ async function insertWideSummaryRows(
          UNION ALL
          SELECT value + 1 FROM sequence WHERE value < ?1
        )
-       INSERT INTO audit_logs
+       INSERT INTO audit_events
          (id, event_id, request_id, action, target_type, target_id,
           outcome, client_name, created_at)
        SELECT value, 'wide-' || value, 'wide-request-' || value,
@@ -563,7 +563,7 @@ async function insertMixedWidthSameSecondRows(db: D1Database, count: number): Pr
          UNION ALL
          SELECT value + 1 FROM sequence WHERE value < ?1
        )
-       INSERT INTO audit_logs
+       INSERT INTO audit_events
          (id, event_id, request_id, action, target_type, target_id,
           outcome, client_name, created_at)
        SELECT value, 'mixed-' || value, 'mixed-request-' || value,
@@ -630,7 +630,7 @@ async function readStoredAuditRowMetrics(
                 length(CAST(created_at AS BLOB))) AS stored_bytes,
               max(${textByteExpressions.join(", ")}) AS max_text_bytes,
               2 * (${textByteExpressions.join(" + ")}) AS exact_hex_payload_bytes
-       FROM audit_logs WHERE event_id = ?1`,
+       FROM audit_events WHERE event_id = ?1`,
     )
     .bind(eventId)
     .first<{
@@ -668,7 +668,7 @@ async function insertCorruptTextColumn(
   }
   await db.exec("PRAGMA ignore_check_constraints = ON")
   await db.exec(`
-    INSERT INTO audit_logs
+    INSERT INTO audit_events
       (id, event_id, request_id, action, target_type, target_id, outcome, reason_code,
        authorization_json, before_json, after_json, metadata_json, client_ip, client_name,
        created_at)
@@ -689,7 +689,7 @@ describe("AuditEventRepository write contract", () => {
 
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE event_id = 'event-1'")
+        .prepare("SELECT COUNT(*) AS count FROM audit_events WHERE event_id = 'event-1'")
         .first<number>("count"),
     ).toBe(1)
   })
@@ -706,7 +706,7 @@ describe("AuditEventRepository write contract", () => {
           `SELECT event_id, request_id, actor_account_id, actor_employee_id, action,
                   target_type, target_id, outcome, reason_code, authorization_json,
                   before_json, after_json, metadata_json, client_ip, client_name, created_at
-           FROM audit_logs WHERE event_id = ?1`,
+           FROM audit_events WHERE event_id = ?1`,
         )
         .bind("event-1")
         .first<Record<string, unknown>>(),
@@ -740,7 +740,7 @@ describe("AuditEventRepository write contract", () => {
     }
 
     const result = await db
-      .prepare("SELECT target_id, typeof(target_id) AS type FROM audit_logs ORDER BY id")
+      .prepare("SELECT target_id, typeof(target_id) AS type FROM audit_events ORDER BY id")
       .all<{ target_id: string; type: string }>()
     expect(result.results).toEqual(targetIds.map((target_id) => ({ target_id, type: "text" })))
   })
@@ -758,7 +758,7 @@ describe("AuditEventRepository write contract", () => {
     const repository = new AuditEventRepository(context)
     await db.exec(`
       CREATE TRIGGER audit_logs_forced_failure
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       WHEN NEW.event_id = 'forced-trigger'
       BEGIN
         SELECT RAISE(ABORT, 'sensitive trigger detail');
@@ -773,7 +773,7 @@ describe("AuditEventRepository write contract", () => {
     const repository = new AuditEventRepository(context)
     await db.exec(`
       CREATE TRIGGER audit_logs_silent_ignore
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       WHEN NEW.event_id = 'silently-ignored'
       BEGIN
         SELECT RAISE(IGNORE);
@@ -822,7 +822,7 @@ describe("AuditEventRepository write contract", () => {
     const repository = new AuditEventRepository(context)
     await db.exec(`
       CREATE TRIGGER audit_logs_batch_silent_ignore
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       WHEN NEW.event_id = 'silently-ignored-in-batch'
       BEGIN
         SELECT RAISE(IGNORE);
@@ -863,7 +863,7 @@ describe("AuditEventRepository write contract", () => {
 
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM audit_logs WHERE event_id = 'must-not-remain'")
+        .prepare("SELECT COUNT(*) AS count FROM audit_events WHERE event_id = 'must-not-remain'")
         .first<number>("count"),
     ).toBe(0)
   })
@@ -1389,7 +1389,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     for (const corruptionSql of ["CAST(X'80' AS TEXT)", "CAST(X'EFBFBD' AS BLOB)"]) {
       const { context, db } = createTestContext()
       await db.exec(`
-        INSERT INTO audit_logs
+        INSERT INTO audit_events
           (id, event_id, request_id, action, target_type, target_id,
            outcome, client_name, created_at)
         VALUES (-1, 'byte-corrupt', 'byte-corrupt-request', 'legacy.corrupt',
@@ -1538,7 +1538,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const metadataJson = JSON.stringify({ note: "\uFEFF値🔐", lines: "a\r\nb" })
     await db
       .prepare(
-        `INSERT INTO audit_logs
+        `INSERT INTO audit_events
            (id, event_id, request_id, action, target_type, target_id, outcome,
             authorization_json, metadata_json, client_name, created_at)
          VALUES (-1, 'remote-byte-faithful', 'remote-byte-request', 'legacy.unicode',
@@ -1577,7 +1577,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const bomText = "CAST(X'EFBBBF' AS TEXT)"
     await db
       .prepare(
-        `INSERT INTO audit_logs
+        `INSERT INTO audit_events
            (id, event_id, request_id, actor_account_id, actor_employee_id, action,
             target_type, target_id, outcome, reason_code, authorization_json,
             before_json, after_json, metadata_json, client_ip, client_name, created_at)
@@ -1617,7 +1617,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     const { context, db } = createTestContext()
     await db
       .prepare(
-        `INSERT INTO audit_logs
+        `INSERT INTO audit_events
            (id, event_id, request_id, actor_account_id, actor_employee_id, action,
             target_type, target_id, outcome, reason_code, authorization_json,
             before_json, after_json, metadata_json, client_ip, client_name, created_at)
@@ -2067,7 +2067,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
 
     await db
       .prepare(
-        `INSERT INTO audit_logs
+        `INSERT INTO audit_events
            (id, event_id, request_id, action, outcome, client_name, created_at)
          VALUES (50001, 'bulk-50001', 'bulk-request-50001',
                  'legacy.bulk', 'succeeded', 'api', 50001)`,
@@ -2089,7 +2089,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
 
     await db
       .prepare(
-        `INSERT INTO audit_logs
+        `INSERT INTO audit_events
            (id, event_id, request_id, action, outcome, client_name, created_at)
          VALUES (50002, 'filtered-special', 'filtered-special-request',
                  'legacy.special', 'succeeded', 'api', 50002)`,

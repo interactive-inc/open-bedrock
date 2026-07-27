@@ -42,7 +42,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "skills",
+    "skill_definitions",
     seedSkills.map((skill) => ({
       code: skill.code,
       name: skill.name,
