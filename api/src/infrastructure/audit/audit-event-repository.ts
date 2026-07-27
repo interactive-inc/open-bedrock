@@ -999,7 +999,7 @@ function summaryDescriptorSql(
   const limitIndex = parts.bindings.push(limit)
   const snapshotSql =
     snapshotMaxId === null
-      ? "(SELECT MAX(id) FROM audit_logs)"
+      ? "(SELECT MAX(id) FROM audit_events)"
       : `?${parts.bindings.push(snapshotMaxId)}`
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
   const order = ascending ? "ASC" : "DESC"
@@ -1011,7 +1011,7 @@ function summaryDescriptorSql(
                  (${SUMMARY_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                  (${SUMMARY_STORAGE_OK_SQL}) AS storage_ok,
                  ${snapshotSql} AS snapshot_max_id
-          FROM audit_logs ${where}
+          FROM audit_events ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
   }
@@ -1059,7 +1059,7 @@ function exportDescriptorSql(
     sql: `WITH layout AS (
             SELECT id, created_at, actor_account_id, actor_employee_id,
                    ${DETAIL_TEXT_COLUMNS.join(", ")}, ${DETAIL_COMPACT_LAYOUT_COLUMNS}
-            FROM audit_logs ${where}
+            FROM audit_events ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
           ), measured AS (
@@ -1243,7 +1243,7 @@ const EXPORT_SEGMENT_SQL = `
              `hex(substr(CAST(a.${column} AS BLOB), ` + `p.byte_offset + 1, p.expected_bytes))`,
          )}
   FROM plan p
-  JOIN audit_logs a ON a.id = p.id
+  JOIN audit_events a ON a.id = p.id
   ORDER BY p.plan_ordinal
 `
 
@@ -1278,7 +1278,7 @@ export class AuditEventRepository {
     if (hexDescriptors.length > 0) {
       const summaryResult = await this.c.env.DB.prepare(
         `SELECT ${SUMMARY_HEX_SELECT_COLUMNS}
-         FROM audit_logs
+         FROM audit_events
          WHERE id IN (SELECT value FROM json_each(?1))
          ORDER BY created_at ${order}, id ${order}`,
       )
@@ -1314,7 +1314,7 @@ export class AuditEventRepository {
   ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
     const detailResult = await this.c.env.DB.prepare(
       `SELECT ${DETAIL_HEX_SELECT_COLUMNS}
-       FROM audit_logs
+       FROM audit_events
        WHERE id IN (SELECT value FROM json_each(?1))
        ORDER BY created_at DESC, id DESC`,
     )
@@ -1515,7 +1515,7 @@ export class AuditEventRepository {
       if (selections.length === 0) throw new Error("audit segmented text read made no progress")
 
       const segmentResult = await this.c.env.DB.prepare(
-        `SELECT ${projections.join(", ")} FROM audit_logs WHERE id = ?1 LIMIT 1`,
+        `SELECT ${projections.join(", ")} FROM audit_events WHERE id = ?1 LIMIT 1`,
       )
         .bind(...bindings)
         .all()
@@ -1595,7 +1595,7 @@ export class AuditEventRepository {
 
   private prepareInsert(record: AuditEventRecord): D1PreparedStatement {
     return this.c.env.DB.prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
          (event_id, request_id, actor_account_id, actor_employee_id, action,
           target_type, target_id, outcome, reason_code, authorization_json,
           before_json, after_json, metadata_json, client_ip, client_name, created_at)
@@ -1627,7 +1627,7 @@ export class AuditEventRepository {
     const { record } = decisionCase
 
     return this.c.env.DB.prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
          (event_id, request_id, actor_account_id, actor_employee_id, action,
           target_type, target_id, outcome, reason_code, authorization_json,
           before_json, after_json, metadata_json, client_ip, client_name, created_at)
@@ -1708,7 +1708,7 @@ export class AuditEventRepository {
              AND decision_value IN (${decisionPlaceholders.join(", ")})) = 1
          AND
          (SELECT COUNT(*)
-            FROM audit_logs
+            FROM audit_events
            WHERE event_id IN (${eventIdPlaceholders.join(", ")})) = 1
        THEN 1 ELSE json_extract('', '$') END AS ok`,
     ).bind(props.decisionId, ...decisions, ...eventIds)
@@ -1927,7 +1927,7 @@ export class AuditEventRepository {
                 (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
                 (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                 (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
-         FROM audit_logs WHERE event_id = ?1 LIMIT 1`,
+         FROM audit_events WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
         .all()

@@ -117,20 +117,20 @@ const assignmentSelect = `
   SELECT period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at
-  FROM org_assignment_period_versions AS current
+  FROM employee_org_assignment_period_versions AS current
   WHERE current.revision = (
     SELECT MAX(candidate.revision)
-    FROM org_assignment_period_versions AS candidate
+    FROM employee_org_assignment_period_versions AS candidate
     WHERE candidate.period_id = current.period_id
   ) AND current.is_void = 0`
 
 const responsibilitySelect = `
   SELECT period_id, revision, department_code, responsibility_type, employee_id,
          starts_on, ends_on, is_void, recorded_by_action_id, recorded_at
-  FROM org_responsibility_period_versions AS current
+  FROM employee_org_responsibility_period_versions AS current
   WHERE current.revision = (
     SELECT MAX(candidate.revision)
-    FROM org_responsibility_period_versions AS candidate
+    FROM employee_org_responsibility_period_versions AS candidate
     WHERE candidate.period_id = current.period_id
   ) AND current.is_void = 0`
 
@@ -226,7 +226,7 @@ export class EmployeeLifecycleRepository {
           .bind(employeeId)
           .first<number>("revision"),
         this.c.env.DB.prepare(
-          "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+          "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
         ).first<number>("revision"),
       ])
 
@@ -277,7 +277,7 @@ export class EmployeeLifecycleRepository {
     try {
       return (
         (await this.c.env.DB.prepare(
-          "SELECT status FROM lifecycle_migration_state WHERE id = 1",
+          "SELECT status FROM lifecycle_migration_states WHERE id = 1",
         ).first<"pending" | "backfilled" | "verified">("status")) ?? "pending"
       )
     } catch (cause) {

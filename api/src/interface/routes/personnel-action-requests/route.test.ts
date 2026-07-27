@@ -139,7 +139,7 @@ describe("POST /personnel-action-requests", () => {
     expect(
       await db
         .prepare(
-          `SELECT COUNT(*) FROM org_assignment_period_versions
+          `SELECT COUNT(*) FROM employee_org_assignment_period_versions
            WHERE employee_id = 5 AND position_title = 'Senior Engineer'`,
         )
         .first<number>("COUNT(*)"),
@@ -176,7 +176,7 @@ describe("POST /personnel-action-requests", () => {
     ).toBe(0)
     expect(
       await db
-        .prepare("SELECT status FROM applications WHERE id = ?1")
+        .prepare("SELECT status FROM application_requests WHERE id = ?1")
         .bind(applicationId)
         .first<string>("status"),
     ).toBe("pending")
@@ -267,7 +267,7 @@ describe("POST /personnel-action-requests", () => {
     expect(await withdrawn.json()).toEqual({ status: "withdrawn" })
     expect(
       await db
-        .prepare("SELECT status FROM applications WHERE id = ?1")
+        .prepare("SELECT status FROM application_requests WHERE id = ?1")
         .bind(applicationId)
         .first<string>("status"),
     ).toBe("rejected")
@@ -276,7 +276,7 @@ describe("POST /personnel-action-requests", () => {
     ).toBe(1)
     expect(
       await db
-        .prepare("SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1")
+        .prepare("SELECT action FROM audit_events ORDER BY id DESC LIMIT 1")
         .first<string>("action"),
     ).toBe("employee.lifecycle.request_withdrawn")
   })
@@ -374,7 +374,7 @@ describe("POST /personnel-action-requests", () => {
     expect(
       await db
         .prepare(
-          `SELECT position_title FROM org_assignment_period_versions
+          `SELECT position_title FROM employee_org_assignment_period_versions
            WHERE employee_id = ?1 AND is_void = 0 ORDER BY revision DESC LIMIT 1`,
         )
         .bind(employeeId)

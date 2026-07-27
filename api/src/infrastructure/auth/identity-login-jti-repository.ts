@@ -18,7 +18,7 @@ export class IdentityLoginJtiRepository {
   async markUsed(jti: string, expiresAt: number, usedAt: number): Promise<MarkJtiResult | Error> {
     try {
       const result = await this.c.env.DB.prepare(
-        `INSERT INTO identity_login_jti (jti, expires_at, used_at)
+        `INSERT INTO identity_login_tokens (jti, expires_at, used_at)
          VALUES (?1, ?2, ?3)
          ON CONFLICT(jti) DO NOTHING`,
       )

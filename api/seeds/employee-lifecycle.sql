@@ -54,7 +54,7 @@ SELECT
 FROM employees
 WHERE status IN ('active', 'leave');
 
-INSERT INTO org_assignment_period_versions
+INSERT INTO employee_org_assignment_period_versions
   (period_id, revision, employment_period_id, employee_id, department_code,
    assignment_type, position_title, manager_employee_id, starts_on, ends_on,
    is_void, recorded_by_action_id, recorded_at)
@@ -80,7 +80,7 @@ LEFT JOIN org_memberships AS membership
 LEFT JOIN employees AS manager ON manager.code = membership.manager_employee_code
 WHERE employee.status IN ('active', 'leave');
 
-INSERT INTO org_responsibility_period_versions
+INSERT INTO employee_org_responsibility_period_versions
   (period_id, revision, department_code, responsibility_type, employee_id,
    starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
 SELECT
@@ -100,9 +100,9 @@ INNER JOIN employees AS manager ON manager.code = organization.manager_employee_
 INSERT INTO employee_lifecycle_revisions (employee_id, revision, updated_at)
 SELECT id, 0, 1767225600 FROM employees;
 
-UPDATE organization_lifecycle_state SET revision = 0, updated_at = 1767225600 WHERE id = 1;
+UPDATE organization_lifecycle_states SET revision = 0, updated_at = 1767225600 WHERE id = 1;
 
-UPDATE lifecycle_migration_state
+UPDATE lifecycle_migration_states
 SET status = 'verified',
     baseline_on = '2026-01-01',
     company_time_zone = 'Asia/Tokyo',

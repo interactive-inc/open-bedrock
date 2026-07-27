@@ -98,7 +98,7 @@ async function seedAuditEvent(
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
        (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
@@ -128,14 +128,14 @@ function request(db: D1Database, path: string, bearer: string | null): Promise<R
 }
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
-  const row = await db.prepare("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 1").first()
+  const row = await db.prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT 1").first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
 }
 
 async function failSelfAudit(db: D1Database): Promise<void> {
   await db.exec(`CREATE TRIGGER fail_audit_self_insert
-    BEFORE INSERT ON audit_logs
+    BEFORE INSERT ON audit_events
     WHEN NEW.action LIKE 'audit.event.%'
     BEGIN SELECT RAISE(ABORT, 'self audit disabled'); END;`)
 }
@@ -223,7 +223,9 @@ describe("GET /audit-events", () => {
     const state = await createTestDb()
     const bearer = await token(1)
     state.resetQueries()
-    const before = await state.db.prepare("SELECT count(*) AS count FROM audit_logs").first("count")
+    const before = await state.db
+      .prepare("SELECT count(*) AS count FROM audit_events")
+      .first("count")
     state.resetQueries()
 
     const response = await request(state.db, "/audit-events?limit=1&limit=1", bearer)
@@ -231,7 +233,9 @@ describe("GET /audit-events", () => {
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ code: "audit_invalid_query" })
     expect(state.queries()).toBe(6)
-    const after = await state.db.prepare("SELECT count(*) AS count FROM audit_logs").first("count")
+    const after = await state.db
+      .prepare("SELECT count(*) AS count FROM audit_events")
+      .first("count")
     expect(after).toBe(before)
   })
 

@@ -1,0 +1,320 @@
+# 名前空間マップ
+
+テーブル、URL、CLI コマンドの名前を全面的に定める。旧名は温存せず、別名も設けない。
+
+このうちテーブル名だけが実装済みである。「URL」節と「CLI コマンド」節が挙げる名前は未実装であり、現行の経路は `/applications` のように旧名のままである。実装済みの経路は `api/src/interface/routes` と `.docs/sitemap.md` を正とする。
+
+## 命名原則
+
+- リソース名の末尾は複数形にできる可算名詞とする。修飾語は単数形または集合名詞とする
+- 名前に主語を含める。主語のない裸の名前を禁止する
+- 名前空間はシステム、company-core、company-standard、company-optional の優先順で確定する。上位は汎用名を汎用の意味で保持し、下位は上位の汎用名を占有しない
+- 集合名詞は単独のリソース名にしない。集合名詞に可算の主名詞を補う
+
+この基盤は会社レイヤーの製品であり、事業レイヤーを持たない。
+
+## 層と段の定義
+
+区分はシステム層と、会社レイヤーを三段に分けた company-core、company-standard、company-optional の四つとする。
+
+システム層は、アカウント、認証、認可、監査、通知、バッチのように製品の業務内容から独立した基盤を指す。どの社内システムにも必要であり、停止できない。
+
+company-core は、会社である限り外せない必須基盤を指す。組織、従業員台帳、アカウント連携、人事発令、申請と承認の骨格が属する。停止すると製品が成立しない。
+
+company-standard は、ほぼ全社が使うが停止できる機能を指す。会計、経費、勤怠、シフト、資産、契約が属する。既定で有効とし、設定で停止できる。
+
+company-optional は、無くても会社が回る機能を指す。1on1、サンクス、目標管理、ナレッジ、社内公募、人事評価、研修が属する。既定で無効とし、有効化して使う。
+
+段の判定は「会社一般にとって無くても回るか」で行う。導入済みの会社がその機能を止められるかどうかで判定しない。ある会社が人事評価や研修を制度として持ち実質的に停止できないとしても、会社一般にとって無くても回る以上その機能は company-optional に属する。
+
+段は機能の三段分類と対応するが同一ではない。三段分類の基盤レイヤーはシステム層に、コア機能は company-core と company-standard に、選択機能は company-optional に対応する。company-standard は三段分類が持たない中間であり、必須ではないが既定で有効という位置を表す。
+
+### 勾配の規則
+
+名前の取り合いは上位が勝つ。上位が汎用名を単独で使い、下位は主語を付けて区別する。
+
+`roles` はシステム層が所有する。company-core の組織上の責任ロールは `governance_org_roles` として主語を持つ。`notifications` はシステム層が所有し、company-optional のサンクス通知は独自の表を持たない。`documents` は company-core の台帳が主語を補い `document_ledger_entries` となる一方、company-standard の規程は `regulations`、company-core の統制文書は `governance_documents` として棲み分ける。
+
+同じ段の中で名前が競合する場合は、先に存在する概念が汎用名を保つのではなく、両方に主語を付ける。段の勾配は段をまたぐ競合にのみ適用する。
+
+段の境界は機能すなわちモジュールの粒度で引く。一つの機能を構成する表を複数の段へ割らない。申請と承認の一群は骨格と多段ワークフローを分けず、まとめて company-core に属する。ある表だけが下位の会社にとって不要であることは、その表を切り出す理由にならない。切り出しを検討する場合は表ではなく機能そのものを分ける。
+
+## システム層のテーブル
+
+製品の業務内容から独立した基盤。停止できない。汎用名を優先して所有する。
+
+### 改名するもの
+
+`identity_login_jti` を `identity_login_tokens` にする。行の粒度は消費済みトークン 1 件であり、末尾が可算名詞でない。
+
+`audit_logs` を `audit_events` にする。API は既に `/audit-events` を用いており、記録対象は個々の事象である。名前を事象側へ揃える。
+
+`lifecycle_outbox` を `lifecycle_outbox_entries` にする。`outbox` は容器を表す集合名詞であり、行の粒度は送出待ちの効果 1 件である。
+
+`permissions` は改名しない。理由は「決定事項」の `permissions` の節に記す。
+
+### 変更しないもの
+
+次はいずれも主語を含む複数形であり、システム層の汎用名として妥当である。
+
+`accounts`、`identities`、`cli_login_states`、`cli_login_codes`、`refresh_tokens`、`roles`、`role_permissions`、`account_roles`、`audit_batch_decisions`、`batch_jobs`、`notifications`、`permissions`。
+
+`roles` と `notifications` はシステム層が汎用名を所有する例である。下位の段は主語を付けて区別する。
+
+システム層は 15 表とする。
+
+## company-core のテーブル
+
+会社である限り外せない必須基盤。停止すると製品が成立しない。
+
+### 改名するもの
+
+`applications` を `application_requests` にする。裸の `applications` は業務アプリケーションとも申請とも読め、公開リポジトリでは特に誤読しやすい。申請という主語を明示する。
+
+`documents` を `document_ledger_entries` にする。この表は本体を保持せず所在と属性のみを台帳として持つ。`governance_documents` および `regulation_versions` と役割が異なることを名前で示す。
+
+`decisions` を `decision_records` にする。裸の `decisions` は承認判断とも意思決定記録とも読める。この表は意思決定記録であり、承認判断は `application_approvals` と `audit_batch_decisions` が担う。
+
+`organization_lifecycle_state` を `organization_lifecycle_states` にする。単一行制約は検査制約が担い、表名は他と同じ複数形に揃える。
+
+`lifecycle_migration_state` を `lifecycle_migration_states` にする。理由は同上とする。
+
+`org_assignment_period_versions` を `employee_org_assignment_period_versions` にする。行の主語は従業員であり、`org_` は所属先を指す修飾語にすぎない。`employment_period_versions` および `employee_status_period_versions` と主語を揃える。
+
+`org_responsibility_period_versions` を `employee_org_responsibility_period_versions` にする。理由は同上とする。
+
+`grades` を `grade_definitions` にする。定義の原簿であり、実績は `employee_grades` が担う。定義と実績を名前で分ける。
+
+`positions` を `position_definitions` にする。理由は同上とする。役職の異動履歴は人事発令が担い、割当表を持たない。
+
+### 変更しないもの
+
+`employees`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
+
+`governance_org_roles` はシステム層の `roles` と競合しないよう主語を持つ。この分離は既に成立しており維持する。
+
+company-core は 50 表とする。
+
+## company-standard のテーブル
+
+ほぼ全社が使うが停止できる機能。既定で有効とし、設定で停止できる。
+
+### 改名するもの
+
+`budgets` を `department_budgets` にする。行の粒度は部署と会計期間の組であり、主語が部署である。
+
+`contracts` を `partner_contracts` にする。行は取引先に従属する。
+
+`licenses` を `software_licenses` にする。裸の `licenses` は資格免許とも読める。この表はソフトウェアの利用権の台帳であり、資格は `certification_definitions` が担う。
+
+`certifications` を `certification_definitions` にする。定義の原簿であり、保有実績は `employee_certifications` が担う。
+
+`meeting_minutes` を `meeting_minutes_records` にする。`minutes` は複数形専用名詞であり行数と一致しない。行の粒度は開催 1 回分の議事録である。
+
+`recruitment_positions` を `job_openings` にする。`position` の語を company-core の `position_definitions` と共有すると、修飾語でしか区別が付かない。募集枠は役職の定義とは別概念であり、固有の語を与えて衝突自体を消す。`recruitment_candidates` は主語が候補者であり衝突しないため維持する。
+
+`employee_work_styles` は変更しない。URL 側が主語を欠く `/work-styles` であるため、URL のみ主語を補う。
+
+### 変更しないもの
+
+`attendance_records`、`company_calendar_days`、`employee_work_styles`、`shift_patterns`、`shift_assignments`、`shift_swap_requests`、`leave_requests`、`leave_balances`、`payslips`、`salary_revisions`、`year_end_adjustments`、`expenses`、`expense_approvals`、`ringi_requests`、`assets`、`asset_lendings`、`stocktakes`、`stocktake_items`、`partners`、`employee_certifications`、`health_checkups`、`work_accidents`、`it_incidents`、`antisocial_checks`、`disciplinary_actions`、`commendations`、`recruitment_candidates`、`headcount_plans`、`meetings`、`life_events`、`family_care_leaves`、`business_trips`、`rooms`、`room_reservations`、`rental_reservations`。
+
+`job_openings` への改名により `position` の語はシステム全体で `position_definitions` のみが用いる。同じ語を二つの概念が共有する状態を残さない。
+
+company-standard は 41 表とする。
+
+## company-optional のテーブル
+
+無くても会社が回る機能。既定で無効とし、有効化して使う。上位の汎用名を占有しない。
+
+### 改名するもの
+
+`thanks` を `thanks_messages` にする。行の粒度は送信 1 件である。関連する `thanks_point_budgets`、`thanks_rewards`、`thanks_redemptions` は既に可算であり維持する。
+
+`goals` を `performance_goals` にする。裸の `goals` は経営目標とも個人目標とも読める。所有主体は個人、部門、全社にわたるため、制度としての名前を主語に置く。
+
+`skills` を `skill_definitions` にする。定義の原簿であり、保有実績は `employee_skills` が担う。
+
+### 変更しないもの
+
+`one_on_ones`、`thanks_point_budgets`、`thanks_rewards`、`thanks_redemptions`、`goal_evaluations`、`employee_skills`、`knowledge_articles`、`career_postings`、`career_applications`、`career_sheets`、`training_courses`、`training_enrollments`、`review_cycles`、`review_forms`、`review_cycle_policies`、`surveys`、`survey_responses`。
+
+`knowledge_articles` は `knowledge` が不可算だが修飾語の位置にあり、主名詞 `articles` が可算である。原則に適合する。
+
+company-optional は 20 表とする。
+
+### 網羅性
+
+システム層 15、company-core 50、company-standard 41、company-optional 20 の合計は 126 であり、`api/src/schema.ts` の `sqliteTable` 定義数と一致する。各表はいずれか一つの段にのみ属する。改名は 21 件、変更なしは 105 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
+
+## URL
+
+第一セグメントを複数形リソースに統一する。単数形のドメインディレクトリは、その配下の実体を主名詞として複数形に昇格させる。
+
+URL は段を経路に含めない。`/company-optional/thanks-messages` のような接頭辞を付けると、段の変更が URL の破壊的変更になる。段は設定と権限で表し、経路はリソース名のみで構成する。段の勾配は名前の取り合いにのみ働く。
+
+### 単数ドメインの是正
+
+`/attendance` を `/attendance-records` にする。配下は `clock-in`、`clock-out`、`me`、`me/summary`、`overtime-summary` とする。打刻は状態遷移の動詞 POST として `/attendance-records/clock-in` の形を維持する。
+
+`/leave` を `/leave-requests` にする。現行の `/leave/requests` の二階層を一階層へ潰す。残高は主語が異なるため `/leave-balances` として独立させる。
+
+`/shift` を分割する。`/shift/patterns` を `/shift-patterns`、`/shift/assignments` を `/shift-assignments`、`/shift/swap-requests` を `/shift-swap-requests` にする。三つは別のリソースであり、共通の親を持つ理由がない。
+
+`/career` を分割する。`/career/postings` を `/career-postings`、`/career/applications` を `/career-applications`、`/career/sheet/me` を `/career-sheets/me` にする。`sheet` の単数形は 1 名につき 1 行である性質に由来するが、リソース名は複数形に統一し、単数性は `me` の指定で表す。
+
+`/knowledge` を `/knowledge-articles` にする。テーブル名と一致させる。
+
+`/ringi` を `/ringi-requests` にする。`ringi` 単独は可算名詞ではなく、実体は決裁の依頼である。
+
+`/org` を分割する。`/org/departments` を `/departments`、`/org/tree` を `/departments/tree`、`/org/reporting-line/:employee_code` を `/employees/:employee_code/reporting-line` にする。報告線は従業員に従属する情報であり、従業員配下へ移す。
+
+`/governance` は配下が複数の独立リソースを含むため分割する。`/governance/documents` を `/governance-documents`、`/governance/org-roles` を `/governance-org-roles`、`/governance/capabilities` を `/governance-capabilities`、`/governance/impact` を `/governance-documents/impact` にする。`governance` は修飾語として残り、単独のセグメントではなくなる。
+
+### 名前の主語を補う是正
+
+`/applications` を `/application-requests` にする。テーブルの改名に合わせる。配下の `inbox`、`me`、`admin`、`workflow-repairs`、`:id/approve`、`:id/reject`、`:id/resubmit`、`:id/reassign-workflow-step` はそのまま従属させる。
+
+`/decisions` を `/decision-records` にする。
+
+`/documents` を `/document-ledger-entries` にする。
+
+`/skills` を `/skill-definitions` にする。本人の保有は `/skill-definitions/me` ではなく `/employee-skills/me` に置く。定義の原簿と保有実績を URL でも分ける。
+
+`/grades` を `/grade-definitions` にする。`/grades/assignments` は `/employee-grades` へ移す。
+
+`/positions` を `/position-definitions` にする。`/recruitment/positions` は `/job-openings` にする。両者は語を共有しない別リソースとなる。
+
+`/certifications` を `/certification-definitions` にする。`/employee-certifications` は変更しない。
+
+`/budgets` を `/department-budgets` にする。
+
+`/goals` を `/performance-goals` にする。`/goals/tree` は `/performance-goals/tree` とする。
+
+`/licenses` を `/software-licenses` にする。
+
+`/contracts` を `/partner-contracts` にする。
+
+`/thanks` を `/thanks-messages` にする。配下の `/thanks/balance/me` を `/thanks-point-budgets/me`、`/thanks/budget/me` を `/thanks-point-budgets/me` に統合する。現行は残高と予算が別経路だが同一の表を読むため一本化する。`/thanks/rewards` を `/thanks-rewards`、`/thanks/redemptions` を `/thanks-redemptions` にする。
+
+`/minutes` を `/meeting-minutes-records` にする。`/meetings/:code/minutes` は会議体配下の一覧として維持する。
+
+`/calendar` を `/company-calendar-days` にする。現行の `/calendar/days` の二階層を潰す。
+
+`/work-styles` を `/employee-work-styles` にする。主語を補う。
+
+`/audit-events` は変更しない。テーブル名を URL 側へ揃える。
+
+`/permissions` を `/permission-definitions` にする。
+
+`/onboarding` は配下を分割する。`/onboarding/templates` を `/onboarding-templates`、`/onboarding/assignments` を `/onboarding-assignments`、`/onboarding/tasks` を `/onboarding-tasks` にする。`/onboarding/me` は `/onboarding-assignments/me`、`/onboarding/employee/:code` は `/onboarding-assignments/employees/:employee_code` にする。
+
+`/training` を分割する。`/training/courses` を `/training-courses`、`/training/enrollments` を `/training-enrollments` にする。
+
+`/recruitment` を分割する。`/recruitment/positions` を `/job-openings`、`/recruitment/candidates` を `/recruitment-candidates` にする。候補者の一覧は `/job-openings/:job_opening_id/candidates` として募集枠配下にも置く。
+
+`/rentals` を `/rental-reservations` にする。実体は予約であり、貸出と返却はその状態遷移である。
+
+`/oneonones` を `/one-on-ones` にする。テーブル名 `one_on_ones` と綴りを揃える。
+
+### 変更しないもの
+
+`/employees`、`/directory/employees`、`/accounts`、`/roles`、`/notifications`、`/announcements`、`/regulations`、`/partners`、`/assets`、`/stocktakes`、`/rooms`、`/surveys`、`/expenses`、`/resignations`、`/business-trips`、`/life-events`、`/family-care-leaves`、`/certificate-requests`、`/antisocial-checks`、`/commendations`、`/disciplinary-actions`、`/headcount-plans`、`/health-checkups`、`/work-accidents`、`/it-incidents`、`/employee-events`、`/employee-certifications`、`/salary-revisions`、`/review-cycles`、`/review-forms`、`/application-templates`、`/approval-delegations`、`/personnel-actions`、`/personnel-action-requests`、`/meetings`、`/audit-event-exports`、`/provisioning/identities`、`/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap`。
+
+`/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap` はリソースの集合ではなく視点または操作の入口である。複数形化の対象としない。
+
+`/directory/employees` は `/employees` と権限が異なる公開名簿であり、別リソースとして維持する。
+
+## CLI コマンド
+
+CLI の第一セグメントを URL のリソース名と一致させる。単数形と略称を廃し、同一資源の重複登録を解消する。
+
+### 単数形の是正
+
+`employee` を `employees`、`asset` を `assets`、`expense` を `expenses`、`goal` を `performance-goals`、`skill` を `skill-definitions`、`room` を `rooms`、`rental` を `rental-reservations`、`shift` を `shift-patterns` および `shift-assignments` および `shift-swap-requests`、`leave` を `leave-requests`、`review` を `review-cycles` および `review-forms`、`training` を `training-courses` および `training-enrollments`、`org` を `departments`、`career` を `career-postings` および `career-applications` および `career-sheets`、`ringi` を `ringi-requests`、`budget` を `department-budgets`、`stocktake` を `stocktakes`、`survey` を `surveys`、`resignation` を `resignations`、`business-trip` を `business-trips`、`life-event` を `life-events`、`family-care-leave` を `family-care-leaves`、`certificate-request` を `certificate-requests`、`antisocial-check` を `antisocial-checks`、`personnel-action` を `personnel-actions` にする。
+
+`thanks` を `thanks-messages` にする。配下の `reward-add` と `rewards` は `thanks-rewards`、`redeem` と `redemptions` は `thanks-redemptions` へ移す。
+
+`recruitment` を分割する。`recruitment/positions` と `recruitment/position-create` と `recruitment/position-update` を `job-openings` へ、`recruitment/candidates` と `recruitment/candidate-add` と `recruitment/advance` を `recruitment-candidates` へ移す。
+
+### 略称と別名の是正
+
+`1on1` を `one-on-ones` にする。`kb` を `knowledge-articles` にする。`notify` を `notifications` にする。`app` を `application-requests` にする。`dashboard` は変更しない。
+
+略称は CLI 固有の語彙を生み、URL とテーブルの名前空間から乖離する。三面で同一の語を使う。
+
+### 重複登録の解消
+
+`room` と `rooms` の二系統を `rooms` に統合する。現行は予約側が `room`、原簿側が `rooms` に分かれている。予約は `room-reservations` として独立させる。
+
+`app` と `application` の二系統を `application-requests` に統合する。現行の `application/mine`、`application/show`、`application/update`、`application/withdraw` は `app` 側の同名コマンドと重複する。
+
+`asset` 配下の `mine` と `holdings` は指す対象が異なる。`mine` を `assets/lent/me`、`holdings` を `assets/holdings` として名前で区別する。
+
+### 変更しないもの
+
+`accounts`、`announcements`、`certifications`、`commendations`、`contracts`、`decisions`、`disciplinary-actions`、`documents`、`employee-events`、`grades`、`headcount-plans`、`health-checkups`、`it-incidents`、`licenses`、`meetings`、`minutes`、`partners`、`positions`、`regulations`、`roles`、`salary-revisions`、`work-accidents`、`work-styles`、`governance`、`onboarding`、`calendar`、`batch`、`bootstrap`、`login`、`whoami`。
+
+このうち `certifications`、`grades`、`positions`、`licenses`、`contracts`、`documents`、`decisions`、`minutes`、`calendar`、`work-styles`、`governance`、`onboarding` はテーブルまたは URL の改名に追随して名前が変わる。上の一覧は単複の観点で是正が不要であることのみを示す。
+
+## 決定事項
+
+### permissions
+
+`permissions` は改名しない。システム層が汎用名を汎用の意味で所有するという勾配の規則そのものに合致する。`permission_definitions` にすると付与側の `role_permissions` との対称性が崩れ、対称を保つには `role_permissions` を `role_permission_grants` にする必要が生じて改名対象が広がる。定義と実績の分離は `grade_definitions` と `employee_grades` のように同名の衝突がある場合に必要であり、`permissions` にその衝突はない。
+
+### 人事評価と研修の段
+
+`review_cycles`、`review_forms`、`review_cycle_policies`、`training_courses`、`training_enrollments` は company-optional とする。会社一般にとって無くても回るためである。人事評価や法定研修を制度として持つ会社で実質的に停止できないことは、段の判定に影響しない。
+
+### 申請ワークフローの段
+
+`application_requests` とワークフロー群は、骨格と多段ワークフローを分けず一群まるごと company-core とする。段の境界は機能の粒度で引き、一つの機能内で段を割らない。`application_workflow_step_candidates` や `lifecycle_effect_template_bindings` が単純な承認しか使わない会社にとって不要であることは、これらを切り出す理由にならない。
+
+### 会議体と意思決定記録の段
+
+`decision_records` は company-core とする。`governance_documents` と対になる統制の記録だからである。`meetings` と `meeting_minutes_records` は会議運営の道具であり company-standard とする。
+
+### 組織の三重表現の解消方向
+
+`code` を唯一の識別子とし `departments` を廃止する。`budgets` すなわち `department_budgets` が持つ `department_id` 参照は `department_code` へ付け替える。`org_departments` と `org_memberships` が既に `code` を用いており、整数の `id` を残す理由がない。
+
+この変更は名前ではなく模型の修正であり、本書では `departments`、`org_departments`、`org_memberships` の改名を行わない。改名はモデル修正と同時に扱う。廃止後に `org_departments` を `departments` へ改名するかは、モデル修正時に決める。
+
+### 期間版の主語
+
+`employment_period_versions` は現名を維持する。`employment` は雇用そのものを主語とする語として成立しており、`employee_` を重ねると冗長になる。`org_` で始まる二つに主語を補ったのは、`org_` が所属先を指す修飾語にすぎず主語が欠けていたためであり、`employment` とは事情が異なる。
+
+### 役職と募集枠の語の衝突
+
+`recruitment_positions` を `job_openings` とする。修飾語による区別を許容せず、語の衝突自体を消す。
+
+## 未決リスト
+
+`career_sheets` と `thanks` はオーナーのプロダクト判断であり、命名の決定では解けない。
+
+### career_sheets の粒度
+
+`career_sheets` は従業員 1 名につき 1 行を上書きする。履歴を持たないため、過去の記載内容を追えない。名前は複数形で妥当だが、履歴を持つべきかどうかは仕様の判断であり、持つと決めれば `career_sheet_versions` の追加が要る。
+
+### thanks の残高と予算
+
+`/thanks/balance/me` と `/thanks/budget/me` は同一の `thanks_point_budgets` を読む。本書では URL の一本化を提案し、その提案は維持する。ただし送付可能な残枠と受領済みの点数を別概念として分けるなら、受領側に別の表が要る。現行は受領点数を `thanks_messages` の集計で得ており表を持たない。概念を分けるかどうかの判断が要る。
+
+## migration の命名運用
+
+現行は 113 件のうち 32 件が `0001` から `0032` の連番を持ち、81 件が連番を持たない機能名である。適用は `wrangler d1 migrations apply` が行い、順序はファイル名の辞書順に依存する。
+
+連番を持たない 81 件は、数字より英字が後に並ぶため連番群の後に適用される。この配置は現時点で偶然成立している。`application_workflow_atomic.sql` は連番期に作られた `applications` を変更し、`asset_dispose.sql` は `asset.sql` が作る `assets` を変更する。いずれも依存先が辞書順で先に来るが、これは名前が偶然その順序を満たしているだけであり、規則が保証していない。新しい機能名を追加したとき、その名前が依存先より辞書順で前に来れば適用が失敗する。
+
+命名も揺れている。連番を持たない 81 件のうち 31 件が下線を、残りが連字符を区切りに使う。
+
+是正案は次のとおりとする。
+
+すべての migration に 4 桁の連番を前置し、`NNNN_<内容>.sql` の形に統一する。区切りは下線に揃える。連番は追加順に採番し、欠番と重複を作らない。
+
+既存の 81 件には、現在の辞書順で確定している適用順に従って `0033` から連番を振る。現在の順序は本番の適用済み記録と一致しているため、順序を変えずに番号だけを与える。番号を与える改名は適用済みの記録名と食い違うため、記録側の名前も同時に更新する手順を移行時に用意する。
+
+以後の追加では、依存関係を名前ではなく連番で表す。テーブルを作る migration と、そのテーブルを変更する migration が別ファイルになる場合、後者の番号を必ず大きくする。
+
+連番だけでは内容が読めないため、内容部分には対象と操作を書く。`0033_assets_add_disposal_columns.sql` のように、対象のテーブルと操作を含める。既存の `asset_dispose.sql` のような操作名のみの命名は避ける。

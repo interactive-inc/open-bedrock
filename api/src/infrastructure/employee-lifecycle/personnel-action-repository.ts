@@ -335,9 +335,9 @@ export class PersonnelActionRepository {
             `SELECT period_id, revision, employment_period_id, employee_id, department_code,
                     assignment_type, position_title, manager_employee_id, starts_on, ends_on,
                     is_void, recorded_by_action_id, recorded_at
-             FROM org_assignment_period_versions
+             FROM employee_org_assignment_period_versions
              WHERE period_id IN (
-               SELECT period_id FROM org_assignment_period_versions WHERE recorded_by_action_id = ?1
+               SELECT period_id FROM employee_org_assignment_period_versions WHERE recorded_by_action_id = ?1
              ) ORDER BY period_id, revision`,
           )
           .bind(actionId)
@@ -346,9 +346,9 @@ export class PersonnelActionRepository {
           .prepare(
             `SELECT period_id, revision, department_code, responsibility_type, employee_id,
                     starts_on, ends_on, is_void, recorded_by_action_id, recorded_at
-             FROM org_responsibility_period_versions
+             FROM employee_org_responsibility_period_versions
              WHERE period_id IN (
-               SELECT period_id FROM org_responsibility_period_versions WHERE recorded_by_action_id = ?1
+               SELECT period_id FROM employee_org_responsibility_period_versions WHERE recorded_by_action_id = ?1
              ) ORDER BY period_id, revision`,
           )
           .bind(actionId)

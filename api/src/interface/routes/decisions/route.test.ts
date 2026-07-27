@@ -46,7 +46,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
-  await seedD1(db, "decisions", [
+  await seedD1(db, "decision_records", [
     {
       id: 1,
       title: "本社移転",

@@ -93,7 +93,7 @@ export class RegisterEmployee {
 
     const organizationRevision =
       (await this.c.env.DB.prepare(
-        "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
       ).first<number>("revision")) ?? 0
     const prepared = await new ApplyPersonnelAction(this.c).prepareDirectProspectiveHire({
       session: command.session,

@@ -54,7 +54,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "goals",
+    "performance_goals",
     seedGoals.map((goal) => ({
       id: goal.id,
       employee_id: goal.employeeId,
@@ -269,7 +269,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     { department_code: "D002", employee_code: "S022", manager_employee_code: null },
   ])
 
-  await seedD1(db, "goals", [
+  await seedD1(db, "performance_goals", [
     {
       id: 100,
       employee_id: 20,
@@ -374,7 +374,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "root" },
   ])
 
-  await seedD1(db, "goals", [
+  await seedD1(db, "performance_goals", [
     {
       id: 102,
       employee_id: 22,

@@ -124,7 +124,7 @@ describe("approval delegation routes", () => {
          ends_on, is_void, recorded_by_action_id, recorded_at) VALUES
         ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
         ('status-6', 1, 'employment-6', 6, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 
     const response = await request(db, 5, "POST", "/approval-delegations", body)

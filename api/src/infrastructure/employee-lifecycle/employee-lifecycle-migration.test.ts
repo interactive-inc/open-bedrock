@@ -24,18 +24,22 @@ import { join } from "node:path"
 const migrationsDirectory = join(import.meta.dir, "../../../migrations")
 const migrationFile = "0019_employee_lifecycle.sql"
 const migrationPath = join(migrationsDirectory, migrationFile)
-const applicationBindingMigrationFile = "application_lifecycle_binding.sql"
+const applicationBindingMigrationFile = "0036_application_lifecycle_binding.sql"
 const applicationBindingMigrationPath = join(migrationsDirectory, applicationBindingMigrationFile)
-const personnelActionTemplateMigrationFile = "application_personnel_action_template.sql"
+const personnelActionTemplateMigrationFile = "0038_application_personnel_action_template.sql"
 const personnelActionTemplateMigrationPath = join(
   migrationsDirectory,
   personnelActionTemplateMigrationFile,
 )
-const requestStateMigrationFile = "application_personnel_action_request_state.sql"
+const requestStateMigrationFile = "0037_application_personnel_action_request_state.sql"
 const requestStateMigrationPath = join(migrationsDirectory, requestStateMigrationFile)
 // 0019 以降に追加された、ライフサイクル列（archived_at 等）を前提とする後続 migration。
 // 「lifecycle 適用前」のスナップショットには含めない（実順序では 0019 の後に走るため）。
-const postLifecycleMigrationFiles = new Set(["0030_identity_provisioning.sql"])
+// 0114 は 0019 より後に作られる表も一括で改名するため、この snapshot には含めない。
+const postLifecycleMigrationFiles = new Set([
+  "0030_identity_provisioning.sql",
+  "0114_tables_rename.sql",
+])
 
 function migrationFiles(): string[] {
   return readdirSync(migrationsDirectory)
@@ -126,27 +130,27 @@ describe("employee lifecycle migration", () => {
         "personnel_actions",
         "employment_period_versions",
         "employee_status_period_versions",
-        "org_assignment_period_versions",
-        "org_responsibility_period_versions",
+        "employee_org_assignment_period_versions",
+        "employee_org_responsibility_period_versions",
         "employee_lifecycle_revisions",
-        "organization_lifecycle_state",
+        "organization_lifecycle_states",
         "personnel_action_requests",
         "application_subjects",
         "application_completion_bindings",
-        "lifecycle_migration_state",
-        "lifecycle_outbox",
+        "lifecycle_migration_states",
+        "lifecycle_outbox_entries",
         "lifecycle_effect_template_bindings",
       ]),
     )
 
     expect(
       await db
-        .prepare("SELECT status FROM lifecycle_migration_state WHERE id = 1")
+        .prepare("SELECT status FROM lifecycle_migration_states WHERE id = 1")
         .first<string>("status"),
     ).toBe("pending")
     expect(
       await db
-        .prepare("SELECT revision FROM organization_lifecycle_state WHERE id = 1")
+        .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
         .first<number>("revision"),
     ).toBe(0)
   })
@@ -288,7 +292,7 @@ describe("employee lifecycle migration", () => {
     expect(
       db
         .prepare(
-          `INSERT INTO org_assignment_period_versions
+          `INSERT INTO employee_org_assignment_period_versions
              (period_id, revision, employment_period_id, employee_id, department_code,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
@@ -301,12 +305,12 @@ describe("employee lifecycle migration", () => {
     expect(
       db
         .prepare(
-          "INSERT INTO organization_lifecycle_state (id, revision, updated_at) VALUES (2, 0, 0)",
+          "INSERT INTO organization_lifecycle_states (id, revision, updated_at) VALUES (2, 0, 0)",
         )
         .run(),
     ).rejects.toThrow()
     expect(
-      db.prepare("UPDATE organization_lifecycle_state SET revision = -1 WHERE id = 1").run(),
+      db.prepare("UPDATE organization_lifecycle_states SET revision = -1 WHERE id = 1").run(),
     ).rejects.toThrow()
   })
 

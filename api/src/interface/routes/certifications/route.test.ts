@@ -14,7 +14,7 @@ const jwtSecret = "certification-route-test-secret"
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
 
-  await seedD1(db, "certifications", [
+  await seedD1(db, "certification_definitions", [
     {
       id: 1,
       code: "FE",

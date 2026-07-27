@@ -86,7 +86,7 @@ export const GET = factory.createHandlers(
                 CASE WHEN snapshot.application_id IS NULL
                   THEN 'snapshot_missing' ELSE 'inactive_candidates' END AS reason,
                 workflow_instance.started_at
-         FROM applications application
+         FROM application_requests application
          INNER JOIN application_workflow_instances workflow_instance
            ON workflow_instance.application_id = application.id
          INNER JOIN application_templates template ON template.id = application.template_id
@@ -103,7 +103,7 @@ export const GET = factory.createHandlers(
           .all<RepairRow>(),
         c.env.DB.prepare(
           `SELECT COUNT(*) AS total
-         FROM applications application
+         FROM application_requests application
          INNER JOIN application_workflow_instances workflow_instance
            ON workflow_instance.application_id = application.id
          LEFT JOIN application_workflow_step_snapshots snapshot

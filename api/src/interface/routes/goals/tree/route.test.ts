@@ -60,7 +60,7 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "goals", [
+  await seedD1(db, "performance_goals", [
     {
       id: 1,
       employee_id: 1,

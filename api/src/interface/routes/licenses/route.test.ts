@@ -47,7 +47,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "licenses",
+    "software_licenses",
     seedLicenses.map((license) => ({
       id: license.id,
       name: license.name,

@@ -180,7 +180,7 @@ export class SendThanks {
         const results = await db.batch([
           db
             .prepare(
-              "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
+              "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
             )
             .bind(
               props.thanks.senderEmployeeId,
@@ -215,7 +215,7 @@ export class SendThanks {
           .bind(props.points, props.senderEmployeeId, props.period),
         db
           .prepare(
-            "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
+            "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
           )
           .bind(
             props.thanks.senderEmployeeId,

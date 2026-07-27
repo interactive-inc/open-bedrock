@@ -286,7 +286,7 @@ describe("DELETE /org/departments/:code", () => {
              ends_on, is_void, recorded_by_action_id, recorded_at)
           VALUES ('fixture-status-e001', 1, 'fixture-employment-e001', 1, 'active',
                   '2025-01-01', NULL, 0, 'fixture', 1);
-          UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+          UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
         `)
       },
     })

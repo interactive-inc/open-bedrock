@@ -71,7 +71,7 @@ describe("POST /employees/:code/archive", () => {
     ).toBe(2)
     expect(
       await db
-        .prepare("SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1")
+        .prepare("SELECT action FROM audit_events ORDER BY id DESC LIMIT 1")
         .first<string>("action"),
     ).toBe("employee.archived")
   })

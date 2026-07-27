@@ -112,7 +112,7 @@ export class ApplicationTemplateRepository {
           `DELETE FROM application_templates
            WHERE code = ?1
              AND NOT EXISTS (
-               SELECT 1 FROM applications
+               SELECT 1 FROM application_requests
                WHERE template_id = (SELECT id FROM application_templates WHERE code = ?1)
              )`,
         ).bind(code),

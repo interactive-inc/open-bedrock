@@ -10,7 +10,7 @@
 - 判定は deny-by-default(fail-closed)。未知のキーや解決失敗は常に拒否
 - JWT に権限を載せない。リクエスト毎に DB から解決するため、ロール変更は即時反映される
 - self(自分のデータ)は permission にせず、本人一致の判定としてコードに残す。「自分の申請を見る」のに権限は要らない
-- ロール・権限の変更は audit_logs に append-only で記録される
+- ロール・権限の変更は audit_events に append-only で記録される
 - knowledge、skill、oneonone には管理 permission がなく、認証済み利用者の操作として実装されている
 
 ## システムロール

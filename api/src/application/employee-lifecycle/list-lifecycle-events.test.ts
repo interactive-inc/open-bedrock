@@ -7,7 +7,7 @@ async function fixture() {
   const setup = createTestContext()
   await setup.db.exec(`
     INSERT INTO employees (id, code, name, status) VALUES (1, 'E001', 'Fixture', 'active');
-    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     INSERT INTO personnel_actions
       (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id,
        requested_by_employee_id, source_type, source_application_id, corrects_action_id,

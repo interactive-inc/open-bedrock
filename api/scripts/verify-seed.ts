@@ -61,7 +61,7 @@ for (const file of ordered) {
 }
 
 const lifecycleState = db
-  .query("SELECT status, employee_count FROM lifecycle_migration_state WHERE id = 1")
+  .query("SELECT status, employee_count FROM lifecycle_migration_states WHERE id = 1")
   .get() as { status: string; employee_count: number }
 const employeeCount = (
   db.query("SELECT COUNT(*) AS count FROM employees").get() as {

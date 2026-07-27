@@ -561,7 +561,9 @@ describe("configured application workflow", () => {
     )
     if (snapshot === null || snapshot instanceof Error) throw snapshot
     await setupResult.db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = ?1",
+      )
       .bind(setupResult.applicationId)
       .run()
 
@@ -614,7 +616,7 @@ describe("configured application workflow", () => {
     ).toBe(true)
 
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
 
@@ -662,7 +664,9 @@ describe("configured application workflow", () => {
       .bind(setupResult.applicationId)
       .run()
     await setupResult.db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = ?1",
+      )
       .bind(setupResult.applicationId)
       .run()
 
@@ -1023,7 +1027,7 @@ describe("configured application workflow", () => {
     })
 
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
 

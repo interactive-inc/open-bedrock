@@ -53,7 +53,7 @@ async function setup() {
       approver_roles: "[]",
     },
   ])
-  await seedD1(db, "applications", [
+  await seedD1(db, "application_requests", [
     {
       id: applicationId,
       template_id: 50,
@@ -136,7 +136,7 @@ describe("workflow repair routes", () => {
 
   test("paginates repair candidates while preserving the unfiltered total", async () => {
     const db = await setup()
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 502,
         template_id: 50,
@@ -500,7 +500,9 @@ describe("workflow repair routes", () => {
     ).toBe(400)
 
     await db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = ?1",
+      )
       .bind(applicationId)
       .run()
     expect((await request(db, path, 1, "POST", validBody)).status).toBe(409)

@@ -32,7 +32,7 @@ async function seedOutbox(
     .run()
   await db
     .prepare(
-      `INSERT INTO lifecycle_outbox
+      `INSERT INTO lifecycle_outbox_entries
          (personnel_action_id, effect_type, payload_json, attempt_count,
           next_attempt_at, processed_at, last_error_code, created_at)
        VALUES (?1, ?2, ?3, 0, 0, NULL, NULL, 0)`,
@@ -88,7 +88,7 @@ describe("lifecycle onboarding effects", () => {
     ).toBe(1)
     expect(
       await db
-        .prepare("SELECT processed_at IS NOT NULL FROM lifecycle_outbox")
+        .prepare("SELECT processed_at IS NOT NULL FROM lifecycle_outbox_entries")
         .first<number>("processed_at IS NOT NULL"),
     ).toBe(1)
 
@@ -147,7 +147,7 @@ describe("lifecycle onboarding effects", () => {
     ).toBe(0)
     expect(
       await db
-        .prepare("SELECT processed_at FROM lifecycle_outbox")
+        .prepare("SELECT processed_at FROM lifecycle_outbox_entries")
         .first<number | null>("processed_at"),
     ).toBeNull()
   })
@@ -181,7 +181,7 @@ describe("lifecycle onboarding effects", () => {
       effectType: "hire",
     })
     await db
-      .prepare("UPDATE lifecycle_outbox SET payload_json = ?1")
+      .prepare("UPDATE lifecycle_outbox_entries SET payload_json = ?1")
       .bind(JSON.stringify({ actionId: "different-action", employeeId: 6 }))
       .run()
 

@@ -85,7 +85,7 @@ async function auditRows(
 ): Promise<Array<{ action: string; reason_code: string | null }>> {
   return (
     await db
-      .prepare("SELECT action, reason_code FROM audit_logs ORDER BY id")
+      .prepare("SELECT action, reason_code FROM audit_events ORDER BY id")
       .all<{ action: string; reason_code: string | null }>()
   ).results
 }
@@ -314,7 +314,7 @@ describe("GET /auth/cli/callback", () => {
     // audit_logs への INSERT を強制的に失敗させる（監査書き込みが不可能な状態を模す）。
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;

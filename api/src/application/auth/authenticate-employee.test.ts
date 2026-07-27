@@ -74,7 +74,7 @@ describe("AuthenticateEmployee", () => {
           `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                   outcome, reason_code, authorization_json, before_json, after_json,
                   metadata_json, client_ip, client_name, request_id, created_at
-           FROM audit_logs`,
+           FROM audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
@@ -101,7 +101,7 @@ describe("AuthenticateEmployee", () => {
     ).toEqual({ created_at: 1_767_225_600, expires_at: 1_767_830_400 })
 
     const persistedAudit = JSON.stringify(
-      await db.prepare("SELECT * FROM audit_logs").first<Record<string, unknown>>(),
+      await db.prepare("SELECT * FROM audit_events").first<Record<string, unknown>>(),
     )
     expect(persistedAudit).not.toContain("you+new@example.com")
     expect(persistedAudit).not.toContain("supersecret")
@@ -298,7 +298,7 @@ describe("AuthenticateEmployee", () => {
     await insertEmployee(db, { id: 1, email: "you+audit@example.com", passwordHash: hash })
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -319,7 +319,7 @@ describe("AuthenticateEmployee", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
   })
 })

@@ -333,7 +333,7 @@ async function persistApproval(props: {
         insert,
         abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
         props.c.env.DB.prepare(
-          `UPDATE applications
+          `UPDATE application_requests
              SET status = 'approved', current_step = NULL
              WHERE id = ?1 AND status = 'pending' AND current_step = ?2
                AND (${workflowValidApprovalCountSql({
@@ -393,7 +393,7 @@ async function persistApproval(props: {
         props.requiredApprovals,
       ),
       props.c.env.DB.prepare(
-        `UPDATE applications
+        `UPDATE application_requests
            SET current_step = ?2
            WHERE id = ?1 AND status = 'pending' AND current_step = ?3
              AND EXISTS (
@@ -442,7 +442,7 @@ async function persistFinalApprovalWithCompletion(props: {
         props.insert,
         abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
         props.c.env.DB.prepare(
-          `UPDATE applications
+          `UPDATE application_requests
                SET status = 'approved', current_step = NULL
              WHERE id = ?1 AND status = 'pending' AND current_step = ?2
                AND (${workflowValidApprovalCountSql({
@@ -545,7 +545,7 @@ async function persistApprovalBeforeUnresolvableNextStep(props: {
           .first<number>("found"),
         props.c.env.DB.prepare(
           `SELECT 1 AS found
-             FROM applications application
+             FROM application_requests application
              INNER JOIN application_workflow_instances workflow_instance
                ON workflow_instance.application_id = application.id
              WHERE application.id = ?1 AND application.status = 'pending'
@@ -604,7 +604,7 @@ function workflowTransitionConsistencyGuard(props: {
     .prepare(
       `SELECT CASE WHEN EXISTS (
          SELECT 1
-         FROM applications application
+         FROM application_requests application
          INNER JOIN application_workflow_instances workflow_instance
            ON workflow_instance.application_id = application.id
          WHERE application.id = ?1 AND application.status = 'pending'
@@ -648,10 +648,10 @@ async function rejectStep(props: {
       abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
       props.step.rejection_behavior === "return"
         ? props.c.env.DB.prepare(
-            "UPDATE applications SET current_step = ?2 WHERE id = ?1 AND status = 'pending'",
+            "UPDATE application_requests SET current_step = ?2 WHERE id = ?1 AND status = 'pending'",
           ).bind(props.instance.applicationId, `returned:${props.step.key}`)
         : props.c.env.DB.prepare(
-            "UPDATE applications SET status = 'rejected', current_step = NULL WHERE id = ?1 AND status = 'pending'",
+            "UPDATE application_requests SET status = 'rejected', current_step = NULL WHERE id = ?1 AND status = 'pending'",
           ).bind(props.instance.applicationId),
     ])
 
@@ -686,7 +686,7 @@ function approvalInsert(
        WHERE EXISTS (
          SELECT 1
          FROM application_workflow_instances workflow_instance
-         INNER JOIN applications application ON application.id = workflow_instance.application_id
+         INNER JOIN application_requests application ON application.id = workflow_instance.application_id
          WHERE workflow_instance.application_id = ?1
            AND workflow_instance.current_step_key = ?2
            AND workflow_instance.current_round = ?3

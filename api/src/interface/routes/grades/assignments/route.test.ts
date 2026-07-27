@@ -55,7 +55,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "grades",
+    "grade_definitions",
     seedGrades.map((grade) => ({
       id: grade.id,
       code: grade.code,

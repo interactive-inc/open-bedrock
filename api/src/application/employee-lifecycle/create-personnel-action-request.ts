@@ -114,7 +114,7 @@ export class CreatePersonnelActionRequest {
     }
     if (prospective) {
       const organizationRevision = await this.c.env.DB.prepare(
-        "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
       ).first<number>("revision")
       if (
         command.baseEmployeeRevision !== 0 ||

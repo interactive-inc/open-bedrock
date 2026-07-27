@@ -34,7 +34,7 @@ describe("EmployeeLifecycleRepository", () => {
               '2026-07-01', 0, 'action-1', 1);
       INSERT INTO employee_lifecycle_revisions (employee_id, revision, updated_at)
       VALUES (1, 4, 2);
-      UPDATE organization_lifecycle_state SET revision = 7, updated_at = 2 WHERE id = 1;
+      UPDATE organization_lifecycle_states SET revision = 7, updated_at = 2 WHERE id = 1;
     `)
 
     const repository = new EmployeeLifecycleRepository(context)

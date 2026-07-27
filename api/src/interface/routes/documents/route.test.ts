@@ -50,7 +50,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "documents",
+    "document_ledger_entries",
     seedDocuments.map((document) => ({
       id: document.id,
       title: document.title,
