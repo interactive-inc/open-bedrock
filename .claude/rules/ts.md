@@ -7,8 +7,6 @@ paths:
 ## ファイル
 
 - 1ファイル1関数 or 1クラス。ファイル名 = 関数名/クラス名（小文字ケバブケース）
-- 例外: `route.ts` / `actions.ts` などのフレームワーク規約ファイル、zod スキーマ集約（`app-schemas.ts`）、エラークラスの継承ファミリ（`errors.ts`）
-- 既存ファイルに2つ目の export 関数を足さない。足したくなったら分割か、下記のクラス化を検討する
 - バレルファイル（`index.ts` で配下を re-export するだけのファイル）禁止。ライブラリの公開エントリのみ例外
 
 ## import
@@ -44,13 +42,13 @@ type Props = {
 ## 関数
 
 - 引数は3個まで、4個以上は `props: Props`
-- 20行以内、純粋関数を優先
+- ロジック関数は20行以内、純粋関数を優先
+- JSX を返すコンポーネント関数は20行制限の対象外。肥大化したらサブコンポーネントに分割する
 
 ## クラス
 
 - `constructor(private readonly props: Props)` + `Object.freeze(this)`
 - `with*()` で不変更新、配列は ReadonlyArray
-- 同じ依存（Context・session・KV 等）を先頭引数で引き回す関数群や、1つの概念を変換・判定する関数群は、ファイルを増やす前にクラス（値オブジェクト・サービス）へまとめる（例: Session.hasPermission、AuditTrail、LifecycleAccess、LoginRateLimiter）
 
 ## 変数・制御フロー
 
@@ -83,7 +81,6 @@ export function run() {
 - 動作が予測しにくい場合のみ。@param, @return 禁止
 - 「集約ルート」「ユーティリティ」のような当たり前のラベルや自明な役割説明は書かない
 - クラスと関数のコメントは必ず JSDoc 形式（`/** ... */`）にする。`//` 行コメントだと IDE のホバーで表示されない
-- ファイル冒頭のモジュールコメントなど、関数・クラスに紐づかないコメントブロック禁止。設計意図は主要な関数・クラスの JSDoc に書く
 
 ```ts
 /**
