@@ -5,7 +5,7 @@ import { ensureOk } from "@/lib/http/ensure-ok"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app approve <id> [--comment <c>]`
+export const help = `bedrock app approve <id> [--comment <c>]`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 

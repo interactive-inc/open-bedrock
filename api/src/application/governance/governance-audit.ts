@@ -1,15 +1,16 @@
+import type { Session } from "@/lib/auth/session"
 import {
   createAuditEvent,
   type AuditAction,
   type AuditTargetType,
 } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import type { AuditJsonValue } from "@/lib/audit/stable-json"
 
 export function prepareGovernanceAudit(props: {
   c: Context
-  session: SessionPayload
+  session: Session
   action: AuditAction
   targetType: AuditTargetType
   targetId: string

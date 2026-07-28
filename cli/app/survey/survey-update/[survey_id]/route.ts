@@ -5,7 +5,7 @@ import { toQuestionsJson } from "@/lib/survey/questions-json"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte survey survey-update <id> --title <t> --status open|closed [--questions <file>] — アンケートを変更（管理権限）`
+export const help = `bedrock survey survey-update <id> --title <t> --status open|closed [--questions <file>] — アンケートを変更（管理権限）`
 
 export default factory.createHandlers(
   zValidator(

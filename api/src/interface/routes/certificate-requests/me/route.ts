@@ -1,6 +1,6 @@
 import { ListMyCertificateRequests } from "@/application/certificate-request/list-my-certificate-requests"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppCertificateRequestList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -8,7 +8,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { certificateRequests } from "@/schema"

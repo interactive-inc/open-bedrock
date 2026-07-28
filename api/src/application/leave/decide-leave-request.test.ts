@@ -125,7 +125,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       leaveRequestId: request.id ?? 0,
       approverId: 5,
       action: "approve",

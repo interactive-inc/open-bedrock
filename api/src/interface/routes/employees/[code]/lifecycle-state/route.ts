@@ -1,19 +1,15 @@
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import { GetEmployee } from "@/application/employee/get-employee"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
-import {
-  appendLifecycleDeniedAudit,
-  appendLifecycleReadAudit,
-  lifecycleNoStore,
-  resolveLifecycleReadAuthorization,
-} from "@/interface/utils/lifecycle-route-contract"
-import { fingerprintLifecycleFilter } from "@/lib/pagination/lifecycle-cursor"
+import { LifecycleAccess } from "@/interface/utils/lifecycle-access"
+import { lifecycleNoStore } from "@/interface/middlewares/lifecycle-no-store"
+import { fingerprintLifecycleFilter } from "@/lib/pagination/fingerprint-lifecycle-filter"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -52,12 +48,12 @@ export const GET = factory.createHandlers(
       code: validateCodeParam(c.req.param("code"), "employee"),
     })
     if (employee instanceof ApplicationError) throw new NotFoundError("employee not found")
-    const authorization = await resolveLifecycleReadAuthorization(c, session, employee.id)
+    const authorization = await new LifecycleAccess({ c, session }).resolveReadAuthorization(
+      employee.id,
+    )
     if (authorization instanceof Error) throw new InternalError("failed to resolve lifecycle scope")
     if (authorization === null) {
-      await appendLifecycleDeniedAudit({
-        c,
-        session,
+      await new LifecycleAccess({ c, session }).appendDeniedAudit({
         targetEmployeeId: employee.id,
         permission: "employee:read",
         reasonCode: "lifecycle_scope_denied",
@@ -70,9 +66,7 @@ export const GET = factory.createHandlers(
     })
     if (state instanceof ApplicationError) throw toHttpException(state)
     const filterFingerprint = await fingerprintLifecycleFilter([employee.id, state.asOf, "state"])
-    await appendLifecycleReadAudit({
-      c,
-      session,
+    await new LifecycleAccess({ c, session }).appendReadAudit({
       action: authorization.auditAction,
       targetEmployeeId: employee.id,
       scope: authorization.scope,

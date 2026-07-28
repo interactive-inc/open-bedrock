@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte expense update <id> --category <c> --amount <n> --spent-at <d> [--note <m>]`
+export const help = `bedrock expense update <id> --category <c> --amount <n> --spent-at <d> [--note <m>]`
 
 export default factory.createHandlers(
   zValidator(

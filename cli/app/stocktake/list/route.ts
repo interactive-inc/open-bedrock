@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte stocktake list [--status open|closed]`
+export const help = `bedrock stocktake list [--status open|closed]`
 
 export default factory.createHandlers(
   zValidator(

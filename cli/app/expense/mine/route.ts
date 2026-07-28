@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte expense mine [--status <s>]`
+export const help = `bedrock expense mine [--status <s>]`
 
 export default factory.createHandlers(
   zValidator(

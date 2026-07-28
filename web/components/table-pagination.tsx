@@ -4,17 +4,6 @@ import Link from "next/link"
 import { PageSizeSelect } from "@/components/page-size-select"
 import { Button } from "@/components/ui/button"
 
-export const DEFAULT_PAGE_SIZE = 20
-
-export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
-
-/** searchParams.size を安全にパースする。許可リスト外の値はデフォルトに戻す */
-export function parsePageSize(raw: string | undefined): number {
-  const size = Number.parseInt(raw ?? "", 10)
-
-  return PAGE_SIZE_OPTIONS.includes(size) ? size : DEFAULT_PAGE_SIZE
-}
-
 /**
  * 一覧画面で使うページ送り。total/limit/offset から件数を計算して、
  * `?page=N` を維持しつつ前後と数ページ分のリンクを描画する。

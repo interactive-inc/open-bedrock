@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import type { ThanksRedemptionInboxResponse } from "@/lib/api/types/thanks-points-types"
 
 const initialState: RedemptionDecisionState = { ok: false, error: null }

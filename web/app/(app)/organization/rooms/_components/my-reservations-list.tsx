@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import {
   cancelRoomReservationAction,
   updateRoomReservationAction,

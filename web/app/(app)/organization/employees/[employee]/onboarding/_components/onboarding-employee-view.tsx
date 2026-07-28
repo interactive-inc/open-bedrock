@@ -1,5 +1,6 @@
 import { AssignmentActions } from "@/app/(app)/organization/onboarding-assignments/_components/assignment-actions"
-import { formatDate, formatDateTime } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
+import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"

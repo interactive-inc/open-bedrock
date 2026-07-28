@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte training reschedule --id <enrollment-id> [--due <date>] — 受講期限を変更`
+export const help = `bedrock training reschedule --id <enrollment-id> [--due <date>] — 受講期限を変更`
 
 export default factory.createHandlers(
   zValidator(

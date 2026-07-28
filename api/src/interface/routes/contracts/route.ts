@@ -1,19 +1,18 @@
 import { CreateContract } from "@/application/contract/create-contract"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { contracts } from "@/schema"
 import { and, asc, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllContracts } from "@/lib/contract/can-view-all-contracts"
 import { zAppContract, zAppContractList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -50,7 +49,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllContracts(session) === false) {
+    if (session.hasPermission("contract:read:all") === false) {
       throw new ForbiddenError()
     }
 

@@ -1,6 +1,5 @@
-import { canViewAllLifeEvents } from "@/lib/life-event/can-view-all-life-events"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { lifeEvents } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllLifeEvents(session) === false) {
+    if (session.hasPermission("life_event:read:all") === false) {
       throw new ForbiddenError()
     }
 

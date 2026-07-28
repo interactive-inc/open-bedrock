@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { EmployeeEvent } from "@/domain/employee-event/employee-event.entity"
-import { canManageEmployeeEvents } from "@/lib/employee-event/can-manage-employee-events"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeEventRepository } from "@/infrastructure/employee-event/employee-event-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   kind: "join" | "transfer" | "leave_of_absence" | "return" | "retire"
   effectiveDate: string
@@ -23,7 +23,7 @@ export class CreateEmployeeEvent {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<EmployeeEvent | ApplicationError> {
-    if (canManageEmployeeEvents(command.session) === false) {
+    if (command.session.hasPermission("employee_event:manage") === false) {
       return new ForbiddenError("cannot manage employee events", "forbidden")
     }
 

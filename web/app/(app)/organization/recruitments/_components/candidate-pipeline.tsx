@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { getRecruitmentCandidateList } from "@/lib/api/get-recruitment-candidate-list"
 import { CandidateStageControls } from "@/app/(app)/organization/recruitments/_components/candidate-stage-controls"
-import { toCandidateStageLabel } from "@/app/(app)/organization/recruitments/_lib/candidate-stage"
+import { toCandidateStageLabel } from "@/app/(app)/organization/recruitments/_lib/to-candidate-stage-label"
 
 type Props = {
   positionId: number

@@ -33,6 +33,9 @@ const personnelActionTemplateMigrationPath = join(
 )
 const requestStateMigrationFile = "application_personnel_action_request_state.sql"
 const requestStateMigrationPath = join(migrationsDirectory, requestStateMigrationFile)
+// 0019 以降に追加された、ライフサイクル列（archived_at 等）を前提とする後続 migration。
+// 「lifecycle 適用前」のスナップショットには含めない（実順序では 0019 の後に走るため）。
+const postLifecycleMigrationFiles = new Set(["0030_identity_provisioning.sql"])
 
 function migrationFiles(): string[] {
   return readdirSync(migrationsDirectory)
@@ -47,7 +50,8 @@ function schemaBeforeLifecycle(): string {
         file !== migrationFile &&
         file !== applicationBindingMigrationFile &&
         file !== personnelActionTemplateMigrationFile &&
-        file !== requestStateMigrationFile,
+        file !== requestStateMigrationFile &&
+        !postLifecycleMigrationFiles.has(file),
     )
     .map((file) => readFileSync(join(migrationsDirectory, file), "utf8"))
     .join("\n")
@@ -323,15 +327,15 @@ describe("employee lifecycle migration", () => {
     ).results
 
     expect(rows).toEqual([
-      { role_key: "admin", permission_key: "employee:archive" },
-      { role_key: "admin", permission_key: "employee:lifecycle:apply" },
-      { role_key: "admin", permission_key: "employee:lifecycle:read:all" },
-      { role_key: "admin", permission_key: "employee:lifecycle:request" },
       { role_key: "hr", permission_key: "employee:archive" },
       { role_key: "hr", permission_key: "employee:lifecycle:apply" },
       { role_key: "hr", permission_key: "employee:lifecycle:read:all" },
       { role_key: "hr", permission_key: "employee:lifecycle:request" },
       { role_key: "manager", permission_key: "employee:lifecycle:request" },
+      { role_key: "root", permission_key: "employee:archive" },
+      { role_key: "root", permission_key: "employee:lifecycle:apply" },
+      { role_key: "root", permission_key: "employee:lifecycle:read:all" },
+      { role_key: "root", permission_key: "employee:lifecycle:request" },
     ])
   })
 

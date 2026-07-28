@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte asset register --code <c> --name <n> --kind pc|monitor|furniture|other [--serial <s>] [--purchased-on <d>]`
+export const help = `bedrock asset register --code <c> --name <n> --kind pc|monitor|furniture|other [--serial <s>] [--purchased-on <d>]`
 
 export default factory.createHandlers(
   zValidator(

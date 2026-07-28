@@ -1,6 +1,6 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { roomAvailabilityQuerySchema } from "@/interface/routes/rooms/availability/room-availability-query"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppRoomAvailabilityList } from "@/lib/app-schemas"
 import {

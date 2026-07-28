@@ -1,11 +1,19 @@
+import path from "node:path"
 import { withSentryConfig } from "@sentry/nextjs"
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
-  // portless のプロキシ経由（karte.open.localhost）で dev リソースと HMR を許可する
-  allowedDevOrigins: ["karte.open.localhost"],
+  // bun workspaces のモノレポ: next は root node_modules に巻き上げられるため
+  // Turbopack root はリポジトリルート。outputFileTracingRoot は同値制約で揃える
+  turbopack: {
+    root: path.join(import.meta.dirname, ".."),
+  },
+  outputFileTracingRoot: path.join(import.meta.dirname, ".."),
+
+  // portless のプロキシ経由（bedrock.localhost）で dev リソースと HMR を許可する
+  allowedDevOrigins: ["bedrock.localhost"],
 
   // Codex のローカル in-app browser は sandboxed frame から Server Action を送るため
   // Origin が `null` になる。production では許可せず、通常の same-origin 検査を維持する。

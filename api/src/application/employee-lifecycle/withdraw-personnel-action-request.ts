@@ -1,10 +1,9 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -12,21 +11,20 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { findAccessiblePersonnelActionRequest } from "@/application/employee-lifecycle/personnel-action-request-access"
+import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
 
 export class WithdrawPersonnelActionRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     requestId: string
     withdrawnAt: string
   }): Promise<{ status: "withdrawn" } | ApplicationError> {
-    const request = await findAccessiblePersonnelActionRequest({
+    const request = await new PersonnelActionRequestAccess({
       c: this.c,
       session: command.session,
-      requestId: command.requestId,
-    })
+    }).find(command.requestId)
     if (request instanceof ApplicationError) return request
     if (request === null) {
       return new NotFoundError("人事変更申請が見つかりません", "personnel_action_request_not_found")

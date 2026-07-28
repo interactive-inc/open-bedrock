@@ -62,7 +62,7 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
     score: 5,
     comment: "Good work",
     evaluatorId: 999,
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
@@ -191,7 +191,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: 9999,
       viewerEmployeeId: 1,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expectApplicationError(result, NotFoundError, "goal_not_found")

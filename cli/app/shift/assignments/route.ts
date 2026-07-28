@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte shift assignments [--from <date>] [--to <date>] [--department-code <c>] — シフト割当一覧`
+export const help = `bedrock shift assignments [--from <date>] [--to <date>] [--department-code <c>] — シフト割当一覧`
 
 export default factory.createHandlers(
   zValidator(

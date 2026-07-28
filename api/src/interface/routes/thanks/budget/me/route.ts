@@ -3,8 +3,8 @@ import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBudget } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 
 /** GET /thanks/budget/me — 自分の当月の贈与原資（付与・消費・残量）を取得する */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

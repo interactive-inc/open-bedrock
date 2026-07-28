@@ -1,12 +1,10 @@
 import {
   loadLegacyLifecycleSnapshot,
-  validateMigrationInput,
   type LegacyLifecycleSnapshot,
-} from "@/application/employee-lifecycle/lifecycle-migration-support"
-import {
-  containsDate,
-  type LifecycleSchedule,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
+import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
 import { validateLifecycleSchedules } from "@/domain/employee-lifecycle/validate-lifecycle-schedule"
 import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"

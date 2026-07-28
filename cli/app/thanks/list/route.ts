@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte thanks list [--limit <n>] [--offset <n>] — 感謝のタイムライン`
+export const help = `bedrock thanks list [--limit <n>] [--offset <n>] — 感謝のタイムライン`
 
 export default factory.createHandlers(
   zValidator(

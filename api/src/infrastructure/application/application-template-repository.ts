@@ -1,10 +1,8 @@
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { applicationTemplates } from "@/schema"
 import { eq } from "drizzle-orm"

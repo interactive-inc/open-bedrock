@@ -39,7 +39,7 @@ export async function getEmployeeList(filter: EmployeeSearchFilter, params: Para
 
 /** snake_case の生レスポンスを公開 type へ変換する。 */
 function toEmployeeListItem(raw: {
-  code: string
+  code: string | null
   name: string
   dept_name: string | null
   position: string | null

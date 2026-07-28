@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte asset lend <code> --employee-code <e>`
+export const help = `bedrock asset lend <code> --employee-code <e>`
 
 export default factory.createHandlers(
   zValidator(

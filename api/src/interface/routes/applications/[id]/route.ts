@@ -3,15 +3,14 @@ import { WithdrawApplication } from "@/application/application/withdraw-applicat
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
-import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
-import { resolveRepresentedApprover } from "@/lib/application/resolve-workflow-approvers"
-import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-workflow-step-snapshot"
+import { resolveRepresentedApprover } from "@/lib/application/resolve-represented-approver"
+import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-or-resolve-workflow-step-snapshot"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { applicationApprovals, applications, applicationTemplates, employees } from "@/schema"
 import { jsonPayloadSchema } from "@/interface/utils/json-payload-schema"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, eq, inArray } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
@@ -269,7 +268,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       }
     }
 
-    if (canApprove === false && canViewAllApplications(session) === false) {
+    if (canApprove === false && session.hasPermission("application:read:all") === false) {
       throw new ForbiddenError()
     }
   }

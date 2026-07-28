@@ -1,8 +1,6 @@
-import {
-  AccountStatusButton,
-  ResetPasswordButton,
-  RevokeRoleButton,
-} from "@/app/(app)/system/accounts/_components/account-actions"
+import { AccountStatusButton } from "@/app/(app)/system/accounts/_components/account-status-button"
+import { ResetPasswordButton } from "@/app/(app)/system/accounts/_components/reset-password-button"
+import { RevokeRoleButton } from "@/app/(app)/system/accounts/_components/revoke-role-button"
 import { GrantRoleForm } from "@/app/(app)/system/accounts/_components/grant-role-form"
 import { FetchError } from "@/components/fetch-error"
 import { TableRowActions } from "@/components/table-row-actions"

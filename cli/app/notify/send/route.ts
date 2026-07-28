@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte notify send --to <employee_code> --title <t> [--body <b>] [--kind task|approval_request|approval_result|reminder|announcement]`
+export const help = `bedrock notify send --to <employee_code> --title <t> [--body <b>] [--kind task|approval_request|approval_result|reminder|announcement]`
 
 export default factory.createHandlers(
   zValidator(

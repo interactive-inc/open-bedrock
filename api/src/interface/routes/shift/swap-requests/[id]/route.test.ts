@@ -130,7 +130,7 @@ describe("GET /shift/swap-requests/:id", () => {
   test("an approver can read another person's request", async () => {
     const response = await request({
       path: "/shift/swap-requests/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

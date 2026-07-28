@@ -1,4 +1,4 @@
-import { canManageOrg } from "@/lib/org/can-manage-org"
+import type { Session } from "@/lib/auth/session"
 import {
   ApplicationError,
   ConflictError,
@@ -6,17 +6,15 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
 }
 
@@ -32,7 +30,7 @@ export class DeleteOrgDepartment {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.session) === false) {
+    if (command.session.hasPermission("org:manage") === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 

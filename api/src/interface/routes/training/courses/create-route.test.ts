@@ -99,7 +99,7 @@ async function request(
 
 describe("POST /training/courses", () => {
   test("privileged role creates a course and returns 201", async () => {
-    const response = await request("/training/courses", await tokenFor(1, "admin"), {
+    const response = await request("/training/courses", await tokenFor(1, "root"), {
       method: "POST",
       body: { code: "TR-NEW-01", title: "New Course", category: "skill" },
     })
@@ -126,7 +126,7 @@ describe("POST /training/courses", () => {
   })
 
   test("duplicate code returns 409", async () => {
-    const response = await request("/training/courses", await tokenFor(1, "admin"), {
+    const response = await request("/training/courses", await tokenFor(1, "root"), {
       method: "POST",
       body: { code: "TR-SEC-01", title: "Duplicate", category: "compliance" },
     })
@@ -135,7 +135,7 @@ describe("POST /training/courses", () => {
   })
 
   test("returns 400 when a required field is missing", async () => {
-    const response = await request("/training/courses", await tokenFor(1, "admin"), {
+    const response = await request("/training/courses", await tokenFor(1, "root"), {
       method: "POST",
       body: { code: "TR-NEW-03", category: "skill" },
     })

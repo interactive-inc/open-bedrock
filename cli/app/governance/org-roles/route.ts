@@ -3,7 +3,7 @@ import { z } from "zod"
 import { factory } from "@/factory"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance org-roles`
+export const help = `bedrock governance org-roles`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

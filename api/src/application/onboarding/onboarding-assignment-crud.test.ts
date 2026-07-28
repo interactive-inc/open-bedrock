@@ -116,7 +116,7 @@ describe("GetOnboardingAssignment", () => {
     const result = await new GetOnboardingAssignment(context).run({
       assignmentId: 9999,
       viewerEmployeeId: 1,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expectApplicationError(result, NotFoundError, "assignment_not_found")
@@ -171,7 +171,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const result = await new CancelOnboardingAssignment(context).run({
       assignmentId,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
@@ -192,7 +192,7 @@ describe("CancelOnboardingAssignment", () => {
 
     const result = await new CancelOnboardingAssignment(context).run({
       assignmentId,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
@@ -296,7 +296,7 @@ describe("UncompleteOnboardingTask", () => {
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId: 9999,
-      session: makeTestSession("admin", 1),
+      session: makeTestSession("root", 1),
     })
 
     expectApplicationError(result, NotFoundError, "task_not_found")

@@ -1,4 +1,4 @@
-import { canManageRoles } from "@/lib/iam/can-manage-roles"
+import type { Session } from "@/lib/auth/session"
 import { permissionKeySchema } from "@/lib/auth/permission-keys"
 import {
   ConflictError,
@@ -8,14 +8,14 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   roleId: number
   name: string
   description: string | null
@@ -34,7 +34,7 @@ export class UpdateRole {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Updated | ApplicationError> {
-    if (canManageRoles(command.session) === false) {
+    if (command.session.hasPermission("iam:manage_roles") === false) {
       return new ForbiddenError("cannot manage roles", "forbidden")
     }
 
@@ -81,7 +81,7 @@ export class UpdateRole {
       permissionKeys: command.permissionKeys,
     })
 
-    if (updated instanceof LastAdminError) {
+    if (updated instanceof LastRootError) {
       return new ConflictError("cannot remove the last effective admin", "last_admin")
     }
 

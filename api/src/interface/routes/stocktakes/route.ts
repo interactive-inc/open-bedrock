@@ -1,6 +1,6 @@
 import { StartStocktake } from "@/application/stocktake/start-stocktake"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
 import {
   DEFAULT_LIST_LIMIT,

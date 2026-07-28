@@ -1,18 +1,14 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
-import { createAuditEvent } from "@/domain/audit/audit-event"
-import { decoyPasswordHash } from "@/lib/auth/decoy-password-hash"
-import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { decoyPasswordHash } from "@/application/auth/decoy-password-hash"
+import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { verifyPassword } from "@/lib/auth/verify-password"
-import { isWrappedLegacyHash } from "@/lib/auth/wrap-legacy-hash"
+import { isWrappedLegacyHash } from "@/lib/auth/is-wrapped-legacy-hash"
 import type { Context } from "@/env"
-import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
-import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
+import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { IssueEmployeeSession } from "@/application/auth/issue-employee-session"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
-import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 
 export type Command = {
   email: string
@@ -29,10 +25,6 @@ export type AuthenticatedSession = AccessTokenView & {
   employeeId: number
 }
 
-function auditUnavailable(cause: unknown): UnavailableError {
-  return new UnavailableError("invalid email or password", "audit_unavailable", { cause })
-}
-
 /**
  * メールとパスワードを照合し、成功時にアクセストークンを発行する。
  * 認証は identities(provider=password, subject=正規化email) を正とし、account/employee を検証する。
@@ -45,8 +37,6 @@ export class AuthenticateEmployee {
     command: Command,
   ): Promise<AuthenticatedSession | InvalidCredentials | ApplicationError> {
     const identityRepository = new IdentityRepository(this.c)
-
-    const tokenSigner = new JoseTokenSigner()
 
     const identity = await identityRepository.findPasswordIdentityByEmail(command.email)
 
@@ -86,64 +76,14 @@ export class AuthenticateEmployee {
       await identityRepository.updateSecret(identity.identityId, newHash)
     }
 
-    const accessToken = await tokenSigner.sign(
-      {
-        accountId: identity.accountId,
-        employeeId: identity.employeeId,
-        tokenVersion: identity.tokenVersion,
-      },
-      command.jwtSecret,
-    )
-
-    if (accessToken instanceof Error) {
-      return new UnexpectedError("failed to sign access token", { cause: accessToken })
-    }
-
-    const rawRefreshToken = crypto.randomUUID()
-
-    const hashedToken = await refreshTokenHash(rawRefreshToken)
-
-    const nowEpoch = Math.floor(command.now.getTime() / 1_000)
-    let auditStatements: ReturnType<AuditEventRepository["prepareAppend"]>
-    try {
-      const auditRecord = createAuditEvent(
-        {
-          actorAccountId: identity.accountId,
-          actorEmployeeId: identity.employeeId,
-          action: "auth.session.login_succeeded",
-          target: { type: "account", id: String(identity.accountId) },
-          outcome: "succeeded",
-          reasonCode: null,
-          now: command.now,
-        },
-        this.c.var.auditContext,
-      )
-      auditStatements = new AuditEventRepository(this.c).prepareAppend(auditRecord)
-    } catch (cause) {
-      return auditUnavailable(cause)
-    }
-
-    const createResult = await new RefreshTokenRepository(this.c).createWithAudit(
-      {
-        accountId: identity.accountId,
-        tokenHash: hashedToken,
-        familyId: crypto.randomUUID(),
-        tokenVersion: identity.tokenVersion,
-        userAgent: command.userAgent,
-        nowEpoch,
-      },
-      auditStatements,
-    )
-
-    if (createResult instanceof Error) {
-      return auditUnavailable(createResult)
-    }
-
-    return {
-      accessToken,
-      refreshToken: rawRefreshToken,
+    return new IssueEmployeeSession(this.c).run({
       accountId: identity.accountId,
       employeeId: identity.employeeId,
-    }
+      tokenVersion: identity.tokenVersion,
+      jwtSecret: command.jwtSecret,
+      userAgent: command.userAgent,
+      now: command.now,
+      successAction: "auth.session.login_succeeded",
+    })
   }
 }

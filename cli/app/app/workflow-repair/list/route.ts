@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { createClient } from "@/lib/http/hc-client"
 import { ensureOk } from "@/lib/http/ensure-ok"
 
-export const help = `karte app workflow-repair list [--limit <n>] [--offset <n>] — 修復が必要な承認フロー一覧`
+export const help = `bedrock app workflow-repair list [--limit <n>] [--offset <n>] — 修復が必要な承認フロー一覧`
 
 export default factory.createHandlers(
   zValidator(

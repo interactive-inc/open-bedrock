@@ -21,7 +21,8 @@ export const zAppAssetHolding = z.object({
   asset_name: z.string(),
   kind: z.string(),
   holder_employee_id: z.number(),
-  holder_employee_code: z.string(),
+  // 保有者は employees.code の innerJoin。外部プロビジョニングの保有者は code=null になり得るため nullable。
+  holder_employee_code: z.string().nullable(),
   holder_employee_name: z.string(),
   lent_at: z.string().nullable(),
 })
@@ -412,10 +413,38 @@ export const zAppAuthToken = z.object({
 
 export type AppAuthToken = z.infer<typeof zAppAuthToken>
 
+/** ブラウザへログインを受け渡すための one-time code と、その残り有効秒数。 */
+export const zAppBrowserLoginCode = z.object({
+  code: z.string(),
+  expires_in: z.number(),
+})
+
+export type AppBrowserLoginCode = z.infer<typeof zAppBrowserLoginCode>
+
+/** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
+export const zAppBootstrapResult = z.object({
+  account_id: z.number(),
+  employee_id: z.number(),
+  email: z.string(),
+})
+
+export type AppBootstrapResult = z.infer<typeof zAppBootstrapResult>
+
+/** 外部 identity 同期（プロビジョニング）の件数サマリ。 */
+export const zAppProvisioningSummary = z.object({
+  created: z.number(),
+  updated: z.number(),
+  skipped: z.number(),
+})
+
+export type AppProvisioningSummary = z.infer<typeof zAppProvisioningSummary>
+
 /** 認証済み本人の社員情報（GET /me）。 */
 export const zAppAuthMe = z.object({
   id: z.number(),
-  code: z.string(),
+  // 外部プロビジョニングで作られた本人は社員コードを持たない（code=null）。GET /me は本人の code を
+  // そのまま返すため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   email: z.string(),
   role: z.string(),
@@ -531,7 +560,8 @@ export type AppEmployee = z.infer<typeof zAppEmployee>
 
 /** 従業員一覧の行。role を含まない。 */
 export const zAppEmployeeListItem = z.object({
-  code: z.string(),
+  // GET /employees は全従業員を列挙し、外部プロビジョニングの code=null 行も含むため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   dept_name: z.string().nullable(),
   position: z.string().nullable(),
@@ -551,7 +581,8 @@ export type AppEmployeeList = z.infer<typeof zAppEmployeeList>
 
 /** 全従業員が参照できる社内ディレクトリの行。機微な認証・在籍情報は含めない。 */
 export const zAppEmployeeDirectoryItem = z.object({
-  code: z.string(),
+  // GET /directory/employees は在籍中の全従業員を列挙し、code=null 行も含むため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   dept_name: z.string().nullable(),
   position: z.string().nullable(),

@@ -25,7 +25,7 @@ import type { Context } from "@/env"
 
 async function seedRoom(context: Context): Promise<Room> {
   const result = await new RegisterRoom(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     room: { name: "Room A", capacity: 10, location: "3F" },
   })
 
@@ -61,7 +61,7 @@ describe("RegisterRoom", () => {
     const { context } = createTestContext()
 
     const result = await new RegisterRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       room: { name: "Room A", capacity: 10, location: "3F" },
     })
 
@@ -112,7 +112,7 @@ describe("UpdateRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new UpdateRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roomId: room.id,
       details: { name: "Updated Room", capacity: 20, location: "5F" },
     })
@@ -144,7 +144,7 @@ describe("UpdateRoom", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roomId: 9999,
       details: { name: "Missing", capacity: 1, location: null },
     })
@@ -159,7 +159,7 @@ describe("DeleteRoom", () => {
     const room = await seedRoom(context)
 
     const result = await new DeleteRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roomId: room.id,
     })
 
@@ -182,7 +182,7 @@ describe("DeleteRoom", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roomId: 9999,
     })
 
@@ -197,7 +197,7 @@ describe("ListRooms", () => {
     await seedRoom(context)
 
     await new RegisterRoom(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       room: { name: "Room B", capacity: 5, location: null },
     })
 

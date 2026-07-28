@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@opennextjs/cloudflare": "^1.20.2",
     "@sentry/nextjs": "^10.42.0",
     "api": "workspace:*",
     "class-variance-authority": "^0.7.1",
@@ -49,7 +50,8 @@
     "happy-dom": "^20.10.6",
     "storybook": "^10.4.6",
     "tailwindcss": "^4.3.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.114.0"
   },
   "ignoreScripts": [
     "sharp",

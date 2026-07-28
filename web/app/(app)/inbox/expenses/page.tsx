@@ -1,5 +1,5 @@
 import { FetchError } from "@/components/fetch-error"
-import { formatDate } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
 import Link from "next/link"
 import { Suspense } from "react"
 import { EmptyState } from "@/components/empty-state"

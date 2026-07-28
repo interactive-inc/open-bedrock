@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDate } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
 import type { HealthCheckupResponse } from "@/lib/api/types/health-checkup-types"
 
 type Props = {

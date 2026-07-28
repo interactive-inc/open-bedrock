@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import type { Document } from "@/domain/document/document.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { DocumentRepository } from "@/infrastructure/document/document-repository"
-import { canManageDocuments } from "@/lib/document/can-manage-documents"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   documentId: number
   title: string
   category: string | null
@@ -25,7 +25,7 @@ export class UpdateDocument {
   async run(command: Command): Promise<Document | ApplicationError> {
     const documentRepository = new DocumentRepository(this.c)
 
-    if (canManageDocuments(command.session) === false) {
+    if (command.session.hasPermission("document:manage") === false) {
       return new ForbiddenError("cannot manage documents", "forbidden")
     }
 

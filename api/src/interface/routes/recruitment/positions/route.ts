@@ -1,6 +1,5 @@
 import { RegisterPosition } from "@/application/recruitment/register-position"
-import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -12,7 +11,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -35,7 +34,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRecruitment(session) === false) {
+    if (session.hasPermission("recruitment:manage") === false) {
       throw new ForbiddenError()
     }
 

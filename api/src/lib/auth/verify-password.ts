@@ -1,6 +1,8 @@
-import { isLegacyPasswordHash, toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
-import { base64ToBytes, derivePbkdf2 } from "@/lib/auth/to-password-hash"
-import { isWrappedLegacyHash, WRAPPED_LEGACY_PREFIX } from "@/lib/auth/wrap-legacy-hash"
+import { base64ToBytes } from "@/lib/auth/base64-to-bytes"
+import { derivePbkdf2 } from "@/lib/auth/derive-pbkdf2"
+import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
+import { isWrappedLegacyHash, WRAPPED_LEGACY_PREFIX } from "@/lib/auth/is-wrapped-legacy-hash"
+import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 
 /**
  * 平文パスワードを既存ハッシュと突き合わせて一致を判定する。

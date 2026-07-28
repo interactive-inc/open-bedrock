@@ -1,10 +1,7 @@
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import { GetEmployee } from "@/application/employee/get-employee"
-import {
-  appendLifecycleDeniedAudit,
-  lifecycleNoStore,
-  resolveLifecycleApplyScope,
-} from "@/interface/utils/lifecycle-route-contract"
+import { LifecycleAccess } from "@/interface/utils/lifecycle-access"
+import { lifecycleNoStore } from "@/interface/middlewares/lifecycle-no-store"
 import {
   ForbiddenError,
   InternalError,
@@ -12,13 +9,12 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { resolvePersonnelActionPosition } from "@/interface/utils/resolve-personnel-action-position"
 import { nonCorrectionWirePersonnelActionInputSchema } from "@/interface/utils/wire-personnel-action-input"
 import type { PersonnelActionRecord } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import { ApplicationError, ValidationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -51,22 +47,18 @@ export const POST = factory.createHandlers(
     const body = c.req.valid("json")
     const employee = await new GetEmployee(c).run({ code: body.action.employeeCode })
     if (employee instanceof ApplicationError) throw new NotFoundError("employee not found")
-    if (!hasPermission(session, "employee:lifecycle:apply")) {
-      await appendLifecycleDeniedAudit({
-        c,
-        session,
+    if (!session.hasPermission("employee:lifecycle:apply")) {
+      await new LifecycleAccess({ c, session }).appendDeniedAudit({
         targetEmployeeId: employee.id,
         permission: "employee:lifecycle:apply",
         reasonCode: "permission_denied",
       })
       throw new ForbiddenError()
     }
-    const scope = await resolveLifecycleApplyScope(c, session, employee.id)
+    const scope = await new LifecycleAccess({ c, session }).resolveApplyScope(employee.id)
     if (scope instanceof Error) throw new InternalError("failed to resolve lifecycle scope")
     if (scope === null) {
-      await appendLifecycleDeniedAudit({
-        c,
-        session,
+      await new LifecycleAccess({ c, session }).appendDeniedAudit({
         targetEmployeeId: employee.id,
         permission: "employee:lifecycle:apply",
         reasonCode: "lifecycle_scope_denied",

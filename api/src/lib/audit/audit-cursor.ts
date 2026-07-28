@@ -1,8 +1,6 @@
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
-export const AUDIT_CURSOR_MAX_LENGTH = 256
-
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u
 const FILTER_FINGERPRINT_PATTERN = /^[A-Za-z0-9_-]{22}$/u
 const BASE36_INTEGER_PATTERN = /^-?(?:0|[1-9a-z][0-9a-z]*)$/u
@@ -217,36 +215,44 @@ function unpack(value: unknown): AuditCursorPosition {
   return parsed.data
 }
 
-/** Encodes a bounded unsigned v2 page cursor in its one canonical representation. */
-export function encodeAuditCursor(position: AuditCursorPosition): string {
-  const parsed = auditCursorPositionSchema.safeParse(position)
-  if (!parsed.success) throw invalidCursor(parsed.error)
+/**
+ * 監査ページカーソルの正準表現。位置情報のみを表し認可は持たない。
+ * encode/decode は base64url の唯一の正準形だけを受け付ける
+ */
+export class AuditCursor {
+  static readonly MAX_LENGTH = 256
 
-  const token = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(pack(parsed.data))))
-  if (token.length > AUDIT_CURSOR_MAX_LENGTH) throw invalidCursor()
-  return token
-}
+  /** Encodes a bounded unsigned v2 page cursor in its one canonical representation. */
+  static encode(position: AuditCursorPosition): string {
+    const parsed = auditCursorPositionSchema.safeParse(position)
+    if (!parsed.success) throw invalidCursor(parsed.error)
 
-/** Decodes only strict, canonical base64url cursor tokens. Cursors are positions, not authorization. */
-export function decodeAuditCursor(token: string): AuditCursorPosition {
-  try {
-    if (
-      typeof token !== "string" ||
-      token.length === 0 ||
-      token.length > AUDIT_CURSOR_MAX_LENGTH ||
-      !BASE64URL_PATTERN.test(token)
-    ) {
-      throw invalidCursor()
+    const token = bytesToBase64Url(new TextEncoder().encode(JSON.stringify(pack(parsed.data))))
+    if (token.length > AuditCursor.MAX_LENGTH) throw invalidCursor()
+    return token
+  }
+
+  /** Decodes only strict, canonical base64url cursor tokens. Cursors are positions, not authorization. */
+  static decode(token: string): AuditCursorPosition {
+    try {
+      if (
+        typeof token !== "string" ||
+        token.length === 0 ||
+        token.length > AuditCursor.MAX_LENGTH ||
+        !BASE64URL_PATTERN.test(token)
+      ) {
+        throw invalidCursor()
+      }
+
+      const json = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        base64UrlToBytes(token),
+      )
+      const position = unpack(JSON.parse(json))
+      if (AuditCursor.encode(position) !== token) throw invalidCursor()
+      return position
+    } catch (error) {
+      if (error instanceof ValidationError) throw error
+      throw invalidCursor(error)
     }
-
-    const json = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
-      base64UrlToBytes(token),
-    )
-    const position = unpack(JSON.parse(json))
-    if (encodeAuditCursor(position) !== token) throw invalidCursor()
-    return position
-  } catch (error) {
-    if (error instanceof ValidationError) throw error
-    throw invalidCursor(error)
   }
 }

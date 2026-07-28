@@ -6,12 +6,10 @@ import { createGoalEvaluation } from "@/lib/api/create-goal-evaluation"
 import { deleteGoal } from "@/lib/api/delete-goal"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
 import { updateGoal } from "@/lib/api/update-goal"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalIntInRange,
-  toOptionalText,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalIntInRange } from "@/lib/form/to-optional-int-in-range"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 

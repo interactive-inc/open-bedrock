@@ -10,7 +10,7 @@ async function adminToken() {
   return createTestToken(lifecycleRouteJwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

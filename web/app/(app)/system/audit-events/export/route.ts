@@ -1,4 +1,4 @@
-import { parseAuditExportSearchParams } from "@/app/(app)/system/audit-events/_lib/audit-query"
+import { parseAuditExportSearchParams } from "@/app/(app)/system/audit-events/_lib/parse-audit-export-search-params"
 import { exportAuditEvents } from "@/lib/api/export-audit-events"
 
 const noStoreHeaders = { "Cache-Control": "no-store" }

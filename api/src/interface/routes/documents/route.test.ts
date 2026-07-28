@@ -85,7 +85,7 @@ async function request(
 
 describe("GET /documents", () => {
   test("admin (document:read:all) gets the list sorted by nearest expiry, nulls last", async () => {
-    const response = await request("/documents", await tokenFor(1, "admin"))
+    const response = await request("/documents", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -109,7 +109,7 @@ describe("GET /documents", () => {
   })
 
   test("filters by category", async () => {
-    const response = await request("/documents?category=license", await tokenFor(1, "admin"))
+    const response = await request("/documents?category=license", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -132,7 +132,7 @@ describe("GET /documents", () => {
 
 describe("POST /documents", () => {
   test("admin registers a document", async () => {
-    const response = await request("/documents", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/documents", await tokenFor(1, "root"), "POST", {
       title: "NDA Template",
       location: "cabinet-C/nda",
       expires_on: "2028-01-01",
@@ -161,7 +161,7 @@ describe("POST /documents", () => {
 
 describe("PUT /documents/:id", () => {
   test("admin updates a document", async () => {
-    const response = await request("/documents/1", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/documents/1", await tokenFor(1, "root"), "PUT", {
       title: "Office Lease Agreement (renewed)",
       location: "cabinet-A/lease",
       partner_code: "P0001",

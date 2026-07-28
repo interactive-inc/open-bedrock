@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance revoke-role <assignment-id>`
+export const help = `bedrock governance revoke-role <assignment-id>`
 
 export default factory.createHandlers(
   zValidator(

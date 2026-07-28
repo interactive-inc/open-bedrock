@@ -9,13 +9,11 @@ import { canCreateEmployee } from "@/lib/employee/can-create-employee"
 import { canArchiveEmployee } from "@/lib/employee/can-archive-employee"
 import { canUpdateEmployee } from "@/lib/employee/can-update-employee"
 import { requireAuth } from "@/lib/auth/require-auth"
-import {
-  FORM_CONSTRAINTS,
-  isValidEmail,
-  toOptionalText,
-  toRequiredIsoDate,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { isValidEmail } from "@/lib/form/is-valid-email"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIsoDate } from "@/lib/form/to-required-iso-date"
+import { toRequiredText } from "@/lib/form/to-required-text"
 
 export type EmployeeCreateFormState = {
   ok: boolean
@@ -32,7 +30,7 @@ export type EmployeeArchiveFormState = {
   error: string | null
 }
 
-const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "admin"]
+const employeeRoles: ReadonlyArray<EmployeeRole> = ["member", "manager", "hr", "root"]
 
 /** FormData の文字列をロール enum へ検証付きで変換する。不正なら null。 */
 function toRole(value: FormDataEntryValue | null): EmployeeRole | null {

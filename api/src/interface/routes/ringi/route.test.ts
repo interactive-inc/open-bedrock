@@ -357,7 +357,7 @@ describe("GET /ringi/admin", () => {
   test("returns the whole company list for a ringi:read:all holder", async () => {
     const response = await request({
       path: "/ringi/admin",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -370,7 +370,7 @@ describe("GET /ringi/admin", () => {
   test("filters by status", async () => {
     const response = await request({
       path: "/ringi/admin?status=pending",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -383,7 +383,7 @@ describe("GET /ringi/admin", () => {
   test("filters by applicant_id", async () => {
     const response = await request({
       path: "/ringi/admin?applicant_id=10",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

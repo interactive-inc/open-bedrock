@@ -1,6 +1,6 @@
-import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
+import type { Session } from "@/lib/auth/session"
 import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { BusinessTripRepository } from "@/infrastructure/business-trip/business-trip-repository"
@@ -8,7 +8,7 @@ import { BusinessTripRepository } from "@/infrastructure/business-trip/business-
 export type Action = "approve" | "reject"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   businessTripId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceBusinessTrip {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<BusinessTrip | ApplicationError> {
-    if (canManageBusinessTrips(command.session) === false) {
+    if (command.session.hasPermission("business_trip:manage") === false) {
       return new ForbiddenError("cannot manage business trips", "forbidden")
     }
 

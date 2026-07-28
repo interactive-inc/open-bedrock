@@ -1,12 +1,12 @@
-import { canManageShift } from "@/lib/shift/can-manage-shift"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   patternId: number
 }
 
@@ -17,7 +17,7 @@ export class GetShiftPattern {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftPattern | ApplicationError> {
-    if (canManageShift(input.session) === false) {
+    if (input.session.hasPermission("shift:manage") === false) {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 

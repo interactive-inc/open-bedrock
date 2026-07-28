@@ -1,9 +1,8 @@
 import { CreateOnboardingTemplate } from "@/application/onboarding/create-onboarding-template"
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
 import {
@@ -32,7 +31,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageOnboarding(session) === false) {
+  if (session.hasPermission("onboarding:manage") === false) {
     throw new ForbiddenError()
   }
 

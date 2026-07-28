@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte asset list [--kind <k>] [--status <s>]`
+export const help = `bedrock asset list [--kind <k>] [--status <s>]`
 
 export default factory.createHandlers(
   zValidator(

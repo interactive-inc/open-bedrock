@@ -50,7 +50,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 
@@ -68,7 +68,7 @@ describe("GET /me", () => {
       expect(parsed.data.id).toBe(1)
       expect(parsed.data.code).toBe("E001")
       expect(parsed.data.email).toBe("you+e001@example.com")
-      expect(parsed.data.role).toBe("admin")
+      expect(parsed.data.role).toBe("root")
     }
   })
 
@@ -87,7 +87,7 @@ describe("GET /me", () => {
   test("returns 401 for an expired token", async () => {
     const expiredToken = await createTestToken(
       jwtSecret,
-      { employeeId: 1, email: "you+e001@example.com", role: "admin" },
+      { employeeId: 1, email: "you+e001@example.com", role: "root" },
       // 1 秒前に切れる exp（絶対 epoch 秒）。
       { expirationTime: Math.floor(Date.now() / 1000) - 1 },
     )
@@ -133,6 +133,65 @@ describe("GET /me", () => {
     const response = await getMe(token)
 
     expect(response.status).toBe(200)
+  })
+
+  test("resolves email for an account whose only identity is external (oidc, no password)", async () => {
+    // 外部 IdP 専用アカウント（password identity を持たない）でも email を返す。
+    // provider="password" 決め打ちで解決していた頃は email が "" になっていた。
+    const db = await createTestDb()
+
+    await db
+      .prepare("DELETE FROM identities WHERE account_id = ?1 AND provider = 'password'")
+      .bind(1)
+      .run()
+
+    await db
+      .prepare(
+        `INSERT INTO identities
+           (account_id, provider, subject, secret, email, email_verified, created_at)
+         VALUES (?1, 'oidc', 'external-subject-e001', NULL, ?2, 1, 0)`,
+      )
+      .bind(1, "you+e001@example.com")
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/me",
+      token: await adminToken(),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ email: "you+e001@example.com" }),
+    )
+  })
+
+  test("prefers the password identity email when both password and oidc exist", async () => {
+    // 複数 identity を持つアカウントでは password を優先し、結果を決定的にする。
+    // oidc 側に小さい id を割り当て、自然な走査順では oidc が先に来る状態を作る。
+    // これで ORDER BY を外すと落ちる（= 優先度指定が実際に SQL へ届いていることの検証になる）。
+    const db = await createTestDb()
+
+    await db.prepare("DELETE FROM identities WHERE account_id = ?1").bind(1).run()
+
+    await db.exec(
+      "INSERT INTO identities (id, account_id, provider, subject, secret, email, email_verified, created_at) " +
+        "VALUES (900, 1, 'oidc', 'ext-e001', NULL, 'you+e001-external@example.com', 1, 0), " +
+        "(901, 1, 'password', 'you+e001@example.com', 'hash', 'you+e001@example.com', 1, 0)",
+    )
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/me",
+      token: await adminToken(),
+    })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ email: "you+e001@example.com" }),
+    )
   })
 
   test("returns the effective lifecycle department and position after verification", async () => {

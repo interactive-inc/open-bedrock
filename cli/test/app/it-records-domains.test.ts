@@ -7,16 +7,16 @@ import { app } from "@/app/index"
  * POST + help:1 で到達性を確かめる。
  */
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/licenses", help: "karte licenses" },
+  { path: "/licenses", help: "bedrock licenses" },
   { path: "/licenses/list", help: "licenses list" },
   { path: "/licenses/create", help: "licenses create" },
   { path: "/licenses/update", help: "licenses update" },
   { path: "/licenses/cancel", help: "licenses cancel" },
-  { path: "/it-incidents", help: "karte it-incidents" },
+  { path: "/it-incidents", help: "bedrock it-incidents" },
   { path: "/it-incidents/list", help: "it-incidents list" },
   { path: "/it-incidents/create", help: "it-incidents create" },
   { path: "/it-incidents/resolve", help: "it-incidents resolve" },
-  { path: "/salary-revisions", help: "karte salary-revisions" },
+  { path: "/salary-revisions", help: "bedrock salary-revisions" },
   { path: "/salary-revisions/list", help: "salary-revisions list" },
   { path: "/salary-revisions/create", help: "salary-revisions create" },
 ]

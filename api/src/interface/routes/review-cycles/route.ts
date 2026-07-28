@@ -1,6 +1,5 @@
 import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -8,7 +7,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { zAppReviewCycleList } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewCycles } from "@/schema"
 import { asc, count, eq } from "drizzle-orm"
@@ -20,7 +19,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const isAdmin = canAdministerCycle(session)
+  const isAdmin = session.hasPermission("review:administer")
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),

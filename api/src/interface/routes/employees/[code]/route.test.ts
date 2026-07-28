@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test"
 import type { Bindings } from "@/env"
 import * as employeeDetailRoute from "@/interface/routes/employees/[code]/route"
 import * as employeeListRoute from "@/interface/routes/employees/route"
-import { databaseMiddleware } from "@/interface/middleware/database-middleware"
-import { requestContextMiddleware } from "@/interface/middleware/request-context-middleware"
+import { databaseMiddleware } from "@/interface/middlewares/database-middleware"
+import { requestContextMiddleware } from "@/interface/middlewares/request-context-middleware"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedOrgDepartments } from "@/infrastructure/seed/seed-org-departments"
 import { seedOrgMemberships } from "@/infrastructure/seed/seed-org-memberships"
@@ -130,7 +130,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 
@@ -263,6 +263,37 @@ describe("GET /employees/:code", () => {
     const response = await request("/employees/E001", null)
 
     expect(response.status).toBe(401)
+  })
+
+  // このテスト用アプリの onError は message だけを返すため code は検証しない（status のみ）
+  test("returns 422 when as_of is given but lifecycle data is not verified", async () => {
+    const response = await request("/employees/E001?as_of=2026-01-01", await adminToken())
+
+    expect(response.status).toBe(422)
+  })
+
+  test("keeps serving the legacy path with 200 when as_of is omitted", async () => {
+    const response = await request("/employees/E001", await adminToken())
+
+    expect(response.status).toBe(200)
+  })
+
+  test("honors as_of instead of rejecting it once lifecycle data is verified", async () => {
+    const response = await request(
+      "/employees/E001?as_of=2026-01-01",
+      await adminToken(),
+      undefined,
+      undefined,
+      enableVerifiedLifecycleForAdmin,
+    )
+
+    expect(response.status).toBe(200)
+  })
+
+  test("conceals lifecycle migration state from an out-of-scope caller instead of returning 422", async () => {
+    const response = await request("/employees/E009?as_of=2026-01-01", await managerToken())
+
+    expect(response.status).toBe(404)
   })
 })
 

@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte shift pattern-create --code <c> --name <n> --start <time> --end <time> [--break <min>]`
+export const help = `bedrock shift pattern-create --code <c> --name <n> --start <time> --end <time> [--break <min>]`
 
 export default factory.createHandlers(
   zValidator(

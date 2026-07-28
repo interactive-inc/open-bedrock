@@ -3,12 +3,12 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte app templates — 申請テンプレート一覧
+export const help = `bedrock app templates — 申請テンプレート一覧
 
 usage:
-  karte app templates [--category <category>]
+  bedrock app templates [--category <category>]
 
-詳細は karte app template <code> で確認できます。`
+詳細は bedrock app template <code> で確認できます。`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 

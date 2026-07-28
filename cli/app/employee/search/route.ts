@@ -3,10 +3,10 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte employee search — 社員検索
+export const help = `bedrock employee search — 社員検索
 
 usage:
-  karte employee search [--q <キーワード>] [--dept <部署名>] [--status active|leave|retired]`
+  bedrock employee search [--q <キーワード>] [--dept <部署名>] [--status active|leave|retired]`
 
 export default factory.createHandlers(
   zValidator(

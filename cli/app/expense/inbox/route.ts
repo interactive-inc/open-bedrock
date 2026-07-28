@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte expense inbox — 承認待ち一覧`
+export const help = `bedrock expense inbox — 承認待ち一覧`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() }).passthrough()),

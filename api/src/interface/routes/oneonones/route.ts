@@ -1,12 +1,10 @@
 import { CreateOneOnOne } from "@/application/oneonone/create-one-on-one"
-import { canCreateOneOnOne } from "@/lib/oneonone/can-create-one-on-one"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
-import { factory } from "@/lib/factory"
+import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOne, zAppOneOnOneList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import {
   ForbiddenError,
   InternalError,
@@ -74,7 +72,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     // 部署スコープは、全社閲覧権限があるか、自分がその部署に所属し部署閲覧権限を持つ場合だけ許可する。
     const isMember = departmentEmployeeIds.includes(session.employeeId)
 
-    const allowed = hasPermission(session, "oneonone:read:department") && isMember
+    const allowed = session.hasPermission("oneonone:read:department") && isMember
 
     if (allowed === false) {
       throw new ForbiddenError()
@@ -159,7 +157,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canCreateOneOnOne(session) === false) {
+    if (session.hasPermission("oneonone:create") === false) {
       throw new ForbiddenError()
     }
 

@@ -5,7 +5,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { toFiniteNumber } from "@/lib/to-finite-number"
 
-export const help = `karte headcount-plans update <id> --planned-count <n> [--note <t>]`
+export const help = `bedrock headcount-plans update <id> --planned-count <n> [--note <t>]`
 
 export default factory.createHandlers(
   zValidator(

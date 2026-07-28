@@ -1,4 +1,5 @@
-import { formatDate, formatDateTime } from "@/lib/format-datetime"
+import { formatDate } from "@/lib/format-date"
+import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
 import { BudgetDeleteButton } from "@/app/(app)/organization/budgets/_components/budget-delete-button"
 import { BudgetEditForm } from "@/app/(app)/organization/budgets/_components/budget-edit-form"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
@@ -39,7 +39,7 @@ async function createTestDb(): Promise<D1Database> {
 
   // 移行対象は identities.secret。E002 にレガシー secret を持たせる。
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+admin@example.com", passwordHash: modernHash, role: "admin" },
+    { id: 1, email: "you+admin@example.com", passwordHash: modernHash, role: "root" },
     { id: 2, email: "you+legacy@example.com", passwordHash: legacyHash, role: "member" },
   ])
 
@@ -50,7 +50,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+admin@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

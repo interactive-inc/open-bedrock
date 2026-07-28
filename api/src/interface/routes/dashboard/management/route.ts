@@ -1,11 +1,10 @@
 import { GetManagementDashboard } from "@/application/dashboard/get-management-dashboard"
-import { canViewManagementDashboard } from "@/lib/dashboard/can-view-management-dashboard"
 import { ApplicationError } from "@/lib/errors"
 import { zAppManagementDashboard } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** GET /dashboard/management — 経営ダッシュボードの横断集計。management_dashboard:view のみ。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -15,7 +14,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewManagementDashboard(session) === false) {
+  if (session.hasPermission("management_dashboard:view") === false) {
     throw new ForbiddenError()
   }
 

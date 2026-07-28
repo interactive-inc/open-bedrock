@@ -344,7 +344,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -396,7 +396,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: firstPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -406,7 +406,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: secondPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -446,7 +446,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -478,7 +478,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin", 5),
+      session: makeTestSession("root", 5),
       redemptionId: pending.id ?? 0,
       deciderId: 5,
       action: "approve",
@@ -492,7 +492,7 @@ describe("DecideRedemption", () => {
     const { context } = createTestContext()
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: 9999,
       deciderId: 2,
       action: "approve",
@@ -520,7 +520,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -530,7 +530,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -572,7 +572,7 @@ describe("DecideRedemption", () => {
     })
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -643,7 +643,7 @@ describe("ListPendingRedemptions", () => {
 
     // approve して fulfilled にする
     await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",

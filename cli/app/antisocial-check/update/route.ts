@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte antisocial-check update --id <id> --partner <s> [--address <s>] [--representative <s>] [--result <s>]`
+export const help = `bedrock antisocial-check update --id <id> --partner <s> [--address <s>] [--representative <s>] [--result <s>]`
 
 export default factory.createHandlers(
   zValidator(

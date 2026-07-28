@@ -1,12 +1,10 @@
 import { CreateWorkAccident } from "@/application/work-accident/create-work-accident"
 import { WorkAccidentRepository } from "@/infrastructure/work-accident/work-accident-repository"
-import { canManageWorkAccidents } from "@/lib/work-accident/can-manage-work-accidents"
-import { canViewAllWorkAccidents } from "@/lib/work-accident/can-view-all-work-accidents"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppWorkAccident, zAppWorkAccidentList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import {
   BadRequestError,
   ForbiddenError,
@@ -36,7 +34,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllWorkAccidents(session) === false) {
+    if (session.hasPermission("work_accident:read:all") === false) {
       throw new ForbiddenError()
     }
 
@@ -97,7 +95,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageWorkAccidents(session) === false) {
+    if (session.hasPermission("work_accident:manage") === false) {
       throw new ForbiddenError()
     }
 

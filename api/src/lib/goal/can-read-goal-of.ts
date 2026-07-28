@@ -1,22 +1,21 @@
+import type { Session } from "@/lib/auth/session"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { SessionPayload } from "@/env"
-import { hasPermission } from "@/lib/auth/has-permission"
 
 /**
  * 対象従業員の目標を閲覧できるか、スコープ(self/reports/department/all)で判定する。
  */
-export function canReadGoalOf(session: SessionPayload, relation: EmployeeRelation): boolean {
+export function canReadGoalOf(session: Session, relation: EmployeeRelation): boolean {
   if (relation.isSelf) {
     return true
   }
 
-  if (hasPermission(session, "goal:read:all")) {
+  if (session.hasPermission("goal:read:all")) {
     return true
   }
 
-  if (relation.isReport && hasPermission(session, "goal:read:reports")) {
+  if (relation.isReport && session.hasPermission("goal:read:reports")) {
     return true
   }
 
-  return relation.isSameDepartment && hasPermission(session, "goal:read:department")
+  return relation.isSameDepartment && session.hasPermission("goal:read:department")
 }

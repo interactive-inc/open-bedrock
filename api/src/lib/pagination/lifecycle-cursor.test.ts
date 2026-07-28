@@ -1,13 +1,9 @@
-import {
-  decodeLifecycleCursor,
-  encodeLifecycleCursor,
-  type LifecycleCursor,
-} from "@/lib/pagination/lifecycle-cursor"
+import { LifecycleCursor, type LifecycleCursorValue } from "@/lib/pagination/lifecycle-cursor"
 import { describe, expect, test } from "bun:test"
 
 const secret = "lifecycle-cursor-test-secret"
 
-const value: LifecycleCursor = {
+const value: LifecycleCursorValue = {
   version: 1,
   filterFingerprint: "filter-v1",
   anchorRowId: 42,
@@ -21,16 +17,16 @@ const value: LifecycleCursor = {
 
 describe("lifecycle cursor", () => {
   test("round trips a signed stable scan position", async () => {
-    const encoded = await encodeLifecycleCursor(value, secret)
+    const encoded = await LifecycleCursor.encode(value, secret)
     expect(encoded.length).toBeLessThanOrEqual(256)
-    expect(await decodeLifecycleCursor(encoded, secret)).toEqual(value)
+    expect(await LifecycleCursor.decode(encoded, secret)).toEqual(value)
   })
 
   test("rejects tampering, an overlong value, and malformed content", async () => {
-    const encoded = await encodeLifecycleCursor(value, secret)
+    const encoded = await LifecycleCursor.encode(value, secret)
     const changed = `${encoded.startsWith("a") ? "b" : "a"}${encoded.slice(1)}`
-    expect(await decodeLifecycleCursor(changed, secret)).toBeInstanceOf(Error)
-    expect(await decodeLifecycleCursor("x".repeat(257), secret)).toBeInstanceOf(Error)
-    expect(await decodeLifecycleCursor("not-a-cursor", secret)).toBeInstanceOf(Error)
+    expect(await LifecycleCursor.decode(changed, secret)).toBeInstanceOf(Error)
+    expect(await LifecycleCursor.decode("x".repeat(257), secret)).toBeInstanceOf(Error)
+    expect(await LifecycleCursor.decode("not-a-cursor", secret)).toBeInstanceOf(Error)
   })
 })

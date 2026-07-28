@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte leave update --id <leave-request-id> --type annual|special --start <date> --end <date> [--reason <text>]`
+export const help = `bedrock leave update --id <leave-request-id> --type annual|special --start <date> --end <date> [--reason <text>]`
 
 export default factory.createHandlers(
   zValidator(

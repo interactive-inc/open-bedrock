@@ -1,5 +1,5 @@
 import { EmployeeStatusBadge } from "@/app/(app)/organization/employees/_components/employee-status-badge"
-import { formatLifecycleDate } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-event"
+import { formatLifecycleDate } from "@/app/(app)/organization/employees/[employee]/_lib/format-lifecycle-date"
 import { DetailField } from "@/components/detail-field"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { EmployeeLifecycleState } from "@/lib/api/get-employee-lifecycle-state"

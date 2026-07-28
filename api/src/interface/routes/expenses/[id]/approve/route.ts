@@ -1,10 +1,9 @@
 import { DecideExpense } from "@/application/expense/decide-expense"
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppExpenseDecision } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
@@ -28,7 +27,7 @@ export const POST = factory.createHandlers(
 
     const expenseId = validateIntParam(c.req.param("id"), "expense")
 
-    if (canDecideExpense(session) === false) {
+    if (session.hasPermission("expense:approve") === false) {
       throw new ForbiddenError()
     }
 

@@ -1,11 +1,10 @@
 import { toReviewCycleStatus } from "@/domain/review/review-cycle-status.value"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import { ReviewForm } from "@/domain/review/review-form.entity"
-import { toReviewResultView } from "@/lib/review/to-review-result-view"
-import { factory } from "@/lib/factory"
+import { toReviewResultView } from "@/interface/routes/review-cycles/[cycle_id]/results/[employee_code]/to-review-result-view"
+import { factory } from "@/interface/utils/factory"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, reviewCycles, reviewForms } from "@/schema"
 import { and, asc, eq } from "drizzle-orm"
 import {
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
     .orderBy(asc(reviewForms.id))
-  const canAdminister = canAdministerCycle(session)
+  const canAdminister = session.hasPermission("review:administer")
   let visibleFormRows = formRows
 
   if (canAdminister === false) {

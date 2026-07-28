@@ -1,6 +1,5 @@
-import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
@@ -14,7 +13,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/interface/utils/current-employee-departments"
 import { InternalError } from "@/interface/lib/errors"
 
 /** 並び順のホワイトリスト。未知の値は created_at desc にフォールバックする。 */
@@ -52,7 +51,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllApplications(session) === false) {
+    if (session.hasPermission("application:read:all") === false) {
       throw new ForbiddenError()
     }
 

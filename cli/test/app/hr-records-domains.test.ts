@@ -6,16 +6,16 @@ import { describe, expect, it } from "bun:test"
  * help が返る（catch-all に落ちない）ことを確認する。動的セグメント (:id?) は省略形でも一致する。
  */
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/certifications", help: "karte certifications" },
+  { path: "/certifications", help: "bedrock certifications" },
   { path: "/certifications/create", help: "certifications create" },
   { path: "/certifications/update", help: "certifications update" },
   { path: "/certifications/records", help: "certifications records" },
   { path: "/certifications/record-add", help: "certifications record-add" },
   { path: "/certifications/record-remove", help: "certifications record-remove" },
-  { path: "/health-checkups", help: "karte health-checkups" },
+  { path: "/health-checkups", help: "bedrock health-checkups" },
   { path: "/health-checkups/create", help: "health-checkups create" },
   { path: "/health-checkups/complete", help: "health-checkups complete" },
-  { path: "/work-accidents", help: "karte work-accidents" },
+  { path: "/work-accidents", help: "bedrock work-accidents" },
   { path: "/work-accidents/create", help: "work-accidents create" },
   { path: "/work-accidents/close", help: "work-accidents close" },
 ]

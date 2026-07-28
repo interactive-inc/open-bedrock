@@ -5,7 +5,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { ensureOk } from "@/lib/http/ensure-ok"
 
-export const help = `karte app workflow <template_code> [--definition '<json>' --expected-revision <n>]`
+export const help = `bedrock app workflow <template_code> [--definition '<json>' --expected-revision <n>]`
 
 type WorkflowEndpoint = {
   $get(input: { param: { code: string } }): Promise<Response>

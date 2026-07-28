@@ -3,7 +3,7 @@ import { EmployeeListSection } from "@/app/(app)/organization/employees/_compone
 import { EmployeeSearchForm } from "@/app/(app)/organization/employees/_components/employee-search-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { parsePageSize } from "@/components/table-pagination"
+import { parsePageSize } from "@/lib/pagination/parse-page-size"
 import type {
   EmployeeSearchFilter,
   EmployeeStatusFilter,

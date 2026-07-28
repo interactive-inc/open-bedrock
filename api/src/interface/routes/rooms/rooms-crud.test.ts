@@ -5,13 +5,13 @@ import { HTTPException } from "hono/http-exception"
 import { seedRoomReservations } from "@/infrastructure/seed/seed-room-reservations"
 import { seedRooms } from "@/infrastructure/seed/seed-rooms"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
-import { databaseMiddleware } from "@/interface/middleware/database-middleware"
+import { databaseMiddleware } from "@/interface/middlewares/database-middleware"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import * as roomsRoute from "@/interface/routes/rooms/route"
 import * as roomDetailRoute from "@/interface/routes/rooms/[id]/route"
 import { z } from "zod"
@@ -97,7 +97,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

@@ -3,10 +3,10 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte accounts — アカウント一覧（account:manage が必要）
+export const help = `bedrock accounts — アカウント一覧（account:manage が必要）
 
 usage:
-  karte accounts`
+  bedrock accounts`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

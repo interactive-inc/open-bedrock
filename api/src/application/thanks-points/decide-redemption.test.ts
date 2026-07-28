@@ -58,7 +58,7 @@ describe("DecideRedemption", () => {
     const redemption = await seedPendingRedemption(repository, 5)
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: 5,
       action: "reject",
@@ -76,7 +76,7 @@ describe("DecideRedemption", () => {
     const redemption = await seedPendingRedemption(repository, 5)
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: 2,
       action: "reject",

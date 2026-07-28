@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte ringi submit --approver-id <id> --title <t> --amount <n> --reason <r>`
+export const help = `bedrock ringi submit --approver-id <id> --title <t> --amount <n> --reason <r>`
 
 export default factory.createHandlers(
   zValidator(

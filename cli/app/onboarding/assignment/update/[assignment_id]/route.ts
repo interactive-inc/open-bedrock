@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte onboarding assignment update <assignment_id> --assigned-at <iso>`
+export const help = `bedrock onboarding assignment update <assignment_id> --assigned-at <iso>`
 
 export default factory.createHandlers(
   zValidator(

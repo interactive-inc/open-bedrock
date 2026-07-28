@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache"
 import { createOneOnOne } from "@/lib/api/create-oneonone"
 import { deleteOneOnOne } from "@/lib/api/delete-oneonone"
 import { updateOneOnOne } from "@/lib/api/update-oneonone"
-import { FORM_CONSTRAINTS, toOptionalText, toRequiredText } from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */

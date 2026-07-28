@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
-import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { findUnknownApproverRoles } from "@/lib/application/validate-approver-roles"
+import { findUnknownApproverRoles } from "@/application/application/validate-approver-roles"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   name: string
   category: string
@@ -26,7 +26,7 @@ export class CreateApplicationTemplate {
   async run(command: Command): Promise<ApplicationTemplate | ApplicationError> {
     const templateRepository = new ApplicationTemplateRepository(this.c)
 
-    if (canManageApplicationTemplates(command.session) === false) {
+    if (command.session.hasPermission("application_template:manage") === false) {
       return new ForbiddenError("cannot manage application templates", "forbidden")
     }
 

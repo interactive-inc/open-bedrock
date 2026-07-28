@@ -1,4 +1,3 @@
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 import { zAppThanksRedemptionAdminList } from "@/lib/app-schemas"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
@@ -7,11 +6,11 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { employees, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, count, desc, eq, ne } from "drizzle-orm"
-import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/interface/utils/current-employee-departments"
 import { InternalError } from "@/interface/lib/errors"
 
 /** GET /thanks/redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング） */
@@ -22,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session) === false) {
+  if (session.hasPermission("thanks_redemption:approve") === false) {
     throw new ForbiddenError()
   }
 

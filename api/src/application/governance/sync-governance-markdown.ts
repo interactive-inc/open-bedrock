@@ -1,10 +1,11 @@
+import type { Session } from "@/lib/auth/session"
 import {
   parseGovernanceMarkdown,
-  sha256Hex,
   type GovernanceReference,
   type ParsedGovernanceMarkdown,
 } from "@/domain/governance/governance-document"
-import type { Context, SessionPayload } from "@/env"
+import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
+import type { Context } from "@/env"
 import type { GovernanceDocumentRecord } from "@/infrastructure/governance/governance-repository"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { PERMISSION_KEYS } from "@/lib/auth/permission-keys"
@@ -47,7 +48,7 @@ export class SyncGovernanceMarkdown {
   constructor(private readonly c: Context) {}
 
   async run(props: {
-    session: SessionPayload
+    session: Session
     documents: ReadonlyArray<GovernanceMarkdownInput>
   }): Promise<ReadonlyArray<GovernanceSyncResult> | Error> {
     if (!props.session.permissions.has("governance:manage")) {
@@ -72,7 +73,7 @@ export class SyncGovernanceMarkdown {
             { cause: document },
           )
         }
-        return { input, parsed: document, contentHash: await sha256Hex(input.markdown) }
+        return { input, parsed: document, contentHash: await toSha256Hex(input.markdown) }
       }),
     )
     const parseError = parsed.find((item) => item instanceof Error)

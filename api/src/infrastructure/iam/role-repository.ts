@@ -3,16 +3,10 @@ import { accountRoles, permissions, rolePermissions, roles } from "@/schema"
 import type { RoleRow } from "@/schema"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenNoLoginEnabledEffectiveAdmin,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
-import {
-  abortWhenActorCannotManageRoleById,
-  isAbortedByLivePermissionGuard,
-  LivePermissionGuardError,
-} from "@/infrastructure/iam/live-permission-guard"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 import { eq } from "drizzle-orm"
 
 export type RoleWithPermissions = {
@@ -227,7 +221,7 @@ export class RoleRepository {
     name: string
     description: string | null
     permissionKeys: ReadonlyArray<string>
-  }): Promise<null | Error | LastAdminError | LivePermissionGuardError> {
+  }): Promise<null | Error | LastRootError | LivePermissionGuardError> {
     try {
       const db = this.c.env.DB
 
@@ -241,8 +235,7 @@ export class RoleRepository {
       }
 
       await db.batch([
-        abortWhenActorCannotManageRoleById({
-          db,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
           actorAccountId: props.actorAccountId,
           targetRoleId: props.roleId,
           requiredPermissionKeys: ["iam:manage_roles"],
@@ -259,17 +252,17 @@ export class RoleRepository {
             )
             .bind(props.roleId, permissionId),
         ),
-        abortWhenNoLoginEnabledEffectiveAdmin(db),
+        new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
       ])
 
       return null
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (isAbortedByLastAdminGuard(caught)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(caught)) {
+        return new LastRootError()
       }
 
       return caught instanceof Error ? caught : new Error("failed to update role")

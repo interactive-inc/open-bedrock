@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte employee timeline --code <code> [--from <date>] [--to <date>] [--cursor <cursor>] [--limit <n>]`
+export const help = `bedrock employee timeline --code <code> [--from <date>] [--to <date>] [--cursor <cursor>] [--limit <n>]`
 
 export default factory.createHandlers(
   zValidator(

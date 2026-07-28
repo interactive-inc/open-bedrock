@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte licenses list [--status active|cancelled]`
+export const help = `bedrock licenses list [--status active|cancelled]`
 
 export default factory.createHandlers(
   zValidator(

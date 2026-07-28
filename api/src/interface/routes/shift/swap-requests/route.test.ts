@@ -140,7 +140,7 @@ describe("GET /shift/swap-requests", () => {
   test("an approver gets only pending requests with employee codes", async () => {
     const response = await request({
       path: "/shift/swap-requests",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

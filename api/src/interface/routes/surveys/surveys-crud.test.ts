@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedSurveyResponses } from "@/infrastructure/seed/seed-survey-responses"
 import { seedSurveys } from "@/infrastructure/seed/seed-surveys"
-import { databaseMiddleware } from "@/interface/middleware/database-middleware"
+import { databaseMiddleware } from "@/interface/middlewares/database-middleware"
 import { HTTPException } from "hono/http-exception"
 import { contextStorage } from "hono/context-storage"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
@@ -15,7 +15,7 @@ import * as surveyDetailRoute from "@/interface/routes/surveys/[survey_id]/route
 import * as surveyResponseCreateRoute from "@/interface/routes/surveys/[survey_id]/responses/route"
 import * as surveySummaryRoute from "@/interface/routes/surveys/[survey_id]/summary/route"
 import type { Bindings } from "@/env"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { z } from "zod"
 
 const surveyResponseSchema = z.object({
@@ -98,7 +98,7 @@ function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId: 1,
     email: "you+e001@example.com",
-    role: "admin",
+    role: "root",
   })
 }
 

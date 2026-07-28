@@ -4,8 +4,8 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingTask } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { toManagementDashboardRanges } from "@/lib/dashboard/to-management-dashboard-ranges"
+import { toManagementDashboardRanges } from "@/application/dashboard/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/lib/app-schemas"
 import {
   applications,

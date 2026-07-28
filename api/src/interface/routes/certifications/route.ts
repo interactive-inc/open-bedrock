@@ -1,10 +1,9 @@
 import { CreateCertification } from "@/application/certification/create-certification"
 import { CertificationRepository } from "@/infrastructure/certification/certification-repository"
-import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppCertification, zAppCertificationList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -57,7 +56,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageCertifications(session) === false) {
+    if (session.hasPermission("certification:manage") === false) {
       throw new ForbiddenError()
     }
 

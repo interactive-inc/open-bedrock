@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte positions update --id <position-id> --code <c> --name <n> --rank <r> [--description <d>]`
+export const help = `bedrock positions update --id <position-id> --code <c> --name <n> --rank <r> [--description <d>]`
 
 export default factory.createHandlers(
   zValidator(

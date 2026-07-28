@@ -2,13 +2,13 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/partners", help: "karte partners" },
+  { path: "/partners", help: "bedrock partners" },
   { path: "/partners/list", help: "partners list" },
   { path: "/partners/show", help: "partners show" },
   { path: "/partners/register", help: "partners register" },
   { path: "/partners/update", help: "partners update" },
   { path: "/partners/archive", help: "partners archive" },
-  { path: "/contracts", help: "karte contracts" },
+  { path: "/contracts", help: "bedrock contracts" },
   { path: "/contracts/list", help: "contracts list" },
   { path: "/contracts/create", help: "contracts create" },
   { path: "/contracts/update", help: "contracts update" },

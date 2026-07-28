@@ -99,7 +99,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /applications/admin", () => {
   test("returns 200 with all applications for admin", async () => {
-    const response = await request("/applications/admin", await tokenFor(1, "admin"))
+    const response = await request("/applications/admin", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -204,10 +204,7 @@ describe("GET /applications/admin", () => {
   })
 
   test("filters by status", async () => {
-    const response = await request(
-      "/applications/admin?status=approved",
-      await tokenFor(1, "admin"),
-    )
+    const response = await request("/applications/admin?status=approved", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -225,7 +222,7 @@ describe("GET /applications/admin", () => {
   })
 
   test("filters by applicant_id", async () => {
-    const response = await request("/applications/admin?applicant_id=5", await tokenFor(1, "admin"))
+    const response = await request("/applications/admin?applicant_id=5", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -241,7 +238,7 @@ describe("GET /applications/admin", () => {
   test("filters by template_code", async () => {
     const response = await request(
       "/applications/admin?template_code=paid_leave",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -259,7 +256,7 @@ describe("GET /applications/admin", () => {
   test("filters by created_at range", async () => {
     const response = await request(
       "/applications/admin?from=2026-05-20T00:00:00Z&to=2026-05-23T00:00:00Z",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -278,7 +275,7 @@ describe("GET /applications/admin", () => {
   test("sorts by created_at ascending", async () => {
     const response = await request(
       "/applications/admin?sort=created_at_asc",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -299,7 +296,7 @@ describe("GET /applications/admin", () => {
   test("respects limit and offset", async () => {
     const response = await request(
       "/applications/admin?limit=2&offset=1",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -317,7 +314,7 @@ describe("GET /applications/admin", () => {
   test("silently ignores non-numeric applicant_id", async () => {
     const response = await request(
       "/applications/admin?applicant_id=abc",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -334,7 +331,7 @@ describe("GET /applications/admin", () => {
   test("returns empty when template_code does not match any template", async () => {
     const response = await request(
       "/applications/admin?template_code=does_not_exist",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)

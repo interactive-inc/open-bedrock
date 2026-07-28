@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte calendar list [--year <YYYY>]`
+export const help = `bedrock calendar list [--year <YYYY>]`
 
 export default factory.createHandlers(
   zValidator(

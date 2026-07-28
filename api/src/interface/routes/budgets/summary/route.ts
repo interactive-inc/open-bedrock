@@ -1,10 +1,9 @@
 import { BuildBudgetSummaryView } from "@/application/budget/budget-summary-view"
-import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBudgetSummary } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -28,7 +27,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBudgets(session) === false) {
+    if (session.hasPermission("budget:manage") === false) {
       throw new ForbiddenError()
     }
 

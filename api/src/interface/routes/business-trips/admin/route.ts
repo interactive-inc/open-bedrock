@@ -1,6 +1,5 @@
-import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-business-trips"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { businessTrips } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllBusinessTrips(session) === false) {
+    if (session.hasPermission("business_trip:read:all") === false) {
       throw new ForbiddenError()
     }
 

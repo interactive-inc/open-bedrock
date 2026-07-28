@@ -131,7 +131,7 @@ describe("GET /employee-events", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-events?employee_id=5",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -152,7 +152,7 @@ describe("GET /employee-events", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-events?employee_code=E005",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -208,7 +208,7 @@ describe("POST /employee-events", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-events",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         employee_id: 9,
@@ -248,7 +248,7 @@ describe("POST /employee-events", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/employee-events",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { employee_id: 9, kind: "promotion", effective_date: "2026-06-01" },
     })

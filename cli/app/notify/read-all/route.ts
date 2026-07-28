@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte notify read-all — 全件既読`
+export const help = `bedrock notify read-all — 全件既読`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

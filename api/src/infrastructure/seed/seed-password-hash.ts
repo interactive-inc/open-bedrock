@@ -1,4 +1,5 @@
-import { derivePbkdf2, formatPbkdf2 } from "@/lib/auth/to-password-hash"
+import { derivePbkdf2 } from "@/lib/auth/derive-pbkdf2"
+import { formatPbkdf2 } from "@/lib/auth/format-pbkdf2"
 
 /** サンプル用パスワード。seed の全ユーザーで共通（実運用では使わない）。 */
 const SEED_PLAIN_PASSWORD = "password"

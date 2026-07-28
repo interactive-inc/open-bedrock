@@ -1,6 +1,6 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import {
   ApplicationError,
   ForbiddenError,
@@ -13,11 +13,11 @@ export class UpdateLifecycleTemplateBinding {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     templateCode: string
     effectType: "hire" | "retired"
   }): Promise<{ effectType: "hire" | "retired"; templateCode: string } | ApplicationError> {
-    if (!canManageOnboarding(command.session)) {
+    if (!command.session.hasPermission("onboarding:manage")) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
     const template = await new OnboardingTemplateRepository(this.c).findByCode(command.templateCode)

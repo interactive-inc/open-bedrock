@@ -35,7 +35,7 @@ async function createNotification(
   await seedEmployee(db, recipientCode, recipientId)
 
   const result = await new SendNotification(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     recipientEmployeeCode: recipientCode,
     kind: "announcement",
     title: "Test notification",
@@ -59,7 +59,7 @@ describe("SendNotification", () => {
     await seedEmployee(db, "E001", 1)
 
     const result = await new SendNotification(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "Welcome",
@@ -119,7 +119,7 @@ describe("SendNotification", () => {
     const { context } = createTestContext()
 
     const result = await new SendNotification(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       recipientEmployeeCode: "NOPE",
       kind: "announcement",
       title: "Test",
@@ -224,7 +224,7 @@ describe("MarkAllNotificationsRead", () => {
     await seedEmployee(db, "E001", 1)
 
     await new SendNotification(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       recipientEmployeeCode: "E001",
       kind: "announcement",
       title: "First",
@@ -235,7 +235,7 @@ describe("MarkAllNotificationsRead", () => {
     })
 
     await new SendNotification(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       recipientEmployeeCode: "E001",
       kind: "reminder",
       title: "Second",

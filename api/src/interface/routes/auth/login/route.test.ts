@@ -6,7 +6,7 @@ import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { requestWithContext } from "@/interface/test-helpers/request-with-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { z } from "zod"
 
 const jwtSecret = "auth-login-route-test-secret"

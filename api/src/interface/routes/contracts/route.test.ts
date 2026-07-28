@@ -101,7 +101,7 @@ async function request(
 
 describe("GET /contracts", () => {
   test("returns 200 with all contracts for a read:all viewer (admin)", async () => {
-    const response = await request("/contracts", await tokenFor(1, "admin"))
+    const response = await request("/contracts", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -115,7 +115,7 @@ describe("GET /contracts", () => {
   })
 
   test("filters by partner_id", async () => {
-    const response = await request("/contracts?partner_id=1", await tokenFor(1, "admin"))
+    const response = await request("/contracts?partner_id=1", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -144,7 +144,7 @@ describe("GET /contracts", () => {
 
 describe("POST /contracts", () => {
   test("creates a contract as admin", async () => {
-    const response = await request("/contracts", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/contracts", await tokenFor(1, "root"), "POST", {
       partner_id: 1,
       title: "New Agreement",
       contract_date: "2026-02-01",
@@ -174,7 +174,7 @@ describe("POST /contracts", () => {
   })
 
   test("returns 404 for an unknown partner", async () => {
-    const response = await request("/contracts", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/contracts", await tokenFor(1, "root"), "POST", {
       partner_id: 9999,
       title: "Ghost",
       contract_date: "2026-02-01",
@@ -186,7 +186,7 @@ describe("POST /contracts", () => {
 
 describe("PUT /contracts/:id", () => {
   test("updates a contract as admin", async () => {
-    const response = await request("/contracts/1", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/contracts/1", await tokenFor(1, "root"), "PUT", {
       title: "Amended Agreement",
       contract_date: "2026-01-15",
       renewal_deadline: "2026-11-30",
@@ -213,7 +213,7 @@ describe("PUT /contracts/:id", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/contracts/9999", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/contracts/9999", await tokenFor(1, "root"), "PUT", {
       title: "Missing",
       contract_date: "2026-01-15",
     })

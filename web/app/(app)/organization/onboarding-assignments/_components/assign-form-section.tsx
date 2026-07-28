@@ -16,7 +16,9 @@ export async function AssignFormSection() {
   const employees =
     employeeResult instanceof Error
       ? []
-      : employeeResult.items.map((e) => ({ code: e.code, name: e.name }))
+      : employeeResult.items.flatMap((e) =>
+          e.code === null ? [] : [{ code: e.code, name: e.name }],
+        )
 
   return <AssignForm templates={templates} employees={employees} />
 }

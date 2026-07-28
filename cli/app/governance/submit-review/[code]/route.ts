@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance submit-review <code> --version <semver>`
+export const help = `bedrock governance submit-review <code> --version <semver>`
 
 export default factory.createHandlers(
   zValidator(

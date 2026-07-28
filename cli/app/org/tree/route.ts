@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { renderOrgTree } from "@/app/org/tree/_modules/render-org-tree"
 
-export const help = `karte org tree — 部署ツリー`
+export const help = `bedrock org tree — 部署ツリー`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

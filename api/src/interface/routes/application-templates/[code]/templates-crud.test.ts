@@ -82,20 +82,16 @@ async function request(
 
 describe("PUT /application-templates/:code", () => {
   test("privileged role updates a template and returns 200", async () => {
-    const response = await request(
-      "/application-templates/paid_leave",
-      await tokenFor(1, "admin"),
-      {
-        method: "PUT",
-        body: {
-          name: "Updated Paid Leave",
-          category: "attendance",
-          description: "更新後の説明",
-          schema_json: { type: "object" },
-          approver_roles: ["manager", "hr"],
-        },
+    const response = await request("/application-templates/paid_leave", await tokenFor(1, "root"), {
+      method: "PUT",
+      body: {
+        name: "Updated Paid Leave",
+        category: "attendance",
+        description: "更新後の説明",
+        schema_json: { type: "object" },
+        approver_roles: ["manager", "hr"],
       },
-    )
+    })
 
     expect(response.status).toBe(200)
 
@@ -123,7 +119,7 @@ describe("PUT /application-templates/:code", () => {
   })
 
   test("unknown code returns 404", async () => {
-    const response = await request("/application-templates/missing", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates/missing", await tokenFor(1, "root"), {
       method: "PUT",
       body: { name: "X", category: "general", schema_json: {} },
     })
@@ -143,13 +139,9 @@ describe("PUT /application-templates/:code", () => {
 
 describe("DELETE /application-templates/:code", () => {
   test("privileged role deletes a template and returns 204", async () => {
-    const response = await request(
-      "/application-templates/paid_leave",
-      await tokenFor(1, "admin"),
-      {
-        method: "DELETE",
-      },
-    )
+    const response = await request("/application-templates/paid_leave", await tokenFor(1, "root"), {
+      method: "DELETE",
+    })
 
     expect(response.status).toBe(204)
   })
@@ -167,7 +159,7 @@ describe("DELETE /application-templates/:code", () => {
   })
 
   test("unknown code returns 404", async () => {
-    const response = await request("/application-templates/missing", await tokenFor(1, "admin"), {
+    const response = await request("/application-templates/missing", await tokenFor(1, "root"), {
       method: "DELETE",
     })
 

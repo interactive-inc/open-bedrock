@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 

@@ -1,6 +1,6 @@
 import { factory } from "@/factory"
 
-export const help = `karte governance <command>
+export const help = `bedrock governance <command>
 
 commands:
   list                         規程・手続き一覧

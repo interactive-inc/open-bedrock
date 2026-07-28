@@ -1,5 +1,5 @@
 import { RegisterEmployee } from "@/application/employee/register-employee"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { likeKeyword } from "@/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,
@@ -7,7 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { resolveEmployeePositionName } from "@/interface/routes/employees/resolve-employee-position-name"
 import { positionRequiresDepartment } from "@/interface/utils/position-requires-department"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
@@ -21,13 +21,11 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema, employeeRoleSchema } from "@/lib/schemas"
-import { canReadEmployees } from "@/lib/employee/can-read-employees"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { listManagedEmployeeIds } from "@/lib/org/organization-authority"
+import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { isoDate } from "@/lib/schemas"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { UnavailableError } from "@/lib/errors"
 
 export const GET = factory.createHandlers(
@@ -50,7 +48,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canReadEmployees(session) === false) {
+    if (session.hasPermission("employee:read") === false) {
       throw new ForbiddenError()
     }
 
@@ -58,7 +56,7 @@ export const GET = factory.createHandlers(
 
     const conditions: Array<SQL> = []
 
-    if (hasPermission(session, "org:manage") === false) {
+    if (session.hasPermission("org:manage") === false) {
       const managedEmployeeIds = await listManagedEmployeeIds(c, session.employeeId)
 
       if (managedEmployeeIds instanceof Error) {
@@ -97,6 +95,18 @@ export const GET = factory.createHandlers(
 
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
     if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+
+    // as_of は確定済みライフサイクル履歴を引く指定。移行未完了の legacy 経路では基準日を
+    // 適用できないため、黙って無視せず 422 で拒否する（無視すると呼び出し側が現在時点の
+    // 一覧を「基準日で絞り込んだ結果」として誤読する）
+    if (query.as_of !== undefined && migrationStatus !== "verified") {
+      throw toHttpException(
+        new UnprocessableError(
+          "as_of は人事ライフサイクル移行の完了後にのみ指定できます",
+          "lifecycle_migration_incomplete",
+        ),
+      )
+    }
 
     if (migrationStatus === "verified") {
       const resolvedDate =

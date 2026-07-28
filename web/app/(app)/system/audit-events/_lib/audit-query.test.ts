@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vite-plus/test"
-import {
-  buildAuditEventsHref,
-  parseAuditExportSearchParams,
-  parseAuditListSearchParams,
-} from "@/app/(app)/system/audit-events/_lib/audit-query"
+import { buildAuditEventsHref } from "@/app/(app)/system/audit-events/_lib/build-audit-events-href"
+import { parseAuditExportSearchParams } from "@/app/(app)/system/audit-events/_lib/parse-audit-export-search-params"
+import { parseAuditListSearchParams } from "@/app/(app)/system/audit-events/_lib/parse-audit-list-search-params"
 
 describe("parseAuditListSearchParams", () => {
   test("normalizes empty form values and defaults the limit to fifty", () => {

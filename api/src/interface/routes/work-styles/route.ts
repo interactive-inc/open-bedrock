@@ -1,7 +1,7 @@
 import { CreateEmployeeWorkStyle } from "@/application/work-style/create-employee-work-style"
-import { canReadWorkStylesOf } from "@/lib/work-style/can-read-work-styles-of"
+import { canReadWorkStylesOf } from "@/interface/routes/work-styles/can-read-work-styles-of"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeWorkStyle, zAppEmployeeWorkStyleList } from "@/lib/app-schemas"
 import { EmployeeWorkStyleRepository } from "@/infrastructure/work-style/employee-work-style-repository"
@@ -11,7 +11,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { isoDate, workStyleSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"

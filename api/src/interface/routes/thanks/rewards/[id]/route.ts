@@ -1,13 +1,12 @@
 import { UpdateReward } from "@/application/thanks-points/update-reward"
-import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
-import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
+import { toPositiveInt } from "@/interface/utils/to-positive-int"
 import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksReward } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -29,7 +28,7 @@ export const PATCH = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session) === false) {
+    if (session.hasPermission("thanks_reward:manage") === false) {
       throw new ForbiddenError()
     }
 

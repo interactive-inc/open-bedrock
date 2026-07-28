@@ -50,7 +50,7 @@ describe("UpdateAsset", () => {
     await seedInStock(context, "A1001")
 
     const result = await new UpdateAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1001",
       details: { name: "Renamed", kind: "monitor", serial: "SN-2", purchasedOn: "2026-02-02" },
     })
@@ -85,7 +85,7 @@ describe("UpdateAsset", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A9999",
       details: { name: "Ghost", kind: "pc", serial: null, purchasedOn: null },
     })
@@ -101,7 +101,7 @@ describe("DeleteAsset", () => {
     await seedInStock(context, "A1003")
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1003",
     })
 
@@ -120,7 +120,7 @@ describe("DeleteAsset", () => {
     await seedLent(context, "A1004")
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1004",
     })
 
@@ -144,7 +144,7 @@ describe("DeleteAsset", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A9999",
     })
 

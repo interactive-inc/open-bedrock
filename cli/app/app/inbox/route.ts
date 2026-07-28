@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte app inbox — 承認待ち一覧`
+export const help = `bedrock app inbox — 承認待ち一覧`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 

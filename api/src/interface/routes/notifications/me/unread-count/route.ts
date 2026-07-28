@@ -1,5 +1,5 @@
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { notifications } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { and, count, eq } from "drizzle-orm"

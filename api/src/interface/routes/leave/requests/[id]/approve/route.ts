@@ -1,12 +1,11 @@
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { ApplicationError } from "@/lib/errors"
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppLeaveRequest } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -26,7 +25,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canDecideLeave(session) === false) {
+    if (session.hasPermission("leave:approve") === false) {
       throw new ForbiddenError()
     }
 

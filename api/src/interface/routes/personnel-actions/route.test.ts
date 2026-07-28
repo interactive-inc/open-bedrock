@@ -33,7 +33,7 @@ async function token(employeeId: number, role: string) {
 describe("POST /personnel-actions", () => {
   test("applies once and returns 200 for an identical idempotent replay", async () => {
     const db = await createLifecycleRouteDb()
-    const admin = await token(1, "admin")
+    const admin = await token(1, "root")
     const props = {
       db,
       jwtSecret: lifecycleRouteJwtSecret,
@@ -83,7 +83,7 @@ describe("POST /personnel-actions", () => {
       jwtSecret: lifecycleRouteJwtSecret,
       path: "/personnel-actions",
       method: "POST",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       body,
     })
     expect(missingKey.status).toBe(400)
@@ -95,7 +95,7 @@ describe("POST /personnel-actions", () => {
       jwtSecret: lifecycleRouteJwtSecret,
       path: "/personnel-actions",
       method: "POST",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       body: {
         action: { ...action, positionCode: "NO_SUCH_POSITION" },
         expected_employee_revision: 0,
