@@ -12,7 +12,7 @@ export type Props = {
   headers?: Record<string, string>
   companyTimeZone?: string
   provisioningApiKey?: string
-  identityJwtSecret?: string
+  identityJwks?: string
   identityIssuer?: string
   identityAudience?: string
   identityLoginUrl?: string
@@ -48,7 +48,7 @@ export function requestWithContext(props: Props): Promise<Response> {
     COMPANY_TIME_ZONE: props.companyTimeZone ?? "Asia/Tokyo",
     NOW: props.now ?? defaultNow,
     PROVISIONING_API_KEY: props.provisioningApiKey,
-    IDENTITY_JWT_SECRET: props.identityJwtSecret,
+    IDENTITY_JWKS: props.identityJwks,
     IDENTITY_ISSUER: props.identityIssuer,
     IDENTITY_AUDIENCE: props.identityAudience,
     IDENTITY_LOGIN_URL: props.identityLoginUrl,

@@ -24,9 +24,8 @@ export type Bindings = {
   // プロビジョニング（外部 identity の同期）エンドポイント専用の machine API キー。
   // `wrangler secret put PROVISIONING_API_KEY` で登録する。未設定なら全リクエストを拒否する。
   PROVISIONING_API_KEY?: string
-  // 外部 identity provider が発行する短命ログイントークン（HS256 JWT）の検証共有シークレット。
-  // `wrangler secret put IDENTITY_JWT_SECRET` で登録する。未設定なら identity ログインを拒否する。
-  IDENTITY_JWT_SECRET?: string
+  // ローカル・テスト用の公開JWKS。未設定の本番ではIDENTITY_ISSUERのJWKS endpointを使う。
+  IDENTITY_JWKS?: string
   // 外部 identity トークンに期待する iss（発行者）。未設定なら identity ログインを拒否する。
   IDENTITY_ISSUER?: string
   // 外部 identity トークンに期待する aud（想定受信者）。未設定時は "open-karte" を既定とする。
@@ -35,7 +34,7 @@ export type Bindings = {
   // 未設定時は機能無効（POST /bootstrap は 404 を返す）。
   BOOTSTRAP_TOKEN?: string
   // CLI（ネイティブアプリ）ログインで、本人確認を委ねる外部 identity provider（ブローカー）のログイン URL。
-  // GET /auth/cli/login はこの URL へ `?callback=<API_ORIGIN>/auth/cli/callback&state=...` を付けて 302 する。
+  // GET /auth/cli/login はこの URL へcallback/state/PKCE challengeを付けて302する。
   // 未設定なら CLI ログインを一律拒否する。
   IDENTITY_LOGIN_URL?: string
   // この API 自身の外部公開 origin（例: "https://api.example.com"）。

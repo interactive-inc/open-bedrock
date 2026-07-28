@@ -2,18 +2,54 @@ import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { postIdentityLogin } from "@/lib/api/post-identity-login"
 import { setSessionCookies } from "@/lib/auth/set-session-cookies"
+import { exchangeIdentityCode } from "@/lib/auth/exchange-identity-code"
+import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
+import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
 
 /**
  * 外部 identity provider（SSO ブローカー）からの戻り先。
- * query の token をサーバーサイドで api に渡して検証・交換し、session cookie を
- * 立ててトップへリダイレクトする。token はここで使い切り（60 秒・一回限り）、
- * クライアント JS には渡さない。リダイレクトで URL からも消える。
+ * queryのone-time codeをHTTP-only CookieのPKCE verifierで交換する。
+ * identity JWTはバックチャネルだけで受け取り、URLやクライアントJSへ渡さない。
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const token = request.nextUrl.searchParams.get("token")
+  const redirectUri = process.env.IDENTITY_REDIRECT_URI
+  const issuer = process.env.IDENTITY_LOGIN_URL
+  if (!redirectUri || !issuer) {
+    return redirectToError(request, "login_not_configured")
+  }
+  try {
+    if (!isSecureIdentityIssuer(new URL(redirectUri)) || !isSecureIdentityIssuer(new URL(issuer))) {
+      return redirectToError(request, "login_not_configured")
+    }
+  } catch {
+    return redirectToError(request, "login_not_configured")
+  }
 
-  if (token === null || token === "") {
-    return redirectToError(request, "missing_token")
+  const state = request.nextUrl.searchParams.get("state")
+  if (
+    !state ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(state)
+  ) {
+    return redirectToError(request, "invalid_state")
+  }
+
+  const names = identityLoginCookieNames(redirectUri, state)
+  const expectedState = request.cookies.get(names.state)?.value ?? null
+  const codeVerifier = request.cookies.get(names.verifier)?.value ?? null
+  const code = request.nextUrl.searchParams.get("code")
+  const brokerError = request.nextUrl.searchParams.get("error")
+
+  if (brokerError !== null) {
+    return clearIdentityCookies(redirectToError(request, brokerError), names)
+  }
+
+  if (!code || !expectedState || !codeVerifier || state !== expectedState) {
+    return clearIdentityCookies(redirectToError(request, "invalid_state"), names)
+  }
+
+  const token = await exchangeIdentityCode({ code, codeVerifier, redirectUri, issuer })
+  if (token instanceof Error) {
+    return clearIdentityCookies(redirectToError(request, "login_failed"), names)
   }
 
   const loginResult = await postIdentityLogin({ token })
@@ -22,7 +58,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const reason =
       loginResult.message === "account_not_found" ? "account_not_found" : "login_failed"
 
-    return redirectToError(request, reason)
+    return clearIdentityCookies(redirectToError(request, reason), names)
   }
 
   const response = NextResponse.redirect(new URL("/", requestOrigin(request)))
@@ -32,6 +68,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     accessToken: loginResult.access_token,
     refreshToken: loginResult.refresh_token,
   })
+  clearIdentityCookies(response, names)
 
   return response
 }
@@ -57,4 +94,29 @@ function redirectToError(request: NextRequest, reason: string): NextResponse {
   url.searchParams.set("reason", reason)
 
   return NextResponse.redirect(url)
+}
+
+function clearIdentityCookies(
+  response: NextResponse,
+  names: ReturnType<typeof identityLoginCookieNames>,
+): NextResponse {
+  const secure = names.state.startsWith("__Host-")
+  response.cookies.set(names.state, "", {
+    expires: new Date(0),
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+  })
+  response.cookies.set(names.verifier, "", {
+    expires: new Date(0),
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+  })
+  response.headers.set("Cache-Control", "no-store")
+  response.headers.set("Referrer-Policy", "no-referrer")
+
+  return response
 }

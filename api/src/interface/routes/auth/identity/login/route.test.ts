@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { createIdentityTestKey } from "@/interface/test-helpers/create-identity-test-key"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createIdentityToken } from "@/interface/test-helpers/create-identity-token"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
@@ -9,7 +10,8 @@ import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-emplo
 import { z } from "zod"
 
 const jwtSecret = "identity-login-route-jwt-secret"
-const identityJwtSecret = "identity-login-route-identity-secret"
+const identityKey = await createIdentityTestKey()
+const wrongIdentityKey = await createIdentityTestKey("wrong-key")
 const identityIssuer = "https://identity-provider.example/"
 const identityAudience = "open-karte"
 const provisioningApiKey = "identity-login-route-provisioning-key"
@@ -62,7 +64,7 @@ async function postIdentityLogin(
   db: D1Database,
   token: string,
   overrides: {
-    identityJwtSecret?: string
+    identityJwks?: string
     identityIssuer?: string
     identityAudience?: string
   } = {},
@@ -75,7 +77,7 @@ async function postIdentityLogin(
     method: "POST",
     body: { token },
     now,
-    identityJwtSecret: overrides.identityJwtSecret ?? identityJwtSecret,
+    identityJwks: overrides.identityJwks ?? identityKey.jwks,
     identityIssuer: overrides.identityIssuer ?? identityIssuer,
     identityAudience: overrides.identityAudience ?? identityAudience,
   })
@@ -109,7 +111,7 @@ async function auditRows(
 describe("POST /auth/identity/login", () => {
   test("issues tokens for a provisioned external identity", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "login-jti-1",
     })
@@ -152,7 +154,7 @@ describe("POST /auth/identity/login", () => {
       .first<{ id: number; code: string | null }>()
     expect(employee?.code).toBeNull()
 
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "ext-null-code",
       email: "you+extnull@example.com",
       jti: "login-jti-null-code",
@@ -168,7 +170,10 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a token with an invalid signature", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken("wrong-secret", nowEpoch, { sub: "external-subject-1" })
+    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+      sub: "external-subject-1",
+      keyId: wrongIdentityKey.keyId,
+    })
 
     const response = await postIdentityLogin(db, token)
 
@@ -180,7 +185,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a token whose issuer does not match", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       issuer: "https://attacker.example/",
     })
@@ -193,7 +198,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a token whose audience does not match", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       audience: "some-other-app",
     })
@@ -206,7 +211,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects an expired token", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch - 120, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch - 120, {
       sub: "external-subject-1",
       iat: nowEpoch - 120,
       exp: nowEpoch - 60,
@@ -220,7 +225,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a token whose email is not verified", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       emailVerified: false,
     })
@@ -233,7 +238,7 @@ describe("POST /auth/identity/login", () => {
 
   test("returns account_not_found when no identity matches the subject", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "unknown-subject",
       jti: "login-jti-unknown",
     })
@@ -247,7 +252,7 @@ describe("POST /auth/identity/login", () => {
   test("rejects a suspended account", async () => {
     const db = await createTestDb()
     await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 1").run()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "login-jti-suspended",
     })
@@ -260,7 +265,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a replayed token (same jti used twice)", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "login-jti-replay",
     })
@@ -280,7 +285,7 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects when identity login is not configured", async () => {
     const db = await createTestDb()
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
     })
 
@@ -292,7 +297,7 @@ describe("POST /auth/identity/login", () => {
       method: "POST",
       body: { token },
       now,
-      // IDENTITY_JWT_SECRET / IDENTITY_ISSUER を渡さない = 未設定。
+      // IDENTITY_JWKS / IDENTITY_ISSUER を渡さない = 未設定。
     })
 
     expect(response.status).toBe(401)

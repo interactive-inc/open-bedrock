@@ -14,8 +14,8 @@ type Props = {
  * サインイン後は boundary を reset して同じページを再描画する。
  *
  * ビルド時環境変数でログイン手段を出し分ける:
- * - NEXT_PUBLIC_IDENTITY_LOGIN_URL … 設定時、外部 identity provider への
- *   ログインボタンを表示する
+ * - NEXT_PUBLIC_IDENTITY_LOGIN_URL … 設定時、PKCEを開始する内部routeへの
+ *   ログインボタンを表示する（値自体は公開provider URLとして使わない）
  * - NEXT_PUBLIC_PASSWORD_LOGIN_HIDDEN="1" … パスワードフォームを隠す。
  *   ただし NEXT_PUBLIC_IDENTITY_LOGIN_URL が無い場合はロックアウト防止のため隠さない
  * - NEXT_PUBLIC_LOGIN_HIDDEN="1" … フォームもボタンも出さずタイトルだけ表示する。
@@ -62,7 +62,7 @@ export function LoginPage(props: Props) {
           ) : null}
 
           {identityLoginUrl !== null ? (
-            <Button nativeButton={false} render={<a href={identityLoginUrl} />}>
+            <Button nativeButton={false} render={<a href="/auth/broker/login" />}>
               {t("ログインする")}
             </Button>
           ) : null}
