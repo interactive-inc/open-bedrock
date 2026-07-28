@@ -193,7 +193,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
     })),
   )
 
-  // admin(id 23, 所属なし)を追加する。
+  // root(id 23, 所属なし)を追加する。
   await seedD1(db, "employees", [
     {
       id: 23,
@@ -207,7 +207,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
   ])
 
   await seedIamForEmployees(db, [
-    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "admin" },
+    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "root" },
   ])
 
   await seedD1(db, "org_memberships", [
@@ -299,7 +299,7 @@ describe("GET /applications?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/applications?scope=department&department_code=D001",
-      token: await tokenFor(23, "admin"),
+      token: await tokenFor(23, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -377,7 +377,7 @@ describe("GET /applications?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/applications?scope=department",
-      token: await tokenFor(23, "admin"),
+      token: await tokenFor(23, "root"),
     })
 
     expect(response.status).toBe(422)
