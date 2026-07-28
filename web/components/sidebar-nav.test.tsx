@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -222,6 +222,49 @@ describe("SidebarNav space tabs", () => {
 
     expect(screen.getByRole("link", { name: "マイページ" }).getAttribute("href")).toBe("/my")
     expect(screen.queryByRole("link", { name: "従業員" })).toBeNull()
+  })
+})
+
+describe("SidebarNav feature registry", () => {
+  test("shows development with a semantic icon color and a text badge", () => {
+    pathnameMock.mockReturnValue("/my/attendances")
+
+    renderSidebar([])
+
+    const link = screen.getByRole("link", { name: "勤怠" })
+    expect(link.querySelector("svg")?.classList.contains("text-feature-development")).toBe(true)
+    expect(screen.getByText("琥珀色のアイコン")).toBeTruthy()
+    expect(link.getAttribute("aria-description")).toBe("company-standard・開発中")
+  })
+
+  test("does not add development treatment to available features", () => {
+    pathnameMock.mockReturnValue("/my")
+
+    renderSidebar([])
+
+    const link = screen.getByRole("link", { name: "マイページ" })
+    expect(link.querySelector("svg")?.classList.contains("text-feature-development")).toBe(false)
+    expect(within(link).queryByText("開発中")).toBeNull()
+  })
+
+  test("groups my features by their task-oriented registry group", () => {
+    pathnameMock.mockReturnValue("/my")
+
+    renderSidebar([])
+
+    expect(screen.getByText("概要")).toBeTruthy()
+    expect(screen.getByText("時間と予定")).toBeTruthy()
+    expect(screen.getByText("申請と手続き")).toBeTruthy()
+    expect(screen.getByText("成長と評価")).toBeTruthy()
+    expect(screen.getByText("資産と施設")).toBeTruthy()
+  })
+
+  test("hides retirement candidates even when the permission is held", () => {
+    pathnameMock.mockReturnValue("/organization/employees")
+
+    renderSidebar(["management_dashboard:view"])
+
+    expect(screen.queryByRole("link", { name: "経営ダッシュボード" })).toBeNull()
   })
 })
 
