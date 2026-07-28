@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /announcements/:id/publish。アナウンスを公開し全社へ通知する（announcement:manage）。
+/** POST /announcements/:id/publish。アナウンスを公開し全社へ通知する（announcement:manage）。 */
 export async function publishAnnouncement(id: number) {
   const client = await createClient()
 

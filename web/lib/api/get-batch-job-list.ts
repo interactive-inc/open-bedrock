@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /batch。バッチジョブの状況一覧を取得する。
-// 認証必須のため、未認証や権限不足の場合は api が 401/403 を返し戻りは Error になる。
+/**
+ * GET /batch。バッチジョブの状況一覧を取得する。
+ * 認証必須のため、未認証や権限不足の場合は api が 401/403 を返し戻りは Error になる。
+ */
 export async function getBatchJobList() {
   const client = await createClient()
 

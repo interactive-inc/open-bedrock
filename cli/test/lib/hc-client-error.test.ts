@@ -1,11 +1,13 @@
 import { app } from "@/app/index"
-import { describe, expect, spyOn, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, spyOn, test } from "bun:test"
+import { mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
-// #96: hc クライアントが API のエラーレスポンス(4xx/5xx)をサイレントに成功扱いせず、
-// stderr + 非ゼロ終了に落とすことを確認する。fetch をモックして API 障害を再現する。
-
-// bun の typeof fetch は静的メソッド preconnect を要求するため、実 fetch から引き継いだ
-// モックを作り、mockImplementation の型（typeof fetch）に適合させる。
+/**
+ * bun の typeof fetch は静的メソッド preconnect を要求するため、実 fetch から引き継いだ
+ * モックを作り、mockImplementation の型（typeof fetch）に適合させる。
+ */
 function fetchReturning(status: number, body: string): typeof fetch {
   return Object.assign(() => Promise.resolve(new Response(body, { status })), {
     preconnect: fetch.preconnect,
@@ -44,7 +46,33 @@ async function whoamiRejectingWith(error: Error): Promise<Response> {
   }
 }
 
+/**
+ * hc クライアントが API のエラーレスポンス(4xx/5xx)をサイレントに成功扱いせず、
+ * stderr + 非ゼロ終了に落とすことを確認する。fetch をモックして API 障害を再現する
+ */
 describe("hc client error handling (#96)", () => {
+  // 実 HOME の settings.json を読まないよう空の一時ディレクトリへ隔離する。
+  // トークンは置かない: 401 テストの refresh 経路を踏ませず、テストの順序依存を避ける。
+  let originalConfigDir: string | undefined
+
+  let tempDir: string
+
+  beforeAll(async () => {
+    originalConfigDir = process.env.BEDROCK_CONFIG_DIR
+    tempDir = await mkdtemp(join(tmpdir(), "bedrock-hc-client-"))
+    process.env.BEDROCK_CONFIG_DIR = tempDir
+  })
+
+  afterAll(async () => {
+    if (originalConfigDir === undefined) {
+      delete process.env.BEDROCK_CONFIG_DIR
+    } else {
+      process.env.BEDROCK_CONFIG_DIR = originalConfigDir
+    }
+
+    await rm(tempDir, { recursive: true, force: true })
+  })
+
   test("surfaces a 4xx API error instead of returning it as success", async () => {
     const response = await whoamiWith(403, "forbidden")
 
@@ -76,12 +104,12 @@ describe("hc client error handling (#96)", () => {
     expect(await response.text()).toContain("You Example")
   })
 
-  test("adds a 'karte login' hint on 401", async () => {
+  test("adds a 'bedrock login' hint on 401", async () => {
     const response = await whoamiWith(401, JSON.stringify({ error: "invalid token" }))
 
     expect(response.status).toBe(401)
 
-    expect(await response.text()).toContain("karte login")
+    expect(await response.text()).toContain("bedrock login")
   })
 
   test("adds a permission hint on 403", async () => {

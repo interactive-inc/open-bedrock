@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte headcount-plans list [--fiscal-year <y>]`
+export const help = `bedrock headcount-plans list [--fiscal-year <y>]`
 
 export default factory.createHandlers(
   zValidator(

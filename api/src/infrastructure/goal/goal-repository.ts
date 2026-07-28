@@ -23,7 +23,7 @@ export class GoalRepository {
     }
   }
 
-  // 社員本人の目標を id の昇順で返す。
+  /** 社員本人の目標を id の昇順で返す。 */
   async findByEmployeeId(
     employeeId: number,
     opts?: { limit: number; offset: number },
@@ -44,7 +44,7 @@ export class GoalRepository {
     }
   }
 
-  // 指定 period の目標を全 owner_type ぶん id 昇順で返す。period 未指定なら全期間。
+  /** 指定 period の目標を全 owner_type ぶん id 昇順で返す。period 未指定なら全期間。 */
   async findAllByPeriod(period: string | null): Promise<ReadonlyArray<Goal> | Error> {
     try {
       const conditions: Array<SQL> = []
@@ -116,7 +116,7 @@ export class GoalRepository {
     }
   }
 
-  // 目標を削除する。
+  /** 目標を削除する。 */
   async delete(goalId: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goals).where(eq(goals.id, goalId))

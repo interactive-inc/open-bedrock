@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { PartnerSearchQuery } from "@/lib/api/types/partner-types"
 
-// GET /partners。取引先一覧。キーワード / status で絞り込み可能。
+/** GET /partners。取引先一覧。キーワード / status で絞り込み可能。 */
 export async function getPartnerList(query: PartnerSearchQuery) {
   const client = await createClient()
 

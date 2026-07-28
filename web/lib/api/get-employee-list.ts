@@ -7,9 +7,11 @@ type Params = {
   offset?: number
 }
 
-// GET /employees を session トークン付きで呼び、絞り込み済みの従業員一覧を返す。
-// 絞り込み条件 q / dept / status は null のとき送信されない。
-// api は snake_case を返すため、この関数内で camelCase の EmployeeListItem に変換する。
+/**
+ * GET /employees を session トークン付きで呼び、絞り込み済みの従業員一覧を返す。
+ * 絞り込み条件 q / dept / status は null のとき送信されない。
+ * api は snake_case を返すため、この関数内で camelCase の EmployeeListItem に変換する。
+ */
 export async function getEmployeeList(filter: EmployeeSearchFilter, params: Params = {}) {
   const client = await createClient()
 
@@ -35,9 +37,9 @@ export async function getEmployeeList(filter: EmployeeSearchFilter, params: Para
   }
 }
 
-// snake_case の生レスポンスを公開 type へ変換する。
+/** snake_case の生レスポンスを公開 type へ変換する。 */
 function toEmployeeListItem(raw: {
-  code: string
+  code: string | null
   name: string
   dept_name: string | null
   position: string | null

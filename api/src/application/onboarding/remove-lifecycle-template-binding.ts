@@ -1,15 +1,15 @@
-import type { Context, SessionPayload } from "@/env"
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 
 export class RemoveLifecycleTemplateBinding {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     templateCode: string
   }): Promise<{ removed: boolean } | ApplicationError> {
-    if (!canManageOnboarding(command.session)) {
+    if (!command.session.hasPermission("onboarding:manage")) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

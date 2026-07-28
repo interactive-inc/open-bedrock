@@ -1,11 +1,11 @@
-import { canManageRooms } from "@/lib/room/can-manage-rooms"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RoomRepository } from "@/infrastructure/room/room-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   roomId: number
 }
 
@@ -21,7 +21,7 @@ export class DeleteRoom {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const roomRepository = new RoomRepository(this.c)
 
-    if (canManageRooms(command.session) === false) {
+    if (command.session.hasPermission("room:manage") === false) {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 

@@ -4,7 +4,10 @@ import { z } from "zod"
 
 const zProps = z.object({
   id: z.number(),
-  code: z.string(),
+  // 外部 identity プロビジョニングで作られる従業員は社員コードを持たない（DB 上 null 許容、
+  // migration 0029）。認証などの読取経路がそうした行を Employee として読み戻すため、code は
+  // 誠実に null 許容とする。code で従業員を一意特定する経路は非 null の引数で引くため影響しない。
+  code: z.string().nullable(),
   name: z.string(),
   deptId: z.number().nullable(),
   deptName: z.string().nullable(),

@@ -3,7 +3,7 @@ import { PreflightLifecycleMigration } from "@/application/employee-lifecycle/pr
 import { RebuildLifecycleProjections } from "@/application/employee-lifecycle/rebuild-lifecycle-projections"
 import { VerifyLifecycleMigration } from "@/application/employee-lifecycle/verify-lifecycle-migration"
 import type { Context } from "@/env"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
@@ -93,12 +93,12 @@ describe("employee lifecycle migration", () => {
     ).toBe(2)
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM org_assignment_period_versions")
+        .prepare("SELECT COUNT(*) AS count FROM employee_org_assignment_period_versions")
         .first<number>("count"),
     ).toBe(3)
     expect(
       await db
-        .prepare("SELECT status FROM lifecycle_migration_state WHERE id = 1")
+        .prepare("SELECT status FROM lifecycle_migration_states WHERE id = 1")
         .first<string>("status"),
     ).toBe("backfilled")
 
@@ -106,7 +106,7 @@ describe("employee lifecycle migration", () => {
     expect(verified).not.toBeInstanceOf(ApplicationError)
     expect(
       await db
-        .prepare("SELECT status FROM lifecycle_migration_state WHERE id = 1")
+        .prepare("SELECT status FROM lifecycle_migration_states WHERE id = 1")
         .first<string>("status"),
     ).toBe("verified")
   })
@@ -146,7 +146,7 @@ describe("employee lifecycle migration", () => {
     expectCode(result, "lifecycle_projection_mismatch")
     expect(
       await db
-        .prepare("SELECT status FROM lifecycle_migration_state WHERE id = 1")
+        .prepare("SELECT status FROM lifecycle_migration_states WHERE id = 1")
         .first<string>("status"),
     ).toBe("backfilled")
   })

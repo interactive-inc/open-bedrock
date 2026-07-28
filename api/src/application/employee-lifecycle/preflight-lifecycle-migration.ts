@@ -1,9 +1,9 @@
 import type { Context } from "@/env"
 import {
   loadLegacyLifecycleSnapshot,
-  validateMigrationInput,
   type LifecycleMigrationIssue,
-} from "@/application/employee-lifecycle/lifecycle-migration-support"
+} from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
+import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
 import { ApplicationError } from "@/lib/errors"
 
 export type LifecycleMigrationPreflight = {

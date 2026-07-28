@@ -8,7 +8,7 @@ export type MeetingMinutesCreateRequest = {
   body_md: string
 }
 
-// POST /meetings/:code/minutes。議事録を記録する。失敗時は Error。
+/** POST /meetings/:code/minutes。議事録を記録する。失敗時は Error。 */
 export async function createMeetingMinutes(code: string, request: MeetingMinutesCreateRequest) {
   const client = await createClient()
 

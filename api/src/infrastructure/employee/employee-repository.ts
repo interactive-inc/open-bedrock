@@ -1,18 +1,17 @@
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
-// 新規従業員の登録に必要な値。id は DB が採番するため含めない。
-// 認証(email/password)・認可(role)は employees ではなく IAM(identities/account_roles)が正。
+/**
+ * 新規従業員の登録に必要な値。id は DB が採番するため含めない。
+ * 認証(email/password)・認可(role)は employees ではなく IAM(identities/account_roles)が正。
+ */
 export type NewEmployee = {
   code: string
   name: string
@@ -45,7 +44,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。
+  /** 新規従業員を登録し、採番後の行を返す。認証情報は AccountProvisioner が別途払い出す。 */
   async create(newEmployee: NewEmployee): Promise<Employee | Error> {
     try {
       const rows = await this.c.var.database
@@ -74,7 +73,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。
+  /** 氏名・部署・役職・在籍状況を更新する。code と認証・認可情報には触れない。 */
   async updateProfile(employee: Employee): Promise<Employee | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -86,7 +85,7 @@ export class EmployeeRepository {
           position: employee.position,
           status: employee.status,
         })
-        .where(eq(employees.code, employee.code))
+        .where(eq(employees.id, employee.id))
         .returning()
 
       const row = rows.at(0)
@@ -103,10 +102,10 @@ export class EmployeeRepository {
     }
   }
 
-  // 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。
-  async updateProfileGuardingLastAdmin(
+  /** 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。 */
+  async updateProfileGuardingLastRoot(
     employee: Employee,
-  ): Promise<Employee | null | Error | LastAdminError> {
+  ): Promise<Employee | null | Error | LastRootError> {
     try {
       const db = this.c.env.DB
 
@@ -119,23 +118,25 @@ export class EmployeeRepository {
                  dept_name = ?4,
                  position = ?5,
                  status = ?6
-             WHERE code = ?1`,
+             WHERE id = ?1`,
           )
           .bind(
-            employee.code,
+            employee.id,
             employee.name,
             employee.deptId,
             employee.deptName,
             employee.position,
             employee.status,
           ),
-        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(db, employee.id),
+        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
+          employee.id,
+        ),
       ])
 
-      return await this.findByCode(employee.code)
+      return await this.findById(employee.id)
     } catch (error) {
-      if (isAbortedByLastAdminGuard(error)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(error)) {
+        return new LastRootError()
       }
 
       if (isUniqueConstraintError(error)) {
@@ -148,7 +149,7 @@ export class EmployeeRepository {
     }
   }
 
-  // 従業員を削除する。
+  /** 従業員を削除する。 */
   async delete(code: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(employees).where(eq(employees.code, code))

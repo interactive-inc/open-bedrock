@@ -1,7 +1,7 @@
 "use client"
 
 import { Eye, EyeOff } from "lucide-react"
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { loginAction } from "@/lib/auth/login-action"
 import type { LoginState } from "@/lib/auth/login-action"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,13 @@ const initialState: LoginState = { ok: false, error: null }
 
 /**
  * メール + パスワードでサインインするフォーム。`useActionState` で `loginAction` を呼び、
- * 成功時は Server Action 内で cookie を立てて `/` に redirect する。
+ * 成功時は Server Action 内で cookie を立て、現在の error boundary を再描画する。
  */
-export function LoginForm() {
+type Props = {
+  onAuthenticated: () => void
+}
+
+export function LoginForm(props: Props) {
   const t = useTranslator()
 
   const action = useActionState(loginAction, initialState)
@@ -27,6 +31,12 @@ export function LoginForm() {
   const isPending = action[2]
 
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    if (state.ok) {
+      props.onAuthenticated()
+    }
+  }, [props.onAuthenticated, state.ok])
 
   return (
     <form action={formAction}>

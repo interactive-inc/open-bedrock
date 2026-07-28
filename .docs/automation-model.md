@@ -1,7 +1,5 @@
 # AI 自動化と人間承認
 
-規範性: 仕様正本。AI の委任、提案、人間承認、限定実行、障害処理の契約を定める。
-
 AI 自動化は、目的の委任、変更提案、方針評価、人間承認、限定実行、結果確認を分離する。人間操作を模倣する経路を作ってはならない。
 
 ## Principal
@@ -11,7 +9,7 @@ AI 自動化は、目的の委任、変更提案、方針評価、人間承認�
 - `ServicePrincipal`: バッチまたは内部サービス
 - `ConnectorPrincipal`: 外部 API 資格情報を使う主体
 
-`AgentPrincipal` と `ServicePrincipal` は `HumanAttestation` を生成できない。人間の目的で AI が動く場合は `requested_by` と `executed_by` を分ける。人間の access token を AI へ渡してはならない。
+`AgentPrincipal` と `ServicePrincipal` は `HumanAttestation` を生成できない。AgentPrincipal、ServicePrincipal、ConnectorPrincipal は、会社を拘束する判断の decider または継続責任主体になれない。人間の目的で AI が動く場合は `requested_by` と `executed_by` を分ける。人間の access token を AI へ渡してはならない。
 
 ## 実行フロー
 
@@ -85,6 +83,23 @@ schema 検証、不変条件、差分、simulation、dry run を判定根拠に�
 
 人間承認を、法的妥当性、税計算、外部実行成功の保証として扱ってはならない。必要な外部専門判断は別の前提条件とする。
 
+## 外部承認チャネル
+
+メッセージング製品、メール、モバイル通知などの外部承認チャネルは表示と入力の提供面とする。チャネルの delivery、既読、reaction、button click を HumanAttestation として扱ってはならない。API が認証、方針、Proposal、状態を検査し、HumanAttestation の作成を最終判断する。
+
+外部承認チャネルは次を満たす。
+
+- 外部利用者 ID を、検証済み mapping により HumanPrincipal へ解決する
+- callback の署名、timestamp、nonce、body digest、replay、重複を検査する
+- 一回限りの state token を proposal ID、revision、digest、対象 HumanPrincipal、channel、expiry へ結ぶ
+- callback の表示値または actor 情報を正本として使用せず、API が Proposal と候補者を再取得する
+- Proposal の効果、差分、対象、外部送信、期限を同じ正規表現から表示する
+- チャネルの identity assurance が RiskPolicy の要求を満たさない場合は、HumanPrincipal の再認証と step-up が可能な Web 提供面へ移す
+- 表示上限または改変により承認対象全体を提示できない場合は、チャネル内で承認させず Web 提供面へ移す
+- 承認、却下、差戻し、棄権の結果と失敗理由を API の応答から表示する
+
+外部チャネルの credential、署名 secret、state token を AI の prompt へ渡してはならない。チャネル障害時も Web または CLI から同じ Proposal を処理できなければならない。
+
 ## ExecutionAuthorization
 
 Execution Gateway は、一回限りまたは短命の `ExecutionAuthorization` だけを受理する。次を固定する。
@@ -115,7 +130,7 @@ flowchart LR
   Effective --> Enforce["実装済み規則だけを強制"]
 ```
 
-文書に規則があることを、技術的強制の証拠として扱ってはならない。強制 mapping と適合テストを持つ規則だけを自動認可に使用する。
+自動認可には、enforcement mapping と適合テストを持つ規則だけを使用する。文章として存在するだけの規則を、自動認可に使用してはならない。
 
 ## 障害処理
 
@@ -128,6 +143,7 @@ flowchart LR
 ## 不変条件
 
 - AgentPrincipal は HumanAttestation を作成できない
+- AgentPrincipal、ServicePrincipal、ConnectorPrincipal は会社を拘束する Decision または継続責任を担えない
 - AgentPrincipal は自分の mandate、権限、方針、監査を変更できない
 - 承認対象と実行 payload の digest を一致させる
 - 承認後の変更は再承認を必要とする
@@ -135,7 +151,8 @@ flowchart LR
 - requester、proposer、approver、executor、connector を別々に記録する
 - 外部結果を Assertion として受領し、採用過程を残す
 - Web、CLI、AI へ同じ業務 API と認可を適用する
+- 外部承認チャネルを認可境界または承認記録の正本にしない
 
 ## 現行実装差分
 
-本フローの実装状態は [能力台帳](./capability-map.md)、API、CLI、Web、テストを正とする。独立した AgentPrincipal、HumanAttestation、ExecutionAuthorization、Execution Gateway が存在しない経路を、本仕様へ適合済みとしてはならない。
+AI 自動化の実装状態は [能力台帳](./capability-map.md) に記録し、API、CLI、Web、テストと一致させる。独立した AgentPrincipal、HumanAttestation、ExecutionAuthorization、Execution Gateway が存在しない経路を、安全要件へ適合済みとしてはならない。

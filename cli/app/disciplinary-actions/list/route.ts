@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte disciplinary-actions list [--employee-id <id>]`
+export const help = `bedrock disciplinary-actions list [--employee-id <id>]`
 
 export default factory.createHandlers(
   zValidator(

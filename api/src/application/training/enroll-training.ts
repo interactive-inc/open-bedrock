@@ -1,4 +1,4 @@
-import { canManageTraining } from "@/lib/training/can-manage-training"
+import type { Session } from "@/lib/auth/session"
 import {
   ApplicationError,
   ConflictError,
@@ -7,14 +7,14 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { TrainingCourseRepository } from "@/infrastructure/training/training-course-repository"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
   courseCode: string
   enrolleeEmployeeCode: string | null
   dueDate: string | null
@@ -81,7 +81,7 @@ export class EnrollTraining {
       return command.viewerEmployeeId
     }
 
-    if (canManageTraining(command.session) === false) {
+    if (command.session.hasPermission("training:manage") === false) {
       return new ForbiddenError("cannot enroll others", "forbidden")
     }
 

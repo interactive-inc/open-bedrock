@@ -1,5 +1,7 @@
 "use client"
 
+import * as Sentry from "@sentry/nextjs"
+import { useEffect } from "react"
 import "./globals.css"
 import { Button } from "@/components/ui/button"
 
@@ -8,10 +10,16 @@ type Props = {
   reset: () => void
 }
 
-// グローバルエラーバウンダリ。ルート layout 自体で投げられた例外を捕捉する
-// （app/error.tsx は layout 配下のみが対象で root layout の例外は拾えない）。
-// root layout を置き換えるため html/body を自前で描画する。
+/**
+ * グローバルエラーバウンダリ。ルート layout 自体で投げられた例外を捕捉する
+ * （app/error.tsx は layout 配下のみが対象で root layout の例外は拾えない）。
+ * root layout を置き換えるため html/body を自前で描画する。
+ */
 export default function GlobalError(props: Props) {
+  useEffect(() => {
+    Sentry.captureException(props.error)
+  }, [props.error])
+
   return (
     <html lang="ja">
       <body className="min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center">

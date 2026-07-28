@@ -11,16 +11,16 @@ import { ViewMyBalance } from "@/application/thanks-points/view-my-balance"
 import { ViewMyBudget } from "@/application/thanks-points/view-my-budget"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { eq } from "drizzle-orm"
 import { describe, expect, test } from "bun:test"
 
 type TestContext = ReturnType<typeof createTestContext>["context"]
 
-// 受領残高を作る。
+/** 受領残高を作る。 */
 async function seedBalance(
   context: TestContext,
   recipientEmployeeId: number,
@@ -35,7 +35,7 @@ async function seedBalance(
   })
 }
 
-// アクティブな報酬を作る。
+/** アクティブな報酬を作る。 */
 async function seedReward(
   context: TestContext,
   props: { pointCost: number; stock: number | null; isActive?: boolean },
@@ -59,8 +59,6 @@ async function seedReward(
 
   return row.id
 }
-
-// --- CreateReward ---
 
 describe("CreateReward", () => {
   test("creates a reward with valid inputs", async () => {
@@ -102,8 +100,6 @@ describe("CreateReward", () => {
     expectApplicationError(result, ValidationError, "invalid_reward")
   })
 })
-
-// --- UpdateReward ---
 
 describe("UpdateReward", () => {
   test("updates an existing reward", async () => {
@@ -157,8 +153,6 @@ describe("UpdateReward", () => {
   })
 })
 
-// --- ListRewards ---
-
 describe("ListRewards", () => {
   test("returns all rewards", async () => {
     const { context } = createTestContext()
@@ -198,8 +192,6 @@ describe("ListRewards", () => {
     expect(result.length).toBe(1)
   })
 })
-
-// --- RequestRedemption ---
 
 describe("RequestRedemption", () => {
   test("creates a redemption when balance and stock are sufficient", async () => {
@@ -333,8 +325,6 @@ describe("RequestRedemption", () => {
   })
 })
 
-// --- DecideRedemption ---
-
 describe("DecideRedemption", () => {
   test("approves a pending redemption and decrements stock", async () => {
     const { context } = createTestContext()
@@ -354,7 +344,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -406,7 +396,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: firstPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -416,7 +406,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: secondPending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -456,7 +446,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -488,7 +478,7 @@ describe("DecideRedemption", () => {
     }
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin", 5),
+      session: makeTestSession("root", 5),
       redemptionId: pending.id ?? 0,
       deciderId: 5,
       action: "approve",
@@ -502,7 +492,7 @@ describe("DecideRedemption", () => {
     const { context } = createTestContext()
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: 9999,
       deciderId: 2,
       action: "approve",
@@ -530,7 +520,7 @@ describe("DecideRedemption", () => {
     }
 
     const first = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -540,7 +530,7 @@ describe("DecideRedemption", () => {
     expect(first).toBeInstanceOf(ThanksRedemption)
 
     const second = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "reject",
@@ -582,7 +572,7 @@ describe("DecideRedemption", () => {
     })
 
     const result = await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -592,8 +582,6 @@ describe("DecideRedemption", () => {
     expectApplicationError(result, ConflictError, "insufficient_balance")
   })
 })
-
-// --- ListMyRedemptions ---
 
 describe("ListMyRedemptions", () => {
   test("returns only the employee's redemptions", async () => {
@@ -635,8 +623,6 @@ describe("ListMyRedemptions", () => {
   })
 })
 
-// --- ListPendingRedemptions ---
-
 describe("ListPendingRedemptions", () => {
   test("returns only pending redemptions", async () => {
     const { context } = createTestContext()
@@ -657,7 +643,7 @@ describe("ListPendingRedemptions", () => {
 
     // approve して fulfilled にする
     await new DecideRedemption(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       redemptionId: pending.id ?? 0,
       deciderId: 2,
       action: "approve",
@@ -674,8 +660,6 @@ describe("ListPendingRedemptions", () => {
     expect(result.length).toBe(0)
   })
 })
-
-// --- ViewMyBalance ---
 
 describe("ViewMyBalance", () => {
   test("returns the correct balance after receiving thanks", async () => {
@@ -728,8 +712,6 @@ describe("ViewMyBalance", () => {
     expect(balance).toBe(70)
   })
 })
-
-// --- ViewMyBudget ---
 
 describe("ViewMyBudget", () => {
   test("creates budget on first access", async () => {

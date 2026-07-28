@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /commendations。表彰を記録する（commendation:manage）。
+/** POST /commendations。表彰を記録する（commendation:manage）。 */
 export async function createCommendation(request: {
   employee_id: number
   title: string

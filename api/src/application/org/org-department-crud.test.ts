@@ -12,14 +12,14 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import type { Context } from "@/env"
 
 async function seedDepartment(context: Context, code: string): Promise<OrgDepartment> {
   const result = await new CreateOrgDepartment(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     department: {
       code: code,
       departmentId: 100,
@@ -41,7 +41,7 @@ describe("CreateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -83,7 +83,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -99,7 +99,7 @@ describe("CreateOrgDepartment", () => {
   test("requires a personnel action for the initial department responsibility", async () => {
     const { context } = createTestContext()
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 1,
@@ -117,7 +117,7 @@ describe("CreateOrgDepartment", () => {
     await seedDepartment(context, "CORP")
 
     const result = await new CreateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       department: {
         code: "DEV",
         departmentId: 2,
@@ -158,7 +158,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: undefined,
@@ -179,7 +179,7 @@ describe("UpdateOrgDepartment", () => {
     const { context } = createTestContext()
     await seedDepartment(context, "DEV")
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: null,
       managerEmployeeCode: "E001",
@@ -210,7 +210,7 @@ describe("UpdateOrgDepartment", () => {
     await seedDepartment(context, "DEV")
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
       parentCode: "DEV",
       managerEmployeeCode: null,
@@ -224,7 +224,7 @@ describe("UpdateOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
       parentCode: null,
       managerEmployeeCode: null,
@@ -240,10 +240,10 @@ describe("DeleteOrgDepartment", () => {
     const { context, db } = createTestContext()
 
     await seedDepartment(context, "DEV")
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
 
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
     })
 
@@ -259,16 +259,16 @@ describe("DeleteOrgDepartment", () => {
     const { context, db } = createTestContext()
     await seedDepartment(context, "DEV")
     await db.exec(`
-      INSERT INTO org_assignment_period_versions
+      INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at)
       VALUES ('fixture-assignment', 1, 'fixture-employment', 1, 'DEV', 'primary',
               NULL, NULL, '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "DEV",
     })
     expectApplicationError(result, ConflictError, "department_in_use")
@@ -291,7 +291,7 @@ describe("DeleteOrgDepartment", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteOrgDepartment(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "NOPE",
     })
 

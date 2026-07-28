@@ -7,8 +7,8 @@ import { UpdateCertificateRequest } from "@/application/certificate-request/upda
 import { CertificateRequest } from "@/domain/certificate-request/certificate-request.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 async function seedRequest(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateCertificateRequest(context).run({

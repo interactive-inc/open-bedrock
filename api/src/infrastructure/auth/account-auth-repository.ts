@@ -2,10 +2,6 @@ import type { Context } from "@/env"
 import { accountRoles, accounts, permissions, rolePermissions, roles } from "@/schema"
 import { eq, inArray } from "drizzle-orm"
 
-// verify-bearer / 認証フローが使う、アカウントの認証・認可状態の解決。
-// account 取得と、accountRoles→roles→rolePermissions→permissions を畳んだ
-// permissions Set / roleKeys の構築を担う。
-
 export type ResolvedAccount = {
   accountId: number
   employeeId: number | null
@@ -16,7 +12,7 @@ export type ResolvedAccount = {
 }
 
 /**
- * アカウントの認証・認可状態を解決する。account 不在は null。
+ * verify-bearer / 認証フローが使う、アカウントの認証・認可状態の解決。account 不在は null。
  * permission は accountRoles ⋈ roles ⋈ rolePermissions ⋈ permissions の和集合。
  */
 export class AccountAuthRepository {
@@ -106,22 +102,14 @@ export class AccountAuthRepository {
 
     const db = this.c.var.database
 
-    const grants = await db
-      .select()
+    // permission 数が D1 のバインド変数上限(100)を超えるため、permission ID の
+    // inArray ではなく join で解決する。バインド変数はロール数だけに依存する。
+    const grantRows = await db
+      .select({ key: permissions.key })
       .from(rolePermissions)
+      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
       .where(inArray(rolePermissions.roleId, [...roleIds]))
 
-    const permissionIds = grants.map((row) => row.permissionId)
-
-    if (permissionIds.length === 0) {
-      return []
-    }
-
-    const permissionRows = await db
-      .select()
-      .from(permissions)
-      .where(inArray(permissions.id, permissionIds))
-
-    return permissionRows.map((row) => row.key)
+    return grantRows.map((row) => row.key)
   }
 }

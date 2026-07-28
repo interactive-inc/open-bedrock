@@ -1,6 +1,6 @@
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
+import type { Session } from "@/lib/auth/session"
 import type { ReviewForm } from "@/domain/review/review-form.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
@@ -16,7 +16,7 @@ export type BulkFormInput = {
 }
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   cycleId: number
   forms: ReadonlyArray<BulkFormInput>
 }
@@ -29,7 +29,7 @@ export class CreateReviewFormsBulk {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ReadonlyArray<ReviewForm> | ApplicationError> {
-    if (canAdministerCycle(input.session) === false) {
+    if (input.session.hasPermission("review:administer") === false) {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
@@ -73,7 +73,7 @@ export class CreateReviewFormsBulk {
     return created
   }
 
-  // 被評価者・評価者に実在しない社員 ID があれば 1 件返す。全て実在すれば null。
+  /** 被評価者・評価者に実在しない社員 ID があれば 1 件返す。全て実在すれば null。 */
   private async findMissingEmployeeId(
     forms: ReadonlyArray<BulkFormInput>,
   ): Promise<number | null | Error> {

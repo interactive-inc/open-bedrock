@@ -1,7 +1,7 @@
 import { Application } from "@/domain/application/application.entity"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("ApplicationRepository", () => {

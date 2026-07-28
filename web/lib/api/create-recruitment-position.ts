@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /recruitment/positions。募集ポジションを登録する（recruitment:manage）。
+/** POST /job-openings。募集ポジションを登録する（recruitment:manage）。 */
 export async function createRecruitmentPosition(request: {
   title: string
   department_code: string | null
@@ -9,7 +9,7 @@ export async function createRecruitmentPosition(request: {
 }) {
   const client = await createClient()
 
-  const response = await client.recruitment.positions.$post({ json: request })
+  const response = await client["job-openings"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "募集の登録に失敗しました" })

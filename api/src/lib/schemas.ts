@@ -10,8 +10,10 @@ export const isoDate = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD 形式で入力してください")
   .refine(isRealCalendarDate, "実在する日付を入力してください")
 
-// 正規表現を通った YYYY-MM-DD が実在する日付か検証する。UTC で組み立て直し、
-// 年・月・日が入力と一致すれば（=ロールオーバーしていなければ）実在する日付とみなす。
+/**
+ * 正規表現を通った YYYY-MM-DD が実在する日付か検証する。UTC で組み立て直し、
+ * 年・月・日が入力と一致すれば（=ロールオーバーしていなければ）実在する日付とみなす。
+ */
 function isRealCalendarDate(value: string): boolean {
   const year = Number(value.slice(0, 4))
 
@@ -36,7 +38,7 @@ export const yearMonth = z.string().regex(/^\d{4}-\d{2}$/, "YYYY-MM 形式で入
 export const codeSchema = z.string().min(1).max(200)
 
 /** 従業員ロール。API 入力で許容する値を列挙する。 */
-export const employeeRoleSchema = z.enum(["member", "manager", "hr", "admin"])
+export const employeeRoleSchema = z.enum(["member", "manager", "hr", "root"])
 
 export type EmployeeRole = z.infer<typeof employeeRoleSchema>
 

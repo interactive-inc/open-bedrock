@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /roles。ロール一覧（iam:manage_roles が必要）。
+/** GET /roles。ロール一覧（iam:manage_roles が必要）。 */
 export async function getRoles() {
   const client = await createClient()
 

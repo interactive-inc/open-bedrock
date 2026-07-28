@@ -6,8 +6,8 @@ import { UpdateRentalReservation } from "@/application/rental/update-rental-rese
 import { CancelRentalReservation } from "@/application/rental/cancel-rental-reservation"
 import { ListMyRentalReservations } from "@/application/rental/list-my-rental-reservations"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import type { Context } from "@/env"
 
 async function seedReservation(context: Context, requesterId: number): Promise<RentalReservation> {

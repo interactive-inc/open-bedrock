@@ -1,7 +1,4 @@
-// rentals ドメインの手書き型。api 側 zod スキーマ (api/src/rental) と疎結合に保つため
-// z.infer を import せず、レスポンス/リクエストの shape をここで独立に定義する。
-
-// POST /rentals のリクエストボディ。
+/** POST /rental-reservations のリクエストボディ。 */
 export type RentalReservationCreateRequest = {
   item_name: string
   start_date: string
@@ -9,7 +6,7 @@ export type RentalReservationCreateRequest = {
   purpose: string | null
 }
 
-// GET /rentals/me と /rentals/:id のレスポンス要素。api は snake_case で返す。
+/** GET /rental-reservations/me と /rentals/:id のレスポンス要素。api は snake_case で返す。 */
 export type RentalReservationResponse = {
   id: string
   requester_id: number
@@ -21,7 +18,7 @@ export type RentalReservationResponse = {
   created_at: string
 }
 
-// PUT /rentals/:id のリクエストボディ。
+/** PUT /rental-reservations/:id のリクエストボディ。 */
 export type RentalReservationUpdateRequest = {
   item_name: string
   start_date: string

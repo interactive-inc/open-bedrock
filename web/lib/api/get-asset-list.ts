@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { AssetSearchQuery } from "@/lib/api/types/asset-types"
 
-// GET /assets。物品一覧。kind / status で絞り込み可能。
+/** GET /assets。物品一覧。kind / status で絞り込み可能。 */
 export async function getAssetList(query: AssetSearchQuery) {
   const client = await createClient()
 

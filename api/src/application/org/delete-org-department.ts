@@ -1,4 +1,4 @@
-import { canManageOrg } from "@/lib/org/can-manage-org"
+import type { Session } from "@/lib/auth/session"
 import {
   ApplicationError,
   ConflictError,
@@ -6,17 +6,15 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
 }
 
@@ -32,7 +30,7 @@ export class DeleteOrgDepartment {
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const departmentRepository = new OrgDepartmentRepository(this.c)
 
-    if (canManageOrg(command.session) === false) {
+    if (command.session.hasPermission("org:manage") === false) {
       return new ForbiddenError("cannot manage org", "forbidden")
     }
 
@@ -74,23 +72,23 @@ export class DeleteOrgDepartment {
                  WHERE child.parent_code = ?1 AND child.archived_at IS NULL
                )
                AND NOT EXISTS (
-                 SELECT 1 FROM org_assignment_period_versions assignment
+                 SELECT 1 FROM employee_org_assignment_period_versions assignment
                  WHERE assignment.department_code = ?1
                    AND assignment.is_void = 0
                    AND assignment.revision = (
                      SELECT MAX(candidate.revision)
-                     FROM org_assignment_period_versions candidate
+                     FROM employee_org_assignment_period_versions candidate
                      WHERE candidate.period_id = assignment.period_id
                    )
                    AND (assignment.ends_on IS NULL OR assignment.ends_on > ?4)
                )
                AND NOT EXISTS (
-                 SELECT 1 FROM org_responsibility_period_versions responsibility
+                 SELECT 1 FROM employee_org_responsibility_period_versions responsibility
                  WHERE responsibility.department_code = ?1
                    AND responsibility.is_void = 0
                    AND responsibility.revision = (
                      SELECT MAX(candidate.revision)
-                     FROM org_responsibility_period_versions candidate
+                     FROM employee_org_responsibility_period_versions candidate
                      WHERE candidate.period_id = responsibility.period_id
                    )
                    AND (responsibility.ends_on IS NULL OR responsibility.ends_on > ?4)

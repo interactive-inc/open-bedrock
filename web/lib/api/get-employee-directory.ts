@@ -11,7 +11,7 @@ type Params = {
   offset?: number
 }
 
-// 選択UI向けの在籍者ディレクトリ。メール・在籍区分・ロールは API から受け取らない。
+/** 選択UI向けの在籍者ディレクトリ。メール・在籍区分・ロールは API から受け取らない。 */
 export async function getEmployeeDirectory(filter: Filter = {}, params: Params = {}) {
   const client = await createClient()
 

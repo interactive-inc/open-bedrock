@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /org/reporting-line/:employee_code を session トークン付きで呼び、
-// 指定従業員から上位へのレポートライン（depth 昇順）を返す。
+/**
+ * GET /employees/:code/reporting-line を session トークン付きで呼び、
+ * 指定従業員から上位へのレポートライン（depth 昇順）を返す。
+ */
 export async function getOrgReportingLine(employeeCode: string) {
   const client = await createClient()
 
-  const response = await client.org["reporting-line"][":employee_code"].$get({
-    param: { employee_code: employeeCode },
+  const response = await client.employees[":code"]["reporting-line"].$get({
+    param: { code: employeeCode },
   })
 
   if (response.status >= 400) {

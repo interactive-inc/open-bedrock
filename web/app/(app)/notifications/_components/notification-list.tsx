@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -21,8 +21,10 @@ type Props = {
 
 const initialState: NotificationFormState = { ok: false, error: null }
 
-// 通知一覧。各通知を Card で並べ、未読には既読化ボタンを出す。
-// 既読化・全件既読の結果は reducer ラッパー内で toast する（render 本体で toast しない）。
+/**
+ * 通知一覧。各通知を Card で並べ、未読には既読化ボタンを出す。
+ * 既読化・全件既読の結果は reducer ラッパー内で toast する（render 本体で toast しない）。
+ */
 export function NotificationList(props: Props) {
   async function markReduce(
     previousState: NotificationFormState,
@@ -79,7 +81,7 @@ export function NotificationList(props: Props) {
                   <span className="font-medium">{notification.title}</span>
 
                   {notification.kind === "thanks" ? (
-                    <Link href="/thanks">
+                    <Link href="/organization/thanks">
                       <Badge variant="secondary">感謝</Badge>
                     </Link>
                   ) : null}

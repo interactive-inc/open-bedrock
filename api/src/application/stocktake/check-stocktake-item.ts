@@ -1,11 +1,11 @@
-import { canManageStocktakes } from "@/lib/stocktake/can-manage-stocktakes"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { StocktakeRepository } from "@/infrastructure/stocktake/stocktake-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   stocktakeId: string
   assetCode: string
   checkerEmployeeId: number
@@ -23,7 +23,7 @@ export class CheckStocktakeItem {
   async run(command: Command): Promise<"checked" | ApplicationError> {
     const stocktakeRepository = new StocktakeRepository(this.c)
 
-    if (canManageStocktakes(command.session) === false) {
+    if (command.session.hasPermission("asset:manage") === false) {
       return new ForbiddenError("cannot manage stocktakes", "forbidden")
     }
 

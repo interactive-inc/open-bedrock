@@ -1,6 +1,6 @@
 import { Notification } from "@/domain/notification/notification.entity"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("NotificationRepository", () => {

@@ -9,7 +9,7 @@ TypeScript のモノレポ。API を業務規則と認可の正本とし、Web �
 ```text
 open-karte/
 ├── api/             # API サーバ (Hono / Cloudflare Workers)
-├── cli/             # karte コマンド (Hono / bun)
+├── cli/             # bedrock コマンド (Hono / bun)
 ├── web/             # Web UI (Next.js)
 ├── Makefile
 ├── package.json     # bun workspaces (api, cli, web)
@@ -19,7 +19,7 @@ open-karte/
 ワークスペースの構成は以下のとおり。
 
 - `api` … HTTP API。Hono + Cloudflare Workers (wrangler)
-- `cli` … `karte` コマンド。引数を POST に変換しローカル Hono ルートで処理し、API を叩く
+- `cli` … `bedrock` コマンド。引数を POST に変換しローカル Hono ルートで処理し、API を叩く
 - `web` … Web UI。Next.js + React + Tailwind + shadcn
 
 ## 必要環境
@@ -41,17 +41,17 @@ make dev      # bun install して portless で全アプリ起動
 ```sh
 cd cli
 bun install
-bun link          # karte コマンドを PATH に通す
-karte --help
+bun link          # bedrock コマンドを PATH に通す
+bedrock --help
 ```
 
-各コマンドは `~/.karte/config.json` のトークンで API を叩く。接続先は環境変数 `KARTE_API`（既定 `http://127.0.0.1:8787`）で上書きできる。
+各コマンドは `~/.config/bedrock/settings.json` のトークンで API を叩く。接続先ごとにトークンを保存する。接続先は環境変数 `BEDROCK_API`（既定 `http://127.0.0.1:18787`）で上書きできる。
 
 ```sh
-karte login --email you@example.com --password your_password_here
-karte whoami
-karte employee search --q プログラマ
-karte app inbox
+bedrock login --email you@example.com --password your_password_here
+bedrock whoami
+bedrock employee search --q プログラマ
+bedrock app inbox
 ```
 
 コマンド体系の詳細は [`cli/README.md`](cli/README.md) を参照。

@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm"
 export class LicenseRepository {
   constructor(private readonly c: Context) {}
 
-  // 更新期限が近い順（NULL は末尾）で台帳を返す。status で絞り込める。
+  /** 更新期限が近い順（NULL は末尾）で台帳を返す。status で絞り込める。 */
   async findAll(props: {
     status: "active" | "cancelled" | null
     limit: number

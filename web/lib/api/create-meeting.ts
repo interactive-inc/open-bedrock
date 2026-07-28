@@ -8,7 +8,7 @@ export type MeetingCreateRequest = {
   description?: string | null
 }
 
-// POST /meetings。会議体を作成する。失敗時は Error。
+/** POST /meetings。会議体を作成する。失敗時は Error。 */
 export async function createMeeting(request: MeetingCreateRequest) {
   const client = await createClient()
 

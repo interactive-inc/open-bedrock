@@ -1,18 +1,18 @@
+import type { Session } from "@/lib/auth/session"
 import type { Employee } from "@/domain/employee/employee.entity"
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
 import type { OnboardingTask } from "@/domain/onboarding/onboarding-task.entity"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeCode: string
   templateCode: string
   assignedAt: string
@@ -32,7 +32,7 @@ export class AssignOnboarding {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<AssignOnboardingResult | ApplicationError> {
-    if (canManageOnboarding(command.session) === false) {
+    if (command.session.hasPermission("onboarding:manage") === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

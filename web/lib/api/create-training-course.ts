@@ -5,13 +5,13 @@ import type {
   TrainingCourseResponse,
 } from "@/lib/api/types/training-types"
 
-// POST /training/courses。特権ロールが研修コースを作成する。
+/** POST /training-courses。特権ロールが研修コースを作成する。 */
 export async function createTrainingCourse(
   request: TrainingCourseCreateRequest,
 ): Promise<TrainingCourseResponse | Error> {
   const client = await createClient()
 
-  const response = await client.training.courses.$post({
+  const response = await client["training-courses"].$post({
     json: {
       code: request.code,
       title: request.title,

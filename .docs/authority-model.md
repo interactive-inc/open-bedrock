@@ -1,7 +1,5 @@
 # 権限と意思決定モデル
 
-規範性: 仕様正本。会社上の権限、意思決定、委任、緊急判断の意味と不変条件を定める。
-
 会社を拘束する判断権限と、システム操作権限を分離する。いずれか一つを他の代替として使用してはならない。
 
 ## 権限型
@@ -42,6 +40,7 @@ flowchart LR
 - `OrganizationalOffice`: 一人が就く役職
 - `CollectiveBody`: 構成員、定足数、議決方式を持つ合議体
 - `ResponsibilityRole`: 組織関係から導出する責任
+- `ResponsibilityAssignment`: 対象範囲と成果への継続責任を役職または合議体へ割り当てる期間付き関係
 - `RoleClass`: 同種の責務を持つ複数人の分類
 
 合議体の判断は、構成員一人の承認として記録してはならない。次を保持する。
@@ -53,6 +52,14 @@ flowchart LR
 - 各構成員の vote または attestation
 - resolution outcome
 - 棄権、利益相反、欠席
+
+## 継続責任
+
+`ResponsibilityAssignment` は、LegalEntity、OrgUnit、Project、Capability、Case または domain resource に対する継続責任を、OrganizationalOffice または CollectiveBody へ割り当てる。対象、期待する成果、scope、開始、終了、根拠、assignment revision を保持する。
+
+承認者と継続責任主体を同一視してはならない。DecisionRecord は、判断時点で有効な ResponsibilityAssignment と、役職就任者または合議体構成員の snapshot を保持する。人の異動または退職後も、誰がどの役職または合議体の資格で責任を負っていたかを再構成できなければならない。
+
+方針が継続責任主体を要求する操作で、有効な ResponsibilityAssignment を一意に決定できない場合は拒否する。AgentPrincipal、ServicePrincipal、ConnectorPrincipal を継続責任主体にしてはならない。
 
 ## 判断型
 
@@ -98,14 +105,15 @@ flowchart LR
 - 法人、部署、法域、支出カテゴリ
 - 例外規則の優先順位
 
-公開リポジトリのサンプル金額は実行規範ではない。導入組織が承認して施行するまで、権限判定に使用してはならない。
+初期データとサンプル設定の金額は未施行とし、自社の権限ある主体が承認して施行するまで権限判定に使用してはならない。
 
 ## 方針評価
 
 `AuthorityRule` は次を入力にする。
 
 - action type と対象
-- initiator、decider、executor の Principal と関係
+- initiator、decider、consulted、executor の Principal と関係
+- accountable な ResponsibilityAssignment と判断時 snapshot
 - 会社、組織、案件、法域
 - 金額、数量、分類、機密度
 - 対象状態と revision
@@ -119,7 +127,9 @@ flowchart LR
 
 - `TechnicalPermission` と `OrganizationalAuthority` は相互に生成されない
 - `AgentPrincipal` は `HumanAttestation` を作成できない
+- `AgentPrincipal`、`ServicePrincipal`、`ConnectorPrincipal` は会社を拘束する Decision の decider または ResponsibilityAssignment の担い手になれない
 - 独立承認が必要な提案を提案者一人で承認できない
+- 承認者を継続責任主体の代わりに記録しない
 - 合議体判断を構成員一人の判断へ縮退できない
 - 案件開始時の候補者、根拠、定足数、方針版を固定する
 - 役職解除または退職で過去の判断根拠を削除しない
@@ -130,4 +140,4 @@ flowchart LR
 
 現行 governance 実装の `org_role` は、役職と合議体を区別しない。公開承認は role ごとに一件であり、定足数を表さない。`authority_rules` は構文検査と表示の metadata であり、業務 API 全体を強制する Policy Decision Point ではない。
 
-governance 文書の同期または公開を、本モデルの実装完了としてはならない。差分は [能力台帳](./capability-map.md)、コード、migration、テストで追跡する。
+governance 文書の同期または公開だけで、権限と意思決定の実装を完了としてはならない。差分は [能力台帳](./capability-map.md)、コード、migration、テストで追跡する。

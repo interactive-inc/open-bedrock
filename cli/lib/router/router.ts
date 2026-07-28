@@ -1,5 +1,7 @@
-// 位置引数をパスセグメントに、`--flag value` / `--flag`（boolトグル）を JSON body に変換する。
-// すべてのコマンドは POST でローカル Hono アプリに渡される。
+/**
+ * 位置引数をパスセグメントに、`--flag value` / `--flag`（boolトグル）を JSON body に変換する。
+ * すべてのコマンドは POST でローカル Hono アプリに渡される。
+ */
 const SHORT_FLAGS: Record<string, string> = {
   h: "help",
   q: "q",

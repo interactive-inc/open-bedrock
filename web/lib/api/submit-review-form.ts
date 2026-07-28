@@ -7,7 +7,7 @@ type Props = {
   request: ReviewFormSubmitRequest
 }
 
-// POST /review-forms/:form_id/submit。割り当てられた評価者がフォームを提出する。
+/** POST /review-forms/:form_id/submit。割り当てられた評価者がフォームを提出する。 */
 export async function submitReviewForm(props: Props) {
   const client = await createClient()
 

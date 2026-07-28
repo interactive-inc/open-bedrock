@@ -1,6 +1,4 @@
-// work-accident ドメインの手書き型。
-
-// GET /work-accidents の要素。api は snake_case で返す。
+/** GET /work-accidents の要素。api は snake_case で返す。 */
 export type WorkAccidentResponse = {
   id: number
   occurred_on: string
@@ -12,7 +10,7 @@ export type WorkAccidentResponse = {
   created_at: string
 }
 
-// POST /work-accidents のリクエストボディ。
+/** POST /work-accidents のリクエストボディ。 */
 export type WorkAccidentCreateRequest = {
   occurred_on: string
   employee_id: number | null

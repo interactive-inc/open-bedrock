@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
 import type { Context } from "@/env"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { UnavailableError } from "@/lib/errors"
 
@@ -142,7 +142,7 @@ async function auditRows(db: D1Database) {
         `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                 outcome, reason_code, metadata_json, client_ip, client_name,
                 request_id, created_at
-         FROM audit_logs ORDER BY id`,
+         FROM audit_events ORDER BY id`,
       )
       .all<{
         actor_account_id: number | null
@@ -291,7 +291,7 @@ describe("RefreshAccessToken", () => {
       },
     ])
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_logs").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
     expect(persisted).not.toContain(rawToken)
     expect(persisted).not.toContain(await refreshTokenHash(rawToken))
     expect(persisted).not.toContain(familyId)
@@ -448,7 +448,7 @@ describe("RefreshAccessToken", () => {
     expect((result as UnavailableError).code).toBe("audit_unavailable")
     expect((result as UnavailableError).message).toBe("invalid or expired refresh token")
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
     expect(await markerCount(db)).toBe(0)
   })
@@ -458,7 +458,7 @@ describe("RefreshAccessToken", () => {
     const { context, db } = await setupRefreshToken(rawToken)
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -473,7 +473,7 @@ describe("RefreshAccessToken", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(1)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
     expect(await markerCount(db)).toBe(0)
   })
@@ -484,7 +484,7 @@ describe("RefreshAccessToken", () => {
     await insertRefreshToken(db, { id: 2, rawToken: "reuse-active-descendant" })
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -495,7 +495,7 @@ describe("RefreshAccessToken", () => {
     expect(failed).toBeInstanceOf(UnavailableError)
     expect(await activeFamilyCount(db)).toBe(1)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
 
     await db.exec("DROP TRIGGER reject_test_audit_insert")

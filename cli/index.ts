@@ -24,10 +24,12 @@ const res = await app.request(url, {
   body: JSON.stringify(body),
 })
 
-// 未知のコマンドは、親パスの help にフォールバックする。
-// ただしハンドラに到達して投げられた 404（マーカーヘッダ付き）は本物のエラーなので
-// フォールバックせず stderr + exit 1 に落とす。
-const isHandlerError = res.headers.get("x-karte-handler-error") === "1"
+/**
+ * 未知のコマンドは、親パスの help にフォールバックする。
+ * ただしハンドラに到達して投げられた 404（マーカーヘッダ付き）は本物のエラーなので
+ * フォールバックせず stderr + exit 1 に落とす。
+ */
+const isHandlerError = res.headers.get("x-bedrock-handler-error") === "1"
 
 if (!res.ok && res.status === 404 && !isHandlerError) {
   const segments = path.split("/").filter(Boolean)

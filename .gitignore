@@ -29,3 +29,7 @@ storybook-static/
 
 # 検証時のスクリーンショット（リポジトリ直下に出力される一時生成物）
 /*.png
+
+# Obsidian
+.obsidian
+.worktrees/

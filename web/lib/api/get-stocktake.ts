@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /stocktakes/:id。棚卸しセッション 1 件の詳細（確認状況を含む）。
+/** GET /stocktakes/:id。棚卸しセッション 1 件の詳細（確認状況を含む）。 */
 export async function getStocktake(id: string) {
   const client = await createClient()
 

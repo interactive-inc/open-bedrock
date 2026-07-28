@@ -90,7 +90,7 @@ export class EmployeeLifecycleReadRepository {
           this.c.env.DB.prepare(
             `SELECT employee.id, employee.code, employee.archived_at,
                       COALESCE(revision.revision, 0) AS employee_revision,
-                      COALESCE((SELECT revision FROM organization_lifecycle_state WHERE id = 1), 0)
+                      COALESCE((SELECT revision FROM organization_lifecycle_states WHERE id = 1), 0)
                         AS organization_revision
                FROM employees AS employee
                LEFT JOIN employee_lifecycle_revisions AS revision
@@ -132,7 +132,7 @@ export class EmployeeLifecycleReadRepository {
                       current.assignment_type, current.position_title,
                       current.manager_employee_id, manager.code AS manager_employee_code,
                       current.starts_on, current.ends_on
-               FROM org_assignment_period_versions AS current
+               FROM employee_org_assignment_period_versions AS current
                INNER JOIN org_departments AS organization
                  ON organization.code = current.department_code
                INNER JOIN departments AS department ON department.id = organization.department_id
@@ -140,7 +140,7 @@ export class EmployeeLifecycleReadRepository {
                WHERE current.employee_id IN (${idList})
                  AND current.revision = (
                    SELECT MAX(candidate.revision)
-                   FROM org_assignment_period_versions AS candidate
+                   FROM employee_org_assignment_period_versions AS candidate
                    WHERE candidate.period_id = current.period_id
                  )
                  AND current.is_void = 0`,
@@ -150,11 +150,11 @@ export class EmployeeLifecycleReadRepository {
           this.c.env.DB.prepare(
             `SELECT current.period_id, current.employee_id, current.department_code,
                       current.starts_on, current.ends_on
-               FROM org_responsibility_period_versions AS current
+               FROM employee_org_responsibility_period_versions AS current
                WHERE current.employee_id IN (${idList})
                  AND current.revision = (
                    SELECT MAX(candidate.revision)
-                   FROM org_responsibility_period_versions AS candidate
+                   FROM employee_org_responsibility_period_versions AS candidate
                    WHERE candidate.period_id = current.period_id
                  )
                  AND current.is_void = 0`,

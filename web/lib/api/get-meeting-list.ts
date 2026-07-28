@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /meetings を session トークン付きで呼び、会議体一覧を取得する。
+/** GET /meetings を session トークン付きで呼び、会議体一覧を取得する。 */
 export async function getMeetingList(query: { limit: number; offset: number }) {
   const client = await createClient()
 

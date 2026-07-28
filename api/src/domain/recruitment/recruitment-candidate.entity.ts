@@ -18,8 +18,10 @@ type Props = z.infer<typeof zProps>
 
 export type CandidateStage = z.infer<typeof zStage>
 
-// 選考ステージの前進先。applied→screening→interview→offer→hired が正順。
-// rejected は hired 以外のどのステージからも遷移できる。hired/rejected は終端。
+/**
+ * 選考ステージの前進先。applied→screening→interview→offer→hired が正順。
+ * rejected は hired 以外のどのステージからも遷移できる。hired/rejected は終端。
+ */
 const FORWARD_STAGE: Record<CandidateStage, CandidateStage | null> = {
   applied: "screening",
   screening: "interview",

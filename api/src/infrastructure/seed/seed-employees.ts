@@ -14,7 +14,7 @@ type SeedEmployee = {
 }
 
 export const seedEmployees: ReadonlyArray<SeedEmployee> = [
-  buildEmployee(1, "E001", "Alex Carter", 1, "Corporate Planning", "CTO", "admin"),
+  buildEmployee(1, "E001", "Alex Carter", 1, "Corporate Planning", "CTO", "root"),
   buildEmployee(2, "E002", "Blake Morgan", 2, "Human Resources", "HR Manager", "manager"),
   buildEmployee(3, "E003", "Casey Reed", 2, "Human Resources", "HR Staff", "member"),
   buildEmployee(4, "E004", "Drew Sato", 3, "Engineering", "Engineering Manager", "manager"),

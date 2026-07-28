@@ -3,18 +3,21 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-// ログアウト Server Action。
-// 1. サーバー側でリフレッシュトークンのファミリーを失効させる
-// 2. クライアント側の cookie を破棄する
-// 3. ログイン画面へリダイレクトする
-// API 呼び出しが失敗してもクライアント側のログアウトは必ず実行する。
+/**
+ * ログアウト Server Action。
+ * 1. サーバー側でリフレッシュトークンのファミリーを失効させる
+ * 2. クライアント側の cookie を破棄する
+ * 3. LOGOUT_REDIRECT_URL（未設定なら "/"）へ遷移する。ログイン画面を外部に
+ *    持つ構成では、そのログイン入口の URL を設定する
+ * API 呼び出しが失敗してもクライアント側のログアウトは必ず実行する。
+ */
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies()
   const refreshToken = cookieStore.get("refresh_token")?.value
 
   if (refreshToken !== undefined) {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8787"
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:18787"
 
       await fetch(`${baseUrl}/auth/logout`, {
         method: "POST",
@@ -30,5 +33,5 @@ export async function logoutAction(): Promise<void> {
 
   cookieStore.delete("refresh_token")
 
-  redirect("/login")
+  redirect(process.env.LOGOUT_REDIRECT_URL ?? "/")
 }

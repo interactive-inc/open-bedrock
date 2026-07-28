@@ -1,15 +1,14 @@
-import { canDecideExpense } from "@/lib/expense/can-decide-expense"
+import type { Session } from "@/lib/auth/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   expenseId: number
   approverId: number
   action: "approve" | "reject"
@@ -31,7 +30,7 @@ export class DecideExpense {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<ExpenseDecision | ApplicationError> {
-    if (canDecideExpense(command.session) === false) {
+    if (command.session.hasPermission("expense:approve") === false) {
       return new ForbiddenError("cannot decide expense", "forbidden")
     }
 
@@ -66,7 +65,7 @@ export class DecideExpense {
     const isInScope =
       organizationAuthority.managementChain ||
       organizationAuthority.departmentManager ||
-      hasPermission(command.session, "org:manage")
+      command.session.hasPermission("org:manage")
 
     if (isInScope === false) {
       return new ForbiddenError("cannot decide expense outside organization scope", "forbidden")

@@ -1,4 +1,4 @@
-import { createD1TestDatabase } from "@/interface/shared/test/d1-test-database"
+import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { auditBatchDecisions, auditLogs } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
@@ -100,6 +100,30 @@ async function applyAppendGuardMigration(db: D1Database): Promise<void> {
 
 async function applyBatchDecisionMigration(db: D1Database): Promise<void> {
   await applyMigration(db, batchDecisionMigrationPath)
+}
+
+/**
+ * 0114 のうち audit に関わる部分だけを再現する。0114 は 21 表を一括で改名するため、
+ * audit 系の表しか持たないこの fixture にはそのまま適用できない。
+ */
+async function applyTablesRenameMigration(db: D1Database): Promise<void> {
+  await db.exec("ALTER TABLE audit_logs RENAME TO audit_events;")
+  await db.exec("DROP TRIGGER audit_logs_append_guard_prevent_insert;")
+  await db.exec(
+    `CREATE TRIGGER audit_events_append_guard_prevent_insert
+     BEFORE INSERT ON audit_logs_append_guard
+     WHEN
+       NOT EXISTS (
+         SELECT 1 FROM audit_events WHERE id = NEW.audit_id AND event_id = NEW.event_id
+       )
+       OR EXISTS (
+         SELECT 1 FROM audit_logs_append_guard
+         WHERE audit_id = NEW.audit_id OR event_id = NEW.event_id
+       )
+     BEGIN
+       SELECT RAISE(ABORT, 'audit_events append guard is immutable');
+     END;`,
+  )
 }
 
 async function applyMigrations(db: D1Database): Promise<void> {
@@ -451,6 +475,8 @@ describe("audit event migration", () => {
   test("keeps the Drizzle audit schema synchronized with the migrated table", async () => {
     const db = await createLegacyDatabase("legacy note")
     await applyMigrations(db)
+    // schema.ts は 0114 改名後の audit_events を指すため、この検証だけ改名まで進める。
+    await applyTablesRenameMigration(db)
     const database = drizzle(db, { schema: { auditLogs } })
 
     await database.insert(auditLogs).values({

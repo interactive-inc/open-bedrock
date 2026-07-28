@@ -1,12 +1,11 @@
 import { z } from "zod"
 
-// 認可の唯一の正(SSOT)。permission は "<domain>:<action>[:<scope>]" 形式の機械可読キー。
-// permissions テーブルは UI 用の写しで、起動時にこの集合の subset であることを検証する。
-// self スコープ(本人==操作対象)は permission に載せず、所有者判定としてコードの不変条件に残す。
-
 /**
- * 全 permission のカタログ。key とカテゴリ(UI グルーピング用)の対応。
- * 既存の can-* ゲートとインライン判定を正規化したもの。
+ * 全 permission のカタログ。認可の唯一の正(SSOT)で、key とカテゴリ(UI グルーピング用)の対応。
+ * permission は "<domain>:<action>[:<scope>]" 形式の機械可読キー。
+ * permissions テーブルは UI 用の写しで、起動時にこの集合の
+ * subset であることを検証する。self スコープ(本人==操作対象)は permission に載せず、
+ * 所有者判定としてコードの不変条件に残す
  */
 export const PERMISSION_CATALOG = [
   { key: "dashboard:view", category: "general", description: "ダッシュボードを閲覧する" },
@@ -47,6 +46,11 @@ export const PERMISSION_CATALOG = [
     description: "全社の申請を横断で閲覧する",
   },
   {
+    key: "application:read:department",
+    category: "application",
+    description: "同じ部署の申請を閲覧する",
+  },
+  {
     key: "application_template:manage",
     category: "application",
     description: "申請テンプレートを管理する",
@@ -58,6 +62,11 @@ export const PERMISSION_CATALOG = [
   { key: "leave:read:all", category: "leave", description: "全社の休暇申請を横断で閲覧する" },
   { key: "notification:send", category: "notification", description: "通知を送信する" },
   { key: "oneonone:create", category: "oneonone", description: "1on1 を作成する" },
+  {
+    key: "oneonone:read:department",
+    category: "oneonone",
+    description: "同じ部署の 1on1 を閲覧する",
+  },
   { key: "review:administer", category: "review", description: "評価サイクルを運営する" },
   {
     key: "career_posting:manage",
@@ -173,6 +182,7 @@ export const PERMISSION_CATALOG = [
   },
   { key: "grade:manage", category: "grade", description: "等級マスタと等級の割当を管理する" },
   { key: "grade:read:all", category: "grade", description: "全社の等級を閲覧する" },
+  { key: "position:manage", category: "position", description: "役職マスタを管理する" },
   {
     key: "grade:read:reports",
     category: "grade",

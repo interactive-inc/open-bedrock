@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /applications/:id。申請を取り下げる。
-// 本人以外は 403、審査済みは 409 を api が返すため、戻りは Error になる。成功時は null。
+/**
+ * DELETE /application-requests/:id。申請を取り下げる。
+ * 本人以外は 403、審査済みは 409 を api が返すため、戻りは Error になる。成功時は null。
+ */
 export async function withdrawApplication(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.applications[":id"].$delete({
+  const response = await client["application-requests"][":id"].$delete({
     param: { id: String(id) },
   })
 

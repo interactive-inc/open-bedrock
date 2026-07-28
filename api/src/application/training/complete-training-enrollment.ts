@@ -1,14 +1,15 @@
-import { canCompleteEnrollment } from "@/lib/training/can-complete-enrollment"
+import type { Session } from "@/lib/auth/session"
+import { canCompleteEnrollment } from "@/application/training/can-complete-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
   score: number | null
   completedAt: string
 }

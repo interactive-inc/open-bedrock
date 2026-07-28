@@ -5,7 +5,7 @@ type Props = {
   status: ExpenseStatus
 }
 
-// 経費ステータスを日本語ラベルと配色付きの Badge で表示する。
+/** 経費ステータスを日本語ラベルと配色付きの Badge で表示する。 */
 export function ExpenseStatusBadge(props: Props) {
   if (props.status === "approved") {
     return <Badge className="bg-emerald-600 text-white">承認済み</Badge>

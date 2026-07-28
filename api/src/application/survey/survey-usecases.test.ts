@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/application/survey/create-survey"
 import { DeleteSurvey } from "@/application/survey/delete-survey"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { GetSurveyResponse } from "@/application/survey/get-survey-response"
 import { ListMySurveyResponses } from "@/application/survey/list-my-survey-responses"
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"
@@ -16,11 +14,9 @@ import { SurveyResponse } from "@/domain/survey/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-
-// --- seed helpers ---
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedSurvey(context: Context, status: "open" | "closed"): Promise<number> {
   const created = await new SurveyRepository(context).create(
@@ -61,14 +57,12 @@ async function seedResponse(
   return created.id
 }
 
-// --- CreateSurvey ---
-
 describe("CreateSurvey", () => {
   test("creates a survey with admin role", async () => {
     const { context } = createTestContext()
 
     const result = await new CreateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       title: "Engagement Survey",
       status: "open",
       questionsJson: [{ q: "Rate your satisfaction" }],
@@ -117,8 +111,6 @@ describe("CreateSurvey", () => {
   })
 })
 
-// --- DeleteSurvey ---
-
 describe("DeleteSurvey", () => {
   test("deletes a closed survey", async () => {
     const { context } = createTestContext()
@@ -126,7 +118,7 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -150,7 +142,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -167,7 +159,7 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -178,7 +170,7 @@ describe("DeleteSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: 9999,
     })
 
@@ -208,7 +200,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -271,8 +263,6 @@ describe("DeleteSurvey", () => {
   })
 })
 
-// --- UpdateSurvey ---
-
 describe("UpdateSurvey", () => {
   test("updates title and status without changing questions", async () => {
     const { context } = createTestContext()
@@ -280,7 +270,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
       status: "closed",
@@ -303,7 +293,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -321,7 +311,7 @@ describe("UpdateSurvey", () => {
     await seedResponse(context, surveyId, 1)
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -335,7 +325,7 @@ describe("UpdateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: 9999,
       title: "Missing",
       status: "open",
@@ -366,7 +356,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -382,7 +372,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
       status: "closed",
@@ -398,8 +388,6 @@ describe("UpdateSurvey", () => {
     expect(result.status).toBe("closed")
   })
 })
-
-// --- SubmitSurveyResponse ---
 
 describe("SubmitSurveyResponse", () => {
   test("submits a response to an open survey", async () => {
@@ -468,8 +456,6 @@ describe("SubmitSurveyResponse", () => {
   })
 })
 
-// --- GetSurveyResponse ---
-
 describe("GetSurveyResponse", () => {
   test("returns the response for the respondent", async () => {
     const { context } = createTestContext()
@@ -517,8 +503,6 @@ describe("GetSurveyResponse", () => {
   })
 })
 
-// --- ListMySurveyResponses ---
-
 describe("ListMySurveyResponses", () => {
   test("returns responses for the respondent", async () => {
     const { context } = createTestContext()
@@ -556,8 +540,6 @@ describe("ListMySurveyResponses", () => {
     expect(result.length).toBe(0)
   })
 })
-
-// --- UpdateSurveyResponse ---
 
 describe("UpdateSurveyResponse", () => {
   test("updates the response content", async () => {
@@ -631,8 +613,6 @@ describe("UpdateSurveyResponse", () => {
     expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })
-
-// --- WithdrawSurveyResponse ---
 
 describe("WithdrawSurveyResponse", () => {
   test("withdraws a response from an open survey", async () => {

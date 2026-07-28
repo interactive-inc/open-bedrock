@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// DELETE /roles/:id。動的ロールを削除する（iam:manage_roles が必要）。
+/** DELETE /roles/:id。動的ロールを削除する（iam:manage_roles が必要）。 */
 export async function deleteRole(roleId: number): Promise<null | Error> {
   const client = await createClient()
 

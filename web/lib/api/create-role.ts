@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// POST /roles。動的ロールを作成する（iam:manage_roles が必要）。
+/** POST /roles。動的ロールを作成する（iam:manage_roles が必要）。 */
 export async function createRole(request: {
   key: string
   name: string

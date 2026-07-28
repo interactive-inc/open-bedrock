@@ -3,7 +3,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte batch employee-lifecycle process-outbox [--limit <n>]`
+export const help = `bedrock batch employee-lifecycle process-outbox [--limit <n>]`
 export default factory.createHandlers(
   zValidator(
     "json",

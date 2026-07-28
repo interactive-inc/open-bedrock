@@ -1,7 +1,9 @@
-// api/src/employee/employee-response-schema.ts と同形の手書き type。
-// 共有 types/employee-types.ts とは別に employees ドメイン専用で持ち、API と疎結合にする。
+/**
+ * api/src/employee/employee-response-schema.ts と同形の手書き type。
+ * 共有 types/employee-types.ts とは別に employees ドメイン専用で持ち、API と疎結合にする。
+ */
 export type EmployeeListItem = {
-  code: string
+  code: string | null
   name: string
   deptName: string | null
   position: string | null
@@ -9,7 +11,7 @@ export type EmployeeListItem = {
   status: string
 }
 
-// GET /employees/:code の詳細。一覧と違い role を含む。
+/** GET /employees/:code の詳細。一覧と違い role を含む。 */
 export type EmployeeDetailItem = {
   code: string
   name: string

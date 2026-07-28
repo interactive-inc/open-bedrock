@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { EmployeeDetailItem } from "@/lib/api/types/employee-list-item"
 
-// GET /employees/:code。従業員 1 件の詳細（role 含む）を取得する。
-// 該当なし（404）は null、その他の失敗は Error を返す。
+/**
+ * GET /employees/:code。従業員 1 件の詳細（role 含む）を取得する。
+ * 該当なし（404）は null、その他の失敗は Error を返す。
+ */
 export async function getEmployeeByCode(code: string): Promise<EmployeeDetailItem | null | Error> {
   const client = await createClient()
 

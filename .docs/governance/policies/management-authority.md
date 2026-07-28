@@ -31,9 +31,7 @@ controls:
 
 # 管理権限規程テンプレート
 
-規範性: 未施行テンプレート。導入組織の規程または認可根拠として使用しない。
-
-この文書は製品モデルを説明する未施行テンプレートである。導入組織の正式規程、法的助言、実行可能な決裁 rule ではない。`effective_from` が未設定であり、`authority_rules` も空であるため、そのまま publish または認可根拠として使用しない。
+`effective_from` が未設定であり、`authority_rules` も空である。値を設定して正式規程として承認、施行するまでは publish または認可根拠に使用しない。法的助言として使用しない。
 
 ## 目的
 
@@ -48,12 +46,13 @@ controls:
 - `CollectiveDecision`: 合議体の構成員、定足数、議決による決定
 - `ExecutionAuthorization`: 決定後に発行する対象限定の実行許可
 - `DecisionRecord`: 判断主体、根拠、版、時点、内容 digest の記録
+- `ResponsibilityAssignment`: 対象と成果への継続責任を役職または合議体へ割り当てる関係
 
 TechnicalPermission、OrganizationalAuthority、CaseAssignment、HumanAttestation を同一視しない。
 
 ## 組織上の主体
 
-導入組織は、一人役職、責任 role、合議体を別々に定義する。
+自社は、一人役職、責任 role、合議体を別々に定義する。
 
 - 一人役職は就任者と有効期間を持つ。
 - 責任 role は部署、案件、関係から導出する根拠を持つ。
@@ -63,10 +62,10 @@ TechnicalPermission、OrganizationalAuthority、CaseAssignment、HumanAttestatio
 
 ## DecisionRule
 
-導入組織の rule は、少なくとも次を定める。
+自社の rule は、少なくとも次を定める。
 
 - action type と対象
-- initiator、decider、consulted、executor
+- initiator、decider、consulted、executor、accountable な ResponsibilityAssignment
 - 法人、組織、案件、法域
 - TechnicalPermission と OrganizationalAuthority
 - 自己判断、利益相反、職務分離
@@ -91,17 +90,19 @@ rule metadata と本文を二重の正本にしない。人間向け本文は同
 - 予算内外と budget version
 - 法人、部署、カテゴリ
 
-公開 repository には導入組織の実額を置かない。deployment 固有の非公開 policy source で管理する。
+公開 repository には自社の実額を置かない。deployment 固有の非公開 policy source で管理する。
 
 ## 標準の意思決定
 
 1. 起案者が Proposal を作成し、対象、差分、効果、revision、evidence を固定する。
 2. Policy evaluation が decider、quorum、職務分離、必要な外部判断を決める。
-3. review 開始時に候補者、authority assignment、rule version を snapshot する。
+3. review 開始時に候補者、authority assignment、ResponsibilityAssignment、rule version を snapshot する。
 4. 権限を持つ人間または合議体が proposal digest へ Decision を記録する。
 5. 実行直前に状態、authority、digest、expiry を再検査する。
 6. ExecutionAuthorization に限定された command だけを実行する。
-7. Proposal、Decision、Execution、Outcome を同じ correlation で記録する。
+7. Proposal、Decision、Execution、Outcome、継続責任主体を同じ correlation で記録する。
+
+AgentPrincipal、ServicePrincipal、ConnectorPrincipal を decider または継続責任主体にしない。方針が継続責任主体を要求する操作で有効な ResponsibilityAssignment を決定できない場合は拒否する。
 
 ```mermaid
 flowchart LR
@@ -137,7 +138,7 @@ flowchart LR
 
 ## 記録と保持
 
-保持期間はこのテンプレートへ固定しない。記録カテゴリ、法域、契約、legal hold、個人情報方針を入力に、導入組織が版付き policy で定める。
+保持期間はこのテンプレートへ固定しない。記録カテゴリ、法域、契約、legal hold、個人情報方針を入力に、自社が版付き policy で定める。
 
 役職解除、退職、rule 改定後も、過去の candidate、authority、Decision、digest、policy version を再構成できるようにする。assignment と decision record を通常操作で物理削除しない。
 

@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift mine", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/mine", {
+    const response = await app.request("/shift-assignments/mine", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),

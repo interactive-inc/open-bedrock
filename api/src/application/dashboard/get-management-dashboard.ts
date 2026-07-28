@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { toManagementDashboardRanges } from "@/lib/dashboard/to-management-dashboard-ranges"
+import { toManagementDashboardRanges } from "@/application/dashboard/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/lib/app-schemas"
 import {
   applications,
@@ -125,7 +125,7 @@ export class GetManagementDashboard {
     }
   }
 
-  // period ごとに done 件数と総数から done 率(0-1)を出す。
+  /** period ごとに done 件数と総数から done 率(0-1)を出す。 */
   private toGoalDoneRates(
     rows: ReadonlyArray<{ period: string; status: string; total: number }>,
   ): AppManagementDashboard["goal_done_rates"] {

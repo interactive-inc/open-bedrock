@@ -2,8 +2,10 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { EmployeeEventCreateRequest } from "@/lib/api/types/employee-event-types"
 
-// POST /employee-events。異動・在籍イベントを記録する。
-// 戻りは作成されたイベント or Error。呼び出し元は instanceof Error で判別する。
+/**
+ * POST /employee-events。異動・在籍イベントを記録する。
+ * 戻りは作成されたイベント or Error。呼び出し元は instanceof Error で判別する。
+ */
 export async function createEmployeeEvent(request: EmployeeEventCreateRequest) {
   const client = await createClient()
 

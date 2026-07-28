@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /assets/:code。物品 1 件の詳細。
+/** GET /assets/:code。物品 1 件の詳細。 */
 export async function getAssetByCode(code: string) {
   const client = await createClient()
 

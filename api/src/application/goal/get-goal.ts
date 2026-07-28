@@ -1,5 +1,6 @@
+import type { Session } from "@/lib/auth/session"
 import type { Goal } from "@/domain/goal/goal.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -9,7 +10,7 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 export type Command = {
   goalId: number
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
 }
 
 /**

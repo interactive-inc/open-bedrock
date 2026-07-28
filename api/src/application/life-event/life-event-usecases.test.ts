@@ -8,8 +8,8 @@ import { LifeEvent } from "@/domain/life-event/life-event.entity"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 
 async function seedEvent(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateLifeEvent(context).run({

@@ -11,7 +11,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { validateAndNormalizeApplicationPayload } from "@/lib/application/validate-application-payload"
+import { validateAndNormalizeApplicationPayload } from "@/application/application/validate-application-payload"
 
 export type Command = {
   applicationId: number

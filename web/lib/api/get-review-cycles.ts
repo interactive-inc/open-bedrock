@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { ReviewCycleResponse } from "@/lib/api/types/review-types"
 
-// GET /review-cycles。評価サイクルの一覧を取得する。
+/** GET /review-cycles。評価サイクルの一覧を取得する。 */
 export async function getReviewCycles(): Promise<Array<ReviewCycleResponse> | Error> {
   const client = await createClient()
 

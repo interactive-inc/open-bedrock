@@ -11,34 +11,34 @@ async function helpText(path: string): Promise<Response> {
 
 describe("ringi commands", () => {
   it("group shows help", async () => {
-    const response = await helpText("/ringi")
+    const response = await helpText("/ringi-requests")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("karte ringi")
+    expect(await response.text()).toContain("bedrock ringi-requests")
   })
 
   it("submit shows help", async () => {
-    const response = await helpText("/ringi/submit")
+    const response = await helpText("/ringi-requests/submit")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("ringi submit")
+    expect(await response.text()).toContain("ringi-requests submit")
   })
 
   it("me shows help", async () => {
-    const response = await helpText("/ringi/me")
+    const response = await helpText("/ringi-requests/me")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("ringi me")
+    expect(await response.text()).toContain("ringi-requests me")
   })
 
   it("inbox shows help", async () => {
-    const response = await helpText("/ringi/inbox")
+    const response = await helpText("/ringi-requests/inbox")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("ringi inbox")
+    expect(await response.text()).toContain("ringi-requests inbox")
   })
 })

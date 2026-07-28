@@ -1,0 +1,27 @@
+import { RingiCreateForm } from "@/app/(app)/my/ringis/_components/ringi-create-form"
+import { BackButton } from "@/components/back-button"
+import { PageHeader } from "@/components/page-header"
+import { Card, CardContent } from "@/components/ui/card"
+
+export const metadata = { title: "稟議の新規起案" }
+
+/**
+ * 稟議の新規起案。フォーム単機能のページとして、一覧から独立させる。
+ */
+export default function NewRingiPage() {
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="稟議を起案"
+        description="承認者・件名・金額・理由を入力する"
+        actions={<BackButton href="/my/ringis" label="一覧に戻る" />}
+      />
+
+      <Card className="max-w-xl">
+        <CardContent>
+          <RingiCreateForm />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /meetings/:code を session トークン付きで呼び、会議体詳細を取得する。
+/** GET /meetings/:code を session トークン付きで呼び、会議体詳細を取得する。 */
 export async function getMeetingDetail(code: string) {
   const client = await createClient()
 

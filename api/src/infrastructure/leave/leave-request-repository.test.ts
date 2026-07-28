@@ -1,6 +1,6 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("LeaveRequestRepository", () => {
@@ -87,7 +87,7 @@ describe("LeaveRequestRepository", () => {
   })
 
   describe("findOverlapping", () => {
-    // pending 申請を 1 件作成し、その repository（同一 DB）と採番 id を返す。
+    /** pending 申請を 1 件作成し、その repository（同一 DB）と採番 id を返す。 */
     async function createPending(props: {
       employeeId: number
       startDate: string

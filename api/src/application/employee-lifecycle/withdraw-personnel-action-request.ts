@@ -1,10 +1,9 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -12,21 +11,20 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { findAccessiblePersonnelActionRequest } from "@/application/employee-lifecycle/personnel-action-request-access"
+import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
 
 export class WithdrawPersonnelActionRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     requestId: string
     withdrawnAt: string
   }): Promise<{ status: "withdrawn" } | ApplicationError> {
-    const request = await findAccessiblePersonnelActionRequest({
+    const request = await new PersonnelActionRequestAccess({
       c: this.c,
       session: command.session,
-      requestId: command.requestId,
-    })
+    }).find(command.requestId)
     if (request instanceof ApplicationError) return request
     if (request === null) {
       return new NotFoundError("人事変更申請が見つかりません", "personnel_action_request_not_found")
@@ -62,7 +60,7 @@ export class WithdrawPersonnelActionRequest {
              SET withdrawn_at = ?2, withdrawn_by_employee_id = ?3
              WHERE id = ?1 AND withdrawn_at IS NULL AND applied_action_id IS NULL
                AND EXISTS (
-                 SELECT 1 FROM applications
+                 SELECT 1 FROM application_requests
                  WHERE id = personnel_action_requests.application_id
                    AND status = 'pending' AND applicant_id = ?3
                )
@@ -70,7 +68,7 @@ export class WithdrawPersonnelActionRequest {
         ).bind(command.requestId, seconds, command.session.employeeId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         this.c.env.DB.prepare(
-          `UPDATE applications SET status = 'rejected', current_step = NULL
+          `UPDATE application_requests SET status = 'rejected', current_step = NULL
              WHERE id = ?1 AND status = 'pending' RETURNING id`,
         ).bind(request.applicationId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),

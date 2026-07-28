@@ -4,10 +4,10 @@ import { DecideApplication } from "@/application/application/decide-application"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ForbiddenError } from "@/lib/errors"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 async function seedTemplate(
@@ -62,7 +62,7 @@ describe("DecideApplication", () => {
     const templateRepository = new ApplicationTemplateRepository(context)
     const applicationRepository = new ApplicationRepository(context)
 
-    const template = await seedTemplate(templateRepository, "role_test_1", ["accountant", "admin"])
+    const template = await seedTemplate(templateRepository, "role_test_1", ["accountant", "root"])
 
     const application = await seedPending(applicationRepository, template.id ?? 0, 5)
 

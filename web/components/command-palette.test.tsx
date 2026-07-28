@@ -22,7 +22,7 @@ describe("CommandPalette audit entry", () => {
     expect(command).toBeTruthy()
     fireEvent.click(command)
     expect(mocks.push).toHaveBeenCalledTimes(1)
-    expect(mocks.push).toHaveBeenCalledWith("/admin/audit-events")
+    expect(mocks.push).toHaveBeenCalledWith("/system/audit-events")
   })
 
   test("does not expose the audit command to export-only users", () => {

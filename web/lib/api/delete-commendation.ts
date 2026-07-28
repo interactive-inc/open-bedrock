@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /commendations/:id。表彰の記録を削除する（commendation:manage）。
+/** DELETE /commendations/:id。表彰の記録を削除する（commendation:manage）。 */
 export async function deleteCommendation(id: number) {
   const client = await createClient()
 

@@ -7,8 +7,8 @@ import { UpdateResignation } from "@/application/resignation/update-resignation"
 import { Resignation } from "@/domain/resignation/resignation.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 async function seedResignation(context: Context, employeeId: number): Promise<string> {
   const created = await new CreateResignation(context).run({

@@ -9,7 +9,8 @@ import {
 import { NotificationList } from "@/app/(app)/notifications/_components/notification-list"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { PAGE_SIZE_OPTIONS, TablePagination, parsePageSize } from "@/components/table-pagination"
+import { TablePagination } from "@/components/table-pagination"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getMyNotifications } from "@/lib/api/get-my-notifications"
@@ -31,9 +32,11 @@ function filterToIsRead(filter: NotificationFilterValue): boolean | undefined {
   return undefined
 }
 
-// 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
-// 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
-// ?filter=unread|read で未読/既読の絞り込みができる。
+/**
+ * 通知画面。自分宛ての通知一覧を RSC で取得して表示する。
+ * 作成は /notifications/new に分離し、特権ロールにだけ導線を出す。
+ * ?filter=unread|read で未読/既読の絞り込みができる。
+ */
 export default async function NotificationsPage(props: { searchParams: SearchParams }) {
   const searchParams = await props.searchParams
 

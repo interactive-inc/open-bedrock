@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   redemptionId: number
   deciderId: number
   action: "approve" | "reject"
@@ -16,9 +16,11 @@ export type Command = {
 
 export type OutOfStock = { reason: "out_of_stock" }
 
-// 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
-// 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
-// これはエラーではなく「在庫警告つきの成功」なので ApplicationError には含めない。
+/**
+ * 確定はできたが在庫減算だけ失敗した結果。交換は確定済みなので巻き戻さず、
+ * 追跡できるよう redemption と原因を呼び出し側へ表面化する（握りつぶさない）。
+ * これはエラーではなく「在庫警告つきの成功」なので ApplicationError には含めない。
+ */
 export type FulfilledWithStockError = {
   reason: "fulfilled_with_stock_error"
   redemption: ThanksRedemption
@@ -40,7 +42,7 @@ export class DecideRedemption {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<DecideResult> {
-    if (canDecideRedemption(command.session) === false) {
+    if (command.session.hasPermission("thanks_redemption:approve") === false) {
       return new ForbiddenError("cannot decide redemption", "forbidden")
     }
 
@@ -69,7 +71,7 @@ export class DecideRedemption {
     return this.approve(redemptionRepository, existing, command)
   }
 
-  // 却下。pending からの条件付き UPDATE で確定済みは弾く。0 行更新は already_decided。
+  /** 却下。pending からの条件付き UPDATE で確定済みは弾く。0 行更新は already_decided。 */
   private async reject(
     redemptionRepository: ThanksRedemptionRepository,
     command: Command,
@@ -91,8 +93,10 @@ export class DecideRedemption {
     return updated
   }
 
-  // 承認＝確定。残高チェックと在庫減算を同一 batch に畳み込んだ条件付き UPDATE で確定する。
-  // 0 行更新は「残高不足 or 在庫切れ or 既に決裁済み」。findById で pending を確認してから区別する。
+  /**
+   * 承認＝確定。残高チェックと在庫減算を同一 batch に畳み込んだ条件付き UPDATE で確定する。
+   * 0 行更新は「残高不足 or 在庫切れ or 既に決裁済み」。findById で pending を確認してから区別する。
+   */
   private async approve(
     redemptionRepository: ThanksRedemptionRepository,
     existing: ThanksRedemption,
@@ -121,8 +125,10 @@ export class DecideRedemption {
     return updated
   }
 
-  // 承認 UPDATE が 0 行のとき、在庫切れか残高不足か既に決裁済みかを判定する。
-  // pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
+  /**
+   * 承認 UPDATE が 0 行のとき、在庫切れか残高不足か既に決裁済みかを判定する。
+   * pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
+   */
   private async classifyZeroUpdate(redemptionId: number): Promise<OutOfStock | ApplicationError> {
     const redemptionRepository = new ThanksRedemptionRepository(this.c)
 

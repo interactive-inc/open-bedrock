@@ -10,7 +10,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/lib/thanks-points/period-of"
-import { toNonNegativePoints } from "@/lib/thanks-points/to-non-negative-points"
+import { toNonNegativePoints } from "@/application/thanks/to-non-negative-points"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
@@ -141,7 +141,7 @@ export class SendThanks {
     return created
   }
 
-  // 当月の原資レコードが存在しなければ既定額で遅延生成する（batch 前に存在を保証する）。
+  /** 当月の原資レコードが存在しなければ既定額で遅延生成する（batch 前に存在を保証する）。 */
   private async ensureBudget(props: {
     senderEmployeeId: number
     period: string
@@ -160,10 +160,12 @@ export class SendThanks {
       : null
   }
 
-  // ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
-  // batch は暗黙のトランザクションで包まれるため、INSERT が失敗しても consume は自動ロールバックされる。
-  // ポイント付きの場合、INSERT は「consume UPDATE が 1 行以上更新した」ことを条件に実行する
-  // （INSERT ... SELECT + EXISTS で条件分岐し、残量不足なら 0 行挿入で済ませる）。
+  /**
+   * ポイント消費（points > 0 の場合）と感謝 INSERT を D1 batch でアトミックに実行する。
+   * batch は暗黙のトランザクションで包まれるため、INSERT が失敗しても consume は自動ロールバックされる。
+   * ポイント付きの場合、INSERT は「consume UPDATE が 1 行以上更新した」ことを条件に実行する
+   * （INSERT ... SELECT + EXISTS で条件分岐し、残量不足なら 0 行挿入で済ませる）。
+   */
   private async consumeAndInsert(props: {
     thanks: Thanks
     senderEmployeeId: number
@@ -178,7 +180,7 @@ export class SendThanks {
         const results = await db.batch([
           db
             .prepare(
-              "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
+              "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
             )
             .bind(
               props.thanks.senderEmployeeId,
@@ -213,7 +215,7 @@ export class SendThanks {
           .bind(props.points, props.senderEmployeeId, props.period),
         db
           .prepare(
-            "INSERT INTO thanks (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
+            "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
           )
           .bind(
             props.thanks.senderEmployeeId,

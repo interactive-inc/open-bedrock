@@ -1,13 +1,13 @@
-import { canAssignRoles } from "@/lib/iam/can-assign-roles"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   accountId: number
   roleKey: string
   now: number
@@ -25,7 +25,7 @@ export class GrantAccountRole {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Granted | ApplicationError> {
-    if (canAssignRoles(command.session) === false) {
+    if (command.session.hasPermission("iam:assign_roles") === false) {
       return new ForbiddenError("cannot assign roles", "forbidden")
     }
 

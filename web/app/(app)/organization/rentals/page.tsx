@@ -1,0 +1,152 @@
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
+import { RentalAdminFilterForm } from "@/app/(app)/organization/rentals/_components/rental-admin-filter-form"
+import { RentalAdminTable } from "@/app/(app)/organization/rentals/_components/rental-admin-table"
+import { FetchError } from "@/components/fetch-error"
+import { ListSkeleton } from "@/components/list-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { TablePagination } from "@/components/table-pagination"
+import { Button } from "@/components/ui/button"
+import { getRentalAdminList, type RentalAdminFilter } from "@/lib/api/get-rental-admin-list"
+import { getMe } from "@/lib/api/get-me"
+import { canManageRentals } from "@/lib/rental/can-manage-rentals"
+import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-reservations"
+
+export const metadata = { title: "貸与品予約管理" }
+
+const PAGE_SIZE = 20
+
+type SearchParams = Promise<{ [key: string]: string | Array<string> | undefined }>
+
+/** 全社の貸与品予約を横断で確認する画面。rental:read:all を持つロールのみ表示できる。 */
+export default async function AdminRentalsPage(props: { searchParams: SearchParams }) {
+  const currentUser = await getMe()
+
+  if (
+    currentUser instanceof Error ||
+    canViewAllRentalReservations(currentUser.permissions) === false
+  ) {
+    notFound()
+  }
+
+  const canManage = canManageRentals(currentUser.permissions)
+
+  const params = await props.searchParams
+
+  const status = toSingleValue(params.status)
+
+  const employeeIdRaw = toSingleValue(params.employee_id)
+
+  const employeeId = toEmployeeId(employeeIdRaw)
+
+  const rawPage = toSingleValue(params.page)
+
+  const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1)
+
+  const offset = (page - 1) * PAGE_SIZE
+
+  const filter: RentalAdminFilter = {
+    status: status,
+    employeeId: employeeId,
+  }
+
+  const suspenseKey = [filter.status ?? "", filter.employeeId ?? "", page].join(":")
+
+  const extraParams: Record<string, string | undefined> = {
+    status: filter.status ?? undefined,
+    employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="貸与品予約管理"
+        description="全社の貸与品予約を横断で確認します。"
+        breadcrumbs={[
+          { label: "貸与品予約", href: "/organization/rentals" },
+          { label: "貸与品予約管理" },
+        ]}
+        actions={
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/organization/rentals" />}
+          >
+            自分の予約
+          </Button>
+        }
+      />
+
+      <RentalAdminFilterForm
+        statusValue={filter.status ?? ""}
+        employeeIdValue={employeeIdRaw ?? ""}
+      />
+
+      <Suspense key={suspenseKey} fallback={<ListSkeleton rows={5} rowClassName="h-12 w-full" />}>
+        <RentalAdminSection
+          filter={filter}
+          offset={offset}
+          extraParams={extraParams}
+          canManage={canManage}
+        />
+      </Suspense>
+    </div>
+  )
+}
+
+async function RentalAdminSection(props: {
+  filter: RentalAdminFilter
+  offset: number
+  extraParams: Record<string, string | undefined>
+  canManage: boolean
+}) {
+  const result = await getRentalAdminList(props.filter, {
+    limit: PAGE_SIZE,
+    offset: props.offset,
+  })
+
+  if (result instanceof Error) {
+    return <FetchError message="貸与品予約一覧の取得に失敗しました" />
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <RentalAdminTable rows={result.data} total={result.total} canManage={props.canManage} />
+
+      <TablePagination
+        pathname="/organization/rentals"
+        total={result.total}
+        limit={PAGE_SIZE}
+        offset={props.offset}
+        extraParams={props.extraParams}
+      />
+    </div>
+  )
+}
+
+function toSingleValue(value: string | Array<string> | undefined): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  if (value === "") {
+    return null
+  }
+
+  return value
+}
+
+function toEmployeeId(raw: string | null): number | null {
+  if (raw === null) {
+    return null
+  }
+
+  const parsed = Number(raw)
+
+  if (Number.isInteger(parsed) === false || parsed <= 0) {
+    return null
+  }
+
+  return parsed
+}

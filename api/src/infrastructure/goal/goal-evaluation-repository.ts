@@ -2,10 +2,8 @@ import type { Goal } from "@/domain/goal/goal.entity"
 import { GoalEvaluation, goalEvaluationKindSchema } from "@/domain/goal/goal-evaluation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { goalEvaluations } from "@/schema"
 import { asc, eq } from "drizzle-orm"
 
@@ -18,7 +16,7 @@ export type AlreadyFinalizedError = { reason: "already_finalized" }
 export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}
 
-  // 目標に紐づく評価を作成順（id 昇順）で返す。
+  /** 目標に紐づく評価を作成順（id 昇順）で返す。 */
   async findByGoalId(goalId: number): Promise<ReadonlyArray<GoalEvaluation> | Error> {
     try {
       const rows = await this.c.var.database
@@ -33,8 +31,10 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
-  // goal の status が 'done' の場合は 0 行挿入となり goal_done を返す。
+  /**
+   * UNIQUE 制約 (goal_id) WHERE kind = 'final' に違反した場合は already_evaluated を返す。
+   * goal の status が 'done' の場合は 0 行挿入となり goal_done を返す。
+   */
   async create(
     evaluation: GoalEvaluation,
   ): Promise<GoalEvaluation | AlreadyEvaluatedError | GoalDoneError | Error> {
@@ -43,7 +43,7 @@ export class GoalEvaluationRepository {
         `
         INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
         SELECT ?1, ?2, ?3, ?4, ?5, ?6
-        WHERE EXISTS (SELECT 1 FROM goals WHERE id = ?1 AND status != 'done')
+        WHERE EXISTS (SELECT 1 FROM performance_goals WHERE id = ?1 AND status != 'done')
         RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
         `,
       )
@@ -90,9 +90,11 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
-  // UPDATE が 0 行（既に done）なら abortWhenPreviousStatementChangedNoRows で中断する。
-  // UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
+  /**
+   * final 評価の INSERT と goal の status='done' UPDATE を D1 batch でアトミックに行う。
+   * UPDATE が 0 行（既に done）なら abortWhenPreviousStatementChangedNoRows で中断する。
+   * UNIQUE 制約違反は already_evaluated を返す。batch 全体が失敗すると rollback される。
+   */
   async createWithGoalCompletion(
     evaluation: GoalEvaluation,
     goal: Goal,
@@ -104,7 +106,7 @@ export class GoalEvaluationRepository {
         db
           .prepare(
             `
-          UPDATE goals SET status = 'done' WHERE id = ?1 AND status != 'done'
+          UPDATE performance_goals SET status = 'done' WHERE id = ?1 AND status != 'done'
           `,
           )
           .bind(goal.id),
@@ -173,7 +175,7 @@ export class GoalEvaluationRepository {
     }
   }
 
-  // 目標に紐づく評価をすべて削除する。
+  /** 目標に紐づく評価をすべて削除する。 */
   async deleteByGoalId(goalId: number): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.goalId, goalId))

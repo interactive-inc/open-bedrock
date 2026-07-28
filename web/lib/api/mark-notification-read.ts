@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { NotificationResponse } from "@/lib/api/types/notification-types"
 
-// POST /notifications/:id/read。指定した通知を既読にする。
+/** POST /notifications/:id/read。指定した通知を既読にする。 */
 export async function markNotificationRead(
   notificationId: number,
 ): Promise<NotificationResponse | Error> {

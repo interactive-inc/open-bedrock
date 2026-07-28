@@ -1,16 +1,16 @@
+import type { Session } from "@/lib/auth/session"
 import type { Employee } from "@/domain/employee/employee.entity"
-import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   assignmentId: number
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
 }
 
 export type GetOnboardingAssignmentResult = {
@@ -39,7 +39,7 @@ export class GetOnboardingAssignment {
 
     const isOwner = assignment.employeeId === command.viewerEmployeeId
 
-    if (isOwner === false && canViewEmployeeOnboarding(command.session) === false) {
+    if (isOwner === false && command.session.hasPermission("onboarding:view:all") === false) {
       return new ForbiddenError("cannot view assignment", "forbidden")
     }
 

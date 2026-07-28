@@ -7,7 +7,7 @@ type SeedLeaveBalance = {
   remainingDays: number
 }
 
-// 各 employee は annual/special の2行を持ち、remainingDays = grantedDays - usedDays。
+/** 各 employee は annual/special の2行を持ち、remainingDays = grantedDays - usedDays。 */
 export const seedLeaveBalances: ReadonlyArray<SeedLeaveBalance> = [
   {
     employeeId: 5,

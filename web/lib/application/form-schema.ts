@@ -87,19 +87,3 @@ export function toFormSchema(raw: unknown): FormSchema {
 
   return emptySchema
 }
-
-export function emptyFormSchema(): FormSchema {
-  return emptySchema
-}
-
-export function toFormFieldTypeLabel(type: FormFieldType): string {
-  if (type === "text") return "1行テキスト"
-
-  if (type === "textarea") return "複数行テキスト"
-
-  if (type === "number") return "数値"
-
-  if (type === "date") return "日付"
-
-  return "選択肢"
-}

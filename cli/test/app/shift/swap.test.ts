@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift swap", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/swap", {
+    const response = await app.request("/shift-swap-requests/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,11 +13,11 @@ describe("shift swap", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("shift swap")
+    expect(text).toContain("shift-swap-requests create")
   })
 
   it("errors without required flags", async () => {
-    const response = await app.request("/shift/swap", {
+    const response = await app.request("/shift-swap-requests/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ note: "メモ" }),

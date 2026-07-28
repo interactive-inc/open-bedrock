@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AuditEventRecord } from "@/domain/audit/audit-event"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ValidationError } from "@/lib/errors"
 
 const decisionId = "00000000-0000-4000-8000-000000000041"
@@ -107,7 +107,7 @@ describe("AuditEventRepository exclusive append fragment", () => {
       expect(
         (
           await db
-            .prepare("SELECT event_id FROM audit_logs ORDER BY event_id")
+            .prepare("SELECT event_id FROM audit_events ORDER BY event_id")
             .all<{ event_id: string }>()
         ).results,
       ).toEqual([{ event_id: `event-${decision}` }])
@@ -174,7 +174,7 @@ describe("AuditEventRepository exclusive append fragment", () => {
     expect((error as Error).message).toContain("malformed JSON")
     expect(await markerCount(db)).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
   })
 
@@ -185,7 +185,7 @@ describe("AuditEventRepository exclusive append fragment", () => {
       const repository = new AuditEventRepository(context)
       await db.exec(`
         CREATE TRIGGER reject_selected_audit_insert
-        BEFORE INSERT ON audit_logs
+        BEFORE INSERT ON audit_events
         WHEN NEW.event_id = 'event-rotated'
         BEGIN
           SELECT RAISE(${raise}${raise === "ABORT" ? ", 'forced audit failure'" : ""});
@@ -215,7 +215,7 @@ describe("AuditEventRepository exclusive append fragment", () => {
           .first<number>("count"),
       ).toBe(0)
       expect(
-        await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+        await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
       ).toBe(0)
     },
   )

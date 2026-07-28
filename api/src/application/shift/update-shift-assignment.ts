@@ -1,13 +1,13 @@
-import { canManageShift } from "@/lib/shift/can-manage-shift"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/domain/shift/shift-assignment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   assignmentId: number
   patternCode: string | null
   date: string
@@ -23,7 +23,7 @@ export class UpdateShiftAssignment {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftAssignment | ApplicationError> {
-    if (canManageShift(input.session) === false) {
+    if (input.session.hasPermission("shift:manage") === false) {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
@@ -83,7 +83,7 @@ export class UpdateShiftAssignment {
     return saved
   }
 
-  // パターンコードを id に解決する。null は「パターン未指定」として patternId:null を返す。
+  /** パターンコードを id に解決する。null は「パターン未指定」として patternId:null を返す。 */
   private async resolvePatternId(
     patternCode: string | null,
   ): Promise<ResolvedPattern | ApplicationError> {

@@ -6,7 +6,7 @@ type Props = {
   employeeCode: string
 }
 
-// GET /review-cycles/:cycle_id/results/:employee_code。特権ロールが集計済みの評価結果を取得する。
+/** GET /review-cycles/:cycle_id/results/:employee_code。特権ロールが集計済みの評価結果を取得する。 */
 export async function getReviewResults(props: Props): Promise<ReviewResultResponse | Error> {
   const client = await createClient()
 
