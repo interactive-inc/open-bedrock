@@ -1104,8 +1104,6 @@ export const budgets = sqliteTable("department_budgets", {
 export type BudgetRow = InferSelectModel<typeof budgets>
 
 /**
- * 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
- * is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
  * 目標（社員ごと・評価期間ごとの目標と重み・状態）。
  * owner_type は目標の所有主体(individual/department/company)。parent_goal_id で全社→部門→個人の
  * 階層をつなぎ、department_code は部門目標の所属部門を表す。個人目標では department_code は null。
