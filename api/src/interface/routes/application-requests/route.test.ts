@@ -12,11 +12,16 @@ import { z } from "zod"
 
 const jwtSecret = "application-mine-route-test-secret"
 
-const applicationMineResponseSchema = z.object({
+const applicationResponseSchema = z.object({
   id: z.number(),
+  template_code: z.string(),
   template_name: z.string(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  template_category: z.string(),
+  applicant_id: z.number(),
+  applicant_name: z.string(),
+  applicant_dept_name: z.string().nullable(),
   current_step: z.string().nullable(),
+  status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
 
@@ -100,7 +105,7 @@ describe("GET /application-requests", () => {
     expect(response.status).toBe(200)
 
     const parsed = z
-      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .object({ data: z.array(applicationResponseSchema), total: z.number() })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
@@ -123,7 +128,7 @@ describe("GET /application-requests", () => {
     expect(response.status).toBe(200)
 
     const parsed = z
-      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .object({ data: z.array(applicationResponseSchema), total: z.number() })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
@@ -140,7 +145,7 @@ describe("GET /application-requests", () => {
     expect(response.status).toBe(200)
 
     const parsed = z
-      .object({ data: z.array(applicationMineResponseSchema), total: z.number() })
+      .object({ data: z.array(applicationResponseSchema), total: z.number() })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
@@ -154,5 +159,230 @@ describe("GET /application-requests", () => {
     const response = await request("/application-requests", null)
 
     expect(response.status).toBe(401)
+  })
+})
+
+const scopeEmployeeRows = [
+  { id: 2, code: "M002", name: "Mgr", email: "you+m002@example.com", role: "manager" },
+  { id: 20, code: "R020", name: "ReportA", email: "you+r020@example.com", role: "member" },
+  { id: 21, code: "R021", name: "ReportB", email: "you+r021@example.com", role: "member" },
+  { id: 22, code: "S022", name: "Solo", email: "you+s022@example.com", role: "manager" },
+]
+
+async function createDepartmentScopeTestDb(): Promise<D1Database> {
+  const db = createD1TestDatabase(loadSchema())
+
+  await seedD1(
+    db,
+    "employees",
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    })),
+  )
+
+  await seedIamForEmployees(
+    db,
+    scopeEmployeeRows.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  // root(id 23, 所属なし)を追加する。
+  await seedD1(db, "employees", [
+    {
+      id: 23,
+      code: "A023",
+      name: "Admin",
+      dept_id: 1,
+      dept_name: "Dept",
+      position: "-",
+      status: "active",
+    },
+  ])
+
+  await seedIamForEmployees(db, [
+    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "root" },
+  ])
+
+  await seedD1(db, "org_memberships", [
+    { department_code: "D001", employee_code: "M002", manager_employee_code: null },
+    { department_code: "D001", employee_code: "R020", manager_employee_code: "M002" },
+    { department_code: "D001", employee_code: "R021", manager_employee_code: "M002" },
+    { department_code: "D002", employee_code: "S022", manager_employee_code: null },
+  ])
+
+  await seedD1(
+    db,
+    "application_templates",
+    seedApplicationTemplates.map((template) => ({
+      id: template.id,
+      code: template.code,
+      name: template.name,
+      category: template.category,
+      description: template.description,
+      schema_json: JSON.stringify(template.schemaJson),
+      approver_roles: JSON.stringify(template.approverRoles),
+    })),
+  )
+
+  await seedD1(db, "application_requests", [
+    {
+      id: 100,
+      template_id: 1,
+      applicant_id: 20,
+      status: "pending",
+      current_step: "manager_approval",
+      payload: JSON.stringify({}),
+      created_at: "2026-06-01T00:00:00Z",
+    },
+    {
+      id: 101,
+      template_id: 1,
+      applicant_id: 21,
+      status: "approved",
+      current_step: null,
+      payload: JSON.stringify({}),
+      created_at: "2026-06-02T00:00:00Z",
+    },
+    {
+      id: 102,
+      template_id: 1,
+      applicant_id: 22,
+      status: "pending",
+      current_step: "manager_approval",
+      payload: JSON.stringify({}),
+      created_at: "2026-06-03T00:00:00Z",
+    },
+  ])
+
+  return db
+}
+
+async function grantDepartmentReader(
+  db: D1Database,
+  accountId: number,
+  permissionKey: string,
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO roles (id, key, name, description, is_system, created_at)
+       VALUES (900, 'dept_reader', 'dept reader', '', 0, 0)`,
+    )
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO role_permissions (role_id, permission_id)
+       SELECT 900, p.id FROM permissions p WHERE p.key = ?1`,
+    )
+    .bind(permissionKey)
+    .run()
+
+  await db
+    .prepare(
+      `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+       VALUES (?1, 900, NULL, 0)`,
+    )
+    .bind(accountId)
+    .run()
+}
+
+describe("GET /application-requests?scope=department", () => {
+  test("admin lists only the requested department's applications", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/application-requests?scope=department&department_code=D001",
+      token: await tokenFor(23, "root"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(applicationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+
+      const applicantIds = parsed.data.data
+        .map((application) => application.applicant_id)
+        .sort((a, b) => a - b)
+
+      expect(applicantIds).toEqual([20, 21])
+    }
+  })
+
+  test("department reader in the department lists its applications", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20, "application:read:department")
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/application-requests?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = z
+      .object({ data: z.array(applicationResponseSchema), total: z.number() })
+      .safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.total).toBe(2)
+    }
+  })
+
+  test("department reader outside the department is forbidden", async () => {
+    const db = await createDepartmentScopeTestDb()
+
+    await grantDepartmentReader(db, 20, "application:read:department")
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/application-requests?scope=department&department_code=D002",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("member without department permission is forbidden", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/application-requests?scope=department&department_code=D001",
+      token: await tokenFor(20, "member"),
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("missing department_code is unprocessable", async () => {
+    const response = await requestWithContext({
+      db: await createDepartmentScopeTestDb(),
+      jwtSecret,
+      path: "/application-requests?scope=department",
+      token: await tokenFor(23, "root"),
+    })
+
+    expect(response.status).toBe(422)
   })
 })

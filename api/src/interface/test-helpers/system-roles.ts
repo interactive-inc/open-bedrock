@@ -119,6 +119,8 @@ const ROOT_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "goal:read:department",
   "attendance:read:department",
   "leave:read:department",
+  "application:read:department",
+  "oneonone:read:department",
   // 経営・対外ドメイン。実務は executive / general_affairs プリセットが担う。
   "ringi:read:all",
   "partner:manage",
