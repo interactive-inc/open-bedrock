@@ -5,13 +5,17 @@ import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-pre
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { redemptionStatusSchema } from "@/lib/schemas"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
-import { and, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 /**
  * 確定済みの交換ステータス。確定は fulfilled の1つだけ。
  * 承認＝確定（fulfilled）へ直行するため approved は使わない。
- * getBalance と approveFromPending はともに fulfilled + pending を差し引いて残高を算出する。
+ *
+ * createIfSufficientBalance と approveFromPending は受領残高の式を SQL 内へ畳み込んで持つ。
+ * 参照専用の同じ式は ThanksPointBalanceRepository が持ち、そちらが受領残高の読み取りの正本である。
+ * ここに式が残るのは、同時実行下で残高を割らせないために防御を単一ステートメントで
+ * 原子的に評価する必要があるためで、重複は意図的なもの。式を変えるときは両方を必ず揃える。
  */
 const settledStatus = "fulfilled"
 
@@ -350,36 +354,6 @@ export class ThanksRedemptionRepository {
       return rows.length > 0
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to check pending redemptions")
-    }
-  }
-
-  /**
-   * 受領残高を算出する。受領 thanks.points 合計 − 確定・保留中の交換（fulfilled + pending）の
-   * point_cost 合計。pending を含めることで、未決裁の申請分も残高に反映させる。
-   * 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
-   */
-  async getBalance(employeeId: number): Promise<number | Error> {
-    try {
-      const [receivedRow] = await this.c.var.database
-        .select({ total: sql<number>`COALESCE(SUM(${thanks.points}), 0)` })
-        .from(thanks)
-        .where(eq(thanks.recipientEmployeeId, employeeId))
-
-      const [deductedRow] = await this.c.var.database
-        .select({
-          total: sql<number>`COALESCE(SUM(${thanksRedemptions.pointCost}), 0)`,
-        })
-        .from(thanksRedemptions)
-        .where(
-          and(
-            eq(thanksRedemptions.employeeId, employeeId),
-            inArray(thanksRedemptions.status, [settledStatus, "pending"]),
-          ),
-        )
-
-      return (receivedRow?.total ?? 0) - (deductedRow?.total ?? 0)
-    } catch (error) {
-      return error instanceof Error ? error : new Error("failed to compute balance")
     }
   }
 }

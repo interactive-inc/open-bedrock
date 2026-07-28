@@ -8,7 +8,7 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 レポートラインは `/employees/:code/reporting-line` とした。本書は `:employee_code` を挙げるが、`/employees` 配下の既存経路が `:code` を使っており、同じ位置のセグメントに二つの名前を与えないことを優先した。
 
-サンクスの残高と予算は一本化せず、`/thanks-point-budgets/me`（当月の贈与原資）と `/thanks-point-budgets/me/balance`（受領残高）の二本を維持した。両者は同じ表を読むが応答の形が異なり、統合すると受領残高を取る手段が失われる。「未決リスト」の `thanks` の節が示すとおり、統合はオーナーのプロダクト判断を待つ。
+サンクスの残高と予算は一本化せず、別リソースへ分けた。`/thanks-point-budgets/me` が当月原資（送れる枠）を、`/thanks-point-balances/me` が受領残高（もらった点数の残り）を返す。当初は同一の表を読む二本と見なして一本化を提案したが、実装では読む対象が既に分かれており、両者は別概念である。詳細は「決定事項」の `thanks` の節に記す。
 
 `/governance-documents/impact` は `/governance-documents/:code` より先に登録した。`impact` を documents 配下へ移したことで動的セグメントに飲まれるためで、経路の名前そのものは本書のとおりである。
 
@@ -225,6 +225,8 @@ URL は段を経路に含めない。`/company-optional/thanks-messages` のよ�
 
 `/oneonones` を `/one-on-ones` にする。テーブル名 `one_on_ones` と綴りを揃える。
 
+`/thanks-point-budgets/me/balance` を `/thanks-point-balances/me` にする。受領残高は当月原資の一部ではなく別概念であり、原資配下へ入れ子にすると原資の集約に属すると読めてしまう。第一セグメントを分けて別リソースとして表す。
+
 ### 変更しないもの
 
 `/employees`、`/directory/employees`、`/accounts`、`/roles`、`/notifications`、`/announcements`、`/regulations`、`/partners`、`/assets`、`/stocktakes`、`/rooms`、`/surveys`、`/expenses`、`/resignations`、`/business-trips`、`/life-events`、`/family-care-leaves`、`/certificate-requests`、`/antisocial-checks`、`/commendations`、`/disciplinary-actions`、`/headcount-plans`、`/health-checkups`、`/work-accidents`、`/it-incidents`、`/employee-events`、`/employee-certifications`、`/salary-revisions`、`/review-cycles`、`/review-forms`、`/application-templates`、`/approval-delegations`、`/personnel-actions`、`/personnel-action-requests`、`/meetings`、`/audit-event-exports`、`/provisioning/identities`、`/me`、`/inbox`、`/dashboard`、`/auth`、`/batch`、`/bootstrap`。
@@ -297,17 +299,19 @@ CLI の第一セグメントを URL のリソース名と一致させる。単�
 
 `recruitment_positions` を `job_openings` とする。修飾語による区別を許容せず、語の衝突自体を消す。
 
-## 未決リスト
-
-`career_sheets` と `thanks` はオーナーのプロダクト判断であり、命名の決定では解けない。
-
 ### career_sheets の粒度
 
-`career_sheets` は従業員 1 名につき 1 行を上書きする。履歴を持たないため、過去の記載内容を追えない。名前は複数形で妥当だが、履歴を持つべきかどうかは仕様の判断であり、持つと決めれば `career_sheet_versions` の追加が要る。
+2026-07-28 オーナー確定。今はやらない。履歴要件が業務から出ていないためである。必要になった時点で `career_sheet_versions` を追加する。
+
+`career_sheets` は従業員 1 名につき 1 行を上書きし、過去の記載内容を追えない。名前は複数形で妥当であり、改名は要らない。
 
 ### thanks の残高と予算
 
-`/thanks/balance/me` と `/thanks/budget/me` は同一の `thanks_point_budgets` を読む。本書では URL の一本化を提案し、その提案は維持する。ただし送付可能な残枠と受領済みの点数を別概念として分けるなら、受領側に別の表が要る。現行は受領点数を `thanks_messages` の集計で得ており表を持たない。概念を分けるかどうかの判断が要る。
+2026-07-28 実施。当月原資と受領残高を別概念として分離した。表は増やさず、責務と URL で分けた。
+
+送れる枠である当月原資は `thanks_point_budgets` が正本であり、`/thanks-point-budgets/me` が返す。もらった点数の累積である受領残高は `thanks_messages` の受領分から確定・未決裁の交換を引いて算出し、`/thanks-point-balances/me` が返す。受領残高は `thanks_point_budgets` を一切参照しない。
+
+受領側に表を作らない判断の理由は次のとおりである。受領残高の式は交換申請と承認の単一ステートメント防御に既に埋め込まれており、同時実行下で残高を割らせないために SQL 内で原子的に評価する必要がある。台帳表や残高列を足すとその防御と同期させる書き込み経路が増え、二重持ちによる不整合の危険を招く。分離すべきだったのは保存先ではなく責務であり、読み取りの正本を `ThanksPointBalanceRepository` に移して当月原資と分けた。
 
 ## migration の命名運用
 

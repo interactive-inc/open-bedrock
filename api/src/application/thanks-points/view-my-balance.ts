@@ -1,18 +1,19 @@
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
+import { ThanksPointBalanceRepository } from "@/infrastructure/thanks-points/thanks-point-balance-repository"
 
 /**
- * 受領残高（受領 thanks の合計 − 確定交換の合計）を参照する。
+ * 受領残高（もらった点数の累積から交換で引かれた分を差し引いた残り）を参照する。
+ * 送れる枠である当月原資は別概念であり ViewMyBudget が担う。ここは原資を一切参照しない。
  */
 export class ViewMyBalance {
   constructor(private readonly c: Context) {}
 
   async run(props: { employeeId: number }): Promise<number | ApplicationError> {
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
+    const balanceRepository = new ThanksPointBalanceRepository(this.c)
 
-    const balance = await redemptionRepository.getBalance(props.employeeId)
+    const balance = await balanceRepository.getBalance(props.employeeId)
 
     if (balance instanceof Error) {
       return new UnexpectedError("failed to find balance", { cause: balance })

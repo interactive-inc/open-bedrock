@@ -300,7 +300,7 @@ import * as surveysResponsesResponseIdRoute from "@/interface/routes/surveys/res
 import * as surveysResponsesMeRoute from "@/interface/routes/surveys/responses/me/route"
 import * as surveysRoute from "@/interface/routes/surveys/route"
 import * as thanksMessagesRoute from "@/interface/routes/thanks-messages/route"
-import * as thanksPointBudgetsMeBalanceRoute from "@/interface/routes/thanks-point-budgets/me/balance/route"
+import * as thanksPointBalancesMeRoute from "@/interface/routes/thanks-point-balances/me/route"
 import * as thanksPointBudgetsMeRoute from "@/interface/routes/thanks-point-budgets/me/route"
 import * as thanksRedemptionsIdApproveRoute from "@/interface/routes/thanks-redemptions/[id]/approve/route"
 import * as thanksRedemptionsIdRejectRoute from "@/interface/routes/thanks-redemptions/[id]/reject/route"
@@ -729,8 +729,8 @@ export const app = appBase
   .get("/surveys/:survey_id/summary", ...surveysSurveyIdSummaryRoute.GET)
   .get("/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks-messages", ...thanksMessagesRoute.POST)
+  .get("/thanks-point-balances/me", ...thanksPointBalancesMeRoute.GET)
   .get("/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
-  .get("/thanks-point-budgets/me/balance", ...thanksPointBudgetsMeBalanceRoute.GET)
   .post("/thanks-redemptions", ...thanksRedemptionsRoute.POST)
   .get("/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
   .get("/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)

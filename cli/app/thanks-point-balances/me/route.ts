@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `bedrock thanks-point-budgets balance — 受領残高（受領 − 確定交換）`
+export const help = `bedrock thanks-point-balances me — 受領残高（受領 − 確定・未決裁の交換）`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),
@@ -14,7 +14,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["thanks-point-budgets"].me.balance.$get()
+    const response = await client["thanks-point-balances"].me.$get()
 
     return c.json(await response.json())
   },

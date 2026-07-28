@@ -131,7 +131,7 @@ import thanksHandler from "@/app/thanks-messages/route"
 import thanksListHandler from "@/app/thanks-messages/list/route"
 import thanksSendHandler from "@/app/thanks-messages/send/route"
 import thanksBudgetHandler from "@/app/thanks-point-budgets/me/route"
-import thanksBalanceHandler from "@/app/thanks-point-budgets/balance/route"
+import thanksBalanceHandler from "@/app/thanks-point-balances/me/route"
 import thanksRewardsHandler from "@/app/thanks-rewards/list/route"
 import thanksRewardAddHandler from "@/app/thanks-rewards/create/route"
 import thanksRedeemHandler from "@/app/thanks-redemptions/create/route"
@@ -313,6 +313,7 @@ import cmd1on1ShowHandler from "@/app/one-on-ones/show/route"
 import appUpdateHandler from "@/app/application-requests/update/[app_id]/route"
 import appWithdrawHandler from "@/app/application-requests/withdraw/[app_id]/route"
 import thanksPointBudgetsRootHandler from "@/app/thanks-point-budgets/route"
+import thanksPointBalancesRootHandler from "@/app/thanks-point-balances/route"
 import governanceOrgRolesRootHandler from "@/app/governance-org-roles/route"
 import employeeSkillsRootHandler from "@/app/employee-skills/route"
 import employeeGradesRootHandler from "@/app/employee-grades/route"
@@ -534,6 +535,7 @@ routes.post("/knowledge-articles/search/:q", ...kbSearchHandler)
 routes.post("/knowledge-articles/get/:kid?", ...kbGetHandler)
 
 routes.post("/thanks-point-budgets", ...thanksPointBudgetsRootHandler)
+routes.post("/thanks-point-balances", ...thanksPointBalancesRootHandler)
 routes.post("/governance-org-roles", ...governanceOrgRolesRootHandler)
 routes.post("/employee-skills", ...employeeSkillsRootHandler)
 routes.post("/employee-grades", ...employeeGradesRootHandler)
@@ -605,7 +607,7 @@ routes.post("/thanks-messages", ...thanksHandler)
 routes.post("/thanks-messages/list", ...thanksListHandler)
 routes.post("/thanks-messages/send", ...thanksSendHandler)
 routes.post("/thanks-point-budgets/me", ...thanksBudgetHandler)
-routes.post("/thanks-point-budgets/balance", ...thanksBalanceHandler)
+routes.post("/thanks-point-balances/me", ...thanksBalanceHandler)
 routes.post("/thanks-rewards", ...thanksRewardsRootHandler)
 routes.post("/thanks-redemptions", ...thanksRedemptionsRootHandler)
 routes.post("/thanks-rewards/list", ...thanksRewardsHandler)

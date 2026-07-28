@@ -1,4 +1,4 @@
-/** GET /thanks-point-budgets/me — 当月の贈与原資。 */
+/** GET /thanks-point-budgets/me — 当月の贈与原資（今月あと何点送れるか）。毎月リセットされる。 */
 export type ThanksBudgetResponse = {
   period: string
   granted_points: number
@@ -6,7 +6,7 @@ export type ThanksBudgetResponse = {
   remaining_points: number
 }
 
-/** GET /thanks-point-budgets/me/balance — 受領残高。 */
+/** GET /thanks-point-balances/me — 受領残高（もらった点数の累積から交換分を引いた残り）。 */
 export type ThanksBalanceResponse = {
   balance_points: number
 }
