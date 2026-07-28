@@ -1,4 +1,4 @@
-/** GET /certifications の要素。api は snake_case で返す。 */
+/** GET /certification-definitions の要素。api は snake_case で返す。 */
 export type CertificationResponse = {
   id: number
   code: string

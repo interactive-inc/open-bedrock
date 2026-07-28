@@ -216,7 +216,7 @@ export class ThanksRedemptionRepository {
                 AND reward_id = ?5
                 AND status = 'pending'
                 AND (
-                  (SELECT COALESCE(SUM(points), 0) FROM thanks
+                  (SELECT COALESCE(SUM(points), 0) FROM thanks_messages
                     WHERE recipient_employee_id = ?2)
                   - (SELECT COALESCE(SUM(point_cost), 0) FROM thanks_redemptions
                     WHERE employee_id = ?2

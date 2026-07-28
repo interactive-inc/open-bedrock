@@ -3,6 +3,7 @@ import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/li
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization permission - 権限キーで判定する
 /** POST /batch/migrate-password-hashes — 旧形式ハッシュを PBKDF2 ラップに一括移行する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

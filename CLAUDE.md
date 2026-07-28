@@ -44,7 +44,7 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 
 ディレクトリの構成は以下のとおり。
 
-- `api/src/` … domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`app.ts` が `:param` に対応づけて登録する。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
+- `api/src/` … domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
 - `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
@@ -80,6 +80,29 @@ web↔api クライアントの約束:
 - `api` のルートや入出力を変更したら `cd api && bun run build:types` で型を再生成し、`cd web && bunx tsc --noEmit` で web の追従を確認する
 - `cli` の変更は `cd cli && bun test` を実行する
 - コミット前に固有名詞・個人情報・認証情報・社内インフラや社内システム統合の情報が混入していないか確認する
+
+## ルート登録と認可の機械検査
+
+`api/src/app.ts` は生成物であり、手で編集しない。ルートを足すときは `interface/routes/<URL パス>/route.ts` を作り、`cd api && bun run gen:app` を実行する。生成器は `routes/` を走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラ・`/health` は手書きの `app-base.ts` が持つ。
+
+`bun run gen:app:check` が生成物と `routes/` のズレを検出する。登録漏れ＝ルート消失は、実装があるのに到達できず、テストも「そのルートを呼ばない」だけで緑のまま通るため、規約ではなく検査で防ぐ。
+
+各 handler は認可の方針を 1 行で宣言する。宣言は `export const GET` などの直前に、メソッドごとに置く（同じファイルでも一覧は全員閲覧可・登録は権限必須のように方針が違うため）。`bun run lint:route-authorization` が宣言の有無と、宣言と認証 middleware の整合を検査する。
+
+```ts
+// @authorization permission - 権限キーで判定する
+// @authorization service    - session を application service に渡して判定する
+// @authorization owner      - 本人のリソースに限定する
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
+// @authorization public     - 未認証で到達してよい
+// @authorization machine    - 機械用のキーで認証する
+```
+
+宣言を要求するのは、認可の判断がルートファイルの中にあるとは限らないため。実際には権限キーの直接判定、専用 middleware、application service への委譲、本人限定の絞り込みに分かれており、ルートファイルを grep する検査は誤検知が大半になる。
+
+**この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。** 宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
+
+両検査は `bun run check`（api）に組み込んである。
 
 ## ドキュメント
 

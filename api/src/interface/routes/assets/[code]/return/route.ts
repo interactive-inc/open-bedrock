@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppAsset } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /assets/:code/return — 貸出中の資産を在庫へ戻す（権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

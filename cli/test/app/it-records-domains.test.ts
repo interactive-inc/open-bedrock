@@ -7,11 +7,11 @@ import { app } from "@/app/index"
  * POST + help:1 で到達性を確かめる。
  */
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/licenses", help: "bedrock licenses" },
-  { path: "/licenses/list", help: "licenses list" },
-  { path: "/licenses/create", help: "licenses create" },
-  { path: "/licenses/update", help: "licenses update" },
-  { path: "/licenses/cancel", help: "licenses cancel" },
+  { path: "/software-licenses", help: "bedrock software-licenses" },
+  { path: "/software-licenses/list", help: "software-licenses list" },
+  { path: "/software-licenses/create", help: "software-licenses create" },
+  { path: "/software-licenses/update", help: "software-licenses update" },
+  { path: "/software-licenses/cancel", help: "software-licenses cancel" },
   { path: "/it-incidents", help: "bedrock it-incidents" },
   { path: "/it-incidents/list", help: "it-incidents list" },
   { path: "/it-incidents/create", help: "it-incidents create" },
@@ -37,7 +37,7 @@ describe("it/records domains commands", () => {
   }
 
   it("licenses create requires --name", async () => {
-    const response = await app.request("/licenses/create", {
+    const response = await app.request("/software-licenses/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ vendor: "x" }),

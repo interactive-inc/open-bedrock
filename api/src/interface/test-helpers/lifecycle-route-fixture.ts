@@ -42,7 +42,7 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
   )
   await seedD1(
     db,
-    "positions",
+    "position_definitions",
     seedPositions.map((position) => ({
       id: position.id,
       code: position.code,
@@ -76,7 +76,7 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
       ('status-4', 1, 'employment-4', 4, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
       ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, '00000000-0000-4000-8000-000000000005', 1),
       ('status-6', 1, 'employment-6', 6, 'active', '2025-01-01', NULL, 0, 'fixture', 1);
-    INSERT INTO org_assignment_period_versions
+    INSERT INTO employee_org_assignment_period_versions
       (period_id, revision, employment_period_id, employee_id, department_code,
        assignment_type, position_title, manager_employee_id, starts_on, ends_on,
        is_void, recorded_by_action_id, recorded_at) VALUES
@@ -84,12 +84,12 @@ export async function createLifecycleRouteDb(): Promise<D1Database> {
       ('assignment-4', 1, 'employment-4', 4, 'D003', 'primary', 'Manager', 1, '2025-01-01', NULL, 0, 'fixture', 1),
       ('assignment-5', 1, 'employment-5', 5, 'D003', 'primary', 'Engineer', 4, '2025-01-01', NULL, 0, '00000000-0000-4000-8000-000000000005', 1),
       ('assignment-6', 1, 'employment-6', 6, 'D004', 'primary', 'Sales', NULL, '2025-01-01', NULL, 0, 'fixture', 1);
-    INSERT INTO org_responsibility_period_versions
+    INSERT INTO employee_org_responsibility_period_versions
       (period_id, revision, department_code, responsibility_type, employee_id,
        starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
     VALUES ('responsibility-4', 1, 'D003', 'department_manager', 4,
             '2025-01-01', NULL, 0, 'fixture', 1);
-    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
   `)
   return db
 }

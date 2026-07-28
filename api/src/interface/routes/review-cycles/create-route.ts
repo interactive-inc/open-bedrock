@@ -10,6 +10,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { zReviewCyclePolicy } from "@/domain/review/review-cycle-policy"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /review-cycles — 管理者が draft の評価サイクルを作成 */
 export const POST = factory.createHandlers(
   verifyBearer,

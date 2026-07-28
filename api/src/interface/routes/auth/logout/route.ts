@@ -8,6 +8,7 @@ import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization public - 未認証で到達してよい
 /** POST /auth/logout — リフレッシュトークンのファミリーを失効させ、サーバー側でセッションを終了する */
 export const POST = factory.createHandlers(
   zValidator(

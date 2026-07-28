@@ -8,7 +8,7 @@ INSERT INTO application_templates (id, code, name, category, description, schema
   (3, 'remote_work', 'Remote Work Request', 'attendance', 'Advance request for remote work', '{"type":"object","properties":{"date":{"type":"string","format":"date"},"reason":{"type":"string"}},"required":["date"]}', '["manager"]'),
   (4, 'equipment', 'Equipment Purchase Request', 'general_affairs', 'Request to purchase work equipment', '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"},"reason":{"type":"string"}},"required":["item","amount"]}', '["manager","root"]');
 
-INSERT INTO applications (id, template_id, applicant_id, status, current_step, payload, created_at) VALUES
+INSERT INTO application_requests (id, template_id, applicant_id, status, current_step, payload, created_at) VALUES
   (1, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-06-10","end_date":"2026-06-12","reason":"personal"}', '2026-05-20T01:00:00Z'),
   (2, 2, 9, 'pending', 'manager_approval', '{"amount":12000,"category":"transport","note":"client visit"}', '2026-05-22T02:30:00Z'),
   (3, 3, 10, 'approved', NULL, '{"date":"2026-05-15","reason":"focus work"}', '2026-05-10T00:00:00Z'),

@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppRegulation } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /regulations/:code/archive — 規程をアーカイブ（regulation:manage）。 */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

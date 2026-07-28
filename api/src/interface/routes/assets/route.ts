@@ -15,6 +15,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /assets — kind / status で絞り込める資産一覧 */
 export const GET = factory.createHandlers(
   verifyBearer,

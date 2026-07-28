@@ -7,6 +7,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
@@ -42,6 +43,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   )
 })
 
+// @authorization service - session を application service に渡して判定する
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

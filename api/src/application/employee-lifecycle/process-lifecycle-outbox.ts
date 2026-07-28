@@ -57,7 +57,7 @@ export class ProcessLifecycleOutbox {
           `SELECT outbox.id, outbox.personnel_action_id, outbox.effect_type,
                   outbox.payload_json, outbox.attempt_count, action.employee_id, action.event_on,
                   binding.template_code, template.kind AS template_kind
-           FROM lifecycle_outbox outbox
+           FROM lifecycle_outbox_entries outbox
            INNER JOIN personnel_actions action ON action.id = outbox.personnel_action_id
            LEFT JOIN lifecycle_effect_template_bindings binding
              ON binding.effect_type = outbox.effect_type
@@ -92,7 +92,7 @@ export class ProcessLifecycleOutbox {
       try {
         const statements: D1PreparedStatement[] = [
           this.c.env.DB.prepare(
-            `UPDATE lifecycle_outbox SET attempt_count = attempt_count
+            `UPDATE lifecycle_outbox_entries SET attempt_count = attempt_count
                WHERE id = ?1 AND processed_at IS NULL
                  AND (
                    ?2 IS NULL OR EXISTS (
@@ -134,7 +134,7 @@ export class ProcessLifecycleOutbox {
         }
         statements.push(
           this.c.env.DB.prepare(
-            `UPDATE lifecycle_outbox
+            `UPDATE lifecycle_outbox_entries
                SET processed_at = ?2, last_error_code = NULL
                WHERE id = ?1 AND processed_at IS NULL RETURNING id`,
           ).bind(row.id, now),
@@ -156,7 +156,7 @@ export class ProcessLifecycleOutbox {
   private async recordFailure(row: OutboxRow, now: number, code: string): Promise<void> {
     const delay = Math.min(60 * 2 ** Math.min(row.attempt_count, 10), 86_400)
     await this.c.env.DB.prepare(
-      `UPDATE lifecycle_outbox
+      `UPDATE lifecycle_outbox_entries
        SET attempt_count = attempt_count + 1, next_attempt_at = ?2, last_error_code = ?3
        WHERE id = ?1 AND processed_at IS NULL`,
     )

@@ -11,6 +11,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /review-cycles/:cycle_id — 管理者がサイクルの題目・期間・締切を更新 */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -57,6 +58,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /review-cycles/:cycle_id — 管理者がサイクルを削除 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

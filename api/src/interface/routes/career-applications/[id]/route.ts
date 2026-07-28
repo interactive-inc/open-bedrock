@@ -1,0 +1,118 @@
+import { GetCareerApplication } from "@/application/career/get-career-application"
+import { UpdateMyCareerApplication } from "@/application/career/update-my-career-application"
+import { WithdrawCareerApplication } from "@/application/career/withdraw-career-application"
+import type { CareerApplication } from "@/domain/career/career-application.entity"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { ApplicationError } from "@/lib/errors"
+import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/interface/lib/to-http-exception"
+import { zAppCareerApplication } from "@/lib/app-schemas"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
+
+const applicationIdSchema = z.coerce.number().int().positive()
+
+/** 応募をレスポンス用の snake_case に整形する。 */
+function toResponseBody(application: CareerApplication) {
+  return zAppCareerApplication.parse({
+    id: application.id,
+    posting_id: application.postingId,
+    applicant_id: application.applicantId,
+    message: application.message,
+    status: application.status,
+  })
+}
+
+// @authorization owner - 本人のリソースに限定する
+/** GET /career-applications/:id — 応募の詳細（本人のみ） */
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+  if (applicationId.success === false) {
+    throw new BadRequestError("invalid application id")
+  }
+
+  const application = await new GetCareerApplication(c).run({
+    applicationId: applicationId.data,
+    applicantId: viewer.employeeId,
+  })
+
+  if (application instanceof ApplicationError) {
+    throw toHttpException(application)
+  }
+
+  return c.json(toResponseBody(application), 200)
+})
+
+// @authorization owner - 本人のリソースに限定する
+/** PUT /career-applications/:id — 応募メッセージを変更（本人のみ・選考前のみ） */
+export const PUT = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "json",
+    z.object({
+      message: z.string().max(3_000).nullable().optional(),
+    }),
+  ),
+  async (c) => {
+    const viewer = c.var.session
+
+    if (viewer === null) {
+      throw new UnauthorizedError()
+    }
+
+    const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+    if (applicationId.success === false) {
+      throw new BadRequestError("invalid application id")
+    }
+
+    const json = c.req.valid("json")
+
+    const application = await new UpdateMyCareerApplication(c).run({
+      applicationId: applicationId.data,
+      applicantId: viewer.employeeId,
+      message: json.message ?? null,
+    })
+
+    if (application instanceof ApplicationError) {
+      throw toHttpException(application)
+    }
+
+    return c.json(toResponseBody(application), 200)
+  },
+)
+
+// @authorization owner - 本人のリソースに限定する
+/** DELETE /career-applications/:id — 応募を取り下げ（本人のみ・選考前のみ） */
+export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
+  const viewer = c.var.session
+
+  if (viewer === null) {
+    throw new UnauthorizedError()
+  }
+
+  const applicationId = applicationIdSchema.safeParse(c.req.param("id") ?? "")
+
+  if (applicationId.success === false) {
+    throw new BadRequestError("invalid application id")
+  }
+
+  const result = await new WithdrawCareerApplication(c).run({
+    applicationId: applicationId.data,
+    applicantId: viewer.employeeId,
+  })
+
+  if (result instanceof ApplicationError) {
+    throw toHttpException(result)
+  }
+
+  return c.body(null, 204)
+})

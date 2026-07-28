@@ -26,6 +26,7 @@ function toResponseBody(resignation: Resignation) {
   })
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /resignations/:id — 退職申請の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -46,6 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(resignation), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /resignations/:id — 退職申請の内容を変更（本人のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -98,6 +100,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /resignations/:id — 退職申請を取消（本人のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

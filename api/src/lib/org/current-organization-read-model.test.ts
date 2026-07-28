@@ -28,7 +28,7 @@ describe("loadCurrentOrganization", () => {
          ends_on, is_void, recorded_by_action_id, recorded_at)
       SELECT 'status-' || id, 1, 'employment-' || id, id, 'active', '2025-01-01',
              NULL, 0, 'fixture', 1 FROM employees;
-      INSERT INTO org_assignment_period_versions
+      INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at) VALUES
@@ -37,12 +37,12 @@ describe("loadCurrentOrganization", () => {
         ('assignment-5', 1, 'employment-5', 5, 'D001', 'primary', 'Engineer', 2, '2025-01-01', NULL, 0, 'fixture', 1),
         ('assignment-5c', 1, 'employment-5', 5, 'D002', 'concurrent', 'Advisor', NULL, '2025-01-01', NULL, 0, 'fixture', 1),
         ('assignment-9', 1, 'employment-9', 9, 'D002', 'primary', 'Legacy', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
-      INSERT INTO org_responsibility_period_versions
+      INSERT INTO employee_org_responsibility_period_versions
         (period_id, revision, department_code, responsibility_type, employee_id,
          starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
       VALUES ('responsibility-1', 1, 'D001', 'department_manager', 1,
               '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 
     const organization = await loadCurrentOrganization(context)

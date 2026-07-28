@@ -140,7 +140,7 @@ export class ResubmitApplication {
     try {
       await this.c.env.DB.batch([
         this.c.env.DB.prepare(
-          `UPDATE applications
+          `UPDATE application_requests
              SET payload = ?2, current_step = ?3
              WHERE id = ?1 AND applicant_id = ?4 AND status = 'pending' AND current_step = ?5`,
         ).bind(

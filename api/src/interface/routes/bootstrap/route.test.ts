@@ -190,7 +190,7 @@ describe("POST /bootstrap", () => {
 
     const audit = await db
       .prepare(
-        "SELECT action, target_type, target_id, outcome, actor_account_id, created_at FROM audit_logs",
+        "SELECT action, target_type, target_id, outcome, actor_account_id, created_at FROM audit_events",
       )
       .first<Record<string, unknown>>()
     expect(audit).toEqual({
@@ -202,7 +202,7 @@ describe("POST /bootstrap", () => {
       created_at: nowEpoch,
     })
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_logs").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
     expect(persisted).not.toContain("root@example.com")
     expect(persisted).not.toContain("Passw0rd")
 
@@ -229,7 +229,7 @@ describe("POST /bootstrap", () => {
 
     expect(await tableCount(db, "accounts")).toBe(1)
     expect(await tableCount(db, "employees")).toBe(1)
-    expect(await tableCount(db, "audit_logs")).toBe(1)
+    expect(await tableCount(db, "audit_events")).toBe(1)
   })
 
   test("rejects a password that fails the complexity policy", async () => {

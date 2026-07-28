@@ -14,6 +14,7 @@ import { zAppAntisocialCheckList } from "@/lib/app-schemas"
 import { antisocialChecks } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /antisocial-checks/me — 申請者本人の反社チェック申請一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

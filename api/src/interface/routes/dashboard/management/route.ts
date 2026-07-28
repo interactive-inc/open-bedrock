@@ -6,6 +6,7 @@ import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization permission - 権限キーで判定する
 /** GET /dashboard/management — 経営ダッシュボードの横断集計。management_dashboard:view のみ。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

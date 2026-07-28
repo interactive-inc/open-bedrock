@@ -18,6 +18,7 @@ const limit = z
   .regex(/^(?:[1-9]|[1-9][0-9]|100)$/u)
   .optional()
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(
   lifecycleNoStore,
   verifyBearer,

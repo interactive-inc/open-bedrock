@@ -43,7 +43,7 @@ export class GoalEvaluationRepository {
         `
         INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
         SELECT ?1, ?2, ?3, ?4, ?5, ?6
-        WHERE EXISTS (SELECT 1 FROM goals WHERE id = ?1 AND status != 'done')
+        WHERE EXISTS (SELECT 1 FROM performance_goals WHERE id = ?1 AND status != 'done')
         RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
         `,
       )
@@ -106,7 +106,7 @@ export class GoalEvaluationRepository {
         db
           .prepare(
             `
-          UPDATE goals SET status = 'done' WHERE id = ?1 AND status != 'done'
+          UPDATE performance_goals SET status = 'done' WHERE id = ?1 AND status != 'done'
           `,
           )
           .bind(goal.id),

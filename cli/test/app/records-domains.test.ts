@@ -15,10 +15,10 @@ const paths: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/regulations/register", help: "regulations register" },
   { path: "/regulations/add-version", help: "regulations add-version" },
   { path: "/regulations/archive", help: "regulations archive" },
-  { path: "/documents", help: "bedrock documents" },
-  { path: "/documents/list", help: "documents list" },
-  { path: "/documents/register", help: "documents register" },
-  { path: "/documents/update", help: "documents update" },
+  { path: "/document-ledger-entries", help: "bedrock document-ledger-entries" },
+  { path: "/document-ledger-entries/list", help: "document-ledger-entries list" },
+  { path: "/document-ledger-entries/register", help: "document-ledger-entries register" },
+  { path: "/document-ledger-entries/update", help: "document-ledger-entries update" },
 ]
 
 describe("announcements/regulations/documents commands", () => {
@@ -77,7 +77,7 @@ describe("announcements/regulations/documents commands", () => {
   })
 
   it("documents register requires --title and --location", async () => {
-    const response = await app.request("/documents/register", {
+    const response = await app.request("/document-ledger-entries/register", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ title: "x" }),
@@ -87,7 +87,7 @@ describe("announcements/regulations/documents commands", () => {
   })
 
   it("documents update requires <id>", async () => {
-    const response = await app.request("/documents/update", {
+    const response = await app.request("/document-ledger-entries/update", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ title: "x", location: "y" }),

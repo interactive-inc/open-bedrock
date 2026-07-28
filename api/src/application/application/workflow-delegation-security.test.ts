@@ -175,7 +175,7 @@ async function expectNoApproval(
     .bind(applicationId)
     .first<number>("total")
   const status = await db
-    .prepare("SELECT status FROM applications WHERE id = ?1")
+    .prepare("SELECT status FROM application_requests WHERE id = ?1")
     .bind(applicationId)
     .first<string>("status")
 
@@ -206,7 +206,7 @@ describe("workflow delegation security", () => {
 
     const repeated = await decide(setupResult.context, setupResult.applicationId, 2, "reject")
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
     const approvalCount = await setupResult.db
@@ -403,7 +403,7 @@ describe("workflow delegation security", () => {
     const state = await setupResult.db
       .prepare(
         `SELECT application.current_step, workflow_instance.current_step_key
-         FROM applications application
+         FROM application_requests application
          INNER JOIN application_workflow_instances workflow_instance
            ON workflow_instance.application_id = application.id
          WHERE application.id = ?1`,

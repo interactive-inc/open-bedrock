@@ -91,7 +91,7 @@ describe("employee mutations preserve an effective administrator", () => {
          ends_on, is_void, recorded_by_action_id, recorded_at)
       VALUES ('fixture-status-e979', 1, 'fixture-employment-e979', ${employeeId},
               'active', '2025-01-01', '2025-12-31', 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 
     const result = await new ArchiveEmployee(context).run({

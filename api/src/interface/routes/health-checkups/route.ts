@@ -14,6 +14,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /health-checkups?fiscal_year=&employee_id= — 健診・ストレスチェックの実施記録一覧。
  * 本人分は誰でも、他人分は health_checkup:read:all を持つロール(hr / admin)のみ閲覧できる。
@@ -95,6 +96,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization permission - 権限キーで判定する
 /** POST /health-checkups — 実施記録を作成する。health_checkup:manage が必要。結果カラムは受け取らない。 */
 export const POST = factory.createHandlers(
   verifyBearer,

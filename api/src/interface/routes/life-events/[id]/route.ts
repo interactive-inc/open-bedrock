@@ -26,6 +26,7 @@ function toResponseBody(lifeEvent: LifeEvent) {
   }
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /life-events/:id — ライフイベント届出の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -48,6 +49,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /life-events/:id — ライフイベント届出の内容を変更（本人のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -86,6 +88,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /life-events/:id — ライフイベント届出を取消（本人のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

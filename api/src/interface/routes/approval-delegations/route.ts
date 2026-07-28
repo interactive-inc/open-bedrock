@@ -21,6 +21,7 @@ const zDelegation = z.object({
   ends_at: z.string().datetime({ offset: true }),
 })
 
+// @authorization owner - 本人のリソースに限定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
@@ -58,6 +59,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   )
 })
 
+// @authorization owner - 本人のリソースに限定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", zDelegation),

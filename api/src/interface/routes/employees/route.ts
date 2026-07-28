@@ -28,6 +28,7 @@ import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { UnavailableError } from "@/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -249,6 +250,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /employees — 新規従業員の登録（権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

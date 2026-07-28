@@ -22,6 +22,7 @@ const querySchema = z.object({
   error: z.string().min(1).max(200).optional(),
 })
 
+// @authorization public - 未認証で到達してよい
 /**
  * GET /auth/cli/callback — 外部 identity provider（ブローカー）からの戻り先。
  * state を one-time 消費して CLI のループバックポートを特定し、以降のあらゆる失敗も

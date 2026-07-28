@@ -165,7 +165,7 @@ async function auditActions(
 ): Promise<Array<{ action: string; outcome: string; reason_code: string | null }>> {
   return (
     await db
-      .prepare("SELECT action, outcome, reason_code FROM audit_logs ORDER BY id")
+      .prepare("SELECT action, outcome, reason_code FROM audit_events ORDER BY id")
       .all<{ action: string; outcome: string; reason_code: string | null }>()
   ).results
 }
@@ -208,7 +208,7 @@ describe("RefreshTokenRepository audited writes", () => {
       created_at: nowEpoch,
     })
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(1)
   })
 
@@ -217,7 +217,7 @@ describe("RefreshTokenRepository audited writes", () => {
     const repository = new RefreshTokenRepository(context)
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -240,7 +240,7 @@ describe("RefreshTokenRepository audited writes", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
   })
 
@@ -296,7 +296,7 @@ describe("RefreshTokenRepository audited writes", () => {
     const { context, db, repository } = await setup()
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -313,7 +313,7 @@ describe("RefreshTokenRepository audited writes", () => {
     expect(result).toBeInstanceOf(Error)
     expect(await activeFamilyCount(db)).toBe(1)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
   })
 })
@@ -417,7 +417,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
     const { context, db, repository } = await setup()
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -436,7 +436,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(1)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
     expect(await markerCount(db)).toBe(0)
   })
@@ -455,7 +455,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
     })
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -466,7 +466,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
     expect(failed).toBeInstanceOf(Error)
     expect(await activeFamilyCount(db)).toBe(1)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
     expect(await markerCount(db)).toBe(0)
 
@@ -526,7 +526,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
     expect(await markerCount(db)).toBe(0)
   })
@@ -571,7 +571,7 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
           .first<number | null>("revoked_at"),
       ).toBeNull()
       expect(
-        await db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count"),
+        await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
       ).toBe(0)
       expect(await markerCount(db)).toBe(0)
     }

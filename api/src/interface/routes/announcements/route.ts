@@ -17,6 +17,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /announcements — 社内アナウンス一覧。
  * 既定は published のみ。管理者は status クエリで draft / archived も閲覧できる。
@@ -83,6 +84,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /announcements — 社内アナウンスを draft で新規作成（announcement:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

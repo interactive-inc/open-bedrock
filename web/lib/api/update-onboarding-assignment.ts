@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-/** PUT /onboarding/assignments/:id。割当日を変更する。特権ロールのみ。 */
+/** PUT /onboarding-assignments/:id。割当日を変更する。特権ロールのみ。 */
 export async function updateOnboardingAssignment(id: number, assignedAt: string) {
   const client = await createClient()
 
-  const response = await client.onboarding.assignments[":id"].$put({
+  const response = await client["onboarding-assignments"][":id"].$put({
     param: { id: String(id) },
     json: { assigned_at: assignedAt },
   })

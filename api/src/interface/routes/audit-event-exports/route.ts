@@ -8,6 +8,7 @@ import { toAuditCsv } from "@/lib/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   auditExportPermission,

@@ -14,6 +14,7 @@ import { zAppFamilyCareLeaveList } from "@/lib/app-schemas"
 import { familyCareLeaves } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /family-care-leaves/me — 申出者本人の休業申出一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

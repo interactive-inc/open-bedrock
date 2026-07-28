@@ -25,7 +25,7 @@ describe("filterLiveWorkflowAccounts", () => {
         ('status-1', 1, 'employment-1', 1, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
         ('status-2', 1, 'employment-2', 2, 'active', '2027-01-01', NULL, 0, 'fixture', 1),
         ('status-3', 1, 'employment-3', 3, 'active', '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 
     expect(

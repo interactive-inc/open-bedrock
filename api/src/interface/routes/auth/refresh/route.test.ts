@@ -183,7 +183,7 @@ async function activeFamilyCount(db: D1Database): Promise<number | null> {
 }
 
 async function auditCount(db: D1Database): Promise<number | null> {
-  return db.prepare("SELECT COUNT(*) AS count FROM audit_logs").first<number>("count")
+  return db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count")
 }
 
 describe("POST /auth/refresh", () => {
@@ -264,7 +264,7 @@ describe("POST /auth/refresh", () => {
                   outcome, reason_code, authorization_json, before_json, after_json,
                   metadata_json, client_ip, client_name,
                   request_id, created_at
-           FROM audit_logs`,
+           FROM audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
@@ -291,7 +291,7 @@ describe("POST /auth/refresh", () => {
         .first<number>("count"),
     ).toBe(0)
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_logs").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
     for (const secret of [
       refreshToken,
       await refreshTokenHash(refreshToken),
@@ -339,7 +339,7 @@ describe("POST /auth/refresh", () => {
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       )
       expect(internalRequestId).not.toBe(incomingRequestId)
-      const row = await db.prepare("SELECT * FROM audit_logs").first<AuditDatabaseRow>()
+      const row = await db.prepare("SELECT * FROM audit_events").first<AuditDatabaseRow>()
       if (internalRequestId === null) throw new Error("internal request ID is missing")
       if (row === null) throw new Error("audit event is missing")
       expect(row.event_id).toMatch(
@@ -391,7 +391,7 @@ describe("POST /auth/refresh", () => {
       const activeBefore = await activeFamilyCount(db)
       await db.exec(`
         CREATE TRIGGER reject_test_audit_insert
-        BEFORE INSERT ON audit_logs
+        BEFORE INSERT ON audit_events
         BEGIN
           SELECT RAISE(ABORT, 'forced audit insert failure');
         END;
@@ -417,7 +417,7 @@ describe("POST /auth/refresh", () => {
     const { db, refreshToken } = await createScenario("active")
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -444,7 +444,7 @@ describe("POST /auth/refresh", () => {
     const { db, refreshToken } = await createScenario("revoked")
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -460,7 +460,7 @@ describe("POST /auth/refresh", () => {
 
     expect(retried.status).toBe(401)
     expect(await activeFamilyCount(db)).toBe(0)
-    expect(await db.prepare("SELECT action FROM audit_logs").first<string>("action")).toBe(
+    expect(await db.prepare("SELECT action FROM audit_events").first<string>("action")).toBe(
       "auth.session.reuse_detected",
     )
   })

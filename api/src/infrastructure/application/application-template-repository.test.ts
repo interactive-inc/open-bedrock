@@ -153,7 +153,7 @@ describe("ApplicationTemplateRepository", () => {
       },
     ])
 
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 1,
         template_id: 1,
@@ -192,7 +192,7 @@ describe("ApplicationTemplateRepository", () => {
       },
     ])
 
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 1,
         template_id: 1,

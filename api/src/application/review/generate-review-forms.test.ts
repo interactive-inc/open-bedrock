@@ -97,7 +97,7 @@ describe("generateReviewForms", () => {
         ('status-5', 1, 'employment-5', 5, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
         ('status-6', 1, 'employment-6', 6, 'active', '2025-01-01', NULL, 0, 'fixture', 1),
         ('status-9', 1, 'employment-9', 9, 'active', '2027-01-01', NULL, 0, 'fixture', 1);
-      INSERT INTO org_assignment_period_versions
+      INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at) VALUES
@@ -107,7 +107,7 @@ describe("generateReviewForms", () => {
         ('assignment-9', 1, 'employment-9', 9, 'D001', 'primary', 'Member', NULL, '2027-01-01', NULL, 0, 'fixture', 1);
       INSERT INTO review_cycles
         (id, title, period, status, due_date) VALUES (1, 'Review', '2026-H1', 'draft', NULL);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
 
     const generated = await generateReviewForms({

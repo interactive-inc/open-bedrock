@@ -13,7 +13,7 @@ import { describe, expect, test } from "bun:test"
 describe("RegisterEmployee live actor authorization", () => {
   test("fails closed when employee:create is revoked before provisioning", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E960")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
@@ -40,7 +40,7 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when employee:assign_role is revoked before assigning a non-member role", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E962")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
@@ -68,7 +68,7 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when the actor loses a target-role permission before provisioning", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E964")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,

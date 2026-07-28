@@ -7,6 +7,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /notifications/:id/read — 本人宛ての通知を既読にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

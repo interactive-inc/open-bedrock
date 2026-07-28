@@ -16,6 +16,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /meetings — 会議体一覧（全認証者） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
@@ -57,6 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /meetings — 会議体を新規登録（meeting:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

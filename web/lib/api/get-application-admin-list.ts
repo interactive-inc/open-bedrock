@@ -18,13 +18,13 @@ type Params = {
 }
 
 /**
- * GET /applications/admin。全社の申請を横断で取得する管理画面向け一覧。
+ * GET /application-requests/admin。全社の申請を横断で取得する管理画面向け一覧。
  * application:read:all を持たない場合はサーバが 403 を返す。
  */
 export async function getApplicationAdminList(filter: ApplicationAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.applications.admin.$get({
+  const response = await client["application-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

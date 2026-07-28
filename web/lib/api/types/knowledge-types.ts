@@ -1,5 +1,5 @@
 /**
- * GET /knowledge のクエリ。未指定は null で表す。
+ * GET /knowledge-articles のクエリ。未指定は null で表す。
  * api/src/knowledge/knowledge-search-request-schema.ts と同形。
  */
 export type KnowledgeSearchQuery = {
@@ -8,7 +8,7 @@ export type KnowledgeSearchQuery = {
 }
 
 /**
- * GET /knowledge の一覧要素（レスポンスは { data, total } で包まれ data の各要素）。
+ * GET /knowledge-articles の一覧要素（レスポンスは { data, total } で包まれ data の各要素）。
  * api は snake_case で返し、interface/knowledge/route.ts の responseBody は
  * id/category/title/snippet に加えて author_id/created_at を含む。
  * id は knowledgeArticles.id（schema 上 integer）なので number。author_id も integer。
@@ -23,7 +23,7 @@ export type KnowledgeSearchResult = {
 }
 
 /**
- * GET /knowledge/:id の詳細。tags は値が無いとき null。
+ * GET /knowledge-articles/:id の詳細。tags は値が無いとき null。
  * interface/knowledge/[id]/route.ts の responseBody は id/title/category/tags/body_md に加えて
  * author_id/created_at を含む。author_id は integer（number）、created_at は text（string）。
  */
@@ -38,7 +38,7 @@ export type KnowledgeDetailResponse = {
 }
 
 /**
- * POST /knowledge のリクエストボディ。
+ * POST /knowledge-articles のリクエストボディ。
  * api/src/interface/knowledge/route.ts の zValidator と同形。tags は省略可・null 可。
  */
 export type KnowledgeCreateRequest = {
@@ -49,7 +49,7 @@ export type KnowledgeCreateRequest = {
 }
 
 /**
- * PUT /knowledge/:id のリクエストボディ。作成時と同じ全項目を送る。
+ * PUT /knowledge-articles/:id のリクエストボディ。作成時と同じ全項目を送る。
  * api/src/interface/knowledge/[id]/route.ts の zValidator と同形。
  */
 export type KnowledgeUpdateRequest = {

@@ -15,7 +15,7 @@ type Props = {
 }
 
 /**
- * 検索条件で GET /knowledge を認証付きに取得し、記事カード一覧を描画する非同期 RSC。
+ * 検索条件で GET /knowledge-articles を認証付きに取得し、記事カード一覧を描画する非同期 RSC。
  * 各カードは記事詳細 /knowledge/:id へのリンク。
  */
 export async function KnowledgeResultList(props: Props) {

@@ -140,9 +140,9 @@ export class ApplicationRepository {
   async delete(applicationId: number): Promise<true | null | Error> {
     try {
       await this.c.env.DB.batch([
-        this.c.env.DB.prepare("DELETE FROM applications WHERE id = ?1 AND status = 'pending'").bind(
-          applicationId,
-        ),
+        this.c.env.DB.prepare(
+          "DELETE FROM application_requests WHERE id = ?1 AND status = 'pending'",
+        ).bind(applicationId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
         this.c.env.DB.prepare(
           "DELETE FROM application_workflow_approvals WHERE application_id = ?1",
@@ -215,7 +215,7 @@ export class ApplicationRepository {
       const results = await this.c.env.DB.batch([
         this.c.env.DB.prepare(
           `
-          UPDATE applications
+          UPDATE application_requests
           SET status = ?2, current_step = NULL
           WHERE id = ?1
             AND status = 'pending'

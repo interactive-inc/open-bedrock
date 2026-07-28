@@ -11,6 +11,7 @@ import { assets } from "@/schema"
 import { and, asc, count, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /assets/lent/me — 本人が現在借り受けている資産一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

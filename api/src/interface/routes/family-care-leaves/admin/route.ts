@@ -22,6 +22,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /family-care-leaves/admin — 全社の産休・育休・介護休業の申出を横断で閲覧する管理画面用の一覧。
  * family_care_leave:read:all を持つロール(hr / admin / auditor)のみ許可。

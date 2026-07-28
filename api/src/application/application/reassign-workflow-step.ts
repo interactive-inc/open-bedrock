@@ -214,7 +214,7 @@ export class ReassignWorkflowStep {
              SET current_round = ?2, started_at = ?3, due_at = NULL
              WHERE application_id = ?1 AND current_step_key = ?4 AND current_round = ?5
                AND EXISTS (
-                 SELECT 1 FROM applications
+                 SELECT 1 FROM application_requests
                  WHERE id = ?1 AND status = 'pending' AND current_step = ?4
                )
              RETURNING current_round`,
