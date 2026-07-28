@@ -50,6 +50,7 @@ flowchart TD
 ## 実装
 
 - [アーキテクチャ](./architecture.md): workspace、層、依存方向、transaction 境界
+- [Identity とセッション](./identity-and-sessions.md): パスワード、外部 identity、Web、CLI、token の信頼境界
 - [API](./api-schema.md): resource、command、応答、型生成
 - [機能](./features.md): domain ごとの実装済み操作
 - [画面](./sitemap.md): Web route と画面責務
