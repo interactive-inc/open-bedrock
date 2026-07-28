@@ -209,6 +209,136 @@ describe("budget", () => {
   })
 })
 
+// 当月原資（送れる枠）と受領残高（もらった点数）は別概念であり、別リソースが返す。
+// 片方の増減がもう片方へ漏れないことを固定する。
+describe("budget and balance are separate concepts", () => {
+  test("sending points drains the budget without touching the sender's balance", async () => {
+    const db = await createTestDb()
+
+    const senderTokenValue = await senderToken()
+
+    await sendThanks({ db, token: senderTokenValue, recipientCode: "E005", points: 100 })
+
+    const budget = await request({
+      db,
+      path: "/thanks-point-budgets/me",
+      token: senderTokenValue,
+    })
+
+    const parsedBudget = z
+      .object({ consumed_points: z.number(), remaining_points: z.number() })
+      .parse(await budget.json())
+
+    expect(parsedBudget.consumed_points).toBe(100)
+    expect(parsedBudget.remaining_points).toBe(300)
+
+    // 送った側の受領残高は 0 のまま。送付は原資を減らすだけで残高を動かさない。
+    const balance = await request({
+      db,
+      path: "/thanks-point-balances/me",
+      token: senderTokenValue,
+    })
+
+    const parsedBalance = z.object({ balance_points: z.number() }).parse(await balance.json())
+
+    expect(parsedBalance.balance_points).toBe(0)
+  })
+
+  test("receiving points raises the balance without granting extra budget", async () => {
+    const db = await createTestDb()
+
+    const recipientTokenValue = await recipientToken()
+
+    await sendThanks({ db, token: await senderToken(), recipientCode: "E005", points: 100 })
+
+    const balance = await request({
+      db,
+      path: "/thanks-point-balances/me",
+      token: recipientTokenValue,
+    })
+
+    const parsedBalance = z.object({ balance_points: z.number() }).parse(await balance.json())
+
+    expect(parsedBalance.balance_points).toBe(100)
+
+    // 受け取っても当月に送れる枠は既定の 400 のまま。受領は原資を増やさない。
+    const budget = await request({
+      db,
+      path: "/thanks-point-budgets/me",
+      token: recipientTokenValue,
+    })
+
+    const parsedBudget = z
+      .object({ granted_points: z.number(), remaining_points: z.number() })
+      .parse(await budget.json())
+
+    expect(parsedBudget.granted_points).toBe(400)
+    expect(parsedBudget.remaining_points).toBe(400)
+  })
+
+  test("balance carries across months while the budget resets", async () => {
+    const db = await createTestDb()
+
+    const recipientTokenValue = await recipientToken()
+
+    // 前月に受領し、前月のうちに原資も使い切る。
+    await sendThanks({
+      db,
+      token: await senderToken(),
+      recipientCode: "E005",
+      points: 100,
+      now: "2026-01-15T00:00:00.000Z",
+    })
+
+    await sendThanks({
+      db,
+      token: recipientTokenValue,
+      recipientCode: "E004",
+      points: 400,
+      now: "2026-01-20T00:00:00.000Z",
+    })
+
+    // 当月。原資は満額に戻る。
+    const budget = await request({
+      db,
+      path: "/thanks-point-budgets/me",
+      token: recipientTokenValue,
+      now: "2026-02-01T00:00:00.000Z",
+    })
+
+    const parsedBudget = z
+      .object({ period: z.string(), remaining_points: z.number() })
+      .parse(await budget.json())
+
+    expect(parsedBudget.period).toBe("2026-02")
+    expect(parsedBudget.remaining_points).toBe(400)
+
+    // 受領残高は月をまたいでも累積したまま（リセットされない）。
+    const balance = await request({
+      db,
+      path: "/thanks-point-balances/me",
+      token: recipientTokenValue,
+      now: "2026-02-01T00:00:00.000Z",
+    })
+
+    const parsedBalance = z.object({ balance_points: z.number() }).parse(await balance.json())
+
+    expect(parsedBalance.balance_points).toBe(100)
+  })
+
+  test("the budget resource no longer serves the balance at its old nested path", async () => {
+    const db = await createTestDb()
+
+    const response = await request({
+      db,
+      path: "/thanks-point-budgets/me/balance",
+      token: await recipientToken(),
+    })
+
+    expect(response.status).toBe(404)
+  })
+})
+
 describe("balance", () => {
   test("accumulates received points", async () => {
     const db = await createTestDb()
@@ -217,7 +347,7 @@ describe("balance", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -233,7 +363,7 @@ describe("balance", () => {
 
     const response = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -262,7 +392,7 @@ describe("balance", () => {
     // pending 状態でも残高は差し引かれている。
     const balance = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -390,7 +520,7 @@ describe("redemption", () => {
 
     const balance = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks-point-balances/me",
       token: await recipientToken(),
     })
 
@@ -551,7 +681,7 @@ describe("redemption", () => {
 
     const balance = await request({
       db,
-      path: "/thanks-point-budgets/me/balance",
+      path: "/thanks-point-balances/me",
       token: await recipientToken(),
     })
 

@@ -1,9 +1,11 @@
 import { factory } from "@/factory"
 
-export const help = `bedrock thanks-point-budgets — サンクスの原資と残高
+export const help = `bedrock thanks-point-budgets — サンクスの当月原資（送れる枠）
 
 usage:
   bedrock thanks-point-budgets me                                 自分の当月の贈与原資
-  bedrock thanks-point-budgets balance                            自分の受領残高`
+
+受領残高（もらった点数）は別リソース:
+  bedrock thanks-point-balances me`
 
 export default factory.createHandlers((c) => c.text(help))

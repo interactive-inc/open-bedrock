@@ -151,8 +151,8 @@ commands:
   review-cycles close                         サイクルを締切 (--id)
   thanks-messages list                        感謝のタイムライン ([--limit --offset])
   thanks-messages send                        感謝を送る (--to --message [--points])
-  thanks-point-budgets me                     当月の贈与原資
-  thanks-point-budgets balance                受領残高
+  thanks-point-budgets me                     当月の贈与原資（送れる枠）
+  thanks-point-balances me                    受領残高（もらった点数の残り）
   thanks-rewards list                         交換カタログ一覧
   thanks-rewards create                       交換カタログ登録(管理者) (--name --cost [--stock])
   thanks-redemptions create                   交換を申請 (--reward)
