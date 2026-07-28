@@ -8,13 +8,13 @@
     }
   },
   "scripts": {
+    "build": "bun run build:types && wrangler deploy src/index.ts --dry-run --minify --outdir dist/worker --name api --compatibility-date 2026-05-24 --compatibility-flags nodejs_compat",
     "build:types": "tsc -p tsconfig.build.json",
     "gen:app": "bun run scripts/gen-app.ts",
     "gen:app:check": "bun run scripts/gen-app.ts --check",
     "lint:route-authorization": "bun run scripts/check-route-authorization.ts",
     "check": "bun run gen:app:check && bun run lint:route-authorization && bun run build:types && tsc --noEmit",
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "test": "bun test",
     "db:repair-migration-history:local": "bunx wrangler d1 execute bedrock --local --file=./scripts/repair-migration-history.sql",
