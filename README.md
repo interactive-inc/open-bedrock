@@ -62,7 +62,7 @@ bedrock app inbox
 cd api
 bun install
 bun run dev        # wrangler dev
-bun run deploy     # 本番デプロイ
+npm run build      # Cloudflare Workers 向けビルド
 ```
 
 URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。ルート一覧は `api/src/app.ts` を参照。
@@ -75,6 +75,7 @@ URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST�
 cd web
 bun install
 bun run dev        # Next.js dev server
+npm run build      # Cloudflare Workers 向けビルド
 ```
 
 ログイン後の画面はドメインごとのルートに collocation されている。
@@ -83,6 +84,7 @@ bun run dev        # Next.js dev server
 ## テストと検証
 
 ```sh
+npm run build            # API と Web の Cloudflare Workers 向けビルド
 vp check                 # フォーマット + lint（リポジトリ全体）
 cd api && bun test       # API のテスト
 cd cli && bun test       # CLI のテスト
