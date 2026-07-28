@@ -307,6 +307,7 @@ const nextConfig: NextConfig = {
     ]
   },
 
+  // CSP is set dynamically per request in middleware.ts with a nonce for script-src.
   async headers() {
     return [
       {
@@ -322,23 +323,6 @@ const nextConfig: NextConfig = {
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
-          },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              // Next.js の streaming SSR と hydration はインライン script($RC、__next_f)で
-              // 動くため 'unsafe-inline' が必須。script-src 'self' 単独だと全画面が
-              // スケルトンのまま止まる。nonce ベース CSP への移行は別課題。
-              process.env.NODE_ENV === "development"
-                ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-                : "script-src 'self' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "font-src 'self'",
-              "connect-src 'self'",
-              "frame-ancestors 'none'",
-            ].join("; "),
           },
         ],
       },
