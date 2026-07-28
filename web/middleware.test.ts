@@ -120,9 +120,8 @@ describe("nonce-based CSP", () => {
   })
 
   test("dev mode adds unsafe-eval to script-src", async () => {
-    const originalEnv = process.env.NODE_ENV
+    vi.stubEnv("NODE_ENV", "development")
     try {
-      process.env.NODE_ENV = "development"
       const request = new NextRequest("https://karte.open.localhost/employees")
       request.cookies.set("session", "valid-token")
       const response = await middleware(request)
@@ -130,14 +129,13 @@ describe("nonce-based CSP", () => {
       const csp = response.headers.get("content-security-policy")
       expect(csp).toContain("'unsafe-eval'")
     } finally {
-      process.env.NODE_ENV = originalEnv
+      vi.unstubAllEnvs()
     }
   })
 
   test("production mode does not include unsafe-eval", async () => {
-    const originalEnv = process.env.NODE_ENV
+    vi.stubEnv("NODE_ENV", "production")
     try {
-      process.env.NODE_ENV = "production"
       const request = new NextRequest("https://karte.open.localhost/employees")
       request.cookies.set("session", "valid-token")
       const response = await middleware(request)
@@ -145,7 +143,7 @@ describe("nonce-based CSP", () => {
       const csp = response.headers.get("content-security-policy")
       expect(csp).not.toContain("'unsafe-eval'")
     } finally {
-      process.env.NODE_ENV = originalEnv
+      vi.unstubAllEnvs()
     }
   })
 })
