@@ -55,12 +55,12 @@ bunx wrangler secret put JWT_SECRET
 
 ## 開発
 
-開発サーバ、テスト、デプロイは次のコマンドで行う。
+開発サーバ、テスト、Cloudflare Workers 向けビルドは次のコマンドで行う。
 
 ```sh
 bun run dev
 bun test
-bun run deploy
+npm run build
 ```
 
 ## マイグレーションと seed の追加
