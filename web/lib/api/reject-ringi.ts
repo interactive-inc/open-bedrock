@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-/** POST /ringi/:id/reject。任意コメント付きで稟議を却下する。指名された承認者本人のみ許可される。 */
+/** POST /ringi-requests/:id/reject。任意コメント付きで稟議を却下する。指名された承認者本人のみ許可される。 */
 export async function rejectRingi(id: number, comment: string | null) {
   const client = await createClient()
 
-  const response = await client.ringi[":id"].reject.$post({
+  const response = await client["ringi-requests"][":id"].reject.$post({
     param: { id: String(id) },
     json: { comment: comment },
   })

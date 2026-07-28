@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift swap-approve", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/swap-approve", {
+    const response = await app.request("/shift-swap-requests/approve", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -17,7 +17,7 @@ describe("shift swap-approve", () => {
   })
 
   it("errors without id", async () => {
-    const response = await app.request("/shift/swap-approve", {
+    const response = await app.request("/shift-swap-requests/approve", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({}),

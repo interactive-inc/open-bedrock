@@ -12,6 +12,7 @@ import { count, desc } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(

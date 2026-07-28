@@ -29,7 +29,7 @@ function seedApplication(
   templateId: number,
   status: "pending" | "approved" | "rejected",
 ): Promise<void> {
-  return seedD1(db, "applications", [
+  return seedD1(db, "application_requests", [
     {
       template_id: templateId,
       applicant_id: 1,

@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift assign", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/assign", {
+    const response = await app.request("/shift-assignments/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,11 +13,11 @@ describe("shift assign", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("shift assign")
+    expect(text).toContain("shift-assignments create")
   })
 
   it("errors without required flags", async () => {
-    const response = await app.request("/shift/assign", {
+    const response = await app.request("/shift-assignments/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ date: "2026-06-01" }),

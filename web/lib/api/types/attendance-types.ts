@@ -1,7 +1,7 @@
 /**
  * api/src/attendance/attendance-record-schema.ts と同形。
- * API は snake_case で返す（GET /attendance・/attendance/me の各要素、
- * POST /attendance/clock-in・/attendance/clock-out のレスポンス）。
+ * API は snake_case で返す（GET /attendance-records・/attendance/me の各要素、
+ * POST /attendance-records/clock-in・/attendance/clock-out のレスポンス）。
  * id は attendanceRecords.id（schema 上 integer）なので number。
  * status は open（打刻中）/ closed（退勤済）など api 側の文字列。
  */
@@ -26,19 +26,19 @@ export type AttendanceSummary = {
   total_work_minutes: number
 }
 
-/** GET /attendance /attendance/me のクエリ。null のキーは送信されない。 */
+/** GET /attendance-records /attendance/me のクエリ。null のキーは送信されない。 */
 export type AttendanceSearchQuery = {
   employeeId: number | null
   from: string | null
   to: string | null
 }
 
-/** GET /attendance/me/summary のクエリ。month 未指定時は api 側で当月を使う。 */
+/** GET /attendance-records/me/summary のクエリ。month 未指定時は api 側で当月を使う。 */
 export type AttendanceSummaryQuery = {
   month: string | null
 }
 
-/** POST /attendance/clock-in /attendance/clock-out のリクエストボディ。 */
+/** POST /attendance-records/clock-in /attendance/clock-out のリクエストボディ。 */
 export type AttendanceClockRequest = {
   note: string | null
 }

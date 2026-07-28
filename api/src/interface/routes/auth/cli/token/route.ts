@@ -10,6 +10,7 @@ import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization public - 未認証で到達してよい
 /**
  * POST /auth/cli/token — CLI（ネイティブアプリ）ログインの one-time code をセッションに交換する。
  * code は GET /auth/cli/callback がループバックへ渡した値で、1 回きり・60 秒 TTL。

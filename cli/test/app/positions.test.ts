@@ -2,11 +2,11 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/positions", help: "bedrock positions" },
-  { path: "/positions/list", help: "positions list" },
-  { path: "/positions/create", help: "positions create" },
-  { path: "/positions/update", help: "positions update" },
-  { path: "/positions/delete", help: "positions delete" },
+  { path: "/position-definitions", help: "bedrock position-definitions" },
+  { path: "/position-definitions/list", help: "position-definitions list" },
+  { path: "/position-definitions/create", help: "position-definitions create" },
+  { path: "/position-definitions/update", help: "position-definitions update" },
+  { path: "/position-definitions/delete", help: "position-definitions delete" },
 ]
 
 describe("positions commands", () => {
@@ -25,7 +25,7 @@ describe("positions commands", () => {
   }
 
   it("positions create requires --code, --name, --rank", async () => {
-    const response = await app.request("/positions/create", {
+    const response = await app.request("/position-definitions/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "Lead" }),

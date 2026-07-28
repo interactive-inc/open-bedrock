@@ -6,8 +6,8 @@ import { describe, expect, test } from "bun:test"
  * help は API 呼び出し前に返るため、--id 検証も実リクエストなしでテストできる。
  */
 const cycleStatusRoutes: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/review/cycle/open", help: "review cycle open" },
-  { path: "/review/cycle/close", help: "review cycle close" },
+  { path: "/review-cycles/open", help: "review-cycles open" },
+  { path: "/review-cycles/close", help: "review-cycles close" },
 ]
 
 describe("review cycle open/close", () => {

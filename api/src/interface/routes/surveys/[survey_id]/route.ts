@@ -15,6 +15,7 @@ import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /surveys/:survey_id — 指定アンケートを取得（認証済みユーザー）
  * 管理ロール以外は open 状態のアンケートのみ閲覧可能。
@@ -63,6 +64,7 @@ function toResponseBody(survey: Survey): AppSurvey {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /surveys/:survey_id — アンケートの内容を変更（管理権限のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -101,6 +103,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /surveys/:survey_id — アンケートを削除（管理権限のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

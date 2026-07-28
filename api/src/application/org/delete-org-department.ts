@@ -72,23 +72,23 @@ export class DeleteOrgDepartment {
                  WHERE child.parent_code = ?1 AND child.archived_at IS NULL
                )
                AND NOT EXISTS (
-                 SELECT 1 FROM org_assignment_period_versions assignment
+                 SELECT 1 FROM employee_org_assignment_period_versions assignment
                  WHERE assignment.department_code = ?1
                    AND assignment.is_void = 0
                    AND assignment.revision = (
                      SELECT MAX(candidate.revision)
-                     FROM org_assignment_period_versions candidate
+                     FROM employee_org_assignment_period_versions candidate
                      WHERE candidate.period_id = assignment.period_id
                    )
                    AND (assignment.ends_on IS NULL OR assignment.ends_on > ?4)
                )
                AND NOT EXISTS (
-                 SELECT 1 FROM org_responsibility_period_versions responsibility
+                 SELECT 1 FROM employee_org_responsibility_period_versions responsibility
                  WHERE responsibility.department_code = ?1
                    AND responsibility.is_void = 0
                    AND responsibility.revision = (
                      SELECT MAX(candidate.revision)
-                     FROM org_responsibility_period_versions candidate
+                     FROM employee_org_responsibility_period_versions candidate
                      WHERE candidate.period_id = responsibility.period_id
                    )
                    AND (responsibility.ends_on IS NULL OR responsibility.ends_on > ?4)

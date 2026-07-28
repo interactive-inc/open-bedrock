@@ -61,7 +61,7 @@ const newEmployeeInput = {
 describe("RegisterEmployee", () => {
   test("registers employee and IAM records atomically for a privileged role", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const adminId = await seedEmployee(context, "E899", { role: "root" })
     const result = await new RegisterEmployee(context).run({
       session: makeTestSession("root", adminId),

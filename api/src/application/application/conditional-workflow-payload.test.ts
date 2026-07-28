@@ -125,7 +125,7 @@ describe("conditional application workflow payload", () => {
     expect(invalidResubmission).toMatchObject({ code: "invalid_payload" })
     expect(
       await db
-        .prepare("SELECT current_step FROM applications WHERE id = ?1")
+        .prepare("SELECT current_step FROM application_requests WHERE id = ?1")
         .bind(application.id)
         .first<string>("current_step"),
     ).toBe("returned:manager")
@@ -165,7 +165,7 @@ describe("conditional application workflow payload", () => {
     expect(racedResubmission).toMatchObject({ code: "not_returned" })
     expect(
       await originalDb
-        .prepare("SELECT current_step FROM applications WHERE id = ?1")
+        .prepare("SELECT current_step FROM application_requests WHERE id = ?1")
         .bind(application.id)
         .first<string>("current_step"),
     ).toBe("returned:manager")

@@ -393,7 +393,7 @@ export type ApplicationTemplateRow = InferSelectModel<typeof applicationTemplate
 
 /** 申請（テンプレートに紐づく申請者の提出）。payload は JSON 文字列で保存される。 */
 export const applications = sqliteTable(
-  "applications",
+  "application_requests",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     templateId: integer("template_id").notNull(),
@@ -537,7 +537,7 @@ export type EmployeeStatusPeriodVersionRow = InferSelectModel<typeof employeeSta
 
 /** 主務・兼務の所属期間。上長関係は各所属期間に紐付ける。 */
 export const orgAssignmentPeriodVersions = sqliteTable(
-  "org_assignment_period_versions",
+  "employee_org_assignment_period_versions",
   {
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
@@ -575,7 +575,7 @@ export type OrgAssignmentPeriodVersionRow = InferSelectModel<typeof orgAssignmen
 
 /** 部門責任者の期間。組織スコープ判定はこの正本から導出する。 */
 export const orgResponsibilityPeriodVersions = sqliteTable(
-  "org_responsibility_period_versions",
+  "employee_org_responsibility_period_versions",
   {
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
@@ -615,7 +615,7 @@ export const employeeLifecycleRevisions = sqliteTable("employee_lifecycle_revisi
 export type EmployeeLifecycleRevisionRow = InferSelectModel<typeof employeeLifecycleRevisions>
 
 export const organizationLifecycleState = sqliteTable(
-  "organization_lifecycle_state",
+  "organization_lifecycle_states",
   {
     id: integer("id").primaryKey(),
     revision: integer("revision").notNull().default(0),
@@ -686,7 +686,7 @@ export const applicationCompletionBindings = sqliteTable("application_completion
 
 export type ApplicationCompletionBindingRow = InferSelectModel<typeof applicationCompletionBindings>
 
-export const lifecycleMigrationState = sqliteTable("lifecycle_migration_state", {
+export const lifecycleMigrationState = sqliteTable("lifecycle_migration_states", {
   id: integer("id").primaryKey(),
   status: text("status").notNull().$type<"pending" | "backfilled" | "verified">(),
   baselineOn: text("baseline_on"),
@@ -701,7 +701,7 @@ export const lifecycleMigrationState = sqliteTable("lifecycle_migration_state", 
 export type LifecycleMigrationStateRow = InferSelectModel<typeof lifecycleMigrationState>
 
 export const lifecycleOutbox = sqliteTable(
-  "lifecycle_outbox",
+  "lifecycle_outbox_entries",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     personnelActionId: text("personnel_action_id").notNull(),
@@ -1089,7 +1089,7 @@ export const ringiRequests = sqliteTable("ringi_requests", {
 
 export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
 /** 部署予算（部署・会計期間・金額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する。 */
-export const budgets = sqliteTable("budgets", {
+export const budgets = sqliteTable("department_budgets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   departmentId: integer("department_id").notNull(),
   fiscalPeriod: text("fiscal_period").notNull(),
@@ -1110,7 +1110,7 @@ export type BudgetRow = InferSelectModel<typeof budgets>
  * owner_type は目標の所有主体(individual/department/company)。parent_goal_id で全社→部門→個人の
  * 階層をつなぎ、department_code は部門目標の所属部門を表す。個人目標では department_code は null。
  */
-export const goals = sqliteTable("goals", {
+export const goals = sqliteTable("performance_goals", {
   id: integer("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
   period: text("period").notNull(),
@@ -1334,7 +1334,7 @@ export const oneOnOnes = sqliteTable("one_on_ones", {
 export type OneOnOneRow = InferSelectModel<typeof oneOnOnes>
 
 /** 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。 */
-export const thanks = sqliteTable("thanks", {
+export const thanks = sqliteTable("thanks_messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   senderEmployeeId: integer("sender_employee_id").notNull(),
   recipientEmployeeId: integer("recipient_employee_id").notNull(),
@@ -1435,7 +1435,7 @@ export const roomReservations = sqliteTable(
 export type RoomReservationRow = InferSelectModel<typeof roomReservations>
 
 /** スキルマスタ（コード・表示名・カテゴリ） */
-export const skills = sqliteTable("skills", {
+export const skills = sqliteTable("skill_definitions", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
   category: text("category").notNull(),
@@ -1580,7 +1580,7 @@ export type CertificateRequestRow = InferSelectModel<typeof certificateRequests>
 
 /** 等級マスタ（並び順の rank を持つ等級の定義。判定・計算は持たず定義のみ） */
 export const grades = sqliteTable(
-  "grades",
+  "grade_definitions",
   {
     id: integer("id").primaryKey(),
     code: text("code").notNull(),
@@ -1600,7 +1600,7 @@ export type GradeRow = InferSelectModel<typeof grades>
  * 役職の期間付き履歴は人事発令が正で、割当履歴テーブルは持たない）
  */
 export const positions = sqliteTable(
-  "positions",
+  "position_definitions",
   {
     id: integer("id").primaryKey(),
     code: text("code").notNull(),
@@ -1703,7 +1703,7 @@ export type MeetingRow = InferSelectModel<typeof meetings>
 
 /** 議事録（会議体ごとの開催記録） */
 export const meetingMinutes = sqliteTable(
-  "meeting_minutes",
+  "meeting_minutes_records",
   {
     id: integer("id").primaryKey(),
     meetingId: integer("meeting_id").notNull(),
@@ -1721,7 +1721,7 @@ export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
 
 /** 意思決定記録（ADR 形式。文脈・決定・帰結を記録し、後続の決定で supersede する） */
 export const decisions = sqliteTable(
-  "decisions",
+  "decision_records",
   {
     id: integer("id").primaryKey(),
     title: text("title").notNull(),
@@ -1739,7 +1739,7 @@ export const decisions = sqliteTable(
 export type DecisionRow = InferSelectModel<typeof decisions>
 
 /** ライセンス・SaaS 台帳（更新期限・管理担当の事実記録。支払・会計連動は持たない） */
-export const licenses = sqliteTable("licenses", {
+export const licenses = sqliteTable("software_licenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   vendor: text("vendor"),
@@ -1818,7 +1818,7 @@ export type IdentityRow = InferSelectModel<typeof identities>
  * jti が主キーのため、同一 jti の二重挿入は制約違反になり二重使用を封じる。
  */
 export const identityLoginJti = sqliteTable(
-  "identity_login_jti",
+  "identity_login_tokens",
   {
     jti: text("jti").primaryKey(),
     expiresAt: integer("expires_at").notNull(),
@@ -1941,7 +1941,7 @@ export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
 
 /** IAM: 監査イベント(append-only)。UPDATE/DELETE は DB trigger でも禁止する。 */
 export const auditLogs = sqliteTable(
-  "audit_logs",
+  "audit_events",
   {
     id: integer("id").primaryKey(),
     eventId: text("event_id").notNull().unique(),
@@ -1990,7 +1990,7 @@ export type PartnerRow = InferSelectModel<typeof partners>
 
 /** 契約記録（契約日・期間・更新期限の事実記録。中身のレビューや法的判定はしない） */
 export const contracts = sqliteTable(
-  "contracts",
+  "partner_contracts",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     partnerId: integer("partner_id").notNull(),
@@ -2062,7 +2062,7 @@ export type RegulationVersionRow = InferSelectModel<typeof regulationVersions>
 
 /** 文書台帳（契約書・許認可などのメタデータ台帳。本体ファイルは持たず所在のみ記録する）。 */
 export const documents = sqliteTable(
-  "documents",
+  "document_ledger_entries",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     title: text("title").notNull(),
@@ -2079,7 +2079,7 @@ export const documents = sqliteTable(
 export type DocumentRow = InferSelectModel<typeof documents>
 
 /** 資格・免許マスタ（コード・名称・発行元・説明）。会社で管理対象とする資格の台帳。 */
-export const certifications = sqliteTable("certifications", {
+export const certifications = sqliteTable("certification_definitions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
@@ -2159,7 +2159,7 @@ export type WorkAccidentRow = InferSelectModel<typeof workAccidents>
 
 /** 採用の募集ポジション（社外個人情報を扱う候補者の親。open/closed の状態を持つ）。 */
 export const recruitmentPositions = sqliteTable(
-  "recruitment_positions",
+  "job_openings",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     title: text("title").notNull(),

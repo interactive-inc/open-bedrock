@@ -13,6 +13,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppApplicationTemplateList } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /templates — 申請テンプレート一覧（カテゴリで絞り込み可） */
 export const GET = factory.createHandlers(
   verifyBearer,

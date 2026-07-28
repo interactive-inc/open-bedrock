@@ -12,6 +12,7 @@ import {
 import { and, count, eq, ne } from "drizzle-orm"
 import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /inbox/counts — 受信箱ごとの未処理件数を一括取得する。
  * ユーザーの権限に応じて各カウントを返す（権限がない inbox は 0）。

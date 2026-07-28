@@ -9,6 +9,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { accountStatusSchema } from "@/lib/schemas"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /accounts/:id/status — アカウントの状態を変更（account:manage が必要）。停止・ロック・有効化。 */
 export const POST = factory.createHandlers(
   verifyBearer,

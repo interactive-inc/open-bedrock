@@ -70,7 +70,7 @@ async function grantPermission(
 async function seedExportRow(db: D1Database): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO audit_logs
+      `INSERT INTO audit_events
        (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
@@ -142,18 +142,20 @@ function rawRequest(
 }
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
-  const row = await db.prepare("SELECT * FROM audit_logs ORDER BY id DESC LIMIT 1").first()
+  const row = await db.prepare("SELECT * FROM audit_events ORDER BY id DESC LIMIT 1").first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
 }
 
 async function countAuditRows(db: D1Database): Promise<number> {
-  return (await db.prepare("SELECT count(*) AS count FROM audit_logs").first<number>("count")) ?? -1
+  return (
+    (await db.prepare("SELECT count(*) AS count FROM audit_events").first<number>("count")) ?? -1
+  )
 }
 
 async function failSelfAudit(db: D1Database): Promise<void> {
   await db.exec(`CREATE TRIGGER fail_audit_self_insert
-    BEFORE INSERT ON audit_logs
+    BEFORE INSERT ON audit_events
     WHEN NEW.action LIKE 'audit.event.%'
     BEGIN SELECT RAISE(ABORT, 'self audit disabled'); END;`)
 }
@@ -163,7 +165,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
     WITH RECURSIVE sequence(value) AS (
       SELECT 1 UNION ALL SELECT value + 1 FROM sequence WHERE value < ${count}
     )
-    INSERT INTO audit_logs
+    INSERT INTO audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, 'legacy-' || (100000 + value), 'r' || value,
            'legacy.bulk', 'succeeded', 'api', 1767225600 + value
@@ -174,7 +176,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
 async function insertFormalWorstRows(db: D1Database): Promise<void> {
   const metadata = JSON.stringify("x".repeat(1_000_000))
   const statement = db.prepare(
-    `INSERT INTO audit_logs
+    `INSERT INTO audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )
@@ -185,7 +187,7 @@ async function insertFormalWorstRows(db: D1Database): Promise<void> {
     WITH RECURSIVE sequence(value) AS (
       SELECT 100 UNION ALL SELECT value + 1 FROM sequence WHERE value < 46099
     )
-    INSERT INTO audit_logs
+    INSERT INTO audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
     SELECT value, CAST(value AS TEXT), 'r', 'a', 'succeeded', 'api', value
     FROM sequence
@@ -223,7 +225,7 @@ async function insertOneByteCsvOverflow(db: D1Database): Promise<void> {
     (_, index) => Math.floor(contentBytes / rowCount) + (index < contentBytes % rowCount ? 1 : 0),
   )
   const statement = db.prepare(
-    `INSERT INTO audit_logs
+    `INSERT INTO audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )

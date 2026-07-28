@@ -3,14 +3,14 @@ import { toResponseError } from "@/lib/api/to-response-error"
 import type { OneOnOneCreateRequest } from "@/lib/api/types/oneonone-types"
 
 /**
- * POST /oneonones。session cookie のトークンで 1on1 記録を新規作成する。
+ * POST /one-on-ones。session cookie のトークンで 1on1 記録を新規作成する。
  * 上長は token から解決されるため member_employee_code でメンバーを指定する。
  * 戻りは作成された OneOnOne or Error。呼び出し元は instanceof Error で判別する。
  */
 export async function createOneOnOne(request: OneOnOneCreateRequest) {
   const client = await createClient()
 
-  const response = await client.oneonones.$post({ json: request })
+  const response = await client["one-on-ones"].$post({ json: request })
 
   if (response.status >= 400) {
     return toResponseError(response, {

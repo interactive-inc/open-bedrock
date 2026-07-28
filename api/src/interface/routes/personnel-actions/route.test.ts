@@ -74,7 +74,7 @@ describe("POST /personnel-actions", () => {
     expect(denied.status).toBe(403)
     expect(
       await db
-        .prepare("SELECT action FROM audit_logs ORDER BY id DESC LIMIT 1")
+        .prepare("SELECT action FROM audit_events ORDER BY id DESC LIMIT 1")
         .first<string>("action"),
     ).toBe("employee.lifecycle.denied")
 

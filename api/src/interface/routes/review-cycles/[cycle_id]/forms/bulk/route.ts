@@ -9,6 +9,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /review-cycles/:cycle_id/forms/bulk — 管理者が被評価者と評価者種別の組を一括作成（360度評価） */
 export const POST = factory.createHandlers(
   verifyBearer,

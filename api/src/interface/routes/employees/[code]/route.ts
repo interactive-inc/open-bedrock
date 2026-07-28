@@ -46,6 +46,7 @@ async function toResponseBody(c: Context, employee: Employee, state?: EmployeeLi
   })
 }
 
+// @authorization permission - 権限キーで判定する
 /** GET /employees/:code — 従業員 1 件の詳細 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -120,6 +121,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /**
  * PUT /employees/:code — 人物台帳の氏名だけを変更（権限が必要）。
  * IAM はアカウント管理、所属・役職・在籍状態は人事発令で変更する。
@@ -157,6 +159,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /employees/:code — 互換用。物理削除は禁止し、履歴保持アーカイブへ誘導する。 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -9,6 +9,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /review-forms/:form_id/submit — 割り当てられた評価者がフォームを提出 */
 export const POST = factory.createHandlers(
   verifyBearer,

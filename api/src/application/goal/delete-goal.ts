@@ -55,7 +55,9 @@ export class DeleteGoal {
       const db = this.c.env.DB
       await db.batch([
         db.prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1").bind(command.goalId),
-        db.prepare("DELETE FROM goals WHERE id = ?1 AND status != 'done'").bind(command.goalId),
+        db
+          .prepare("DELETE FROM performance_goals WHERE id = ?1 AND status != 'done'")
+          .bind(command.goalId),
         abortWhenPreviousStatementChangedNoRows(db),
       ])
     } catch (error) {

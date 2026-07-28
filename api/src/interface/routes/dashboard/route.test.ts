@@ -49,7 +49,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "goals",
+    "performance_goals",
     seedGoals.map((goal) => ({
       id: goal.id,
       employee_id: goal.employeeId,
@@ -63,7 +63,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(
     db,
-    "applications",
+    "application_requests",
     seedApplications.map((application) => ({
       id: application.id,
       template_id: application.templateId,

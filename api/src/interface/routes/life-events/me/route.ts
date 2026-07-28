@@ -14,6 +14,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { lifeEvents } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /life-events/me — 届出者本人のライフイベント届出一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

@@ -5,6 +5,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /** POST /work-accidents/:id/close — 発生記録を closed にする。work_accident:manage が必要。 */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

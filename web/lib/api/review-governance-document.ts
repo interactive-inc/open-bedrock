@@ -9,7 +9,7 @@ export async function reviewGovernanceDocument(input: {
   comment: string | null
 }) {
   const client = await createClient()
-  const response = await client.governance.documents[":code"].versions[":version"].review.$post({
+  const response = await client["governance-documents"][":code"].versions[":version"].review.$post({
     param: { code: input.code, version: input.version },
     json: {
       org_role_code: input.orgRoleCode,

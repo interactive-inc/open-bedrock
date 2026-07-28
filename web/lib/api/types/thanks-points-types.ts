@@ -1,4 +1,4 @@
-/** GET /thanks/budget/me — 当月の贈与原資。 */
+/** GET /thanks-point-budgets/me — 当月の贈与原資。 */
 export type ThanksBudgetResponse = {
   period: string
   granted_points: number
@@ -6,12 +6,12 @@ export type ThanksBudgetResponse = {
   remaining_points: number
 }
 
-/** GET /thanks/balance/me — 受領残高。 */
+/** GET /thanks-point-budgets/me/balance — 受領残高。 */
 export type ThanksBalanceResponse = {
   balance_points: number
 }
 
-/** GET /thanks/rewards の各要素 / POST /thanks/rewards のレスポンス（交換カタログ）。 */
+/** GET /thanks-rewards の各要素 / POST /thanks-rewards のレスポンス（交換カタログ）。 */
 export type ThanksRewardResponse = {
   id: number | null
   name: string
@@ -21,7 +21,7 @@ export type ThanksRewardResponse = {
   created_at: string
 }
 
-/** GET /thanks/redemptions/me の各要素（自分の交換申請）。 */
+/** GET /thanks-redemptions/me の各要素（自分の交換申請）。 */
 export type ThanksRedemptionResponse = {
   id: number | null
   employee_id: number

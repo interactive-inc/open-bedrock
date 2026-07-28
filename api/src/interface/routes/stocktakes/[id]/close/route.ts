@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppStocktake } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /stocktakes/:id/close — 棚卸しセッションを締める（権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

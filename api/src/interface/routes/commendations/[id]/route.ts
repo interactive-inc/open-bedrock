@@ -6,6 +6,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /commendations/:id — 表彰の記録を削除（commendation:manage）。 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -16,6 +16,7 @@ import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /disciplinary-actions?employee_id= — 懲戒の記録一覧（disciplinary_action:read:all。本人にも開かない）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -82,6 +83,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /disciplinary-actions — 懲戒を記録（disciplinary_action:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

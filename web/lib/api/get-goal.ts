@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /goals/:goal_id。1 件の目標詳細を取得する。 */
+/** GET /performance-goals/:goal_id。1 件の目標詳細を取得する。 */
 export async function getGoal(id: number) {
   const client = await createClient()
 
-  const response = await client.goals[":goal_id"].$get({
+  const response = await client["performance-goals"][":goal_id"].$get({
     param: { goal_id: String(id) },
   })
 

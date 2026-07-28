@@ -101,7 +101,7 @@ async function auditRows(
 ): Promise<Array<{ action: string; reason_code: string | null }>> {
   return (
     await db
-      .prepare("SELECT action, reason_code FROM audit_logs ORDER BY id")
+      .prepare("SELECT action, reason_code FROM audit_events ORDER BY id")
       .all<{ action: string; reason_code: string | null }>()
   ).results
 }
@@ -126,7 +126,7 @@ describe("POST /auth/identity/login", () => {
 
     // jti が使用済みとして記録されている。
     const jti = await db
-      .prepare("SELECT jti FROM identity_login_jti WHERE jti = 'login-jti-1'")
+      .prepare("SELECT jti FROM identity_login_tokens WHERE jti = 'login-jti-1'")
       .first<string>("jti")
     expect(jti).toBe("login-jti-1")
   })

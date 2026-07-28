@@ -14,7 +14,7 @@ describe("IdentityLoginJtiRepository", () => {
     expect(second).toBe("replayed")
 
     const count = await db
-      .prepare("SELECT COUNT(*) AS n FROM identity_login_jti WHERE jti = 'jti-1'")
+      .prepare("SELECT COUNT(*) AS n FROM identity_login_tokens WHERE jti = 'jti-1'")
       .first<number>("n")
     expect(count).toBe(1)
   })

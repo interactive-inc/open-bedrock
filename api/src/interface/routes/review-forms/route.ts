@@ -12,6 +12,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /review-forms?subject_employee_id=&cycle_id= — 被評価者ごとのフォームと提出状況（360度評価の集計）。
  * 管理者は全件、被評価者本人は disclosed のみ閲覧できる（開示制御）。

@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /goals/tree。session トークンで全社→部門→個人の目標ツリーを取得する。 */
+/** GET /performance-goals/tree。session トークンで全社→部門→個人の目標ツリーを取得する。 */
 export async function getGoalTree(period: string | null) {
   const client = await createClient()
 
-  const response = await client.goals.tree.$get({
+  const response = await client["performance-goals"].tree.$get({
     query: { period: period ?? undefined },
   })
 

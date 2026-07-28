@@ -9,6 +9,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { codeSchema } from "@/lib/schemas"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /accounts/:id/roles — アカウントにロールを付与（iam:assign_roles が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

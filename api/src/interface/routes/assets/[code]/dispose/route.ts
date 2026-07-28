@@ -10,6 +10,7 @@ import { isoDate } from "@/lib/schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /assets/:code/dispose — 在庫中の資産を廃棄済みにする（理由・日付を記録。権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -5,11 +5,11 @@ type Params = {
   offset?: number
 }
 
-/** GET /applications/me。ログイン本人の申請一覧（payload を含む）。data と total を返す。 */
+/** GET /application-requests/me。ログイン本人の申請一覧（payload を含む）。data と total を返す。 */
 export async function listMyApplications(params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.applications.me.$get({
+  const response = await client["application-requests"].me.$get({
     query: {
       limit: params.limit !== undefined ? String(params.limit) : undefined,
       offset: params.offset !== undefined ? String(params.offset) : undefined,

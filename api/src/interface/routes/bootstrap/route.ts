@@ -7,6 +7,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization public - 未認証で到達してよい
 /**
  * POST /bootstrap — デプロイ直後に 1 度だけ初期 ROOT アカウントを作成する。
  * BOOTSTRAP_TOKEN 未設定なら機能自体を隠す（404）。トークン照合は定数時間で行い、

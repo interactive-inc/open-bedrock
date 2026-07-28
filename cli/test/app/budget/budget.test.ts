@@ -3,13 +3,13 @@ import { app } from "@/app/index"
 
 /** budget 各サブコマンドが app/index.ts に登録され、help が返る（catch-all に落ちない）ことを確認する。 */
 const routes: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/budget", help: "bedrock budget" },
-  { path: "/budget/list", help: "budget list" },
-  { path: "/budget/summary", help: "budget summary" },
-  { path: "/budget/create", help: "budget create" },
-  { path: "/budget/show", help: "budget show" },
-  { path: "/budget/update", help: "budget update" },
-  { path: "/budget/delete", help: "budget delete" },
+  { path: "/department-budgets", help: "bedrock department-budgets" },
+  { path: "/department-budgets/list", help: "department-budgets list" },
+  { path: "/department-budgets/summary", help: "department-budgets summary" },
+  { path: "/department-budgets/create", help: "department-budgets create" },
+  { path: "/department-budgets/show", help: "department-budgets show" },
+  { path: "/department-budgets/update", help: "department-budgets update" },
+  { path: "/department-budgets/delete", help: "department-budgets delete" },
 ]
 
 describe("budget command registration", () => {

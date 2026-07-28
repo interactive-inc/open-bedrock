@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import type { CareerPosting, CareerPostingCreateRequest } from "@/lib/api/types/career-types"
 
 /**
- * POST /career/postings。管理ロールが社内公募を作成する。
+ * POST /career-postings。管理ロールが社内公募を作成する。
  * 権限不足は 403 を api が返すため、戻りは Error になる。
  */
 export async function createCareerPosting(
@@ -10,7 +10,7 @@ export async function createCareerPosting(
 ): Promise<CareerPosting | Error> {
   const client = await createClient()
 
-  const response = await client.career.postings.$post({
+  const response = await client["career-postings"].$post({
     json: {
       title: request.title,
       dept_id: request.dept_id ?? undefined,

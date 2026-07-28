@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("family-care-leave admin", () => {
   it("shows help", async () => {
-    const response = await app.request("/family-care-leave/admin", {
+    const response = await app.request("/family-care-leaves/admin", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,6 +13,6 @@ describe("family-care-leave admin", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("family-care-leave admin")
+    expect(text).toContain("family-care-leaves admin")
   })
 })

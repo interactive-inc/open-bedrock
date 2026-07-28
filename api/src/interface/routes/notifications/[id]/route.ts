@@ -8,6 +8,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /notifications/:id — 本人宛ての通知1件を取得する */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -42,6 +43,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /notifications/:id — 本人宛ての通知を削除する */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

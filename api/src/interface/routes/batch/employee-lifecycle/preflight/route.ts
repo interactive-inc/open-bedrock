@@ -12,6 +12,7 @@ const inputSchema = z.object({
   time_zone: z.string(),
 })
 
+// @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", inputSchema),

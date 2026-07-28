@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-/** GET /org/tree を session トークン付きで呼び、部署ツリー（再帰ノード配列）を返す。 */
+/** GET /departments/tree を session トークン付きで呼び、部署ツリー（再帰ノード配列）を返す。 */
 export async function getOrgTree() {
   const client = await createClient()
 
-  const response = await client.org.tree.$get()
+  const response = await client.departments.tree.$get()
 
   if (response.status >= 400) {
     return new Error("failed to load org tree")

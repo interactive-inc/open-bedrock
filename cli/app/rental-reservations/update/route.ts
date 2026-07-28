@@ -1,0 +1,45 @@
+import { z } from "zod"
+import { zValidator } from "@hono/zod-validator"
+import { createClient } from "@/lib/http/hc-client"
+import { factory } from "@/factory"
+import { UsageError } from "@/lib/errors"
+
+export const help = `bedrock rental-reservations update --id <reservation-id> --item <name> --start <date> --end <date> [--purpose <p>]`
+
+export default factory.createHandlers(
+  zValidator(
+    "json",
+    z.object({
+      help: z.string().optional(),
+      id: z.string().optional(),
+      item: z.string().optional(),
+      start: z.string().optional(),
+      end: z.string().optional(),
+      purpose: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    const query = c.req.valid("json")
+
+    if (query.help) return c.text(help)
+
+    if (!query.id || !query.item || !query.start || !query.end)
+      throw new UsageError("--id, --item, --start, --end が必要です")
+
+    const client = await createClient()
+
+    const response = await client["rental-reservations"][":id"].$put({
+      param: { id: query.id },
+      json: {
+        item_name: query.item,
+        start_date: query.start,
+        end_date: query.end,
+        purpose: query.purpose ?? null,
+      },
+    })
+
+    const reservation = await response.json()
+
+    return c.json(reservation)
+  },
+)

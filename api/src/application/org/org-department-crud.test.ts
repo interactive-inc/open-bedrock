@@ -240,7 +240,7 @@ describe("DeleteOrgDepartment", () => {
     const { context, db } = createTestContext()
 
     await seedDepartment(context, "DEV")
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
 
     const result = await new DeleteOrgDepartment(context).run({
       session: makeTestSession("root"),
@@ -259,13 +259,13 @@ describe("DeleteOrgDepartment", () => {
     const { context, db } = createTestContext()
     await seedDepartment(context, "DEV")
     await db.exec(`
-      INSERT INTO org_assignment_period_versions
+      INSERT INTO employee_org_assignment_period_versions
         (period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at)
       VALUES ('fixture-assignment', 1, 'fixture-employment', 1, 'DEV', 'primary',
               NULL, NULL, '2025-01-01', NULL, 0, 'fixture', 1);
-      UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+      UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
     `)
     const result = await new DeleteOrgDepartment(context).run({
       session: makeTestSession("root"),

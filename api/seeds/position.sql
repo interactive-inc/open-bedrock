@@ -3,7 +3,7 @@
 -- 値は src/infrastructure/seed/seed-positions.ts と一致させる（テスト期待値と整合）。
 -- name は seeds/employee.sql の employees.position と一致させ、発令・登録の code 参照で解決される先にする。
 
-INSERT INTO positions (id, code, name, rank, description, created_at) VALUES
+INSERT INTO position_definitions (id, code, name, rank, description, created_at) VALUES
   (1, 'CTO', 'CTO', 1, 'Chief Technology Officer', '2026-01-01T00:00:00.000Z'),
   (2, 'HR_MANAGER', 'HR Manager', 2, NULL, '2026-01-01T00:00:00.000Z'),
   (3, 'ENGINEERING_MANAGER', 'Engineering Manager', 3, NULL, '2026-01-01T00:00:00.000Z'),

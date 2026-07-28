@@ -7,6 +7,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppMeeting } from "@/lib/app-schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /meetings/:code/archive — 会議体をアーカイブする（meeting:manage） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

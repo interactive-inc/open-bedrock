@@ -14,6 +14,7 @@ import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -36,6 +37,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /assets/:code — 資産の名称・種別・シリアル・購入日を更新（権限が必要） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -86,6 +88,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /assets/:code — 資産を削除（権限が必要、貸与中は拒否） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

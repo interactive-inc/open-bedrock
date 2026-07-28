@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("shift pattern-create", () => {
   it("shows help", async () => {
-    const response = await app.request("/shift/pattern-create", {
+    const response = await app.request("/shift-patterns/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,11 +13,11 @@ describe("shift pattern-create", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("shift pattern-create")
+    expect(text).toContain("shift-patterns create")
   })
 
   it("errors without required flags", async () => {
-    const response = await app.request("/shift/pattern-create", {
+    const response = await app.request("/shift-patterns/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ code: "EARLY" }),

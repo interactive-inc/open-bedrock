@@ -69,11 +69,11 @@ export class ArchiveEmployee {
       )
     }
     const futureManagerAssignment = await this.c.env.DB.prepare(
-      `SELECT 1 AS found FROM org_assignment_period_versions assignment
+      `SELECT 1 AS found FROM employee_org_assignment_period_versions assignment
        WHERE assignment.manager_employee_id = ?1 AND assignment.starts_on > ?2
          AND assignment.is_void = 0
          AND assignment.revision = (
-           SELECT MAX(candidate.revision) FROM org_assignment_period_versions candidate
+           SELECT MAX(candidate.revision) FROM employee_org_assignment_period_versions candidate
            WHERE candidate.period_id = assignment.period_id
          ) LIMIT 1`,
     )

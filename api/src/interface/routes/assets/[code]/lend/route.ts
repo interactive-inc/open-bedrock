@@ -10,6 +10,7 @@ import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /assets/:code/lend — 在庫中の資産を従業員へ貸し出す（権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

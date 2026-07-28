@@ -5,13 +5,13 @@ import type {
   ShiftAssignmentResponse,
 } from "@/lib/api/types/shift-types"
 
-/** POST /shift/assignments。特権ロールが社員にシフトを割り当てる。 */
+/** POST /shift-assignments。特権ロールが社員にシフトを割り当てる。 */
 export async function createShiftAssignment(
   request: ShiftAssignmentCreateRequest,
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.shift.assignments.$post({
+  const response = await client["shift-assignments"].$post({
     json: {
       employee_code: request.employee_code,
       pattern_code: request.pattern_code,

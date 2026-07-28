@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** POST /expenses/:id/approve — 経費を承認する（承認権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

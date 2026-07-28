@@ -3,7 +3,7 @@ import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export async function submitGovernanceReview(code: string, version: string) {
   const client = await createClient()
-  const response = await client.governance.documents[":code"].versions[":version"][
+  const response = await client["governance-documents"][":code"].versions[":version"][
     "submit-review"
   ].$post({
     param: { code, version },

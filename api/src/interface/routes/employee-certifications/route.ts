@@ -14,6 +14,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /employee-certifications?employee_id= — 従業員の資格保有記録一覧。
  * 本人分は誰でも、他人分は certification:read:all を持つロールのみ閲覧できる。
@@ -68,6 +69,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization permission - 権限キーで判定する
 /** POST /employee-certifications — 資格保有記録を作成する。certification:manage が必要。 */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -137,7 +137,7 @@ export class PersonnelActionRequestAccess {
     ${this.statusSql()} AS status, application.current_step, request.created_at,
     request.applied_action_id, request.withdrawn_at
   FROM personnel_action_requests request
-  INNER JOIN applications application ON application.id = request.application_id
+  INNER JOIN application_requests application ON application.id = request.application_id
   INNER JOIN application_subjects subject ON subject.application_id = application.id
   LEFT JOIN employees target ON target.id = request.target_employee_id
   INNER JOIN employees requester ON requester.id = request.requested_by_employee_id`

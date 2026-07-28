@@ -154,7 +154,7 @@ function mutationStatement(
       const period = mutation.after
       return db
         .prepare(
-          `INSERT INTO org_assignment_period_versions
+          `INSERT INTO employee_org_assignment_period_versions
              (period_id, revision, employment_period_id, employee_id, department_code,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
@@ -180,7 +180,7 @@ function mutationStatement(
       const period = mutation.after
       return db
         .prepare(
-          `INSERT INTO org_responsibility_period_versions
+          `INSERT INTO employee_org_responsibility_period_versions
              (period_id, revision, department_code, responsibility_type, employee_id,
               starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
@@ -316,7 +316,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     statements.push(
       db
         .prepare(
-          `UPDATE organization_lifecycle_state
+          `UPDATE organization_lifecycle_states
            SET revision = revision + 1, updated_at = ?1
            WHERE id = 1 AND revision = ?2`,
         )
@@ -402,7 +402,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     statements.push(
       db
         .prepare(
-          `INSERT INTO lifecycle_outbox
+          `INSERT INTO lifecycle_outbox_entries
              (personnel_action_id, effect_type, payload_json, attempt_count,
               next_attempt_at, processed_at, last_error_code, created_at)
            VALUES (?1, ?2, ?3, 0, ?4, NULL, NULL, ?4)`,

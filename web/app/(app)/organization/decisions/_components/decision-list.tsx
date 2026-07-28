@@ -13,7 +13,7 @@ type Props = {
 }
 
 /**
- * GET /decisions を認証付きで取得し、意思決定記録カード一覧を描画する非同期 RSC。
+ * GET /decision-records を認証付きで取得し、意思決定記録カード一覧を描画する非同期 RSC。
  * 各カードは詳細 /decisions/:id へのリンク。
  */
 export async function DecisionList(props: Props) {

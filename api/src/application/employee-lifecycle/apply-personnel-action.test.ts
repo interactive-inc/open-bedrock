@@ -41,7 +41,7 @@ async function setupActiveEmployee(): Promise<{ context: Context; db: D1Database
        ends_on, is_void, recorded_by_action_id, recorded_at)
     VALUES ('status-1', 1, 'employment-1', 1, 'active', '2026-01-01',
             NULL, 0, 'baseline-action', 1);
-    INSERT INTO org_assignment_period_versions
+    INSERT INTO employee_org_assignment_period_versions
       (period_id, revision, employment_period_id, employee_id, department_code,
        assignment_type, position_title, manager_employee_id, starts_on, ends_on,
        is_void, recorded_by_action_id, recorded_at)
@@ -49,7 +49,7 @@ async function setupActiveEmployee(): Promise<{ context: Context; db: D1Database
             NULL, '2026-01-01', NULL, 0, 'baseline-action', 1);
     INSERT INTO employee_lifecycle_revisions (employee_id, revision, updated_at)
     VALUES (1, 0, 1);
-    UPDATE lifecycle_migration_state
+    UPDATE lifecycle_migration_states
     SET status = 'verified', baseline_on = '2026-01-01', company_time_zone = 'Asia/Tokyo',
         legacy_source_fingerprint = 'fixture', employee_count = 1, department_count = 2,
         backfilled_at = 1, verified_at = 1
@@ -99,7 +99,7 @@ describe("ApplyPersonnelAction", () => {
     expect(
       await db
         .prepare(
-          "SELECT COUNT(*) AS count FROM audit_logs WHERE action = 'employee.lifecycle.applied'",
+          "SELECT COUNT(*) AS count FROM audit_events WHERE action = 'employee.lifecycle.applied'",
         )
         .first<number>("count"),
     ).toBe(1)
@@ -153,7 +153,7 @@ describe("ApplyPersonnelAction", () => {
     const { context, db } = await setupActiveEmployee()
     await db.exec(`
       CREATE TRIGGER reject_lifecycle_audit
-      BEFORE INSERT ON audit_logs
+      BEFORE INSERT ON audit_events
       WHEN NEW.action = 'employee.lifecycle.applied'
       BEGIN
         SELECT RAISE(ABORT, 'fixture audit failure');
@@ -199,7 +199,7 @@ describe("ApplyPersonnelAction", () => {
     expect(applied).not.toBeInstanceOf(ApplicationError)
     expect(
       await db
-        .prepare("SELECT revision FROM organization_lifecycle_state WHERE id = 1")
+        .prepare("SELECT revision FROM organization_lifecycle_states WHERE id = 1")
         .first<number>("revision"),
     ).toBe(1)
     expect(
@@ -233,7 +233,7 @@ describe("ApplyPersonnelAction", () => {
 
     expect(corrected).not.toBeInstanceOf(ApplicationError)
     const auditAfter = await db
-      .prepare("SELECT after_json FROM audit_logs WHERE action = 'employee.lifecycle.corrected'")
+      .prepare("SELECT after_json FROM audit_events WHERE action = 'employee.lifecycle.corrected'")
       .first<string>("after_json")
     expect(auditAfter).not.toContain("Fixture private reason")
     expect(
@@ -258,7 +258,7 @@ describe("ApplyPersonnelAction", () => {
     })
     expectCode(denied, "forbidden")
 
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'pending' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'pending' WHERE id = 1").run()
     const pending = await new ApplyPersonnelAction(context).run(leaveCommand)
     expectCode(pending, "lifecycle_migration_incomplete")
   })

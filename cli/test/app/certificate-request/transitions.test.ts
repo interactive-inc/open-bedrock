@@ -11,18 +11,18 @@ async function helpText(path: string): Promise<Response> {
 
 describe("certificate-request transitions", () => {
   it("issue shows help", async () => {
-    const response = await helpText("/certificate-request/issue")
+    const response = await helpText("/certificate-requests/issue")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("certificate-request issue")
+    expect(await response.text()).toContain("certificate-requests issue")
   })
 
   it("reject shows help", async () => {
-    const response = await helpText("/certificate-request/reject")
+    const response = await helpText("/certificate-requests/reject")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("certificate-request reject")
+    expect(await response.text()).toContain("certificate-requests reject")
   })
 })

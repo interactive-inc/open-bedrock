@@ -32,7 +32,7 @@ async function database(): Promise<D1Database> {
       ('status-3', 1, 'employment-3', 3, 'active', '2026-07-01', NULL, 0, 'fixture', 1),
       ('status-4', 1, 'employment-4', 4, 'active', '2026-01-01', '2026-06-02', 0, 'fixture', 1),
       ('status-5', 1, 'employment-5', 5, 'active', '2026-01-01', NULL, 0, 'fixture', 1);
-    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
   `)
   await seedIamForEmployees(
     db,

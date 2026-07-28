@@ -5,6 +5,7 @@ import { factory } from "@/interface/utils/factory"
 import { approvalDelegations } from "@/schema"
 import { and, eq, isNull } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

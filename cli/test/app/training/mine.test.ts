@@ -3,7 +3,7 @@ import { app } from "@/app/index"
 
 describe("training mine", () => {
   it("shows help", async () => {
-    const response = await app.request("/training/mine", {
+    const response = await app.request("/training-enrollments/mine", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ help: "1" }),
@@ -13,6 +13,6 @@ describe("training mine", () => {
 
     const text = await response.text()
 
-    expect(text).toContain("training mine")
+    expect(text).toContain("training-enrollments mine")
   })
 })

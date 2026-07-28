@@ -3,9 +3,9 @@ import { describe, expect, spyOn, test } from "bun:test"
 
 describe("toRequest", () => {
   test("maps positional args to path segments and --flag value to body", () => {
-    const result = toRequest(["leave", "approve", "--id", "5"])
+    const result = toRequest(["leave-requests", "approve", "--id", "5"])
 
-    expect(result.path).toBe("/leave/approve")
+    expect(result.path).toBe("/leave-requests/approve")
     expect(result.body).toEqual({ id: "5" })
   })
 

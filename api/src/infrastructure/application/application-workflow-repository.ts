@@ -167,7 +167,7 @@ export class ApplicationWorkflowRepository {
              (application_id, definition_json, current_step_key, started_at, due_at)
              SELECT ?1, ?2, ?3, ?4, ?5
              WHERE EXISTS (
-               SELECT 1 FROM applications WHERE id = ?1 AND status = 'pending'
+               SELECT 1 FROM application_requests WHERE id = ?1 AND status = 'pending'
              )
              RETURNING application_id`,
         ).bind(
@@ -185,7 +185,7 @@ export class ApplicationWorkflowRepository {
           snapshot: props.stepSnapshot,
         }),
         this.c.env.DB.prepare(
-          `UPDATE applications SET current_step = ?2
+          `UPDATE application_requests SET current_step = ?2
              WHERE id = ?1 AND status = 'pending'
              RETURNING id`,
         ).bind(props.applicationId, props.currentStepKey),
@@ -215,7 +215,7 @@ export class ApplicationWorkflowRepository {
     try {
       const results = await this.c.env.DB.batch([
         this.c.env.DB.prepare(
-          `INSERT INTO applications
+          `INSERT INTO application_requests
                (template_id, applicant_id, status, current_step, payload, created_at,
                 workflow_creation_id)
              VALUES (?1, ?2, 'pending', ?3, ?4, ?5, ?6)
@@ -233,7 +233,7 @@ export class ApplicationWorkflowRepository {
           `INSERT INTO application_workflow_instances
                (application_id, definition_json, current_step_key, started_at, due_at)
              SELECT id, ?2, ?3, ?4, ?5
-             FROM applications
+             FROM application_requests
              WHERE workflow_creation_id = ?1`,
         ).bind(
           creationId,
@@ -249,7 +249,7 @@ export class ApplicationWorkflowRepository {
           snapshot: props.stepSnapshot,
         }),
         this.c.env.DB.prepare(
-          `UPDATE applications
+          `UPDATE application_requests
              SET workflow_creation_id = NULL
              WHERE workflow_creation_id = ?1
              RETURNING id`,
@@ -295,7 +295,7 @@ export class ApplicationWorkflowRepository {
     try {
       const results = await this.c.env.DB.batch([
         this.c.env.DB.prepare(
-          `INSERT INTO applications
+          `INSERT INTO application_requests
              (template_id, applicant_id, status, current_step, payload, created_at,
               workflow_creation_id)
            VALUES (?1, ?2, 'pending', ?3, ?4, ?5, ?6)
@@ -312,7 +312,7 @@ export class ApplicationWorkflowRepository {
         this.c.env.DB.prepare(
           `INSERT INTO application_workflow_instances
              (application_id, definition_json, current_step_key, started_at, due_at)
-           SELECT id, ?2, ?3, ?4, ?5 FROM applications WHERE workflow_creation_id = ?1`,
+           SELECT id, ?2, ?3, ?4, ?5 FROM application_requests WHERE workflow_creation_id = ?1`,
         ).bind(
           creationId,
           JSON.stringify(props.definition),
@@ -332,7 +332,7 @@ export class ApplicationWorkflowRepository {
               requested_by_employee_id, base_employee_revision, base_organization_revision,
               created_at, applied_action_id)
            SELECT ?2, id, ?3, ?4, ?5, ?6, ?7, ?8, ?9, NULL
-           FROM applications WHERE workflow_creation_id = ?1`,
+           FROM application_requests WHERE workflow_creation_id = ?1`,
         ).bind(
           creationId,
           props.request.id,
@@ -351,7 +351,7 @@ export class ApplicationWorkflowRepository {
               target_department_code)
            SELECT id, CASE WHEN ?2 IS NULL THEN 'prospective_employee' ELSE 'employee' END,
                   ?2, ?3, ?4
-           FROM applications WHERE workflow_creation_id = ?1`,
+           FROM application_requests WHERE workflow_creation_id = ?1`,
         ).bind(
           creationId,
           props.request.targetEmployeeId,
@@ -362,7 +362,7 @@ export class ApplicationWorkflowRepository {
           `INSERT INTO application_completion_bindings
              (application_id, handler_key, resource_id, payload_fingerprint, created_at)
            SELECT id, 'personnel_action', ?2, ?3, ?4
-           FROM applications WHERE workflow_creation_id = ?1`,
+           FROM application_requests WHERE workflow_creation_id = ?1`,
         ).bind(
           creationId,
           props.request.id,
@@ -370,7 +370,7 @@ export class ApplicationWorkflowRepository {
           props.request.createdAt,
         ),
         this.c.env.DB.prepare(
-          `UPDATE applications SET workflow_creation_id = NULL
+          `UPDATE application_requests SET workflow_creation_id = NULL
            WHERE workflow_creation_id = ?1 RETURNING id`,
         ).bind(creationId),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),

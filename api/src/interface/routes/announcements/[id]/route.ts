@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /announcements/:id — アナウンス1件。published は全員、draft/archived は管理者のみ。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -50,6 +51,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /announcements/:id — 社内アナウンスの表題・本文を更新（announcement:manage）。 */
 export const PUT = factory.createHandlers(
   verifyBearer,

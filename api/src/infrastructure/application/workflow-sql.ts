@@ -88,7 +88,7 @@ export class WorkflowSql {
              (application_id, step_key, round, required_approvals, activated_at, due_at,
               escalated_at, resolution_reason, resolution_id)
            SELECT id, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
-           FROM applications
+           FROM application_requests
            WHERE workflow_creation_id = ?1`,
         )
         .bind(
@@ -114,7 +114,7 @@ export class WorkflowSql {
              SELECT application.id, ?2, ?3, candidate_employee_id, candidate_account_id,
                     source, selectors_json, ?4, eligible_from, resolved_at
              FROM candidate_rows
-             CROSS JOIN applications application
+             CROSS JOIN application_requests application
              WHERE application.workflow_creation_id = ?1`,
           )
           .bind(
@@ -140,7 +140,7 @@ export class WorkflowSql {
     const activationCondition = `EXISTS (
       SELECT 1
       FROM application_workflow_instances workflow_instance
-      INNER JOIN applications application ON application.id = workflow_instance.application_id
+      INNER JOIN application_requests application ON application.id = workflow_instance.application_id
       WHERE workflow_instance.application_id = ?1
         AND workflow_instance.current_step_key = ?10
         AND workflow_instance.current_round = ?11
