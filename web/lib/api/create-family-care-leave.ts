@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { FamilyCareLeaveCreateRequest } from "@/lib/api/types/family-care-leave-types"
 
-// POST /family-care-leaves。休業申出を作成する。status は requested で登録される。
+/** POST /family-care-leaves。休業申出を作成する。status は requested で登録される。 */
 export async function createFamilyCareLeave(request: FamilyCareLeaveCreateRequest) {
   const client = await createClient()
 

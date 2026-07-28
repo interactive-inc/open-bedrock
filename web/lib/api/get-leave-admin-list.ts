@@ -21,11 +21,11 @@ type Params = {
   sort?: LeaveAdminSort
 }
 
-// GET /leave/requests/admin。全社の休暇申請を横断で取得する。leave:read:all が無いと 403。
+/** GET /leave-requests/admin。全社の休暇申請を横断で取得する。leave:read:all が無いと 403。 */
 export async function getLeaveAdminList(filter: LeaveAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.leave.requests.admin.$get({
+  const response = await client["leave-requests"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       applicant_id: filter.applicantId !== null ? String(filter.applicantId) : undefined,

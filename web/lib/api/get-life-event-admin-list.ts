@@ -10,7 +10,7 @@ type Params = {
   offset?: number
 }
 
-// GET /life-events/admin。全社のライフイベント届を横断で取得する。life_event:read:all が無いと 403。
+/** GET /life-events/admin。全社のライフイベント届を横断で取得する。life_event:read:all が無いと 403。 */
 export async function getLifeEventAdminList(filter: LifeEventAdminFilter, params: Params = {}) {
   const client = await createClient()
 

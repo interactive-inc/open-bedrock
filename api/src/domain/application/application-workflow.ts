@@ -77,21 +77,3 @@ export function parseApplicationWorkflow(value: unknown): ApplicationWorkflow | 
 
   return parsed.success ? parsed.data : new Error(parsed.error.message)
 }
-
-export function legacyApplicationWorkflow(
-  approverRoles: ReadonlyArray<string>,
-): ApplicationWorkflow {
-  return zApplicationWorkflow.parse({
-    version: 1,
-    steps: [
-      {
-        key: "manager_approval",
-        name: "承認",
-        approvers:
-          approverRoles.length > 0
-            ? approverRoles.map((roleKey) => ({ type: "role" as const, role_key: roleKey }))
-            : [{ type: "direct_manager" as const }],
-      },
-    ],
-  })
-}

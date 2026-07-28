@@ -1,15 +1,15 @@
+import type { Session } from "@/lib/auth/session"
 import { EmployeeGrade } from "@/domain/grade/employee-grade.entity"
-import { canManageGrades } from "@/lib/grade/can-manage-grades"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeGradeRepository } from "@/infrastructure/grade/employee-grade-repository"
 import { GradeRepository } from "@/infrastructure/grade/grade-repository"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   gradeId: number
   effectiveDate: string
@@ -25,7 +25,7 @@ export class CreateEmployeeGrade {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<EmployeeGrade | ApplicationError> {
-    if (canManageGrades(command.session) === false) {
+    if (command.session.hasPermission("grade:manage") === false) {
       return new ForbiddenError("cannot manage grades", "forbidden")
     }
 

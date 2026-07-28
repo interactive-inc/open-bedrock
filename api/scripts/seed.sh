@@ -9,7 +9,8 @@
 set -euo pipefail
 
 TARGET="${1:---local}"
-DB_NAME="open-karte"
+# wrangler.jsonc の d1_databases[].database_name と一致させる。
+DB_NAME="bedrock"
 SEEDS_DIR="$(cd "$(dirname "$0")/../seeds" && pwd)"
 
 # 依存順。employee（employees）と org（departments 等）を先に。
@@ -22,7 +23,9 @@ apply() {
     return 0
   fi
   echo "seeding $(basename "$file")"
-  wrangler d1 execute "$DB_NAME" "$TARGET" --file="$file"
+  # bunx で devDependency に固定した wrangler を使う。素の `wrangler` はグローバル版に
+  # 解決され、migration を流した版と miniflare の状態形式が食い違って落ちる。
+  bunx wrangler d1 execute "$DB_NAME" "$TARGET" --file="$file"
 }
 
 # 先に基盤ドメイン

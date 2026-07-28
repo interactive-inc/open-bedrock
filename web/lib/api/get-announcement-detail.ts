@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /announcements/:id。アナウンス1件の詳細。
+/** GET /announcements/:id。アナウンス1件の詳細。 */
 export async function getAnnouncementDetail(id: number) {
   const client = await createClient()
 

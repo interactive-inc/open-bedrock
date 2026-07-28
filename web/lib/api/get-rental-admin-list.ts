@@ -10,11 +10,11 @@ type Params = {
   offset?: number
 }
 
-// GET /rentals/admin。全社の貸与品予約を横断で取得する。rental:read:all が無いと 403。
+/** GET /rental-reservations/admin。全社の貸与品予約を横断で取得する。rental:read:all が無いと 403。 */
 export async function getRentalAdminList(filter: RentalAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.rentals.admin.$get({
+  const response = await client["rental-reservations"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

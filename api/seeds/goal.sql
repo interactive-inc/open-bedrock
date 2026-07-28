@@ -2,7 +2,7 @@
 -- 対象テーブル: goals, goal_evaluations
 -- migration: migrations/goal.sql / 値: src/infrastructure/seed/seed-goals.ts, seed-goal-evaluations.ts
 
-INSERT INTO goals (id, employee_id, period, title, kpi, weight, status) VALUES
+INSERT INTO performance_goals (id, employee_id, period, title, kpi, weight, status) VALUES
   (1, 5, '2026-H1', 'Release the new dashboard feature', 'Released with zero critical bugs', 40, 'in_progress'),
   (2, 5, '2026-H1', 'Reduce code review turnaround time', 'Average response within 4 hours', 20, 'in_progress'),
   (3, 9, '2026-H1', 'Improve test coverage', 'Coverage at or above 80%', 30, 'in_progress'),

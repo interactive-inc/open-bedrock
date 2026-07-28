@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/errors"
-import { loadConfig, saveConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
+import { SettingsFile } from "@/lib/config/settings-file"
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE"
@@ -17,13 +18,13 @@ export async function api<T = unknown>(path: string, options: RequestOptions = {
       const refreshed = await tryRefresh(config.base_url, config.refresh_token)
 
       if (refreshed !== null) {
-        config.token = refreshed.access_token
+        // email / name を温存してトークンだけ差し替える。
+        await new SettingsFile().saveTokens(config.base_url, {
+          token: refreshed.access_token,
+          refresh_token: refreshed.refresh_token,
+        })
 
-        config.refresh_token = refreshed.refresh_token
-
-        await saveConfig(config)
-
-        return await request<T>(config.base_url, config.token, path, options)
+        return await request<T>(config.base_url, refreshed.access_token, path, options)
       }
     }
 
@@ -34,7 +35,7 @@ export async function api<T = unknown>(path: string, options: RequestOptions = {
 async function tryRefresh(
   baseUrl: string,
   refreshToken: string,
-): Promise<{ access_token: string; refresh_token: string } | null> {
+): Promise<{ access_token: string; refresh_token: string | null } | null> {
   try {
     const url = new URL("/auth/refresh", baseUrl)
 
@@ -49,7 +50,7 @@ async function tryRefresh(
       return null
     }
 
-    const json = (await res.json()) as { access_token: string; refresh_token: string }
+    const json = (await res.json()) as { access_token: string; refresh_token: string | null }
 
     return json
   } catch {
@@ -57,7 +58,7 @@ async function tryRefresh(
   }
 }
 
-export async function request<T = unknown>(
+async function request<T = unknown>(
   baseUrl: string,
   token: string | null,
   path: string,

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
-// POST /accounts/:id/roles。アカウントにロールを付与する（iam:assign_roles が必要）。
+/** POST /accounts/:id/roles。アカウントにロールを付与する（iam:assign_roles が必要）。 */
 export async function grantAccountRole(accountId: number, roleKey: string): Promise<null | Error> {
   const client = await createClient()
 

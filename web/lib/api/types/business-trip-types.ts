@@ -1,7 +1,4 @@
-// business-trip ドメインの手書き型。api 側 zod スキーマと疎結合に保つため
-// z.infer を import せず、レスポンス/リクエストの shape をここで独立に定義する。
-
-// POST /business-trips のリクエストボディ。estimated_cost は任意（記録のみ）。
+/** POST /business-trips のリクエストボディ。estimated_cost は任意（記録のみ）。 */
 export type BusinessTripCreateRequest = {
   destination: string
   start_date: string
@@ -10,7 +7,7 @@ export type BusinessTripCreateRequest = {
   estimated_cost: number | null
 }
 
-// PUT /business-trips/:id のリクエストボディ。
+/** PUT /business-trips/:id のリクエストボディ。 */
 export type BusinessTripUpdateRequest = {
   destination: string
   start_date: string
@@ -19,7 +16,7 @@ export type BusinessTripUpdateRequest = {
   estimated_cost: number | null
 }
 
-// GET /business-trips/me と /business-trips/:id のレスポンス要素。api は snake_case で返す。
+/** GET /business-trips/me と /business-trips/:id のレスポンス要素。api は snake_case で返す。 */
 export type BusinessTripResponse = {
   id: string
   traveler_id: number

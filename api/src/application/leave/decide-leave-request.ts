@@ -1,8 +1,8 @@
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
+import type { Session } from "@/lib/auth/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import {
   ConflictError,
   ForbiddenError,
@@ -12,11 +12,10 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   leaveRequestId: number
   approverId: number
   action: "approve" | "reject"
@@ -32,7 +31,7 @@ export class DecideLeaveRequest {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
-    if (canDecideLeave(command.session) === false) {
+    if (command.session.hasPermission("leave:approve") === false) {
       return new ForbiddenError("cannot decide leave requests", "forbidden")
     }
 
@@ -67,7 +66,7 @@ export class DecideLeaveRequest {
     const isInScope =
       organizationAuthority.managementChain ||
       organizationAuthority.departmentManager ||
-      hasPermission(command.session, "org:manage")
+      command.session.hasPermission("org:manage")
 
     if (isInScope === false) {
       return new ForbiddenError(

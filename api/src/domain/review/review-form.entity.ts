@@ -1,9 +1,7 @@
-import {
-  toAnswers,
-  toFormStatus,
-  toReviewerType,
-  toVisibility,
-} from "@/lib/review/review-form-helpers"
+import { toAnswers } from "@/lib/review/to-answers"
+import { toFormStatus } from "@/lib/review/to-form-status"
+import { toReviewerType } from "@/lib/review/to-reviewer-type"
+import { toVisibility } from "@/lib/review/to-visibility"
 import type { ReviewFormRow } from "@/schema"
 import { z } from "zod"
 

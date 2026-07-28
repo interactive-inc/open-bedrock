@@ -1,9 +1,7 @@
 import { AccountProvisioner } from "@/infrastructure/iam/account-provisioner"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import {
-  replaceAccountRolesWithPermissionSets,
-  seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
+import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { describe, expect, test } from "bun:test"
 
 async function countRows(db: D1Database, table: string): Promise<number> {
@@ -16,7 +14,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("employee / account / identity / account_role が全てアトミックに作成される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E499", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E499", "root")
 
     const result = await provisioner.provisionWithEmployee({
       employee: {
@@ -68,7 +66,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("employee code 重複時は全体が rollback される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E498", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E498", "root")
 
     // 先に同じ code の employee を作っておく
     await db
@@ -104,7 +102,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
   test("存在しない role key では全体が rollback される", async () => {
     const { context, db } = createTestContext()
     const provisioner = new AccountProvisioner(context)
-    const actorAccountId = await seedIamTestAccount(context, "E497", "admin")
+    const actorAccountId = await seedIamTestAccount(context, "E497", "root")
 
     const result = await provisioner.provisionWithEmployee({
       employee: {
@@ -149,7 +147,7 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
       },
       email: "you+e503@example.com",
       passwordHash: "hashed-password",
-      roleKey: "admin",
+      roleKey: "root",
       grantedByAccountId: actorAccountId,
       now: 1000,
     })

@@ -2,10 +2,10 @@ import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { DecideLeaveRequest } from "@/application/leave/decide-leave-request"
 import { ForbiddenError, ValidationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 async function seedPendingRequest(
@@ -125,7 +125,7 @@ describe("DecideLeaveRequest", () => {
     const request = await seedPendingRequest(repository, 5)
 
     const result = await new DecideLeaveRequest(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       leaveRequestId: request.id ?? 0,
       approverId: 5,
       action: "approve",

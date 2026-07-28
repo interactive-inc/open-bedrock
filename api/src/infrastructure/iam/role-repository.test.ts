@@ -1,5 +1,5 @@
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function seedDynamicRole(db: D1Database, key: string): Promise<number> {

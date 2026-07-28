@@ -1,18 +1,18 @@
 import { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { redemptionStatusSchema } from "@/lib/schemas"
 import { thanks, thanksRedemptions, thanksRewards } from "@/schema"
 import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 
-// 確定済みの交換ステータス。確定は fulfilled の1つだけ。
-// 承認＝確定（fulfilled）へ直行するため approved は使わない。
-// getBalance と approveFromPending はともに fulfilled + pending を差し引いて残高を算出する。
+/**
+ * 確定済みの交換ステータス。確定は fulfilled の1つだけ。
+ * 承認＝確定（fulfilled）へ直行するため approved は使わない。
+ * getBalance と approveFromPending はともに fulfilled + pending を差し引いて残高を算出する。
+ */
 const settledStatus = "fulfilled"
 
 export type PendingExistsError = { reason: "pending_exists" }
@@ -83,11 +83,13 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 残高チェック・重複 pending チェック・在庫チェックを INSERT の SELECT ... WHERE に畳み込んだ
-  // 1 ステートメントでアトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
-  // 同時に複数の申請が試みられても残高がマイナスに割れず、在庫ゼロの報酬への申請も通らない。
-  // 0 行挿入（changes === 0）は残高不足・既に pending が存在・在庫切れのいずれかを意味する。
-  // 原因は hasPendingByEmployee と在庫の再 SELECT で判定する（INSERT が弾いた後なので競合の心配は不要）。
+  /**
+   * 残高チェック・重複 pending チェック・在庫チェックを INSERT の SELECT ... WHERE に畳み込んだ
+   * 1 ステートメントでアトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
+   * 同時に複数の申請が試みられても残高がマイナスに割れず、在庫ゼロの報酬への申請も通らない。
+   * 0 行挿入（changes === 0）は残高不足・既に pending が存在・在庫切れのいずれかを意味する。
+   * 原因は hasPendingByEmployee と在庫の再 SELECT で判定する（INSERT が弾いた後なので競合の心配は不要）。
+   */
   async createIfSufficientBalance(
     redemption: ThanksRedemption,
   ): Promise<
@@ -177,11 +179,13 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 承認＝確定を 1 ステートメントで原子的に行う。残高チェックを確定 UPDATE の WHERE に畳み込み、
-  // 「pending かつ 当該社員の残高（fulfilled + 他の pending を差し引き） >= point_cost」のときだけ
-  // fulfilled へ更新する。自身の pending 行は差し引き対象から除外し二重カウントを防ぐ。
-  // D1 は個々のステートメントを直列化するため、別 ID の同時承認でも合計が残高を超える分は必ず弾かれる
-  // （残高がマイナスに割れない）。0 行更新は残高不足 or 既に決裁済みを意味する。
+  /**
+   * 承認＝確定を 1 ステートメントで原子的に行う。残高チェックを確定 UPDATE の WHERE に畳み込み、
+   * 「pending かつ 当該社員の残高（fulfilled + 他の pending を差し引き） >= point_cost」のときだけ
+   * fulfilled へ更新する。自身の pending 行は差し引き対象から除外し二重カウントを防ぐ。
+   * D1 は個々のステートメントを直列化するため、別 ID の同時承認でも合計が残高を超える分は必ず弾かれる
+   * （残高がマイナスに割れない）。0 行更新は残高不足 or 既に決裁済みを意味する。
+   */
   async approveFromPending(props: {
     redemptionId: number
     employeeId: number
@@ -212,7 +216,7 @@ export class ThanksRedemptionRepository {
                 AND reward_id = ?5
                 AND status = 'pending'
                 AND (
-                  (SELECT COALESCE(SUM(points), 0) FROM thanks
+                  (SELECT COALESCE(SUM(points), 0) FROM thanks_messages
                     WHERE recipient_employee_id = ?2)
                   - (SELECT COALESCE(SUM(point_cost), 0) FROM thanks_redemptions
                     WHERE employee_id = ?2
@@ -264,7 +268,7 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 却下を pending からの条件付き UPDATE で原子的に行う。0 行更新は既に決裁済み。
+  /** 却下を pending からの条件付き UPDATE で原子的に行う。0 行更新は既に決裁済み。 */
   async rejectFromPending(props: {
     redemptionId: number
     deciderId: number
@@ -329,7 +333,7 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 指定社員に pending 状態の交換申請が存在するかを返す。
+  /** 指定社員に pending 状態の交換申請が存在するかを返す。 */
   async hasPendingByEmployee(employeeId: number): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
@@ -349,9 +353,11 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  // 受領残高を算出する。受領 thanks.points 合計 − 確定・保留中の交換（fulfilled + pending）の
-  // point_cost 合計。pending を含めることで、未決裁の申請分も残高に反映させる。
-  // 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
+  /**
+   * 受領残高を算出する。受領 thanks.points 合計 − 確定・保留中の交換（fulfilled + pending）の
+   * point_cost 合計。pending を含めることで、未決裁の申請分も残高に反映させる。
+   * 残高列は持たず台帳から集計することで二重持ちによる不整合を避ける。
+   */
   async getBalance(employeeId: number): Promise<number | Error> {
     try {
       const [receivedRow] = await this.c.var.database

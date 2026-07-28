@@ -5,7 +5,7 @@ import type {
   ApplicationTemplateResponse,
 } from "@/lib/api/types/application-template-types"
 
-// POST /application-templates。管理権限が申請テンプレートを作成する。
+/** POST /application-templates。管理権限が申請テンプレートを作成する。 */
 export async function createApplicationTemplate(
   request: ApplicationTemplateCreateRequest,
 ): Promise<ApplicationTemplateResponse | Error> {

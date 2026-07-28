@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte meetings list`
+export const help = `bedrock meetings list`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

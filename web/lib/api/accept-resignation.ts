@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /resignations/:id/accept。退職申請を受理する。
-// 権限なしは 403、不存在は 404、遷移不可は 409 を api が返すため、戻りは Error になる。成功時は null。
+/**
+ * POST /resignations/:id/accept。退職申請を受理する。
+ * 権限なしは 403、不存在は 404、遷移不可は 409 を api が返すため、戻りは Error になる。成功時は null。
+ */
 export async function acceptResignation(id: string): Promise<null | Error> {
   const client = await createClient()
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /expenses/:id/reject。理由コメント必須で経費を却下する。
+/** POST /expenses/:id/reject。理由コメント必須で経費を却下する。 */
 export async function rejectExpense(id: number, comment: string) {
   const client = await createClient()
 

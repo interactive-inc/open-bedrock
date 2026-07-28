@@ -11,18 +11,18 @@ async function helpText(path: string): Promise<Response> {
 
 describe("rental transitions", () => {
   it("lend shows help", async () => {
-    const response = await helpText("/rental/lend")
+    const response = await helpText("/rental-reservations/lend")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("rental lend")
+    expect(await response.text()).toContain("rental-reservations lend")
   })
 
   it("return shows help", async () => {
-    const response = await helpText("/rental/return")
+    const response = await helpText("/rental-reservations/return")
 
     expect(response.status).toBe(200)
 
-    expect(await response.text()).toContain("rental return")
+    expect(await response.text()).toContain("rental-reservations return")
   })
 })

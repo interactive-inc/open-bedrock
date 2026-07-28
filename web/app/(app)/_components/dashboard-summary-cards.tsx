@@ -4,8 +4,10 @@ import { getMe } from "@/lib/api/get-me"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { DashboardCharts } from "@/app/(app)/_components/dashboard-charts"
 
-// /dashboard を認証付きで取得して 4 つのサマリカードとチャートを描画する非同期 RSC。
-// dashboard:view 権限が無いユーザーにはサマリを出さず、案内文を表示する。
+/**
+ * /dashboard を認証付きで取得して 4 つのサマリカードとチャートを描画する非同期 RSC。
+ * dashboard:view 権限が無いユーザーにはサマリを出さず、案内文を表示する。
+ */
 export async function DashboardSummaryCards() {
   const me = await getMe()
 

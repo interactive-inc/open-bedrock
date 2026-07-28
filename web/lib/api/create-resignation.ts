@@ -2,7 +2,7 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ResignationCreateRequest } from "@/lib/api/types/resignation-types"
 
-// POST /resignations。退職申請を作成する。status は requested で登録される。
+/** POST /resignations。退職申請を作成する。status は requested で登録される。 */
 export async function createResignation(request: ResignationCreateRequest) {
   const client = await createClient()
 

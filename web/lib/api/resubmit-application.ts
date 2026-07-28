@@ -3,7 +3,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 
 export async function resubmitApplication(id: number, payload: unknown) {
   const client = await createClient()
-  const response = await client.applications[":id"].resubmit.$post({
+  const response = await client["application-requests"][":id"].resubmit.$post({
     param: { id: String(id) },
     json: { payload },
   })

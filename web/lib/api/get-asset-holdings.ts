@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /assets/holdings。現在の保有状況一覧（誰が何を持っているか）。
+/** GET /assets/holdings。現在の保有状況一覧（誰が何を持っているか）。 */
 export async function getAssetHoldings() {
   const client = await createClient()
 

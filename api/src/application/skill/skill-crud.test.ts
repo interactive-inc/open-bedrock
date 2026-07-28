@@ -4,12 +4,14 @@ import { SetMySkill } from "@/application/skill/set-my-skill"
 import { GetMySkill } from "@/application/skill/get-my-skill"
 import { RemoveMySkill } from "@/application/skill/remove-my-skill"
 import { ApplicationError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 
 async function seedSkillMaster(db: D1Database, code: string): Promise<void> {
-  await seedD1(db, "skills", [{ code: code, name: `Skill ${code}`, category: "engineering" }])
+  await seedD1(db, "skill_definitions", [
+    { code: code, name: `Skill ${code}`, category: "engineering" },
+  ])
 }
 
 describe("SetMySkill", () => {

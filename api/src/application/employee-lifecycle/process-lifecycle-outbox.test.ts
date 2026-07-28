@@ -1,9 +1,9 @@
 import { ProcessLifecycleOutbox } from "@/application/employee-lifecycle/process-lifecycle-outbox"
 import { UpdateLifecycleTemplateBinding } from "@/application/onboarding/update-lifecycle-template-binding"
 import { RemoveLifecycleTemplateBinding } from "@/application/onboarding/remove-lifecycle-template-binding"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { ApplicationError, ForbiddenError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
@@ -32,7 +32,7 @@ async function seedOutbox(
     .run()
   await db
     .prepare(
-      `INSERT INTO lifecycle_outbox
+      `INSERT INTO lifecycle_outbox_entries
          (personnel_action_id, effect_type, payload_json, attempt_count,
           next_attempt_at, processed_at, last_error_code, created_at)
        VALUES (?1, ?2, ?3, 0, 0, NULL, NULL, 0)`,
@@ -68,14 +68,14 @@ describe("lifecycle onboarding effects", () => {
     await seedTemplate(db, { code: "join-default", kind: "join" })
     await seedOutbox(db, { actionId: "action-hire", employeeId: 5, effectType: "hire" })
     const binding = await new UpdateLifecycleTemplateBinding(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       templateCode: "join-default",
       effectType: "hire",
     })
     expect(binding).not.toBeInstanceOf(ApplicationError)
 
     const first = await new ProcessLifecycleOutbox(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
     expect(first).toEqual({ processed: 1, skipped: 0, failed: 0 })
     expect(
@@ -88,12 +88,12 @@ describe("lifecycle onboarding effects", () => {
     ).toBe(1)
     expect(
       await db
-        .prepare("SELECT processed_at IS NOT NULL FROM lifecycle_outbox")
+        .prepare("SELECT processed_at IS NOT NULL FROM lifecycle_outbox_entries")
         .first<number>("processed_at IS NOT NULL"),
     ).toBe(1)
 
     expect(
-      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("admin") }),
+      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("root") }),
     ).toEqual({ processed: 0, skipped: 0, failed: 0 })
   })
 
@@ -101,7 +101,7 @@ describe("lifecycle onboarding effects", () => {
     const { context, db } = createTestContext()
     await seedOutbox(db, { actionId: "action-retired", employeeId: 6, effectType: "retired" })
     expect(
-      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("admin") }),
+      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("root") }),
     ).toEqual({ processed: 0, skipped: 1, failed: 0 })
     expect(
       await db.prepare("SELECT COUNT(*) FROM onboarding_assignments").first<number>("COUNT(*)"),
@@ -113,7 +113,7 @@ describe("lifecycle onboarding effects", () => {
     await seedTemplate(db, { code: "join-default", kind: "join" })
     await seedOutbox(db, { actionId: "action-hire", employeeId: 5, effectType: "hire" })
     await new UpdateLifecycleTemplateBinding(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       templateCode: "join-default",
       effectType: "hire",
     })
@@ -140,14 +140,14 @@ describe("lifecycle onboarding effects", () => {
     })
 
     expect(
-      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("admin") }),
+      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("root") }),
     ).toEqual({ processed: 0, skipped: 0, failed: 0 })
     expect(
       await db.prepare("SELECT COUNT(*) FROM onboarding_assignments").first<number>("COUNT(*)"),
     ).toBe(0)
     expect(
       await db
-        .prepare("SELECT processed_at FROM lifecycle_outbox")
+        .prepare("SELECT processed_at FROM lifecycle_outbox_entries")
         .first<number | null>("processed_at"),
     ).toBeNull()
   })
@@ -157,7 +157,7 @@ describe("lifecycle onboarding effects", () => {
     await seedTemplate(db, { code: "leave-default", kind: "leave" })
     expectApplicationError(
       await new UpdateLifecycleTemplateBinding(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         templateCode: "leave-default",
         effectType: "hire",
       }),
@@ -176,17 +176,17 @@ describe("lifecycle onboarding effects", () => {
     await seedTemplate(db, { code: "join-default", kind: "join" })
     await seedOutbox(db, { actionId: "action-hire", employeeId: 5, effectType: "hire" })
     await new UpdateLifecycleTemplateBinding(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       templateCode: "join-default",
       effectType: "hire",
     })
     await db
-      .prepare("UPDATE lifecycle_outbox SET payload_json = ?1")
+      .prepare("UPDATE lifecycle_outbox_entries SET payload_json = ?1")
       .bind(JSON.stringify({ actionId: "different-action", employeeId: 6 }))
       .run()
 
     expect(
-      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("admin") }),
+      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("root") }),
     ).toEqual({ processed: 0, skipped: 0, failed: 1 })
     expect(
       await db.prepare("SELECT COUNT(*) FROM onboarding_assignments").first<number>("COUNT(*)"),
@@ -205,7 +205,7 @@ describe("lifecycle onboarding effects", () => {
       .run()
 
     expect(
-      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("admin") }),
+      await new ProcessLifecycleOutbox(context).run({ session: makeTestSession("root") }),
     ).toEqual({ processed: 0, skipped: 0, failed: 1 })
   })
 
@@ -213,14 +213,14 @@ describe("lifecycle onboarding effects", () => {
     const { context, db } = createTestContext()
     await seedTemplate(db, { code: "join-default", kind: "join" })
     await new UpdateLifecycleTemplateBinding(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       templateCode: "join-default",
       effectType: "hire",
     })
 
     expect(
       await new RemoveLifecycleTemplateBinding(context).run({
-        session: makeTestSession("admin"),
+        session: makeTestSession("root"),
         templateCode: "join-default",
       }),
     ).toEqual({ removed: true })

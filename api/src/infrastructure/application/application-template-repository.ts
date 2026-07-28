@@ -1,10 +1,8 @@
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { applicationTemplates } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -74,8 +72,10 @@ export class ApplicationTemplateRepository {
     }
   }
 
-  // 申請テンプレートの内容を更新する。code をキーに更新し、更新後の行を返す。
-  // 対象行が存在しない場合は null を返す。
+  /**
+   * 申請テンプレートの内容を更新する。code をキーに更新し、更新後の行を返す。
+   * 対象行が存在しない場合は null を返す。
+   */
   async update(template: ApplicationTemplate): Promise<ApplicationTemplate | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -98,11 +98,13 @@ export class ApplicationTemplateRepository {
     }
   }
 
-  // 参照する申請が 1 件も存在しない場合のみテンプレートを削除する。
-  // 状態を問わず（pending / approved / rejected）参照があれば削除しない。
-  // 決定済み申請がテンプレートを参照したまま削除されると、監査記録（template_name/code）が壊れるため。
-  // D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
-  // 0 行削除（参照する申請が存在）なら null を返す。
+  /**
+   * 参照する申請が 1 件も存在しない場合のみテンプレートを削除する。
+   * 状態を問わず（pending / approved / rejected）参照があれば削除しない。
+   * 決定済み申請がテンプレートを参照したまま削除されると、監査記録（template_name/code）が壊れるため。
+   * D1 batch でチェックと削除をアトミックに実行し TOCTOU を防ぐ。
+   * 0 行削除（参照する申請が存在）なら null を返す。
+   */
   async delete(code: string): Promise<true | null | Error> {
     try {
       await this.c.env.DB.batch([
@@ -110,7 +112,7 @@ export class ApplicationTemplateRepository {
           `DELETE FROM application_templates
            WHERE code = ?1
              AND NOT EXISTS (
-               SELECT 1 FROM applications
+               SELECT 1 FROM application_requests
                WHERE template_id = (SELECT id FROM application_templates WHERE code = ?1)
              )`,
         ).bind(code),

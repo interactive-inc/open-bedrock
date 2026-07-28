@@ -8,7 +8,7 @@ type SeedShiftSwapRequest = {
   approvedAt: string | null
 }
 
-// status は "pending" か "approved"。approvedAt は承認済みのみ文字列。
+/** status は "pending" か "approved"。approvedAt は承認済みのみ文字列。 */
 export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
   {
     id: 1,

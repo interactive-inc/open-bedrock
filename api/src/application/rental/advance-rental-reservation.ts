@@ -1,6 +1,6 @@
-import { canManageRentals } from "@/lib/rental/can-manage-rentals"
+import type { Session } from "@/lib/auth/session"
 import { RentalReservation } from "@/domain/rental/rental-reservation.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { RentalReservationRepository } from "@/infrastructure/rental/rental-reservation-repository"
@@ -8,7 +8,7 @@ import { RentalReservationRepository } from "@/infrastructure/rental/rental-rese
 export type Action = "lend" | "return"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   reservationId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceRentalReservation {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
-    if (canManageRentals(command.session) === false) {
+    if (command.session.hasPermission("rental:manage") === false) {
       return new ForbiddenError("cannot manage rental reservations", "forbidden")
     }
 

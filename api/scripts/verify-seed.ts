@@ -8,7 +8,7 @@ const migrationsDir = join(root, "migrations")
 
 const seedsDir = join(root, "seeds")
 
-// 安全ガード: 想定外に巨大なファイルがあれば中断（自己参照膨張の再発防止）。
+/** 安全ガード: 想定外に巨大なファイルがあれば中断（自己参照膨張の再発防止）。 */
 function assertSane(path: string): void {
   const size = statSync(path).size
 
@@ -19,7 +19,7 @@ function assertSane(path: string): void {
 
 const db = new Database(":memory:")
 
-// migrations を結合して適用（個々の空ファイル対策）。
+/** migrations を結合して適用（個々の空ファイル対策）。 */
 const schema = readdirSync(migrationsDir)
   .filter((file) => file.endsWith(".sql"))
   .sort()
@@ -34,7 +34,7 @@ const schema = readdirSync(migrationsDir)
 
 db.exec(schema)
 
-// seeds を依存順（employee → org → 残り）に 1 ファイルずつ適用。
+/** seeds を依存順（employee → org → 残り）に 1 ファイルずつ適用。 */
 const order = ["employee", "org", "employee-lifecycle"]
 
 const seedFiles = readdirSync(seedsDir)
@@ -61,7 +61,7 @@ for (const file of ordered) {
 }
 
 const lifecycleState = db
-  .query("SELECT status, employee_count FROM lifecycle_migration_state WHERE id = 1")
+  .query("SELECT status, employee_count FROM lifecycle_migration_states WHERE id = 1")
   .get() as { status: string; employee_count: number }
 const employeeCount = (
   db.query("SELECT COUNT(*) AS count FROM employees").get() as {

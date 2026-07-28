@@ -1,15 +1,13 @@
-# システムアーキテクチャ仕様
+# システムアーキテクチャ
 
-規範性: 補助仕様。中核モデルを実装する配置、依存方向、信頼境界を定める。
-
-実装済みの配置、依存方向、信頼境界と、未実装の要求構成を定義する。現行構成の正本は workspace の `package.json`、route、migration、deployment config とする。要求構成は設計制約であり、実装済みであることを意味しない。図は依存関係を定義し、runtime topology の完全な列挙を目的としない。
+実装済みの配置、依存方向、信頼境界は workspace の `package.json`、route、migration、deployment config に一致させる。要求構成は未実装部分にも適用する設計制約である。
 
 ## 現在の構成
 
 - `api`: Hono と Cloudflare Workers で動く HTTP API
 - `cli`: 引数を local Hono route で検証し、HTTP API を呼ぶ Bun CLI
 - `web`: Next.js、React、Tailwind、shadcn による Web UI
-- `D1`: SQLite 互換の永続化。migration SQL が schema の正本
+- `D1`: SQLite 互換の永続化。schema は migration SQL に従う
 
 ```mermaid
 flowchart LR
@@ -21,7 +19,27 @@ flowchart LR
   API --> KV[("KV・rate limit bindings")]
 ```
 
-実装されている route の正本は `api/src/app.ts` と `api/src/interface`、データ制約の正本は `api/migrations` である。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。
+実装されている route は `api/src/app.ts` と `api/src/interface/routes`、データ制約は `api/migrations` で確認する。`api/src/schema.ts` は Drizzle query と型生成に使う同期表現である。DB スキーマの正は手書きの `api/migrations/*.sql` で、drizzle-kit generate による再生成は行わない。一意・部分インデックス（二重登録・TOCTOU 防止）は ORM からの可視性とドリフト検知のため schema.ts にも同期させ、性能用の非一意インデックスは migration のみに持つ。インデックスを追加・変更する際は migration を正として更新し、一意・部分インデックスは schema.ts にも反映する。
+
+## migration の命名
+
+migration は `NNNN_<対象>_<操作>.sql` の形とし、4 桁の連番を前置する。連番は追加順に採番し、欠番と重複を作らない。表を作る migration と、その表を変更する migration が別ファイルになる場合、後者の番号を必ず大きくする。内容部分には対象と操作を書き、`asset_dispose.sql` のような操作名だけの命名は避ける。区切りは下線に揃える。
+
+連番は依存順序を名前で保証するために必要である。`wrangler d1 migrations apply` は連番を持つファイルを持たないファイルより先に適用し（`compareSegments` が数値前置を優先する）、テストの replay も同じ順序を使う。連番を持たないファイルが混在すると、新しい連番ファイルが依存先より先に走る。
+
+`d1_migrations` は適用済みかどうかをファイル名で判定する。したがって適用済みの migration を改名すると、その migration は未適用と見なされて再実行される。改名する場合は `d1_migrations` の名前も同時に書き換える。`api/scripts/repair-migration-history.sql` がこの書き換えを行い、`db:migrate` と `db:migrate:local` が `migrations apply` の前に実行する。
+
+## Deployment と法人
+
+一つの deployment は一つの法人だけを扱う。法人は request ごとに選ぶ resource や scope ではなく、deployment 全体の固定前提である。別の法人を運用する場合は、database、identity、secret、connector credential、audit access を共有しない別 deployment を使用する。
+
+外部の取引先、専門家、委託先は Party または Organization として参照できる。ただし、外部法人はこの deployment が運用する法人にはならない。
+
+API、Web、CLI、AI に法人 selector を設けない。全社共通の table に `tenant_id` または `legal_entity_id` を partition key として追加しない。法的意味のために外部の LegalEntity を参照する record は、この制約の対象外とする。
+
+外部 tenant ID は connector namespace 内の外部識別子として扱い、内部認可 scope または database partition に使用しない。
+
+現行実装に法人 selector と tenant partition はない。自社 profile と LegalEntity record も未実装であるため、実装済みの法人台帳として表示してはならない。
 
 ## API の層
 
@@ -38,7 +56,7 @@ route は App Router 形式の directory に置き、`app.ts` が Hono path へ�
 
 ## Web と CLI
 
-Web と CLI は提供面であり、業務規則と認可の正本ではない。
+Web と CLI は提供面であり、業務規則と認可を定義しない。
 
 - Web の route 固有 component は `_components`、表示用純関数は `_lib` へ collocate する。
 - `web/components/ui` は shadcn 生成物とし、直接編集しない。
@@ -46,12 +64,13 @@ Web と CLI は提供面であり、業務規則と認可の正本ではない�
 - API の実行時 module を client bundle へ import しない。
 - CLI route は `cli/app/index.ts` へ登録する。
 - UI の非表示や CLI help は認可ではなく、API が最終判断する。
+- Web の画面 URL 規約は [Web routes](./sitemap.md) を定義元とする。
 
 ## 認証と認可
 
 現在は login で発行した token を Bearer として API へ送る。Web は httpOnly cookie、CLI は local config を使う。token の検証、session 失効、account 状態、permission、scope、案件資格は API が評価する。
 
-目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。現行実装は permission ベース(deny-by-default)で、verify-bearer が request ごとに account の permission 集合を DB から解決する。詳細は [認可モデル](./authorization-model.md) と [[roles-and-permissions|ロールと権限]] を参照する。
+目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。現行実装は permission ベース(deny-by-default)で、verify-bearer が request ごとに account の permission 集合を DB から解決する。詳細は [認可モデル](./authorization-model.md) と [ロールと権限](./roles-and-permissions.md) を参照する。
 
 ## データと transaction
 
@@ -123,7 +142,7 @@ flowchart TB
 - 外部 URL、redirect、webhook、file input を信頼境界として扱う。
 - 監査だけで防御したことにせず、認可と DB 制約で side effect を防ぐ。
 
-具体的な反復数、token 寿命、rate limit 値など運用可能な値はコードと deployment config を正とし、この恒久文書へ複製しない。
+具体的な反復数、token 寿命、rate limit 値など運用可能な値はコードと deployment config で管理する。
 
 ## 可換性による適合確認
 

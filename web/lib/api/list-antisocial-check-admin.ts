@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import type { AntisocialCheckAdminResponse } from "@/lib/api/types/antisocial-check-types"
 
-// GET /antisocial-checks/admin。自分を除く判定待ち申請を取得する。
+/** GET /antisocial-checks/admin。自分を除く判定待ち申請を取得する。 */
 export async function listAntisocialCheckAdmin(): Promise<
   ReadonlyArray<AntisocialCheckAdminResponse> | Error
 > {

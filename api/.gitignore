@@ -15,6 +15,9 @@ dist/
 node_modules/
 .wrangler
 
+# deploy config (本番ドメイン・バインディング ID を含むためコミットしない)
+wrangler.jsonc
+
 # env
 .env
 .env.production

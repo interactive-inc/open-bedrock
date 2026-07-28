@@ -7,8 +7,8 @@ import { UpdateBusinessTrip } from "@/application/business-trip/update-business-
 import { BusinessTrip } from "@/domain/business-trip/business-trip.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 async function seedTrip(context: Context, travelerId: number): Promise<string> {
   const created = await new CreateBusinessTrip(context).run({

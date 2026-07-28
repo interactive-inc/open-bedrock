@@ -6,7 +6,7 @@ export async function getThanksRedemptionInbox(): Promise<
 > {
   const client = await createClient()
 
-  const response = await client.thanks.redemptions.inbox.$get({ query: { limit: "100" } })
+  const response = await client["thanks-redemptions"].inbox.$get({ query: { limit: "100" } })
 
   if (response.status >= 400) {
     return new Error("failed to load redemption inbox")

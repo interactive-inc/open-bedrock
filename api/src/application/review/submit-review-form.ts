@@ -1,4 +1,4 @@
-import { canSubmitForm } from "@/lib/review/can-submit-form"
+import { canSubmitForm } from "@/application/review/can-submit-form"
 import type { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

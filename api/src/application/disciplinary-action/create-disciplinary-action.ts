@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { DisciplinaryAction } from "@/domain/disciplinary-action/disciplinary-action.entity"
-import { canManageDisciplinaryActions } from "@/lib/disciplinary-action/can-manage-disciplinary-actions"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { DisciplinaryActionRepository } from "@/infrastructure/disciplinary-action/disciplinary-action-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   kind: string
   summary: string
@@ -21,7 +21,7 @@ export class CreateDisciplinaryAction {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<DisciplinaryAction | ApplicationError> {
-    if (canManageDisciplinaryActions(command.session) === false) {
+    if (command.session.hasPermission("disciplinary_action:manage") === false) {
       return new ForbiddenError("cannot manage disciplinary actions", "forbidden")
     }
 

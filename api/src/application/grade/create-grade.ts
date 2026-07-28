@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import { Grade } from "@/domain/grade/grade.entity"
-import { canManageGrades } from "@/lib/grade/can-manage-grades"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { GradeRepository } from "@/infrastructure/grade/grade-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
   name: string
   rank: number
@@ -24,7 +24,7 @@ export class CreateGrade {
   async run(command: Command): Promise<Grade | ApplicationError> {
     const repository = new GradeRepository(this.c)
 
-    if (canManageGrades(command.session) === false) {
+    if (command.session.hasPermission("grade:manage") === false) {
       return new ForbiddenError("cannot manage grades", "forbidden")
     }
 

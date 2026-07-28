@@ -1,5 +1,5 @@
 import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
@@ -33,7 +33,7 @@ async function setupTimeline() {
       ('status-active-2', 1, 'employment-1', 1, 'active', '2026-08-01', '2026-10-02', 0, 'fixture-action', 1),
       ('status-rehire', 1, 'employment-2', 1, 'active', '2026-12-01', NULL, 0, 'fixture-action', 1),
       ('status-manager', 1, 'employment-manager', 2, 'active', '2026-01-01', NULL, 0, 'fixture-action', 1);
-    INSERT INTO org_assignment_period_versions
+    INSERT INTO employee_org_assignment_period_versions
       (period_id, revision, employment_period_id, employee_id, department_code,
        assignment_type, position_title, manager_employee_id, starts_on, ends_on,
        is_void, recorded_by_action_id, recorded_at) VALUES
@@ -44,8 +44,8 @@ async function setupTimeline() {
       ('assignment-manager', 1, 'employment-manager', 2, 'D001', 'primary', 'Manager', NULL, '2026-01-01', NULL, 0, 'fixture-action', 1);
     INSERT INTO employee_lifecycle_revisions (employee_id, revision, updated_at)
     VALUES (1, 8, 1), (2, 1, 1);
-    UPDATE organization_lifecycle_state SET revision = 11, updated_at = 1 WHERE id = 1;
-    UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1;
+    UPDATE organization_lifecycle_states SET revision = 11, updated_at = 1 WHERE id = 1;
+    UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1;
   `)
   return setup
 }

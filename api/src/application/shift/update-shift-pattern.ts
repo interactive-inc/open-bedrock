@@ -1,12 +1,12 @@
-import { canManageShift } from "@/lib/shift/can-manage-shift"
+import type { Session } from "@/lib/auth/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftPattern } from "@/domain/shift/shift-pattern.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ShiftPatternRepository } from "@/infrastructure/shift/shift-pattern-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   patternId: number
   code: string
   name: string
@@ -22,7 +22,7 @@ export class UpdateShiftPattern {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftPattern | ApplicationError> {
-    if (canManageShift(input.session) === false) {
+    if (input.session.hasPermission("shift:manage") === false) {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
@@ -65,7 +65,7 @@ export class UpdateShiftPattern {
     return saved
   }
 
-  // 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。
+  /** 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。 */
   private async findCodeConflict(
     code: string,
     patternId: number,

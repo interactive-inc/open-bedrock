@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /expenses/inbox。承認者向けの承認待ち経費一覧。
+/** GET /expenses/inbox。承認者向けの承認待ち経費一覧。 */
 export async function getExpenseInbox() {
   const client = await createClient()
 

@@ -5,9 +5,9 @@ import { ApplicationTemplate } from "@/domain/application/application-template.e
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 const workflow: ApplicationWorkflow = {
@@ -125,7 +125,7 @@ describe("conditional application workflow payload", () => {
     expect(invalidResubmission).toMatchObject({ code: "invalid_payload" })
     expect(
       await db
-        .prepare("SELECT current_step FROM applications WHERE id = ?1")
+        .prepare("SELECT current_step FROM application_requests WHERE id = ?1")
         .bind(application.id)
         .first<string>("current_step"),
     ).toBe("returned:manager")
@@ -165,7 +165,7 @@ describe("conditional application workflow payload", () => {
     expect(racedResubmission).toMatchObject({ code: "not_returned" })
     expect(
       await originalDb
-        .prepare("SELECT current_step FROM applications WHERE id = ?1")
+        .prepare("SELECT current_step FROM application_requests WHERE id = ?1")
         .bind(application.id)
         .first<string>("current_step"),
     ).toBe("returned:manager")

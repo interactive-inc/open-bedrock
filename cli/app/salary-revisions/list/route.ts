@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte salary-revisions list --employee-id <id>`
+export const help = `bedrock salary-revisions list --employee-id <id>`
 
 export default factory.createHandlers(
   zValidator(

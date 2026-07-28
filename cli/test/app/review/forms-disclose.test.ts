@@ -1,9 +1,6 @@
 import { app } from "@/app/index"
 import { describe, expect, test } from "bun:test"
 
-// review forms / forms-bulk / disclose コマンドの到達性と引数検証を確認する。
-// help と引数検証は API 呼び出し前に返るため、実リクエストなしでテストできる。
-
 async function requestJson(path: string, body: unknown): Promise<Response> {
   return app.request(path, {
     method: "POST",
@@ -12,11 +9,15 @@ async function requestJson(path: string, body: unknown): Promise<Response> {
   })
 }
 
+/**
+ * review forms / forms-bulk / disclose コマンドの到達性と引数検証を確認する。
+ * help と引数検証は API 呼び出し前に返るため、実リクエストなしでテストできる
+ */
 describe("review forms/forms-bulk/disclose", () => {
   const helpRoutes: ReadonlyArray<{ path: string; help: string }> = [
-    { path: "/review/forms", help: "review forms" },
-    { path: "/review/forms-bulk", help: "review forms-bulk" },
-    { path: "/review/disclose", help: "review disclose" },
+    { path: "/review-forms/list", help: "review-forms list" },
+    { path: "/review-forms/bulk", help: "review-forms bulk" },
+    { path: "/review-cycles/disclose", help: "review-cycles disclose" },
   ]
 
   for (const route of helpRoutes) {
@@ -30,25 +31,25 @@ describe("review forms/forms-bulk/disclose", () => {
   }
 
   test("review forms requires --subject-employee-id", async () => {
-    const response = await requestJson("/review/forms", {})
+    const response = await requestJson("/review-forms/list", {})
 
     expect(response.status).toBe(400)
   })
 
   test("review forms-bulk requires --cycle-id", async () => {
-    const response = await requestJson("/review/forms-bulk", { forms: "forms.json" })
+    const response = await requestJson("/review-forms/bulk", { forms: "forms.json" })
 
     expect(response.status).toBe(400)
   })
 
   test("review forms-bulk requires --forms", async () => {
-    const response = await requestJson("/review/forms-bulk", { "cycle-id": "1" })
+    const response = await requestJson("/review-forms/bulk", { "cycle-id": "1" })
 
     expect(response.status).toBe(400)
   })
 
   test("review disclose requires --cycle-id", async () => {
-    const response = await requestJson("/review/disclose", {})
+    const response = await requestJson("/review-cycles/disclose", {})
 
     expect(response.status).toBe(400)
   })

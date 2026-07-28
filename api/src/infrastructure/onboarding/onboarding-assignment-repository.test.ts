@@ -2,7 +2,7 @@ import { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.
 import { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
 import { OnboardingTemplateTask } from "@/domain/onboarding/onboarding-template-task.entity"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function twoTaskTemplate(): OnboardingTemplate {

@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /calendar。指定年の会社カレンダー（会社休日・振替出勤日）一覧を取得する。誰でも参照できる。
+/** GET /company-calendar-days。指定年の会社カレンダー（会社休日・振替出勤日）一覧を取得する。誰でも参照できる。 */
 export async function getCalendar(year: string | null) {
   const client = await createClient()
 
-  const response = await client.calendar.$get({
+  const response = await client["company-calendar-days"].$get({
     query: { year: year ?? undefined },
   })
 

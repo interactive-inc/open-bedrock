@@ -8,7 +8,7 @@ import { desc, eq, or } from "drizzle-orm"
 export class OneOnOneRepository {
   constructor(private readonly c: Context) {}
 
-  // 1on1 id で1件取得する。存在しなければ null。
+  /** 1on1 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<OneOnOne | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -25,7 +25,7 @@ export class OneOnOneRepository {
     }
   }
 
-  // 本人が参加した（メンバー or マネージャー）1on1 を開催日時の降順で返す。
+  /** 本人が参加した（メンバー or マネージャー）1on1 を開催日時の降順で返す。 */
   async findByParticipantId(
     employeeId: number,
     options: { limit: number; offset: number },
@@ -66,8 +66,10 @@ export class OneOnOneRepository {
     }
   }
 
-  // 記録内容（議題・上長メモ・次のアクション）を更新する。
-  // 対象行が存在しない場合は null を返す。
+  /**
+   * 記録内容（議題・上長メモ・次のアクション）を更新する。
+   * 対象行が存在しない場合は null を返す。
+   */
   async update(oneOnOne: OneOnOne): Promise<OneOnOne | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -88,7 +90,7 @@ export class OneOnOneRepository {
     }
   }
 
-  // 1on1 の記録を削除する。対象行が存在しない場合は null を返す。
+  /** 1on1 の記録を削除する。対象行が存在しない場合は null を返す。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

@@ -1,7 +1,7 @@
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("ApplicationTemplateRepository", () => {
@@ -98,7 +98,7 @@ describe("ApplicationTemplateRepository", () => {
         category: "accounting",
         description: "更新",
         schemaJson: { type: "object" },
-        approverRoles: ["admin"],
+        approverRoles: ["root"],
       }),
     )
 
@@ -109,7 +109,7 @@ describe("ApplicationTemplateRepository", () => {
     }
 
     expect(updated.name).toBe("経費精算")
-    expect(updated.approverRoles).toEqual(["admin"])
+    expect(updated.approverRoles).toEqual(["root"])
   })
 
   test("delete removes the template", async () => {
@@ -153,7 +153,7 @@ describe("ApplicationTemplateRepository", () => {
       },
     ])
 
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 1,
         template_id: 1,
@@ -192,7 +192,7 @@ describe("ApplicationTemplateRepository", () => {
       },
     ])
 
-    await seedD1(db, "applications", [
+    await seedD1(db, "application_requests", [
       {
         id: 1,
         template_id: 1,

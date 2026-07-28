@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import type { License } from "@/domain/license/license.entity"
-import { canManageLicenses } from "@/lib/license/can-manage-licenses"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { LicenseRepository } from "@/infrastructure/license/license-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   details: {
     name: string
@@ -28,7 +28,7 @@ export class UpdateLicense {
   async run(command: Command): Promise<License | ApplicationError> {
     const repository = new LicenseRepository(this.c)
 
-    if (canManageLicenses(command.session) === false) {
+    if (command.session.hasPermission("license:manage") === false) {
       return new ForbiddenError("cannot manage licenses", "forbidden")
     }
 

@@ -1,8 +1,8 @@
 import { DeleteRole } from "@/application/iam/delete-role"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { seedIamForEmployees } from "@/interface/shared/test/seed-iam-for-employees"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
@@ -59,7 +59,7 @@ describe("DeleteRole", () => {
 
     const usecase = new DeleteRole(context)
     const result = await usecase.run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roleId: roleId,
     })
 
@@ -93,7 +93,7 @@ describe("DeleteRole", () => {
 
     const usecase = new DeleteRole(context)
     const result = await usecase.run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       roleId: roleId,
     })
 

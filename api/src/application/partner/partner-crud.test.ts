@@ -3,15 +3,15 @@ import { Partner } from "@/domain/partner/partner.entity"
 import { RegisterPartner } from "@/application/partner/register-partner"
 import { UpdatePartner } from "@/application/partner/update-partner"
 import { ArchivePartner } from "@/application/partner/archive-partner"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import type { Context } from "@/env"
 
 async function seedPartner(context: Context, code: string): Promise<Partner> {
   const result = await new RegisterPartner(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     partner: {
       code: code,
       name: "Test Partner",
@@ -34,7 +34,7 @@ describe("RegisterPartner", () => {
     const { context } = createTestContext()
 
     const result = await new RegisterPartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       partner: {
         code: "P0001",
         name: "Acme Supplies",
@@ -80,7 +80,7 @@ describe("RegisterPartner", () => {
     await seedPartner(context, "P0001")
 
     const result = await new RegisterPartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       partner: {
         code: "P0001",
         name: "Another Partner",
@@ -106,7 +106,7 @@ describe("UpdatePartner", () => {
     }
 
     const result = await new UpdatePartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: partner.id,
       details: {
         name: "Renamed Partner",
@@ -149,7 +149,7 @@ describe("UpdatePartner", () => {
     const { context } = createTestContext()
 
     const result = await new UpdatePartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: 9999,
       details: { name: "Missing", category: null, corporateNumber: null, note: null },
     })
@@ -169,7 +169,7 @@ describe("ArchivePartner", () => {
     }
 
     const result = await new ArchivePartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: partner.id,
     })
 
@@ -197,7 +197,7 @@ describe("ArchivePartner", () => {
     const { context } = createTestContext()
 
     const result = await new ArchivePartner(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       id: 9999,
     })
 

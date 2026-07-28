@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /oneonones。session cookie のトークンで本人が参加した 1on1 履歴を取得する。
+/** GET /one-on-ones。session cookie のトークンで本人が参加した 1on1 履歴を取得する。 */
 export async function getOneOnOneList(props: { limit: number; offset: number }) {
   const client = await createClient()
 
-  const response = await client.oneonones.$get({
+  const response = await client["one-on-ones"].$get({
     query: { limit: String(props.limit), offset: String(props.offset) },
   })
 

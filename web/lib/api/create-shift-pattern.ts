@@ -2,13 +2,13 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftPatternCreateRequest, ShiftPatternResponse } from "@/lib/api/types/shift-types"
 
-// POST /shift/patterns。特権ロールがシフトパターンを作成する。
+/** POST /shift-patterns。特権ロールがシフトパターンを作成する。 */
 export async function createShiftPattern(
   request: ShiftPatternCreateRequest,
 ): Promise<ShiftPatternResponse | Error> {
   const client = await createClient()
 
-  const response = await client.shift.patterns.$post({
+  const response = await client["shift-patterns"].$post({
     json: {
       code: request.code,
       name: request.name,

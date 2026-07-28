@@ -4,10 +4,8 @@ import type {
 } from "@/domain/governance/governance-document"
 import { zGovernanceMetadata, zProcedureDefinition } from "@/domain/governance/governance-document"
 import type { Context } from "@/env"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   governanceAcknowledgements,
   governanceCapabilities,

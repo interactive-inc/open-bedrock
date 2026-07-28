@@ -74,9 +74,7 @@ controls: []
 
 # 情報セキュリティ incident 対応手続きテンプレート
 
-規範性: 未施行テンプレート。導入組織の手続きまたは実行根拠として使用しない。
-
-この未施行テンプレートは、security event の報告、triage、containment、investigation、recovery、post review を追跡する。自動化は観測収集、隔離提案、照合を支援できるが、広範な access 変更、証拠破壊の可能性がある操作、外部通知は RiskPolicy に応じて HumanAttestation を要求する。
+security event の報告、triage、containment、investigation、recovery、post review を追跡する。自社が承認、施行するまでは手続きまたは実行根拠として使用しない。自動化は観測収集、隔離提案、照合を支援できるが、広範な access 変更、証拠破壊の可能性がある操作、外部通知は RiskPolicy に応じて HumanAttestation を要求する。
 
 ## 実行上の注意
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-// GET /partners/:code。取引先 1 件の詳細。
+/** GET /partners/:code。取引先 1 件の詳細。 */
 export async function getPartnerByCode(code: string) {
   const client = await createClient()
 

@@ -1,6 +1,6 @@
 {
   "apps": {
-    "web": { "name": "karte.open" },
-    "api": { "name": "api.karte.open", "appPort": 8787 }
+    "web": { "name": "bedrock" },
+    "api": { "name": "api.bedrock", "appPort": 18787 }
   }
 }

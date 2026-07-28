@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /leave/requests/:id。休暇申請を取り下げる。
-// 本人以外は 403、決定済みは 409、不存在は 404 を api が返すため、戻りは Error になる。成功時は null。
+/**
+ * DELETE /leave-requests/:id。休暇申請を取り下げる。
+ * 本人以外は 403、決定済みは 409、不存在は 404 を api が返すため、戻りは Error になる。成功時は null。
+ */
 export async function cancelLeaveRequest(id: number): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.leave.requests[":id"].$delete({
+  const response = await client["leave-requests"][":id"].$delete({
     param: { id: String(id) },
   })
 

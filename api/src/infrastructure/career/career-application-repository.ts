@@ -12,8 +12,10 @@ export type ApplicationDecidedError = { reason: "application_decided" }
 export class CareerApplicationRepository {
   constructor(private readonly c: Context) {}
 
-  // 公募が open のときだけ INSERT する。公募が closed なら posting_closed、重複なら already_applied を返す。
-  // INSERT ... SELECT ... WHERE EXISTS で公募ステータス確認と INSERT をアトミックに行い TOCTOU を防ぐ。
+  /**
+   * 公募が open のときだけ INSERT する。公募が closed なら posting_closed、重複なら already_applied を返す。
+   * INSERT ... SELECT ... WHERE EXISTS で公募ステータス確認と INSERT をアトミックに行い TOCTOU を防ぐ。
+   */
   async create(
     careerApplication: CareerApplication,
   ): Promise<CareerApplication | AlreadyAppliedError | PostingClosedError | Error> {
@@ -52,7 +54,7 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募者本人の応募を id の昇順で返す。
+  /** 応募者本人の応募を id の昇順で返す。 */
   async findByApplicantId(props: {
     applicantId: number
     limit: number
@@ -73,7 +75,7 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募 id で1件取得する。存在しなければ null。
+  /** 応募 id で1件取得する。存在しなければ null。 */
   async findById(id: number): Promise<CareerApplication | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -90,8 +92,10 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募メッセージを更新する。status = 'applied' のときだけ更新を許可し、
-  // 選考確定済み（accepted/rejected）の応募は null を返す。
+  /**
+   * 応募メッセージを更新する。status = 'applied' のときだけ更新を許可し、
+   * 選考確定済み（accepted/rejected）の応募は null を返す。
+   */
   async update(
     careerApplication: CareerApplication,
   ): Promise<CareerApplication | ApplicationDecidedError | Error> {
@@ -117,8 +121,10 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 応募を削除する。status = 'applied' のときだけ削除を許可し、
-  // 選考確定済み（accepted/rejected）の応募は application_decided を返す。
+  /**
+   * 応募を削除する。status = 'applied' のときだけ削除を許可し、
+   * 選考確定済み（accepted/rejected）の応募は application_decided を返す。
+   */
   async delete(id: number): Promise<null | ApplicationDecidedError | Error> {
     try {
       const result = await this.c.var.database.run(
@@ -137,7 +143,7 @@ export class CareerApplicationRepository {
     }
   }
 
-  // 指定した求人に対して指定ステータスの応募件数を返す。
+  /** 指定した求人に対して指定ステータスの応募件数を返す。 */
   async countByPostingIdAndStatus(
     postingId: number,
     status: CareerApplication["status"],

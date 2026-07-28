@@ -18,12 +18,14 @@ type Params = {
   sort?: RedemptionAdminSort
 }
 
-// GET /thanks/redemptions/admin。全社のサンクス交換申請を横断で取得する。
-// thanks_redemption:read:all が無いと 403。
+/**
+ * GET /thanks-redemptions/admin。全社のサンクス交換申請を横断で取得する。
+ * thanks_redemption:read:all が無いと 403。
+ */
 export async function getRedemptionAdminList(filter: RedemptionAdminFilter, params: Params = {}) {
   const client = await createClient()
 
-  const response = await client.thanks.redemptions.admin.$get({
+  const response = await client["thanks-redemptions"].admin.$get({
     query: {
       status: filter.status ?? undefined,
       employee_id: filter.employeeId !== null ? String(filter.employeeId) : undefined,

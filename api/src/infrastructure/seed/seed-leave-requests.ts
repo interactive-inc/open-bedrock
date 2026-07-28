@@ -12,7 +12,7 @@ type SeedLeaveRequest = {
   createdAt: string
 }
 
-// days は toLeaveDays(startDate, endDate) と一致する包括日数。pending は approverId/decidedComment を null に。
+/** days は toLeaveDays(startDate, endDate) と一致する包括日数。pending は approverId/decidedComment を null に。 */
 export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
   {
     id: 1,

@@ -70,7 +70,7 @@ export class RegulationRepository {
     }
   }
 
-  // 規程の改定版一覧を version 降順（新しい版が先）で返す。
+  /** 規程の改定版一覧を version 降順（新しい版が先）で返す。 */
   async listVersions(regulationId: number): Promise<ReadonlyArray<RegulationVersion> | Error> {
     try {
       const rows = await this.c.var.database

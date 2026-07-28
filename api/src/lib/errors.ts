@@ -1,12 +1,8 @@
-// application 層が返す失敗は、すべてこのカスタムエラーで表す。
-// 旧来の素の Error や { reason } 判別ユニオンを上位へ漏らさず、何が起きたかを
-// code（機械判定用の安定した識別子。旧 reason に相当）と message（人間可読の説明）で表現する。
-// infrastructure が返した素の Error や DB の内部情報は cause に隠し、message には載せない。
-// interface 層は instanceof で HTTP ステータスへ翻訳し、message と code だけを応答に出す。
-
 /**
- * application 層が返す失敗の基底。code は機械判定用の安定した識別子、
- * message は人間可読の説明。内部の素エラーは options.cause に隠す
+ * application 層が返す失敗の基底。素の Error や { reason } 判別ユニオンを上位へ漏らさず、
+ * code（機械判定用の安定した識別子。旧 reason に相当）と message（人間可読の説明）で表現する。
+ * infrastructure が返した素エラーや DB の内部情報は options.cause に隠し、message には載せない。
+ * interface 層は instanceof で HTTP ステータスへ翻訳し、message と code だけを応答に出す
  */
 export class ApplicationError extends Error {
   constructor(

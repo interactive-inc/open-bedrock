@@ -8,7 +8,7 @@ import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 export class CompanyCalendarDayRepository {
   constructor(private readonly c: Context) {}
 
-  // 指定期間の会社カレンダーを日付の昇順で返す。
+  /** 指定期間の会社カレンダーを日付の昇順で返す。 */
   async findByDateRange(props: {
     from: string
     to: string

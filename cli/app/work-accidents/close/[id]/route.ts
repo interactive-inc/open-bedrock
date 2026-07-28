@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte work-accidents close <id> — 発生記録を closed にする`
+export const help = `bedrock work-accidents close <id> — 発生記録を closed にする`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

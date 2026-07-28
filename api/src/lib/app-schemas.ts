@@ -1,9 +1,5 @@
 import { z } from "zod"
 
-// API レスポンスの形を表す Zod スキーマを集約する。各エンドポイントは応答前に
-// ここのスキーマで parse して形を保証する。web/cli はこのファイルの型（z.infer）を
-// 共有してレスポンスを型付けする。1 ファイル 1 スキーマ規約の例外として 1 ファイルに集約する。
-
 /** 資産 1 件のレスポンス。廃棄済みは disposed_on / disposal_reason を伴う。 */
 export const zAppAsset = z.object({
   code: z.string(),
@@ -25,7 +21,8 @@ export const zAppAssetHolding = z.object({
   asset_name: z.string(),
   kind: z.string(),
   holder_employee_id: z.number(),
-  holder_employee_code: z.string(),
+  // 保有者は employees.code の innerJoin。外部プロビジョニングの保有者は code=null になり得るため nullable。
+  holder_employee_code: z.string().nullable(),
   holder_employee_name: z.string(),
   lent_at: z.string().nullable(),
 })
@@ -97,10 +94,12 @@ export const zAppAssetList = z.object({
 
 export type AppAssetList = z.infer<typeof zAppAssetList>
 
-// ===========================================================================
-// 以下、各ドメインのレスポンススキーマ
-// ===========================================================================
-// ===== antisocial-check =====
+/**
+ * ===========================================================================
+ * 以下、各ドメインのレスポンススキーマ
+ * ===========================================================================
+ * ===== antisocial-check =====
+ */
 export const zAppAntisocialCheck = z.object({
   id: z.string(),
   requester_id: z.number(),
@@ -131,8 +130,7 @@ export const zAppAntisocialCheckAdminList = z.object({
 
 export type AppAntisocialCheckAdminList = z.infer<typeof zAppAntisocialCheckAdminList>
 
-// ===== application =====
-/** 申請への承認/却下アクション 1 件。GET /applications/:id の approvals[] に並ぶ。 */
+/** 申請への承認/却下アクション 1 件。GET /application-requests/:id の approvals[] に並ぶ。 */
 export const zAppApplicationApproval = z.object({
   id: z.number(),
   approver_name: z.string(),
@@ -170,7 +168,7 @@ export const zAppApplicationWorkflowProgress = z.object({
   approvals: z.array(zAppApplicationWorkflowApproval),
 })
 
-/** 申請 1 件（詳細・作成のレスポンス）。GET /applications/:id と POST /applications で使う。 */
+/** 申請 1 件（詳細・作成のレスポンス）。GET /application-requests/:id と POST /application-requests で使う。 */
 export const zAppApplication = z.object({
   id: z.number(),
   template_code: z.string(),
@@ -189,7 +187,7 @@ export const zAppApplication = z.object({
   current_step: z.string().nullable(),
   payload: z.unknown(),
   created_at: z.string(),
-  /** 承認/却下の履歴。古い順。POST /applications の直後は空配列で返す。 */
+  /** 承認/却下の履歴。古い順。POST /application-requests の直後は空配列で返す。 */
   approvals: z.array(zAppApplicationApproval).default([]),
   /** テンプレートの承認可能ロール（空配列なら application:approve 権限保持者）。 */
   approver_roles: z.array(z.string()).default([]),
@@ -198,7 +196,7 @@ export const zAppApplication = z.object({
 
 export type AppApplication = z.infer<typeof zAppApplication>
 
-/** 申請一覧（GET /applications）の 1 件。payload は含まない。 */
+/** 申請一覧（GET /application-requests）の 1 件。payload は含まない。 */
 export const zAppApplicationListItem = z.object({
   id: z.number(),
   template_name: z.string(),
@@ -209,7 +207,7 @@ export const zAppApplicationListItem = z.object({
 
 export type AppApplicationListItem = z.infer<typeof zAppApplicationListItem>
 
-/** 申請一覧（GET /applications）のレスポンス。 */
+/** 申請一覧（GET /application-requests）のレスポンス。 */
 export const zAppApplicationList = z.object({
   data: z.array(zAppApplicationListItem),
   total: z.number(),
@@ -217,7 +215,7 @@ export const zAppApplicationList = z.object({
 
 export type AppApplicationList = z.infer<typeof zAppApplicationList>
 
-/** 承認待ち一覧（GET /applications/inbox）の 1 件。applicant_name を含む。 */
+/** 承認待ち一覧（GET /application-requests/inbox）の 1 件。applicant_name を含む。 */
 export const zAppApplicationInboxItem = z.object({
   id: z.number(),
   template_name: z.string(),
@@ -229,7 +227,7 @@ export const zAppApplicationInboxItem = z.object({
 
 export type AppApplicationInboxItem = z.infer<typeof zAppApplicationInboxItem>
 
-/** 承認待ち一覧（GET /applications/inbox）のレスポンス。 */
+/** 承認待ち一覧（GET /application-requests/inbox）のレスポンス。 */
 export const zAppApplicationInboxList = z.object({
   data: z.array(zAppApplicationInboxItem),
   total: z.number(),
@@ -237,7 +235,7 @@ export const zAppApplicationInboxList = z.object({
 
 export type AppApplicationInboxList = z.infer<typeof zAppApplicationInboxList>
 
-/** 全社申請一覧（GET /applications/admin）の 1 件。applicant_name と template_code を含む。 */
+/** 全社申請一覧（GET /application-requests/admin）の 1 件。applicant_name と template_code を含む。 */
 export const zAppApplicationAdminItem = z.object({
   id: z.number(),
   template_code: z.string(),
@@ -253,7 +251,7 @@ export const zAppApplicationAdminItem = z.object({
 
 export type AppApplicationAdminItem = z.infer<typeof zAppApplicationAdminItem>
 
-/** 全社申請一覧（GET /applications/admin）のレスポンス。 */
+/** 全社申請一覧（GET /application-requests/admin）のレスポンス。 */
 export const zAppApplicationAdminList = z.object({
   data: z.array(zAppApplicationAdminItem),
   total: z.number(),
@@ -261,7 +259,7 @@ export const zAppApplicationAdminList = z.object({
 
 export type AppApplicationAdminList = z.infer<typeof zAppApplicationAdminList>
 
-/** 本人の申請一覧（GET /applications/me）の 1 件。template_id と payload を含む。 */
+/** 本人の申請一覧（GET /application-requests/me）の 1 件。template_id と payload を含む。 */
 export const zAppApplicationMineItem = z.object({
   id: z.number().nullable(),
   template_id: z.number(),
@@ -273,7 +271,7 @@ export const zAppApplicationMineItem = z.object({
 
 export type AppApplicationMineItem = z.infer<typeof zAppApplicationMineItem>
 
-/** 本人の申請一覧（GET /applications/me）のレスポンス。 */
+/** 本人の申請一覧（GET /application-requests/me）のレスポンス。 */
 export const zAppApplicationMineList = z.object({
   data: z.array(zAppApplicationMineItem),
   total: z.number(),
@@ -281,7 +279,7 @@ export const zAppApplicationMineList = z.object({
 
 export type AppApplicationMineList = z.infer<typeof zAppApplicationMineList>
 
-/** 申請内容更新（PUT /applications/:id）のレスポンス。 */
+/** 申請内容更新（PUT /application-requests/:id）のレスポンス。 */
 export const zAppApplicationUpdated = z.object({
   id: z.number().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
@@ -290,7 +288,7 @@ export const zAppApplicationUpdated = z.object({
 
 export type AppApplicationUpdated = z.infer<typeof zAppApplicationUpdated>
 
-/** 承認・却下（POST /applications/:id/approve, /reject）のレスポンス。 */
+/** 承認・却下（POST /application-requests/:id/approve, /reject）のレスポンス。 */
 export const zAppApplicationDecision = z.object({
   status: z.enum(["pending", "approved", "rejected"]),
 })
@@ -340,7 +338,6 @@ export const zAppApplicationTemplateList = z.object({
 
 export type AppApplicationTemplateList = z.infer<typeof zAppApplicationTemplateList>
 
-// ===== attendance =====
 /** 勤怠記録 1 件のレスポンス。 */
 export const zAppAttendanceRecord = z.object({
   id: z.number(),
@@ -372,7 +369,6 @@ export const zAppAttendanceSummary = z.object({
 
 export type AppAttendanceSummary = z.infer<typeof zAppAttendanceSummary>
 
-// ===== management-dashboard =====
 /** 部署別の在籍人数。 */
 export const zAppDepartmentHeadcount = z.object({
   department_name: z.string().nullable(),
@@ -409,7 +405,6 @@ export const zAppManagementDashboard = z.object({
 
 export type AppManagementDashboard = z.infer<typeof zAppManagementDashboard>
 
-// ===== auth =====
 /** ログイン成功時のアクセストークンとリフレッシュトークン。 */
 export const zAppAuthToken = z.object({
   access_token: z.string(),
@@ -418,10 +413,38 @@ export const zAppAuthToken = z.object({
 
 export type AppAuthToken = z.infer<typeof zAppAuthToken>
 
+/** ブラウザへログインを受け渡すための one-time code と、その残り有効秒数。 */
+export const zAppBrowserLoginCode = z.object({
+  code: z.string(),
+  expires_in: z.number(),
+})
+
+export type AppBrowserLoginCode = z.infer<typeof zAppBrowserLoginCode>
+
+/** 初期 ROOT ブートストラップ成功時に返す、作成したアカウント・従業員・メール。 */
+export const zAppBootstrapResult = z.object({
+  account_id: z.number(),
+  employee_id: z.number(),
+  email: z.string(),
+})
+
+export type AppBootstrapResult = z.infer<typeof zAppBootstrapResult>
+
+/** 外部 identity 同期（プロビジョニング）の件数サマリ。 */
+export const zAppProvisioningSummary = z.object({
+  created: z.number(),
+  updated: z.number(),
+  skipped: z.number(),
+})
+
+export type AppProvisioningSummary = z.infer<typeof zAppProvisioningSummary>
+
 /** 認証済み本人の社員情報（GET /me）。 */
 export const zAppAuthMe = z.object({
   id: z.number(),
-  code: z.string(),
+  // 外部プロビジョニングで作られた本人は社員コードを持たない（code=null）。GET /me は本人の code を
+  // そのまま返すため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   email: z.string(),
   role: z.string(),
@@ -433,7 +456,7 @@ export const zAppAuthMe = z.object({
 
 export type AppAuthMe = z.infer<typeof zAppAuthMe>
 
-// ===== business-trip =====
+/** ===== business-trip ===== */
 export const zAppBusinessTrip = z.object({
   id: z.string(),
   traveler_id: z.number(),
@@ -455,7 +478,7 @@ export const zAppBusinessTripList = z.object({
 
 export type AppBusinessTripList = z.infer<typeof zAppBusinessTripList>
 
-// ===== career =====
+/** ===== career ===== */
 export const zAppCareerPosting = z.object({
   id: z.number().nullable(),
   title: z.string(),
@@ -500,7 +523,6 @@ export const zAppCareerSheet = z.object({
 
 export type AppCareerSheet = z.infer<typeof zAppCareerSheet>
 
-// ===== certificate-request =====
 /** 証明書発行依頼 1 件のレスポンス。 */
 export const zAppCertificateRequest = z.object({
   id: z.string(),
@@ -523,7 +545,6 @@ export const zAppCertificateRequestList = z.object({
 
 export type AppCertificateRequestList = z.infer<typeof zAppCertificateRequestList>
 
-// ===== employee =====
 /** 従業員 1 件のレスポンス（単体取得・登録・更新）。role を含む。 */
 export const zAppEmployee = z.object({
   code: z.string(),
@@ -539,7 +560,8 @@ export type AppEmployee = z.infer<typeof zAppEmployee>
 
 /** 従業員一覧の行。role を含まない。 */
 export const zAppEmployeeListItem = z.object({
-  code: z.string(),
+  // GET /employees は全従業員を列挙し、外部プロビジョニングの code=null 行も含むため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   dept_name: z.string().nullable(),
   position: z.string().nullable(),
@@ -559,7 +581,8 @@ export type AppEmployeeList = z.infer<typeof zAppEmployeeList>
 
 /** 全従業員が参照できる社内ディレクトリの行。機微な認証・在籍情報は含めない。 */
 export const zAppEmployeeDirectoryItem = z.object({
-  code: z.string(),
+  // GET /directory/employees は在籍中の全従業員を列挙し、code=null 行も含むため nullable。
+  code: z.string().nullable(),
   name: z.string(),
   dept_name: z.string().nullable(),
   position: z.string().nullable(),
@@ -575,7 +598,6 @@ export const zAppEmployeeDirectoryList = z.object({
 
 export type AppEmployeeDirectoryList = z.infer<typeof zAppEmployeeDirectoryList>
 
-// ===== expense =====
 /** 経費 1 件のレスポンス（申請・更新の戻り）。 */
 const expenseCategory = z.enum(["transport", "supplies", "entertainment", "books", "other"])
 
@@ -680,7 +702,7 @@ export const zAppExpenseAdminList = z.object({
 
 export type AppExpenseAdminList = z.infer<typeof zAppExpenseAdminList>
 
-// ===== ringi =====
+/** ===== ringi ===== */
 const ringiStatus = z.enum(["pending", "approved", "rejected"])
 
 /** 稟議 1 件のレスポンス。 */
@@ -750,7 +772,7 @@ export const zAppRingiDecision = z.object({
 
 export type AppRingiDecision = z.infer<typeof zAppRingiDecision>
 
-/** 全社稟議一覧（GET /ringi/admin）の 1 件。 */
+/** 全社稟議一覧（GET /ringi-requests/admin）の 1 件。 */
 export const zAppRingiAdminItem = z.object({
   id: z.number(),
   applicant_id: z.number(),
@@ -767,14 +789,13 @@ export const zAppRingiAdminItem = z.object({
 
 export type AppRingiAdminItem = z.infer<typeof zAppRingiAdminItem>
 
-/** 全社稟議一覧（GET /ringi/admin）のレスポンス。 */
+/** 全社稟議一覧（GET /ringi-requests/admin）のレスポンス。 */
 export const zAppRingiAdminList = z.object({
   data: z.array(zAppRingiAdminItem),
   total: z.number(),
 })
 
 export type AppRingiAdminList = z.infer<typeof zAppRingiAdminList>
-// ===== budget =====
 
 /** 部署予算 1 件のレスポンス。 */
 export const zAppBudget = z.object({
@@ -791,7 +812,7 @@ export const zAppBudget = z.object({
 
 export type AppBudget = z.infer<typeof zAppBudget>
 
-/** 部署予算一覧（GET /budgets）の 1 件。部署名を含む。 */
+/** 部署予算一覧（GET /department-budgets）の 1 件。部署名を含む。 */
 export const zAppBudgetListItem = z.object({
   id: z.number(),
   department_id: z.number(),
@@ -807,7 +828,7 @@ export const zAppBudgetListItem = z.object({
 
 export type AppBudgetListItem = z.infer<typeof zAppBudgetListItem>
 
-/** 部署予算一覧（GET /budgets）のレスポンス。 */
+/** 部署予算一覧（GET /department-budgets）のレスポンス。 */
 export const zAppBudgetList = z.object({
   data: z.array(zAppBudgetListItem),
   total: z.number(),
@@ -815,7 +836,7 @@ export const zAppBudgetList = z.object({
 
 export type AppBudgetList = z.infer<typeof zAppBudgetList>
 
-/** 部署予算の詳細（GET /budgets/:id）。承認済み経費の消化額・残額を含む。 */
+/** 部署予算の詳細（GET /department-budgets/:id）。承認済み経費の消化額・残額を含む。 */
 export const zAppBudgetDetail = z.object({
   id: z.number(),
   department_id: z.number(),
@@ -833,7 +854,7 @@ export const zAppBudgetDetail = z.object({
 
 export type AppBudgetDetail = z.infer<typeof zAppBudgetDetail>
 
-/** 消化状況の横断ビュー（GET /budgets/summary）の 1 件。 */
+/** 消化状況の横断ビュー（GET /department-budgets/summary）の 1 件。 */
 export const zAppBudgetSummaryItem = z.object({
   department_id: z.number(),
   department_name: z.string().nullable(),
@@ -845,7 +866,7 @@ export const zAppBudgetSummaryItem = z.object({
 
 export type AppBudgetSummaryItem = z.infer<typeof zAppBudgetSummaryItem>
 
-/** 消化状況の横断ビュー（GET /budgets/summary）のレスポンス。 */
+/** 消化状況の横断ビュー（GET /department-budgets/summary）のレスポンス。 */
 export const zAppBudgetSummary = z.object({
   fiscal_period: z.string(),
   data: z.array(zAppBudgetSummaryItem),
@@ -853,7 +874,7 @@ export const zAppBudgetSummary = z.object({
 
 export type AppBudgetSummary = z.infer<typeof zAppBudgetSummary>
 
-// ===== family-care-leave =====
+/** ===== family-care-leave ===== */
 export const zAppFamilyCareLeave = z.object({
   id: z.string(),
   employee_id: z.number(),
@@ -872,7 +893,6 @@ export const zAppFamilyCareLeaveList = z.object({
 })
 export type AppFamilyCareLeaveList = z.infer<typeof zAppFamilyCareLeaveList>
 
-// ===== goal =====
 /** 目標の所有主体。 */
 export const zAppGoalOwnerType = z.enum(["individual", "department", "company"])
 
@@ -950,7 +970,6 @@ export const zAppGoalTree = z.object({
 
 export type AppGoalTree = z.infer<typeof zAppGoalTree>
 
-// ===== grade =====
 /** 等級マスタ 1 件のレスポンス。 */
 export const zAppGrade = z.object({
   id: z.number(),
@@ -992,7 +1011,26 @@ export const zAppEmployeeGradeList = z.object({
 
 export type AppEmployeeGradeList = z.infer<typeof zAppEmployeeGradeList>
 
-// ===== employee-event =====
+/** 役職マスタ 1 件のレスポンス。 */
+export const zAppPosition = z.object({
+  id: z.number(),
+  code: z.string(),
+  name: z.string(),
+  rank: z.number(),
+  description: z.string().nullable(),
+  created_at: z.string(),
+})
+
+export type AppPosition = z.infer<typeof zAppPosition>
+
+/** 役職マスタ一覧のレスポンス。 */
+export const zAppPositionList = z.object({
+  data: z.array(zAppPosition),
+  total: z.number(),
+})
+
+export type AppPositionList = z.infer<typeof zAppPositionList>
+
 /** 異動・在籍イベント 1 件のレスポンス。 */
 export const zAppEmployeeEvent = z.object({
   id: z.number(),
@@ -1015,7 +1053,6 @@ export const zAppEmployeeEventList = z.object({
 
 export type AppEmployeeEventList = z.infer<typeof zAppEmployeeEventList>
 
-// ===== knowledge =====
 /** ナレッジ記事一覧の 1 件（本文は snippet に短縮）。 */
 export const zAppKnowledgeListItem = z.object({
   id: z.number(),
@@ -1036,7 +1073,7 @@ export const zAppKnowledgeList = z.object({
 
 export type AppKnowledgeList = z.infer<typeof zAppKnowledgeList>
 
-/** ナレッジ記事 1 件の詳細レスポンス（GET /knowledge/:id）。 */
+/** ナレッジ記事 1 件の詳細レスポンス（GET /knowledge-articles/:id）。 */
 export const zAppKnowledge = z.object({
   id: z.number(),
   title: z.string(),
@@ -1049,7 +1086,7 @@ export const zAppKnowledge = z.object({
 
 export type AppKnowledge = z.infer<typeof zAppKnowledge>
 
-/** ナレッジ記事の作成・更新レスポンス（POST /knowledge, PUT /knowledge/:id）。 */
+/** ナレッジ記事の作成・更新レスポンス（POST /knowledge-articles, PUT /knowledge-articles/:id）。 */
 export const zAppKnowledgeWritten = z.object({
   id: z.number(),
   title: z.string(),
@@ -1060,7 +1097,6 @@ export const zAppKnowledgeWritten = z.object({
 
 export type AppKnowledgeWritten = z.infer<typeof zAppKnowledgeWritten>
 
-// ===== leave =====
 /** 休暇申請 1 件のレスポンス（作成・承認・却下時）。approver_id と decided_comment を含む。 */
 export const zAppLeaveRequest = z.object({
   id: z.number(),
@@ -1137,7 +1173,7 @@ export const zAppLeaveRequestInboxList = z.object({
 
 export type AppLeaveRequestInboxList = z.infer<typeof zAppLeaveRequestInboxList>
 
-/** 全社休暇申請一覧（GET /leave/requests/admin）の 1 件。 */
+/** 全社休暇申請一覧（GET /leave-requests/admin）の 1 件。 */
 export const zAppLeaveRequestAdminItem = z.object({
   id: z.number(),
   applicant_id: z.number(),
@@ -1154,7 +1190,7 @@ export const zAppLeaveRequestAdminItem = z.object({
 
 export type AppLeaveRequestAdminItem = z.infer<typeof zAppLeaveRequestAdminItem>
 
-/** 全社休暇申請一覧（GET /leave/requests/admin）のレスポンス。 */
+/** 全社休暇申請一覧（GET /leave-requests/admin）のレスポンス。 */
 export const zAppLeaveRequestAdminList = z.object({
   data: z.array(zAppLeaveRequestAdminItem),
   total: z.number(),
@@ -1178,7 +1214,7 @@ export const zAppLeaveBalanceList = z.array(zAppLeaveBalance)
 
 export type AppLeaveBalanceList = z.infer<typeof zAppLeaveBalanceList>
 
-// ===== life-event =====
+/** ===== life-event ===== */
 export const zAppLifeEvent = z.object({
   id: z.string(),
   employee_id: z.number(),
@@ -1198,7 +1234,7 @@ export const zAppLifeEventList = z.object({
 
 export type AppLifeEventList = z.infer<typeof zAppLifeEventList>
 
-// ===== notification =====
+/** ===== notification ===== */
 export const zAppNotification = z.object({
   id: z.number(),
   recipient_employee_id: z.number(),
@@ -1227,7 +1263,6 @@ export const zAppNotificationList = z.object({
 
 export type AppNotificationList = z.infer<typeof zAppNotificationList>
 
-// ===== onboarding =====
 /** オンボーディングテンプレート 1 件のレスポンス。 */
 export const zAppOnboardingTemplate = z.object({
   id: z.number(),
@@ -1302,7 +1337,6 @@ export const zAppOnboardingAssignmentList = z.object({
 
 export type AppOnboardingAssignmentList = z.infer<typeof zAppOnboardingAssignmentList>
 
-// ===== oneonone =====
 /** 1on1 1 件のレスポンス。参加者名込み。 */
 export const zAppOneOnOne = z.object({
   id: z.string(),
@@ -1324,7 +1358,6 @@ export const zAppOneOnOneList = z.object({
 
 export type AppOneOnOneList = z.infer<typeof zAppOneOnOneList>
 
-// ===== org =====
 /** 組織部署ノード 1 件のレスポンス。 */
 export const zAppOrgDepartment = z.object({
   code: z.string(),
@@ -1373,6 +1406,38 @@ export const zAppOrgReportingLineList = z.array(zAppOrgReportingLineNode)
 
 export type AppOrgReportingLineList = z.infer<typeof zAppOrgReportingLineList>
 
+/** 直属部下 1 件のレスポンス。 */
+export const zAppMyReport = z.object({
+  code: z.string(),
+  name: z.string(),
+  dept_name: z.string().nullable(),
+  position: z.string().nullable(),
+})
+
+export type AppMyReport = z.infer<typeof zAppMyReport>
+
+/** 直属部下一覧のレスポンス（{ data }）。 */
+export const zAppMyReportList = z.object({
+  data: z.array(zAppMyReport),
+})
+
+export type AppMyReportList = z.infer<typeof zAppMyReportList>
+
+/** 本人の所属部署 1 件のレスポンス（主配属を先頭に並べる）。 */
+export const zAppMyDepartment = z.object({
+  code: z.string(),
+  name: z.string(),
+  assignment_type: z.enum(["primary", "concurrent"]),
+})
+
+export type AppMyDepartment = z.infer<typeof zAppMyDepartment>
+
+export const zAppMyDepartmentList = z.object({
+  data: z.array(zAppMyDepartment),
+})
+
+export type AppMyDepartmentList = z.infer<typeof zAppMyDepartmentList>
+
 /** 組織ツリーノード 1 件のレスポンス（children で再帰）。 */
 export type AppOrgTreeNode = {
   code: string
@@ -1395,7 +1460,7 @@ export const zAppOrgTreeList = z.array(zAppOrgTreeNode)
 
 export type AppOrgTreeList = z.infer<typeof zAppOrgTreeList>
 
-// ===== rental =====
+/** ===== rental ===== */
 export const zAppRentalReservation = z.object({
   id: z.string(),
   requester_id: z.number(),
@@ -1416,7 +1481,7 @@ export const zAppRentalReservationList = z.object({
 
 export type AppRentalReservationList = z.infer<typeof zAppRentalReservationList>
 
-// ===== resignation =====
+/** ===== resignation ===== */
 export const zAppResignation = z.object({
   id: z.string(),
   employee_id: z.number(),
@@ -1436,7 +1501,6 @@ export const zAppResignationList = z.object({
 
 export type AppResignationList = z.infer<typeof zAppResignationList>
 
-// ===== review =====
 /** 評価サイクル 1 件のレスポンス。 */
 export const zAppReviewCycle = z.object({
   id: z.number(),
@@ -1535,7 +1599,6 @@ export const zAppReviewDiscloseResult = z.object({
 
 export type AppReviewDiscloseResult = z.infer<typeof zAppReviewDiscloseResult>
 
-// ===== room =====
 /** 会議室マスタ 1 件のレスポンス。 */
 export const zAppRoom = z.object({
   id: z.number(),
@@ -1601,7 +1664,6 @@ export const zAppRoomAvailabilityList = z.object({
 
 export type AppRoomAvailabilityList = z.infer<typeof zAppRoomAvailabilityList>
 
-// ===== shift =====
 /** シフトパターン 1 件のレスポンス。 */
 export const zAppShiftPattern = z.object({
   id: z.number(),
@@ -1729,7 +1791,7 @@ export const zAppShiftSwapRequestPendingList = z.object({
 
 export type AppShiftSwapRequestPendingList = z.infer<typeof zAppShiftSwapRequestPendingList>
 
-/** 全社シフト交代申請一覧（GET /shift/swap-requests/admin）の 1 件。社員名・部署も付与する。 */
+/** 全社シフト交代申請一覧（GET /shift-swap-requests/admin）の 1 件。社員名・部署も付与する。 */
 export const zAppShiftSwapRequestAdminItem = z.object({
   id: z.number(),
   requester_employee_id: z.number(),
@@ -1755,7 +1817,6 @@ export const zAppShiftSwapRequestAdminList = z.object({
 
 export type AppShiftSwapRequestAdminList = z.infer<typeof zAppShiftSwapRequestAdminList>
 
-// ===== skill =====
 /** スキルマスタ 1 件のレスポンス。 */
 export const zAppSkill = z.object({
   code: z.string(),
@@ -1793,7 +1854,7 @@ export const zAppEmployeeSkillList = z.object({
 
 export type AppEmployeeSkillList = z.infer<typeof zAppEmployeeSkillList>
 
-// ===== survey =====
+/** ===== survey ===== */
 export const zAppSurvey = z.object({
   id: z.number(),
   title: z.string(),
@@ -1847,7 +1908,7 @@ export const zAppSurveySummary = z.object({
 
 export type AppSurveySummary = z.infer<typeof zAppSurveySummary>
 
-// ===== thanks =====
+/** ===== thanks ===== */
 export const zAppThanks = z.object({
   id: z.number().nullable(),
   sender_employee_id: z.number(),
@@ -1866,7 +1927,6 @@ export const zAppThanksList = z.object({
 })
 export type AppThanksList = z.infer<typeof zAppThanksList>
 
-// ===== thanks-points =====
 /** Thanks ポイントの交換カタログ 1 件のレスポンス。 */
 export const zAppThanksReward = z.object({
   id: z.number(),
@@ -1918,7 +1978,7 @@ export const zAppThanksRedemptionDecision = z.object({
 
 export type AppThanksRedemptionDecision = z.infer<typeof zAppThanksRedemptionDecision>
 
-/** 全社サンクス交換申請一覧（GET /thanks/redemptions/admin）の 1 件。申請者名・景品名を含む。 */
+/** 全社サンクス交換申請一覧（GET /thanks-redemptions/admin）の 1 件。申請者名・景品名を含む。 */
 export const zAppThanksRedemptionAdminItem = z.object({
   id: z.number(),
   employee_id: z.number(),
@@ -1960,7 +2020,6 @@ export const zAppThanksBudget = z.object({
 
 export type AppThanksBudget = z.infer<typeof zAppThanksBudget>
 
-// ===== training =====
 /** 研修コース 1 件のレスポンス。 */
 export const zAppTrainingCourse = z.object({
   id: z.number(),
@@ -2004,7 +2063,6 @@ export const zAppTrainingEnrollmentList = z.object({
 
 export type AppTrainingEnrollmentList = z.infer<typeof zAppTrainingEnrollmentList>
 
-// ===== iam =====
 /** ロール 1 件のレスポンス。 */
 export const zAppRole = z.object({
   id: z.number(),
@@ -2120,7 +2178,6 @@ export const zAppContractList = z.object({
 
 export type AppContractList = z.infer<typeof zAppContractList>
 
-// ===== meeting =====
 /** 会議体 1 件のレスポンス（詳細・作成・更新）。 */
 export const zAppMeeting = z.object({
   id: z.number(),
@@ -2164,7 +2221,6 @@ export const zAppMeetingMinutesList = z.object({
 
 export type AppMeetingMinutesList = z.infer<typeof zAppMeetingMinutesList>
 
-// ===== decision =====
 /** 意思決定記録 1 件のレスポンス（詳細・作成・更新・supersede）。 */
 export const zAppDecision = z.object({
   id: z.number(),
@@ -2188,7 +2244,6 @@ export const zAppDecisionList = z.object({
 
 export type AppDecisionList = z.infer<typeof zAppDecisionList>
 
-// ===== calendar =====
 /** 会社カレンダーの 1 日（会社休日 / 振替出勤日）。通常営業日は含まない。 */
 export const zAppCompanyCalendarDay = z.object({
   id: z.number(),
@@ -2208,7 +2263,6 @@ export const zAppCompanyCalendarDayList = z.object({
 
 export type AppCompanyCalendarDayList = z.infer<typeof zAppCompanyCalendarDayList>
 
-// ===== work-style =====
 /** 従業員の勤務形態の 1 区分（期間つき）。制度の適法性判定はしない。 */
 export const zAppEmployeeWorkStyle = z.object({
   id: z.number(),
@@ -2230,7 +2284,6 @@ export const zAppEmployeeWorkStyleList = z.object({
 
 export type AppEmployeeWorkStyleList = z.infer<typeof zAppEmployeeWorkStyleList>
 
-// ===== overtime-summary =====
 /** 従業員ごとの時間外の参考集計。1 日 8 時間×営業日を超えた分の合計（法定判定ではない参考値）。 */
 export const zAppOvertimeSummaryEntry = z.object({
   employee_id: z.number(),
@@ -2252,7 +2305,6 @@ export const zAppOvertimeSummary = z.object({
 
 export type AppOvertimeSummary = z.infer<typeof zAppOvertimeSummary>
 
-// ===== announcement =====
 /** 社内アナウンス一覧の 1 件。 */
 export const zAppAnnouncementListItem = z.object({
   id: z.number(),
@@ -2286,7 +2338,6 @@ export const zAppAnnouncement = z.object({
 
 export type AppAnnouncement = z.infer<typeof zAppAnnouncement>
 
-// ===== regulation =====
 /** 規程集一覧の 1 件（最新版のメタ情報を含む）。 */
 export const zAppRegulationListItem = z.object({
   id: z.number(),
@@ -2347,7 +2398,6 @@ export const zAppRegulation = z.object({
 
 export type AppRegulation = z.infer<typeof zAppRegulation>
 
-// ===== document =====
 /** 文書台帳一覧の 1 件。 */
 export const zAppDocumentListItem = z.object({
   id: z.number(),
@@ -2536,7 +2586,6 @@ export const zAppWorkAccidentList = z.object({
 
 export type AppWorkAccidentList = z.infer<typeof zAppWorkAccidentList>
 
-// ===== recruitment =====
 /** 募集ポジション 1 件のレスポンス。 */
 export const zAppRecruitmentPosition = z.object({
   id: z.number(),
@@ -2579,7 +2628,6 @@ export const zAppRecruitmentCandidateList = z.object({
 
 export type AppRecruitmentCandidateList = z.infer<typeof zAppRecruitmentCandidateList>
 
-// ===== commendation =====
 /** 表彰の記録 1 件のレスポンス（社内公開）。 */
 export const zAppCommendation = z.object({
   id: z.number(),
@@ -2600,7 +2648,6 @@ export const zAppCommendationList = z.object({
 
 export type AppCommendationList = z.infer<typeof zAppCommendationList>
 
-// ===== disciplinary action =====
 /** 懲戒の記録 1 件のレスポンス（非公開。本人にも見せない設計）。 */
 export const zAppDisciplinaryAction = z.object({
   id: z.number(),
@@ -2621,7 +2668,6 @@ export const zAppDisciplinaryActionList = z.object({
 
 export type AppDisciplinaryActionList = z.infer<typeof zAppDisciplinaryActionList>
 
-// ===== headcount plan =====
 /** 人員計画 1 件のレスポンス。actual_count は同部署の active 在籍数。 */
 export const zAppHeadcountPlan = z.object({
   id: z.number(),
@@ -2642,7 +2688,6 @@ export const zAppHeadcountPlanList = z.object({
 })
 
 export type AppHeadcountPlanList = z.infer<typeof zAppHeadcountPlanList>
-// ===== audit =====
 /** 監査イベント一覧の legacy-tolerant な公開投影。 */
 export const zAppAuditEventSummary = z.strictObject({
   event_id: z.string(),

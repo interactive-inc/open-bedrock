@@ -26,17 +26,21 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
-// このスキーマは Drizzle ORM のクエリ用の型定義。DB スキーマ（テーブル・インデックス）の正は
-// api/migrations/*.sql で、本プロジェクトは手書き migration 運用（drizzle-kit generate による
-// 再生成は行わない）。migration が持つ一意インデックス・部分インデックス（二重登録・TOCTOU 防止）
-// は、ORM からの可視性とドリフト検知のため schema.ts にも宣言して同期させている（性能用の
-// 非一意インデックスは除く）。インデックスを追加・変更する際は migration を正として更新し、
-// 一意・部分インデックスは本ファイルにも反映すること。
-
-// 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
+/**
+ * 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
+ *
+ * DB 上の code は null 許容（0029_identity_provisioning.sql）。外部 identity provider からの
+ * プロビジョニングで社員コードを持たない従業員を作れるようにするため。UNIQUE は維持する
+ * （SQLite は複数 NULL を互いに異なる値として扱う）。
+ *
+ * Drizzle 表現でも code を null 許容として型付けする。認証（identity ログイン）などの読取経路が
+ * code=null の行を Employee として読み戻すため、非 null narrowing は実行時の zod parse で破綻する。
+ * 型は DB の正（migration）に合わせて誠実に string | null とし、code を必須とする経路は入力側
+ * スキーマや find 引数の非 null 性で担保する。
+ */
 export const employees = sqliteTable("employees", {
   id: integer("id").primaryKey(),
-  code: text("code").notNull().unique(),
+  code: text("code").unique(),
   name: text("name").notNull(),
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
@@ -48,7 +52,7 @@ export const employees = sqliteTable("employees", {
 
 export type EmployeeRow = InferSelectModel<typeof employees>
 
-// 部署マスタ（id と表示名）
+/** 部署マスタ（id と表示名） */
 export const departments = sqliteTable("departments", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
@@ -56,7 +60,7 @@ export const departments = sqliteTable("departments", {
 
 export type DepartmentRow = InferSelectModel<typeof departments>
 
-// 組織図上の部署ノード
+/** 組織図上の部署ノード */
 export const orgDepartments = sqliteTable("org_departments", {
   code: text("code").primaryKey(),
   departmentId: integer("department_id").notNull(),
@@ -69,7 +73,7 @@ export const orgDepartments = sqliteTable("org_departments", {
 
 export type OrgDepartmentRow = InferSelectModel<typeof orgDepartments>
 
-// 部署への所属
+/** 部署への所属 */
 export const orgMemberships = sqliteTable(
   "org_memberships",
   {
@@ -82,7 +86,7 @@ export const orgMemberships = sqliteTable(
 
 export type OrgMembershipRow = InferSelectModel<typeof orgMemberships>
 
-// 通知（社員宛ての申請・承認・リマインド・お知らせ）。is_read は 0/1 で保存する。
+/** 通知（社員宛ての申請・承認・リマインド・お知らせ）。is_read は 0/1 で保存する。 */
 export const notifications = sqliteTable(
   "notifications",
   {
@@ -105,7 +109,7 @@ export const notifications = sqliteTable(
 
 export type NotificationRow = InferSelectModel<typeof notifications>
 
-// 研修コース（コード・タイトル・カテゴリ・必須フラグ・状態）。is_required は 0/1 を boolean で持つ。
+/** 研修コース（コード・タイトル・カテゴリ・必須フラグ・状態）。is_required は 0/1 を boolean で持つ。 */
 export const trainingCourses = sqliteTable("training_courses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   code: text("code").notNull().unique(),
@@ -119,7 +123,7 @@ export const trainingCourses = sqliteTable("training_courses", {
 
 export type TrainingCourseRow = InferSelectModel<typeof trainingCourses>
 
-// 受講登録（社員ごとのコース受講状況・スコア・期限）。
+/** 受講登録（社員ごとのコース受講状況・スコア・期限）。 */
 export const trainingEnrollments = sqliteTable(
   "training_enrollments",
   {
@@ -139,7 +143,7 @@ export const trainingEnrollments = sqliteTable(
 
 export type TrainingEnrollmentRow = InferSelectModel<typeof trainingEnrollments>
 
-// 評価サイクル（多面評価の実施単位・期間・状態）
+/** 評価サイクル（多面評価の実施単位・期間・状態） */
 export const reviewCycles = sqliteTable("review_cycles", {
   id: integer("id").primaryKey(),
   title: text("title").notNull(),
@@ -150,7 +154,7 @@ export const reviewCycles = sqliteTable("review_cycles", {
 
 export type ReviewCycleRow = InferSelectModel<typeof reviewCycles>
 
-// 評価フォーム（サイクル・被評価者・評価者ごとの回答とスコア・状態）。answers は JSON 文字列で保存される。
+/** 評価フォーム（サイクル・被評価者・評価者ごとの回答とスコア・状態）。answers は JSON 文字列で保存される。 */
 export const reviewForms = sqliteTable("review_forms", {
   id: integer("id").primaryKey(),
   cycleId: integer("cycle_id").notNull(),
@@ -175,7 +179,7 @@ export const reviewCyclePolicies = sqliteTable("review_cycle_policies", {
 
 export type ReviewCyclePolicyRow = InferSelectModel<typeof reviewCyclePolicies>
 
-// 給与明細（社員ごと・期間ごとの支給/控除/差引支給額）
+/** 給与明細（社員ごと・期間ごとの支給/控除/差引支給額） */
 export const payslips = sqliteTable(
   "payslips",
   {
@@ -195,7 +199,7 @@ export const payslips = sqliteTable(
 
 export type PayslipRow = InferSelectModel<typeof payslips>
 
-// 給与改定の履歴（基本給の改定・前回基本給・適用日）
+/** 給与改定の履歴（基本給の改定・前回基本給・適用日） */
 export const salaryRevisions = sqliteTable(
   "salary_revisions",
   {
@@ -215,7 +219,7 @@ export const salaryRevisions = sqliteTable(
 
 export type SalaryRevisionRow = InferSelectModel<typeof salaryRevisions>
 
-// シフトパターン（勤務区分の雛形：勤務時間と休憩）
+/** シフトパターン（勤務区分の雛形：勤務時間と休憩） */
 export const shiftPatterns = sqliteTable("shift_patterns", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   code: text("code").notNull().unique(),
@@ -227,7 +231,7 @@ export const shiftPatterns = sqliteTable("shift_patterns", {
 
 export type ShiftPatternRow = InferSelectModel<typeof shiftPatterns>
 
-// シフト割当（社員ごとの日次シフト。published_at:null は下書き）
+/** シフト割当（社員ごとの日次シフト。published_at:null は下書き） */
 export const shiftAssignments = sqliteTable(
   "shift_assignments",
   {
@@ -246,7 +250,7 @@ export const shiftAssignments = sqliteTable(
 
 export type ShiftAssignmentRow = InferSelectModel<typeof shiftAssignments>
 
-// シフト交代申請（申請者と交代相手・対象日・承認状態）
+/** シフト交代申請（申請者と交代相手・対象日・承認状態） */
 export const shiftSwapRequests = sqliteTable(
   "shift_swap_requests",
   {
@@ -268,7 +272,7 @@ export const shiftSwapRequests = sqliteTable(
 
 export type ShiftSwapRequestRow = InferSelectModel<typeof shiftSwapRequests>
 
-// 休暇申請（本人の申請・承認/却下の記録）。id は自動採番。
+/** 休暇申請（本人の申請・承認/却下の記録）。id は自動採番。 */
 export const leaveRequests = sqliteTable("leave_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
@@ -285,7 +289,7 @@ export const leaveRequests = sqliteTable("leave_requests", {
 
 export type LeaveRequestRow = InferSelectModel<typeof leaveRequests>
 
-// 年度ごとの休暇残数（付与・消化・残）。employee_id + fiscal_year + leave_type が主キー。
+/** 年度ごとの休暇残数（付与・消化・残）。employee_id + fiscal_year + leave_type が主キー。 */
 export const leaveBalances = sqliteTable(
   "leave_balances",
   {
@@ -301,7 +305,7 @@ export const leaveBalances = sqliteTable(
 
 export type LeaveBalanceRow = InferSelectModel<typeof leaveBalances>
 
-// 入社/退職手続きのテンプレート（チェックリストの雛形）
+/** 入社/退職手続きのテンプレート（チェックリストの雛形） */
 export const onboardingTemplates = sqliteTable("onboarding_templates", {
   id: integer("id").primaryKey(),
   code: text("code").notNull().unique(),
@@ -312,7 +316,7 @@ export const onboardingTemplates = sqliteTable("onboarding_templates", {
 
 export type OnboardingTemplateRow = InferSelectModel<typeof onboardingTemplates>
 
-// テンプレートに含まれるタスク定義（並び順・担当ロール）
+/** テンプレートに含まれるタスク定義（並び順・担当ロール） */
 export const onboardingTemplateTasks = sqliteTable(
   "onboarding_template_tasks",
   {
@@ -327,7 +331,7 @@ export const onboardingTemplateTasks = sqliteTable(
 
 export type OnboardingTemplateTaskRow = InferSelectModel<typeof onboardingTemplateTasks>
 
-// 社員へのテンプレート割り当て（手続きの進行状態）
+/** 社員へのテンプレート割り当て（手続きの進行状態） */
 export const onboardingAssignments = sqliteTable(
   "onboarding_assignments",
   {
@@ -348,7 +352,7 @@ export const onboardingAssignments = sqliteTable(
 
 export type OnboardingAssignmentRow = InferSelectModel<typeof onboardingAssignments>
 
-// 割り当てから展開された個別タスク（完了状態）
+/** 割り当てから展開された個別タスク（完了状態） */
 export const onboardingTasks = sqliteTable("onboarding_tasks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   assignmentId: integer("assignment_id").notNull(),
@@ -361,8 +365,10 @@ export const onboardingTasks = sqliteTable("onboarding_tasks", {
 
 export type OnboardingTaskRow = InferSelectModel<typeof onboardingTasks>
 
-// 申請テンプレート（種類・カテゴリ・入力スキーマ・承認ロール）。
-// schema_json と approver_roles は JSON 文字列で保存される。
+/**
+ * 申請テンプレート（種類・カテゴリ・入力スキーマ・承認ロール）。
+ * schema_json と approver_roles は JSON 文字列で保存される。
+ */
 export const applicationTemplates = sqliteTable(
   "application_templates",
   {
@@ -385,9 +391,9 @@ export const applicationTemplates = sqliteTable(
 
 export type ApplicationTemplateRow = InferSelectModel<typeof applicationTemplates>
 
-// 申請（テンプレートに紐づく申請者の提出）。payload は JSON 文字列で保存される。
+/** 申請（テンプレートに紐づく申請者の提出）。payload は JSON 文字列で保存される。 */
 export const applications = sqliteTable(
-  "applications",
+  "application_requests",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     templateId: integer("template_id").notNull(),
@@ -407,7 +413,7 @@ export const applications = sqliteTable(
 
 export type ApplicationRow = InferSelectModel<typeof applications>
 
-// 申請への承認/却下アクションの記録。
+/** 申請への承認/却下アクションの記録。 */
 export const applicationApprovals = sqliteTable("application_approvals", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   applicationId: integer("application_id").notNull(),
@@ -419,7 +425,7 @@ export const applicationApprovals = sqliteTable("application_approvals", {
 
 export type ApplicationApprovalRow = InferSelectModel<typeof applicationApprovals>
 
-// 人事アクション台帳。事実は追記のみで、訂正も corrected アクションとして記録する。
+/** 人事アクション台帳。事実は追記のみで、訂正も corrected アクションとして記録する。 */
 export const personnelActions = sqliteTable(
   "personnel_actions",
   {
@@ -476,7 +482,7 @@ export const personnelActions = sqliteTable(
 
 export type PersonnelActionRow = InferSelectModel<typeof personnelActions>
 
-// 雇用期間の版。最新 revision の非 void 行を現在有効な期間として読む。
+/** 雇用期間の版。最新 revision の非 void 行を現在有効な期間として読む。 */
 export const employmentPeriodVersions = sqliteTable(
   "employment_period_versions",
   {
@@ -501,7 +507,7 @@ export const employmentPeriodVersions = sqliteTable(
 
 export type EmploymentPeriodVersionRow = InferSelectModel<typeof employmentPeriodVersions>
 
-// 在籍中の状態期間。prehire / retired は雇用期間の有無から導出する。
+/** 在籍中の状態期間。prehire / retired は雇用期間の有無から導出する。 */
 export const employeeStatusPeriodVersions = sqliteTable(
   "employee_status_period_versions",
   {
@@ -529,9 +535,9 @@ export const employeeStatusPeriodVersions = sqliteTable(
 
 export type EmployeeStatusPeriodVersionRow = InferSelectModel<typeof employeeStatusPeriodVersions>
 
-// 主務・兼務の所属期間。上長関係は各所属期間に紐付ける。
+/** 主務・兼務の所属期間。上長関係は各所属期間に紐付ける。 */
 export const orgAssignmentPeriodVersions = sqliteTable(
-  "org_assignment_period_versions",
+  "employee_org_assignment_period_versions",
   {
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
@@ -567,9 +573,9 @@ export const orgAssignmentPeriodVersions = sqliteTable(
 
 export type OrgAssignmentPeriodVersionRow = InferSelectModel<typeof orgAssignmentPeriodVersions>
 
-// 部門責任者の期間。組織スコープ判定はこの正本から導出する。
+/** 部門責任者の期間。組織スコープ判定はこの正本から導出する。 */
 export const orgResponsibilityPeriodVersions = sqliteTable(
-  "org_responsibility_period_versions",
+  "employee_org_responsibility_period_versions",
   {
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
@@ -608,11 +614,18 @@ export const employeeLifecycleRevisions = sqliteTable("employee_lifecycle_revisi
 
 export type EmployeeLifecycleRevisionRow = InferSelectModel<typeof employeeLifecycleRevisions>
 
-export const organizationLifecycleState = sqliteTable("organization_lifecycle_state", {
-  id: integer("id").primaryKey(),
-  revision: integer("revision").notNull().default(0),
-  updatedAt: integer("updated_at").notNull(),
-})
+export const organizationLifecycleState = sqliteTable(
+  "organization_lifecycle_states",
+  {
+    id: integer("id").primaryKey(),
+    revision: integer("revision").notNull().default(0),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (table) => [
+    check("organization_lifecycle_state_singleton", sql`${table.id} = 1`),
+    check("organization_lifecycle_state_revision", sql`${table.revision} >= 0`),
+  ],
+)
 
 export type OrganizationLifecycleStateRow = InferSelectModel<typeof organizationLifecycleState>
 
@@ -673,7 +686,7 @@ export const applicationCompletionBindings = sqliteTable("application_completion
 
 export type ApplicationCompletionBindingRow = InferSelectModel<typeof applicationCompletionBindings>
 
-export const lifecycleMigrationState = sqliteTable("lifecycle_migration_state", {
+export const lifecycleMigrationState = sqliteTable("lifecycle_migration_states", {
   id: integer("id").primaryKey(),
   status: text("status").notNull().$type<"pending" | "backfilled" | "verified">(),
   baselineOn: text("baseline_on"),
@@ -688,7 +701,7 @@ export const lifecycleMigrationState = sqliteTable("lifecycle_migration_state", 
 export type LifecycleMigrationStateRow = InferSelectModel<typeof lifecycleMigrationState>
 
 export const lifecycleOutbox = sqliteTable(
-  "lifecycle_outbox",
+  "lifecycle_outbox_entries",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     personnelActionId: text("personnel_action_id").notNull(),
@@ -869,7 +882,7 @@ export const approvalDelegations = sqliteTable("approval_delegations", {
 
 export type ApprovalDelegationRow = InferSelectModel<typeof approvalDelegations>
 
-// 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。
+/** 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。 */
 export const assets = sqliteTable("assets", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -884,7 +897,7 @@ export const assets = sqliteTable("assets", {
 
 export type AssetRow = InferSelectModel<typeof assets>
 
-// 貸出記録。open は returned_at が NULL。返却で閉じる。
+/** 貸出記録。open は returned_at が NULL。返却で閉じる。 */
 export const assetLendings = sqliteTable("asset_lendings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   assetCode: text("asset_code").notNull(),
@@ -895,7 +908,7 @@ export const assetLendings = sqliteTable("asset_lendings", {
 
 export type AssetLendingRow = InferSelectModel<typeof assetLendings>
 
-// 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。
+/** 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。 */
 export const stocktakes = sqliteTable(
   "stocktakes",
   {
@@ -911,7 +924,7 @@ export const stocktakes = sqliteTable(
 
 export type StocktakeRow = InferSelectModel<typeof stocktakes>
 
-// 棚卸しセッションでの資産ごとの現物確認記録。checked_at:null は未確認。
+/** 棚卸しセッションでの資産ごとの現物確認記録。checked_at:null は未確認。 */
 export const stocktakeItems = sqliteTable(
   "stocktake_items",
   {
@@ -926,7 +939,7 @@ export const stocktakeItems = sqliteTable(
 
 export type StocktakeItemRow = InferSelectModel<typeof stocktakeItems>
 
-// 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。
+/** 勤怠記録（出勤・退勤の打刻と労働時間）。id は AUTOINCREMENT。 */
 export const attendanceRecords = sqliteTable(
   "attendance_records",
   {
@@ -949,7 +962,7 @@ export const attendanceRecords = sqliteTable(
 
 export type AttendanceRecordRow = InferSelectModel<typeof attendanceRecords>
 
-// 会社カレンダー（会社休日と振替出勤日の記録）。通常営業日は行を持たない。判定・計算は持たず記録のみ。
+/** 会社カレンダー（会社休日と振替出勤日の記録）。通常営業日は行を持たない。判定・計算は持たず記録のみ。 */
 export const companyCalendarDays = sqliteTable(
   "company_calendar_days",
   {
@@ -965,7 +978,7 @@ export const companyCalendarDays = sqliteTable(
 
 export type CompanyCalendarDayRow = InferSelectModel<typeof companyCalendarDays>
 
-// 従業員の勤務形態の期間つき記録（regular / flextime / discretionary / shift）。制度の適法性判定はしない。事実の記録のみ。
+/** 従業員の勤務形態の期間つき記録（regular / flextime / discretionary / shift）。制度の適法性判定はしない。事実の記録のみ。 */
 export const employeeWorkStyles = sqliteTable(
   "employee_work_styles",
   {
@@ -982,7 +995,7 @@ export const employeeWorkStyles = sqliteTable(
 
 export type EmployeeWorkStyleRow = InferSelectModel<typeof employeeWorkStyles>
 
-// バッチジョブの実行状況（夜間同期・通知送信などの記録）。
+/** バッチジョブの実行状況（夜間同期・通知送信などの記録）。 */
 export const batchJobs = sqliteTable("batch_jobs", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
@@ -994,7 +1007,7 @@ export const batchJobs = sqliteTable("batch_jobs", {
 
 export type BatchJobRow = InferSelectModel<typeof batchJobs>
 
-// 社内公募（部署・必要スキル・公開状態）。
+/** 社内公募（部署・必要スキル・公開状態）。 */
 export const careerPostings = sqliteTable("career_postings", {
   id: integer("id").primaryKey(),
   title: text("title").notNull(),
@@ -1006,7 +1019,7 @@ export const careerPostings = sqliteTable("career_postings", {
 
 export type CareerPostingRow = InferSelectModel<typeof careerPostings>
 
-// 公募への応募（応募者・メッセージ・状態）。id は AUTOINCREMENT。
+/** 公募への応募（応募者・メッセージ・状態）。id は AUTOINCREMENT。 */
 export const careerApplications = sqliteTable(
   "career_applications",
   {
@@ -1024,7 +1037,7 @@ export const careerApplications = sqliteTable(
 
 export type CareerApplicationRow = InferSelectModel<typeof careerApplications>
 
-// 社員ごとのキャリアシート（目標・強み）。employee_id が主キー。
+/** 社員ごとのキャリアシート（目標・強み）。employee_id が主キー。 */
 export const careerSheets = sqliteTable("career_sheets", {
   employeeId: integer("employee_id").primaryKey(),
   goalsText: text("goals_text"),
@@ -1034,7 +1047,7 @@ export const careerSheets = sqliteTable("career_sheets", {
 
 export type CareerSheetRow = InferSelectModel<typeof careerSheets>
 
-// 経費申請（申請者・カテゴリ・金額・ステータス）。
+/** 経費申請（申請者・カテゴリ・金額・ステータス）。 */
 export const expenses = sqliteTable("expenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull(),
@@ -1048,7 +1061,7 @@ export const expenses = sqliteTable("expenses", {
 
 export type ExpenseRow = InferSelectModel<typeof expenses>
 
-// 経費への承認/却下アクションの記録。
+/** 経費への承認/却下アクションの記録。 */
 export const expenseApprovals = sqliteTable("expense_approvals", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   expenseId: integer("expense_id").notNull(),
@@ -1060,7 +1073,7 @@ export const expenseApprovals = sqliteTable("expense_approvals", {
 
 export type ExpenseApprovalRow = InferSelectModel<typeof expenseApprovals>
 
-// 稟議（金額つきの汎用決裁）。起案時に承認者を 1 名指定する単段決裁。決裁結果は行に inline 保持する。
+/** 稟議（金額つきの汎用決裁）。起案時に承認者を 1 名指定する単段決裁。決裁結果は行に inline 保持する。 */
 export const ringiRequests = sqliteTable("ringi_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   applicantId: integer("applicant_id").notNull(),
@@ -1075,8 +1088,8 @@ export const ringiRequests = sqliteTable("ringi_requests", {
 })
 
 export type RingiRequestRow = InferSelectModel<typeof ringiRequests>
-// 部署予算（部署・会計期間・金額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する。
-export const budgets = sqliteTable("budgets", {
+/** 部署予算（部署・会計期間・金額の記録）。消化額は保持せず、承認済み経費の読み取り集計で算出する。 */
+export const budgets = sqliteTable("department_budgets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   departmentId: integer("department_id").notNull(),
   fiscalPeriod: text("fiscal_period").notNull(),
@@ -1090,12 +1103,14 @@ export const budgets = sqliteTable("budgets", {
 
 export type BudgetRow = InferSelectModel<typeof budgets>
 
-// 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
-// is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
-// 目標（社員ごと・評価期間ごとの目標と重み・状態）。
-// owner_type は目標の所有主体(individual/department/company)。parent_goal_id で全社→部門→個人の
-// 階層をつなぎ、department_code は部門目標の所属部門を表す。個人目標では department_code は null。
-export const goals = sqliteTable("goals", {
+/**
+ * 機能フラグ（core / optional）。1機能 = 1行。表示順を sort_order で保持する。
+ * is_core は必須機能か、is_enabled は有効かを 0/1 で持つ。
+ * 目標（社員ごと・評価期間ごとの目標と重み・状態）。
+ * owner_type は目標の所有主体(individual/department/company)。parent_goal_id で全社→部門→個人の
+ * 階層をつなぎ、department_code は部門目標の所属部門を表す。個人目標では department_code は null。
+ */
+export const goals = sqliteTable("performance_goals", {
   id: integer("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
   period: text("period").notNull(),
@@ -1110,7 +1125,7 @@ export const goals = sqliteTable("goals", {
 
 export type GoalRow = InferSelectModel<typeof goals>
 
-// 目標への評価（自己・上長・最終）
+/** 目標への評価（自己・上長・最終） */
 export const goalEvaluations = sqliteTable(
   "goal_evaluations",
   {
@@ -1136,7 +1151,7 @@ export const goalEvaluations = sqliteTable(
 
 export type GoalEvaluationRow = InferSelectModel<typeof goalEvaluations>
 
-// ナレッジ記事（社内手続き・規程などの記事）
+/** ナレッジ記事（社内手続き・規程などの記事） */
 export const knowledgeArticles = sqliteTable("knowledge_articles", {
   id: integer("id").primaryKey(),
   title: text("title").notNull(),
@@ -1149,7 +1164,7 @@ export const knowledgeArticles = sqliteTable("knowledge_articles", {
 
 export type KnowledgeArticleRow = InferSelectModel<typeof knowledgeArticles>
 
-// 規程・手続き・統制の安定した業務能力。表示名や担当組織の変更で code は変えない。
+/** 規程・手続き・統制の安定した業務能力。表示名や担当組織の変更で code は変えない。 */
 export const governanceCapabilities = sqliteTable("governance_capabilities", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -1162,7 +1177,7 @@ export const governanceCapabilities = sqliteTable("governance_capabilities", {
 
 export type GovernanceCapabilityRow = InferSelectModel<typeof governanceCapabilities>
 
-// 組織上の責任。IAM の system role（操作能力）とは分離する。
+/** 組織上の責任。IAM の system role（操作能力）とは分離する。 */
 export const governanceOrgRoles = sqliteTable("governance_org_roles", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
@@ -1305,7 +1320,7 @@ export const governanceAcknowledgements = sqliteTable(
 
 export type GovernanceAcknowledgementRow = InferSelectModel<typeof governanceAcknowledgements>
 
-// 1on1 の記録（参加者・実施日時・話題・所感・次アクション）。
+/** 1on1 の記録（参加者・実施日時・話題・所感・次アクション）。 */
 export const oneOnOnes = sqliteTable("one_on_ones", {
   id: text("id").primaryKey(),
   memberId: integer("member_id").notNull(),
@@ -1318,8 +1333,8 @@ export const oneOnOnes = sqliteTable("one_on_ones", {
 
 export type OneOnOneRow = InferSelectModel<typeof oneOnOnes>
 
-// 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。
-export const thanks = sqliteTable("thanks", {
+/** 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。 */
+export const thanks = sqliteTable("thanks_messages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   senderEmployeeId: integer("sender_employee_id").notNull(),
   recipientEmployeeId: integer("recipient_employee_id").notNull(),
@@ -1330,9 +1345,11 @@ export const thanks = sqliteTable("thanks", {
 
 export type ThanksRow = InferSelectModel<typeof thanks>
 
-// サンクスポイントの月次贈与原資。employee_id + period(YYYY-MM) で一意。
-// 残量は granted_points − consumed_points で算出する。consumed_points は贈与時に
-// 原子的な条件付き UPDATE で加算し、同月の同時送付でも原資超過しないための消費カウンタ。
+/**
+ * サンクスポイントの月次贈与原資。employee_id + period(YYYY-MM) で一意。
+ * 残量は granted_points − consumed_points で算出する。consumed_points は贈与時に
+ * 原子的な条件付き UPDATE で加算し、同月の同時送付でも原資超過しないための消費カウンタ。
+ */
 export const thanksPointBudgets = sqliteTable(
   "thanks_point_budgets",
   {
@@ -1350,7 +1367,7 @@ export const thanksPointBudgets = sqliteTable(
 
 export type ThanksPointBudgetRow = InferSelectModel<typeof thanksPointBudgets>
 
-// サンクスポイントの交換カタログ。stock が null は在庫無制限。is_active は 0/1 を boolean で持つ。
+/** サンクスポイントの交換カタログ。stock が null は在庫無制限。is_active は 0/1 を boolean で持つ。 */
 export const thanksRewards = sqliteTable("thanks_rewards", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
@@ -1362,8 +1379,10 @@ export const thanksRewards = sqliteTable("thanks_rewards", {
 
 export type ThanksRewardRow = InferSelectModel<typeof thanksRewards>
 
-// サンクスポイントの交換申請。状態は pending→fulfilled（確定）/rejected（却下）。
-// point_cost は申請時点の交換コストを写し取り、後からカタログ価格が変わってもブレないようにする。
+/**
+ * サンクスポイントの交換申請。状態は pending→fulfilled（確定）/rejected（却下）。
+ * point_cost は申請時点の交換コストを写し取り、後からカタログ価格が変わってもブレないようにする。
+ */
 export const thanksRedemptions = sqliteTable(
   "thanks_redemptions",
   {
@@ -1386,7 +1405,7 @@ export const thanksRedemptions = sqliteTable(
 
 export type ThanksRedemptionRow = InferSelectModel<typeof thanksRedemptions>
 
-// 会議室マスタ（定員・所在地）
+/** 会議室マスタ（定員・所在地） */
 export const rooms = sqliteTable("rooms", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
@@ -1396,7 +1415,7 @@ export const rooms = sqliteTable("rooms", {
 
 export type RoomRow = InferSelectModel<typeof rooms>
 
-// 会議室予約（重複判定は start_at/end_at の範囲で行う）
+/** 会議室予約（重複判定は start_at/end_at の範囲で行う） */
 export const roomReservations = sqliteTable(
   "room_reservations",
   {
@@ -1415,8 +1434,8 @@ export const roomReservations = sqliteTable(
 
 export type RoomReservationRow = InferSelectModel<typeof roomReservations>
 
-// スキルマスタ（コード・表示名・カテゴリ）
-export const skills = sqliteTable("skills", {
+/** スキルマスタ（コード・表示名・カテゴリ） */
+export const skills = sqliteTable("skill_definitions", {
   code: text("code").primaryKey(),
   name: text("name").notNull(),
   category: text("category").notNull(),
@@ -1424,7 +1443,7 @@ export const skills = sqliteTable("skills", {
 
 export type SkillRow = InferSelectModel<typeof skills>
 
-// 従業員ごとの登録スキル（レベル・経験年数・補足）
+/** 従業員ごとの登録スキル（レベル・経験年数・補足） */
 export const employeeSkills = sqliteTable(
   "employee_skills",
   {
@@ -1439,7 +1458,7 @@ export const employeeSkills = sqliteTable(
 
 export type EmployeeSkillRow = InferSelectModel<typeof employeeSkills>
 
-// アンケート（survey ドメイン）。questions_json は設問定義の JSON 文字列。
+/** アンケート（survey ドメイン）。questions_json は設問定義の JSON 文字列。 */
 export const surveys = sqliteTable("surveys", {
   id: integer("id").primaryKey(),
   title: text("title").notNull(),
@@ -1449,7 +1468,7 @@ export const surveys = sqliteTable("surveys", {
 
 export type SurveyRow = InferSelectModel<typeof surveys>
 
-// アンケートへの回答。id は自動採番。answers_json は回答内容の JSON 文字列。
+/** アンケートへの回答。id は自動採番。answers_json は回答内容の JSON 文字列。 */
 export const surveyResponses = sqliteTable(
   "survey_responses",
   {
@@ -1467,7 +1486,7 @@ export const surveyResponses = sqliteTable(
 
 export type SurveyResponseRow = InferSelectModel<typeof surveyResponses>
 
-// 出張申請（行き先・期間・目的・概算費用の記録。金額の計算や判定は持たず記録のみ）
+/** 出張申請（行き先・期間・目的・概算費用の記録。金額の計算や判定は持たず記録のみ） */
 export const businessTrips = sqliteTable("business_trips", {
   id: text("id").primaryKey(),
   travelerId: integer("traveler_id").notNull(),
@@ -1482,7 +1501,7 @@ export const businessTrips = sqliteTable("business_trips", {
 
 export type BusinessTripRow = InferSelectModel<typeof businessTrips>
 
-// 物のレンタル予約（外部からの貸与品の予約申請。期間と用途を記録）
+/** 物のレンタル予約（外部からの貸与品の予約申請。期間と用途を記録） */
 export const rentalReservations = sqliteTable("rental_reservations", {
   id: text("id").primaryKey(),
   requesterId: integer("requester_id").notNull(),
@@ -1496,7 +1515,7 @@ export const rentalReservations = sqliteTable("rental_reservations", {
 
 export type RentalReservationRow = InferSelectModel<typeof rentalReservations>
 
-// 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ）
+/** 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ） */
 export const resignations = sqliteTable(
   "resignations",
   {
@@ -1518,7 +1537,7 @@ export const resignations = sqliteTable(
 
 export type ResignationRow = InferSelectModel<typeof resignations>
 
-// ライフイベント届出（結婚・出産・転居・忌引・扶養変更などの届出を記録）
+/** ライフイベント届出（結婚・出産・転居・忌引・扶養変更などの届出を記録） */
 export const lifeEvents = sqliteTable("life_events", {
   id: text("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
@@ -1531,7 +1550,7 @@ export const lifeEvents = sqliteTable("life_events", {
 
 export type LifeEventRow = InferSelectModel<typeof lifeEvents>
 
-// 産休・育休・介護休業の申出（期限管理と記録。給付金額の計算は持たない）
+/** 産休・育休・介護休業の申出（期限管理と記録。給付金額の計算は持たない） */
 export const familyCareLeaves = sqliteTable("family_care_leaves", {
   id: text("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
@@ -1545,7 +1564,7 @@ export const familyCareLeaves = sqliteTable("family_care_leaves", {
 
 export type FamilyCareLeaveRow = InferSelectModel<typeof familyCareLeaves>
 
-// 証明書発行依頼（在職・就労・退職証明書などの発行依頼を記録）
+/** 証明書発行依頼（在職・就労・退職証明書などの発行依頼を記録） */
 export const certificateRequests = sqliteTable("certificate_requests", {
   id: text("id").primaryKey(),
   requesterId: integer("requester_id").notNull(),
@@ -1559,9 +1578,9 @@ export const certificateRequests = sqliteTable("certificate_requests", {
 
 export type CertificateRequestRow = InferSelectModel<typeof certificateRequests>
 
-// 等級マスタ（並び順の rank を持つ等級の定義。判定・計算は持たず定義のみ）
+/** 等級マスタ（並び順の rank を持つ等級の定義。判定・計算は持たず定義のみ） */
 export const grades = sqliteTable(
-  "grades",
+  "grade_definitions",
   {
     id: integer("id").primaryKey(),
     code: text("code").notNull(),
@@ -1576,7 +1595,27 @@ export const grades = sqliteTable(
 
 export type GradeRow = InferSelectModel<typeof grades>
 
-// 等級の割当履歴（社員ごとに、いつからどの等級か。事実の記録のみ）
+/**
+ * 役職マスタ（並び順の rank を持つ役職の定義。判定・計算は持たず定義のみ。
+ * 役職の期間付き履歴は人事発令が正で、割当履歴テーブルは持たない）
+ */
+export const positions = sqliteTable(
+  "position_definitions",
+  {
+    id: integer("id").primaryKey(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    rank: integer("rank").notNull(),
+    description: text("description"),
+    createdAt: text("created_at").notNull(),
+  },
+  // 役職コードは全社で一意（同一コードの二重登録を防ぐ）。
+  (table) => [uniqueIndex("uq_positions_code").on(table.code)],
+)
+
+export type PositionRow = InferSelectModel<typeof positions>
+
+/** 等級の割当履歴（社員ごとに、いつからどの等級か。事実の記録のみ） */
 export const employeeGrades = sqliteTable(
   "employee_grades",
   {
@@ -1600,7 +1639,7 @@ export const employeeGrades = sqliteTable(
 
 export type EmployeeGradeRow = InferSelectModel<typeof employeeGrades>
 
-// 異動・在籍イベント履歴（入社・異動・休職・復職・退職。判定は持たず事実の記録のみ）
+/** 異動・在籍イベント履歴（入社・異動・休職・復職・退職。判定は持たず事実の記録のみ） */
 export const employeeEvents = sqliteTable("employee_events", {
   id: integer("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
@@ -1614,7 +1653,7 @@ export const employeeEvents = sqliteTable("employee_events", {
 
 export type EmployeeEventRow = InferSelectModel<typeof employeeEvents>
 
-// 年末調整の申告受付（提出状況の記録のみ。税額の計算や判定は持たない）
+/** 年末調整の申告受付（提出状況の記録のみ。税額の計算や判定は持たない） */
 export const yearEndAdjustments = sqliteTable(
   "year_end_adjustments",
   {
@@ -1631,7 +1670,7 @@ export const yearEndAdjustments = sqliteTable(
 
 export type YearEndAdjustmentRow = InferSelectModel<typeof yearEndAdjustments>
 
-// 反社チェックの申請（取引先の確認情報と判定結果を記録）
+/** 反社チェックの申請（取引先の確認情報と判定結果を記録） */
 export const antisocialChecks = sqliteTable("antisocial_checks", {
   id: text("id").primaryKey(),
   requesterId: integer("requester_id").notNull(),
@@ -1645,7 +1684,7 @@ export const antisocialChecks = sqliteTable("antisocial_checks", {
 
 export type AntisocialCheckRow = InferSelectModel<typeof antisocialChecks>
 
-// 会議体マスタ（定例会議などの器。cadence は開催頻度メモ）
+/** 会議体マスタ（定例会議などの器。cadence は開催頻度メモ） */
 export const meetings = sqliteTable(
   "meetings",
   {
@@ -1662,9 +1701,9 @@ export const meetings = sqliteTable(
 
 export type MeetingRow = InferSelectModel<typeof meetings>
 
-// 議事録（会議体ごとの開催記録）
+/** 議事録（会議体ごとの開催記録） */
 export const meetingMinutes = sqliteTable(
-  "meeting_minutes",
+  "meeting_minutes_records",
   {
     id: integer("id").primaryKey(),
     meetingId: integer("meeting_id").notNull(),
@@ -1680,9 +1719,9 @@ export const meetingMinutes = sqliteTable(
 
 export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
 
-// 意思決定記録（ADR 形式。文脈・決定・帰結を記録し、後続の決定で supersede する）
+/** 意思決定記録（ADR 形式。文脈・決定・帰結を記録し、後続の決定で supersede する） */
 export const decisions = sqliteTable(
-  "decisions",
+  "decision_records",
   {
     id: integer("id").primaryKey(),
     title: text("title").notNull(),
@@ -1699,8 +1738,8 @@ export const decisions = sqliteTable(
 
 export type DecisionRow = InferSelectModel<typeof decisions>
 
-// ライセンス・SaaS 台帳（更新期限・管理担当の事実記録。支払・会計連動は持たない）
-export const licenses = sqliteTable("licenses", {
+/** ライセンス・SaaS 台帳（更新期限・管理担当の事実記録。支払・会計連動は持たない） */
+export const licenses = sqliteTable("software_licenses", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   vendor: text("vendor"),
@@ -1715,7 +1754,7 @@ export const licenses = sqliteTable("licenses", {
 
 export type LicenseRow = InferSelectModel<typeof licenses>
 
-// インシデント記録（発生した障害・事故の事実記録。原因判定は持たない）
+/** インシデント記録（発生した障害・事故の事実記録。原因判定は持たない） */
 export const itIncidents = sqliteTable("it_incidents", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   occurredAt: text("occurred_at").notNull(),
@@ -1729,8 +1768,10 @@ export const itIncidents = sqliteTable("it_incidents", {
 
 export type ItIncidentRow = InferSelectModel<typeof itIncidents>
 
-// drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
-// IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
+/**
+ * drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
+ * IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
+ */
 export const accounts = sqliteTable(
   "accounts",
   {
@@ -1750,7 +1791,7 @@ export const accounts = sqliteTable(
 
 export type AccountRow = InferSelectModel<typeof accounts>
 
-// IAM: ログイン手段(多態)。password は secret に PBKDF2、OAuth は subject に sub。
+/** IAM: ログイン手段(多態)。password は secret に PBKDF2、OAuth は subject に sub。 */
 export const identities = sqliteTable(
   "identities",
   {
@@ -1772,7 +1813,61 @@ export const identities = sqliteTable(
 
 export type IdentityRow = InferSelectModel<typeof identities>
 
-// IAM: ロール。system role は is_system=1 で key 改名・削除不可。
+/**
+ * 外部 identity provider の短命トークンの使用済み jti を記録し、再利用(replay)を拒否する。
+ * jti が主キーのため、同一 jti の二重挿入は制約違反になり二重使用を封じる。
+ */
+export const identityLoginJti = sqliteTable(
+  "identity_login_tokens",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at").notNull(),
+  },
+  (table) => [index("idx_identity_login_jti_expires").on(table.expiresAt)],
+)
+
+export type IdentityLoginJtiRow = InferSelectModel<typeof identityLoginJti>
+
+/**
+ * CLI（ネイティブアプリ）ログインの one-time state。
+ * GET /auth/cli/login が発行し、broker から返ってきた GET /auth/cli/callback で 1 回だけ引いて消費する。
+ */
+export const cliLoginStates = sqliteTable(
+  "cli_login_states",
+  {
+    state: text("state").primaryKey(),
+    port: integer("port").notNull(),
+    cliState: text("cli_state").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_states_expires").on(table.expiresAt)],
+)
+
+export type CliLoginStateRow = InferSelectModel<typeof cliLoginStates>
+
+/**
+ * CLI（ネイティブアプリ）ログインの one-time code。
+ * GET /auth/cli/callback が identity 検証・プロビジョニング成功後に払い出し、
+ * POST /auth/cli/token が 1 回だけ消費してセッションを発行する。
+ * トークンは持たず、解決済みの account/employee の id のみを保持する
+ * （access/refresh トークンを平文で保存領域に置かないため）。code 自体は主キーに持たずハッシュ
+ * （code_hash）で照合する。
+ */
+export const cliLoginCodes = sqliteTable(
+  "cli_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_codes_expires").on(table.expiresAt)],
+)
+
+export type CliLoginCodeRow = InferSelectModel<typeof cliLoginCodes>
+
+/** IAM: ロール。system role は is_system=1 で key 改名・削除不可。 */
 export const roles = sqliteTable("roles", {
   id: integer("id").primaryKey(),
   key: text("key").notNull().unique(),
@@ -1784,7 +1879,7 @@ export const roles = sqliteTable("roles", {
 
 export type RoleRow = InferSelectModel<typeof roles>
 
-// IAM: 権限カタログ(UI 用の写し、正はコードの PERMISSION_KEYS)。
+/** IAM: 権限カタログ(UI 用の写し、正はコードの PERMISSION_KEYS)。 */
 export const permissions = sqliteTable("permissions", {
   id: integer("id").primaryKey(),
   key: text("key").notNull().unique(),
@@ -1794,7 +1889,7 @@ export const permissions = sqliteTable("permissions", {
 
 export type PermissionRow = InferSelectModel<typeof permissions>
 
-// IAM: ロールが持つ権限。
+/** IAM: ロールが持つ権限。 */
 export const rolePermissions = sqliteTable(
   "role_permissions",
   {
@@ -1806,7 +1901,7 @@ export const rolePermissions = sqliteTable(
 
 export type RolePermissionRow = InferSelectModel<typeof rolePermissions>
 
-// IAM: アカウントに割り当てたロール。複数可、実効権限は和集合。
+/** IAM: アカウントに割り当てたロール。複数可、実効権限は和集合。 */
 export const accountRoles = sqliteTable(
   "account_roles",
   {
@@ -1820,7 +1915,7 @@ export const accountRoles = sqliteTable(
 
 export type AccountRoleRow = InferSelectModel<typeof accountRoles>
 
-// IAM: refresh token。生は保存せず SHA-256 のみ。family_id で再利用検知。
+/** IAM: refresh token。生は保存せず SHA-256 のみ。family_id で再利用検知。 */
 export const refreshTokens = sqliteTable(
   "refresh_tokens",
   {
@@ -1844,9 +1939,9 @@ export const refreshTokens = sqliteTable(
 
 export type RefreshTokenRow = InferSelectModel<typeof refreshTokens>
 
-// IAM: 監査イベント(append-only)。UPDATE/DELETE は DB trigger でも禁止する。
+/** IAM: 監査イベント(append-only)。UPDATE/DELETE は DB trigger でも禁止する。 */
 export const auditLogs = sqliteTable(
-  "audit_logs",
+  "audit_events",
   {
     id: integer("id").primaryKey(),
     eventId: text("event_id").notNull().unique(),
@@ -1879,7 +1974,7 @@ export const auditLogs = sqliteTable(
 
 export type AuditLogRow = InferSelectModel<typeof auditLogs>
 
-// 取引先台帳（顧客・仕入先ほか。反社チェック・契約記録の親マスタ）
+/** 取引先台帳（顧客・仕入先ほか。反社チェック・契約記録の親マスタ） */
 export const partners = sqliteTable("partners", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   code: text("code").notNull().unique(),
@@ -1893,9 +1988,9 @@ export const partners = sqliteTable("partners", {
 
 export type PartnerRow = InferSelectModel<typeof partners>
 
-// 契約記録（契約日・期間・更新期限の事実記録。中身のレビューや法的判定はしない）
+/** 契約記録（契約日・期間・更新期限の事実記録。中身のレビューや法的判定はしない） */
 export const contracts = sqliteTable(
-  "contracts",
+  "partner_contracts",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     partnerId: integer("partner_id").notNull(),
@@ -1912,7 +2007,7 @@ export const contracts = sqliteTable(
 
 export type ContractRow = InferSelectModel<typeof contracts>
 
-// 社内アナウンス（全社お知らせ。draft→published→archived の状態を持つ）。
+/** 社内アナウンス（全社お知らせ。draft→published→archived の状態を持つ）。 */
 export const announcements = sqliteTable(
   "announcements",
   {
@@ -1929,7 +2024,7 @@ export const announcements = sqliteTable(
 
 export type AnnouncementRow = InferSelectModel<typeof announcements>
 
-// 規程集（就業規則などの版管理台帳）。
+/** 規程集（就業規則などの版管理台帳）。 */
 export const regulations = sqliteTable(
   "regulations",
   {
@@ -1945,7 +2040,7 @@ export const regulations = sqliteTable(
 
 export type RegulationRow = InferSelectModel<typeof regulations>
 
-// 規程の改定版（version は整数の連番。同一規程内で version は一意）。
+/** 規程の改定版（version は整数の連番。同一規程内で version は一意）。 */
 export const regulationVersions = sqliteTable(
   "regulation_versions",
   {
@@ -1965,9 +2060,9 @@ export const regulationVersions = sqliteTable(
 
 export type RegulationVersionRow = InferSelectModel<typeof regulationVersions>
 
-// 文書台帳（契約書・許認可などのメタデータ台帳。本体ファイルは持たず所在のみ記録する）。
+/** 文書台帳（契約書・許認可などのメタデータ台帳。本体ファイルは持たず所在のみ記録する）。 */
 export const documents = sqliteTable(
-  "documents",
+  "document_ledger_entries",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     title: text("title").notNull(),
@@ -1983,8 +2078,8 @@ export const documents = sqliteTable(
 
 export type DocumentRow = InferSelectModel<typeof documents>
 
-// 資格・免許マスタ（コード・名称・発行元・説明）。会社で管理対象とする資格の台帳。
-export const certifications = sqliteTable("certifications", {
+/** 資格・免許マスタ（コード・名称・発行元・説明）。会社で管理対象とする資格の台帳。 */
+export const certifications = sqliteTable("certification_definitions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
@@ -1995,7 +2090,7 @@ export const certifications = sqliteTable("certifications", {
 
 export type CertificationRow = InferSelectModel<typeof certifications>
 
-// 従業員の資格保有記録（取得日・有効期限つき）。更新要否の判定はしない（台帳）。
+/** 従業員の資格保有記録（取得日・有効期限つき）。更新要否の判定はしない（台帳）。 */
 export const employeeCertifications = sqliteTable(
   "employee_certifications",
   {
@@ -2020,7 +2115,7 @@ export const employeeCertifications = sqliteTable(
 
 export type EmployeeCertificationRow = InferSelectModel<typeof employeeCertifications>
 
-// 健康診断・ストレスチェックの実施記録のみ。要配慮個人情報である「結果」は絶対に持たない。
+/** 健康診断・ストレスチェックの実施記録のみ。要配慮個人情報である「結果」は絶対に持たない。 */
 export const healthCheckups = sqliteTable(
   "health_checkups",
   {
@@ -2041,7 +2136,7 @@ export const healthCheckups = sqliteTable(
 
 export type HealthCheckupRow = InferSelectModel<typeof healthCheckups>
 
-// 労災・事故の発生記録。起きた事実の時系列記録のみ（記録）。対象者不特定の事故もあるため employee_id は NULL 可。
+/** 労災・事故の発生記録。起きた事実の時系列記録のみ（記録）。対象者不特定の事故もあるため employee_id は NULL 可。 */
 export const workAccidents = sqliteTable(
   "work_accidents",
   {
@@ -2062,9 +2157,9 @@ export const workAccidents = sqliteTable(
 
 export type WorkAccidentRow = InferSelectModel<typeof workAccidents>
 
-// 採用の募集ポジション（社外個人情報を扱う候補者の親。open/closed の状態を持つ）。
+/** 採用の募集ポジション（社外個人情報を扱う候補者の親。open/closed の状態を持つ）。 */
 export const recruitmentPositions = sqliteTable(
-  "recruitment_positions",
+  "job_openings",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     title: text("title").notNull(),
@@ -2078,7 +2173,7 @@ export const recruitmentPositions = sqliteTable(
 
 export type RecruitmentPositionRow = InferSelectModel<typeof recruitmentPositions>
 
-// 応募者（社外個人情報。選考ステージを applied→…→hired/rejected で進める）。
+/** 応募者（社外個人情報。選考ステージを applied→…→hired/rejected で進める）。 */
 export const recruitmentCandidates = sqliteTable(
   "recruitment_candidates",
   {
@@ -2096,7 +2191,7 @@ export const recruitmentCandidates = sqliteTable(
 
 export type RecruitmentCandidateRow = InferSelectModel<typeof recruitmentCandidates>
 
-// 表彰の記録（社内公開。判定や評価計算は持たず事実の記録のみ）。
+/** 表彰の記録（社内公開。判定や評価計算は持たず事実の記録のみ）。 */
 export const commendations = sqliteTable(
   "commendations",
   {
@@ -2112,7 +2207,7 @@ export const commendations = sqliteTable(
 
 export type CommendationRow = InferSelectModel<typeof commendations>
 
-// 懲戒の記録（非公開。本人にも見せない設計。判定は持たず事実の記録のみ）。
+/** 懲戒の記録（非公開。本人にも見せない設計。判定は持たず事実の記録のみ）。 */
 export const disciplinaryActions = sqliteTable(
   "disciplinary_actions",
   {
@@ -2128,7 +2223,7 @@ export const disciplinaryActions = sqliteTable(
 
 export type DisciplinaryActionRow = InferSelectModel<typeof disciplinaryActions>
 
-// 人員計画（年度・部署ごとの計画人数。実在籍数との比較は API 側で active 数を添える）。
+/** 人員計画（年度・部署ごとの計画人数。実在籍数との比較は API 側で active 数を添える）。 */
 export const headcountPlans = sqliteTable(
   "headcount_plans",
   {
@@ -2146,7 +2241,7 @@ export const headcountPlans = sqliteTable(
 )
 
 export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
-// 監査付き batch の transaction 内だけで使う排他的 decision marker。
+/** 監査付き batch の transaction 内だけで使う排他的 decision marker。 */
 export const auditBatchDecisions = sqliteTable(
   "audit_batch_decisions",
   {
@@ -2170,6 +2265,9 @@ export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
 export const schema = {
   accounts,
   identities,
+  identityLoginJti,
+  cliLoginStates,
+  cliLoginCodes,
   roles,
   permissions,
   rolePermissions,

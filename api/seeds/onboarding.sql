@@ -12,7 +12,7 @@ INSERT INTO onboarding_templates (id, code, name, kind, description) VALUES
 
 INSERT INTO onboarding_template_tasks (template_code, code, title, sort_order, owner_role) VALUES
   ('engineer_join', 'issue_pc', 'Issue a laptop', 1, 'hr'),
-  ('engineer_join', 'create_account', 'Create accounts', 2, 'admin'),
+  ('engineer_join', 'create_account', 'Create accounts', 2, 'root'),
   ('common_leave', 'return_pc', 'Return the laptop', 1, 'hr');
 
 INSERT INTO onboarding_assignments (id, employee_id, template_code, kind, status, assigned_at) VALUES

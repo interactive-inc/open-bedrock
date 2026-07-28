@@ -6,8 +6,10 @@ export type ThanksListResult = {
   total: number
 }
 
-// GET /thanks。全従業員に公開された感謝のタイムライン（新着順）を取得する。
-// API は { data: ThanksResponse[], total: number } を返す。
+/**
+ * GET /thanks-messages。全従業員に公開された感謝のタイムライン（新着順）を取得する。
+ * API は { data: ThanksResponse[], total: number } を返す。
+ */
 export async function getThanksList(props?: {
   limit?: number
   offset?: number
@@ -24,7 +26,7 @@ export async function getThanksList(props?: {
     query.offset = String(props.offset)
   }
 
-  const response = await client.thanks.$get({ query })
+  const response = await client["thanks-messages"].$get({ query })
 
   if (response.status >= 400) {
     return new Error("failed to load thanks list")

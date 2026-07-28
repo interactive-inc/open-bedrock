@@ -6,7 +6,7 @@ import { and, asc, eq } from "drizzle-orm"
 export class LifeEventRepository {
   constructor(private readonly c: Context) {}
 
-  // 届出者本人のライフイベント届出をイベント日の昇順でページングして返す。
+  /** 届出者本人のライフイベント届出をイベント日の昇順でページングして返す。 */
   async findByEmployeeId(props: {
     employeeId: number
     limit: number
@@ -27,7 +27,7 @@ export class LifeEventRepository {
     }
   }
 
-  // ライフイベント届出 id で1件取得する。存在しなければ null。
+  /** ライフイベント届出 id で1件取得する。存在しなければ null。 */
   async findById(id: string): Promise<LifeEvent | null | Error> {
     try {
       const rows = await this.c.var.database.select().from(lifeEvents).where(eq(lifeEvents.id, id))
@@ -58,7 +58,7 @@ export class LifeEventRepository {
     }
   }
 
-  // ライフイベント届出の種別・発生日・詳細を更新する。status が "submitted" の行のみ対象。
+  /** ライフイベント届出の種別・発生日・詳細を更新する。status が "submitted" の行のみ対象。 */
   async update(lifeEvent: LifeEvent): Promise<LifeEvent | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -79,7 +79,7 @@ export class LifeEventRepository {
     }
   }
 
-  // status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。
+  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
   async updateStatus(props: {
     id: string
     fromStatus: string
@@ -100,7 +100,7 @@ export class LifeEventRepository {
     }
   }
 
-  // ライフイベント届出を削除する。status が "submitted" の行のみ対象。
+  /** ライフイベント届出を削除する。status が "submitted" の行のみ対象。 */
   async delete(id: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

@@ -24,7 +24,7 @@ export const seedApplicationTemplates: ReadonlyArray<SeedApplicationTemplate> = 
       },
       required: ["start_date", "end_date"],
     },
-    approverRoles: ["manager", "admin"],
+    approverRoles: ["manager", "root"],
   },
   {
     id: 2,
@@ -41,7 +41,7 @@ export const seedApplicationTemplates: ReadonlyArray<SeedApplicationTemplate> = 
       },
       required: ["amount", "category"],
     },
-    approverRoles: ["manager", "admin"],
+    approverRoles: ["manager", "root"],
   },
   {
     id: 3,
@@ -74,6 +74,6 @@ export const seedApplicationTemplates: ReadonlyArray<SeedApplicationTemplate> = 
       },
       required: ["item", "amount"],
     },
-    approverRoles: ["manager", "admin"],
+    approverRoles: ["manager", "root"],
   },
 ]

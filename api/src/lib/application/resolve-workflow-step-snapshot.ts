@@ -2,13 +2,14 @@ import type { ApplicationWorkflowStep } from "@/domain/application/application-w
 import type { Context } from "@/env"
 import { accounts } from "@/schema"
 import { eq } from "drizzle-orm"
-import { dueAt } from "@/lib/application/evaluate-workflow"
+import { dueAt } from "@/lib/application/due-at"
 import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
 import {
   resolveWorkflowApproverMatches,
   type WorkflowApproverMatch,
   type WorkflowApproverProvenance,
-} from "@/lib/application/resolve-workflow-approvers"
+} from "@/lib/application/resolve-workflow-approver-matches"
+import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
 
 export type WorkflowStepCandidateSnapshot = {
   employeeId: number
@@ -27,13 +28,6 @@ export type WorkflowStepSnapshotDraft = {
   resolutionReason: "activation" | "legacy_backfill" | "manual_repair"
   resolutionId: string
   candidates: ReadonlyArray<WorkflowStepCandidateSnapshot>
-}
-
-export class UnresolvableWorkflowStepError extends Error {
-  constructor(readonly stepKey: string) {
-    super(`workflow step has insufficient active approvers: ${stepKey}`)
-    this.name = "UnresolvableWorkflowStepError"
-  }
 }
 
 export async function resolveWorkflowStepSnapshot(props: {

@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /applications/:id/approve。任意コメント付きで申請を承認する。
+/** POST /application-requests/:id/approve。任意コメント付きで申請を承認する。 */
 export async function approveApplication(id: number, comment: string | null) {
   const client = await createClient()
 
-  const response = await client.applications[":id"].approve.$post({
+  const response = await client["application-requests"][":id"].approve.$post({
     param: { id: String(id) },
     json: { comment: comment },
   })

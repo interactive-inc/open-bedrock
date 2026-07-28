@@ -11,7 +11,7 @@ type SeedReviewForm = {
   submittedAt: string | null
 }
 
-// 1サイクル・1被評価者に self/manager/peer のフォームを割り当てる。
+/** 1サイクル・1被評価者に self/manager/peer のフォームを割り当てる。 */
 export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: 1,

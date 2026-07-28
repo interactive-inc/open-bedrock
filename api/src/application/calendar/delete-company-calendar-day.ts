@@ -1,11 +1,11 @@
-import { canManageCalendar } from "@/lib/calendar/can-manage-calendar"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/infrastructure/calendar/company-calendar-day-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
 }
 
@@ -16,7 +16,7 @@ export class DeleteCompanyCalendarDay {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<null | ApplicationError> {
-    if (canManageCalendar(command.session) === false) {
+    if (command.session.hasPermission("calendar:manage") === false) {
       return new ForbiddenError("cannot manage calendar", "forbidden")
     }
 

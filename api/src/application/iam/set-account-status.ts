@@ -1,4 +1,4 @@
-import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
+import type { Session } from "@/lib/auth/session"
 import { accountStatusSchema } from "@/lib/schemas"
 import {
   ConflictError,
@@ -8,15 +8,15 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard"
-import { hasPermissionSuperset } from "@/lib/iam/has-permission-superset"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   accountId: number
   status: string
   now: number
@@ -32,7 +32,7 @@ export class SetAccountStatus {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Updated | ApplicationError> {
-    if (canManageAccounts(command.session) === false) {
+    if (command.session.hasPermission("account:manage") === false) {
       return new ForbiddenError("cannot manage accounts", "forbidden")
     }
 
@@ -63,14 +63,14 @@ export class SetAccountStatus {
     }
 
     // live permission・状態変更・実効管理者検査を同じ batch で確定する。
-    const updated = await accountRepository.setStatusGuardingLastAdmin(
+    const updated = await accountRepository.setStatusGuardingLastRoot(
       command.accountId,
       parsedStatus.data,
       command.now,
       command.session.accountId,
     )
 
-    if (updated instanceof LastAdminError) {
+    if (updated instanceof LastRootError) {
       return new ConflictError("cannot deactivate the last effective admin", "last_admin")
     }
 

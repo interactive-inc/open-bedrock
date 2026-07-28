@@ -3,19 +3,11 @@ import { accountRoles, permissions, rolePermissions, roles } from "@/schema"
 import type { RoleRow } from "@/schema"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenNoLoginEnabledEffectiveAdmin,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
-import {
-  abortWhenActorCannotManageRoleById,
-  isAbortedByLivePermissionGuard,
-  LivePermissionGuardError,
-} from "@/infrastructure/iam/live-permission-guard"
-import { eq, inArray } from "drizzle-orm"
-
-// IAM のロールと、その permission 割当を扱う。動的ロールの CRUD と permission 一括置換を担う。
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
+import { eq } from "drizzle-orm"
 
 export type RoleWithPermissions = {
   role: RoleRow
@@ -23,7 +15,7 @@ export type RoleWithPermissions = {
 }
 
 /**
- * roles と role_permissions を扱うリポジトリ。
+ * roles と role_permissions を扱うリポジトリ。動的ロールの CRUD と permission 一括置換を担う。
  */
 export class RoleRepository {
   constructor(private readonly c: Context) {
@@ -129,21 +121,12 @@ export class RoleRepository {
 
   async permissionKeysOf(roleId: number): Promise<ReadonlyArray<string> | Error> {
     try {
-      const grants = await this.c.var.database
-        .select()
-        .from(rolePermissions)
-        .where(eq(rolePermissions.roleId, roleId))
-
-      const permissionIds = grants.map((row) => row.permissionId)
-
-      if (permissionIds.length === 0) {
-        return []
-      }
-
+      // permission 数が D1 のバインド変数上限(100)を超えるため join で解決する。
       const rows = await this.c.var.database
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.id, permissionIds))
+        .select({ key: permissions.key })
+        .from(rolePermissions)
+        .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+        .where(eq(rolePermissions.roleId, roleId))
 
       return rows.map((row) => row.key)
     } catch (caught) {
@@ -200,13 +183,15 @@ export class RoleRepository {
         return null
       }
 
-      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）
+      // permission キーを ID に解決する（読み取り専用なので batch 外で実行）。
+      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
       const drizzle = this.c.var.database
 
-      const permissionRows = await drizzle
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.key, [...permissionKeys]))
+      const requestedKeys = new Set(permissionKeys)
+
+      const allPermissionRows = await drizzle.select().from(permissions)
+
+      const permissionRows = allPermissionRows.filter((row) => requestedKeys.has(row.key))
 
       // DELETE と全 INSERT を同一 batch にまとめてアトミックに実行する
       await db.batch([
@@ -236,7 +221,7 @@ export class RoleRepository {
     name: string
     description: string | null
     permissionKeys: ReadonlyArray<string>
-  }): Promise<null | Error | LastAdminError | LivePermissionGuardError> {
+  }): Promise<null | Error | LastRootError | LivePermissionGuardError> {
     try {
       const db = this.c.env.DB
 
@@ -250,8 +235,7 @@ export class RoleRepository {
       }
 
       await db.batch([
-        abortWhenActorCannotManageRoleById({
-          db,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleById({
           actorAccountId: props.actorAccountId,
           targetRoleId: props.roleId,
           requiredPermissionKeys: ["iam:manage_roles"],
@@ -268,17 +252,17 @@ export class RoleRepository {
             )
             .bind(props.roleId, permissionId),
         ),
-        abortWhenNoLoginEnabledEffectiveAdmin(db),
+        new LastRootGuard(this.c).abortWhenNoLoginEnabledEffectiveRoot(),
       ])
 
       return null
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught)) {
         return new LivePermissionGuardError({ cause: caught })
       }
 
-      if (isAbortedByLastAdminGuard(caught)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(caught)) {
+        return new LastRootError()
       }
 
       return caught instanceof Error ? caught : new Error("failed to update role")
@@ -335,12 +319,12 @@ export class RoleRepository {
     permissionKeys: ReadonlyArray<string>,
   ): Promise<ReadonlyArray<number> | Error> {
     try {
-      const rows = await this.c.var.database
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.key, [...permissionKeys]))
+      // 指定キー数が D1 のバインド変数上限(100)を超えうるため、全件を読み key で絞る。
+      const requestedKeys = new Set(permissionKeys)
 
-      return rows.map((row) => row.id)
+      const rows = await this.c.var.database.select().from(permissions)
+
+      return rows.filter((row) => requestedKeys.has(row.key)).map((row) => row.id)
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve permission ids")
     }

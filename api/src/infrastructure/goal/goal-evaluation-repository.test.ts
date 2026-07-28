@@ -1,14 +1,14 @@
 import { GoalEvaluation } from "@/domain/goal/goal-evaluation.entity"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 describe("GoalEvaluationRepository", () => {
   test("create persists the evaluation and assigns an id", async () => {
     const { context, db } = createTestContext()
 
-    await seedD1(db, "goals", [
+    await seedD1(db, "performance_goals", [
       {
         id: 1,
         employee_id: 2,

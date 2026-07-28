@@ -117,20 +117,20 @@ const assignmentSelect = `
   SELECT period_id, revision, employment_period_id, employee_id, department_code,
          assignment_type, position_title, manager_employee_id, starts_on, ends_on,
          is_void, recorded_by_action_id, recorded_at
-  FROM org_assignment_period_versions AS current
+  FROM employee_org_assignment_period_versions AS current
   WHERE current.revision = (
     SELECT MAX(candidate.revision)
-    FROM org_assignment_period_versions AS candidate
+    FROM employee_org_assignment_period_versions AS candidate
     WHERE candidate.period_id = current.period_id
   ) AND current.is_void = 0`
 
 const responsibilitySelect = `
   SELECT period_id, revision, department_code, responsibility_type, employee_id,
          starts_on, ends_on, is_void, recorded_by_action_id, recorded_at
-  FROM org_responsibility_period_versions AS current
+  FROM employee_org_responsibility_period_versions AS current
   WHERE current.revision = (
     SELECT MAX(candidate.revision)
-    FROM org_responsibility_period_versions AS candidate
+    FROM employee_org_responsibility_period_versions AS candidate
     WHERE candidate.period_id = current.period_id
   ) AND current.is_void = 0`
 
@@ -226,7 +226,7 @@ export class EmployeeLifecycleRepository {
           .bind(employeeId)
           .first<number>("revision"),
         this.c.env.DB.prepare(
-          "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+          "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
         ).first<number>("revision"),
       ])
 
@@ -273,11 +273,49 @@ export class EmployeeLifecycleRepository {
     }
   }
 
+  /**
+   * 人事ライフサイクル移行の進捗を返す。`pending` → `backfilled` → `verified` と進む。
+   *
+   * この値を見て分岐する呼び出し側（`employees`、`me`、`directory/employees` の各 route と
+   * `lib/org`・`lib/application` の解決関数）が、verified 経路（期間テーブルを正本とする
+   * 時点指定読み）と legacy 経路（`employees` 表の非正規化列 dept_id/dept_name/position/status
+   * を読む現在時点のみ）に分かれる。
+   *
+   * ## legacy 経路を削除してよい条件
+   *
+   * legacy 経路は移行前の遺物ではなく、未移行 deployment の唯一の読み経路である。
+   * migration 0019 が全 deployment に `status = 'pending'` を INSERT するため、
+   * 新規セルフホスト環境は必ず pending から始まり、batch の preflight → backfill → verify
+   * を実行するまで verified にならない。したがって legacy 経路を今削除すると、
+   * seed 済みの開発環境以外（＝実運用の新規導入すべて）が従業員一覧を読めなくなる。
+   *
+   * 削除できるのは次を全て満たしたときに限る。
+   *
+   * 1. 新規 deployment が pending を経由しなくなる。空 DB を `verified` として
+   *    開始してよいと migration で表明する案が考えられるが、**それだけでは足りない**。
+   *    verified 経路は「期間テーブルに状態がある従業員」しか一覧に出さない
+   *    （`interface/routes/employees/route.ts` の findStatesAt 後の filter）。
+   *    一方 bootstrap は `employees` に 1 行 INSERT するだけで期間行を作らない
+   *    （`infrastructure/iam/bootstrap-account-repository.ts`）。空 DB を verified で
+   *    始めると、最初の管理者が従業員一覧から消える。
+   *    したがって条件は「bootstrap と、移行後に従業員を増やす全ての経路が、
+   *    期間テーブル（雇用・在籍状態・配属）を必ず作ること」まで含む。
+   * 2. 既存 deployment に verified への到達を強制する手段がある。運用者が backfill/verify を
+   *    実行しないまま API を更新すると、legacy 削除は無停止の機能喪失になる。
+   *    最低限、pending/backfilled のまま起動したら 503 で明示的に停止する必要がある。
+   * 3. `employees` の非正規化列（dept_id/dept_name/position/status）の扱いを決める。
+   *    これらは legacy 経路の読み元であると同時に、verified 後も
+   *    `rebuild-lifecycle-projections` が現在時点の投影として書き続けている。
+   *    legacy 削除＝列削除ではない。列を残すなら投影専用と明記し、読み取りの正本が
+   *    期間テーブル側であることを型か命名で示す。
+   *
+   * 1〜3 が揃うまでは分岐を残す。分岐の重複を減らす目的で片方を消さない。
+   */
   async migrationStatus(): Promise<"pending" | "backfilled" | "verified" | ApplicationError> {
     try {
       return (
         (await this.c.env.DB.prepare(
-          "SELECT status FROM lifecycle_migration_state WHERE id = 1",
+          "SELECT status FROM lifecycle_migration_states WHERE id = 1",
         ).first<"pending" | "backfilled" | "verified">("status")) ?? "pending"
       )
     } catch (cause) {

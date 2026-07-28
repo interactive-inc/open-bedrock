@@ -2,10 +2,10 @@ import { Asset } from "@/domain/asset/asset.entity"
 import { DeleteAsset } from "@/application/asset/delete-asset"
 import { UpdateAsset } from "@/application/asset/update-asset"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"
 
@@ -50,7 +50,7 @@ describe("UpdateAsset", () => {
     await seedInStock(context, "A1001")
 
     const result = await new UpdateAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1001",
       details: { name: "Renamed", kind: "monitor", serial: "SN-2", purchasedOn: "2026-02-02" },
     })
@@ -85,7 +85,7 @@ describe("UpdateAsset", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A9999",
       details: { name: "Ghost", kind: "pc", serial: null, purchasedOn: null },
     })
@@ -101,7 +101,7 @@ describe("DeleteAsset", () => {
     await seedInStock(context, "A1003")
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1003",
     })
 
@@ -120,7 +120,7 @@ describe("DeleteAsset", () => {
     await seedLent(context, "A1004")
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A1004",
     })
 
@@ -144,7 +144,7 @@ describe("DeleteAsset", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteAsset(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       code: "A9999",
     })
 

@@ -49,8 +49,10 @@ export class RingiRequestRepository {
     }
   }
 
-  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
-  // 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。決裁結果は行に inline 保持する。
+  /**
+   * 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+   * 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。決裁結果は行に inline 保持する。
+   */
   async decideFromPending(props: {
     ringiId: number
     status: "approved" | "rejected"

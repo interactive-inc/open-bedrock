@@ -1,14 +1,15 @@
-import { canModifyEnrollment } from "@/lib/training/can-modify-enrollment"
+import type { Session } from "@/lib/auth/session"
+import { canModifyEnrollment } from "@/application/training/can-modify-enrollment"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/domain/training/training-enrollment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/infrastructure/training/training-enrollment-repository"
 
 export type Command = {
   enrollmentId: number
   viewerEmployeeId: number
-  session: SessionPayload
+  session: Session
   dueDate: string | null
 }
 

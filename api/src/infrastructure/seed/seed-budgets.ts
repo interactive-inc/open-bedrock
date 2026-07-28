@@ -10,8 +10,10 @@ type SeedBudget = {
   createdAt: string
 }
 
-// departmentId は seedDepartments に存在する部署に対応させる。
-// dept 3(Engineering)は seed-expenses の承認済み経費(id:2, 3300)が消化額に反映される。
+/**
+ * departmentId は seedDepartments に存在する部署に対応させる。
+ * dept 3(Engineering)は seed-expenses の承認済み経費(id:2, 3300)が消化額に反映される。
+ */
 export const seedBudgets: ReadonlyArray<SeedBudget> = [
   {
     id: 1,

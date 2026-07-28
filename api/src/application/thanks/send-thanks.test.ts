@@ -1,8 +1,8 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
 import { Thanks } from "@/domain/thanks/thanks.entity"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

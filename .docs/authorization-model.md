@@ -1,7 +1,5 @@
 # 認可モデル
 
-規範性: 仕様正本。Principal ごとの技術的認可、scope、項目制御、案件資格、実行時検査を定める。
-
 認可は、Principal、操作、対象、項目、状態、時点の組を評価する。会社を拘束する判断権限は [権限と意思決定モデル](./authority-model.md) が定める。技術的認可を会社上の権限として使用してはならない。
 
 ## Principal
@@ -51,7 +49,7 @@ flowchart TD
 
 - Permission は API operation の上限を表す安定 key とする
 - ロールは Permission の集合とする
-- 業務コードで `admin`、`hr` などのロール名を直接判定しない
+- 業務コードで `root`、`hr` などのロール名を直接判定しない
 - Permission だけで対象範囲、決裁権限、案件資格を付与しない
 - ロールの付与と剥奪へ認可、職務分離、監査を適用する
 - 最後の実効管理者を失う変更は transaction 内で拒否する
@@ -69,6 +67,8 @@ scope は対象集合と有効時点を返す。少なくとも次を区別す�
 - organization
 - resource_custody
 - external_tenant
+
+`organization` は自社内の全社 scope を表す。`external_tenant` は connector が接続する外部製品内の対象であり、法人の選択に使用してはならない。
 
 複数 scope の和集合によって項目範囲または purpose を拡張してはならない。過去記録は、保存済み参加資格または履歴閲覧方針で評価する。現在の組織関係で評価してはならない。
 

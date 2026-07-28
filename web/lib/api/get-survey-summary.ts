@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// 指定アンケートの集計を取得する。GET /surveys/:survey_id/summary。
+/** 指定アンケートの集計を取得する。GET /surveys/:survey_id/summary。 */
 export async function getSurveySummary(surveyId: number) {
   const client = await createClient()
 

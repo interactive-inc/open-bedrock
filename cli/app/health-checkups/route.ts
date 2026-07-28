@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte health-checkups [--fiscal-year <y>] [--employee-id <id>] — 健診・ストレスチェックの実施記録一覧（本人 or health_checkup:read:all）`
+export const help = `bedrock health-checkups [--fiscal-year <y>] [--employee-id <id>] — 健診・ストレスチェックの実施記録一覧（本人 or health_checkup:read:all）`
 
 export default factory.createHandlers(
   zValidator(

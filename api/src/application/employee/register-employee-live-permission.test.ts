@@ -1,20 +1,19 @@
+import { Session } from "@/lib/auth/session"
 import { RegisterEmployee } from "@/application/employee/register-employee"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import {
-  replaceAccountRolesWithPermissionSets,
-  seedIamTestAccount,
-} from "@/interface/shared/test/seed-effective-admin"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { replaceAccountRolesWithPermissionSets } from "@/interface/test-helpers/replace-account-roles-with-permission-sets"
+import { seedIamTestAccount } from "@/interface/test-helpers/seed-iam-test-account"
 import { ForbiddenError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
 describe("RegisterEmployee live actor authorization", () => {
   test("fails closed when employee:create is revoked before provisioning", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E960")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
@@ -41,7 +40,7 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when employee:assign_role is revoked before assigning a non-member role", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E962")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
@@ -69,7 +68,7 @@ describe("RegisterEmployee live actor authorization", () => {
 
   test("fails closed when the actor loses a target-role permission before provisioning", async () => {
     const { context, db } = createTestContext()
-    await db.prepare("UPDATE lifecycle_migration_state SET status = 'verified' WHERE id = 1").run()
+    await db.prepare("UPDATE lifecycle_migration_states SET status = 'verified' WHERE id = 1").run()
     const actorAccountId = await seedIamTestAccount(context, "E964")
     const [actorRole] = await replaceAccountRolesWithPermissionSets(
       context,
@@ -134,20 +133,20 @@ async function createRole(context: Context, key: string, permissionKeys: Readonl
   return role
 }
 
-async function sessionFor(context: Context, accountId: number): Promise<SessionPayload> {
+async function sessionFor(context: Context, accountId: number): Promise<Session> {
   const account = await new AccountAuthRepository(context).resolveById(accountId)
 
   if (account === null || account instanceof Error || account.employeeId === null) {
     throw new Error("account setup failed")
   }
 
-  return {
+  return new Session({
     accountId: account.accountId,
     employeeId: account.employeeId,
     employeeStatus: "active",
     permissions: account.permissions,
     roleKeys: account.roleKeys,
-  }
+  })
 }
 
 function mutateBeforeNextBatch(

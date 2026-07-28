@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// POST /assets/:code/dispose。物品を廃棄済みにする（管理者ロールのみ）。
+/** POST /assets/:code/dispose。物品を廃棄済みにする（管理者ロールのみ）。 */
 export async function disposeAsset(code: string, reason: string, disposedOn?: string) {
   const client = await createClient()
 

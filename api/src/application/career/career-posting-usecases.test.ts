@@ -8,13 +8,13 @@ import { CareerPosting } from "@/domain/career/career-posting.entity"
 import { CareerApplicationRepository } from "@/infrastructure/career/career-application-repository"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedPosting(context: Context): Promise<number> {
   const created = await new CreateCareerPosting(context).run({
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     title: "Platform Engineer",
     deptId: 3,
     deptName: "Engineering",
@@ -113,7 +113,7 @@ describe("UpdateCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const updated = await new UpdateCareerPosting(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       postingId: postingId,
       title: "Senior Platform Engineer",
       deptId: 3,
@@ -136,7 +136,7 @@ describe("UpdateCareerPosting", () => {
     const { context } = createTestContext()
 
     const updated = await new UpdateCareerPosting(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       postingId: 9999,
       title: "X",
       deptId: null,
@@ -156,7 +156,7 @@ describe("DeleteCareerPosting", () => {
     const postingId = await seedPosting(context)
 
     const result = await new DeleteCareerPosting(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       postingId: postingId,
     })
 
@@ -203,7 +203,7 @@ describe("DeleteCareerPosting", () => {
     }
 
     const result = await new DeleteCareerPosting(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       postingId,
     })
 
@@ -225,7 +225,7 @@ describe("DeleteCareerPosting", () => {
 
     // Now delete the posting — should succeed (no applied applications)
     const result = await new DeleteCareerPosting(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       postingId,
     })
 

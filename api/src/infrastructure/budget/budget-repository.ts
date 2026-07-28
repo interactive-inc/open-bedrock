@@ -115,8 +115,10 @@ export class BudgetRepository {
     }
   }
 
-  // 承認済み経費を部署・期間で SUM する。経費に部署の紐付きは無いため、申請者従業員の所属部署で集計する。
-  // spent_at が予算の period_start..period_end に収まる approved の経費のみ対象。
+  /**
+   * 承認済み経費を部署・期間で SUM する。経費に部署の紐付きは無いため、申請者従業員の所属部署で集計する。
+   * spent_at が予算の period_start..period_end に収まる approved の経費のみ対象。
+   */
   async sumApprovedExpenses(props: {
     departmentId: number
     periodStart: string

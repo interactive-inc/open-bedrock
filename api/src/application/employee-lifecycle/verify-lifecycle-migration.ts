@@ -1,12 +1,10 @@
 import {
   loadLegacyLifecycleSnapshot,
-  validateMigrationInput,
   type LegacyLifecycleSnapshot,
-} from "@/application/employee-lifecycle/lifecycle-migration-support"
-import {
-  containsDate,
-  type LifecycleSchedule,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
+import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
 import { validateLifecycleSchedules } from "@/domain/employee-lifecycle/validate-lifecycle-schedule"
 import type { Context } from "@/env"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
@@ -125,7 +123,7 @@ export class VerifyLifecycleMigration {
       const state = await this.c.env.DB.prepare(
         `SELECT status, baseline_on, company_time_zone, legacy_source_fingerprint,
                   employee_count, department_count
-           FROM lifecycle_migration_state WHERE id = 1`,
+           FROM lifecycle_migration_states WHERE id = 1`,
       ).first<MigrationState>()
       if (
         state === null ||
@@ -176,7 +174,7 @@ export class VerifyLifecycleMigration {
 
       const now = Math.floor(Date.parse(this.c.env.NOW ?? new Date().toISOString()) / 1_000)
       const update = await this.c.env.DB.prepare(
-        `UPDATE lifecycle_migration_state SET status = 'verified', verified_at = ?1
+        `UPDATE lifecycle_migration_states SET status = 'verified', verified_at = ?1
            WHERE id = 1 AND status = 'backfilled' AND legacy_source_fingerprint = ?2`,
       )
         .bind(now, command.legacySourceFingerprint)

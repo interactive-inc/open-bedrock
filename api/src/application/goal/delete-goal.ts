@@ -1,11 +1,9 @@
 import type { Context } from "@/env"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
+import { hasFinalEvaluation } from "@/application/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 
@@ -57,7 +55,9 @@ export class DeleteGoal {
       const db = this.c.env.DB
       await db.batch([
         db.prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1").bind(command.goalId),
-        db.prepare("DELETE FROM goals WHERE id = ?1 AND status != 'done'").bind(command.goalId),
+        db
+          .prepare("DELETE FROM performance_goals WHERE id = ?1 AND status != 'done'")
+          .bind(command.goalId),
         abortWhenPreviousStatementChangedNoRows(db),
       ])
     } catch (error) {

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/api/hc-client"
 
-// GET /assets/lent/me。自分が借りている貸与品の一覧。
+/** GET /assets/lent/me。自分が借りている貸与品の一覧。 */
 export async function getMyLentAssets() {
   const client = await createClient()
 

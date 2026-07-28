@@ -1,3 +1,8 @@
 JWT_SECRET="local-dev-secret-change-me"
 AUDIT_HMAC_SECRET="local-dev-audit-hmac-secret-change-me"
 COMPANY_TIME_ZONE="Asia/Tokyo"
+PROVISIONING_API_KEY="local-dev-provisioning-key-change-me"
+IDENTITY_JWT_SECRET="local-dev-identity-secret-change-me"
+IDENTITY_ISSUER="https://identity-provider.example/"
+IDENTITY_AUDIENCE="open-karte"
+BOOTSTRAP_TOKEN="local-dev-bootstrap-token-change-me"

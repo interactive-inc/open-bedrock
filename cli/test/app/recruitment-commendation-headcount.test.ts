@@ -2,21 +2,21 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/recruitment", help: "karte recruitment" },
-  { path: "/recruitment/positions", help: "recruitment positions" },
-  { path: "/recruitment/position-create", help: "recruitment position-create" },
-  { path: "/recruitment/position-update", help: "recruitment position-update" },
-  { path: "/recruitment/candidates", help: "recruitment candidates" },
-  { path: "/recruitment/candidate-add", help: "recruitment candidate-add" },
-  { path: "/recruitment/advance", help: "recruitment advance" },
-  { path: "/commendations", help: "karte commendations" },
+  { path: "/job-openings", help: "bedrock job-openings" },
+  { path: "/job-openings/list", help: "job-openings list" },
+  { path: "/job-openings/create", help: "job-openings create" },
+  { path: "/job-openings/update", help: "job-openings update" },
+  { path: "/recruitment-candidates/list", help: "recruitment-candidates list" },
+  { path: "/recruitment-candidates/create", help: "recruitment-candidates create" },
+  { path: "/recruitment-candidates/advance", help: "recruitment-candidates advance" },
+  { path: "/commendations", help: "bedrock commendations" },
   { path: "/commendations/list", help: "commendations list" },
   { path: "/commendations/create", help: "commendations create" },
   { path: "/commendations/delete", help: "commendations delete" },
-  { path: "/disciplinary-actions", help: "karte disciplinary-actions" },
+  { path: "/disciplinary-actions", help: "bedrock disciplinary-actions" },
   { path: "/disciplinary-actions/list", help: "disciplinary-actions list" },
   { path: "/disciplinary-actions/create", help: "disciplinary-actions create" },
-  { path: "/headcount-plans", help: "karte headcount-plans" },
+  { path: "/headcount-plans", help: "bedrock headcount-plans" },
   { path: "/headcount-plans/list", help: "headcount-plans list" },
   { path: "/headcount-plans/create", help: "headcount-plans create" },
   { path: "/headcount-plans/update", help: "headcount-plans update" },
@@ -38,7 +38,7 @@ describe("recruitment / commendations / disciplinary-actions / headcount-plans c
   }
 
   it("recruitment position-create requires --title", async () => {
-    const response = await app.request("/recruitment/position-create", {
+    const response = await app.request("/job-openings/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({}),
@@ -48,7 +48,7 @@ describe("recruitment / commendations / disciplinary-actions / headcount-plans c
   })
 
   it("recruitment advance requires <candidate_id>", async () => {
-    const response = await app.request("/recruitment/advance", {
+    const response = await app.request("/recruitment-candidates/advance", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ stage: "screening" }),

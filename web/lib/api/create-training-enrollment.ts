@@ -5,13 +5,13 @@ import type {
   TrainingEnrollmentResponse,
 } from "@/lib/api/types/training-types"
 
-// POST /training/enrollments。本人がコースの受講を申し込む。
+/** POST /training-enrollments。本人がコースの受講を申し込む。 */
 export async function createTrainingEnrollment(
   request: TrainingEnrollmentCreateRequest,
 ): Promise<TrainingEnrollmentResponse | Error> {
   const client = await createClient()
 
-  const response = await client.training.enrollments.$post({
+  const response = await client["training-enrollments"].$post({
     json: { course_code: request.course_code },
   })
 

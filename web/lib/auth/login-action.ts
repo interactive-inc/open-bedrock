@@ -1,7 +1,6 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { postLogin } from "@/lib/api/post-login"
 import { setSessionCookies } from "@/lib/auth/set-session-cookies"
 import { getTranslator } from "@/lib/i18n/get-translator"
@@ -13,7 +12,8 @@ export type LoginState = {
 
 /**
  * ログインフォームの Server Action。`useActionState` から呼ばれる。
- * 成功時は session cookie を立てて `/` へ redirect する。
+ * 成功時は session cookie を立て、Client Component へ成功を返す。
+ * error boundary の reset で現在の URL を再描画するため、ここでは redirect しない。
  */
 export async function loginAction(
   previousState: LoginState,
@@ -43,5 +43,5 @@ export async function loginAction(
     refreshToken: result.refresh_token,
   })
 
-  redirect("/")
+  return { ok: true, error: null }
 }

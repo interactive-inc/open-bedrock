@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-// DELETE /rentals/:id。レンタル予約を取消す。
-// 本人以外は 403、不存在は 404 を api が返すため、戻りは Error になる。成功時は null。
+/**
+ * DELETE /rental-reservations/:id。レンタル予約を取消す。
+ * 本人以外は 403、不存在は 404 を api が返すため、戻りは Error になる。成功時は null。
+ */
 export async function cancelRentalReservation(id: string): Promise<null | Error> {
   const client = await createClient()
 
-  const response = await client.rentals[":id"].$delete({
+  const response = await client["rental-reservations"][":id"].$delete({
     param: { id },
   })
 

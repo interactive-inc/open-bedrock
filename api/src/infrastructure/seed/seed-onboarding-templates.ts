@@ -23,7 +23,7 @@ export const seedOnboardingTemplates: ReadonlyArray<SeedOnboardingTemplate> = [
     description: "Initial setup for new engineers",
     tasks: [
       { code: "issue_pc", title: "Issue a laptop", order: 1, ownerRole: "hr" },
-      { code: "create_account", title: "Create accounts", order: 2, ownerRole: "admin" },
+      { code: "create_account", title: "Create accounts", order: 2, ownerRole: "root" },
     ],
   },
   {

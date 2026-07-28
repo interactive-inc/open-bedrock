@@ -1,12 +1,10 @@
-# 製品能力境界
+# 製品能力
 
-規範性: 実装写像。一般業務能力に対する製品責任と実装状態を対応付ける。
+open-karte は自社の一般的な業務能力を分類し、製品の責任境界を割り当てる。法律、税、会計、給与計算、決済もモデルから除外せず、実行主体を外部へ割り当てる。
 
-導入組織で発生し得る一般的な業務能力と open-karte の責任境界を分類する。法律、税、会計、給与計算、決済もモデルから除外せず、実行主体を外部へ割り当てる。
+公開 repository には、open-karte 開発元または利用者の自社に固有の事業、戦略、顧客、契約、取引、財務、人事を記録しない。主体と能力は製品モデル上の一般型として扱い、実在組織の事実と結び付けない。
 
-本書は open-karte 開発元または特定の導入組織の事業、戦略、顧客、契約、取引、財務、人事を記録しない。記載する主体と能力は製品モデル上の一般型であり、実在組織の事実ではない。
-
-製品責務の境界は [製品目的と境界](./product-purpose.md) を正本とする。本書は能力分類と実装状態の対応 snapshot である。実装済み route、schema、画面の正本はコードと migration とする。能力列挙は roadmap または実装約束ではない。
+実装状態は route、schema、画面、migration と一致させる。能力の列挙は roadmap または実装約束を意味しない。
 
 ## 分類軸
 
@@ -42,16 +40,16 @@ flowchart LR
 ### 経営戦略と全社目標
 
 - 会社での位置: 隣接
-- 製品の役割: 参照
+- 製品の役割: 記録・参照
 - 実現主体: 経営者と外部の戦略管理
-- 実装状態: 非対象。個人目標は扱うが、経営戦略の策定を実行しない
+- 実装状態: 部分実装。全社・部門・個人の目標ツリーと経営ダッシュボードは実装済み。経営戦略の策定は実行しない
 
 ### 会社統治と法定機関
 
 - 会社での位置: 外部必須
 - 製品の役割: 調整・記録
 - 実現主体: 権限ある人間、合議体、外部専門家
-- 実装状態: 部分実装。governance 文書、role assignment、review、publish はあるが、合議体、定足数、authority enforcement は未完成
+- 実装状態: 部分実装。governance 文書、role assignment、review、publish、会議体台帳、議事録、意思決定記録はあるが、合議体の定足数と authority enforcement は未完成
 
 ## 顧客と提供
 
@@ -84,21 +82,28 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 調整・記録
 - 実現主体: 人間と外部 planning 製品
-- 実装状態: 未実装
+- 実装状態: 部分実装。年度・部署別の人員計画の記録と実在籍比較は実装済み。外部 planning 連携は未実装
 
 ### 法人と事業所
 
 - 会社での位置: 中核
 - 製品の役割: 記録
 - 実現主体: open-karte と外部 master
-- 実装状態: 未実装
+- 実装状態: 未実装。自社 profile と LegalEntity record はない
+
+### Deployment と単一法人境界
+
+- 会社での位置: 中核
+- 製品の役割: 所有・強制
+- 実現主体: 自社と open-karte
+- 実装状態: 部分実装。self-host deployment があり、route と schema に法人 selector と tenant partition はない。自社 profile と LegalEntity record は未実装
 
 ### Job、Position、office、cost center
 
 - 会社での位置: 中核
 - 製品の役割: 所有・記録
 - 実現主体: open-karte
-- 実装状態: 部分実装。表示項目と role はあるが、Kind と期間関係の分離が不完全
+- 実装状態: 部分実装。表示項目と role はあり、等級マスタと割当履歴は実装済み。役職マスタと選択入力は実装済み(従業員登録と人事発令が役職マスタの code を参照する)。役職の期間付き履歴は人事発令が持つ。Kind と期間関係の分離が不完全
 
 ### Project と外部関係者
 
@@ -119,9 +124,9 @@ flowchart LR
 ### 採用と候補者
 
 - 会社での位置: 隣接
-- 製品の役割: 調整・参照
-- 実現主体: 外部採用製品と人間
-- 実装状態: 未実装
+- 製品の役割: 記録・調整
+- 実現主体: open-karte、人間、外部採用製品
+- 実装状態: 部分実装。募集と候補者パイプラインの記録は実装済み。外部採用製品との連携は未実装
 
 ### Onboarding
 
@@ -251,7 +256,7 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 調整・記録
 - 実現主体: 外部資産管理製品と open-karte
-- 実装状態: 未実装
+- 実装状態: 部分実装。ライセンス・SaaS の台帳は実装済み。資産保守は未実装
 
 ### 拠点、入退館、物理 security
 
@@ -281,7 +286,7 @@ flowchart LR
 - 会社での位置: 外部必須
 - 製品の役割: 調整・記録・参照
 - 実現主体: 外部給与製品と権限ある人間
-- 実装状態: 台帳のみ。給与計算は行わない
+- 実装状態: 部分実装。給与改定の事実記録と閲覧は実装済み。給与明細は schema のみ。給与計算は行わない
 
 ### 年末調整
 
@@ -295,7 +300,7 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 調整・記録
 - 実現主体: open-karte、人間、外部契約・購買製品
-- 実装状態: 未実装
+- 実装状態: 部分実装。取引先台帳と契約記録は実装済み。購買と発注は未実装
 
 ### 支払
 
@@ -364,13 +369,6 @@ flowchart LR
 - 実現主体: open-karte
 - 実装状態: 実装済み
 
-### 用語、handbook、外部 source
-
-- 会社での位置: 中核
-- 製品の役割: 参照
-- 実現主体: repository 文書、人間、外部専門 source
-- 実装状態: 実装済み。非実行の参考情報として分類
-
 ### 規程版、公開、対象、acknowledgement
 
 - 会社での位置: 中核
@@ -413,7 +411,7 @@ flowchart LR
 - 会社での位置: 外部必須
 - 製品の役割: 調整・記録
 - 実現主体: 外部専門家と専門製品
-- 実装状態: 未実装
+- 実装状態: 部分実装。健康診断・ストレスチェックの実施記録と労災・事故の記録は実装済み。医学的判断と法的判断は外部
 
 ### Risk register、ControlRun、内部 audit
 
@@ -427,7 +425,7 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 調整・記録
 - 実現主体: open-karte、人間、外部専門家
-- 実装状態: 未実装。procedure definition はあるが実行 case はない
+- 実装状態: 部分実装。IT インシデントの発生と解消の記録は実装済み。procedure definition からの実行 case は未実装
 
 ### Privacy management
 
@@ -478,7 +476,7 @@ flowchart LR
 - 会社での位置: 中核
 - 製品の役割: 調整・記録・強制
 - 実現主体: open-karte と権限ある人間・合議体
-- 実装状態: 未実装。governance role と workflow approval は概念の一部だけを表す
+- 実装状態: 未実装。governance role と workflow approval は、ResponsibilityAssignment、判断時 snapshot、継続責任主体を含む概念の一部だけを表す
 
 ### Break-glass access
 
@@ -547,12 +545,26 @@ flowchart LR
 - 実現主体: open-karte と外部 AI runtime
 - 実装状態: 未実装。CLI 利用は可能だが AgentPrincipal、mandate、attestation chain はない
 
-### Notification と dashboard
+### Notification
 
 - 会社での位置: 中核
 - 製品の役割: 所有
 - 実現主体: open-karte と外部 notification provider
-- 実装状態: 部分実装。通知と dashboard はあるが、全 domain と外部 provider の統一 contract はない
+- 実装状態: 部分実装。内部通知はあるが、全 domain と外部 provider の統一 contract はない
+
+### 外部承認チャネル
+
+- 会社での位置: 中核
+- 製品の役割: 連携・強制
+- 実現主体: open-karte と外部 messaging provider
+- 実装状態: 未実装。外部 identity mapping、単回 state token、step-up、HumanAttestation callback contract はない
+
+### Metric projection と dashboard
+
+- 会社での位置: 中核
+- 製品の役割: 所有・参照
+- 実現主体: open-karte
+- 実装状態: 部分実装。dashboard はあるが、MetricDefinition、MetricObservation、as-of、provenance、集計と drill-down の共通認可は未実装
 
 ### Batch、health、job operation
 
@@ -579,7 +591,7 @@ flowchart LR
 
 - 会社での位置: 中核
 - 製品の役割: 所有
-- 実現主体: 導入組織と open-karte
+- 実現主体: 自社と open-karte
 - 実装状態: 実装済み
 
 ## 網羅性の点検

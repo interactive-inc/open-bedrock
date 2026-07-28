@@ -1,26 +1,26 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import {
-  containsDate,
-  type LifecycleSchedule,
-  type LifecycleVersionMutation,
+import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import type {
+  LifecycleSchedule,
+  LifecycleVersionMutation,
 } from "@/domain/employee-lifecycle/lifecycle-schedule"
 import {
   projectPersonnelAction,
   type PersonnelActionProjection,
 } from "@/domain/employee-lifecycle/project-personnel-action"
 import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
-import type { Context, SessionPayload } from "@/env"
+import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
+import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {
   PersonnelActionRepository,
   type PersonnelActionRecord,
 } from "@/infrastructure/employee-lifecycle/personnel-action-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -29,11 +29,11 @@ import {
   UnavailableError,
   ValidationError,
 } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { z } from "zod"
 
 export type DirectPersonnelActionCommand = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   input: PersonnelActionInput
   idempotencyKey: string
@@ -52,38 +52,6 @@ type CurrentLifecycleProjection = {
 
 const idempotencyKeySchema = z.string().min(1).max(200)
 const revisionSchema = z.number().int().nonnegative()
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(canonicalize)
-  }
-
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([key, child]) => [key, canonicalize(child)]),
-    )
-  }
-
-  return value
-}
-
-function stableJson(value: unknown): string {
-  return JSON.stringify(canonicalize(value))
-}
-
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
-}
-
-export function fingerprintPersonnelAction(
-  employeeId: number | string,
-  input: PersonnelActionInput,
-): Promise<string> {
-  return sha256(stableJson({ employeeId, input }))
-}
 
 export type PreparedPersonnelActionCompletion = {
   action: PersonnelActionRecord
@@ -186,7 +154,7 @@ function mutationStatement(
       const period = mutation.after
       return db
         .prepare(
-          `INSERT INTO org_assignment_period_versions
+          `INSERT INTO employee_org_assignment_period_versions
              (period_id, revision, employment_period_id, employee_id, department_code,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
@@ -212,7 +180,7 @@ function mutationStatement(
       const period = mutation.after
       return db
         .prepare(
-          `INSERT INTO org_responsibility_period_versions
+          `INSERT INTO employee_org_responsibility_period_versions
              (period_id, revision, department_code, responsibility_type, employee_id,
               starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
@@ -348,7 +316,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     statements.push(
       db
         .prepare(
-          `UPDATE organization_lifecycle_state
+          `UPDATE organization_lifecycle_states
            SET revision = revision + 1, updated_at = ?1
            WHERE id = 1 AND revision = ?2`,
         )
@@ -379,7 +347,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         props.action.correctsActionId,
         props.action.operationId,
         props.action.payloadFingerprint,
-        stableJson(props.action.summary),
+        stableLifecycleJson(props.action.summary),
       ),
     abortWhenPreviousStatementChangedNoRows(db),
     ...props.projection.mutations.map((mutation) => mutationStatement(db, mutation)),
@@ -434,7 +402,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
     statements.push(
       db
         .prepare(
-          `INSERT INTO lifecycle_outbox
+          `INSERT INTO lifecycle_outbox_entries
              (personnel_action_id, effect_type, payload_json, attempt_count,
               next_attempt_at, processed_at, last_error_code, created_at)
            VALUES (?1, ?2, ?3, 0, ?4, NULL, NULL, ?4)`,
@@ -442,7 +410,7 @@ function preparePersistenceStatements(c: Context, props: PersistenceProps): D1Pr
         .bind(
           props.action.id,
           props.action.kind,
-          stableJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
+          stableLifecycleJson({ actionId: props.action.id, employeeId: props.action.employeeId }),
           props.action.recordedAt,
         ),
     )
@@ -460,7 +428,7 @@ export class ApplyPersonnelAction {
   async run(
     command: DirectPersonnelActionCommand,
   ): Promise<{ action: PersonnelActionRecord; replayed: boolean } | ApplicationError> {
-    if (!hasPermission(command.session, "employee:lifecycle:apply")) {
+    if (!command.session.hasPermission("employee:lifecycle:apply")) {
       return new ForbiddenError("人事発令を確定する権限がありません", "forbidden")
     }
 
@@ -639,7 +607,7 @@ export class ApplyPersonnelAction {
   }
 
   async prepareApplicationCompletion(command: {
-    session: SessionPayload
+    session: Session
     employeeId: number | null
     input: PersonnelActionInput
     sourceApplicationId: number | null
@@ -835,7 +803,7 @@ export class ApplyPersonnelAction {
   }
 
   async prepareDirectProspectiveHire(command: {
-    session: SessionPayload
+    session: Session
     input: Extract<PersonnelActionInput, { kind: "hire" }>
     idempotencyKey: string
     expectedOrganizationRevision: number

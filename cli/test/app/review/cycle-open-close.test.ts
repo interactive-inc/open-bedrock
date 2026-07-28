@@ -1,11 +1,13 @@
 import { app } from "@/app/index"
 import { describe, expect, test } from "bun:test"
 
-// review cycle open / close コマンドの到達性と引数検証を確認する。
-// help は API 呼び出し前に返るため、--id 検証も実リクエストなしでテストできる。
+/**
+ * review cycle open / close コマンドの到達性と引数検証を確認する。
+ * help は API 呼び出し前に返るため、--id 検証も実リクエストなしでテストできる。
+ */
 const cycleStatusRoutes: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/review/cycle/open", help: "review cycle open" },
-  { path: "/review/cycle/close", help: "review cycle close" },
+  { path: "/review-cycles/open", help: "review-cycles open" },
+  { path: "/review-cycles/close", help: "review-cycles close" },
 ]
 
 describe("review cycle open/close", () => {

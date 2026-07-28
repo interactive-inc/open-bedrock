@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import { Application } from "@/domain/application/application.entity"
 import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
-import type { Context, SessionPayload } from "@/env"
-import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
+import type { Context } from "@/env"
+import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
 import {
   ApplicationError,
   ConflictError,
@@ -17,13 +17,11 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
-import { applicableWorkflowSteps } from "@/lib/application/evaluate-workflow"
-import {
-  resolveWorkflowStepSnapshot,
-  UnresolvableWorkflowStepError,
-} from "@/lib/application/resolve-workflow-step-snapshot"
+import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
+import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
 
 export type CreatedPersonnelActionRequest = {
   id: string
@@ -50,13 +48,13 @@ export class CreatePersonnelActionRequest {
   }
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     input: PersonnelActionInput
     baseEmployeeRevision: number
     baseOrganizationRevision: number | null
     createdAt: string
   }): Promise<CreatedPersonnelActionRequest | ApplicationError> {
-    if (!hasPermission(command.session, "employee:lifecycle:request")) {
+    if (!command.session.hasPermission("employee:lifecycle:request")) {
       return new ForbiddenError("人事変更を申請する権限がありません", "forbidden")
     }
     if (command.input.kind === "legacy_baseline") {
@@ -87,7 +85,7 @@ export class CreatePersonnelActionRequest {
     if (requester instanceof Error || requester === null) {
       return new UnexpectedError("申請者を取得できません", { cause: requester ?? undefined })
     }
-    if (!hasPermission(command.session, "employee:lifecycle:read:all")) {
+    if (!command.session.hasPermission("employee:lifecycle:read:all")) {
       if (prospective) {
         const organization = await loadCurrentOrganization(this.c)
         if (organization instanceof Error) {
@@ -116,7 +114,7 @@ export class CreatePersonnelActionRequest {
     }
     if (prospective) {
       const organizationRevision = await this.c.env.DB.prepare(
-        "SELECT revision FROM organization_lifecycle_state WHERE id = 1",
+        "SELECT revision FROM organization_lifecycle_states WHERE id = 1",
       ).first<number>("revision")
       if (
         command.baseEmployeeRevision !== 0 ||

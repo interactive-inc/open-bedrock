@@ -9,13 +9,13 @@ import { ListMyGoals } from "@/application/goal/list-my-goals"
 import { CreateGoalEvaluation } from "@/application/goal/create-goal-evaluation"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import type { Context } from "@/env"
 
-// 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。
+/** 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。 */
 async function seedReportsTo(
   db: D1Database,
   props: { managerId: number; managerCode: string; ownerId: number; ownerCode: string },
@@ -62,7 +62,7 @@ async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
     score: 5,
     comment: "Good work",
     evaluatorId: 999,
-    session: makeTestSession("admin"),
+    session: makeTestSession("root"),
     createdAt: "2026-01-01T00:00:00.000Z",
   })
 
@@ -191,7 +191,7 @@ describe("GetGoal", () => {
     const result = await new GetGoal(context).run({
       goalId: 9999,
       viewerEmployeeId: 1,
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
     })
 
     expectApplicationError(result, NotFoundError, "goal_not_found")

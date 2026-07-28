@@ -2,8 +2,10 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { EmployeeCreateRequest } from "@/lib/api/types/employee-types"
 
-// POST /employees。従業員を新規登録する（権限が必要）。
-// 権限不足は 403、コード重複は 409 を api が返すため、戻りは Error になる。
+/**
+ * POST /employees。従業員を新規登録する（権限が必要）。
+ * 権限不足は 403、コード重複は 409 を api が返すため、戻りは Error になる。
+ */
 export async function createEmployee(request: EmployeeCreateRequest) {
   const client = await createClient()
 

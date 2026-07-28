@@ -2,7 +2,7 @@
 -- スキルマスタと従業員ごとの登録スキル。
 -- 値は src/infrastructure/seed/seed-skills.ts と src/infrastructure/seed/seed-employee-skills.ts に一致させること。
 
-INSERT INTO skills (code, name, category) VALUES
+INSERT INTO skill_definitions (code, name, category) VALUES
 ('typescript', 'TypeScript', 'Programming'),
 ('react', 'React', 'Frontend'),
 ('nodejs', 'Node.js', 'Backend'),

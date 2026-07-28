@@ -2,10 +2,8 @@ import { Expense, expenseRowSchema } from "@/domain/expense/expense.entity"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { expenseApprovals, expenses } from "@/schema"
 import { and, eq } from "drizzle-orm"
 
@@ -77,8 +75,10 @@ export class ExpenseRepository {
     }
   }
 
-  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
-  // 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+  /**
+   * 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+   * 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+   */
   async decideFromPending(props: {
     expenseId: number
     status: "approved" | "rejected"
@@ -98,8 +98,10 @@ export class ExpenseRepository {
     }
   }
 
-  // 経費申請を削除する。
-  // pending 状態のみ削除可。承認済み・却下済み・精算済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+  /**
+   * 経費申請を削除する。
+   * pending 状態のみ削除可。承認済み・却下済み・精算済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+   */
   async delete(expenseId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -113,7 +115,7 @@ export class ExpenseRepository {
     }
   }
 
-  // 承認/却下の記録は経費集約に属するため、経費リポジトリが永続化する。
+  /** 承認/却下の記録は経費集約に属するため、経費リポジトリが永続化する。 */
   async addApproval(approval: ExpenseApproval): Promise<ExpenseApproval | Error> {
     try {
       const rows = await this.c.var.database
@@ -137,8 +139,10 @@ export class ExpenseRepository {
     }
   }
 
-  // status の条件付き UPDATE と承認記録 INSERT を D1 batch でアトミックに行う。
-  // 決定済み（0 行更新）は null を返す。batch 全体が失敗すると rollback される。
+  /**
+   * status の条件付き UPDATE と承認記録 INSERT を D1 batch でアトミックに行う。
+   * 決定済み（0 行更新）は null を返す。batch 全体が失敗すると rollback される。
+   */
   async decideFromPendingWithApproval(props: {
     expenseId: number
     status: "approved" | "rejected"

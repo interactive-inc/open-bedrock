@@ -4,9 +4,9 @@ import { ApplicationTemplate } from "@/domain/application/application-template.e
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 const approvalStep = {
@@ -175,7 +175,7 @@ async function expectNoApproval(
     .bind(applicationId)
     .first<number>("total")
   const status = await db
-    .prepare("SELECT status FROM applications WHERE id = ?1")
+    .prepare("SELECT status FROM application_requests WHERE id = ?1")
     .bind(applicationId)
     .first<string>("status")
 
@@ -206,7 +206,7 @@ describe("workflow delegation security", () => {
 
     const repeated = await decide(setupResult.context, setupResult.applicationId, 2, "reject")
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
     const approvalCount = await setupResult.db
@@ -403,7 +403,7 @@ describe("workflow delegation security", () => {
     const state = await setupResult.db
       .prepare(
         `SELECT application.current_step, workflow_instance.current_step_key
-         FROM applications application
+         FROM application_requests application
          INNER JOIN application_workflow_instances workflow_instance
            ON workflow_instance.application_id = application.id
          WHERE application.id = ?1`,

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 export class MeetingRepository {
   constructor(private readonly c: Context) {}
 
-  // 会議体 code で1件取得する。存在しなければ null。
+  /** 会議体 code で1件取得する。存在しなければ null。 */
   async findByCode(code: string): Promise<Meeting | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -45,7 +45,7 @@ export class MeetingRepository {
     }
   }
 
-  // 会議体の名称・頻度・説明・状態を更新する。該当行が無ければ null。
+  /** 会議体の名称・頻度・説明・状態を更新する。該当行が無ければ null。 */
   async update(meeting: Meeting): Promise<Meeting | null | Error> {
     try {
       if (meeting.id === null) {

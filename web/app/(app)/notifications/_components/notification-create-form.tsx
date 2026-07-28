@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 const initialState: NotificationFormState = { ok: false, error: null }
 
-// 通知の種別の選択肢。値は api の notificationKindSchema に対応する。
+/** 通知の種別の選択肢。値は api の notificationKindSchema に対応する。 */
 const kindOptions = [
   { value: "announcement", label: "お知らせ" },
   { value: "task", label: "タスク" },
@@ -33,8 +33,10 @@ type Props = {
   employees: ReadonlyArray<{ code: string; name: string }>
 }
 
-// 通知の作成フォーム（特権ロール向け）。宛先・種別・タイトル・本文を native form で送る。
-// 成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
+/**
+ * 通知の作成フォーム（特権ロール向け）。宛先・種別・タイトル・本文を native form で送る。
+ * 成功・失敗の通知は action の結果を見て toast() で出す。成功時は一覧へ遷移する。
+ */
 export function NotificationCreateForm(props: Props) {
   const router = useRouter()
 

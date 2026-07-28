@@ -7,9 +7,9 @@ import { UpdateAntisocialCheck } from "@/application/antisocial-check/update-ant
 import { AntisocialCheck } from "@/domain/antisocial-check/antisocial-check.entity"
 import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedCheck(context: Context, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({

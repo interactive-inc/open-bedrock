@@ -5,15 +5,12 @@ import { SubmitApplication } from "@/application/application/submit-application"
 import { ApplicationTemplate } from "@/domain/application/application-template.entity"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import {
-  ApplicationWorkflowRepository,
-  conditionalWorkflowStepSnapshotInsertStatements,
-  workflowStepSnapshotInsertStatements,
-} from "@/infrastructure/application/application-workflow-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import { seedD1 } from "@/interface/shared/test/seed-d1"
+import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"
 
 const firstStep = {
@@ -154,8 +151,7 @@ describe("configured application workflow", () => {
     }
 
     expect(
-      workflowStepSnapshotInsertStatements({
-        db,
+      new WorkflowSql(db).insert({
         applicationId: 1,
         stepKey: "large",
         round: 1,
@@ -163,8 +159,7 @@ describe("configured application workflow", () => {
       }).length,
     ).toBeLessThanOrEqual(8)
     expect(
-      conditionalWorkflowStepSnapshotInsertStatements({
-        db,
+      new WorkflowSql(db).conditionalInsert({
         applicationId: 1,
         stepKey: "large",
         round: 1,
@@ -566,7 +561,9 @@ describe("configured application workflow", () => {
     )
     if (snapshot === null || snapshot instanceof Error) throw snapshot
     await setupResult.db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = ?1",
+      )
       .bind(setupResult.applicationId)
       .run()
 
@@ -619,7 +616,7 @@ describe("configured application workflow", () => {
     ).toBe(true)
 
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
 
@@ -667,7 +664,9 @@ describe("configured application workflow", () => {
       .bind(setupResult.applicationId)
       .run()
     await setupResult.db
-      .prepare("UPDATE applications SET status = 'approved', current_step = NULL WHERE id = ?1")
+      .prepare(
+        "UPDATE application_requests SET status = 'approved', current_step = NULL WHERE id = ?1",
+      )
       .bind(setupResult.applicationId)
       .run()
 
@@ -966,8 +965,7 @@ describe("configured application workflow", () => {
 
     for (const candidateEmployeeId of [2, 3]) {
       await setupResult.db.batch([
-        ...workflowStepSnapshotInsertStatements({
-          db: setupResult.db,
+        ...new WorkflowSql(setupResult.db).insert({
           applicationId: setupResult.applicationId,
           stepKey: "manager",
           round: 1,
@@ -1029,7 +1027,7 @@ describe("configured application workflow", () => {
     })
 
     const status = await setupResult.db
-      .prepare("SELECT status FROM applications WHERE id = ?1")
+      .prepare("SELECT status FROM application_requests WHERE id = ?1")
       .bind(setupResult.applicationId)
       .first<string>("status")
 

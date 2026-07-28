@@ -1,7 +1,9 @@
 import { cookies } from "next/headers"
 
-// httpOnly cookie `session` に保存した Bearer トークンを取り出す。
-// Server Component / Server Action 専用。クライアントへは露出しない。
+/**
+ * httpOnly cookie `session` に保存した Bearer トークンを取り出す。
+ * Server Component / Server Action 専用。クライアントへは露出しない。
+ */
 export async function getServerSession(): Promise<string | null> {
   const cookieStore = await cookies()
 

@@ -20,6 +20,7 @@ const actions = [
   "auth.session.refreshed",
   "auth.session.logout",
   "auth.session.reuse_detected",
+  "auth.bootstrap.completed",
   "iam.role.created",
   "iam.role.updated",
   "iam.role.deleted",
@@ -27,6 +28,13 @@ const actions = [
   "iam.account.role_revoked",
   "iam.account.status_changed",
   "iam.account.password_reset",
+  "iam.identity.provisioned",
+  "iam.identity.provision_updated",
+  "auth.session.identity_login_succeeded",
+  "auth.session.identity_login_denied",
+  "auth.session.cli_login_succeeded",
+  "auth.session.cli_login_denied",
+  "auth.session.browser_login_succeeded",
   "employee.account.registered",
   "employee.account.retired",
   "employee.account.deleted",
@@ -61,6 +69,7 @@ const targetTypes = [
   "session",
   "role",
   "account",
+  "identity",
   "employee",
   "application_workflow",
   "application",
@@ -110,7 +119,7 @@ function makeInput(overrides: Partial<AuditEventInput> = {}): AuditEventInput {
 }
 
 describe("audit event vocabulary", () => {
-  test("accepts exactly the 40 managed actions", () => {
+  test("accepts exactly the 47 managed actions", () => {
     expect(auditActionSchema.options).toEqual([...actions])
     for (const action of actions) {
       expect(auditActionSchema.parse(action)).toBe(action)
@@ -118,7 +127,7 @@ describe("audit event vocabulary", () => {
     expect(() => auditActionSchema.parse("free.form.action")).toThrow()
   })
 
-  test("accepts exactly the 12 managed target types", () => {
+  test("accepts exactly the 13 managed target types", () => {
     expect(auditTargetTypeSchema.options).toEqual([...targetTypes])
     for (const targetType of targetTypes) {
       expect(auditTargetTypeSchema.parse(targetType)).toBe(targetType)

@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte dashboard — ダッシュボード集計`
+export const help = `bedrock dashboard — ダッシュボード集計`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

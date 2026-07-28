@@ -1,6 +1,6 @@
 import { Asset } from "@/domain/asset/asset.entity"
 import { AssetRepository } from "@/infrastructure/asset/asset-repository"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { assetLendings } from "@/schema"
 import { describe, expect, test } from "bun:test"
 import type { Context } from "@/env"

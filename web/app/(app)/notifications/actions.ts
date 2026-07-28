@@ -10,13 +10,13 @@ import { requireAuth } from "@/lib/auth/require-auth"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
-// useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。
+/** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type NotificationFormState = {
   ok: boolean
   error: string | null
 }
 
-// 指定通知の既読化 Server Action。hidden input の notification_id を受け取る。
+/** 指定通知の既読化 Server Action。hidden input の notification_id を受け取る。 */
 export async function markNotificationReadAction(
   _previousState: NotificationFormState,
   formData: FormData,
@@ -40,7 +40,7 @@ export async function markNotificationReadAction(
   return { ok: true, error: null }
 }
 
-// 全件既読化 Server Action。
+/** 全件既読化 Server Action。 */
 export async function markAllNotificationsReadAction(
   _previousState: NotificationFormState,
 ): Promise<NotificationFormState> {
@@ -57,7 +57,7 @@ export async function markAllNotificationsReadAction(
   return { ok: true, error: null }
 }
 
-// FormData の kind を NotificationKind に正規化する。未知の値は announcement。
+/** FormData の kind を NotificationKind に正規化する。未知の値は announcement。 */
 function toNotificationKind(value: FormDataEntryValue | null): NotificationKind {
   if (value === "task") {
     return "task"
@@ -78,8 +78,10 @@ function toNotificationKind(value: FormDataEntryValue | null): NotificationKind 
   return "announcement"
 }
 
-// 通知作成 Server Action（特権ロール）。recipient_employee_code/kind/title 必須、body 任意。
-// 成功時は一覧へ redirect する。
+/**
+ * 通知作成 Server Action（特権ロール）。recipient_employee_code/kind/title 必須、body 任意。
+ * 成功時は一覧へ redirect する。
+ */
 export async function createNotificationAction(
   _previousState: NotificationFormState,
   formData: FormData,

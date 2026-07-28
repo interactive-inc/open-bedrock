@@ -92,7 +92,7 @@ export function SidebarUserMenu(props: Props) {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem render={<Link href="/employees" />}>
+          <DropdownMenuItem render={<Link href="/my" />}>
             <User />
             <span>プロフィール</span>
           </DropdownMenuItem>

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `karte batch employee-lifecycle preflight --baseline-on <date> --time-zone <iana-zone>`
+export const help = `bedrock batch employee-lifecycle preflight --baseline-on <date> --time-zone <iana-zone>`
 export default factory.createHandlers(
   zValidator(
     "json",

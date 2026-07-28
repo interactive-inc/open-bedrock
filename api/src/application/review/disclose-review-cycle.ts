@@ -1,12 +1,12 @@
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
 import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   cycleId: number
 }
 
@@ -22,7 +22,7 @@ export class DiscloseReviewCycle {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<DiscloseResult | ApplicationError> {
-    if (canAdministerCycle(input.session) === false) {
+    if (input.session.hasPermission("review:administer") === false) {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 

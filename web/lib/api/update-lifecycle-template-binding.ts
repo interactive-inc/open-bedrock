@@ -8,7 +8,7 @@ export async function updateLifecycleTemplateBinding(
   effectType: LifecycleEffect,
 ): Promise<{ effect_type: LifecycleEffect; template_code: string } | Error> {
   const client = await createClient()
-  const response = await client.onboarding.templates[":code"]["lifecycle-binding"].$put({
+  const response = await client["onboarding-templates"][":code"]["lifecycle-binding"].$put({
     param: { code: templateCode },
     json: { effect_type: effectType },
   })
@@ -20,19 +20,4 @@ export async function updateLifecycleTemplateBinding(
   }
 
   return response.json()
-}
-
-export async function removeLifecycleTemplateBinding(templateCode: string): Promise<null | Error> {
-  const client = await createClient()
-  const response = await client.onboarding.templates[":code"]["lifecycle-binding"].$delete({
-    param: { code: templateCode },
-  })
-
-  if (response.status >= 400) {
-    return toResponseError(response, {
-      fallback: "入退社イベントとの連携解除に失敗しました",
-    })
-  }
-
-  return null
 }

@@ -9,11 +9,9 @@ import { ReviewForm } from "@/domain/review/review-form.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ReviewCycleRepository } from "@/infrastructure/review/review-cycle-repository"
-import { expectApplicationError } from "@/interface/shared/test/expect-application-error"
-import { createTestContext } from "@/interface/shared/test/create-test-context"
-import { makeTestSession } from "@/interface/shared/test/make-test-session"
-
-// --- seed helpers ---
+import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
+import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 
 async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
   const created = await new ReviewCycleRepository(context).create(
@@ -68,14 +66,12 @@ async function seedForm(
   return Number(formId)
 }
 
-// --- CreateReviewCycle ---
-
 describe("CreateReviewCycle", () => {
   test("creates a draft cycle with admin role", async () => {
     const { context } = createTestContext()
 
     const created = await new CreateReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       title: "2026 H1 Review",
       period: "2026-H1",
       dueDate: "2026-06-30",
@@ -120,8 +116,6 @@ describe("CreateReviewCycle", () => {
   })
 })
 
-// --- DeleteReviewCycle ---
-
 describe("DeleteReviewCycle", () => {
   test("deletes a draft cycle", async () => {
     const { context } = createTestContext()
@@ -129,7 +123,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new DeleteReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
@@ -146,7 +140,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new DeleteReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
@@ -159,7 +153,7 @@ describe("DeleteReviewCycle", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new DeleteReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
@@ -170,7 +164,7 @@ describe("DeleteReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: 9999,
     })
 
@@ -205,7 +199,7 @@ describe("DeleteReviewCycle", () => {
     await db.prepare("UPDATE review_cycles SET status = 'open' WHERE id = ?1").bind(cycleId).run()
 
     const result = await new DeleteReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
@@ -214,8 +208,6 @@ describe("DeleteReviewCycle", () => {
   })
 })
 
-// --- SetReviewCycleStatus ---
-
 describe("SetReviewCycleStatus", () => {
   test("transitions draft to open", async () => {
     const { context } = createTestContext()
@@ -223,7 +215,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new SetReviewCycleStatus(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       status: "open",
     })
@@ -243,7 +235,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new SetReviewCycleStatus(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       status: "closed",
     })
@@ -263,7 +255,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new SetReviewCycleStatus(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       status: "closed",
     })
@@ -277,7 +269,7 @@ describe("SetReviewCycleStatus", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new SetReviewCycleStatus(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       status: "open",
     })
@@ -289,7 +281,7 @@ describe("SetReviewCycleStatus", () => {
     const { context } = createTestContext()
 
     const result = await new SetReviewCycleStatus(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: 9999,
       status: "open",
     })
@@ -310,8 +302,6 @@ describe("SetReviewCycleStatus", () => {
   })
 })
 
-// --- UpdateReviewCycle ---
-
 describe("UpdateReviewCycle", () => {
   test("updates a draft cycle", async () => {
     const { context } = createTestContext()
@@ -319,7 +309,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "draft")
 
     const result = await new UpdateReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Updated Title",
       period: "2026-H2",
@@ -343,7 +333,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "open")
 
     const result = await new UpdateReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Open Updated",
       period: "2026-H1",
@@ -365,7 +355,7 @@ describe("UpdateReviewCycle", () => {
     const cycleId = await seedCycle(context, "closed")
 
     const result = await new UpdateReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Should Fail",
       period: "2026-H1",
@@ -379,7 +369,7 @@ describe("UpdateReviewCycle", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateReviewCycle(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       cycleId: 9999,
       title: "Missing",
       period: "2026-H1",
@@ -403,8 +393,6 @@ describe("UpdateReviewCycle", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 })
-
-// --- SubmitReviewForm ---
 
 describe("SubmitReviewForm", () => {
   test("submits a pending form in an open cycle", async () => {

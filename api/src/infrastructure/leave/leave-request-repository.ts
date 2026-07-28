@@ -1,7 +1,7 @@
 import { LeaveRequest, leaveRequestRowSchema } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 
@@ -31,10 +31,12 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 同一社員の未却下（pending/approved）申請のうち、指定期間と重なるものを返す。
-  // 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
-  // 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
-  // excludeId を渡すと当該申請自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
+  /**
+   * 同一社員の未却下（pending/approved）申請のうち、指定期間と重なるものを返す。
+   * 期間 [startA, endA] と [startB, endB] は startA <= endB かつ startB <= endA で重複する。
+   * 日付は YYYY-MM-DD のゼロ埋め文字列なので辞書順比較で大小が成り立つ。
+   * excludeId を渡すと当該申請自身を除外する（更新時に自己ヒットして常に重複扱いになるのを防ぐ）。
+   */
   async findOverlapping(props: {
     employeeId: number
     startDate: string
@@ -61,8 +63,10 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
-  // 同一社員の未却下（pending/approved）申請と期間が重なる行があれば INSERT をスキップし null を返す。
+  /**
+   * 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
+   * 同一社員の未却下（pending/approved）申請と期間が重なる行があれば INSERT をスキップし null を返す。
+   */
   async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
       const result = await this.c.var.database.run(
@@ -125,8 +129,10 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
-  // 再決定と残数の二重減算を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+  /**
+   * 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+   * 再決定と残数の二重減算を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+   */
   async decideFromPending(props: {
     leaveRequestId: number
     status: "approved" | "rejected"
@@ -152,9 +158,11 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 承認と休暇残数の減算を D1 batch で同一トランザクションにまとめる。
-  // Cloudflare D1 は BEGIN TRANSACTION ではなく batch() で複数 statement の
-  // 順次実行と失敗時 rollback を提供する。
+  /**
+   * 承認と休暇残数の減算を D1 batch で同一トランザクションにまとめる。
+   * Cloudflare D1 は BEGIN TRANSACTION ではなく batch() で複数 statement の
+   * 順次実行と失敗時 rollback を提供する。
+   */
   async approveFromPendingAndConsumeBalance(props: {
     leaveRequestId: number
     approverId: number
@@ -272,9 +280,11 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
-  // pending 状態のみ更新可かつ重複なしの条件で UPDATE する（TOCTOU 競合を防ぐ）。
-  // 0 行更新の場合は status を再確認し "already_decided" か "overlapping" を返す。
+  /**
+   * 申請内容（種別・期間・日数・理由）を更新する。未保存は不可。
+   * pending 状態のみ更新可かつ重複なしの条件で UPDATE する（TOCTOU 競合を防ぐ）。
+   * 0 行更新の場合は status を再確認し "already_decided" か "overlapping" を返す。
+   */
   async revise(
     leaveRequest: LeaveRequest,
   ): Promise<LeaveRequest | "already_decided" | "overlapping" | Error> {
@@ -333,8 +343,10 @@ export class LeaveRequestRepository {
     }
   }
 
-  // 休暇申請を削除する。
-  // pending 状態のみ削除可。承認済み・却下済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+  /**
+   * 休暇申請を削除する。
+   * pending 状態のみ削除可。承認済み・却下済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+   */
   async delete(leaveRequestId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database

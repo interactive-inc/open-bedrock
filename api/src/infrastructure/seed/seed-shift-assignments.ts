@@ -7,7 +7,7 @@ type SeedShiftAssignment = {
   publishedAt: string | null
 }
 
-// publishedAt:null は下書き、文字列入りは公開済み。
+/** publishedAt:null は下書き、文字列入りは公開済み。 */
 export const seedShiftAssignments: ReadonlyArray<SeedShiftAssignment> = [
   {
     id: 1,

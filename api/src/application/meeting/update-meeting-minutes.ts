@@ -1,12 +1,12 @@
-import { canManageMeetings } from "@/lib/meeting/can-manage-meetings"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { MeetingMinutes } from "@/domain/meeting/meeting-minutes.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { MeetingMinutesRepository } from "@/infrastructure/meeting/meeting-minutes-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   minutesId: number
   heldOn: string
   title: string
@@ -35,7 +35,7 @@ export class UpdateMeetingMinutes {
 
     const isAuthor = current.authorEmployeeId === command.session.employeeId
 
-    if (isAuthor === false && canManageMeetings(command.session) === false) {
+    if (isAuthor === false && command.session.hasPermission("meeting:manage") === false) {
       return new ForbiddenError("not the author", "not_author")
     }
 
