@@ -11,7 +11,7 @@
 - JWT に権限を載せない。リクエスト毎に DB から解決するため、ロール変更は即時反映される
 - self(自分のデータ)は permission にせず、本人一致の判定としてコードに残す。「自分の申請を見る」のに権限は要らない
 - ロール・権限の変更は audit_events に append-only で記録される
-- knowledge、skill、oneonone には管理 permission がなく、認証済み利用者の操作として実装されている
+- knowledge、skill には管理 permission がなく、認証済み利用者の操作として実装されている。oneonone は作成(oneonone:create)と部署閲覧(oneonone:read:department)がある
 
 ## システムロール
 
@@ -45,9 +45,9 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 
 判定は次のカスケード。self → :all 保持 → 配下かつ :reports 保持 → 同部署かつ :department 保持 → 拒否。関係解決(org の走査)は他者のデータに触るときだけ実行する。
 
-適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため root は保持する)。
+適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read / application:read / oneonone:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため root は保持する)。
 
-一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests は employee_id 指定なしで scope=reports(配下全員分)または scope=all(全社)を受け付け、対応する permission が無ければ 403。
+一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests・GET /applications・GET /oneonones は scope=department&department_code= で部署メンバー分を一覧する(対応する :department permission が必要)。GET /goals・GET /attendance・GET /leave/requests は scope=reports(配下全員分)や scope=all(全社)も受け付ける。
 
 ## 実装の決まりごと
 

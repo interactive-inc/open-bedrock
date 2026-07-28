@@ -502,6 +502,18 @@ function buildTeamSections(teamCode: string): ReadonlyArray<Section> {
           icon: CalendarOff,
           requiredAnyPermission: ["leave:read:department", "leave:read:all"],
         },
+        {
+          label: "申請",
+          href: `/teams/${teamCode}/applications`,
+          icon: FileText,
+          requiredAnyPermission: ["application:read:department", "application:read:all"],
+        },
+        {
+          label: "1on1",
+          href: `/teams/${teamCode}/oneonones`,
+          icon: CalendarClock,
+          requiredAnyPermission: ["oneonone:read:department"],
+        },
       ],
     },
   ]
