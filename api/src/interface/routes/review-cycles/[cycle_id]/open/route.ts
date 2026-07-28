@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /review-cycles/:cycle_id/open — 管理者が評価サイクルを open にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

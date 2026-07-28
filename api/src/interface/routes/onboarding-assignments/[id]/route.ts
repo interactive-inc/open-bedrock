@@ -34,6 +34,7 @@ function toResponseBody(assignment: OnboardingAssignment, employee: Employee) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /onboarding-assignments/:id — 割り当ての詳細（本人か特権ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -57,6 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(result.assignment, result.employee), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /onboarding-assignments/:id — 割当日を変更（特権ロールのみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -86,6 +88,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /onboarding-assignments/:id — 割り当てを取り消し（特権ロールのみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

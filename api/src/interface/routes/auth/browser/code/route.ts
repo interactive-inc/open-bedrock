@@ -8,6 +8,7 @@ import { loginCodeHash } from "@/lib/auth/login-code-hash"
 /** one-time code の有効期限（秒）。発行直後にブラウザを開いて交換する前提の短命値。 */
 const CODE_TTL_SECONDS = 60
 
+// @authorization owner - 本人のリソースに限定する
 /**
  * POST /auth/browser/code — 認証済みの呼び出し元が、自分のセッションをブラウザへ
  * 受け渡すための one-time code を発行する。呼び出し元は Bearer トークンで本人確認済みなので、

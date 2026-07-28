@@ -17,6 +17,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /meetings/:code/minutes — 会議体配下の議事録一覧（全認証者） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
@@ -82,6 +83,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /meetings/:code/minutes — 議事録を記録（全認証者。記録文化を阻害しない） */
 export const POST = factory.createHandlers(
   verifyBearer,

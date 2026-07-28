@@ -14,6 +14,7 @@ import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /ringi-requests/me — 本人が起案した稟議一覧（status で絞り込み可能） */
 export const GET = factory.createHandlers(
   verifyBearer,

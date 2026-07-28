@@ -9,6 +9,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppApplicationDecision } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

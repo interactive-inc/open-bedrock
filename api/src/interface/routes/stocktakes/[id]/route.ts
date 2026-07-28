@@ -5,6 +5,7 @@ import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppStocktake } from "@/lib/app-schemas"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /stocktakes/:id — 棚卸しセッションの詳細（対象資産ごとの確認状況を含む） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

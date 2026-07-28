@@ -19,6 +19,7 @@ function loginRateLimitWarn() {
   }
 }
 
+// @authorization public - 未認証で到達してよい
 /** POST /auth/login — メールとパスワードを照合しアクセストークンを発行する */
 export const POST = factory.createHandlers(
   zValidator(

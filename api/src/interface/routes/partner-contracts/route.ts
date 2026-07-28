@@ -27,6 +27,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /partner-contracts — 全社の契約記録を横断で閲覧する（contract:read:all）。
  * フィルタ: partner_id。order: 期限切れ間近（renewal_near）ほか。
@@ -114,6 +115,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /partner-contracts — 契約記録の新規作成（contract:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

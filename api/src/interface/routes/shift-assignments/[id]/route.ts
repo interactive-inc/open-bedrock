@@ -26,6 +26,7 @@ function toResponseBody(assignment: ShiftAssignment) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /shift-assignments/:id — シフト割当の詳細（特権ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
@@ -48,6 +49,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(assignment), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /shift-assignments/:id — シフト割当のパターン・日付・備考を変更（特権ロール） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -86,6 +88,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /shift-assignments/:id — シフト割当を削除（特権ロール） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")

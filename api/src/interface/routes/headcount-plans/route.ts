@@ -15,6 +15,7 @@ import { HeadcountPlanRepository } from "@/infrastructure/headcount-plan/headcou
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /headcount-plans?fiscal_year= — 人員計画一覧に実在籍数(active)を添える（headcount_plan:read:all）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -95,6 +96,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /headcount-plans — 人員計画を登録（headcount_plan:manage）。年度・部署の重複は 409。 */
 export const POST = factory.createHandlers(
   verifyBearer,

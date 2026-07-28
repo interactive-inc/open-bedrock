@@ -16,6 +16,7 @@ import {
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) {

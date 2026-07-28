@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppAttendanceRecord } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /attendance-records/clock-in — 本人の出勤を打刻する */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -12,6 +12,7 @@ import {
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization permission - 権限キーで判定する
 /** POST /thanks-redemptions/:id/approve — 交換申請を承認・確定する（承認権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

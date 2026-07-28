@@ -10,6 +10,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /performance-goals/:goal_id/evaluations — 目標への評価を登録し、final なら目標を完了にする */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -21,6 +21,7 @@ import { zAppApplicationInboxList } from "@/lib/app-schemas"
 import { InternalError } from "@/interface/lib/errors"
 import { resolveApplicationInboxCondition } from "@/interface/utils/resolve-application-inbox-condition"
 
+// @authorization service - session を application service に渡して判定する
 /**
  * GET /application-requests/inbox — 承認待ちの申請一覧。
  * 旧テンプレートは application:approve、approverRoles、組織スコープをすべて満たす場合だけ返す。

@@ -18,6 +18,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /regulations — 規程集一覧（全認証者）。各規程の最新版のメタも返す。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -117,6 +118,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /regulations — 規程を初版付きで新規登録（regulation:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

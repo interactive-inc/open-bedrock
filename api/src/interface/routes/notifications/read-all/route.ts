@@ -5,6 +5,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /notifications/read-all — 本人宛ての未読通知をすべて既読にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

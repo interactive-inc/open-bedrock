@@ -14,6 +14,7 @@ import { zAppResignationList } from "@/lib/app-schemas"
 import { resignations } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /resignations/me — 申請者本人の退職申請一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

@@ -24,6 +24,7 @@ function toResponseBody(application: CareerApplication) {
   })
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /career-applications/:id — 応募の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -50,6 +51,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(application), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /career-applications/:id — 応募メッセージを変更（本人のみ・選考前のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -88,6 +90,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /career-applications/:id — 応募を取り下げ（本人のみ・選考前のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

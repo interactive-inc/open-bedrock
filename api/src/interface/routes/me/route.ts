@@ -11,6 +11,7 @@ import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /me — 認証済みの本人の社員情報 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

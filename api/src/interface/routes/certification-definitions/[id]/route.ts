@@ -7,6 +7,7 @@ import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** PUT /certification-definitions/:id — 資格マスタの名称・発行元・説明を更新する。certification:manage が必要。 */
 export const PUT = factory.createHandlers(
   verifyBearer,

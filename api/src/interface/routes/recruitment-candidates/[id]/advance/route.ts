@@ -9,6 +9,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /recruitment-candidates/:id/advance — 選考ステージを1つ前進または不採用へ（recruitment:manage）。不正遷移は 409。 */
 export const POST = factory.createHandlers(
   verifyBearer,

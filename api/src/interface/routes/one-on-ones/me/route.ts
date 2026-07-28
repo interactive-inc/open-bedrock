@@ -18,6 +18,7 @@ const members = aliasedTable(employees, "members")
 
 const managers = aliasedTable(employees, "managers")
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /oneonone/me — 本人が参加した 1on1 の履歴（参加者名込み、開催日時の降順） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

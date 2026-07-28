@@ -12,6 +12,7 @@ import {
 import { roomReservations, rooms } from "@/schema"
 import { and, count, gt, gte, inArray, lt } from "drizzle-orm"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

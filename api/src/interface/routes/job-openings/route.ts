@@ -16,6 +16,7 @@ import { InternalError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /job-openings — 募集ポジション一覧。閲覧も recruitment:manage に閉じる（社外個人情報の親のため）。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -83,6 +84,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /job-openings — 募集ポジションを登録（recruitment:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

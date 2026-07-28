@@ -10,6 +10,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /partner-contracts/:id — 契約記録の表題・契約日・期間・更新期限・備考を更新（contract:manage） */
 export const PUT = factory.createHandlers(
   verifyBearer,

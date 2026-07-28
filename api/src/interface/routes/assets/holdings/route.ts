@@ -11,6 +11,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /assets/holdings — 現在貸出中の資産を「誰が何を持っているか」で横断一覧する。
  * 資産管理権限（asset:manage）を持つロールのみ許可。

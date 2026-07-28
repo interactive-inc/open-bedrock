@@ -29,6 +29,7 @@ function toResponseBody(posting: CareerPosting) {
   })
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /career-postings — 公開中の公募一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -79,6 +80,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /career-postings — 公募を新規作成（管理ロールのみ） */
 export const POST = factory.createHandlers(
   verifyBearer,

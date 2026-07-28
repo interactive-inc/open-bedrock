@@ -13,6 +13,7 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /attendance-records/me — 本人の勤怠記録一覧（employee_id は無視して本人に固定） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const parsed = attendanceSearchQuerySchema.safeParse(c.req.query())

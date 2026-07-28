@@ -7,6 +7,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /shift-assignments/:id/publish — 特権ロールが未公開の割当を公開する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")

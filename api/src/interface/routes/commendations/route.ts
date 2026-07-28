@@ -16,6 +16,7 @@ import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /commendations?employee_id= — 表彰の記録一覧。閲覧は全認証者（社内公開）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -78,6 +79,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /commendations — 表彰を記録（commendation:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

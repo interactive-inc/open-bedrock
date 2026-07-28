@@ -10,6 +10,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization public - 未認証で到達してよい
 /**
  * POST /auth/browser/token — ブラウザ受け渡しの one-time code をセッションに交換する。
  * code は POST /auth/browser/code が認証済みの呼び出し元へ払い出した値で、1 回きり・60 秒 TTL。

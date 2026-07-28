@@ -13,6 +13,7 @@ import { zValidator } from "@hono/zod-validator"
 import { and, count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /leave-requests/me — 本人の休暇申請一覧（status で絞り込み可能） */
 export const GET = factory.createHandlers(
   verifyBearer,

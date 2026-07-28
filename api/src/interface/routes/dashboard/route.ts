@@ -22,6 +22,7 @@ function buildMonthLabels(now: string): string[] {
   return labels
 }
 
+// @authorization permission - 権限キーで判定する
 /** GET /dashboard — 従業員・目標・申請・調査の横断的な集計 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

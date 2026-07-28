@@ -23,6 +23,7 @@ type RepairRow = {
   started_at: string
 }
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(

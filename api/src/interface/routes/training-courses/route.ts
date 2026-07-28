@@ -14,6 +14,7 @@ import { and, asc, count, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(

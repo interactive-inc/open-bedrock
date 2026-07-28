@@ -4,6 +4,7 @@ import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppMyDepartmentList } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 
+// @authorization owner - 本人のリソースに限定する
 /**
  * GET /me/departments — 本人が現に所属する部署の一覧（主配属を先頭、以降は兼務）。
  * 認証のみで permission 不要（自分の所属という関係そのもの）。所属なしは空配列。

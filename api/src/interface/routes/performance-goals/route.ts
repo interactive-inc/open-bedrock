@@ -21,6 +21,7 @@ import {
   UnprocessableEntityError,
 } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /performance-goals — 本人の目標一覧。
  * employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。

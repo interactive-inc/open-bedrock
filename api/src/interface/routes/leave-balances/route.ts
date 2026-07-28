@@ -10,6 +10,7 @@ import { and, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /**
  * GET /leave-balances — 他者の当年度の休暇残数を employee_id 指定で閲覧する。
  * self→all→reports→department のスコープ判定。本人分は /leave/balance/me を使う。

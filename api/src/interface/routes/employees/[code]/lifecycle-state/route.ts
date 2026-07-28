@@ -37,6 +37,7 @@ function assignmentResponse(assignment: {
   }
 }
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(
   lifecycleNoStore,
   verifyBearer,

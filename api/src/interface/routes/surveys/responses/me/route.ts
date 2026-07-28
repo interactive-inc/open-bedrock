@@ -14,6 +14,7 @@ import { zAppSurveyResponseList } from "@/lib/app-schemas"
 import { surveyResponses } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /surveys/responses/me — 回答者本人のアンケート回答一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

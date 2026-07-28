@@ -9,6 +9,7 @@ import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /thanks-redemptions — 受領残高から交換を申請する */
 export const POST = factory.createHandlers(
   verifyBearer,

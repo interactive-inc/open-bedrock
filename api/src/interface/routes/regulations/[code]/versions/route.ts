@@ -9,6 +9,7 @@ import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /regulations/:code/versions — 既存規程へ新版を追加（regulation:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

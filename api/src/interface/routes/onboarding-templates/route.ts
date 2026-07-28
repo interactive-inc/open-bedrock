@@ -23,6 +23,7 @@ import { codeSchema } from "@/lib/schemas"
 
 const kindQuerySchema = z.enum(["join", "leave"]).optional()
 
+// @authorization permission - 権限キーで判定する
 /** GET /onboarding-templates — テンプレート一覧（kind で絞り込み可能） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -114,6 +115,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /onboarding-templates — テンプレートを新規作成（管理権限のみ） */
 export const POST = factory.createHandlers(
   verifyBearer,

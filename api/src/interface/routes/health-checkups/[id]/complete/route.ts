@@ -8,6 +8,7 @@ import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** POST /health-checkups/:id/complete — 実施記録を完了にし実施日を記録する。health_checkup:manage が必要。 */
 export const POST = factory.createHandlers(
   verifyBearer,

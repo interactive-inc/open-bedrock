@@ -29,6 +29,7 @@ const requestSchema = z
   })
   .strict()
 
+// @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(
   lifecycleNoStore,
   verifyBearer,

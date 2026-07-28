@@ -13,6 +13,7 @@ import { and, count, desc, eq, ne } from "drizzle-orm"
 import { loadCurrentEmployeeDepartmentNames } from "@/interface/utils/current-employee-departments"
 import { InternalError } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /** GET /thanks-redemptions/inbox — 承認待ちの交換申請一覧（承認権限が必要・ページング） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

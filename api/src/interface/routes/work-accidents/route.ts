@@ -14,6 +14,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /work-accidents?status=&employee_id= — 労災・事故の発生記録一覧。
  * 個人が横断で見るものではないため work_accident:read:all を持つロールのみ許可（本人閲覧の概念はない）。
@@ -75,6 +76,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization permission - 権限キーで判定する
 /** POST /work-accidents — 発生記録を作成する。work_accident:manage が必要。employee_id は任意（対象者不特定可）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

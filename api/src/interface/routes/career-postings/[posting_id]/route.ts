@@ -24,6 +24,7 @@ function toResponseBody(posting: CareerPosting) {
   })
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /career-postings/:posting_id — 応募に必要な公募の詳細（認証済みユーザー） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -45,6 +46,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(posting), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /career-postings/:posting_id — 公募の内容と状態を変更（管理ロールのみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -87,6 +89,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /career-postings/:posting_id — 公募を削除（管理ロールのみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

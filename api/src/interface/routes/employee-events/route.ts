@@ -24,6 +24,7 @@ import {
 } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /employee-events?employee_id=&kind= — 本人 or employee_event:read:all */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -117,6 +118,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /employee-events — 異動・在籍イベントを記録（employee_event:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

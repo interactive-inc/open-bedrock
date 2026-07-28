@@ -14,6 +14,7 @@ import type { SQL } from "drizzle-orm"
 import { and, count, desc, eq, ne } from "drizzle-orm"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /antisocial-checks/admin — 他者から提出された反社チェックの管理受信箱。
  * 自分の申請は職務分離のため除外する。

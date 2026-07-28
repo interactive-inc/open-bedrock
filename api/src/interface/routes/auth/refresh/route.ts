@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization public - 未認証で到達してよい
 /** POST /auth/refresh — リフレッシュトークンで新しいアクセストークンを発行する */
 export const POST = factory.createHandlers(
   zValidator(

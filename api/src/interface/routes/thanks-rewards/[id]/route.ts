@@ -10,6 +10,7 @@ import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** PATCH /thanks-rewards/:id — 交換カタログを更新する（管理者向け） */
 export const PATCH = factory.createHandlers(
   verifyBearer,

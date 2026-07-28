@@ -24,6 +24,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /application-requests/admin — 全社の申請を横断で閲覧する管理画面用の一覧。
  * application:read:all を持つロール(hr / admin)のみ許可。申請本文(payload)は返さない。

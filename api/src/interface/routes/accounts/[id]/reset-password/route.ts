@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /accounts/:id/reset-password — 管理者がアカウントのパスワードを再設定（account:manage が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

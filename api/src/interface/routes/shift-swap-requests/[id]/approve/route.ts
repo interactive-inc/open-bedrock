@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppShiftSwapRequest } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /shift-swap-requests/:id/approve — 特権ロールが保留中の交代申請を承認する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const swapRequestId = validateIntParam(c.req.param("id"), "swap request")

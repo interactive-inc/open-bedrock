@@ -27,6 +27,7 @@ function toResponseBody(course: TrainingCourse) {
   })
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const code = validateCodeParam(c.req.param("code"), "training course")
 
@@ -56,6 +57,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /training-courses/:code — 研修コースの内容を変更（管理権限のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -96,6 +98,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /training-courses/:code — 研修コースをアーカイブ（管理権限のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

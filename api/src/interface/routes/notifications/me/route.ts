@@ -8,6 +8,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /notifications/me — 本人宛ての通知一覧（新着順） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

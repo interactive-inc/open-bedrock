@@ -16,6 +16,7 @@ const identityInputSchema = z.object({
 // 単体 or 配列を受け付ける。単体は 1 件配列に正規化する。
 const bodySchema = z.union([identityInputSchema, z.array(identityInputSchema).min(1).max(500)])
 
+// @authorization machine - 機械用のキーで認証する
 /**
  * POST /provisioning/identities — 外部 identity provider からの同期(プロビジョニング)を冪等に適用する。
  * 認証は machine API キー(PROVISIONING_API_KEY)。ユーザー Bearer とは独立。

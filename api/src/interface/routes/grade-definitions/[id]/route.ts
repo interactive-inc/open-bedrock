@@ -28,6 +28,7 @@ function toGradeId(value: string | undefined): number {
   return validateIntParam(value, "grade")
 }
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /grade-definitions/:id — 等級マスタの定義を変更（grade:manage） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -66,6 +67,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /grade-definitions/:id — 等級マスタを削除（grade:manage） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

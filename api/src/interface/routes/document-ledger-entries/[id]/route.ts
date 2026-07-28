@@ -9,6 +9,7 @@ import { zAppDocument } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /document-ledger-entries/:id — 文書台帳のメタデータを更新（document:manage）。 */
 export const PUT = factory.createHandlers(
   verifyBearer,

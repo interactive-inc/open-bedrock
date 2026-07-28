@@ -17,6 +17,7 @@ function toRoomId(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /rooms/:id — 会議室マスタの詳細（要ログイン、閲覧は全ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -47,6 +48,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /rooms/:id — 会議室の名称・定員・所在地を更新（管理者ロールのみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -94,6 +96,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /rooms/:id — 会議室を削除（管理者ロールのみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

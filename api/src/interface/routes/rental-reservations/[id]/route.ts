@@ -27,6 +27,7 @@ function toResponseBody(reservation: RentalReservation) {
   })
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /rental-reservations/:id — 予約の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -47,6 +48,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(reservation), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /rental-reservations/:id — 予約の品名・期間・用途を変更（本人のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -90,6 +92,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /rental-reservations/:id — 予約を取消（本人のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

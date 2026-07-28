@@ -22,6 +22,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /business-trips/admin — 全社の出張申請を横断で閲覧する管理画面用の一覧。
  * business_trip:read:all を持つロール(hr / admin / auditor)のみ許可。

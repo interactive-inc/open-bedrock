@@ -13,6 +13,7 @@ import { z } from "zod"
 import { and, count, eq, gte, inArray, isNotNull, lte } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /**
  * GET /shift-assignments/me — 本人の担当シフト一覧（日付範囲で絞り込み可能）。
  * member はパターン一覧（/shift/patterns）を閲覧できないため、割当にパターン名・時間帯を埋めて返す。

@@ -8,6 +8,7 @@ import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /grade-definitions — 等級マスタを新規登録する（grade:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

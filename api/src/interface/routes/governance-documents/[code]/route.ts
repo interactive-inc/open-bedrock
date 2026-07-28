@@ -12,6 +12,7 @@ import { parseGovernanceCode } from "@/interface/utils/parse-governance-code"
 import { toGovernanceDocumentResponse } from "@/interface/utils/to-governance-document-response"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

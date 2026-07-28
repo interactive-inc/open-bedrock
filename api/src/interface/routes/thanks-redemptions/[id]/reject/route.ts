@@ -7,6 +7,7 @@ import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization permission - 権限キーで判定する
 /** POST /thanks-redemptions/:id/reject — 交換申請を却下する（承認権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

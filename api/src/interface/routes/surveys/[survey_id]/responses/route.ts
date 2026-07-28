@@ -10,6 +10,7 @@ import { zAppSurveyResponse } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

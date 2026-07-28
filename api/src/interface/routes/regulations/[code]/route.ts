@@ -6,6 +6,7 @@ import { zAppRegulationDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import type { RegulationVersion } from "@/domain/regulation/regulation-version.entity"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /regulations/:code — 規程1件（最新版＋版一覧、全認証者）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -18,6 +18,7 @@ import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /partners — キーワード・status で絞り込める取引先一覧（台帳は社内公開） */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -99,6 +100,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /partners — 新規取引先の登録（partner:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

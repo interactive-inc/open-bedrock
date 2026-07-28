@@ -22,6 +22,7 @@ function toParsedJson(raw: string): unknown {
   }
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -70,6 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /templates/:code — 申請テンプレートの内容を変更（管理権限のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -120,6 +122,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /templates/:code — 申請テンプレートを削除（管理権限のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

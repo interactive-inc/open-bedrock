@@ -6,6 +6,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /thanks-point-budgets/me — 自分の当月の贈与原資（付与・消費・残量）を取得する */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

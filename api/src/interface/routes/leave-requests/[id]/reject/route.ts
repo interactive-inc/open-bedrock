@@ -9,6 +9,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** POST /leave-requests/:id/reject — 休暇申請を却下する（コメント必須） */
 export const POST = factory.createHandlers(
   verifyBearer,

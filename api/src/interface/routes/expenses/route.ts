@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /expenses — 本人の経費を申請する（submit = create） */
 export const POST = factory.createHandlers(
   verifyBearer,

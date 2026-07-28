@@ -6,6 +6,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /company-calendar-days/:id — 会社カレンダーから 1 日を削除（calendar:manage） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

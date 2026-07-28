@@ -10,6 +10,7 @@ import { zAppRole, zAppRoleList } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** GET /roles — ロール一覧（iam:manage_roles または iam:assign_roles が必要） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -39,6 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /roles — 動的ロールの作成（iam:manage_roles が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -23,6 +23,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /thanks-redemptions/admin — 全社のサンクス交換申請を横断で閲覧する。
  * thanks_redemption:read:all を持つロール(hr / admin)のみ許可。

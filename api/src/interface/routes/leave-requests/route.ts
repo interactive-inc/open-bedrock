@@ -27,6 +27,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /leave-requests — 他者の休暇申請一覧。
  * employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。
@@ -207,6 +208,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /leave-requests — 本人として休暇申請を作成 */
 export const POST = factory.createHandlers(
   verifyBearer,

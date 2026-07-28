@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /accounts/:id/roles/:roleKey — アカウントからロールを剥奪（iam:assign_roles が必要） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

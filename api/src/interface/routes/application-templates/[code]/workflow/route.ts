@@ -51,6 +51,7 @@ async function loadTemplate(c: Context, code: string) {
   return template
 }
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -79,6 +80,7 @@ const zWorkflowUpdateRequest = zApplicationWorkflow.and(
   z.object({ expected_revision: z.number().int().nonnegative() }),
 )
 
+// @authorization permission - 権限キーで判定する
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator("json", zWorkflowUpdateRequest),

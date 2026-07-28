@@ -9,6 +9,7 @@ import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /stocktakes/:id/assets/:code/check — 資産の現物確認を記録（確認者・所在メモ。権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

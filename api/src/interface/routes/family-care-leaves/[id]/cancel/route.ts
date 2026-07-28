@@ -7,6 +7,7 @@ import { factory } from "@/interface/utils/factory"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /family-care-leaves/:id/cancel — 人事が産休・育休・介護休業の申出を取消にする */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

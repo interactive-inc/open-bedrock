@@ -7,6 +7,7 @@ import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", z.strictObject({ limit: z.number().int().min(1).max(100).optional() })),

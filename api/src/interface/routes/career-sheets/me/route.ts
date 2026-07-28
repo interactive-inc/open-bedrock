@@ -8,6 +8,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppCareerSheet } from "@/lib/app-schemas"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /career-sheets/me — 本人のキャリアシート（未登録なら空のシート） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -45,6 +46,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /career-sheets/me — 本人のキャリアシートを削除（未登録でも 204） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
