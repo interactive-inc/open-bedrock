@@ -54,3 +54,96 @@ describe("session refresh middleware", () => {
     expect(response.cookies.get("refresh_token")?.value).toBe("rotated-refresh-token")
   })
 })
+
+describe("nonce-based CSP", () => {
+  test("authenticated page response contains nonce and strict-dynamic in CSP", async () => {
+    const request = new NextRequest("https://karte.open.localhost/employees")
+    request.cookies.set("session", "valid-token")
+    const response = await middleware(request)
+
+    const csp = response.headers.get("content-security-policy")
+    expect(csp).not.toBeNull()
+    expect(csp).toMatch(/'nonce-[0-9a-f-]+'/)
+    expect(csp).toContain("'strict-dynamic'")
+  })
+
+  test("CSP nonce differs between requests", async () => {
+    const req1 = new NextRequest("https://karte.open.localhost/employees")
+    req1.cookies.set("session", "valid-token")
+    const res1 = await middleware(req1)
+
+    const req2 = new NextRequest("https://karte.open.localhost/employees")
+    req2.cookies.set("session", "valid-token")
+    const res2 = await middleware(req2)
+
+    const nonce1 = res1.headers.get("content-security-policy")!.match(/'nonce-([^']+)'/)![1]
+    const nonce2 = res2.headers.get("content-security-policy")!.match(/'nonce-([^']+)'/)![1]
+    expect(nonce1).not.toBe(nonce2)
+  })
+
+  test("x-nonce request header is forwarded via x-middleware-request-x-nonce", async () => {
+    const request = new NextRequest("https://karte.open.localhost/employees")
+    request.cookies.set("session", "valid-token")
+    const response = await middleware(request)
+
+    const overrideHeaders = response.headers.get("x-middleware-override-headers")
+    expect(overrideHeaders).toContain("x-nonce")
+    expect(overrideHeaders).toContain("content-security-policy")
+
+    const forwardedNonce = response.headers.get("x-middleware-request-x-nonce")
+    expect(forwardedNonce).toMatch(/^[0-9a-f-]+$/)
+  })
+
+  test("CSP is set when no session or refresh token exists", async () => {
+    const request = new NextRequest("https://karte.open.localhost/admin/audit-events")
+    const response = await middleware(request)
+
+    const csp = response.headers.get("content-security-policy")
+    expect(csp).not.toBeNull()
+    expect(csp).toMatch(/'nonce-[0-9a-f-]+'/)
+    expect(csp).toContain("'strict-dynamic'")
+  })
+
+  test("CSP is set after successful refresh on protected page", async () => {
+    mocks.postRefreshToken.mockResolvedValue({
+      access_token: "new-access",
+      refresh_token: "new-refresh",
+    })
+    const request = new NextRequest("https://karte.open.localhost/employees")
+    request.cookies.set("refresh_token", "old-refresh")
+    const response = await middleware(request)
+
+    const csp = response.headers.get("content-security-policy")
+    expect(csp).not.toBeNull()
+    expect(csp).toMatch(/'nonce-[0-9a-f-]+'/)
+    expect(csp).toContain("'strict-dynamic'")
+  })
+
+  test("dev mode adds unsafe-eval to script-src", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    try {
+      const request = new NextRequest("https://karte.open.localhost/employees")
+      request.cookies.set("session", "valid-token")
+      const response = await middleware(request)
+
+      const csp = response.headers.get("content-security-policy")
+      expect(csp).toContain("'unsafe-eval'")
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
+  test("production mode does not include unsafe-eval", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    try {
+      const request = new NextRequest("https://karte.open.localhost/employees")
+      request.cookies.set("session", "valid-token")
+      const response = await middleware(request)
+
+      const csp = response.headers.get("content-security-policy")
+      expect(csp).not.toContain("'unsafe-eval'")
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+})
