@@ -2,6 +2,9 @@ import { CliLoginStateRepository } from "@/infrastructure/auth/cli-login-state-r
 import { factory } from "@/interface/utils/factory"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { UnavailableError } from "@/lib/errors"
+import { cliIdentityRedirectUri } from "@/lib/auth/cli-identity-redirect-uri"
+import { createPkce } from "@/lib/auth/create-pkce"
+import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -38,14 +41,26 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
 
   const { port, state: cliState } = c.req.valid("query")
 
+  let brokerUrl: URL
+  const redirectUri = cliIdentityRedirectUri(apiOrigin)
+  try {
+    brokerUrl = new URL(identityLoginUrl)
+  } catch {
+    throw new UnauthorizedError("cli login is not configured")
+  }
+  if (!isSecureIdentityIssuer(brokerUrl) || redirectUri instanceof Error) {
+    throw new UnauthorizedError("cli login is not configured")
+  }
+
   const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
   const nowEpoch = Math.floor(now.getTime() / 1_000)
 
   const brokerState = crypto.randomUUID()
+  const pkce = await createPkce()
 
   const created = await new CliLoginStateRepository(c).create(
     brokerState,
-    { port, cliState },
+    { port, cliState, codeVerifier: pkce.verifier },
     nowEpoch + STATE_TTL_SECONDS,
   )
   if (created instanceof Error) {
@@ -56,9 +71,10 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     )
   }
 
-  const brokerUrl = new URL(identityLoginUrl)
-  brokerUrl.searchParams.set("callback", `${apiOrigin}/auth/cli/callback`)
+  brokerUrl.searchParams.set("callback", redirectUri)
   brokerUrl.searchParams.set("state", brokerState)
+  brokerUrl.searchParams.set("code_challenge", pkce.challenge)
+  brokerUrl.searchParams.set("code_challenge_method", "S256")
 
   return c.redirect(brokerUrl.toString(), 302)
 })

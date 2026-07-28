@@ -4,13 +4,13 @@ type Props = {
 
 /**
  * SSO ログイン失敗の案内。reason に応じてメッセージを出し分ける。
- * ログインのやり直し先は IDENTITY_LOGIN_URL（外部 identity provider の入口）。
- * 未設定ならトップへ誘導する。
+ * ログインのやり直しはstateとPKCEを再生成する内部routeから始める。
+ * identity login未設定ならトップへ誘導する。
  */
 export default async function BrokerErrorPage(props: Props) {
   const searchParams = await props.searchParams
 
-  const retryUrl = process.env.IDENTITY_LOGIN_URL ?? "/"
+  const retryUrl = process.env.IDENTITY_LOGIN_URL ? "/auth/broker/login" : "/"
 
   const message =
     searchParams.reason === "account_not_found"

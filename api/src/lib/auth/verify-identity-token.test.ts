@@ -1,39 +1,53 @@
 import { describe, expect, test } from "bun:test"
+
+import { createIdentityTestKey } from "@/interface/test-helpers/create-identity-test-key"
 import { createIdentityToken } from "@/interface/test-helpers/create-identity-token"
 import { verifyIdentityToken } from "@/lib/auth/verify-identity-token"
 
-const secret = "identity-token-test-secret"
+const identityKey = await createIdentityTestKey()
+const wrongIdentityKey = await createIdentityTestKey("wrong-key")
 const issuer = "https://identity-provider.example/"
 const audience = "open-karte"
 const nowEpoch = 1_767_225_600
 const now = new Date(nowEpoch * 1_000)
 
 function verify(token: string) {
-  return verifyIdentityToken({ token, secret, issuer, audience, now })
+  return verifyIdentityToken({
+    token,
+    verificationKey: identityKey.verificationKey,
+    issuer,
+    audience,
+    now,
+  })
 }
 
 describe("verifyIdentityToken", () => {
-  test("accepts a valid token and returns its claims", async () => {
-    const token = await createIdentityToken(secret, nowEpoch, { sub: "ext-1", jti: "jti-1" })
+  test("accepts a valid EdDSA token and returns its claims", async () => {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+      sub: "ext-1",
+      jti: "jti-1",
+    })
 
-    const result = await verify(token)
+    const claims = await verify(token)
 
-    if ("reason" in result) throw new Error("expected valid claims")
-    expect(result.sub).toBe("ext-1")
-    expect(result.email).toBe("you+ext@example.com")
-    expect(result.email_verified).toBe(true)
-    expect(result.name).toBe("External Worker")
-    expect(result.jti).toBe("jti-1")
+    if ("reason" in claims) throw new Error("expected valid claims")
+    expect(claims.sub).toBe("ext-1")
+    expect(claims.email).toBe("you+ext@example.com")
+    expect(claims.email_verified).toBe(true)
+    expect(claims.name).toBe("External Worker")
+    expect(claims.jti).toBe("jti-1")
   })
 
-  test("rejects a token signed with the wrong secret", async () => {
-    const token = await createIdentityToken("a-different-secret", nowEpoch)
+  test("rejects a token signed with a key outside the JWKS", async () => {
+    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
+      keyId: wrongIdentityKey.keyId,
+    })
 
     expect(await verify(token)).toEqual({ reason: "invalid_token" })
   })
 
   test("rejects a token with an unexpected issuer", async () => {
-    const token = await createIdentityToken(secret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       issuer: "https://attacker.example/",
     })
 
@@ -41,14 +55,15 @@ describe("verifyIdentityToken", () => {
   })
 
   test("rejects a token with an unexpected audience", async () => {
-    const token = await createIdentityToken(secret, nowEpoch, { audience: "some-other-app" })
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
+      audience: "some-other-app",
+    })
 
     expect(await verify(token)).toEqual({ reason: "invalid_token" })
   })
 
   test("rejects an expired token", async () => {
-    // 発行から 60 秒で失効する短命トークンが、検証時刻より前に失効している。
-    const token = await createIdentityToken(secret, nowEpoch - 120, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch - 120, {
       exp: nowEpoch - 60,
       iat: nowEpoch - 120,
     })
@@ -57,8 +72,7 @@ describe("verifyIdentityToken", () => {
   })
 
   test("rejects a token missing required claims", async () => {
-    // jti を空にすると claims スキーマ検証で弾かれる。
-    const token = await createIdentityToken(secret, nowEpoch, { jti: "" })
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, { jti: "" })
 
     expect(await verify(token)).toEqual({ reason: "invalid_token" })
   })

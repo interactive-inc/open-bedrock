@@ -1,8 +1,10 @@
 import { jwtVerify } from "jose"
 import { z } from "zod"
 
+import type { JWTVerifyGetKey } from "jose"
+
 /**
- * 外部 identity provider が発行する短命ログイントークン(HS256 JWT)の claims。
+ * 外部 identity provider が発行する短命ログイントークン(EdDSA JWT)の claims。
  * email_verified が false のトークンは拒否対象だが、claims 検証段階では形だけ確認する。
  */
 export const identityTokenClaimsSchema = z.object({
@@ -19,7 +21,7 @@ export type IdentityTokenClaims = z.infer<typeof identityTokenClaimsSchema>
 
 export type VerifyIdentityTokenInput = {
   token: string
-  secret: string
+  verificationKey: JWTVerifyGetKey
   issuer: string
   audience: string
   /** exp/iat の検証基準時刻。アプリの時刻注入(NOW)と一致させ、決定的に検証する。 */
@@ -32,7 +34,7 @@ export type IdentityTokenError = {
 
 /**
  * 外部 identity トークンを検証する。以下すべてを満たさなければ invalid_token を返す。
- * - HS256 署名が共有シークレットで検証できる
+ * - EdDSA署名がissuerの公開JWKSで検証できる
  * - iss が期待値と一致する
  * - aud が期待値と一致する
  * - exp が未失効（jose が iat/exp を検証）
@@ -44,8 +46,8 @@ export async function verifyIdentityToken(
   input: VerifyIdentityTokenInput,
 ): Promise<IdentityTokenClaims | IdentityTokenError> {
   try {
-    const verified = await jwtVerify(input.token, new TextEncoder().encode(input.secret), {
-      algorithms: ["HS256"],
+    const verified = await jwtVerify(input.token, input.verificationKey, {
+      algorithms: ["EdDSA"],
       issuer: input.issuer,
       audience: input.audience,
       currentDate: input.now,

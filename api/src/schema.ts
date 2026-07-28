@@ -1837,6 +1837,7 @@ export const cliLoginStates = sqliteTable(
     state: text("state").primaryKey(),
     port: integer("port").notNull(),
     cliState: text("cli_state").notNull(),
+    codeVerifier: text("code_verifier").notNull(),
     expiresAt: integer("expires_at").notNull(),
   },
   (table) => [index("idx_cli_login_states_expires").on(table.expiresAt)],
