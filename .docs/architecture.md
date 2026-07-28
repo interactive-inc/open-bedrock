@@ -70,6 +70,8 @@ Web と CLI は提供面であり、業務規則と認可を定義しない。
 
 現在は login で発行した token を Bearer として API へ送る。Web は httpOnly cookie、CLI は local config を使う。token の検証、session 失効、account 状態、permission、scope、案件資格は API が評価する。
 
+外部 identity ログインでは、identity broker が発行した 60 秒の EdDSA token を issuer の公開 JWKS で検証する。Web と CLI は code + PKCE で broker と往復し、identity token を URL または client JavaScript へ渡さない。API は `jti` の一回性と事前同期済み account の状態を検査してから、自身の access token と refresh token を発行する。詳細は [Identity とセッション](./identity-and-sessions.md) に従う。
+
 目標モデルでは Human、Agent、Service、Connector を別 Principal として認証する。人間 token を AI や connector が借用しない。現行実装は permission ベース(deny-by-default)で、verify-bearer が request ごとに account の permission 集合を DB から解決する。詳細は [認可モデル](./authorization-model.md) と [ロールと権限](./roles-and-permissions.md) を参照する。
 
 ## データと transaction

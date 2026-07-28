@@ -10,6 +10,8 @@ HTTP API は Principal、認可境界、resource、command、query、error、cal
 
 現行 login は access token と refresh token を発行し、Bearer token で API を呼ぶ。未実装の Agent、Service、Connector も Principal として区別し、人間 token の共有で実現しない。
 
+パスワード login と外部 identity login は同じ session 発行境界へ到達する。外部 identity token は API resource の Bearer token ではなく、`POST /auth/identity/login` または CLI callback が一回だけ受理する身元証明である。Web と CLI の code、PKCE、JWKS、session の契約は [Identity とセッション](./identity-and-sessions.md) に従う。
+
 token または request context は少なくとも principal ID、principal kind、account または credential ID、session または execution ID を識別可能にする。人間の on-behalf-of 操作では requester と executor を別に記録する。
 
 認証済みであることは操作許可を意味しない。permission、scope、field、state、case assignment、organizational authority、attestation を API が評価する。
