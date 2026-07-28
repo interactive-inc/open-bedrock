@@ -8,7 +8,7 @@
     }
   },
   "scripts": {
-    "build": "bun run build:types && wrangler deploy --dry-run --minify --outdir dist/worker",
+    "build": "bun run build:types && wrangler deploy src/index.ts --dry-run --minify --outdir dist/worker --name api --compatibility-date 2026-05-24 --compatibility-flags nodejs_compat",
     "build:types": "tsc -p tsconfig.build.json",
     "gen:app": "bun run scripts/gen-app.ts",
     "gen:app:check": "bun run scripts/gen-app.ts --check",

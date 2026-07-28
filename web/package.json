@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "opennextjs-cloudflare build",
+    "build": "opennextjs-cloudflare build --skipWranglerConfigCheck",
     "start": "next start",
     "check": "tsc --noEmit",
     "test": "vp test run",
