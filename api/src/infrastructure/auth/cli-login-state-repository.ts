@@ -3,6 +3,7 @@ import type { Context } from "@/env"
 export type CliLoginState = {
   port: number
   cliState: string
+  codeVerifier: string
 }
 
 /**
@@ -19,10 +20,10 @@ export class CliLoginStateRepository {
   async create(state: string, input: CliLoginState, expiresAt: number): Promise<null | Error> {
     try {
       await this.c.env.DB.prepare(
-        `INSERT INTO cli_login_states (state, port, cli_state, expires_at)
-         VALUES (?1, ?2, ?3, ?4)`,
+        `INSERT INTO cli_login_states (state, port, cli_state, code_verifier, expires_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)`,
       )
-        .bind(state, input.port, input.cliState, expiresAt)
+        .bind(state, input.port, input.cliState, input.codeVerifier, expiresAt)
         .run()
 
       return null
@@ -40,16 +41,16 @@ export class CliLoginStateRepository {
       const row = await this.c.env.DB.prepare(
         `DELETE FROM cli_login_states
          WHERE state = ?1 AND expires_at > ?2
-         RETURNING port, cli_state`,
+         RETURNING port, cli_state, code_verifier`,
       )
         .bind(state, nowEpoch)
-        .first<{ port: number; cli_state: string }>()
+        .first<{ port: number; cli_state: string; code_verifier: string }>()
 
       if (row === null) {
         return null
       }
 
-      return { port: row.port, cliState: row.cli_state }
+      return { port: row.port, cliState: row.cli_state, codeVerifier: row.code_verifier }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to consume cli login state")
     }

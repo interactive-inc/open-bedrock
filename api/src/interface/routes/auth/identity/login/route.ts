@@ -11,6 +11,7 @@ import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { LoginRateLimiter } from "@/interface/utils/login-rate-limiter"
+import { getIdentityVerificationKey } from "@/lib/auth/get-identity-verification-key"
 import { z } from "zod"
 
 const DEFAULT_AUDIENCE = "open-karte"
@@ -46,14 +47,9 @@ export const POST = factory.createHandlers(
       return c.json({ error: "too many requests" }, 429)
     }
 
-    const secret = c.env.IDENTITY_JWT_SECRET
     const issuer = c.env.IDENTITY_ISSUER
-    if (
-      secret === undefined ||
-      secret.length === 0 ||
-      issuer === undefined ||
-      issuer.length === 0
-    ) {
+    const verificationKey = getIdentityVerificationKey(c.env)
+    if (issuer === undefined || issuer.length === 0 || verificationKey instanceof Error) {
       // 設定不備は identity ログインを一律拒否する（安全側）。
       throw new UnauthorizedError("identity login is not configured")
     }
@@ -63,7 +59,7 @@ export const POST = factory.createHandlers(
 
     const { token } = c.req.valid("json")
 
-    const claims = await verifyIdentityToken({ token, secret, issuer, audience, now })
+    const claims = await verifyIdentityToken({ token, verificationKey, issuer, audience, now })
 
     if ("reason" in claims) {
       return denyIdentityLogin(c, limiter, ip, now, "invalid_token")

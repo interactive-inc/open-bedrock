@@ -5,6 +5,9 @@ import { AuditEventRepository } from "@/infrastructure/audit/audit-event-reposit
 import { CliLoginCodeRepository } from "@/infrastructure/auth/cli-login-code-repository"
 import { CliLoginStateRepository } from "@/infrastructure/auth/cli-login-state-repository"
 import { IdentityLoginJtiRepository } from "@/infrastructure/auth/identity-login-jti-repository"
+import { cliIdentityRedirectUri } from "@/lib/auth/cli-identity-redirect-uri"
+import { exchangeIdentityCode } from "@/lib/auth/exchange-identity-code"
+import { getIdentityVerificationKey } from "@/lib/auth/get-identity-verification-key"
 import { loginCodeHash } from "@/lib/auth/login-code-hash"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
@@ -17,7 +20,7 @@ import { z } from "zod"
 const CODE_TTL_SECONDS = 60
 
 const querySchema = z.object({
-  token: z.string().min(1).max(4096).optional(),
+  code: z.string().min(1).max(512).optional(),
   state: z.string().min(1).max(512).optional(),
   error: z.string().min(1).max(200).optional(),
 })
@@ -35,7 +38,7 @@ const querySchema = z.object({
  * トークンを平文で保存領域（cli_login_codes）に置かないための二段構え。
  */
 export const GET = factory.createHandlers(zValidator("query", querySchema), async (c) => {
-  const { token, state: brokerState, error: brokerError } = c.req.valid("query")
+  const { code, state: brokerState, error: brokerError } = c.req.valid("query")
 
   const now = c.env.NOW === undefined ? new Date() : new Date(c.env.NOW)
   const nowEpoch = Math.floor(now.getTime() / 1_000)
@@ -75,27 +78,41 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
     return loopbackError(brokerError)
   }
 
-  if (token === undefined) {
-    return loopbackError("missing_token")
+  if (code === undefined) {
+    return loopbackError("missing_code")
   }
 
-  const secret = c.env.IDENTITY_JWT_SECRET
   const issuer = c.env.IDENTITY_ISSUER
   const apiOrigin = c.env.API_ORIGIN
+  const verificationKey = getIdentityVerificationKey(c.env)
+  const redirectUri =
+    apiOrigin === undefined
+      ? new Error("API origin is not configured")
+      : cliIdentityRedirectUri(apiOrigin)
   if (
-    secret === undefined ||
-    secret.length === 0 ||
     issuer === undefined ||
     issuer.length === 0 ||
     apiOrigin === undefined ||
-    apiOrigin.length === 0
+    apiOrigin.length === 0 ||
+    verificationKey instanceof Error ||
+    redirectUri instanceof Error
   ) {
     return loopbackError("cli_login_not_configured")
   }
 
+  const token = await exchangeIdentityCode({
+    code,
+    codeVerifier: consumed.codeVerifier,
+    redirectUri,
+    issuer,
+  })
+  if (token instanceof Error) {
+    return denyAndLoopback("invalid_token")
+  }
+
   const claims = await verifyIdentityToken({
     token,
-    secret,
+    verificationKey,
     issuer,
     // ブローカーは callback URL の origin を aud に入れて発行する（パスは含まない）。
     audience: apiOrigin,
