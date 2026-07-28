@@ -87,7 +87,7 @@ const attendanceListResponseSchema = z.object({
 
 describe("GET /attendance", () => {
   test("privileged role can read another employee via employee_id", async () => {
-    const response = await getRequest("/attendance?employee_id=5", await tokenFor(1, "admin"))
+    const response = await getRequest("/attendance?employee_id=5", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -129,13 +129,13 @@ describe("GET /attendance", () => {
   })
 
   test("returns 400 when from is not a valid date format", async () => {
-    const response = await getRequest("/attendance?from=aaa", await tokenFor(1, "admin"))
+    const response = await getRequest("/attendance?from=aaa", await tokenFor(1, "root"))
 
     expect(response.status).toBe(400)
   })
 
   test("returns 400 when to is not a valid date format", async () => {
-    const response = await getRequest("/attendance?to=2026/06/01", await tokenFor(1, "admin"))
+    const response = await getRequest("/attendance?to=2026/06/01", await tokenFor(1, "root"))
 
     expect(response.status).toBe(400)
   })

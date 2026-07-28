@@ -3,7 +3,7 @@ import { z } from "zod"
 import { factory } from "@/factory"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance list [--q <text>] [--kind policy|procedure|guideline|control]`
+export const help = `bedrock governance list [--q <text>] [--kind policy|procedure|guideline|control]`
 
 export default factory.createHandlers(
   zValidator(

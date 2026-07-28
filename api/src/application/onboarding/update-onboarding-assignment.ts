@@ -1,15 +1,15 @@
+import type { Session } from "@/lib/auth/session"
 import type { Employee } from "@/domain/employee/employee.entity"
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { OnboardingAssignmentRepository } from "@/infrastructure/onboarding/onboarding-assignment-repository"
 
 export type Command = {
   assignmentId: number
-  session: SessionPayload
+  session: Session
   assignedAt: string
 }
 
@@ -25,7 +25,7 @@ export class UpdateOnboardingAssignment {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<UpdateOnboardingAssignmentResult | ApplicationError> {
-    if (canManageOnboarding(command.session) === false) {
+    if (command.session.hasPermission("onboarding:manage") === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

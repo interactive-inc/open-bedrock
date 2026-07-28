@@ -9,10 +9,10 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { employees, thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc, inArray } from "drizzle-orm"

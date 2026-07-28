@@ -11,10 +11,10 @@ import {
   applicationWorkflows,
 } from "@/schema"
 import { and, eq } from "drizzle-orm"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { WorkflowRevisionConflictError } from "@/infrastructure/application/workflow-revision-conflict-error"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
 
 export type WorkflowInstance = {
   applicationId: number
@@ -30,13 +30,6 @@ export type ApplicationWorkflowDefinitionRecord = {
   revision: number
   updatedAt: string
   updatedByAccountId: number | null
-}
-
-export class WorkflowRevisionConflictError extends Error {
-  constructor() {
-    super("workflow revision conflict")
-    this.name = "WorkflowRevisionConflictError"
-  }
 }
 
 export type WorkflowStepSnapshot = {
@@ -185,8 +178,7 @@ export class ApplicationWorkflowRepository {
           props.dueAt,
         ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...workflowStepSnapshotInsertStatements({
-          db: this.c.env.DB,
+        ...new WorkflowSql(this.c.env.DB).insert({
           applicationId: props.applicationId,
           stepKey: props.currentStepKey,
           round: 1,
@@ -250,8 +242,7 @@ export class ApplicationWorkflowRepository {
           props.startedAt,
           props.dueAt,
         ),
-        ...workflowStepSnapshotInsertByCreationStatements({
-          db: this.c.env.DB,
+        ...new WorkflowSql(this.c.env.DB).insertByCreation({
           creationId,
           stepKey: props.currentStepKey,
           round: 1,
@@ -329,8 +320,7 @@ export class ApplicationWorkflowRepository {
           props.startedAt,
           props.dueAt,
         ),
-        ...workflowStepSnapshotInsertByCreationStatements({
-          db: this.c.env.DB,
+        ...new WorkflowSql(this.c.env.DB).insertByCreation({
           creationId,
           stepKey: props.currentStepKey,
           round: 1,
@@ -519,309 +509,6 @@ export class ApplicationWorkflowRepository {
       return error instanceof Error ? error : new Error("failed to load workflow approvals")
     }
   }
-}
-
-function workflowStepSnapshotInsertByCreationStatements(props: {
-  db: D1Database
-  creationId: string
-  stepKey: string
-  round: number
-  snapshot: WorkflowStepSnapshotDraft
-}): ReadonlyArray<D1PreparedStatement> {
-  return [
-    props.db
-      .prepare(
-        `INSERT INTO application_workflow_step_snapshots
-           (application_id, step_key, round, required_approvals, activated_at, due_at,
-            escalated_at, resolution_reason, resolution_id)
-         SELECT id, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
-         FROM applications
-         WHERE workflow_creation_id = ?1`,
-      )
-      .bind(
-        props.creationId,
-        props.stepKey,
-        props.round,
-        props.snapshot.requiredApprovals,
-        props.snapshot.activatedAt,
-        props.snapshot.dueAt,
-        props.snapshot.escalatedAt,
-        props.snapshot.resolutionReason,
-        props.snapshot.resolutionId,
-      ),
-    ...chunk(props.snapshot.candidates, 16).map((candidates) =>
-      props.db
-        .prepare(
-          `WITH candidate_rows
-             (candidate_employee_id, candidate_account_id, source, selectors_json,
-              eligible_from, resolved_at) AS (VALUES ${candidateValueRows(candidates.length, 5)})
-           INSERT INTO application_workflow_step_candidates
-             (application_id, step_key, round, candidate_employee_id, candidate_account_id,
-              source, selectors_json, resolution_id, eligible_from, resolved_at)
-           SELECT application.id, ?2, ?3, candidate_employee_id, candidate_account_id,
-                  source, selectors_json, ?4, eligible_from, resolved_at
-           FROM candidate_rows
-           CROSS JOIN applications application
-           WHERE application.workflow_creation_id = ?1`,
-        )
-        .bind(
-          props.creationId,
-          props.stepKey,
-          props.round,
-          props.snapshot.resolutionId,
-          ...candidates.flatMap(candidateValues),
-        ),
-    ),
-  ]
-}
-
-export function workflowStepSnapshotInsertStatements(props: {
-  db: D1Database
-  applicationId: number
-  stepKey: string
-  round: number
-  snapshot: WorkflowStepSnapshotDraft
-  ignoreConflicts?: boolean
-}): ReadonlyArray<D1PreparedStatement> {
-  const insert = props.ignoreConflicts ? "INSERT OR IGNORE" : "INSERT"
-
-  return [
-    props.db
-      .prepare(
-        `${insert} INTO application_workflow_step_snapshots
-           (application_id, step_key, round, required_approvals, activated_at, due_at,
-            escalated_at, resolution_reason, resolution_id)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
-      )
-      .bind(
-        props.applicationId,
-        props.stepKey,
-        props.round,
-        props.snapshot.requiredApprovals,
-        props.snapshot.activatedAt,
-        props.snapshot.dueAt,
-        props.snapshot.escalatedAt,
-        props.snapshot.resolutionReason,
-        props.snapshot.resolutionId,
-      ),
-    ...chunk(props.snapshot.candidates, 16).map((candidates) => {
-      const bindings: Array<unknown> = [
-        props.applicationId,
-        props.stepKey,
-        props.round,
-        props.snapshot.resolutionId,
-        ...candidates.flatMap(candidateValues),
-      ]
-      const rows = candidateValueRows(candidates.length, 5)
-      const winnerCondition = props.ignoreConflicts
-        ? `WHERE EXISTS (
-             SELECT 1 FROM application_workflow_step_snapshots
-             WHERE application_id = ?1 AND step_key = ?2 AND round = ?3
-               AND resolution_id = ?4
-           )`
-        : ""
-
-      return props.db
-        .prepare(
-          `WITH candidate_rows
-             (candidate_employee_id, candidate_account_id, source, selectors_json,
-              eligible_from, resolved_at) AS (VALUES ${rows})
-           ${insert} INTO application_workflow_step_candidates
-             (application_id, step_key, round, candidate_employee_id, candidate_account_id,
-              source, selectors_json, resolution_id, eligible_from, resolved_at)
-           SELECT ?1, ?2, ?3, candidate_employee_id, candidate_account_id,
-                  source, selectors_json, ?4, eligible_from, resolved_at
-           FROM candidate_rows
-           ${winnerCondition}`,
-        )
-        .bind(...bindings)
-    }),
-  ]
-}
-
-export function conditionalWorkflowStepSnapshotInsertStatements(props: {
-  db: D1Database
-  applicationId: number
-  stepKey: string
-  round: number
-  snapshot: WorkflowStepSnapshotDraft
-  currentStepKey: string
-  currentRound: number
-  requiredApprovals: number
-}): ReadonlyArray<D1PreparedStatement> {
-  const activationCondition = `EXISTS (
-    SELECT 1
-    FROM application_workflow_instances workflow_instance
-    INNER JOIN applications application ON application.id = workflow_instance.application_id
-    WHERE workflow_instance.application_id = ?1
-      AND workflow_instance.current_step_key = ?10
-      AND workflow_instance.current_round = ?11
-      AND application.status = 'pending'
-      AND application.current_step = ?10
-      AND (${workflowValidApprovalCountSql({
-        applicationId: "?1",
-        stepKey: "?10",
-        round: "?11",
-      })}) >= ?12
-  )`
-
-  return [
-    props.db
-      .prepare(
-        `INSERT OR IGNORE INTO application_workflow_step_snapshots
-           (application_id, step_key, round, required_approvals, activated_at, due_at,
-            escalated_at, resolution_reason, resolution_id)
-           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
-           WHERE ${activationCondition}`,
-      )
-      .bind(
-        props.applicationId,
-        props.stepKey,
-        props.round,
-        props.snapshot.requiredApprovals,
-        props.snapshot.activatedAt,
-        props.snapshot.dueAt,
-        props.snapshot.escalatedAt,
-        props.snapshot.resolutionReason,
-        props.snapshot.resolutionId,
-        props.currentStepKey,
-        props.currentRound,
-        props.requiredApprovals,
-      ),
-    ...chunk(props.snapshot.candidates, 14).map((candidates) => {
-      const bindings: Array<unknown> = [
-        props.applicationId,
-        props.stepKey,
-        props.round,
-        props.snapshot.requiredApprovals,
-        props.snapshot.activatedAt,
-        props.snapshot.dueAt,
-        props.snapshot.escalatedAt,
-        props.snapshot.resolutionReason,
-        props.snapshot.resolutionId,
-        props.currentStepKey,
-        props.currentRound,
-        props.requiredApprovals,
-        ...candidates.flatMap(candidateValues),
-      ]
-
-      return props.db
-        .prepare(
-          `WITH candidate_rows
-             (candidate_employee_id, candidate_account_id, source, selectors_json,
-              eligible_from, resolved_at) AS (VALUES ${candidateValueRows(candidates.length, 13)})
-           INSERT OR IGNORE INTO application_workflow_step_candidates
-             (application_id, step_key, round, candidate_employee_id, candidate_account_id,
-              source, selectors_json, resolution_id, eligible_from, resolved_at)
-           SELECT ?1, ?2, ?3, candidate_employee_id, candidate_account_id,
-                  source, selectors_json, ?9, eligible_from, resolved_at
-           FROM candidate_rows
-           WHERE ${activationCondition}
-               AND EXISTS (
-                 SELECT 1 FROM application_workflow_step_snapshots
-                 WHERE application_id = ?1 AND step_key = ?2 AND round = ?3
-                   AND resolution_id = ?9
-               )`,
-        )
-        .bind(...bindings)
-    }),
-  ]
-}
-
-type WorkflowCandidate = WorkflowStepSnapshotDraft["candidates"][number]
-
-function candidateValues(candidate: WorkflowCandidate): Array<unknown> {
-  return [
-    candidate.employeeId,
-    candidate.accountId,
-    candidate.source,
-    candidate.selectorsJson,
-    candidate.eligibleFrom,
-    candidate.resolvedAt,
-  ]
-}
-
-function candidateValueRows(rowCount: number, firstParameter: number): string {
-  return Array.from({ length: rowCount }, (_, rowIndex) => {
-    const start = firstParameter + rowIndex * 6
-    return `(?${start}, ?${start + 1}, ?${start + 2}, ?${start + 3}, ?${start + 4}, ?${start + 5})`
-  }).join(", ")
-}
-
-function chunk<T>(values: ReadonlyArray<T>, size: number): ReadonlyArray<ReadonlyArray<T>> {
-  return Array.from({ length: Math.ceil(values.length / size) }, (_, index) =>
-    values.slice(index * size, (index + 1) * size),
-  )
-}
-
-export function workflowValidApprovalCountSql(props: {
-  applicationId: string
-  stepKey: string
-  round: string
-}): string {
-  return `SELECT COUNT(*) FROM (${workflowValidApprovalsSql(props)})`
-}
-
-export function workflowReachableApprovalCountSql(props: {
-  applicationId: string
-  stepKey: string
-  round: string
-}): string {
-  return `SELECT COUNT(*) FROM (
-    SELECT represented_approver_id
-    FROM (${workflowValidApprovalsSql(props)})
-    UNION
-    SELECT candidate.candidate_employee_id AS represented_approver_id
-    FROM application_workflow_step_snapshots snapshot
-    INNER JOIN application_workflow_step_candidates candidate
-      ON candidate.application_id = snapshot.application_id
-     AND candidate.step_key = snapshot.step_key
-     AND candidate.round = snapshot.round
-     AND candidate.resolution_id = snapshot.resolution_id
-    INNER JOIN accounts candidate_account
-      ON candidate_account.id = candidate.candidate_account_id
-     AND candidate_account.status = 'active'
-    INNER JOIN employees candidate_employee
-      ON candidate_employee.id = candidate.candidate_employee_id
-     AND candidate_employee.status <> 'retired'
-    WHERE snapshot.application_id = ${props.applicationId}
-      AND snapshot.step_key = ${props.stepKey}
-      AND snapshot.round = ${props.round}
-      AND (
-        candidate.source = 'primary'
-        OR (candidate.source = 'escalation' AND snapshot.escalated_at IS NOT NULL)
-      )
-  )`
-}
-
-export function workflowValidApprovalsSql(props: {
-  applicationId: string
-  stepKey: string
-  round: string
-}): string {
-  return `SELECT DISTINCT approval.represented_approver_id AS represented_approver_id
-    FROM application_workflow_approvals approval
-    WHERE approval.application_id = ${props.applicationId}
-      AND approval.step_key = ${props.stepKey}
-      AND approval.round = ${props.round}
-      AND approval.action = 'approve'
-      AND EXISTS (
-        SELECT 1
-        FROM application_workflow_step_snapshots snapshot
-        INNER JOIN application_workflow_step_candidates candidate
-          ON candidate.application_id = snapshot.application_id
-         AND candidate.step_key = snapshot.step_key
-         AND candidate.round = snapshot.round
-         AND candidate.resolution_id = snapshot.resolution_id
-        WHERE snapshot.application_id = approval.application_id
-          AND snapshot.step_key = approval.step_key
-          AND snapshot.round = approval.round
-          AND candidate.candidate_employee_id = approval.represented_approver_id
-          AND (
-            candidate.source = 'primary'
-            OR (snapshot.escalated_at IS NOT NULL AND snapshot.escalated_at <= approval.created_at)
-          )
-      )`
 }
 
 function decode(json: string): ApplicationWorkflow | Error {

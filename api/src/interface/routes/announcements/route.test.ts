@@ -105,7 +105,7 @@ describe("GET /announcements", () => {
   })
 
   test("admin can filter drafts via status query", async () => {
-    const response = await request("/announcements?status=draft", await tokenFor(1, "admin"))
+    const response = await request("/announcements?status=draft", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -144,7 +144,7 @@ describe("GET /announcements/:id", () => {
   })
 
   test("admin can read a draft announcement", async () => {
-    const response = await request("/announcements/3", await tokenFor(1, "admin"))
+    const response = await request("/announcements/3", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
   })
@@ -152,7 +152,7 @@ describe("GET /announcements/:id", () => {
 
 describe("POST /announcements", () => {
   test("admin creates a draft announcement", async () => {
-    const response = await request("/announcements", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/announcements", await tokenFor(1, "root"), "POST", {
       title: "New Announcement",
       body_md: "hello everyone",
     })
@@ -180,7 +180,7 @@ describe("POST /announcements", () => {
 
 describe("PUT /announcements/:id", () => {
   test("admin updates title and body", async () => {
-    const response = await request("/announcements/3", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/announcements/3", await tokenFor(1, "root"), "PUT", {
       title: "Updated Draft",
       body_md: "updated body",
     })
@@ -216,7 +216,7 @@ describe("POST /announcements/:id/publish", () => {
       db,
       jwtSecret,
       path: "/announcements/3/publish",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       now,
     })
@@ -249,7 +249,7 @@ describe("POST /announcements/:id/publish", () => {
 
 describe("POST /announcements/:id/archive", () => {
   test("admin archives an announcement", async () => {
-    const response = await request("/announcements/1/archive", await tokenFor(1, "admin"), "POST")
+    const response = await request("/announcements/1/archive", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(200)
 

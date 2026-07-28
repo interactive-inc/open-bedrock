@@ -1,18 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import { createAuditEvent } from "@/domain/audit/audit-event"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import {
-  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
-import { hasPermission } from "@/lib/auth/has-permission"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ApplicationError,
   ConflictError,
@@ -20,17 +15,17 @@ import {
   NotFoundError,
   UnexpectedError,
 } from "@/lib/errors"
-import { resolveCompanyBusinessDate } from "@/lib/time/company-business-date"
+import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
 export class ArchiveEmployee {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     employeeCode: string
     archivedAt: string
   }): Promise<{ status: "archived" } | ApplicationError> {
-    if (!hasPermission(command.session, "employee:archive")) {
+    if (!command.session.hasPermission("employee:archive")) {
       return new ForbiddenError("従業員をアーカイブする権限がありません", "forbidden")
     }
     const employee = await new EmployeeRepository(this.c).findByCode(command.employeeCode)
@@ -123,7 +118,9 @@ export class ArchiveEmployee {
     )
     try {
       await this.c.env.DB.batch([
-        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(this.c.env.DB, employee.id),
+        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
+          employee.id,
+        ),
         this.c.env.DB.prepare(
           `UPDATE employees SET archived_at = ?2, archived_by_account_id = ?3
              WHERE id = ?1 AND archived_at IS NULL AND status = 'retired'
@@ -144,7 +141,7 @@ export class ArchiveEmployee {
       ])
       return { status: "archived" }
     } catch (cause) {
-      if (isAbortedByLastAdminGuard(cause)) {
+      if (LastRootGuard.isAbortedBy(cause)) {
         return new ConflictError("最後の実効管理者はアーカイブできません", "last_admin")
       }
       return isAbortedByGuard(cause)

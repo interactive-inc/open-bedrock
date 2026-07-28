@@ -1,6 +1,6 @@
 import { CreateTrainingCourse } from "@/application/training/create-training-course"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"

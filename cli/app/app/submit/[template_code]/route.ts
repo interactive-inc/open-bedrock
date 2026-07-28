@@ -5,7 +5,7 @@ import { readJsonFile } from "@/lib/io/read-json"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app submit <code> --data <file>`
+export const help = `bedrock app submit <code> --data <file>`
 
 const json = () => zValidator("json", z.object({ help: z.string().optional() }).passthrough())
 

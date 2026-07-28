@@ -1,6 +1,5 @@
-import { canViewAllRedemptions } from "@/lib/thanks-points/can-view-all-redemptions"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, thanksRedemptions, thanksRewards } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
@@ -14,7 +13,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/interface/utils/current-employee-departments"
 import { InternalError } from "@/interface/lib/errors"
 
 const SORT_OPTIONS = {
@@ -51,7 +50,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllRedemptions(session) === false) {
+    if (session.hasPermission("thanks_redemption:read:all") === false) {
       throw new ForbiddenError()
     }
 

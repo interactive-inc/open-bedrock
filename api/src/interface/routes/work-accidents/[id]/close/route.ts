@@ -1,9 +1,8 @@
 import { CloseWorkAccident } from "@/application/work-accident/close-work-accident"
-import { canManageWorkAccidents } from "@/lib/work-accident/can-manage-work-accidents"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppWorkAccident } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
 /** POST /work-accidents/:id/close — 発生記録を closed にする。work_accident:manage が必要。 */
@@ -14,7 +13,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageWorkAccidents(session) === false) {
+  if (session.hasPermission("work_accident:manage") === false) {
     throw new ForbiddenError()
   }
 

@@ -163,7 +163,7 @@ describe("GET /goals/:goal_id", () => {
   test("privileged role can view another employee's goal", async () => {
     const response = await request({
       path: `/goals/${othersGoalId}`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

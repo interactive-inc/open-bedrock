@@ -26,10 +26,21 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
-/** 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。 */
+/**
+ * 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
+ *
+ * DB 上の code は null 許容（0029_identity_provisioning.sql）。外部 identity provider からの
+ * プロビジョニングで社員コードを持たない従業員を作れるようにするため。UNIQUE は維持する
+ * （SQLite は複数 NULL を互いに異なる値として扱う）。
+ *
+ * Drizzle 表現でも code を null 許容として型付けする。認証（identity ログイン）などの読取経路が
+ * code=null の行を Employee として読み戻すため、非 null narrowing は実行時の zod parse で破綻する。
+ * 型は DB の正（migration）に合わせて誠実に string | null とし、code を必須とする経路は入力側
+ * スキーマや find 引数の非 null 性で担保する。
+ */
 export const employees = sqliteTable("employees", {
   id: integer("id").primaryKey(),
-  code: text("code").notNull().unique(),
+  code: text("code").unique(),
   name: text("name").notNull(),
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
@@ -1802,6 +1813,60 @@ export const identities = sqliteTable(
 
 export type IdentityRow = InferSelectModel<typeof identities>
 
+/**
+ * 外部 identity provider の短命トークンの使用済み jti を記録し、再利用(replay)を拒否する。
+ * jti が主キーのため、同一 jti の二重挿入は制約違反になり二重使用を封じる。
+ */
+export const identityLoginJti = sqliteTable(
+  "identity_login_jti",
+  {
+    jti: text("jti").primaryKey(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at").notNull(),
+  },
+  (table) => [index("idx_identity_login_jti_expires").on(table.expiresAt)],
+)
+
+export type IdentityLoginJtiRow = InferSelectModel<typeof identityLoginJti>
+
+/**
+ * CLI（ネイティブアプリ）ログインの one-time state。
+ * GET /auth/cli/login が発行し、broker から返ってきた GET /auth/cli/callback で 1 回だけ引いて消費する。
+ */
+export const cliLoginStates = sqliteTable(
+  "cli_login_states",
+  {
+    state: text("state").primaryKey(),
+    port: integer("port").notNull(),
+    cliState: text("cli_state").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_states_expires").on(table.expiresAt)],
+)
+
+export type CliLoginStateRow = InferSelectModel<typeof cliLoginStates>
+
+/**
+ * CLI（ネイティブアプリ）ログインの one-time code。
+ * GET /auth/cli/callback が identity 検証・プロビジョニング成功後に払い出し、
+ * POST /auth/cli/token が 1 回だけ消費してセッションを発行する。
+ * トークンは持たず、解決済みの account/employee の id のみを保持する
+ * （access/refresh トークンを平文で保存領域に置かないため）。code 自体は主キーに持たずハッシュ
+ * （code_hash）で照合する。
+ */
+export const cliLoginCodes = sqliteTable(
+  "cli_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    employeeId: integer("employee_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_cli_login_codes_expires").on(table.expiresAt)],
+)
+
+export type CliLoginCodeRow = InferSelectModel<typeof cliLoginCodes>
+
 /** IAM: ロール。system role は is_system=1 で key 改名・削除不可。 */
 export const roles = sqliteTable("roles", {
   id: integer("id").primaryKey(),
@@ -2200,6 +2265,9 @@ export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
 export const schema = {
   accounts,
   identities,
+  identityLoginJti,
+  cliLoginStates,
+  cliLoginCodes,
   roles,
   permissions,
   rolePermissions,

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte family-care-leave update --id <id> --kind <s> --start <date> --end <date> [--note <s>]`
+export const help = `bedrock family-care-leave update --id <id> --kind <s> --start <date> --end <date> [--note <s>]`
 
 export default factory.createHandlers(
   zValidator(

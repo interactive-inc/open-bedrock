@@ -78,7 +78,7 @@ async function request(
 
 describe("GET /salary-revisions", () => {
   test("returns 200 for admin viewing an employee's history", async () => {
-    const response = await request("/salary-revisions?employee_id=5", await tokenFor(1, "admin"))
+    const response = await request("/salary-revisions?employee_id=5", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -107,7 +107,7 @@ describe("GET /salary-revisions", () => {
 
 describe("POST /salary-revisions", () => {
   test("creates a salary revision as admin", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
       employee_id: 1,
       effective_date: "2026-04-01",
       previous_base_salary: 280000,
@@ -127,7 +127,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 409 on duplicate employee + effective_date", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
       employee_id: 5,
       effective_date: "2025-04-01",
       previous_base_salary: 280000,
@@ -149,7 +149,7 @@ describe("POST /salary-revisions", () => {
   })
 
   test("returns 404 for an unknown employee", async () => {
-    const response = await request("/salary-revisions", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
       employee_id: 9999,
       effective_date: "2026-05-01",
       previous_base_salary: 1,

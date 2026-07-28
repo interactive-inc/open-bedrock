@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import { useState } from "react"
 import {
   updateSurveyResponseAction,

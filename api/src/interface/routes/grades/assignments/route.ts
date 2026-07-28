@@ -1,8 +1,8 @@
 import { CreateEmployeeGrade } from "@/application/grade/create-employee-grade"
-import { canReadGradeOf } from "@/lib/grade/can-read-grade-of"
+import { canReadGradeOf } from "@/interface/routes/grades/assignments/can-read-grade-of"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeGrade, zAppEmployeeGradeList } from "@/lib/app-schemas"
 import { EmployeeGradeRepository } from "@/infrastructure/grade/employee-grade-repository"
@@ -12,7 +12,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"

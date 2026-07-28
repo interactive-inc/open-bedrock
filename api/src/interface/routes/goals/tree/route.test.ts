@@ -155,7 +155,7 @@ describe("GET /goals/tree", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/goals/tree?period=2026-H1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)

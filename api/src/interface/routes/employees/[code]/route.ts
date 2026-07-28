@@ -3,21 +3,19 @@ import { GetEmployee } from "@/application/employee/get-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
 import type { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
-import { toPrimaryRole } from "@/lib/auth/to-primary-role"
-import { ApplicationError, UnexpectedError } from "@/lib/errors"
+import { toPrimaryRole } from "@/interface/utils/to-primary-role"
+import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { canReadEmployees } from "@/lib/employee/can-read-employees"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import type { EmployeeLifecycleState } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
@@ -68,11 +66,11 @@ export const GET = factory.createHandlers(
     }
 
     if (employee.id !== session.employeeId) {
-      if (canReadEmployees(session) === false) {
+      if (session.hasPermission("employee:read") === false) {
         throw new NotFoundError("employee not found")
       }
 
-      if (hasPermission(session, "org:manage") === false) {
+      if (session.hasPermission("org:manage") === false) {
         const authority = await resolveOrganizationAuthority(c, session.employeeId, employee.id)
 
         if (authority instanceof Error) {
@@ -87,6 +85,19 @@ export const GET = factory.createHandlers(
 
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
     if (migrationStatus instanceof ApplicationError) throw toHttpException(migrationStatus)
+
+    // as_of は確定済みライフサイクル履歴を引く指定。移行未完了の legacy 経路では基準日を
+    // 適用できないため、黙って無視せず 422 で拒否する（無視すると呼び出し側が現在時点の
+    // 台帳を「基準日時点の姿」として誤読する）
+    if (c.req.valid("query").as_of !== undefined && migrationStatus !== "verified") {
+      throw toHttpException(
+        new UnprocessableError(
+          "as_of は人事ライフサイクル移行の完了後にのみ指定できます",
+          "lifecycle_migration_incomplete",
+        ),
+      )
+    }
+
     const state =
       migrationStatus === "verified"
         ? await new GetLifecycleState(c).run({

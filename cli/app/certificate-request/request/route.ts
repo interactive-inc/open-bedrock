@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte certificate-request request --type <s> [--submit-to <s>] [--needed-by <date>] [--note <s>]`
+export const help = `bedrock certificate-request request --type <s> [--submit-to <s>] [--needed-by <date>] [--note <s>]`
 
 export default factory.createHandlers(
   zValidator(

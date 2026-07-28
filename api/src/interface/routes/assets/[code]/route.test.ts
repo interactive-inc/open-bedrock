@@ -82,7 +82,7 @@ function tokenFor(employeeId: number): Promise<string> {
   return createTestToken(jwtSecret, {
     employeeId,
     email: `you+e${String(employeeId).padStart(3, "0")}@example.com`,
-    role: employeeId === 1 ? "admin" : "member",
+    role: employeeId === 1 ? "root" : "member",
   })
 }
 

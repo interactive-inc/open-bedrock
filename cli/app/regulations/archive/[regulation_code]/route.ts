@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte regulations archive <code>`
+export const help = `bedrock regulations archive <code>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

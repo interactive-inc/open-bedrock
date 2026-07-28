@@ -1,6 +1,6 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { RegulationRepository } from "@/infrastructure/regulation/regulation-repository"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppRegulationDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"

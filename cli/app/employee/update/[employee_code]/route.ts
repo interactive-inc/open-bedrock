@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte employee update <code> --name <n>
+export const help = `bedrock employee update <code> --name <n>
 
 人物台帳の氏名だけを変更します。
 メール・ロールはアカウント管理、所属・役職・在籍状態は personnel-action を使ってください。`

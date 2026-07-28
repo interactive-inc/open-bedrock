@@ -5,12 +5,10 @@ import { createGrade } from "@/lib/api/create-grade"
 import { deleteGrade } from "@/lib/api/delete-grade"
 import { getMe } from "@/lib/api/get-me"
 import { updateGrade } from "@/lib/api/update-grade"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalText,
-  toRequiredIntInRange,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIntInRange } from "@/lib/form/to-required-int-in-range"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageGrades } from "@/lib/grade/can-manage-grades"
 

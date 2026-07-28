@@ -3,13 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { deleteMySkill } from "@/lib/api/delete-my-skill"
 import { putMySkill } from "@/lib/api/put-my-skill"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalIntInRange,
-  toOptionalText,
-  toRequiredIntInRange,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalIntInRange } from "@/lib/form/to-optional-int-in-range"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIntInRange } from "@/lib/form/to-required-int-in-range"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 export type SkillUpdateState = {

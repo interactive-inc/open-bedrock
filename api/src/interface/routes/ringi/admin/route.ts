@@ -1,6 +1,5 @@
-import { canViewAllRingi } from "@/lib/ringi/can-view-all-ringi"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { alias } from "drizzle-orm/sqlite-core"
 import { employees, ringiRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
@@ -53,7 +52,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllRingi(session) === false) {
+    if (session.hasPermission("ringi:read:all") === false) {
       throw new ForbiddenError()
     }
 

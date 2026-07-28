@@ -1,10 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/application/survey/create-survey"
 import { DeleteSurvey } from "@/application/survey/delete-survey"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { GetSurveyResponse } from "@/application/survey/get-survey-response"
 import { ListMySurveyResponses } from "@/application/survey/list-my-survey-responses"
 import { SubmitSurveyResponse } from "@/application/survey/submit-survey-response"
@@ -64,7 +62,7 @@ describe("CreateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new CreateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       title: "Engagement Survey",
       status: "open",
       questionsJson: [{ q: "Rate your satisfaction" }],
@@ -120,7 +118,7 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -144,7 +142,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -161,7 +159,7 @@ describe("DeleteSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -172,7 +170,7 @@ describe("DeleteSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: 9999,
     })
 
@@ -202,7 +200,7 @@ describe("DeleteSurvey", () => {
     await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
 
     const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
@@ -272,7 +270,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
       status: "closed",
@@ -295,7 +293,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "open")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -313,7 +311,7 @@ describe("UpdateSurvey", () => {
     await seedResponse(context, surveyId, 1)
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -327,7 +325,7 @@ describe("UpdateSurvey", () => {
     const { context } = createTestContext()
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: 9999,
       title: "Missing",
       status: "open",
@@ -358,7 +356,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
       status: "open",
@@ -374,7 +372,7 @@ describe("UpdateSurvey", () => {
     const surveyId = await seedSurvey(context, "closed")
 
     const result = await new UpdateSurvey(context).run({
-      session: makeTestSession("admin"),
+      session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
       status: "closed",

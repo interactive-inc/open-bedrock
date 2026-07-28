@@ -1,4 +1,3 @@
-import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppShiftPatternList } from "@/lib/app-schemas"
 import {
@@ -7,8 +6,8 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { shiftPatterns } from "@/schema"
 import { count } from "drizzle-orm"
 
@@ -19,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canManageShift(session) === false) {
+  if (session.hasPermission("shift:manage") === false) {
     throw new ForbiddenError()
   }
 

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte shift assignment-update --id <assignment-id> --date <yyyy-mm-dd> [--pattern <code>] [--note <text>]`
+export const help = `bedrock shift assignment-update --id <assignment-id> --date <yyyy-mm-dd> [--pattern <code>] [--note <text>]`
 
 export default factory.createHandlers(
   zValidator(

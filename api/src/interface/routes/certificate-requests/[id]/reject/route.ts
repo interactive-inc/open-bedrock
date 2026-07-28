@@ -3,9 +3,9 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppCertificateRequest } from "@/lib/app-schemas"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** POST /certificate-requests/:id/reject — 人事が証明書発行依頼を却下する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

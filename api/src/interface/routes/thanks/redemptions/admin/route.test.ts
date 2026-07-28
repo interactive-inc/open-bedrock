@@ -122,7 +122,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /thanks/redemptions/admin", () => {
   test("returns 200 with all redemptions for admin", async () => {
-    const response = await request("/thanks/redemptions/admin", await tokenFor(1, "admin"))
+    const response = await request("/thanks/redemptions/admin", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -161,7 +161,7 @@ describe("GET /thanks/redemptions/admin", () => {
   test("filters by status", async () => {
     const response = await request(
       "/thanks/redemptions/admin?status=fulfilled",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -178,7 +178,7 @@ describe("GET /thanks/redemptions/admin", () => {
   test("filters by employee_id", async () => {
     const response = await request(
       "/thanks/redemptions/admin?employee_id=5",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -195,7 +195,7 @@ describe("GET /thanks/redemptions/admin", () => {
   test("filters by reward_id", async () => {
     const response = await request(
       "/thanks/redemptions/admin?reward_id=1",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)

@@ -1,6 +1,6 @@
-import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
+import type { Session } from "@/lib/auth/session"
 import { Resignation } from "@/domain/resignation/resignation.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ResignationRepository } from "@/infrastructure/resignation/resignation-repository"
@@ -8,7 +8,7 @@ import { ResignationRepository } from "@/infrastructure/resignation/resignation-
 export type Action = "accept" | "reject"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   resignationId: string
   action: Action
 }
@@ -21,7 +21,7 @@ export class AdvanceResignation {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
-    if (canManageResignations(command.session) === false) {
+    if (command.session.hasPermission("resignation:manage") === false) {
       return new ForbiddenError("cannot manage resignations", "forbidden")
     }
 

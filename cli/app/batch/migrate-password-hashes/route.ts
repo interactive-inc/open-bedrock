@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte batch migrate-password-hashes — 旧形式パスワードハッシュを PBKDF2 ラップに一括移行`
+export const help = `bedrock batch migrate-password-hashes — 旧形式パスワードハッシュを PBKDF2 ラップに一括移行`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

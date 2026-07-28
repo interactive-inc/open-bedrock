@@ -1,11 +1,11 @@
-import { canManagePartners } from "@/lib/partner/can-manage-partners"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { PartnerRepository } from "@/infrastructure/partner/partner-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
 }
 
@@ -20,7 +20,7 @@ export class ArchivePartner {
   async run(command: Command): Promise<Archived | ApplicationError> {
     const partnerRepository = new PartnerRepository(this.c)
 
-    if (canManagePartners(command.session) === false) {
+    if (command.session.hasPermission("partner:manage") === false) {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 

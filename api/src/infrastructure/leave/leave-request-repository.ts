@@ -1,7 +1,7 @@
 import { LeaveRequest, leaveRequestRowSchema } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { leaveBalances, leaveRequests } from "@/schema"
 import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 

@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte attendance clock-in [--note <n>]`
+export const help = `bedrock attendance clock-in [--note <n>]`
 
 export default factory.createHandlers(
   zValidator(

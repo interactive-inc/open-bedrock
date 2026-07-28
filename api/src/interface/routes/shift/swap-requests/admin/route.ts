@@ -1,6 +1,5 @@
-import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, shiftSwapRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
@@ -15,7 +14,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { z } from "zod"
-import { loadCurrentEmployeeDepartmentNames } from "@/lib/org/current-employee-departments"
+import { loadCurrentEmployeeDepartmentNames } from "@/interface/utils/current-employee-departments"
 import { InternalError } from "@/interface/lib/errors"
 
 const SORT_OPTIONS = {
@@ -54,7 +53,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllShiftSwaps(session) === false) {
+    if (session.hasPermission("shift_swap:read:all") === false) {
       throw new ForbiddenError()
     }
 

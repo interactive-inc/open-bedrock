@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance assign-role <role> --employee <code> --starts-on <date> [--department <code>] [--ends-on <date>] [--source-document <code>]`
+export const help = `bedrock governance assign-role <role> --employee <code> --starts-on <date> [--department <code>] [--ends-on <date>] [--source-document <code>]`
 
 export default factory.createHandlers(
   zValidator(

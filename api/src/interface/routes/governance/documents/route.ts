@@ -1,22 +1,17 @@
-import {
-  canManageGovernance,
-  canPublishGovernance,
-  canReadGovernance,
-  canReadGovernanceDocument,
-  canReviewGovernance,
-} from "@/application/governance/governance-access"
+import { GovernanceAccess } from "@/application/governance/governance-access"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { toGovernanceDocumentResponse } from "@/interface/routes/governance/governance-route-shared"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { toGovernanceDocumentResponse } from "@/interface/routes/governance/to-governance-document-response"
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
+  const governanceAccess = new GovernanceAccess({ c, session })
   const elevated =
-    canManageGovernance(session) || canReviewGovernance(session) || canPublishGovernance(session)
-  if (!canReadGovernance(session) && !elevated) throw new ForbiddenError()
+    governanceAccess.canManage() || governanceAccess.canReview() || governanceAccess.canPublish()
+  if (!governanceAccess.canRead() && !elevated) throw new ForbiddenError()
 
   const records = await new GovernanceRepository(c).listDocuments(elevated)
   if (records instanceof Error) throw new InternalError("failed to list governance documents")
@@ -25,9 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       record,
       allowed:
         record.version !== null &&
-        (await canReadGovernanceDocument({
-          c,
-          session,
+        (await governanceAccess.canReadDocument({
           metadata: record.version.metadata,
           isDraft: record.version.row.state !== "published",
         })),

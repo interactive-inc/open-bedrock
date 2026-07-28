@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { HeadcountPlan } from "@/domain/headcount-plan/headcount-plan.entity"
-import { canManageHeadcountPlans } from "@/lib/headcount-plan/can-manage-headcount-plans"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { HeadcountPlanRepository } from "@/infrastructure/headcount-plan/headcount-plan-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   plannedCount: number
   note: string | null
@@ -19,7 +19,7 @@ export class UpdateHeadcountPlan {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<HeadcountPlan | ApplicationError> {
-    if (canManageHeadcountPlans(command.session) === false) {
+    if (command.session.hasPermission("headcount_plan:manage") === false) {
       return new ForbiddenError("cannot manage headcount plans", "forbidden")
     }
 

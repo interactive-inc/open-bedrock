@@ -3,10 +3,10 @@
 -- employees / departments は他ドメイン（employee / org）が seed するため含めない。
 
 INSERT INTO application_templates (id, code, name, category, description, schema_json, approver_roles) VALUES
-  (1, 'paid_leave', 'Paid Leave Request', 'attendance', 'Request for paid leave', '{"type":"object","properties":{"start_date":{"type":"string","format":"date"},"end_date":{"type":"string","format":"date"},"reason":{"type":"string"}},"required":["start_date","end_date"]}', '["manager","admin"]'),
-  (2, 'expense', 'Expense Reimbursement', 'accounting', 'Request for reimbursement of paid expenses', '{"type":"object","properties":{"amount":{"type":"number"},"category":{"type":"string"},"note":{"type":"string"}},"required":["amount","category"]}', '["manager","admin"]'),
+  (1, 'paid_leave', 'Paid Leave Request', 'attendance', 'Request for paid leave', '{"type":"object","properties":{"start_date":{"type":"string","format":"date"},"end_date":{"type":"string","format":"date"},"reason":{"type":"string"}},"required":["start_date","end_date"]}', '["manager","root"]'),
+  (2, 'expense', 'Expense Reimbursement', 'accounting', 'Request for reimbursement of paid expenses', '{"type":"object","properties":{"amount":{"type":"number"},"category":{"type":"string"},"note":{"type":"string"}},"required":["amount","category"]}', '["manager","root"]'),
   (3, 'remote_work', 'Remote Work Request', 'attendance', 'Advance request for remote work', '{"type":"object","properties":{"date":{"type":"string","format":"date"},"reason":{"type":"string"}},"required":["date"]}', '["manager"]'),
-  (4, 'equipment', 'Equipment Purchase Request', 'general_affairs', 'Request to purchase work equipment', '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"},"reason":{"type":"string"}},"required":["item","amount"]}', '["manager","admin"]');
+  (4, 'equipment', 'Equipment Purchase Request', 'general_affairs', 'Request to purchase work equipment', '{"type":"object","properties":{"item":{"type":"string"},"amount":{"type":"number"},"reason":{"type":"string"}},"required":["item","amount"]}', '["manager","root"]');
 
 INSERT INTO applications (id, template_id, applicant_id, status, current_step, payload, created_at) VALUES
   (1, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-06-10","end_date":"2026-06-12","reason":"personal"}', '2026-05-20T01:00:00Z'),

@@ -1,9 +1,7 @@
-import { canDecideLeave } from "@/lib/leave/can-decide-leave"
-import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { resolveOrganizationAuthority } from "@/lib/org/organization-authority"
+import type { Session } from "@/lib/auth/session"
+import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
@@ -11,7 +9,7 @@ import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-rep
 export type Command = {
   leaveRequestId: number
   employeeId: number
-  session?: SessionPayload
+  session?: Session
 }
 
 /**
@@ -35,19 +33,21 @@ export class GetLeaveRequest {
 
     const isApplicant = leaveRequest.employeeId === command.employeeId
     if (isApplicant === false) {
-      const canViewAll = command.session !== undefined && canViewAllLeaves(command.session)
+      const canViewAll =
+        command.session !== undefined && command.session.hasPermission("leave:read:all")
 
       if (canViewAll) {
         return leaveRequest
       }
 
-      const canDecide = command.session !== undefined && canDecideLeave(command.session)
+      const canDecide =
+        command.session !== undefined && command.session.hasPermission("leave:approve")
 
       if (canDecide === false || command.session === undefined) {
         return new ForbiddenError("not the applicant", "not_applicant")
       }
 
-      if (hasPermission(command.session, "org:manage") === false) {
+      if (command.session.hasPermission("org:manage") === false) {
         const organizationAuthority = await resolveOrganizationAuthority(
           this.c,
           command.employeeId,

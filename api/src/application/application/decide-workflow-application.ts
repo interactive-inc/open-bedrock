@@ -1,34 +1,29 @@
+import type { Session } from "@/lib/auth/session"
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"
 import {
   ApplicationWorkflowRepository,
-  conditionalWorkflowStepSnapshotInsertStatements,
   type WorkflowInstance,
   type WorkflowStepSnapshot,
-  workflowValidApprovalCountSql,
-  workflowValidApprovalsSql,
 } from "@/infrastructure/application/application-workflow-repository"
-import { resolveRepresentedApprover } from "@/lib/application/resolve-workflow-approvers"
-import {
-  loadOrResolveWorkflowStepSnapshot,
-  persistResolvedWorkflowStepSnapshot,
-} from "@/lib/application/load-workflow-step-snapshot"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
+import { workflowValidApprovalCountSql } from "@/infrastructure/application/workflow-valid-approval-count-sql"
+import { workflowValidApprovalsSql } from "@/infrastructure/application/workflow-valid-approvals-sql"
+import { resolveRepresentedApprover } from "@/lib/application/resolve-represented-approver"
+import { loadOrResolveWorkflowStepSnapshot } from "@/lib/application/load-or-resolve-workflow-step-snapshot"
+import { persistResolvedWorkflowStepSnapshot } from "@/lib/application/persist-resolved-workflow-step-snapshot"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import {
-  resolveWorkflowStepSnapshot,
-  UnresolvableWorkflowStepError,
-} from "@/lib/application/resolve-workflow-step-snapshot"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
+import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import {
   applicableWorkflowSteps,
   type WorkflowApplicant,
-} from "@/lib/application/evaluate-workflow"
+} from "@/lib/application/applicable-workflow-steps"
 
 export type WorkflowDecision = { status: "pending" | "approved" | "rejected" }
 
@@ -41,7 +36,7 @@ export async function decideWorkflowApplication(props: {
   payload: unknown
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   action: "approve" | "reject"
   comment: string | null
   createdAt: string
@@ -219,7 +214,7 @@ async function resolveStepAuthorization(props: {
   c: Context
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   templateCode: string
   createdAt: string
   step: ApplicationWorkflowStep
@@ -265,7 +260,7 @@ async function persistApproval(props: {
   applicantEmployeeId: number
   actorEmployeeId: number
   actorAccountId: number
-  session: SessionPayload
+  session: Session
   representedApprover: number
   delegationId: number | null
   comment: string | null
@@ -368,8 +363,7 @@ async function persistApproval(props: {
     const results = await props.c.env.DB.batch([
       insert,
       abortWhenPreviousStatementChangedNoRows(props.c.env.DB),
-      ...conditionalWorkflowStepSnapshotInsertStatements({
-        db: props.c.env.DB,
+      ...new WorkflowSql(props.c.env.DB).conditionalInsert({
         applicationId: props.instance.applicationId,
         stepKey: nextStep.key,
         round: nextStepRound,

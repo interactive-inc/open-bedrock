@@ -1,10 +1,9 @@
 import { CompleteHealthCheckup } from "@/application/health-checkup/complete-health-checkup"
-import { canManageHealthCheckups } from "@/lib/health-checkup/can-manage-health-checkups"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
 import { zAppHealthCheckup } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -20,7 +19,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageHealthCheckups(session) === false) {
+    if (session.hasPermission("health_checkup:manage") === false) {
       throw new ForbiddenError()
     }
 

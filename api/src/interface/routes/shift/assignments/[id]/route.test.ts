@@ -97,7 +97,7 @@ describe("GET /shift/assignments/:id", () => {
   test("privileged role reads an assignment and returns 200", async () => {
     const response = await request({
       path: "/shift/assignments/1",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -123,7 +123,7 @@ describe("GET /shift/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift/assignments/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -140,7 +140,7 @@ describe("PUT /shift/assignments/:id", () => {
   test("privileged role updates pattern, date and note and returns 200", async () => {
     const response = await request({
       path: "/shift/assignments/2",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: "Updated" },
     })
@@ -161,7 +161,7 @@ describe("PUT /shift/assignments/:id", () => {
   test("clears the pattern when pattern_code is null", async () => {
     const response = await request({
       path: "/shift/assignments/2",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { pattern_code: null, date: "2026-06-10", note: null },
     })
@@ -180,7 +180,7 @@ describe("PUT /shift/assignments/:id", () => {
   test("returns 404 for an unknown pattern code", async () => {
     const response = await request({
       path: "/shift/assignments/2",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { pattern_code: "UNKNOWN", date: "2026-06-10", note: null },
     })
@@ -202,7 +202,7 @@ describe("PUT /shift/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift/assignments/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: null },
     })
@@ -215,7 +215,7 @@ describe("DELETE /shift/assignments/:id", () => {
   test("privileged role deletes an assignment and returns 204", async () => {
     const response = await request({
       path: "/shift/assignments/2",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 
@@ -235,7 +235,7 @@ describe("DELETE /shift/assignments/:id", () => {
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
       path: "/shift/assignments/9999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "DELETE",
     })
 

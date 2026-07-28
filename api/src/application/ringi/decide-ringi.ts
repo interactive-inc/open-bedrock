@@ -1,11 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { RingiRequestRepository } from "@/infrastructure/ringi/ringi-request-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   ringiId: number
   approverId: number
   action: "approve" | "reject"

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte 1on1 edit --id <one-on-one-id> [--topics <t>] [--manager-note <n>] [--next-action <a>] — 記録内容を変更`
+export const help = `bedrock 1on1 edit --id <one-on-one-id> [--topics <t>] [--manager-note <n>] [--next-action <a>] — 記録内容を変更`
 
 export default factory.createHandlers(
   zValidator(

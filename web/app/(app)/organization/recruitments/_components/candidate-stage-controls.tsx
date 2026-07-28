@@ -4,11 +4,9 @@ import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { advanceCandidateAction } from "@/app/(app)/organization/recruitments/actions"
 import type { RecruitmentActionState } from "@/app/(app)/organization/recruitments/actions"
-import {
-  canReject,
-  toCandidateStageLabel,
-  toNextStage,
-} from "@/app/(app)/organization/recruitments/_lib/candidate-stage"
+import { canReject } from "@/app/(app)/organization/recruitments/_lib/can-reject"
+import { toCandidateStageLabel } from "@/app/(app)/organization/recruitments/_lib/to-candidate-stage-label"
+import { toNextStage } from "@/app/(app)/organization/recruitments/_lib/to-next-stage"
 import { Button } from "@/components/ui/button"
 
 const initialState: RecruitmentActionState = { ok: false, error: null }

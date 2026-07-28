@@ -1,4 +1,3 @@
-import { canViewEmployeeOnboarding } from "@/lib/onboarding/can-view-employee-onboarding"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppOnboardingAssignmentList } from "@/lib/app-schemas"
 import {
@@ -8,8 +7,8 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
 import { asc, count, eq, inArray } from "drizzle-orm"
 
@@ -21,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewEmployeeOnboarding(session) === false) {
+  if (session.hasPermission("onboarding:view:all") === false) {
     throw new ForbiddenError()
   }
 

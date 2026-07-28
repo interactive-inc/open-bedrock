@@ -1,7 +1,8 @@
+import type { Session } from "@/lib/auth/session"
 import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -11,7 +12,7 @@ import { decideWorkflowApplication } from "@/application/application/decide-work
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   applicationId: number
   approverId: number
   action: "approve" | "reject"

@@ -58,7 +58,7 @@ async function createPlan(
     db,
     jwtSecret,
     path: "/headcount-plans",
-    token: await tokenFor(1, "admin"),
+    token: await tokenFor(1, "root"),
     method: "POST",
     body,
   })
@@ -81,7 +81,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(list.status).toBe(200)
@@ -107,7 +107,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: "/headcount-plans",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     const body = (await list.json()) as { data: Array<{ actual_count: number }> }
@@ -153,7 +153,7 @@ describe("headcount plans", () => {
       db,
       jwtSecret,
       path: `/headcount-plans/${plan.id}`,
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "PUT",
       body: { planned_count: 6 },
     })

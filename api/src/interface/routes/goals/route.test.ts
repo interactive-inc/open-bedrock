@@ -141,7 +141,7 @@ describe("GET /goals", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/goals?employee_id=5",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -371,7 +371,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
   ])
 
   await seedIamForEmployees(db, [
-    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "admin" },
+    { id: 23, email: "you+a023@example.com", passwordHash: "x", role: "root" },
   ])
 
   await seedD1(db, "goals", [
@@ -420,7 +420,7 @@ describe("GET /goals?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/goals?scope=department&department_code=D001",
-      token: await tokenFor(23, "admin"),
+      token: await tokenFor(23, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -496,7 +496,7 @@ describe("GET /goals?scope=department", () => {
       db: await createDepartmentScopeTestDb(),
       jwtSecret,
       path: "/goals?scope=department",
-      token: await tokenFor(23, "admin"),
+      token: await tokenFor(23, "root"),
     })
 
     expect(response.status).toBe(422)

@@ -92,7 +92,7 @@ describe("POST /notifications", () => {
   test("privileged role sends a notification and returns 201", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         recipient_employee_code: "E005",
@@ -131,7 +131,7 @@ describe("POST /notifications", () => {
   test("returns 404 for an unknown recipient_employee_code", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         recipient_employee_code: "E999",
@@ -145,7 +145,7 @@ describe("POST /notifications", () => {
   test("returns 400 when the title is missing", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { recipient_employee_code: "E005" },
     })
@@ -156,7 +156,7 @@ describe("POST /notifications", () => {
   test("returns 400 when source_id is negative", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         recipient_employee_code: "E005",
@@ -171,7 +171,7 @@ describe("POST /notifications", () => {
   test("returns 400 when source_id is a decimal", async () => {
     const response = await request({
       path: "/notifications",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         recipient_employee_code: "E005",

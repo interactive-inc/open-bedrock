@@ -106,7 +106,7 @@ async function request(
 
 describe("GET /applications/inbox", () => {
   test("returns 200 with the inbox columns and joined names", async () => {
-    const response = await request("/applications/inbox", await tokenFor(1, "admin"))
+    const response = await request("/applications/inbox", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 

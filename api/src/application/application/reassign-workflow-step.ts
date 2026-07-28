@@ -1,16 +1,12 @@
-import type { Context, SessionPayload } from "@/env"
+import type { Session } from "@/lib/auth/session"
+import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
-import {
-  ApplicationWorkflowRepository,
-  workflowReachableApprovalCountSql,
-  workflowStepSnapshotInsertStatements,
-} from "@/infrastructure/application/application-workflow-repository"
-import { hasPermission } from "@/lib/auth/has-permission"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
+import { workflowReachableApprovalCountSql } from "@/infrastructure/application/workflow-reachable-approval-count-sql"
 import { ensureWorkflowStepEscalation } from "@/lib/application/ensure-workflow-step-escalation"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {
   ConflictError,
   ForbiddenError,
@@ -31,7 +27,7 @@ export class ReassignWorkflowStep {
   constructor(private readonly c: Context) {}
 
   async run(command: {
-    session: SessionPayload
+    session: Session
     applicationId: number
     candidateEmployeeIds: ReadonlyArray<number>
     requiredApprovals?: number
@@ -39,8 +35,8 @@ export class ReassignWorkflowStep {
     reassignedAt: string
   }): Promise<ReassignedWorkflowStep | ApplicationError> {
     if (
-      hasPermission(command.session, "application:read:all") === false ||
-      hasPermission(command.session, "application_template:manage") === false
+      command.session.hasPermission("application:read:all") === false ||
+      command.session.hasPermission("application_template:manage") === false
     ) {
       return new ForbiddenError("cannot repair application workflows", "forbidden")
     }
@@ -240,8 +236,7 @@ export class ReassignWorkflowStep {
           db: this.c.env.DB,
           candidateEmployeeIds,
         }),
-        ...workflowStepSnapshotInsertStatements({
-          db: this.c.env.DB,
+        ...new WorkflowSql(this.c.env.DB).insert({
           applicationId: command.applicationId,
           stepKey: instance.currentStepKey,
           round,

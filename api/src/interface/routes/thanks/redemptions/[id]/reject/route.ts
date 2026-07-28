@@ -1,12 +1,11 @@
 import { DecideRedemption } from "@/application/thanks-points/decide-redemption"
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
-import { toPositiveInt } from "@/lib/thanks-points/to-positive-int"
+import { toPositiveInt } from "@/interface/utils/to-positive-int"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 
 /** POST /thanks/redemptions/:id/reject — 交換申請を却下する（承認権限が必要） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
@@ -16,7 +15,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canDecideRedemption(session) === false) {
+  if (session.hasPermission("thanks_redemption:approve") === false) {
     throw new ForbiddenError()
   }
 

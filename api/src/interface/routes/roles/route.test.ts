@@ -34,7 +34,7 @@ async function createTestDb(): Promise<D1Database> {
 
 /** E001 は admin(iam:manage_roles 保有)、E005 は member。 */
 function adminToken(): Promise<string> {
-  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "admin" })
+  return createTestToken(jwtSecret, { employeeId: 1, email: "you+e001@example.com", role: "root" })
 }
 
 function memberToken(): Promise<string> {
@@ -85,10 +85,10 @@ describe("GET /roles", () => {
     if (parsed.success) {
       const keys = parsed.data.data.map((role) => role.key)
 
-      expect(keys).toContain("admin")
+      expect(keys).toContain("root")
       expect(keys).toContain("member")
 
-      const admin = parsed.data.data.find((role) => role.key === "admin")
+      const admin = parsed.data.data.find((role) => role.key === "root")
 
       expect(admin?.permission_keys).toContain("iam:manage_roles")
     }
@@ -187,7 +187,7 @@ describe("POST /roles", () => {
       path: "/roles",
       token: await adminToken(),
       method: "POST",
-      body: { key: "admin", name: "dup", description: null, permission_keys: [] },
+      body: { key: "root", name: "dup", description: null, permission_keys: [] },
     })
 
     expect(response.status).toBe(409)

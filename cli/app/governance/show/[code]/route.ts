@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance show <code>`
+export const help = `bedrock governance show <code>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), code: z.string().optional() })),

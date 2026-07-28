@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte notify list [--unread]`
+export const help = `bedrock notify list [--unread]`
 
 export default factory.createHandlers(
   zValidator(

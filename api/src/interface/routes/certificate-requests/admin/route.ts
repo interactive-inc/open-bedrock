@@ -1,6 +1,5 @@
-import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-view-all-certificate-requests"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { certificateRequests } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllCertificateRequests(session) === false) {
+    if (session.hasPermission("certificate_request:read:all") === false) {
       throw new ForbiddenError()
     }
 

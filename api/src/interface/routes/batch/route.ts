@@ -1,4 +1,3 @@
-import { canManageBatch } from "@/lib/batch/can-manage-batch"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import {
   DEFAULT_LIST_LIMIT,
@@ -6,8 +5,8 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { batchJobs } from "@/schema"
 import { count, desc } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
@@ -29,7 +28,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageBatch(session) === false) {
+    if (session.hasPermission("batch:view") === false) {
       throw new ForbiddenError()
     }
 

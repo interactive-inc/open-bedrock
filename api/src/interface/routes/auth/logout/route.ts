@@ -1,9 +1,10 @@
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import { assertAuditHmacSecret, hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 

@@ -1,11 +1,9 @@
 import type { Context } from "@/env"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { hasFinalEvaluation } from "@/lib/goal/has-final-evaluation"
+import { hasFinalEvaluation } from "@/application/goal/has-final-evaluation"
 import { GoalEvaluationRepository } from "@/infrastructure/goal/goal-evaluation-repository"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 

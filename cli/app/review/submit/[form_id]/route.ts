@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte review submit <form_id> --score <n> [--comment <c>]`
+export const help = `bedrock review submit <form_id> --score <n> [--comment <c>]`
 
 export default factory.createHandlers(
   zValidator(

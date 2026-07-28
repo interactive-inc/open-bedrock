@@ -133,7 +133,7 @@ describe("GET /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments?employee_id=5",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -175,7 +175,7 @@ describe("GET /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments?employee_code=E999",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -232,7 +232,7 @@ describe("POST /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { employee_id: 9, grade_id: 2, effective_date: "2026-04-01", reason: "Promotion" },
     })
@@ -254,7 +254,7 @@ describe("POST /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         employee_id: 9,
@@ -280,7 +280,7 @@ describe("POST /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         employee_id: 9,
@@ -311,7 +311,7 @@ describe("POST /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { employee_id: 9, grade_id: 999, effective_date: "2026-04-01" },
     })
@@ -324,7 +324,7 @@ describe("POST /grades/assignments", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/grades/assignments",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: { employee_id: 5, grade_id: 1, effective_date: "2025-04-01" },
     })

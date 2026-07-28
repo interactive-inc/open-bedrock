@@ -1,7 +1,6 @@
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import { filterFormsForSubjectViewer } from "@/lib/review/filter-forms-for-subject-viewer"
-import { toReviewerTypeSummary } from "@/lib/review/to-reviewer-type-summary"
-import { factory } from "@/lib/factory"
+import { filterFormsForSubjectViewer } from "@/interface/routes/review-forms/filter-forms-for-subject-viewer"
+import { toReviewerTypeSummary } from "@/interface/utils/to-reviewer-type-summary"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -9,7 +8,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 import { zAppReviewResult } from "@/lib/app-schemas"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { ReviewFormRepository } from "@/infrastructure/review/review-form-repository"
 
@@ -30,7 +29,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("subject_employee_id is required")
   }
 
-  const isAdministrator = canAdministerCycle(session)
+  const isAdministrator = session.hasPermission("review:administer")
 
   const isSubjectSelf = subjectEmployeeId === session.employeeId
 

@@ -1,17 +1,16 @@
 import { CreateLicense } from "@/application/license/create-license"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { LicenseRepository } from "@/infrastructure/license/license-repository"
 import { ApplicationError } from "@/lib/errors"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllLicenses } from "@/lib/license/can-view-all-licenses"
 import { zAppLicense, zAppLicenseList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -35,7 +34,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllLicenses(session) === false) {
+    if (session.hasPermission("license:read:all") === false) {
       throw new ForbiddenError()
     }
 

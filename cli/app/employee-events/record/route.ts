@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte employee-events record --employee-id <id> --kind join|transfer|leave_of_absence|return|retire --effective-date <YYYY-MM-DD> [--from <code>] [--to <code>] [--note <n>]`
+export const help = `bedrock employee-events record --employee-id <id> --kind join|transfer|leave_of_absence|return|retire --effective-date <YYYY-MM-DD> [--from <code>] [--to <code>] [--note <n>]`
 
 const kindSchema = z.enum(["join", "transfer", "leave_of_absence", "return", "retire"])
 

@@ -4,11 +4,11 @@ import { bodyLimit } from "hono/body-limit"
 import { cors } from "hono/cors"
 import { secureHeaders } from "hono/secure-headers"
 import { contextStorage } from "hono/context-storage"
-import { databaseMiddleware } from "@/interface/middleware/database-middleware"
-import { rateLimitMiddleware } from "@/interface/middleware/rate-limit-middleware"
-import { requestContextMiddleware } from "@/interface/middleware/request-context-middleware"
-import { factory } from "@/lib/factory"
-import { auditNoStore } from "@/interface/utils/audit-route-contract"
+import { databaseMiddleware } from "@/interface/middlewares/database-middleware"
+import { rateLimitMiddleware } from "@/interface/middlewares/rate-limit-middleware"
+import { requestContextMiddleware } from "@/interface/middlewares/request-context-middleware"
+import { factory } from "@/interface/utils/factory"
+import { auditNoStore } from "@/interface/middlewares/audit-no-store"
 import * as auditEventExportsRoute from "@/interface/routes/audit-event-exports/route"
 import * as auditEventDetailRoute from "@/interface/routes/audit-events/[event_id]/route"
 import * as auditEventsRoute from "@/interface/routes/audit-events/route"
@@ -55,10 +55,18 @@ import * as calendarListRoute from "@/interface/routes/calendar/route"
 import * as calendarDayCreateRoute from "@/interface/routes/calendar/days/create-route"
 import * as calendarDayDetailRoute from "@/interface/routes/calendar/days/[id]/route"
 import * as workStyleRoute from "@/interface/routes/work-styles/route"
+import * as authIdentityLoginRoute from "@/interface/routes/auth/identity/login/route"
+import * as authCliLoginRoute from "@/interface/routes/auth/cli/login/route"
+import * as authCliCallbackRoute from "@/interface/routes/auth/cli/callback/route"
+import * as authCliTokenRoute from "@/interface/routes/auth/cli/token/route"
+import * as authBrowserCodeRoute from "@/interface/routes/auth/browser/code/route"
+import * as authBrowserTokenRoute from "@/interface/routes/auth/browser/token/route"
+import * as bootstrapRoute from "@/interface/routes/bootstrap/route"
 import * as authLoginRoute from "@/interface/routes/auth/login/route"
 import * as authLogoutRoute from "@/interface/routes/auth/logout/route"
 import * as authMeRoute from "@/interface/routes/me/route"
 import * as authRefreshRoute from "@/interface/routes/auth/refresh/route"
+import * as provisioningIdentitiesRoute from "@/interface/routes/provisioning/identities/route"
 import * as meDepartmentsRoute from "@/interface/routes/me/departments/route"
 import * as meReportsRoute from "@/interface/routes/me/reports/route"
 import * as batchMigratePasswordHashesRoute from "@/interface/routes/batch/migrate-password-hashes/route"
@@ -409,9 +417,17 @@ export const app = factory
     return c.json({ error: "internal server error" }, 500)
   })
   .get("/health", (c) => c.json({ status: "ok" }, 200))
+  .post("/bootstrap", ...bootstrapRoute.POST)
   .post("/auth/login", ...authLoginRoute.POST)
+  .post("/auth/identity/login", ...authIdentityLoginRoute.POST)
+  .get("/auth/cli/login", ...authCliLoginRoute.GET)
+  .get("/auth/cli/callback", ...authCliCallbackRoute.GET)
+  .post("/auth/cli/token", ...authCliTokenRoute.POST)
+  .post("/auth/browser/code", ...authBrowserCodeRoute.POST)
+  .post("/auth/browser/token", ...authBrowserTokenRoute.POST)
   .post("/auth/logout", ...authLogoutRoute.POST)
   .post("/auth/refresh", ...authRefreshRoute.POST)
+  .post("/provisioning/identities", ...provisioningIdentitiesRoute.POST)
   .get("/me", ...authMeRoute.GET)
   .get("/me/departments", ...meDepartmentsRoute.GET)
   .get("/me/reports", ...meReportsRoute.GET)

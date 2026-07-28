@@ -7,12 +7,10 @@ import { createLifeEvent } from "@/lib/api/create-life-event"
 import { getMe } from "@/lib/api/get-me"
 import { rejectLifeEvent } from "@/lib/api/reject-life-event"
 import { updateLifeEvent } from "@/lib/api/update-life-event"
-import {
-  FORM_CONSTRAINTS,
-  toOptionalText,
-  toRequiredIsoDate,
-  toRequiredText,
-} from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toOptionalText } from "@/lib/form/to-optional-text"
+import { toRequiredIsoDate } from "@/lib/form/to-required-iso-date"
+import { toRequiredText } from "@/lib/form/to-required-text"
 import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
 import { requireAuth } from "@/lib/auth/require-auth"
 

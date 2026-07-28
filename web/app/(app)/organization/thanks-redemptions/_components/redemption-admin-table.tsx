@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/empty-state"

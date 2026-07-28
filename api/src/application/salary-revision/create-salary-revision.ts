@@ -1,14 +1,14 @@
+import type { Session } from "@/lib/auth/session"
 import { SalaryRevision } from "@/domain/salary-revision/salary-revision.entity"
-import { canManageSalaryRevisions } from "@/lib/salary-revision/can-manage-salary-revisions"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/infrastructure/salary-revision/salary-revision-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   employeeId: number
   effectiveDate: string
   previousBaseSalary: number
@@ -25,7 +25,7 @@ export class CreateSalaryRevision {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<SalaryRevision | ApplicationError> {
-    if (canManageSalaryRevisions(command.session) === false) {
+    if (command.session.hasPermission("salary_revision:manage") === false) {
       return new ForbiddenError("cannot manage salary revisions", "forbidden")
     }
 

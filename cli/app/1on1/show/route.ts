@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte 1on1 show --id <one-on-one-id> — 1on1 を1件表示`
+export const help = `bedrock 1on1 show --id <one-on-one-id> — 1on1 を1件表示`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), id: z.string().optional() })),

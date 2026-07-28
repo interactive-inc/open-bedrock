@@ -1,19 +1,17 @@
+import type { Session } from "@/lib/auth/session"
 import { Notification } from "@/domain/notification/notification.entity"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
 export type Input = {
-  session: SessionPayload
+  session: Session
   approverId: number
   swapRequestId: number
   approvedAt: string
@@ -27,7 +25,7 @@ export class ApproveShiftSwapRequest {
   constructor(private readonly c: Context) {}
 
   async run(input: Input): Promise<ShiftSwapRequest | ApplicationError> {
-    if (canApproveShiftSwap(input.session) === false) {
+    if (input.session.hasPermission("shift_swap:approve") === false) {
       return new ForbiddenError("cannot approve shift swap", "forbidden")
     }
 

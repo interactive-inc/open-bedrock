@@ -1,13 +1,13 @@
+import type { Session } from "@/lib/auth/session"
 import type { ThanksRedemption } from "@/domain/thanks-points/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/infrastructure/thanks-points/thanks-redemption-repository"
 import { ThanksRewardRepository } from "@/infrastructure/thanks-points/thanks-reward-repository"
-import { canDecideRedemption } from "@/lib/thanks-points/can-decide-redemption"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   redemptionId: number
   deciderId: number
   action: "approve" | "reject"
@@ -42,7 +42,7 @@ export class DecideRedemption {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<DecideResult> {
-    if (canDecideRedemption(command.session) === false) {
+    if (command.session.hasPermission("thanks_redemption:approve") === false) {
       return new ForbiddenError("cannot decide redemption", "forbidden")
     }
 

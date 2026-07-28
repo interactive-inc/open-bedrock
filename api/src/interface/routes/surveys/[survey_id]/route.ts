@@ -1,11 +1,10 @@
 import { DeleteSurvey } from "@/application/survey/delete-survey"
 import { UpdateSurvey } from "@/application/survey/update-survey"
-import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { Survey } from "@/domain/survey/survey.entity"
 import { surveyQuestionSchema } from "@/domain/survey/survey-question.value"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -37,7 +36,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new NotFoundError("survey not found")
   }
 
-  if (row.status !== "open" && canManageSurveys(session) === false) {
+  if (row.status !== "open" && session.hasPermission("survey:manage") === false) {
     throw new NotFoundError("survey not found")
   }
 

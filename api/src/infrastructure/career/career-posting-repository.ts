@@ -1,9 +1,7 @@
 import { CareerPosting } from "@/domain/career/career-posting.entity"
 import type { Context } from "@/env"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { careerPostings } from "@/schema"
 import { eq } from "drizzle-orm"
 

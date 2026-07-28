@@ -1,12 +1,12 @@
-import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
+import type { Session } from "@/lib/auth/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTemplate } from "@/domain/onboarding/onboarding-template.entity"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   code: string
 }
 
@@ -19,7 +19,7 @@ export class GetOnboardingTemplate {
   async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
     const templateRepository = new OnboardingTemplateRepository(this.c)
 
-    if (canManageOnboarding(command.session) === false) {
+    if (command.session.hasPermission("onboarding:manage") === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 

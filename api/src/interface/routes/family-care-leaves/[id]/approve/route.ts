@@ -3,9 +3,9 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { zAppFamilyCareLeave } from "@/lib/app-schemas"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
 /** POST /family-care-leaves/:id/approve — 人事が産休・育休・介護休業の申出を承認する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {

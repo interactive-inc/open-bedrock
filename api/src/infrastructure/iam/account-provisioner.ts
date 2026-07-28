@@ -1,20 +1,41 @@
 import type { Context } from "@/env"
+import type { IdentityProvider } from "@/lib/schemas"
 import { accountRoles, accounts, identities, roles } from "@/schema"
-import {
-  abortWhenPreviousStatementChangedNoRows,
-  isAbortedByGuard,
-} from "@/lib/d1/batch-abort-guard"
-import {
-  abortWhenActorCannotManageRoleByKey,
-  isAbortedByLivePermissionGuard,
-} from "@/infrastructure/iam/live-permission-guard"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
+import { RoleAssignmentGuardError } from "@/infrastructure/iam/role-assignment-guard-error"
 import { eq } from "drizzle-orm"
 
 export type ProvisionInput = {
   employeeId: number
   email: string
-  passwordHash: string
+  /** 認証方式。password は secret に PBKDF2、外部 IdP(oidc 等)は secret を持たない。 */
+  provider: IdentityProvider
+  /** password 認証のハッシュ。secret を持たない外部 IdP では null。 */
+  secret: string | null
+  /** identity の subject。password は正規化 email、外部 IdP は IdP の sub。 */
+  subject: string
   roleKey: string
+  now: number
+}
+
+/** 外部 identity provider から新規従業員一式(code なし)を払い出すための入力。 */
+export type ProvisionExternalEmployeeInput = {
+  provider: IdentityProvider
+  subject: string
+  email: string
+  name: string
+  roleKey: string
+  now: number
+}
+
+/** 既存アカウントへ外部 identity を 1 件追加するための入力。 */
+export type AttachExternalIdentityInput = {
+  accountId: number
+  provider: IdentityProvider
+  subject: string
+  email: string
   now: number
 }
 
@@ -41,14 +62,6 @@ export type PreparedProvisionInput = {
   roleKey: string
   grantedByAccountId: number
   now: number
-}
-
-/** requested role が存在しないか、付与者の実効権限を超えたため batch を中止した。 */
-export class RoleAssignmentGuardError extends Error {
-  constructor(options?: ErrorOptions) {
-    super("role assignment was rejected", options)
-    this.name = "RoleAssignmentGuardError"
-  }
 }
 
 /**
@@ -84,9 +97,9 @@ export class AccountProvisioner {
 
       await db.insert(identities).values({
         accountId: account.id,
-        provider: "password",
-        subject: input.email.toLowerCase(),
-        secret: input.passwordHash,
+        provider: input.provider,
+        subject: input.subject,
+        secret: input.secret,
         email: input.email,
         emailVerified: 1,
         createdAt: input.now,
@@ -108,6 +121,91 @@ export class AccountProvisioner {
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to provision account")
+    }
+  }
+
+  /**
+   * 外部 identity provider から、社員コードを持たない従業員一式(employee/account/identity/role)を
+   * 単一の D1 batch でアトミックに払い出す。途中失敗は batch 全体を rollback し孤立レコードを防ぐ。
+   * code は null。secret は持たず(email_verified=1)、provider は外部 IdP。
+   * 付与ロールが存在しない場合は最後の guard で batch 全体を中止する。
+   * 作成した employee の id を返す。
+   */
+  async provisionExternalEmployee(input: ProvisionExternalEmployeeInput): Promise<number | Error> {
+    try {
+      const db = this.c.env.DB
+
+      const statements: D1PreparedStatement[] = [
+        // 1. employee を作成する（code は null）。
+        db
+          .prepare("INSERT INTO employees (code, name, status) VALUES (NULL, ?1, 'active')")
+          .bind(input.name),
+
+        // 2. account を作成する（直前に作った employee を last_insert_rowid() で参照）。
+        db
+          .prepare(
+            `INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at)
+             VALUES (last_insert_rowid(), 'active', 0, ?1, ?1)`,
+          )
+          .bind(input.now),
+
+        // 3. identity を作成する（直前に作った account を last_insert_rowid() で参照）。
+        db
+          .prepare(
+            `INSERT INTO identities
+               (account_id, provider, subject, secret, email, email_verified, created_at)
+             VALUES (last_insert_rowid(), ?1, ?2, NULL, ?3, 1, ?4)`,
+          )
+          .bind(input.provider, input.subject, input.email, input.now),
+
+        // 4. account_role を作成する。account は subject 経由で逆引きし、role 不在なら 0 行。
+        db
+          .prepare(
+            `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
+             SELECT identity.account_id, role.id, NULL, ?3
+             FROM identities identity
+             JOIN roles role ON role.key = ?2
+             WHERE identity.provider = ?4 AND identity.subject = ?1`,
+          )
+          .bind(input.subject, input.roleKey, input.now, input.provider),
+
+        // role 不在なら直前 INSERT は 0 行。孤立した employee/account/identity も rollback する。
+        abortWhenPreviousStatementChangedNoRows(db),
+      ]
+
+      const results = await db.batch(statements)
+
+      const employeeId = results[0]?.meta?.last_row_id
+
+      if (employeeId === undefined) {
+        return new Error("failed to retrieve employee id from batch")
+      }
+
+      return employeeId
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to provision external employee")
+    }
+  }
+
+  /**
+   * 既存アカウントへ外部 identity を 1 件追加する（email で既存従業員に見つかった場合の紐付け）。
+   * (provider, subject) の一意制約により、同じ外部 identity の二重紐付けは失敗する。
+   */
+  async attachExternalIdentity(input: AttachExternalIdentityInput): Promise<null | Error> {
+    try {
+      await this.c.var.database.insert(identities).values({
+        accountId: input.accountId,
+        provider: input.provider,
+        subject: input.subject,
+        secret: null,
+        email: input.email,
+        emailVerified: 1,
+        createdAt: input.now,
+      })
+
+      return null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to attach external identity")
     }
   }
 
@@ -142,8 +240,7 @@ export class AccountProvisioner {
           input.now,
         ),
       abortWhenPreviousStatementChangedNoRows(db),
-      abortWhenActorCannotManageRoleByKey({
-        db,
+      new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
         actorAccountId: input.grantedByAccountId,
         targetRoleKey: input.roleKey,
         requiredPermissionKeys:
@@ -221,8 +318,7 @@ export class AccountProvisioner {
           ),
 
         // 4. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
-        abortWhenActorCannotManageRoleByKey({
-          db,
+        new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
           actorAccountId: input.grantedByAccountId,
           targetRoleKey: input.roleKey,
           requiredPermissionKeys:
@@ -258,7 +354,7 @@ export class AccountProvisioner {
 
       return employeeId
     } catch (caught) {
-      if (isAbortedByLivePermissionGuard(caught) || isAbortedByGuard(caught)) {
+      if (LivePermissionGuard.isAbortedBy(caught) || isAbortedByGuard(caught)) {
         return new RoleAssignmentGuardError({ cause: caught })
       }
 

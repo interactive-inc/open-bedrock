@@ -1,10 +1,7 @@
 import { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"
-import { LastAdminError } from "@/infrastructure/iam/last-admin-error"
-import {
-  abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone,
-  isAbortedByLastAdminGuard,
-} from "@/infrastructure/iam/last-admin-guard"
+import { LastRootError } from "@/infrastructure/iam/last-root-error"
+import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 import { employees } from "@/schema"
@@ -88,7 +85,7 @@ export class EmployeeRepository {
           position: employee.position,
           status: employee.status,
         })
-        .where(eq(employees.code, employee.code))
+        .where(eq(employees.id, employee.id))
         .returning()
 
       const row = rows.at(0)
@@ -106,9 +103,9 @@ export class EmployeeRepository {
   }
 
   /** 氏名・部署・役職・在籍状況を更新し、最後の実効管理者の退職なら batch ごと戻す。 */
-  async updateProfileGuardingLastAdmin(
+  async updateProfileGuardingLastRoot(
     employee: Employee,
-  ): Promise<Employee | null | Error | LastAdminError> {
+  ): Promise<Employee | null | Error | LastRootError> {
     try {
       const db = this.c.env.DB
 
@@ -121,23 +118,25 @@ export class EmployeeRepository {
                  dept_name = ?4,
                  position = ?5,
                  status = ?6
-             WHERE code = ?1`,
+             WHERE id = ?1`,
           )
           .bind(
-            employee.code,
+            employee.id,
             employee.name,
             employee.deptId,
             employee.deptName,
             employee.position,
             employee.status,
           ),
-        abortWhenRemovingLoginEnabledEffectiveAdminWouldLeaveNone(db, employee.id),
+        new LastRootGuard(this.c).abortWhenRemovingLoginEnabledEffectiveRootWouldLeaveNone(
+          employee.id,
+        ),
       ])
 
-      return await this.findByCode(employee.code)
+      return await this.findById(employee.id)
     } catch (error) {
-      if (isAbortedByLastAdminGuard(error)) {
-        return new LastAdminError()
+      if (LastRootGuard.isAbortedBy(error)) {
+        return new LastRootError()
       }
 
       if (isUniqueConstraintError(error)) {

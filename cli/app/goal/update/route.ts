@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte goal update --id <goal-id> --period <p> --title <t> [--weight <n>] [--kpi <k>]`
+export const help = `bedrock goal update --id <goal-id> --period <p> --title <t> [--weight <n>] [--kpi <k>]`
 
 export default factory.createHandlers(
   zValidator(

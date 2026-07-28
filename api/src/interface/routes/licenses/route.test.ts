@@ -84,7 +84,7 @@ async function request(
 
 describe("GET /licenses", () => {
   test("returns 200 with all licenses for a read:all viewer (admin)", async () => {
-    const response = await request("/licenses", await tokenFor(1, "admin"))
+    const response = await request("/licenses", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -112,7 +112,7 @@ describe("GET /licenses", () => {
 
 describe("POST /licenses", () => {
   test("creates a license as admin", async () => {
-    const response = await request("/licenses", await tokenFor(1, "admin"), "POST", {
+    const response = await request("/licenses", await tokenFor(1, "root"), "POST", {
       name: "New SaaS",
       category: "saas",
       seats: 5,
@@ -142,7 +142,7 @@ describe("POST /licenses", () => {
 
 describe("PUT /licenses/:id", () => {
   test("updates a license as admin", async () => {
-    const response = await request("/licenses/1", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/licenses/1", await tokenFor(1, "root"), "PUT", {
       name: "Renamed Tracker",
       seats: 60,
       renewal_deadline: "2026-04-30",
@@ -161,7 +161,7 @@ describe("PUT /licenses/:id", () => {
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/licenses/9999", await tokenFor(1, "admin"), "PUT", {
+    const response = await request("/licenses/9999", await tokenFor(1, "root"), "PUT", {
       name: "Missing",
     })
 
@@ -171,7 +171,7 @@ describe("PUT /licenses/:id", () => {
 
 describe("POST /licenses/:id/cancel", () => {
   test("cancels a license as admin", async () => {
-    const response = await request("/licenses/1/cancel", await tokenFor(1, "admin"), "POST")
+    const response = await request("/licenses/1/cancel", await tokenFor(1, "root"), "POST")
 
     expect(response.status).toBe(200)
 

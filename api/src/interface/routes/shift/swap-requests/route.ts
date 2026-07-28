@@ -2,10 +2,9 @@ import { CreateShiftSwapRequest } from "@/application/shift/create-shift-swap-re
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppShiftSwapRequest, zAppShiftSwapRequestPendingList } from "@/lib/app-schemas"
-import { canApproveShiftSwap } from "@/lib/shift/can-approve-shift-swap"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { isoDate } from "@/lib/schemas"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -28,7 +27,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canApproveShiftSwap(session) === false) {
+  if (session.hasPermission("shift_swap:approve") === false) {
     throw new ForbiddenError()
   }
 

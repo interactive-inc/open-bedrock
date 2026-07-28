@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte thanks redemption-approve <id> — 交換申請を承認・確定（承認者向け）`
+export const help = `bedrock thanks redemption-approve <id> — 交換申請を承認・確定（承認者向け）`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() }).passthrough()),

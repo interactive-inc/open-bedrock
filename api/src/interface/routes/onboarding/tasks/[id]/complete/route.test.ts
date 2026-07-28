@@ -182,7 +182,7 @@ describe("POST /onboarding/tasks/:id/complete", () => {
       db,
       jwtSecret,
       path: "/onboarding/employee/E005",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     const parsed = z
@@ -209,7 +209,7 @@ describe("POST /onboarding/tasks/:id/complete", () => {
   test("returns 404 for an unknown task", async () => {
     const response = await request({
       path: "/onboarding/tasks/9999/complete",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
     })
 
@@ -219,7 +219,7 @@ describe("POST /onboarding/tasks/:id/complete", () => {
   test("returns 404 for a non-integer task id", async () => {
     const response = await request({
       path: "/onboarding/tasks/abc/complete",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
     })
 

@@ -1,9 +1,8 @@
 import { UpdateCertification } from "@/application/certification/update-certification"
-import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppCertification } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -26,7 +25,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageCertifications(session) === false) {
+    if (session.hasPermission("certification:manage") === false) {
       throw new ForbiddenError()
     }
 

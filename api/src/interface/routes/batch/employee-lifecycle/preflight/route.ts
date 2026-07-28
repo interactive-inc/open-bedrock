@@ -1,10 +1,9 @@
 import { PreflightLifecycleMigration } from "@/application/employee-lifecycle/preflight-lifecycle-migration"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { canManageLifecycleMigration } from "@/lib/employee-lifecycle/can-manage-lifecycle-migration"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -19,7 +18,7 @@ export const POST = factory.createHandlers(
   async (c) => {
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
-    if (!canManageLifecycleMigration(session)) throw new ForbiddenError()
+    if (!session.hasPermission("batch:view")) throw new ForbiddenError()
 
     const input = c.req.valid("json")
     const result = await new PreflightLifecycleMigration(c).run({

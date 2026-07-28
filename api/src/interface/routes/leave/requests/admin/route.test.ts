@@ -89,7 +89,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /leave/requests/admin", () => {
   test("returns 200 with all leave requests for admin", async () => {
-    const response = await request("/leave/requests/admin", await tokenFor(1, "admin"))
+    const response = await request("/leave/requests/admin", await tokenFor(1, "root"))
 
     expect(response.status).toBe(200)
 
@@ -123,7 +123,7 @@ describe("GET /leave/requests/admin", () => {
   test("filters by status", async () => {
     const response = await request(
       "/leave/requests/admin?status=approved",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -140,7 +140,7 @@ describe("GET /leave/requests/admin", () => {
   test("filters by leave_type", async () => {
     const response = await request(
       "/leave/requests/admin?leave_type=annual",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)
@@ -157,7 +157,7 @@ describe("GET /leave/requests/admin", () => {
   test("filters by applicant_id", async () => {
     const response = await request(
       "/leave/requests/admin?applicant_id=5",
-      await tokenFor(1, "admin"),
+      await tokenFor(1, "root"),
     )
 
     expect(response.status).toBe(200)

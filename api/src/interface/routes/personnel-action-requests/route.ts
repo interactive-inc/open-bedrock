@@ -1,12 +1,12 @@
 import { CreatePersonnelActionRequest } from "@/application/employee-lifecycle/create-personnel-action-request"
-import { listAccessiblePersonnelActionRequests } from "@/application/employee-lifecycle/personnel-action-request-access"
+import { PersonnelActionRequestAccess } from "@/application/employee-lifecycle/personnel-action-request-access"
 import { resolvePersonnelActionPosition } from "@/interface/utils/resolve-personnel-action-position"
 import { wirePersonnelActionInputSchema } from "@/interface/utils/wire-personnel-action-input"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
@@ -32,9 +32,7 @@ export const GET = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     const query = c.req.valid("query")
-    const requests = await listAccessiblePersonnelActionRequests({
-      c,
-      session,
+    const requests = await new PersonnelActionRequestAccess({ c, session }).list({
       targetEmployeeCode: query.target_employee_code,
       status: query.status,
       limit: query.limit,

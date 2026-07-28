@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte it-incidents list [--status open|resolved]`
+export const help = `bedrock it-incidents list [--status open|resolved]`
 
 export default factory.createHandlers(
   zValidator(

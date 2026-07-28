@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte training complete <id> [--score <n>]`
+export const help = `bedrock training complete <id> [--score <n>]`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional(), score: z.string().optional() })),

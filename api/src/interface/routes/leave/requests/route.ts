@@ -8,12 +8,11 @@ import {
   UnprocessableEntityError,
 } from "@/interface/lib/errors"
 import { zAppLeaveRequest, zAppLeaveRequestAdminList } from "@/lib/app-schemas"
-import { canReadLeaveOf } from "@/lib/leave/can-read-leave-of"
-import { hasPermission } from "@/lib/auth/has-permission"
-import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
-import { listReportEmployeeIds } from "@/lib/org/list-report-employee-ids"
+import { canReadLeaveOf } from "@/interface/routes/leave/can-read-leave-of"
+import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
+import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { isoDate, leaveTypeSchema } from "@/lib/schemas"
 import {
   DEFAULT_LIST_LIMIT,
@@ -21,7 +20,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, leaveRequests } from "@/schema"
 import { and, count, desc, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -65,7 +64,7 @@ export const GET = factory.createHandlers(
     const conditions: Array<SQL> = []
 
     if (requestedEmployeeId === null && query.scope === "reports") {
-      if (hasPermission(session, "leave:read:reports") === false) {
+      if (session.hasPermission("leave:read:reports") === false) {
         throw new ForbiddenError()
       }
 
@@ -102,8 +101,8 @@ export const GET = factory.createHandlers(
       const isMember = departmentEmployeeIds.includes(session.employeeId)
 
       const allowed =
-        hasPermission(session, "leave:read:all") ||
-        (hasPermission(session, "leave:read:department") && isMember)
+        session.hasPermission("leave:read:all") ||
+        (session.hasPermission("leave:read:department") && isMember)
 
       if (allowed === false) {
         throw new ForbiddenError()
@@ -117,7 +116,7 @@ export const GET = factory.createHandlers(
 
       conditions.push(inArray(leaveRequests.employeeId, departmentEmployeeIds))
     } else if (requestedEmployeeId === null && query.scope === "all") {
-      if (hasPermission(session, "leave:read:all") === false) {
+      if (session.hasPermission("leave:read:all") === false) {
         throw new ForbiddenError()
       }
     } else {

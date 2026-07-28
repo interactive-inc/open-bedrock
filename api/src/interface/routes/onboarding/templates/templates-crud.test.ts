@@ -97,7 +97,7 @@ describe("POST /onboarding/templates", () => {
   test("a privileged role creates a template", async () => {
     const response = await request({
       path: "/onboarding/templates",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
       body: { code: "manager_join", name: "Manager Onboarding", kind: "join", description: null },
     })
@@ -128,7 +128,7 @@ describe("POST /onboarding/templates", () => {
   test("a duplicate code conflicts", async () => {
     const response = await request({
       path: "/onboarding/templates",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
       body: { code: "engineer_join", name: "Dup", kind: "join" },
     })
@@ -150,7 +150,7 @@ describe("POST /onboarding/templates", () => {
   test("returns 400 for an invalid body", async () => {
     const response = await request({
       path: "/onboarding/templates",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "POST",
       body: { code: "x", name: "y", kind: "bogus" },
     })
@@ -163,7 +163,7 @@ describe("GET /onboarding/templates/:code", () => {
   test("a privileged role gets a template", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -189,7 +189,7 @@ describe("GET /onboarding/templates/:code", () => {
   test("returns 404 for an unknown code", async () => {
     const response = await request({
       path: "/onboarding/templates/unknown",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
     })
 
     expect(response.status).toBe(404)
@@ -200,7 +200,7 @@ describe("PUT /onboarding/templates/:code", () => {
   test("a privileged role updates a template", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { name: "Updated", kind: "leave", description: null },
     })
@@ -231,7 +231,7 @@ describe("PUT /onboarding/templates/:code", () => {
   test("returns 404 for an unknown code", async () => {
     const response = await request({
       path: "/onboarding/templates/unknown",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "PUT",
       body: { name: "Updated", kind: "join" },
     })
@@ -244,7 +244,7 @@ describe("DELETE /onboarding/templates/:code", () => {
   test("a privileged role deletes a template", async () => {
     const response = await request({
       path: "/onboarding/templates/engineer_join",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "DELETE",
     })
 
@@ -264,7 +264,7 @@ describe("DELETE /onboarding/templates/:code", () => {
   test("returns 404 for an unknown code", async () => {
     const response = await request({
       path: "/onboarding/templates/unknown",
-      token: await token(1, "admin"),
+      token: await token(1, "root"),
       method: "DELETE",
     })
 

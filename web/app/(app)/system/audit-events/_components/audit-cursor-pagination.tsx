@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import { buildAuditEventsHref } from "@/app/(app)/system/audit-events/_lib/audit-query"
+import { buildAuditEventsHref } from "@/app/(app)/system/audit-events/_lib/build-audit-events-href"
 import { Button } from "@/components/ui/button"
 import type { AuditListQuery } from "@/lib/api/types/audit-types"
 

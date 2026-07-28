@@ -5,7 +5,7 @@ import { KnowledgeResultList } from "@/app/(app)/organization/knowledge-articles
 import { KnowledgeSearchForm } from "@/app/(app)/organization/knowledge-articles/_components/knowledge-search-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { parsePageSize } from "@/components/table-pagination"
+import { parsePageSize } from "@/lib/pagination/parse-page-size"
 import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "ナレッジ" }

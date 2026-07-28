@@ -1,5 +1,5 @@
 import { ListMyGoals } from "@/application/goal/list-my-goals"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -9,7 +9,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { goals } from "@/schema"
 import { count, eq } from "drizzle-orm"

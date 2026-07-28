@@ -63,6 +63,6 @@ Governance Markdown は文書型、metadata、状態、参照、公開制約を�
 
 ## CLI
 
-CLI は同期、impact 検査、review、publish、acknowledgement、org role assignment の入口を持つ。利用可能な command と引数は `cli/app/governance` と `karte governance --help` を正とする。
+CLI は同期、impact 検査、review、publish、acknowledgement、org role assignment の入口を持つ。利用可能な command と引数は `cli/app/governance` と `bedrock governance --help` を正とする。
 
 AI に CLI を許可する場合も、人間 account を共有しない。AgentPrincipal として proposal を作り、人間 review が必要な operation は [AI 自動化と人間承認](../automation-model.md) の immutable digest に結ぶ。

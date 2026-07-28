@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { formatDateTime } from "@/lib/format-datetime"
+import { formatDateTime } from "@/lib/format-date-time"
 
 type Delegation = {
   id: number
-  delegator: { id: number; code: string; name: string } | null
-  delegate: { id: number; code: string; name: string } | null
+  delegator: { id: number; code: string | null; name: string } | null
+  delegate: { id: number; code: string | null; name: string } | null
   template_code: string | null
   starts_at: string
   ends_at: string

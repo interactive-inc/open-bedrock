@@ -1,6 +1,5 @@
-import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all-family-care-leaves"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { familyCareLeaves } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq } from "drizzle-orm"
@@ -47,7 +46,7 @@ export const GET = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canViewAllFamilyCareLeaves(session) === false) {
+    if (session.hasPermission("family_care_leave:read:all") === false) {
       throw new ForbiddenError()
     }
 

@@ -1,4 +1,4 @@
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppPositionList } from "@/lib/app-schemas"
 import { PositionRepository } from "@/infrastructure/position/position-repository"
 import {
@@ -7,7 +7,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
 /** GET /positions — 役職マスタ一覧（全認証者。マスタは公開情報） */

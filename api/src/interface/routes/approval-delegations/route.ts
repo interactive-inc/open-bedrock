@@ -5,9 +5,9 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { accounts, approvalDelegations, applicationTemplates, employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"

@@ -32,3 +32,4 @@ storybook-static/
 
 # Obsidian
 .obsidian
+.worktrees/

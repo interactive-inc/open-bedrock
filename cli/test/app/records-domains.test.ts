@@ -2,20 +2,20 @@ import { describe, expect, it } from "bun:test"
 import { app } from "@/app/index"
 
 const paths: ReadonlyArray<{ path: string; help: string }> = [
-  { path: "/announcements", help: "karte announcements" },
+  { path: "/announcements", help: "bedrock announcements" },
   { path: "/announcements/list", help: "announcements list" },
   { path: "/announcements/show", help: "announcements show" },
   { path: "/announcements/create", help: "announcements create" },
   { path: "/announcements/update", help: "announcements update" },
   { path: "/announcements/publish", help: "announcements publish" },
   { path: "/announcements/archive", help: "announcements archive" },
-  { path: "/regulations", help: "karte regulations" },
+  { path: "/regulations", help: "bedrock regulations" },
   { path: "/regulations/list", help: "regulations list" },
   { path: "/regulations/show", help: "regulations show" },
   { path: "/regulations/register", help: "regulations register" },
   { path: "/regulations/add-version", help: "regulations add-version" },
   { path: "/regulations/archive", help: "regulations archive" },
-  { path: "/documents", help: "karte documents" },
+  { path: "/documents", help: "bedrock documents" },
   { path: "/documents/list", help: "documents list" },
   { path: "/documents/register", help: "documents register" },
   { path: "/documents/update", help: "documents update" },

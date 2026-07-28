@@ -9,7 +9,8 @@ import { updateSurvey } from "@/lib/api/update-survey"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
-import { FORM_CONSTRAINTS, toRequiredText } from "@/lib/form/constraints"
+import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
+import { toRequiredText } from "@/lib/form/to-required-text"
 
 /** アンケート作成・編集フォームの useActionState 結果。 */
 export type SurveyFormState = {

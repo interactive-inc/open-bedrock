@@ -1,20 +1,14 @@
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import { hashAuditIdentifier } from "@/lib/audit/hash-identifier"
+import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { ApplicationError, UnavailableError } from "@/lib/errors"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { zAppAuthToken } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
-import {
-  checkAccountRateLimit,
-  checkRateLimit,
-  clearAccountFailures,
-  recordAccountFailure,
-  recordFailure,
-} from "@/interface/utils/login-rate-limit"
+import { LoginRateLimiter } from "@/interface/utils/login-rate-limiter"
 import { z } from "zod"
 
 let loginRateLimitWarned = false
@@ -47,14 +41,16 @@ export const POST = factory.createHandlers(
     if (kv === undefined) {
       loginRateLimitWarn()
     }
-    if (kv !== undefined) {
-      const ipLimited = await checkRateLimit(kv, ip)
+    const limiter = kv === undefined ? null : new LoginRateLimiter(kv)
+
+    if (limiter !== null) {
+      const ipLimited = await limiter.isIpLimited(ip)
 
       if (ipLimited) {
         return c.json({ error: "too many requests" }, 429)
       }
 
-      const accountLimited = await checkAccountRateLimit(kv, email)
+      const accountLimited = await limiter.isAccountLimited(email)
 
       if (accountLimited) {
         return c.json({ error: "too many requests" }, 429)
@@ -79,9 +75,9 @@ export const POST = factory.createHandlers(
 
     if ("reason" in result) {
       // 認証失敗: IP・アカウント両方のカウンタを増やす
-      if (kv !== undefined) {
-        await recordFailure(kv, ip)
-        await recordAccountFailure(kv, email)
+      if (limiter !== null) {
+        await limiter.recordIpFailure(ip)
+        await limiter.recordAccountFailure(email)
       }
 
       try {
@@ -112,8 +108,8 @@ export const POST = factory.createHandlers(
     // 認証成功: アカウントカウンタのみリセットする。
     // IP カウンタは TTL で自然消滅させる（共有 IP 環境で攻撃者のカウンタまで
     // リセットされるのを防ぐ）。
-    if (kv !== undefined) {
-      await clearAccountFailures(kv, email)
+    if (limiter !== null) {
+      await limiter.clearAccountFailures(email)
     }
 
     const responseBody = zAppAuthToken.parse({

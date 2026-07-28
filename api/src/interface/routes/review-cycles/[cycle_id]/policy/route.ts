@@ -8,9 +8,8 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { reviewCycles } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -19,7 +18,7 @@ import type { Context } from "@/env"
 function authorize(c: Context) {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
-  if (canAdministerCycle(session) === false) throw new ForbiddenError()
+  if (session.hasPermission("review:administer") === false) throw new ForbiddenError()
 }
 
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

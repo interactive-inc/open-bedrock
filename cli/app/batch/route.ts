@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte batch — バッチ状況を表示`
+export const help = `bedrock batch — バッチ状況を表示`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `karte notify count — 未読件数`
+export const help = `bedrock notify count — 未読件数`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() })),

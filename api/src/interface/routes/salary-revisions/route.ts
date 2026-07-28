@@ -1,12 +1,12 @@
 import { CreateSalaryRevision } from "@/application/salary-revision/create-salary-revision"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { SalaryRevisionRepository } from "@/infrastructure/salary-revision/salary-revision-repository"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
 import { ApplicationError } from "@/lib/errors"
@@ -17,7 +17,6 @@ import {
   UnauthorizedError,
 } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { canViewAllSalaryRevisions } from "@/lib/salary-revision/can-view-all-salary-revisions"
 import { zAppSalaryRevision, zAppSalaryRevisionList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
@@ -34,7 +33,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewAllSalaryRevisions(session) === false) {
+  if (session.hasPermission("salary_revision:read:all") === false) {
     throw new ForbiddenError()
   }
 

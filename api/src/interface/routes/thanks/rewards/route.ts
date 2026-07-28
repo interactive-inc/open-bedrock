@@ -1,6 +1,5 @@
 import { CreateReward } from "@/application/thanks-points/create-reward"
 import { ListRewards } from "@/application/thanks-points/list-rewards"
-import { canManageRewards } from "@/lib/thanks-points/can-manage-rewards"
 import { rewardPointCostSchema } from "@/domain/thanks-points/thanks-reward.entity"
 import type { ThanksReward } from "@/domain/thanks-points/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -13,8 +12,8 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { thanksRewards } from "@/schema"
 import { count, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
@@ -42,7 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const isActiveOnly = canManageRewards(session) === false
+  const isActiveOnly = session.hasPermission("thanks_reward:manage") === false
 
   const rewards = await new ListRewards(c).run({
     activeOnly: isActiveOnly,
@@ -85,7 +84,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    if (canManageRewards(session) === false) {
+    if (session.hasPermission("thanks_reward:manage") === false) {
       throw new ForbiddenError()
     }
 

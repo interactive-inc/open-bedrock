@@ -3,8 +3,8 @@ import { ApplicationError } from "@/lib/errors"
 import { zAppThanksBalance } from "@/lib/app-schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 
 /** GET /thanks/balance/me — 自分の受領残高（受領 − 確定交換）を取得する */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {

@@ -1,10 +1,8 @@
 import { zApplicationWorkflow } from "@/domain/application/application-workflow"
 import type { ApplicationWorkflow } from "@/domain/application/application-workflow"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import {
-  ApplicationWorkflowRepository,
-  WorkflowRevisionConflictError,
-} from "@/infrastructure/application/application-workflow-repository"
+import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
+import { WorkflowRevisionConflictError } from "@/infrastructure/application/workflow-revision-conflict-error"
 import {
   ForbiddenError,
   InternalError,
@@ -13,9 +11,8 @@ import {
   UnprocessableEntityError,
 } from "@/interface/lib/errors"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
-import { factory } from "@/lib/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { factory } from "@/interface/utils/factory"
 import { ConflictError as ApplicationConflictError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zValidator } from "@hono/zod-validator"
@@ -58,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
   if (session === null) throw new UnauthorizedError()
-  if (canManageApplicationTemplates(session) === false) throw new ForbiddenError()
+  if (session.hasPermission("application_template:manage") === false) throw new ForbiddenError()
 
   const code = validateCodeParam(c.req.param("code"), "template")
   const template = await loadTemplate(c, code)
@@ -89,7 +86,7 @@ export const PUT = factory.createHandlers(
     const session = c.var.session
 
     if (session === null) throw new UnauthorizedError()
-    if (canManageApplicationTemplates(session) === false) throw new ForbiddenError()
+    if (session.hasPermission("application_template:manage") === false) throw new ForbiddenError()
 
     const code = validateCodeParam(c.req.param("code"), "template")
     const template = await loadTemplate(c, code)

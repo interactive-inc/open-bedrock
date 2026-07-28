@@ -1,12 +1,12 @@
+import type { Session } from "@/lib/auth/session"
 import type { Partner } from "@/domain/partner/partner.entity"
-import { canManagePartners } from "@/lib/partner/can-manage-partners"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context, SessionPayload } from "@/env"
+import type { Context } from "@/env"
 import { PartnerRepository } from "@/infrastructure/partner/partner-repository"
 
 export type Command = {
-  session: SessionPayload
+  session: Session
   id: number
   details: {
     name: string
@@ -25,7 +25,7 @@ export class UpdatePartner {
   async run(command: Command): Promise<Partner | ApplicationError> {
     const partnerRepository = new PartnerRepository(this.c)
 
-    if (canManagePartners(command.session) === false) {
+    if (command.session.hasPermission("partner:manage") === false) {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 

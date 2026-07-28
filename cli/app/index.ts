@@ -1,6 +1,6 @@
 import { HTTPException } from "hono/http-exception"
 import { factory } from "@/factory"
-import { loadConfig } from "@/lib/config/config"
+import { loadConfig } from "@/lib/config/load-config"
 import { toConnectionErrorMessage } from "@/lib/http/to-connection-error-message"
 import appApproveHandler from "@/app/app/approve/[app_id]/route"
 import appHandler from "@/app/app/route"
@@ -105,6 +105,7 @@ import leaveMineHandler from "@/app/leave/mine/route"
 import leaveRejectHandler from "@/app/leave/reject/[leave_id]/route"
 import leaveRequestHandler from "@/app/leave/request/route"
 import loginHandler from "@/app/login/route"
+import bootstrapHandler from "@/app/bootstrap/route"
 import notifyCountHandler from "@/app/notify/count/route"
 import notifyHandler from "@/app/notify/route"
 import notifyListHandler from "@/app/notify/list/route"
@@ -448,12 +449,12 @@ const base = factory.createApp()
 base.onError(async (error, c) => {
   // ハンドラに到達して投げられたエラーであることを示すマーカー。
   // 未登録パスで Hono が返す素の 404 と、ハンドラ由来の 404 を index.ts で区別する。
-  c.header("x-karte-handler-error", "1")
+  c.header("x-bedrock-handler-error", "1")
 
   if (error instanceof HTTPException) {
     if (error.status === 401) {
       return c.text(
-        `${error.message}\n認証されていません。'karte login' でログインしてください。`,
+        `${error.message}\n認証されていません。'bedrock login' でログインしてください。`,
         error.status,
       )
     }
@@ -484,6 +485,7 @@ base.onError(async (error, c) => {
 const routes = base
 
 routes.post("/login", ...loginHandler)
+routes.post("/bootstrap", ...bootstrapHandler)
 routes.post("/whoami", ...whoamiHandler)
 
 routes.post("/governance", ...governanceHandler)

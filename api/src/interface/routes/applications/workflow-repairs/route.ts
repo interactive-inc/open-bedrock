@@ -1,9 +1,8 @@
-import { hasPermission } from "@/lib/auth/has-permission"
-import { factory } from "@/lib/factory"
+import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
-import { workflowReachableApprovalCountSql } from "@/infrastructure/application/application-workflow-repository"
-import { activateDueWorkflowEscalations } from "@/lib/application/ensure-workflow-step-escalation"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
+import { workflowReachableApprovalCountSql } from "@/infrastructure/application/workflow-reachable-approval-count-sql"
+import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -37,8 +36,8 @@ export const GET = factory.createHandlers(
     const session = c.var.session
     if (session === null) throw new UnauthorizedError()
     if (
-      hasPermission(session, "application:read:all") === false ||
-      hasPermission(session, "application_template:manage") === false
+      session.hasPermission("application:read:all") === false ||
+      session.hasPermission("application_template:manage") === false
     ) {
       throw new ForbiddenError()
     }

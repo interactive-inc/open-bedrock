@@ -1,7 +1,6 @@
-import { hasPermission } from "@/lib/auth/has-permission"
-import { listDepartmentEmployeeIds } from "@/lib/org/list-department-employee-ids"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { applications, applicationTemplates, employees } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, eq, inArray } from "drizzle-orm"
@@ -79,8 +78,8 @@ export const GET = factory.createHandlers(
       const isMember = departmentEmployeeIds.includes(session.employeeId)
 
       const allowed =
-        hasPermission(session, "application:read:all") ||
-        (hasPermission(session, "application:read:department") && isMember)
+        session.hasPermission("application:read:all") ||
+        (session.hasPermission("application:read:department") && isMember)
 
       if (allowed === false) {
         throw new ForbiddenError()

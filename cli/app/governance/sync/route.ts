@@ -4,7 +4,7 @@ import { factory } from "@/factory"
 import { readGovernanceMarkdownSources } from "@/lib/governance/read-governance-markdown"
 import { api } from "@/lib/http/client"
 
-export const help = `karte governance sync [--path <file-or-directory>]
+export const help = `bedrock governance sync [--path <file-or-directory>]
 
 既定値は .docs/governance。README.md とシンボリックリンクは同期対象外です。`
 

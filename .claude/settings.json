@@ -1,10 +1,8 @@
 {
   "enableAllProjectMcpServers": true,
   "enabledPlugins": {
-    "claude-md-management@claude-plugins-official": true,
     "commit-commands@claude-plugins-official": true,
     "context7@claude-plugins-official": true,
-    "document-skills@anthropic-agent-skills": true,
     "feature-dev@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
     "pr-review-toolkit@claude-plugins-official": true,
@@ -16,37 +14,37 @@
     "CLAUDE_CODE_TASK_LIST_ID": "open-karte"
   },
   "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "jq -r '.tool_input.file_path | select(test(\"\\\\.tsx?$\"))' | { read -r f; [ -n \"$f\" ] && vp fmt \"$f\" --write && vp lint \"$f\" --fix; } 2>/dev/null || true",
+            "statusMessage": "vp fmt + lint",
+            "type": "command"
+          },
+          {
+            "command": "jq -e '.tool_input.file_path | test(\"/api/.*\\\\.tsx?$\")' >/dev/null && (cd api && bun test) 2>/dev/null || true",
+            "statusMessage": "bun test (api)",
+            "type": "command"
+          }
+        ],
+        "matcher": "Write|Edit"
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
           {
-            "type": "command",
             "command": "bash .claude/scripts/funnel-gateway-check.sh",
-            "statusMessage": "funnel gateway check"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path | select(test(\"\\\\.tsx?$\"))' | { read -r f; [ -n \"$f\" ] && vp fmt \"$f\" --write && vp lint \"$f\" --fix; } 2>/dev/null || true",
-            "statusMessage": "vp fmt + lint"
-          },
-          {
-            "type": "command",
-            "command": "jq -e '.tool_input.file_path | test(\"/api/.*\\\\.tsx?$\")' >/dev/null && (cd api && bun test) 2>/dev/null || true",
-            "statusMessage": "bun test (api)"
+            "statusMessage": "funnel gateway check",
+            "type": "command"
           }
         ]
       }
     ]
   },
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "bypassPermissions"
   },
   "skipDangerousModePermissionPrompt": true
 }

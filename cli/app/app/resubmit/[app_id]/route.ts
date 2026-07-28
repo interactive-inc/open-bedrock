@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte app resubmit <app_id> --payload '<json>'`
+export const help = `bedrock app resubmit <app_id> --payload '<json>'`
 export default factory.createHandlers(
   zValidator(
     "json",

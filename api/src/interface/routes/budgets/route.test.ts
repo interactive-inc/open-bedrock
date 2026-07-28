@@ -119,7 +119,7 @@ describe("GET /budgets", () => {
   test("returns budgets with department name for a budget:manage role", async () => {
     const response = await request({
       path: "/budgets",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -137,7 +137,7 @@ describe("GET /budgets", () => {
   test("filters by fiscal_period and department_id", async () => {
     const response = await request({
       path: "/budgets?department_id=3&fiscal_period=2026",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
     })
 
     expect(response.status).toBe(200)
@@ -172,7 +172,7 @@ describe("POST /budgets", () => {
   test("returns 201 with the created budget", async () => {
     const response = await request({
       path: "/budgets",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         department_id: 5,
@@ -201,7 +201,7 @@ describe("POST /budgets", () => {
   test("returns 404 when the department does not exist", async () => {
     const response = await request({
       path: "/budgets",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         department_id: 999,
@@ -219,7 +219,7 @@ describe("POST /budgets", () => {
   test("returns 400 when period_end precedes period_start", async () => {
     const response = await request({
       path: "/budgets",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         department_id: 3,
@@ -237,7 +237,7 @@ describe("POST /budgets", () => {
   test("returns 400 when amount is not positive", async () => {
     const response = await request({
       path: "/budgets",
-      token: await tokenFor(1, "admin"),
+      token: await tokenFor(1, "root"),
       method: "POST",
       body: {
         department_id: 3,

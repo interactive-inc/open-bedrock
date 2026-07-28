@@ -1,4 +1,4 @@
-import { isLegacyPasswordHash } from "@/lib/auth/legacy-password-hash"
+import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"

@@ -6,10 +6,11 @@ import type {
 } from "@/domain/audit/audit-event"
 import { auditClientNameSchema, auditOutcomeSchema } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
-import { decodeAuditCursor, encodeAuditCursor } from "@/lib/audit/audit-cursor"
+import { AuditCursor } from "@/lib/audit/audit-cursor"
 import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"
-import { AUDIT_CSV_MAX_BYTES, AuditCsvByteCounter } from "@/lib/audit/audit-csv"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/batch-abort-guard"
+import { AuditCsvByteCounter } from "@/lib/audit/audit-csv-byte-counter"
+import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
@@ -855,7 +856,7 @@ function cursorForRange(
   source: PageRange,
   target: PageRange | null = null,
 ): string {
-  return encodeAuditCursor({
+  return AuditCursor.encode({
     version: 2,
     direction,
     snapshotMaxId,
@@ -1753,7 +1754,7 @@ export class AuditEventRepository {
 
   async search(query: AuditEventSearchQuery): Promise<AuditEventPage> {
     const parsed = parseQuery(auditSearchQuerySchema, query)
-    const cursor = parsed.cursor === null ? null : decodeAuditCursor(parsed.cursor)
+    const cursor = parsed.cursor === null ? null : AuditCursor.decode(parsed.cursor)
 
     try {
       const filterFingerprint = await auditFilterFingerprint(parsed.filters)

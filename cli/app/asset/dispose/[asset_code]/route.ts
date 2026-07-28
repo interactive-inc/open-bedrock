@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `karte asset dispose <code> --reason <r> [--disposed-on <d>]`
+export const help = `bedrock asset dispose <code> --reason <r> [--disposed-on <d>]`
 
 export default factory.createHandlers(
   zValidator(

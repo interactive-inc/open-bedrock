@@ -1,7 +1,6 @@
-import { canViewDashboard } from "@/lib/dashboard/can-view-dashboard"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
-import { factory } from "@/lib/factory"
-import { verifyBearer } from "@/interface/middleware/verify-bearer"
+import { factory } from "@/interface/utils/factory"
+import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { applications, employees, goals, surveys } from "@/schema"
 import { count, eq, gte, sql } from "drizzle-orm"
 
@@ -31,7 +30,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  if (canViewDashboard(session) === false) {
+  if (session.hasPermission("dashboard:view") === false) {
     throw new ForbiddenError()
   }
 

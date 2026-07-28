@@ -8,7 +8,8 @@ import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { requestWithContext } from "@/interface/test-helpers/request-with-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
-import { AUDIT_CSV_MAX_BYTES, toAuditCsv } from "@/lib/audit/audit-csv"
+import { toAuditCsv } from "@/lib/audit/to-audit-csv"
+import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
 
 const jwtSecret = "audit-export-route-test-secret"
 const now = "2026-01-03T00:00:00.000Z"
@@ -26,7 +27,7 @@ async function createTestDb(withFixture = true): Promise<TestDb> {
     { id: 4, code: "E004", name: "Member", status: "active" },
   ])
   await seedIamForEmployees(db, [
-    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "admin" },
+    { id: 1, email: "you+e001@example.com", passwordHash: "hash", role: "root" },
     { id: 2, email: "you+e002@example.com", passwordHash: "hash", role: "member" },
     { id: 3, email: "you+e003@example.com", passwordHash: "hash", role: "member" },
     { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "member" },
