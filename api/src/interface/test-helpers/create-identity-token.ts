@@ -1,7 +1,9 @@
 import { SignJWT } from "jose"
 
+import type { KeyLike } from "jose"
+
 /**
- * テスト用: 外部 identity provider が発行する短命ログイントークン(HS256 JWT)を作る。
+ * テスト用: 外部 identity provider が発行する短命ログイントークン(EdDSA JWT)を作る。
  * 既定は正常系の claims。各フィールドやヘッダ(alg)を上書きして異常系も作れる。
  */
 export type IdentityTokenOverrides = {
@@ -16,12 +18,13 @@ export type IdentityTokenOverrides = {
   iat?: number
   /** 失効時刻(epoch 秒)。既定は now + 60。 */
   exp?: number
-  /** 署名アルゴリズム。既定は HS256。異常系検証用に上書きできる。 */
+  /** 署名アルゴリズム。既定はEdDSA。異常系検証用に上書きできる。 */
   alg?: string
+  keyId?: string
 }
 
 export function createIdentityToken(
-  secret: string,
+  signingKey: KeyLike | Uint8Array,
   nowEpoch: number,
   overrides: IdentityTokenOverrides = {},
 ): Promise<string> {
@@ -34,10 +37,13 @@ export function createIdentityToken(
   }
 
   return new SignJWT(claims)
-    .setProtectedHeader({ alg: overrides.alg ?? "HS256" })
+    .setProtectedHeader({
+      alg: overrides.alg ?? "EdDSA",
+      kid: overrides.keyId ?? "identity-test-key",
+    })
     .setIssuer(overrides.issuer ?? "https://identity-provider.example/")
     .setAudience(overrides.audience ?? "open-karte")
     .setIssuedAt(overrides.iat ?? nowEpoch)
     .setExpirationTime(overrides.exp ?? nowEpoch + 60)
-    .sign(new TextEncoder().encode(secret))
+    .sign(signingKey)
 }

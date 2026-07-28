@@ -43,15 +43,21 @@ describe("GET /auth/cli/login", () => {
     const url = new URL(location)
     expect(`${url.origin}${url.pathname}`).toBe("https://identity-provider.example/login")
     expect(url.searchParams.get("callback")).toBe("https://api.example.com/auth/cli/callback")
+    expect(url.searchParams.get("code_challenge_method")).toBe("S256")
+    expect(url.searchParams.get("code_challenge")).toMatch(/^[A-Za-z0-9_-]{43}$/)
     const brokerState = url.searchParams.get("state")
     expect(brokerState).not.toBeNull()
     expect(brokerState).not.toBe("cli-opaque-state-1")
 
     const row = await db
-      .prepare("SELECT port, cli_state FROM cli_login_states WHERE state = ?1")
+      .prepare("SELECT port, cli_state, code_verifier FROM cli_login_states WHERE state = ?1")
       .bind(brokerState)
-      .first<{ port: number; cli_state: string }>()
-    expect(row).toEqual({ port: 51820, cli_state: "cli-opaque-state-1" })
+      .first<{ port: number; cli_state: string; code_verifier: string }>()
+    expect(row).toEqual({
+      port: 51820,
+      cli_state: "cli-opaque-state-1",
+      code_verifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+    })
   })
 
   test("rejects an out-of-range port", async () => {
@@ -81,6 +87,34 @@ describe("GET /auth/cli/login", () => {
       method: "GET",
       now,
       // IDENTITY_LOGIN_URL / API_ORIGIN を渡さない = 未設定。
+    })
+
+    expect(response.status).toBe(401)
+    const row = await db.prepare("SELECT COUNT(*) AS count FROM cli_login_states").first<{
+      count: number
+    }>()
+    expect(row?.count).toBe(0)
+  })
+
+  test("rejects an insecure external broker URL", async () => {
+    const db = await createTestDb()
+
+    const response = await getCliLogin(db, "?port=51820&state=cli-opaque-state-4", {
+      identityLoginUrl: "http://identity-provider.example/login",
+    })
+
+    expect(response.status).toBe(401)
+    const row = await db.prepare("SELECT COUNT(*) AS count FROM cli_login_states").first<{
+      count: number
+    }>()
+    expect(row?.count).toBe(0)
+  })
+
+  test("rejects API_ORIGIN containing a path", async () => {
+    const db = await createTestDb()
+
+    const response = await getCliLogin(db, "?port=51820&state=cli-opaque-state-5", {
+      apiOrigin: "https://api.example.com/unexpected",
     })
 
     expect(response.status).toBe(401)

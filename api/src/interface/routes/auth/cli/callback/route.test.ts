@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
+import { createIdentityTestKey } from "@/interface/test-helpers/create-identity-test-key"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createIdentityToken } from "@/interface/test-helpers/create-identity-token"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
@@ -8,13 +9,20 @@ import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
 
 const jwtSecret = "cli-callback-route-jwt-secret"
-const identityJwtSecret = "cli-callback-route-identity-secret"
+const identityKey = await createIdentityTestKey()
+const wrongIdentityKey = await createIdentityTestKey("wrong-key")
 const identityIssuer = "https://identity-provider.example/"
 const apiOrigin = "https://api.example.com"
 const now = "2026-01-01T00:00:00.000Z"
 const nowEpoch = 1_767_225_600
 // audience は callback URL の origin（ブローカーは origin だけを aud に入れる）。
 const callbackAudience = "https://api.example.com"
+const codeVerifier = "a".repeat(43)
+const originalFetch = globalThis.fetch
+
+afterEach(() => {
+  globalThis.fetch = originalFetch
+})
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -41,13 +49,15 @@ async function seedCliLoginState(
   state: string,
   port: number,
   cliState: string,
+  verifier: string = codeVerifier,
   expiresAt: number = nowEpoch + 600,
 ): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO cli_login_states (state, port, cli_state, expires_at) VALUES (?1, ?2, ?3, ?4)`,
+      `INSERT INTO cli_login_states (state, port, cli_state, code_verifier, expires_at)
+       VALUES (?1, ?2, ?3, ?4, ?5)`,
     )
-    .bind(state, port, cliState, expiresAt)
+    .bind(state, port, cliState, verifier, expiresAt)
     .run()
 }
 
@@ -74,10 +84,20 @@ function getCliCallback(db: D1Database, query: string): Promise<Response> {
     token: null,
     method: "GET",
     now,
-    identityJwtSecret,
+    identityJwks: identityKey.jwks,
     identityIssuer,
     apiOrigin,
   })
+}
+
+function mockIdentityExchange(token: string): void {
+  const fetchIdentityToken = async () =>
+    new Response(JSON.stringify({ id_token: token }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })
+  fetchIdentityToken.preconnect = originalFetch.preconnect
+  globalThis.fetch = fetchIdentityToken
 }
 
 async function auditRows(
@@ -96,17 +116,15 @@ describe("GET /auth/cli/callback", () => {
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
     await seedCliLoginState(db, "broker-state-1", 51820, "cli-opaque-state-1")
 
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "cli-callback-jti-1",
       issuer: identityIssuer,
       audience: callbackAudience,
     })
+    mockIdentityExchange(token)
 
-    const response = await getCliCallback(
-      db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-1`,
-    )
+    const response = await getCliCallback(db, "?code=broker-code-1&state=broker-state-1")
 
     expect(response.status).toBe(302)
     const location = response.headers.get("Location")
@@ -146,16 +164,17 @@ describe("GET /auth/cli/callback", () => {
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
     await seedCliLoginState(db, "broker-state-no-token-storage", 51828, "cli-opaque-state-no-token")
 
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "cli-callback-jti-no-token-storage",
       issuer: identityIssuer,
       audience: callbackAudience,
     })
+    mockIdentityExchange(token)
 
     const response = await getCliCallback(
       db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-no-token-storage`,
+      "?code=broker-code-no-token&state=broker-state-no-token-storage",
     )
     expect(response.status).toBe(302)
 
@@ -177,7 +196,7 @@ describe("GET /auth/cli/callback", () => {
     const db = createD1TestDatabase(loadSchema())
     await seedCliLoginState(db, "broker-state-provision", 51821, "cli-opaque-state-provision")
 
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "cli-new-subject",
       email: "you+clinew@example.com",
       name: "CLI New Hire",
@@ -185,10 +204,11 @@ describe("GET /auth/cli/callback", () => {
       issuer: identityIssuer,
       audience: callbackAudience,
     })
+    mockIdentityExchange(token)
 
     const response = await getCliCallback(
       db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-provision`,
+      "?code=broker-code-provision&state=broker-state-provision",
     )
 
     expect(response.status).toBe(302)
@@ -231,15 +251,17 @@ describe("GET /auth/cli/callback", () => {
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
     await seedCliLoginState(db, "broker-state-bad-token", 51823, "cli-opaque-state-bad-token")
 
-    const token = await createIdentityToken("wrong-secret", nowEpoch, {
+    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       issuer: identityIssuer,
       audience: callbackAudience,
+      keyId: wrongIdentityKey.keyId,
     })
+    mockIdentityExchange(token)
 
     const response = await getCliCallback(
       db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-bad-token`,
+      "?code=broker-code-bad-token&state=broker-state-bad-token",
     )
 
     expect(response.status).toBe(302)
@@ -258,15 +280,16 @@ describe("GET /auth/cli/callback", () => {
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
     await seedCliLoginState(db, "broker-state-bad-aud", 51824, "cli-opaque-state-bad-aud")
 
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       issuer: identityIssuer,
       audience: "https://some-other-app.example/",
     })
+    mockIdentityExchange(token)
 
     const response = await getCliCallback(
       db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-bad-aud`,
+      "?code=broker-code-bad-aud&state=broker-state-bad-aud",
     )
 
     expect(response.status).toBe(302)
@@ -279,30 +302,25 @@ describe("GET /auth/cli/callback", () => {
   test("returns 401 when the state is missing, unknown, or already consumed", async () => {
     const db = await createTestDb()
 
-    const missing = await getCliCallback(db, "?token=whatever")
+    const missing = await getCliCallback(db, "?code=whatever")
     expect(missing.status).toBe(401)
 
-    const unknown = await getCliCallback(db, "?token=whatever&state=never-issued")
+    const unknown = await getCliCallback(db, "?code=whatever&state=never-issued")
     expect(unknown.status).toBe(401)
 
     await seedCliLoginState(db, "broker-state-reuse", 51825, "cli-opaque-state-reuse")
-    const token = await createIdentityToken(identityJwtSecret, nowEpoch, {
+    const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       issuer: identityIssuer,
       audience: callbackAudience,
       jti: "cli-callback-jti-reuse",
     })
+    mockIdentityExchange(token)
     await seedExternalIdentity(db, 1, "external-subject-1", "you+e001@example.com")
-    const first = await getCliCallback(
-      db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-reuse`,
-    )
+    const first = await getCliCallback(db, "?code=broker-code-reuse&state=broker-state-reuse")
     expect(first.status).toBe(302)
 
-    const second = await getCliCallback(
-      db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-reuse`,
-    )
+    const second = await getCliCallback(db, "?code=broker-code-reuse&state=broker-state-reuse")
     expect(second.status).toBe(401)
   })
 
@@ -321,15 +339,17 @@ describe("GET /auth/cli/callback", () => {
     `)
 
     // 無効な token による invalid_token 拒否パス（denyAndLoopback 経由）で検証する。
-    const token = await createIdentityToken("wrong-secret", nowEpoch, {
+    const token = await createIdentityToken(wrongIdentityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       issuer: identityIssuer,
       audience: callbackAudience,
+      keyId: wrongIdentityKey.keyId,
     })
+    mockIdentityExchange(token)
 
     const response = await getCliCallback(
       db,
-      `?token=${encodeURIComponent(token)}&state=broker-state-audit-down`,
+      "?code=broker-code-audit-down&state=broker-state-audit-down",
     )
 
     expect(response.status).toBe(302)
@@ -352,18 +372,18 @@ describe("GET /auth/cli/callback", () => {
     expect(await auditRows(db)).toEqual([])
   })
 
-  test("rejects when cli login is not configured (missing IDENTITY_JWT_SECRET/API_ORIGIN)", async () => {
+  test("rejects when cli login is not configured (missing IDENTITY_JWKS/API_ORIGIN)", async () => {
     const db = await createTestDb()
     await seedCliLoginState(db, "broker-state-unconfigured", 51826, "cli-opaque-state-unconfigured")
 
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/auth/cli/callback?token=whatever&state=broker-state-unconfigured",
+      path: "/auth/cli/callback?code=whatever&state=broker-state-unconfigured",
       token: null,
       method: "GET",
       now,
-      // identityJwtSecret / apiOrigin を渡さない = 未設定。
+      // identityJwks / apiOrigin を渡さない = 未設定。
     })
 
     expect(response.status).toBe(302)
