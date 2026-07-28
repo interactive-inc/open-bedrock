@@ -33,6 +33,7 @@ function toGoalId(value: string | undefined): number {
   return validateIntParam(value, "goal")
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /performance-goals/:goal_id — 目標の詳細（本人と goal:read:all 権限のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -54,6 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(goal), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /performance-goals/:goal_id — 目標の定義を変更（本人のみ・確定評価済みは不可） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -92,6 +94,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /performance-goals/:goal_id — 目標を削除（本人のみ・確定評価済みは不可） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

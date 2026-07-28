@@ -15,6 +15,7 @@ import { zAppItIncident, zAppItIncidentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /it-incidents — 全社のインシデント記録（it_incident:read:all）。発生日時の新しい順。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -87,6 +88,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /it-incidents — インシデント記録を新規登録（it_incident:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

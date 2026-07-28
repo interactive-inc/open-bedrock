@@ -10,6 +10,7 @@ import { zAppApplication } from "@/lib/app-schemas"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /application-requests — 本人として申請を作成 */
 export const POST = factory.createHandlers(
   verifyBearer,

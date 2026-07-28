@@ -14,6 +14,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { businessTrips } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /business-trips/me — 申請者本人の出張申請一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

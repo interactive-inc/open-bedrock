@@ -10,6 +10,7 @@ import { attendanceRecords } from "@/schema"
 import { and, asc, eq, gte, lte } from "drizzle-orm"
 import { BadRequestError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /attendance-records/me/summary — 本人の指定月の勤怠集計（未指定なら現在月） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const parsed = attendanceSummaryQuerySchema.safeParse(c.req.query())

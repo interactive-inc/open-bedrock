@@ -6,6 +6,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppAccountList } from "@/lib/app-schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** GET /accounts — アカウント一覧（account:manage が必要） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

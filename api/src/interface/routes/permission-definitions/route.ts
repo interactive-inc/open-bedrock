@@ -4,6 +4,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppPermissionList } from "@/lib/app-schemas"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /permission-definitions — 権限カタログ全件（iam:manage_roles が必要）。
  * ロール編集 UI の checkbox とカテゴリ表示に使う。正はコードの PERMISSION_CATALOG。

@@ -11,6 +11,7 @@ import { zAppRoleDetail } from "@/lib/app-schemas"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** GET /roles/:id — ロール詳細（割当 permission 付き、iam:manage_roles が必要） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -39,6 +40,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PATCH /roles/:id — ロールの名前・説明・権限を更新（iam:manage_roles が必要） */
 export const PATCH = factory.createHandlers(
   verifyBearer,
@@ -78,6 +80,7 @@ export const PATCH = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /roles/:id — 動的ロールを削除（iam:manage_roles が必要） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

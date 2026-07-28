@@ -25,6 +25,7 @@ function toResponseBody(pattern: ShiftPattern) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /shift-patterns/:id — シフトパターンの詳細（特権ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const patternId = validateIntParam(c.req.param("id"), "shift pattern")
@@ -47,6 +48,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(pattern), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /shift-patterns/:id — シフトパターンの内容を変更（特権ロール） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -93,6 +95,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /shift-patterns/:id — シフトパターンを削除（特権ロール） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const patternId = validateIntParam(c.req.param("id"), "shift pattern")

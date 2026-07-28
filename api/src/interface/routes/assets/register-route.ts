@@ -10,6 +10,7 @@ import { zAppAsset } from "@/lib/app-schemas"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /assets — 新規資産の登録（権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

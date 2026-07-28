@@ -26,6 +26,7 @@ import {
   UnprocessableEntityError,
 } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /attendance-records — 勤怠検索。
  * employee_id 指定で他者を1人閲覧できる(self→all→reports→department のスコープ判定)。

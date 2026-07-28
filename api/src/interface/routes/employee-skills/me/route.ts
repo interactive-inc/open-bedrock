@@ -11,6 +11,7 @@ import { zAppEmployeeSkillList } from "@/lib/app-schemas"
 import { employeeSkills, skills } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /employee-skills/me — 本人の登録スキル一覧（スキルマスタ結合済み） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

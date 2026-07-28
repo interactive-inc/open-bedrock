@@ -23,6 +23,7 @@ function toYearRange(raw: string | undefined): { from: string; to: string } | nu
   return { from: `${raw}-01-01`, to: `${raw}-12-31` }
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /company-calendar-days?year= — 会社カレンダー一覧（全認証者）。year 未指定は当年を使う。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

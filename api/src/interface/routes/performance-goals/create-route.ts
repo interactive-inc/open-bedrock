@@ -10,6 +10,7 @@ import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * POST /performance-goals — 目標を新規作成する。
  * owner_type 省略時は individual(本人の個人目標)。company は review:administer 保持者、

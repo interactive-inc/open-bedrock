@@ -19,6 +19,7 @@ import { count, eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /thanks-rewards — 交換カタログ一覧。管理者は無効なものも見える。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -66,6 +67,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization permission - 権限キーで判定する
 /** POST /thanks-rewards — 交換カタログを登録する（管理者向け） */
 export const POST = factory.createHandlers(
   verifyBearer,

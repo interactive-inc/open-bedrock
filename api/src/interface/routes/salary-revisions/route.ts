@@ -22,6 +22,7 @@ import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /salary-revisions?employee_id= — 社員の給与改定履歴（salary_revision:read:all のみ）。
  * 最機微のため self 例外は設けず、read:all を持たない者は本人分でも 403。
@@ -100,6 +101,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /salary-revisions — 給与改定の事実記録を追加（salary_revision:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

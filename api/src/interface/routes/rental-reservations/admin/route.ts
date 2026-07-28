@@ -22,6 +22,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /rental-reservations/admin — 全社の貸与品予約を横断で閲覧する管理画面用の一覧。
  * rental:read:all を持つロール(hr / admin / auditor / general_affairs)のみ許可。

@@ -25,6 +25,7 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator("query", listQuerySchema),
@@ -63,6 +64,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", requestSchema),

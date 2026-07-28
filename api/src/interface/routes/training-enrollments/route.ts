@@ -15,6 +15,7 @@ import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/li
 import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /training-enrollments — 受講状況を一覧する（管理権限で他者の指定が可能） */
 export const GET = factory.createHandlers(
   verifyBearer,

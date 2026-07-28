@@ -6,6 +6,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization service - session を application service に渡して判定する
 /**
  * GET /performance-goals/tree?period= — 全社→部門→個人の目標ツリー。
  * 全社・部門目標は全認証者が閲覧でき、個人目標(葉)は閲覧スコープでフィルタする。

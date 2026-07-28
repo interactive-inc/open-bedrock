@@ -16,6 +16,7 @@ import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /stocktakes — 棚卸しセッション一覧（新しい順。status で絞り込める） */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -93,6 +94,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /stocktakes — 棚卸しセッションを開始（名称・対象日。権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

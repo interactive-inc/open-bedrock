@@ -9,6 +9,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /recruitment-candidates/:id — 応募者の名前・連絡先・流入元・備考を更新（recruitment:manage）。 */
 export const PUT = factory.createHandlers(
   verifyBearer,

@@ -14,6 +14,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { certificateRequests } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /certificate-requests/me — 依頼者本人の証明書発行依頼一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

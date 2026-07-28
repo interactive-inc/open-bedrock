@@ -25,6 +25,7 @@ function identityLoginRateLimitWarn() {
   }
 }
 
+// @authorization public - 未認証で到達してよい
 /**
  * POST /auth/identity/login — 外部 identity provider の短命トークンでログインさせる。
  * 認証不要（トークン自体が資格情報）。署名・iss・aud・exp・email_verified・replay を検証し、

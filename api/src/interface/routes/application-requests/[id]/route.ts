@@ -25,6 +25,7 @@ import {
 import { zAppApplication, zAppApplicationUpdated } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -397,6 +398,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /application-requests/:id — 本人が申請内容（payload）を更新（pending のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -432,6 +434,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /application-requests/:id — 本人が申請を取り下げ（pending のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

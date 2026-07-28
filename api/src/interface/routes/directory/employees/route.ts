@@ -20,6 +20,7 @@ import type { SQL } from "drizzle-orm"
 import { and, asc, count, eq, exists, inArray, isNull, lte, or, sql } from "drizzle-orm"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /**
  * GET /directory/employees — 選択UI向けの在籍者ディレクトリ。
  * 全認証ユーザーが利用できるが、メール・在籍区分・ロール・内部IDは返さない。

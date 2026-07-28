@@ -7,6 +7,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { zAppAnnouncement } from "@/lib/app-schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /announcements/:id/publish — アナウンスを公開し全社へ通知（announcement:manage）。 */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -23,6 +23,7 @@ function toResponseBody(template: OnboardingTemplate) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /onboarding-templates/:code — テンプレート詳細（管理権限のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -43,6 +44,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(template), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /onboarding-templates/:code — テンプレートの内容を変更（管理権限のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -79,6 +81,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /onboarding-templates/:code — テンプレートを削除（管理権限のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

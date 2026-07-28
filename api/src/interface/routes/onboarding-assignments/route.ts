@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /onboarding-assignments — テンプレートを社員へ割り当てる */
 export const POST = factory.createHandlers(
   verifyBearer,

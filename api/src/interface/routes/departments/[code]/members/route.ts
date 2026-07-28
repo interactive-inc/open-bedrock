@@ -6,6 +6,7 @@ import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"
 import { zAppOrgDepartmentMemberList } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

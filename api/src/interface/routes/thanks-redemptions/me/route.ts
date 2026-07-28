@@ -15,6 +15,7 @@ import { factory } from "@/interface/utils/factory"
 import { thanksRedemptions } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /thanks-redemptions/me — 自分の交換申請の一覧（新しい順・ページング） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

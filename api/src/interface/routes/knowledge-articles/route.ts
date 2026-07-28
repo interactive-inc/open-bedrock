@@ -18,6 +18,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 
@@ -89,6 +90,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /knowledge-articles — ナレッジ記事を新規作成（作成者は本人） */
 export const POST = factory.createHandlers(
   verifyBearer,

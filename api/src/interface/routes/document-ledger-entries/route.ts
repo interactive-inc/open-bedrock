@@ -17,6 +17,7 @@ import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /document-ledger-entries — 文書台帳一覧（document:read:all）。期限の近い順（期限なしは末尾）。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -93,6 +94,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /document-ledger-entries — 文書台帳へ新規登録（document:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

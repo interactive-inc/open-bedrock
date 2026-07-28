@@ -24,6 +24,7 @@ import {
 } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /employee-grades?employee_id= — 従業員の等級割当履歴（self / grade:read:all / 配下かつ grade:read:reports） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -113,6 +114,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /employee-grades — 等級の割当を記録（grade:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

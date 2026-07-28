@@ -7,6 +7,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /software-licenses/:id/cancel — ライセンスを解約済みに倒す（license:manage、物理削除はしない） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

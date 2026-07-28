@@ -14,6 +14,7 @@ const querySchema = z.object({
   state: z.string().min(1).max(512),
 })
 
+// @authorization public - 未認証で到達してよい
 /**
  * GET /auth/cli/login — CLI（ネイティブアプリ）ログインの入口。
  * CLI がローカルで listen しているループバックポートと、CLI 側の opaque な state を受け取り、

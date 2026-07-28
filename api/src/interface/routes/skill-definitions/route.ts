@@ -13,6 +13,7 @@ import {
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

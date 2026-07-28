@@ -16,6 +16,7 @@ import { isoDate } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /software-licenses — 全社のライセンス・SaaS 台帳（license:read:all）。更新期限が近い順（NULL は末尾）。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -90,6 +91,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** POST /software-licenses — ライセンス台帳を新規登録（license:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

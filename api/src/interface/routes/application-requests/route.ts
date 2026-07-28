@@ -14,6 +14,7 @@ import {
 } from "@/interface/utils/to-bounded-int"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /application-requests — 本人の申請一覧（ステータスで絞り込み可） */
 export const GET = factory.createHandlers(
   verifyBearer,

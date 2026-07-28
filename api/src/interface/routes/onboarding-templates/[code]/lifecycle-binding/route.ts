@@ -9,6 +9,7 @@ import { factory } from "@/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator("json", z.strictObject({ effect_type: z.enum(["hire", "retired"]) })),
@@ -24,6 +25,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) throw new UnauthorizedError()
   const result = await new RemoveLifecycleTemplateBinding(c).run({

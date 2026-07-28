@@ -20,6 +20,7 @@ const members = aliasedTable(employees, "members")
 
 const managers = aliasedTable(employees, "managers")
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /oneonone — 本人が参加した 1on1 の履歴（参加者名込み） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -77,6 +78,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization permission - 権限キーで判定する
 /** POST /oneonone — マネージャーが 1on1 を記録する */
 export const POST = factory.createHandlers(
   verifyBearer,

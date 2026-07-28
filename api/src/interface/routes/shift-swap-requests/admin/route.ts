@@ -26,6 +26,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /shift-swap-requests/admin — 全社のシフト交代申請を横断で閲覧する。
  * shift_swap:read:all を持つロール(hr / admin)のみ許可。

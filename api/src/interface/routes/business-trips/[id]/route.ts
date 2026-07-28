@@ -29,6 +29,7 @@ function toResponseBody(businessTrip: BusinessTrip): AppBusinessTrip {
   })
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /business-trips/:id — 出張申請の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -49,6 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(businessTrip), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /business-trips/:id — 出張申請の内容を変更（本人のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -94,6 +96,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /business-trips/:id — 出張申請を取消（本人のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

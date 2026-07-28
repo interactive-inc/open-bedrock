@@ -34,6 +34,7 @@ function toResponseBody(expense: Expense) {
   }
 }
 
+// @authorization permission - 権限キーで判定する
 /** GET /expenses/:id — 経費の詳細（本人または承認権限者のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -99,6 +100,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /expenses/:id — 経費申請の内容を変更（本人のみ・pending のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -141,6 +143,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /expenses/:id — 経費申請を取り下げ（本人のみ・pending のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

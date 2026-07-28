@@ -27,6 +27,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /expenses/admin — 全社の経費申請を横断で閲覧する管理画面用の一覧。
  * expense:read:all を持つロール(hr / admin)のみ許可。

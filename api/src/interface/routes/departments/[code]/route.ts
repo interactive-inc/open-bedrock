@@ -25,6 +25,7 @@ function toResponseBody(department: OrgDepartment) {
   }
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /departments/:code — 部署ノードの詳細 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -51,6 +52,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /departments/:code — 親・責任者・表示順を変更（権限が必要） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -88,6 +90,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /departments/:code — 部署ノードを削除（権限が必要） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

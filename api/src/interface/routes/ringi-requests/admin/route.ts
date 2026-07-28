@@ -28,6 +28,7 @@ type SortKey = keyof typeof SORT_OPTIONS
 
 const approvers = alias(employees, "approvers")
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /ringi-requests/admin — 全社の稟議を横断で閲覧する管理画面用の一覧。
  * ringi:read:all を持つロール(admin / auditor / executive)のみ許可。

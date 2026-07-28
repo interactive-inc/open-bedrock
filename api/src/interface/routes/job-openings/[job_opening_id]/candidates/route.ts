@@ -21,6 +21,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /job-openings/:job_opening_id/candidates — 募集配下の応募者一覧（recruitment:manage。社外個人情報のため非公開）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -90,6 +91,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /job-openings/:job_opening_id/candidates — 応募者を applied で登録（recruitment:manage）。 */
 export const POST = factory.createHandlers(
   verifyBearer,

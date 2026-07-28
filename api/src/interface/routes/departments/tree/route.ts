@@ -20,6 +20,7 @@ function toOrgTreeNode(node: DepartmentTreeNode): AppOrgTreeNode {
   }
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

@@ -27,6 +27,7 @@ function toResponseBody(license: License) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /software-licenses/:id — ライセンス台帳の属性を更新（license:manage） */
 export const PUT = factory.createHandlers(
   verifyBearer,

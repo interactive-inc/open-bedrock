@@ -16,6 +16,7 @@ const request = z.strictObject({
   source_document_code: z.string().min(2).max(120).nullable().optional(),
 })
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(verifyBearer, zValidator("json", request), async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

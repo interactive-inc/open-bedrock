@@ -11,6 +11,7 @@ import { zAppOnboardingTaskList } from "@/lib/app-schemas"
 import { onboardingAssignments, onboardingTasks } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /onboarding-assignments/me — 本人に割り当てられたタスク一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

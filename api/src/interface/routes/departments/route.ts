@@ -24,6 +24,7 @@ function toResponseBody(department: OrgDepartment) {
   }
 }
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /departments — 部署ノード一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -56,6 +57,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /departments — 部署ノードを作成（権限が必要） */
 export const POST = factory.createHandlers(
   verifyBearer,

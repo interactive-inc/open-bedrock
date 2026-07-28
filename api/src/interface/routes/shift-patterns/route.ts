@@ -11,6 +11,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { shiftPatterns } from "@/schema"
 import { count } from "drizzle-orm"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

@@ -42,6 +42,7 @@ async function toResponseBody(c: Context, oneOnOne: OneOnOne) {
   }
 }
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /oneonone/:id — 1on1 の詳細（参加者のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -69,6 +70,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /oneonone/:id — 1on1 の記録内容を変更（記録した上長のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -107,6 +109,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /oneonone/:id — 1on1 の記録を削除（記録した上長のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

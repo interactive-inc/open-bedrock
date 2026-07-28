@@ -22,6 +22,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /certificate-requests/admin — 全社の証明書発行依頼を横断で閲覧する管理画面用の一覧。
  * certificate_request:read:all を持つロール(hr / admin / auditor)のみ許可。

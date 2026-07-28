@@ -12,6 +12,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { reviewForms } from "@/schema"
 import { asc, count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) {

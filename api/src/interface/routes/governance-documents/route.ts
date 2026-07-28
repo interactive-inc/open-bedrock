@@ -5,6 +5,7 @@ import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/li
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { toGovernanceDocumentResponse } from "@/interface/utils/to-governance-document-response"
 
+// @authorization service - session を application service に渡して判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

@@ -19,6 +19,7 @@ import { count, desc, inArray } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /thanks-messages — 全従業員が閲覧する感謝のタイムライン（新着順・ページング） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -75,6 +76,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /thanks-messages — 全従業員が他の従業員へ感謝を送る（受信者にだけ通知を作成） */
 export const POST = factory.createHandlers(
   verifyBearer,

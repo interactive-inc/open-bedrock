@@ -22,6 +22,7 @@ const DAILY_REGULAR_MINUTES = 480
 const OVERTIME_NOTE =
   "1 日 8 時間×営業日を超えた労働時間の合計です。36 協定などの法定判定ではなく、あくまで参考の集計値です。"
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /attendance-records/overtime-summary?month=&scope= — 時間外の参考集計。
  * scope=reports は attendance:read:reports、scope=all は attendance:read:all を要求する（GET /attendance-records と同じ判定）。

@@ -19,6 +19,7 @@ import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization permission - 権限キーで判定する
 /** GET /shift-swap-requests — 承認権限者向けの保留中のシフト交代申請一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -94,6 +95,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /shift-swap-requests — 認証された本人がシフト交代を申請する */
 export const POST = factory.createHandlers(
   verifyBearer,

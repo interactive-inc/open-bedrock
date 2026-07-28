@@ -14,6 +14,7 @@ import { zAppApplicationMineList } from "@/lib/app-schemas"
 import { applications } from "@/schema"
 import { count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /application-requests/me — 申請者本人の申請一覧（ユースケース経由） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

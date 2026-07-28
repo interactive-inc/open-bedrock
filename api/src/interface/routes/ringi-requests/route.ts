@@ -8,6 +8,7 @@ import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** POST /ringi-requests — 稟議を起案する（全認証者。承認者を 1 名指定する） */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -22,6 +22,7 @@ const SORT_OPTIONS = {
 
 type SortKey = keyof typeof SORT_OPTIONS
 
+// @authorization permission - 権限キーで判定する
 /** GET /leave-requests/inbox — 承認権限者向けの承認待ち一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

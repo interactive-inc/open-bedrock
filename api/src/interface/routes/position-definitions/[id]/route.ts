@@ -28,6 +28,7 @@ function toPositionId(value: string | undefined): number {
   return validateIntParam(value, "position")
 }
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /position-definitions/:id — 役職マスタの定義を変更（position:manage） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -66,6 +67,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /position-definitions/:id — 役職マスタを削除（position:manage） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

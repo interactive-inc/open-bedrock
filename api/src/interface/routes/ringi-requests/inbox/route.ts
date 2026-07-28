@@ -11,6 +11,7 @@ import { employees, ringiRequests } from "@/schema"
 import { and, count, desc, eq } from "drizzle-orm"
 import { UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /ringi-requests/inbox — 自分が承認者の承認待ち稟議一覧（指名された承認者本人のみ見える） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

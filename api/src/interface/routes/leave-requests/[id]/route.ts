@@ -38,6 +38,7 @@ function toLeaveRequestId(value: string): number | null {
   return parsed
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /leave-requests/:id — 休暇申請の詳細（申請者本人または承認権限者） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -65,6 +66,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(result), 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /leave-requests/:id — 休暇申請の内容を変更（申請者本人・pending のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -114,6 +116,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /leave-requests/:id — 休暇申請を取り下げ（申請者本人・pending のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

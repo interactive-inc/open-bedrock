@@ -3,6 +3,7 @@ import { factory } from "@/interface/utils/factory"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()

@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
     throw new UnauthorizedError()
@@ -44,6 +45,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /knowledge-articles/:id — ナレッジ記事の表題・カテゴリ・タグ・本文を更新（作成者のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -92,6 +94,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /knowledge-articles/:id — ナレッジ記事を削除（作成者のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

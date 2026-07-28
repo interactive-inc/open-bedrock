@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /meeting-minutes-records/:id — 議事録の詳細（全認証者） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (c.var.session === null) {
@@ -45,6 +46,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /meeting-minutes-records/:id — 議事録を更新（作成者本人 or meeting:manage） */
 export const PUT = factory.createHandlers(
   verifyBearer,

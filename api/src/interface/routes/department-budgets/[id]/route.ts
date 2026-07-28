@@ -11,6 +11,7 @@ import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /department-budgets/:id — 予算の詳細（承認済み経費の消化額・残額を集計して返す）。budget:manage を持つロールのみ。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -49,6 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization permission - 権限キーで判定する
 /** PATCH /department-budgets/:id — 金額・名称・メモを修正する。部署・会計期間は変更しない。budget:manage を持つロールのみ。 */
 export const PATCH = factory.createHandlers(
   verifyBearer,
@@ -102,6 +104,7 @@ export const PATCH = factory.createHandlers(
   },
 )
 
+// @authorization permission - 権限キーで判定する
 /** DELETE /department-budgets/:id — 予算を削除する。budget:manage を持つロールのみ。 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

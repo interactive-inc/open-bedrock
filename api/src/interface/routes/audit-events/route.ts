@@ -7,6 +7,7 @@ import { auditListValidation } from "@/interface/middlewares/audit-list-validati
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
 
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(
   verifyBearer,
   auditListPermission,

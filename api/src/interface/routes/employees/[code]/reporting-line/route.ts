@@ -6,6 +6,7 @@ import { zAppOrgReportingLineList } from "@/lib/app-schemas"
 import type { AppOrgReportingLineNode } from "@/lib/app-schemas"
 import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /employees/:code/reporting-line — 本人から上位へのレポートライン */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

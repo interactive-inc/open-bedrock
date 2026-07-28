@@ -8,6 +8,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

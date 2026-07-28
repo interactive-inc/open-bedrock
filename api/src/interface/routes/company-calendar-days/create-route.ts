@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /company-calendar-days — 会社休日・振替出勤日を記録する（calendar:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

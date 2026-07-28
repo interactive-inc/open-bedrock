@@ -10,6 +10,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization service - session を application service に渡して判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

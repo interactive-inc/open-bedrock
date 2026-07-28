@@ -6,6 +6,7 @@ import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppPartner } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /partners/:code — 取引先 1 件の詳細（台帳は社内公開） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

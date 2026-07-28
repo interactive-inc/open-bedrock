@@ -8,6 +8,7 @@ import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/li
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /certification-definitions — 資格マスタ一覧。認証済みなら誰でも閲覧できる（全認証者）。 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -37,6 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization permission - 権限キーで判定する
 /** POST /certification-definitions — 資格マスタを作成する。certification:manage が必要。 */
 export const POST = factory.createHandlers(
   verifyBearer,

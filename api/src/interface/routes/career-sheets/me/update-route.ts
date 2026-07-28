@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppCareerSheet } from "@/lib/app-schemas"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /career-sheets/me — 本人のキャリアシートを登録・更新 */
 export const PUT = factory.createHandlers(
   verifyBearer,

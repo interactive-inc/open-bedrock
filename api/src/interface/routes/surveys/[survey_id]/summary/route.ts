@@ -23,6 +23,7 @@ import { count, eq } from "drizzle-orm"
  */
 const MAX_SUMMARY_RESPONSES = 1000
 
+// @authorization permission - 権限キーで判定する
 /**
  * GET /surveys/:survey_id/summary — 設問ごとに集計したアンケートサマリー（管理ロールのみ）。
  * 自由記述を含む集計を返すため、回答の機微情報の保護として閲覧を管理ロールに限定する。

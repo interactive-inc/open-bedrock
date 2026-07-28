@@ -6,6 +6,7 @@ import { zAppLeaveBalanceList } from "@/lib/app-schemas"
 import { leaveBalances } from "@/schema"
 import { and, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /leave-balances/me — 本人の当年度の休暇残数 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

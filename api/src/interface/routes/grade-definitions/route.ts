@@ -10,6 +10,7 @@ import {
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /grade-definitions — 等級マスタ一覧（全認証者。マスタは公開情報） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

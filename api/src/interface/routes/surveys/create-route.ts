@@ -9,6 +9,7 @@ import { zAppSurvey } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /surveys — アンケートを作成（管理権限のみ） */
 export const POST = factory.createHandlers(
   verifyBearer,

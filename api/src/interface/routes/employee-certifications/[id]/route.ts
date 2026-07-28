@@ -4,6 +4,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /** DELETE /employee-certifications/:id — 資格保有記録を削除する。certification:manage が必要。 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

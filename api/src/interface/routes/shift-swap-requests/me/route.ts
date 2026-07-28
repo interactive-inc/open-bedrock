@@ -14,6 +14,7 @@ import { UnauthorizedError } from "@/interface/lib/errors"
 import { employees, shiftSwapRequests } from "@/schema"
 import { count, eq, inArray } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /**
  * GET /shift-swap-requests/me — 申請者本人が出したシフト交代申請の一覧。
  * member は社員 ID から氏名を引けないため、交代相手の氏名を埋めて返す。

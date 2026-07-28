@@ -15,6 +15,7 @@ import { and, count, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 
+// @authorization permission - 権限キーで判定する
 /** GET /shift-assignments — 特権ロールが部署単位でシフトを横断検索する */
 export const GET = factory.createHandlers(
   verifyBearer,

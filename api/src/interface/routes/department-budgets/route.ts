@@ -12,6 +12,7 @@ import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization permission - 権限キーで判定する
 /** GET /department-budgets — 部署予算の一覧。部署・会計期間で絞り込む。budget:manage を持つロールのみ。 */
 export const GET = factory.createHandlers(
   verifyBearer,
@@ -89,6 +90,7 @@ export const GET = factory.createHandlers(
   },
 )
 
+// @authorization permission - 権限キーで判定する
 /** POST /department-budgets — 部署予算を登録する。budget:manage を持つロールのみ。 */
 export const POST = factory.createHandlers(
   verifyBearer,

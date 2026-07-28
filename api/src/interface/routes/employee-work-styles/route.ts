@@ -23,6 +23,7 @@ import {
 } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /employee-work-styles?employee_id= — 従業員の勤務形態一覧（self / work_style:read:all） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -98,6 +99,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /employee-work-styles — 従業員の勤務形態を記録（work_style:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -11,6 +11,7 @@ import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { trainingEnrollments } from "@/schema"
 import { asc, count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /training-enrollments/me — 本人の受講一覧 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

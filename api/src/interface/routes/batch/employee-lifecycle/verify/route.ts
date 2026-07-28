@@ -13,6 +13,7 @@ const inputSchema = z.object({
   legacy_source_fingerprint: z.string(),
 })
 
+// @authorization permission - 権限キーで判定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", inputSchema),

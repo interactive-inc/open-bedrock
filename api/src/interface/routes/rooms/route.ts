@@ -17,6 +17,7 @@ import {
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /rooms — 会議室マスタ一覧（要ログイン、閲覧は全ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -60,6 +61,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** POST /rooms — 会議室を新規登録（管理者ロールのみ） */
 export const POST = factory.createHandlers(
   verifyBearer,

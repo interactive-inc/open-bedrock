@@ -12,6 +12,7 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { employees, onboardingAssignments, onboardingTasks, onboardingTemplates } from "@/schema"
 import { asc, count, eq, inArray } from "drizzle-orm"
 
+// @authorization permission - 権限キーで判定する
 /** GET /onboarding-assignments/employees/:employee_code — 指定社員の手続き一覧（特権ロールのみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

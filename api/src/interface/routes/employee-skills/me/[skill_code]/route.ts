@@ -8,6 +8,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppEmployeeSkill } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /employee-skills/me/:skill_code — 本人の登録スキルを1件取得（スキルマスタ結合済み） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -37,6 +38,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /employee-skills/me/:skill_code — 本人の登録スキルを削除 */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

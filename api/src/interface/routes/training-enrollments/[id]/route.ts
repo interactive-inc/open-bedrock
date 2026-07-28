@@ -26,6 +26,7 @@ function toResponseBody(enrollment: TrainingEnrollment) {
   })
 }
 
+// @authorization service - session を application service に渡して判定する
 /** GET /training-enrollments/:id — 受講登録の詳細（本人または管理権限） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
@@ -49,6 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(toResponseBody(enrollment), 200)
 })
 
+// @authorization service - session を application service に渡して判定する
 /** PUT /training-enrollments/:id — 受講期限を変更（本人または管理権限） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -79,6 +81,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization service - session を application service に渡して判定する
 /** DELETE /training-enrollments/:id — 受講を取り消す（本人または管理権限） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

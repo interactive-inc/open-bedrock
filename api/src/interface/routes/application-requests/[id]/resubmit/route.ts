@@ -9,6 +9,7 @@ import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator("json", z.object({ payload: jsonPayloadSchema(10_000) })),

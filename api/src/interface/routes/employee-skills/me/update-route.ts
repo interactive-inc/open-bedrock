@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /employee-skills/me — 本人のスキルを登録・更新（スキルマスタ結合済みを返す） */
 export const PUT = factory.createHandlers(
   verifyBearer,

@@ -11,6 +11,7 @@ import { validateUuidParam } from "@/interface/utils/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /rooms/reservations/:id — 予約の詳細（本人のみ） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session
@@ -40,6 +41,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
+// @authorization owner - 本人のリソースに限定する
 /** PUT /rooms/reservations/:id — 予約の時刻と用途を変更（本人のみ） */
 export const PUT = factory.createHandlers(
   verifyBearer,
@@ -90,6 +92,7 @@ export const PUT = factory.createHandlers(
   },
 )
 
+// @authorization owner - 本人のリソースに限定する
 /** DELETE /rooms/reservations/:id — 予約をキャンセル（本人のみ） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
   const viewer = c.var.session

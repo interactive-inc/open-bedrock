@@ -4,6 +4,7 @@ import { notifications } from "@/schema"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { and, count, eq } from "drizzle-orm"
 
+// @authorization owner - 本人のリソースに限定する
 /** GET /notifications/me/unread-count — 本人宛ての未読通知数 */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

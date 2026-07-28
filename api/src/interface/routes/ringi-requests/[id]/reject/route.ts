@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /ringi-requests/:id/reject — 稟議を却下する（指名された承認者本人のみ。コメント任意） */
 export const POST = factory.createHandlers(
   verifyBearer,

@@ -7,6 +7,7 @@ import { validateIntParam } from "@/interface/utils/validate-int-param"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /onboarding-tasks/:id/uncomplete — タスクの完了を取り消す（本人か特権ロール） */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session

@@ -9,6 +9,7 @@ import { zAppDecision } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
+// @authorization service - session を application service に渡して判定する
 /** POST /decision-records/:id/supersede — 対象の決定を後続の決定で supersede（decision:manage） */
 export const POST = factory.createHandlers(
   verifyBearer,
