@@ -74,6 +74,7 @@ async function createTestDb(): Promise<D1Database> {
       start_date: leaveRequest.startDate,
       end_date: leaveRequest.endDate,
       days: leaveRequest.days,
+      consumed_days: leaveRequest.days,
       reason: leaveRequest.reason,
       status: leaveRequest.status,
       approver_id: leaveRequest.approverId,
@@ -297,9 +298,9 @@ describe("POST /leave-requests/:id/approve", () => {
       .prepare(
         `
         INSERT INTO leave_requests
-          (id, employee_id, leave_type, start_date, end_date, days, unit, hours, reason, status, approver_id, decided_comment, created_at)
+          (id, employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
         VALUES
-          (100, 5, 'compensatory', '2026-06-15', '2026-06-15', 1, 'full_day', NULL, NULL, 'pending', NULL, NULL, '2026-05-22T00:00:00Z')
+          (100, 5, 'compensatory', '2026-06-15', '2026-06-15', 1, 'full_day', NULL, 1, NULL, 'pending', NULL, NULL, '2026-05-22T00:00:00Z')
         `,
       )
       .run()

@@ -79,6 +79,7 @@ async function createTestDb(): Promise<D1Database> {
       start_date: leaveRequest.startDate,
       end_date: leaveRequest.endDate,
       days: leaveRequest.days,
+      consumed_days: leaveRequest.days,
       reason: leaveRequest.reason,
       status: leaveRequest.status,
       approver_id: leaveRequest.approverId,
@@ -86,6 +87,25 @@ async function createTestDb(): Promise<D1Database> {
       created_at: leaveRequest.createdAt,
     })),
   )
+
+  await seedD1(db, "leave_balances", [
+    {
+      employee_id: 5,
+      fiscal_year: "2026",
+      leave_type: "annual",
+      granted_days: 20,
+      used_days: 0,
+      remaining_days: 20,
+    },
+    {
+      employee_id: 5,
+      fiscal_year: "2026",
+      leave_type: "special",
+      granted_days: 5,
+      used_days: 0,
+      remaining_days: 5,
+    },
+  ])
 
   return db
 }
@@ -322,6 +342,7 @@ describe("PUT /leave-requests/:id", () => {
         start_date: "2026-07-01",
         end_date: "2026-07-03",
         days: 3,
+        consumed_days: 3,
         reason: null,
         status: "pending",
         approver_id: null,

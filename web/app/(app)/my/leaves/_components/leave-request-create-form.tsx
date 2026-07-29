@@ -161,7 +161,7 @@ export function LeaveRequestCreateForm() {
       </div>
 
       <FieldDescription>
-        開始日と終了日から日数が自動計算され、承認後に残日数へ反映されます
+        残日数は承認後に反映されます（全休は暦日数、半休は0.5日、時間休は時間数÷8で換算します）。残日数が不足する場合は申請できません
       </FieldDescription>
 
       <FieldDescription>

@@ -286,6 +286,8 @@ export const leaveRequests = sqliteTable("leave_requests", {
   days: integer("days").notNull(),
   unit: text("unit").notNull().$type<LeaveUnit>(),
   hours: real("hours"),
+  // 残数消費量（按分計算後）。半休=0.5、時間休=時間数/8、全休=days と同じ。
+  consumedDays: real("consumed_days").notNull(),
   reason: text("reason"),
   status: text("status").notNull().$type<LeaveStatus>(),
   approverId: integer("approver_id"),
@@ -302,9 +304,10 @@ export const leaveBalances = sqliteTable(
     employeeId: integer("employee_id").notNull(),
     fiscalYear: text("fiscal_year").notNull(),
     leaveType: text("leave_type").notNull().$type<LeaveType>(),
-    grantedDays: integer("granted_days").notNull(),
-    usedDays: integer("used_days").notNull(),
-    remainingDays: integer("remaining_days").notNull(),
+    // 半休(0.5)・時間休(時間数/8)の按分に対応するため REAL。
+    grantedDays: real("granted_days").notNull(),
+    usedDays: real("used_days").notNull(),
+    remainingDays: real("remaining_days").notNull(),
   },
   (table) => [primaryKey({ columns: [table.employeeId, table.fiscalYear, table.leaveType] })],
 )

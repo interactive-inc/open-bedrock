@@ -45,6 +45,10 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedIamForEmployees(db)
 
+  await seedD1(db, "org_memberships", [
+    { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E004" },
+  ])
+
   await seedD1(
     db,
     "leave_requests",
@@ -55,6 +59,7 @@ async function createTestDb(): Promise<D1Database> {
       start_date: leaveRequest.startDate,
       end_date: leaveRequest.endDate,
       days: leaveRequest.days,
+      consumed_days: leaveRequest.days,
       reason: leaveRequest.reason,
       status: leaveRequest.status,
       approver_id: leaveRequest.approverId,
@@ -228,6 +233,84 @@ describe("POST /leave-requests", () => {
     })
 
     expect(response.status).toBe(401)
+  })
+
+  test("returns 409 at submission time when the balance is insufficient", async () => {
+    // employee 5 の annual remaining は 15（seed-leave-balances.ts）。20 日分は超過するため申請自体を拒否する。
+    const response = await request({
+      path: "/leave-requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-09-01",
+        end_date: "2026-09-20",
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 at submission time when no balance record exists for the leave type", async () => {
+    // employee 9 には leave_balances が一切ない（seed-leave-balances.ts は employee 5/10 のみ）。
+    const response = await request({
+      path: "/leave-requests",
+      token: await tokenFor(9, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-08-01",
+        end_date: "2026-08-02",
+      },
+    })
+
+    expect(response.status).toBe(409)
+  })
+
+  test("consumes only 0.5 day for a half-day request once approved", async () => {
+    const db = await createTestDb()
+
+    const created = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/leave-requests",
+      token: await tokenFor(5, "member"),
+      method: "POST",
+      body: {
+        leave_type: "annual",
+        start_date: "2026-09-10",
+        end_date: "2026-09-10",
+        unit: "half_day_am",
+      },
+    })
+
+    expect(created.status).toBe(201)
+
+    const createdBody = leaveRequestCreateResponseSchema.parse(await created.json())
+
+    const approveResponse = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/leave-requests/${createdBody.id}/approve`,
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: null },
+    })
+
+    expect(approveResponse.status).toBe(200)
+
+    const balance = z
+      .object({ remaining_days: z.number() })
+      .parse(
+        await db
+          .prepare(
+            "SELECT remaining_days FROM leave_balances WHERE employee_id = 5 AND fiscal_year = '2026' AND leave_type = 'annual'",
+          )
+          .first(),
+      )
+
+    // seed の remaining(15) から半休0.5日分だけ減る。
+    expect(balance.remaining_days).toBe(14.5)
   })
 })
 

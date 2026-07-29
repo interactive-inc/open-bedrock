@@ -1,3 +1,5 @@
+import { checkLeaveBalanceSufficiency } from "@/application/leave/check-leave-balance-sufficiency"
+import { computeConsumedDays } from "@/domain/leave/compute-consumed-days"
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { validateLeaveUnit } from "@/domain/leave/validate-leave-unit"
 import type { Context } from "@/env"
@@ -67,6 +69,19 @@ export class UpdateLeaveRequest {
       return new ValidationError("invalid leave unit", "invalid_leave_unit", { cause: unitError })
     }
 
+    const consumedDays = computeConsumedDays({ unit: command.unit, hours: command.hours, days })
+
+    const balanceError = await checkLeaveBalanceSufficiency(this.c, {
+      employeeId: command.employeeId,
+      leaveType: command.leaveType,
+      startDate: command.startDate,
+      consumedDays,
+    })
+
+    if (balanceError !== null) {
+      return balanceError
+    }
+
     // 自分自身を除外して、同社員・同期間の未却下申請と重ならないか確認する。
     // 除外しないと更新のたびに自己ヒットして必ず重複扱いになる。
     const overlapping = await repository.findOverlapping({
@@ -94,6 +109,7 @@ export class UpdateLeaveRequest {
       days,
       unit: command.unit,
       hours: command.hours,
+      consumedDays,
       reason: command.reason,
     })
 

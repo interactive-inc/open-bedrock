@@ -13,6 +13,7 @@ export const leaveRequestRowSchema = z.object({
   days: z.number(),
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
+  consumedDays: z.number(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   approverId: z.number().nullable(),
@@ -29,6 +30,7 @@ const zProps = z.object({
   days: z.number(),
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
+  consumedDays: z.number(),
   reason: z.string().nullable(),
   status: leaveStatusSchema,
   approverId: z.number().nullable(),
@@ -59,6 +61,8 @@ export class LeaveRequest implements Props {
 
   readonly hours!: Props["hours"]
 
+  readonly consumedDays!: Props["consumedDays"]
+
   readonly reason!: Props["reason"]
 
   readonly status!: Props["status"]
@@ -86,6 +90,7 @@ export class LeaveRequest implements Props {
     days: number
     unit: LeaveUnit
     hours: number | null
+    consumedDays: number
     reason: string | null
     createdAt: string
   }): LeaveRequest {
@@ -98,6 +103,7 @@ export class LeaveRequest implements Props {
       days: props.days,
       unit: props.unit,
       hours: props.hours,
+      consumedDays: props.consumedDays,
       reason: props.reason,
       status: "pending",
       approverId: null,
@@ -133,6 +139,7 @@ export class LeaveRequest implements Props {
       days: row.days,
       unit: row.unit,
       hours: row.hours,
+      consumedDays: row.consumedDays,
       reason: row.reason,
       status: row.status,
       approverId: row.approverId,
@@ -154,6 +161,7 @@ export class LeaveRequest implements Props {
     days: number
     unit: LeaveUnit
     hours: number | null
+    consumedDays: number
     reason: string | null
   }): LeaveRequest {
     return new LeaveRequest({
@@ -164,6 +172,7 @@ export class LeaveRequest implements Props {
       days: props.days,
       unit: props.unit,
       hours: props.hours,
+      consumedDays: props.consumedDays,
       reason: props.reason,
     })
   }
