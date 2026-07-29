@@ -1,6 +1,7 @@
 import type { Session } from "@/lib/auth/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import type { Context } from "@/env"
 import {
@@ -24,7 +25,7 @@ export type Command = {
 }
 
 /**
- * 休暇申請を承認/却下する。pending のみ確定でき、承認確定時のみ残数を減算する。
+ * 休暇申請を承認/却下する。pending のみ確定でき、残高管理対象の種別のみ承認確定時に残数を減算する。
  * 会計年度は申請の startDate から導出する（サーバ時刻に依存しない）。
  */
 export class DecideLeaveRequest {
@@ -94,46 +95,58 @@ export class DecideLeaveRequest {
       )
     }
 
-    const nextStatus = command.action === "approve" ? "approved" : "rejected"
-
-    if (command.action === "approve") {
-      const approved = await leaveRequestRepository.approveFromPendingAndConsumeBalance({
-        leaveRequestId: command.leaveRequestId,
-        approverId: command.approverId,
-        decidedComment: command.comment,
-        fiscalYear,
-      })
-
-      if (approved instanceof Error) {
-        return new UnexpectedError("failed to approve leave request", { cause: approved })
-      }
-
-      if (approved === "already_decided") {
-        return new ConflictError("the leave request is already decided", "already_decided")
-      }
-
-      if (approved === "balance_not_found") {
-        return new ConflictError("leave balance record not found", "balance_not_found")
-      }
-
-      if (approved === "insufficient_balance") {
-        return new ConflictError("insufficient leave balance", "insufficient_balance")
-      }
-
-      // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
-      await new NotifyApprovalResult(this.c).run({
-        recipientEmployeeId: existing.employeeId,
-        action: command.action,
-        subjectLabel: "休暇申請",
-        sourceDomain: "leave",
-        sourceId: command.leaveRequestId,
-        createdAt: command.createdAt,
-      })
-
-      return approved
+    if (command.action === "approve" && hasLeaveBalanceTracking(existing.leaveType)) {
+      return this.approveWithBalance(command, existing, leaveRequestRepository, fiscalYear)
     }
 
-    const decided = await leaveRequestRepository.decideFromPending({
+    const nextStatus = command.action === "approve" ? "approved" : "rejected"
+
+    return this.finalizeWithoutBalance(command, existing, leaveRequestRepository, nextStatus)
+  }
+
+  /** 残高管理対象の種別のみ通る経路。承認と残数消費を D1 batch で確定する。 */
+  private async approveWithBalance(
+    command: Command,
+    existing: LeaveRequest,
+    repository: LeaveRequestRepository,
+    fiscalYear: string,
+  ): Promise<LeaveRequest | ApplicationError> {
+    const approved = await repository.approveFromPendingAndConsumeBalance({
+      leaveRequestId: command.leaveRequestId,
+      approverId: command.approverId,
+      decidedComment: command.comment,
+      fiscalYear,
+    })
+
+    if (approved instanceof Error) {
+      return new UnexpectedError("failed to approve leave request", { cause: approved })
+    }
+
+    if (approved === "already_decided") {
+      return new ConflictError("the leave request is already decided", "already_decided")
+    }
+
+    if (approved === "balance_not_found") {
+      return new ConflictError("leave balance record not found", "balance_not_found")
+    }
+
+    if (approved === "insufficient_balance") {
+      return new ConflictError("insufficient leave balance", "insufficient_balance")
+    }
+
+    await this.notify(command, existing)
+
+    return approved
+  }
+
+  /** 却下、および残高管理なし種別の承認が通る経路。残高テーブルは一切触らない。 */
+  private async finalizeWithoutBalance(
+    command: Command,
+    existing: LeaveRequest,
+    repository: LeaveRequestRepository,
+    nextStatus: "approved" | "rejected",
+  ): Promise<LeaveRequest | ApplicationError> {
+    const decided = await repository.decideFromPending({
       leaveRequestId: command.leaveRequestId,
       status: nextStatus,
       approverId: command.approverId,
@@ -148,7 +161,13 @@ export class DecideLeaveRequest {
       return new ConflictError("the leave request is already decided", "already_decided")
     }
 
-    // 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。
+    await this.notify(command, existing)
+
+    return decided
+  }
+
+  /** 決定は確定済みのため、申請者への結果通知が失敗しても決定は返す。 */
+  private async notify(command: Command, existing: LeaveRequest): Promise<void> {
     await new NotifyApprovalResult(this.c).run({
       recipientEmployeeId: existing.employeeId,
       action: command.action,
@@ -157,7 +176,5 @@ export class DecideLeaveRequest {
       sourceId: command.leaveRequestId,
       createdAt: command.createdAt,
     })
-
-    return decided
   }
 }

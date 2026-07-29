@@ -1,4 +1,5 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { validateLeaveUnit } from "@/domain/leave/validate-leave-unit"
 import type { Context } from "@/env"
 import {
   ConflictError,
@@ -9,7 +10,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import type { LeaveType } from "@/lib/schemas"
+import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {
   leaveRequestId: number
@@ -17,6 +18,8 @@ export type Command = {
   leaveType: LeaveType
   startDate: string
   endDate: string
+  unit: LeaveUnit
+  hours: number | null
   reason: string | null
 }
 
@@ -53,6 +56,17 @@ export class UpdateLeaveRequest {
       return new ValidationError("invalid leave period", "invalid_leave_period", { cause: days })
     }
 
+    const unitError = validateLeaveUnit({
+      unit: command.unit,
+      hours: command.hours,
+      startDate: command.startDate,
+      endDate: command.endDate,
+    })
+
+    if (unitError !== null) {
+      return new ValidationError("invalid leave unit", "invalid_leave_unit", { cause: unitError })
+    }
+
     // 自分自身を除外して、同社員・同期間の未却下申請と重ならないか確認する。
     // 除外しないと更新のたびに自己ヒットして必ず重複扱いになる。
     const overlapping = await repository.findOverlapping({
@@ -78,6 +92,8 @@ export class UpdateLeaveRequest {
       startDate: command.startDate,
       endDate: command.endDate,
       days,
+      unit: command.unit,
+      hours: command.hours,
       reason: command.reason,
     })
 

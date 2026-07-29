@@ -12,7 +12,7 @@ import { z } from "zod"
 
 const leaveBalanceResponseSchema = z.object({
   fiscal_year: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   granted_days: z.number(),
   used_days: z.number(),
   remaining_days: z.number(),
@@ -115,7 +115,7 @@ describe("GET /leave-balances/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.length).toBe(2)
+      expect(parsed.data.length).toBe(5)
 
       const annual = parsed.data.find((row) => row.leave_type === "annual")
 

@@ -16,7 +16,7 @@ const leaveAdminResponseSchema = z.object({
   applicant_id: z.number(),
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),

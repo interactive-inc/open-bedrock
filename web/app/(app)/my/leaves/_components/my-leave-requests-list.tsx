@@ -135,6 +135,10 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
         <form action={formAction} className="flex flex-col gap-4">
           <input type="hidden" name="leave_request_id" value={props.leaveRequest.id} />
 
+          <input type="hidden" name="unit" value={props.leaveRequest.unit} />
+
+          <input type="hidden" name="hours" value={props.leaveRequest.hours ?? ""} />
+
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="update_leave_type">種別</FieldLabel>
@@ -148,6 +152,18 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
                 <option value="annual">年次有給</option>
 
                 <option value="special">特別休暇</option>
+
+                <option value="compensatory">代休</option>
+
+                <option value="summer">夏季休暇</option>
+
+                <option value="child_nursing_care">子の看護等休暇</option>
+
+                <option value="prenatal_checkup">妊婦通院休暇</option>
+
+                <option value="menstrual">生理休暇</option>
+
+                <option value="caregiving_leave">介護休暇</option>
               </select>
             </Field>
 

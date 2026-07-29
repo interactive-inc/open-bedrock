@@ -12,7 +12,7 @@ import { z } from "zod"
 
 const leaveBalanceResponseSchema = z.object({
   fiscal_year: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   granted_days: z.number(),
   used_days: z.number(),
   remaining_days: z.number(),
@@ -21,7 +21,7 @@ const leaveBalanceResponseSchema = z.object({
 const leaveDecisionResponseSchema = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
@@ -288,6 +288,48 @@ describe("POST /leave-requests/:id/approve", () => {
     )
 
     expect(requestRow.status).toBe("pending")
+  })
+
+  test("approves a compensatory leave request without a balance record", async () => {
+    const db = await createTestDb()
+
+    await db
+      .prepare(
+        `
+        INSERT INTO leave_requests
+          (id, employee_id, leave_type, start_date, end_date, days, unit, hours, reason, status, approver_id, decided_comment, created_at)
+        VALUES
+          (100, 5, 'compensatory', '2026-06-15', '2026-06-15', 1, 'full_day', NULL, NULL, 'pending', NULL, NULL, '2026-05-22T00:00:00Z')
+        `,
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      now: fiscalNow,
+      path: "/leave-requests/100/approve",
+      token: await tokenFor(4, "manager"),
+      method: "POST",
+      body: { comment: "approved" },
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = leaveDecisionResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("approved")
+      expect(parsed.data.leave_type).toBe("compensatory")
+    }
+
+    const balanceRows = await db
+      .prepare("SELECT * FROM leave_balances WHERE employee_id = 5 AND leave_type = 'compensatory'")
+      .all()
+
+    expect(balanceRows.results.length).toBe(0)
   })
 
   test("returns 403 for a member", async () => {

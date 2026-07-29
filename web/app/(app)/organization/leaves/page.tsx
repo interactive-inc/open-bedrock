@@ -186,12 +186,19 @@ function toStatus(value: string | null): LeaveStatus | null {
   return null
 }
 
-function toLeaveType(value: string | null): LeaveType | null {
-  if (value === "annual" || value === "special") {
-    return value
-  }
+const LEAVE_TYPES: ReadonlyArray<LeaveType> = [
+  "annual",
+  "special",
+  "compensatory",
+  "summer",
+  "child_nursing_care",
+  "prenatal_checkup",
+  "menstrual",
+  "caregiving_leave",
+]
 
-  return null
+function toLeaveType(value: string | null): LeaveType | null {
+  return LEAVE_TYPES.find((leaveType) => leaveType === value) ?? null
 }
 
 function toApplicantId(raw: string | null): number | null {

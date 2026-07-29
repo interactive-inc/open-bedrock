@@ -93,6 +93,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       start_date: row.leaveRequest.startDate,
       end_date: row.leaveRequest.endDate,
       days: row.leaveRequest.days,
+      unit: row.leaveRequest.unit,
+      hours: row.leaveRequest.hours,
       reason: row.leaveRequest.reason,
       status: row.leaveRequest.status,
       created_at: row.leaveRequest.createdAt,

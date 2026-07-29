@@ -5,8 +5,24 @@ import { cancelLeaveRequest } from "@/lib/api/cancel-leave-request"
 import { createLeaveRequest } from "@/lib/api/create-leave-request"
 import { updateLeaveRequest } from "@/lib/api/update-leave-request"
 import type { LeaveType } from "@/lib/api/types/leave-types"
+import type { LeaveRequestCreateRequest } from "@/lib/api/types/leave-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
+
+const LEAVE_TYPES: ReadonlyArray<LeaveType> = [
+  "annual",
+  "special",
+  "compensatory",
+  "summer",
+  "child_nursing_care",
+  "prenatal_checkup",
+  "menstrual",
+  "caregiving_leave",
+]
+
+type LeaveUnit = LeaveRequestCreateRequest["unit"]
+
+const LEAVE_UNITS: ReadonlyArray<LeaveUnit> = ["full_day", "half_day_am", "half_day_pm", "hourly"]
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type LeaveActionState = {
@@ -51,10 +67,16 @@ export async function createLeaveRequestAction(
   const reason =
     typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : null
 
+  const unit = toLeaveUnit(formData.get("unit"))
+
+  const hours = toHours(formData.get("hours"))
+
   const created = await createLeaveRequest({
     leave_type: leaveType,
     start_date: startDate,
     end_date: endDate,
+    unit: unit,
+    hours: hours,
     reason: reason,
   })
 
@@ -110,10 +132,16 @@ export async function updateLeaveRequestAction(
   const reason =
     typeof reasonValue === "string" && reasonValue.trim() !== "" ? reasonValue.trim() : null
 
+  const unit = toLeaveUnit(formData.get("unit"))
+
+  const hours = toHours(formData.get("hours"))
+
   const updated = await updateLeaveRequest(leaveRequestId, {
     leave_type: leaveType,
     start_date: startDate,
     end_date: endDate,
+    unit: unit,
+    hours: hours,
     reason: reason,
   })
 
@@ -155,9 +183,21 @@ export async function cancelLeaveRequestAction(
 
 /** leave_type の FormData 値を許可値へ。不正値は null。 */
 function toLeaveType(value: FormDataEntryValue | null): LeaveType | null {
-  if (value === "annual" || value === "special") {
-    return value
+  return LEAVE_TYPES.find((leaveType) => leaveType === value) ?? null
+}
+
+/** unit の FormData 値を許可値へ。不正値は full_day にフォールバックする。 */
+function toLeaveUnit(value: FormDataEntryValue | null): LeaveUnit {
+  return LEAVE_UNITS.find((unit) => unit === value) ?? "full_day"
+}
+
+/** hours の FormData 値を数値へ。未入力・不正値は null。 */
+function toHours(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string" || value.trim() === "") {
+    return null
   }
 
-  return null
+  const parsed = Number(value)
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }

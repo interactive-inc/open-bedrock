@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { createLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
 import type { LeaveActionState } from "@/app/(app)/my/leaves/actions"
@@ -20,6 +20,16 @@ const initialState: LeaveActionState = { ok: false, error: null }
  */
 export function LeaveRequestCreateForm() {
   const router = useRouter()
+
+  const [leaveType, setLeaveType] = useState("annual")
+
+  const [unit, setUnit] = useState("full_day")
+
+  const [singleDate, setSingleDate] = useState("")
+
+  const isSingleDateUnit =
+    leaveType === "annual" &&
+    (unit === "half_day_am" || unit === "half_day_pm" || unit === "hourly")
 
   /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
   async function reduce(
@@ -55,10 +65,28 @@ export function LeaveRequestCreateForm() {
         <Field>
           <FieldLabel htmlFor="leave-type">休暇種別</FieldLabel>
 
-          <NativeSelect id="leave-type" name="leave_type" defaultValue="annual" className="w-full">
+          <NativeSelect
+            id="leave-type"
+            name="leave_type"
+            defaultValue="annual"
+            className="w-full"
+            onChange={(event) => setLeaveType(event.target.value)}
+          >
             <NativeSelectOption value="annual">年次有給</NativeSelectOption>
 
             <NativeSelectOption value="special">特別休暇</NativeSelectOption>
+
+            <NativeSelectOption value="compensatory">代休</NativeSelectOption>
+
+            <NativeSelectOption value="summer">夏季休暇</NativeSelectOption>
+
+            <NativeSelectOption value="child_nursing_care">子の看護等休暇</NativeSelectOption>
+
+            <NativeSelectOption value="prenatal_checkup">妊婦通院休暇</NativeSelectOption>
+
+            <NativeSelectOption value="menstrual">生理休暇</NativeSelectOption>
+
+            <NativeSelectOption value="caregiving_leave">介護休暇</NativeSelectOption>
           </NativeSelect>
         </Field>
 
@@ -68,21 +96,76 @@ export function LeaveRequestCreateForm() {
           <Input id="leave-reason" name="reason" placeholder="任意" />
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="leave-start">開始日</FieldLabel>
+        {isSingleDateUnit ? (
+          <Field>
+            <FieldLabel htmlFor="leave-date">対象日</FieldLabel>
 
-          <Input id="leave-start" name="start_date" type="date" required />
-        </Field>
+            <Input
+              id="leave-date"
+              name="start_date"
+              type="date"
+              required
+              value={singleDate}
+              onChange={(event) => setSingleDate(event.target.value)}
+            />
 
-        <Field>
-          <FieldLabel htmlFor="leave-end">終了日</FieldLabel>
+            <input type="hidden" name="end_date" value={singleDate} />
+          </Field>
+        ) : (
+          <>
+            <Field>
+              <FieldLabel htmlFor="leave-start">開始日</FieldLabel>
 
-          <Input id="leave-end" name="end_date" type="date" required />
-        </Field>
+              <Input id="leave-start" name="start_date" type="date" required />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="leave-end">終了日</FieldLabel>
+
+              <Input id="leave-end" name="end_date" type="date" required />
+            </Field>
+          </>
+        )}
+
+        {leaveType === "annual" ? (
+          <Field>
+            <FieldLabel htmlFor="leave-unit">取得単位</FieldLabel>
+
+            <NativeSelect
+              id="leave-unit"
+              name="unit"
+              defaultValue="full_day"
+              className="w-full"
+              onChange={(event) => setUnit(event.target.value)}
+            >
+              <NativeSelectOption value="full_day">全休</NativeSelectOption>
+
+              <NativeSelectOption value="half_day_am">午前半休</NativeSelectOption>
+
+              <NativeSelectOption value="half_day_pm">午後半休</NativeSelectOption>
+
+              <NativeSelectOption value="hourly">時間休</NativeSelectOption>
+            </NativeSelect>
+          </Field>
+        ) : (
+          <input type="hidden" name="unit" value="full_day" />
+        )}
+
+        {leaveType === "annual" && unit === "hourly" ? (
+          <Field>
+            <FieldLabel htmlFor="leave-hours">時間数</FieldLabel>
+
+            <Input id="leave-hours" name="hours" type="number" min="1" step="1" required />
+          </Field>
+        ) : null}
       </div>
 
       <FieldDescription>
         開始日と終了日から日数が自動計算され、承認後に残日数へ反映されます
+      </FieldDescription>
+
+      <FieldDescription>
+        夏季休暇・子の看護等休暇・介護休暇には勤続期間や所定労働日数などの資格要件があります。要件を満たすかは承認者が確認します
       </FieldDescription>
 
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}

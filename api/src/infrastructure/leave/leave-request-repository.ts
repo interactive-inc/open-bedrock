@@ -70,10 +70,11 @@ export class LeaveRequestRepository {
   async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
       const result = await this.c.var.database.run(
-        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, reason, status, approver_id, decided_comment, created_at)
+        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, reason, status, approver_id, decided_comment, created_at)
             SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
                    ${leaveRequest.startDate}, ${leaveRequest.endDate},
-                   ${leaveRequest.days}, ${leaveRequest.reason},
+                   ${leaveRequest.days}, ${leaveRequest.unit}, ${leaveRequest.hours},
+                   ${leaveRequest.reason},
                    ${leaveRequest.status}, ${leaveRequest.approverId},
                    ${leaveRequest.decidedComment}, ${leaveRequest.createdAt}
             WHERE NOT EXISTS (
@@ -217,6 +218,8 @@ export class LeaveRequestRepository {
               start_date AS startDate,
               end_date AS endDate,
               days,
+              unit,
+              hours,
               reason,
               status,
               approver_id AS approverId,
@@ -299,6 +302,8 @@ export class LeaveRequestRepository {
                 start_date = ${leaveRequest.startDate},
                 end_date   = ${leaveRequest.endDate},
                 days       = ${leaveRequest.days},
+                unit       = ${leaveRequest.unit},
+                hours      = ${leaveRequest.hours},
                 reason     = ${leaveRequest.reason}
             WHERE id = ${leaveRequest.id}
               AND status = 'pending'

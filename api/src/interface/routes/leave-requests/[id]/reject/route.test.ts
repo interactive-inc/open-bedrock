@@ -12,7 +12,7 @@ import { z } from "zod"
 
 const leaveBalanceResponseSchema = z.object({
   fiscal_year: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   granted_days: z.number(),
   used_days: z.number(),
   remaining_days: z.number(),
@@ -21,7 +21,7 @@ const leaveBalanceResponseSchema = z.object({
 const leaveDecisionResponseSchema = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),

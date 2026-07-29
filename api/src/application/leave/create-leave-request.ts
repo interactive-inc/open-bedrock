@@ -1,15 +1,18 @@
 import { LeaveRequest } from "@/domain/leave/leave-request.entity"
+import { validateLeaveUnit } from "@/domain/leave/validate-leave-unit"
 import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import type { LeaveType } from "@/lib/schemas"
+import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 
 export type Command = {
   employeeId: number
   leaveType: LeaveType
   startDate: string
   endDate: string
+  unit: LeaveUnit
+  hours: number | null
   reason: string | null
   createdAt: string
 }
@@ -27,6 +30,17 @@ export class CreateLeaveRequest {
 
     if (days instanceof Error) {
       return new ValidationError("invalid leave period", "invalid_leave_period", { cause: days })
+    }
+
+    const unitError = validateLeaveUnit({
+      unit: command.unit,
+      hours: command.hours,
+      startDate: command.startDate,
+      endDate: command.endDate,
+    })
+
+    if (unitError !== null) {
+      return new ValidationError("invalid leave unit", "invalid_leave_unit", { cause: unitError })
     }
 
     // 同社員・同期間の未却下申請があれば、全承認時の残数二重減算を防ぐため拒否する。
@@ -53,6 +67,8 @@ export class CreateLeaveRequest {
       startDate: command.startDate,
       endDate: command.endDate,
       days,
+      unit: command.unit,
+      hours: command.hours,
       reason: command.reason,
       createdAt: command.createdAt,
     })

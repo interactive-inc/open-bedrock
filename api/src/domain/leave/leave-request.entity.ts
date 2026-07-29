@@ -1,5 +1,5 @@
-import { leaveStatusSchema, leaveTypeSchema } from "@/lib/schemas"
-import type { LeaveType } from "@/lib/schemas"
+import { leaveStatusSchema, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
+import type { LeaveType, LeaveUnit } from "@/lib/schemas"
 import type { LeaveRequestRow } from "@/schema"
 import { z } from "zod"
 
@@ -7,10 +7,12 @@ import { z } from "zod"
 export const leaveRequestRowSchema = z.object({
   id: z.number(),
   employeeId: z.number(),
-  leaveType: z.enum(["annual", "special"]),
+  leaveType: leaveTypeSchema,
   startDate: z.string(),
   endDate: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   approverId: z.number().nullable(),
@@ -25,6 +27,8 @@ const zProps = z.object({
   startDate: z.string(),
   endDate: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: leaveStatusSchema,
   approverId: z.number().nullable(),
@@ -51,6 +55,10 @@ export class LeaveRequest implements Props {
 
   readonly days!: Props["days"]
 
+  readonly unit!: Props["unit"]
+
+  readonly hours!: Props["hours"]
+
   readonly reason!: Props["reason"]
 
   readonly status!: Props["status"]
@@ -76,6 +84,8 @@ export class LeaveRequest implements Props {
     startDate: string
     endDate: string
     days: number
+    unit: LeaveUnit
+    hours: number | null
     reason: string | null
     createdAt: string
   }): LeaveRequest {
@@ -86,6 +96,8 @@ export class LeaveRequest implements Props {
       startDate: props.startDate,
       endDate: props.endDate,
       days: props.days,
+      unit: props.unit,
+      hours: props.hours,
       reason: props.reason,
       status: "pending",
       approverId: null,
@@ -119,6 +131,8 @@ export class LeaveRequest implements Props {
       startDate: row.startDate,
       endDate: row.endDate,
       days: row.days,
+      unit: row.unit,
+      hours: row.hours,
       reason: row.reason,
       status: row.status,
       approverId: row.approverId,
@@ -138,6 +152,8 @@ export class LeaveRequest implements Props {
     startDate: string
     endDate: string
     days: number
+    unit: LeaveUnit
+    hours: number | null
     reason: string | null
   }): LeaveRequest {
     return new LeaveRequest({
@@ -146,6 +162,8 @@ export class LeaveRequest implements Props {
       startDate: props.startDate,
       endDate: props.endDate,
       days: props.days,
+      unit: props.unit,
+      hours: props.hours,
       reason: props.reason,
     })
   }

@@ -1,3 +1,4 @@
+import { leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import { z } from "zod"
 
 /** 資産 1 件のレスポンス。廃棄済みは disposed_on / disposal_reason を伴う。 */
@@ -1101,10 +1102,12 @@ export type AppKnowledgeWritten = z.infer<typeof zAppKnowledgeWritten>
 export const zAppLeaveRequest = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   approver_id: z.number().nullable(),
@@ -1118,10 +1121,12 @@ export type AppLeaveRequest = z.infer<typeof zAppLeaveRequest>
 export const zAppLeaveRequestDetail = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
@@ -1132,10 +1137,12 @@ export type AppLeaveRequestDetail = z.infer<typeof zAppLeaveRequestDetail>
 /** 本人の休暇申請一覧 1 件（GET /requests/me）。 */
 export const zAppLeaveRequestSummary = z.object({
   id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
 })
@@ -1154,10 +1161,12 @@ export type AppLeaveRequestSummaryList = z.infer<typeof zAppLeaveRequestSummaryL
 export const zAppLeaveRequestInbox = z.object({
   id: z.number(),
   applicant_name: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
@@ -1179,10 +1188,12 @@ export const zAppLeaveRequestAdminItem = z.object({
   applicant_id: z.number(),
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
+  unit: leaveUnitSchema,
+  hours: z.number().nullable(),
   reason: z.string().nullable(),
   status: z.enum(["pending", "approved", "rejected"]),
   created_at: z.string(),
@@ -1201,7 +1212,7 @@ export type AppLeaveRequestAdminList = z.infer<typeof zAppLeaveRequestAdminList>
 /** 本人の休暇残数 1 件（GET /balance/me）。 */
 export const zAppLeaveBalance = z.object({
   fiscal_year: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: leaveTypeSchema,
   granted_days: z.number(),
   used_days: z.number(),
   remaining_days: z.number(),
