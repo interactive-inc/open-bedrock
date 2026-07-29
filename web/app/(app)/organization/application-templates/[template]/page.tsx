@@ -9,6 +9,7 @@ import { getApplicationTemplate } from "@/lib/api/get-application-template"
 import { getMe } from "@/lib/api/get-me"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
 import { toFormSchema } from "@/lib/application/form-schema"
+import { categoryLabel } from "@/lib/category-label"
 
 export const metadata = { title: "申請テンプレート詳細" }
 
@@ -44,7 +45,7 @@ export default async function ApplicationTemplateDetailPage(props: Props) {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">{template.category}</Badge>
+        <Badge variant="secondary">{categoryLabel(template.category)}</Badge>
 
         {canManage ? <TemplateManagement template={template} /> : null}
       </div>
