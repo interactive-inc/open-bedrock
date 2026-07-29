@@ -48,6 +48,7 @@ export const employees = sqliteTable("employees", {
   deptName: text("dept_name"),
   position: text("position"),
   status: text("status").notNull().$type<EmployeeStatus>(),
+  phone: text("phone"),
   archivedAt: integer("archived_at"),
   archivedByAccountId: integer("archived_by_account_id"),
 })
