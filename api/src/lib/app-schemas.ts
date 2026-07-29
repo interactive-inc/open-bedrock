@@ -453,9 +453,17 @@ export const zAppAuthMe = z.object({
   position: z.string().nullable(),
   permissions: z.array(z.string()),
   role_keys: z.array(z.string()),
+  phone: z.string().nullable(),
 })
 
 export type AppAuthMe = z.infer<typeof zAppAuthMe>
+
+/** 本人の電話番号（PUT /me/phone）。 */
+export const zAppMyPhone = z.object({
+  phone: z.string().nullable(),
+})
+
+export type AppMyPhone = z.infer<typeof zAppMyPhone>
 
 /** ===== business-trip ===== */
 export const zAppBusinessTrip = z.object({

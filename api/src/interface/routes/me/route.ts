@@ -64,6 +64,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         : (lifecycleState.primaryAssignment?.positionTitle ?? null),
     permissions: [...session.permissions],
     role_keys: [...session.roleKeys],
+    phone: row.phone,
   })
 
   return c.json(responseBody, 200)

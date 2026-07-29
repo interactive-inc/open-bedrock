@@ -11,6 +11,7 @@ describe("Employee.fromRow", () => {
       deptName: "Engineering",
       position: "Staff",
       status: "active",
+      phone: null,
     })
 
     expect(employee).toBeInstanceOf(Employee)
@@ -32,6 +33,7 @@ describe("Employee.fromRow", () => {
       deptName: null,
       position: null,
       status: "leave",
+      phone: null,
     })
 
     expect(employee.status).toBe("leave")
@@ -49,6 +51,7 @@ describe("Employee.fromRow", () => {
       deptName: "Sales",
       position: "Manager",
       status: "retired",
+      phone: null,
     })
 
     expect(employee.status).toBe("retired")
@@ -65,6 +68,7 @@ describe("Employee.withStatus", () => {
       deptName: "Engineering",
       position: "Staff",
       status: "active",
+      phone: null,
     })
 
     const retired = employee.withStatus("retired")
@@ -86,6 +90,7 @@ describe("Employee.withProfile", () => {
       deptName: "Engineering",
       position: "Staff",
       status: "active",
+      phone: null,
     })
 
     const updated = employee.withProfile({

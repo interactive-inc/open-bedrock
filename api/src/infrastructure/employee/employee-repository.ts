@@ -149,6 +149,23 @@ export class EmployeeRepository {
     }
   }
 
+  /** 本人が自己申告する電話番号を更新する。他の項目には触れない。 */
+  async updatePhone(employeeId: number, phone: string | null): Promise<Employee | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(employees)
+        .set({ phone })
+        .where(eq(employees.id, employeeId))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Employee.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update employee phone")
+    }
+  }
+
   /** 従業員を削除する。 */
   async delete(code: string): Promise<null | Error> {
     try {
