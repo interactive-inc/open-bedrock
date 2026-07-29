@@ -13,6 +13,7 @@ const zProps = z.object({
   deptName: z.string().nullable(),
   position: z.string().nullable(),
   status: employeeStatusSchema,
+  phone: z.string().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -32,6 +33,8 @@ export class Employee implements Props {
 
   readonly status!: Props["status"]
 
+  readonly phone!: Props["phone"]
+
   constructor(private readonly props: Props) {
     zProps.parse(props)
 
@@ -41,7 +44,10 @@ export class Employee implements Props {
   }
 
   static fromRow(
-    row: Pick<EmployeeRow, "id" | "code" | "name" | "deptId" | "deptName" | "position" | "status">,
+    row: Pick<
+      EmployeeRow,
+      "id" | "code" | "name" | "deptId" | "deptName" | "position" | "status" | "phone"
+    >,
   ): Employee {
     return new Employee({
       id: row.id,
@@ -51,6 +57,7 @@ export class Employee implements Props {
       deptName: row.deptName,
       position: row.position,
       status: row.status,
+      phone: row.phone,
     })
   }
 
@@ -67,5 +74,10 @@ export class Employee implements Props {
     status: Props["status"]
   }) {
     return new Employee({ ...this.props, ...profile })
+  }
+
+  /** 本人が自己申告する電話番号を差し替えた新しい従業員を返す。 */
+  withPhone(phone: Props["phone"]) {
+    return new Employee({ ...this.props, phone })
   }
 }
