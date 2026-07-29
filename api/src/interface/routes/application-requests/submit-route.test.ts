@@ -114,7 +114,7 @@ describe("POST /application-requests", () => {
 
     if (parsed.success) {
       expect(parsed.data.template_code).toBe("paid_leave")
-      expect(parsed.data.template_name).toBe("Paid Leave Request")
+      expect(parsed.data.template_name).toBe("有給休暇申請")
       expect(parsed.data.applicant_name).toBe("Emery Lane")
       expect(parsed.data.status).toBe("pending")
     }

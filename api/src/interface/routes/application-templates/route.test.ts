@@ -94,7 +94,7 @@ describe("GET /application-templates", () => {
 
       const paidLeave = parsed.data.data.find((item) => item.code === "paid_leave")
 
-      expect(paidLeave?.name).toBe("Paid Leave Request")
+      expect(paidLeave?.name).toBe("有給休暇申請")
       expect(paidLeave?.category).toBe("attendance")
     }
   })

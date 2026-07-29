@@ -121,7 +121,7 @@ describe("GET /application-requests/inbox", () => {
 
       const first = parsed.data.data.find((item) => item.id === 1)
 
-      expect(first?.template_name).toBe("Paid Leave Request")
+      expect(first?.template_name).toBe("有給休暇申請")
       expect(first?.applicant_name).toBe("Emery Lane")
       expect(first?.status).toBe("pending")
     }
