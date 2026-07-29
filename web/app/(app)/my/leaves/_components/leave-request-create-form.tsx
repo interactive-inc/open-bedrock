@@ -168,6 +168,12 @@ export function LeaveRequestCreateForm() {
         夏季休暇・子の看護等休暇・介護休暇には勤続期間や所定労働日数などの資格要件があります。要件を満たすかは承認者が確認します
       </FieldDescription>
 
+      {leaveType === "annual" ? (
+        <FieldDescription>
+          年次有給休暇の付与日数は勤続期間に応じて法定されています（勤続6ヶ月=10日、1年6ヶ月=11日、2年6ヶ月=12日、3年6ヶ月=14日、4年6ヶ月=16日、5年6ヶ月=18日、6年6ヶ月以上=20日。各付与は直近1年間の出勤率8割以上が条件）。繰り越しは1年で、付与から2年で消滅します。付与日数が10日以上の場合は、付与から1年以内に5日以上取得する必要があります。付与日数の登録・出勤率や資格要件の確認はHRが行います
+        </FieldDescription>
+      ) : null}
+
       {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
       <div>
