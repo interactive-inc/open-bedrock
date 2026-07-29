@@ -26,6 +26,8 @@ export async function updateLeaveRequest(
       conflictMessages: {
         "an overlapping leave request already exists": "期間が重複する休暇申請が既にあります",
         "the leave request is already decided": "決定済みの休暇申請は変更できません",
+        "leave balance record not found": "この休暇種別の残日数が登録されていません",
+        "insufficient leave balance": "残日数が不足しているため変更できません",
       },
     })
   }

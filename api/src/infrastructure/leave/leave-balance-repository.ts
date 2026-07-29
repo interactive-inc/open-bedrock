@@ -1,5 +1,6 @@
 import { LeaveBalance } from "@/domain/leave/leave-balance.entity"
 import type { Context } from "@/env"
+import type { LeaveType } from "@/lib/schemas"
 import { leaveBalances } from "@/schema"
 import { and, eq, gte, sql } from "drizzle-orm"
 
@@ -12,7 +13,7 @@ export class LeaveBalanceRepository {
   async findByKey(props: {
     employeeId: number
     fiscalYear: string
-    leaveType: "annual" | "special"
+    leaveType: LeaveType
   }): Promise<LeaveBalance | null | Error> {
     try {
       const rows = await this.c.var.database
@@ -43,7 +44,7 @@ export class LeaveBalanceRepository {
    */
   async consumeDays(props: {
     employeeId: number
-    leaveType: "annual" | "special"
+    leaveType: LeaveType
     fiscalYear: string
     days: number
   }): Promise<ConsumeOutcome | Error> {

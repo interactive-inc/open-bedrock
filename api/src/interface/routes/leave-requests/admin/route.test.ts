@@ -43,6 +43,7 @@ async function createTestDb(): Promise<D1Database> {
       start_date: request.startDate,
       end_date: request.endDate,
       days: request.days,
+      consumed_days: request.days,
       reason: request.reason,
       status: request.status,
       approver_id: request.approverId,
