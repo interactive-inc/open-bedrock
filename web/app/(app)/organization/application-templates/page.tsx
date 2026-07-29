@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getApplicationTemplates } from "@/lib/api/get-application-templates"
 import { getMe } from "@/lib/api/get-me"
 import { canManageApplicationTemplates } from "@/lib/application/can-manage-application-templates"
+import { categoryLabel } from "@/lib/category-label"
 
 export const metadata = { title: "申請テンプレート" }
 
@@ -83,7 +84,7 @@ async function TemplatesGrid() {
             <div className="flex items-center justify-between gap-2">
               <span className="font-medium">{template.name}</span>
 
-              <Badge variant="secondary">{template.category}</Badge>
+              <Badge variant="secondary">{categoryLabel(template.category)}</Badge>
             </div>
 
             <span className="text-sm text-muted-foreground">
