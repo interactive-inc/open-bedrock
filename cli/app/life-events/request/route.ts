@@ -4,14 +4,23 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock life-events request --type <s> --date <date> [--detail <s>]`
+const LIFE_EVENT_TYPES = [
+  "marriage",
+  "divorce",
+  "childbirth",
+  "relocation",
+  "dependent_added",
+  "dependent_removed",
+] as const
+
+export const help = `bedrock life-events request --type ${LIFE_EVENT_TYPES.join("|")} --date <date> [--detail <s>]`
 
 export default factory.createHandlers(
   zValidator(
     "json",
     z.object({
       help: z.string().optional(),
-      type: z.string().optional(),
+      type: z.enum(LIFE_EVENT_TYPES).optional(),
       date: z.string().optional(),
       detail: z.string().optional(),
     }),
@@ -21,7 +30,8 @@ export default factory.createHandlers(
 
     if (query.help) return c.text(help)
 
-    if (!query.type || !query.date) throw new UsageError("--type, --date が必要です")
+    if (!query.type || !query.date)
+      throw new UsageError(`--type (${LIFE_EVENT_TYPES.join("|")}), --date が必要です`)
 
     const client = await createClient()
 

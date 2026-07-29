@@ -2,7 +2,7 @@ import { CreateLifeEvent } from "@/application/life-event/create-life-event"
 import { ApplicationError } from "@/lib/errors"
 import { zAppLifeEvent } from "@/lib/app-schemas"
 import { factory } from "@/interface/utils/factory"
-import { isoDate } from "@/lib/schemas"
+import { isoDate, lifeEventTypeSchema } from "@/lib/schemas"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"
@@ -15,7 +15,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      event_type: z.string().min(1).max(200),
+      event_type: lifeEventTypeSchema,
       event_date: isoDate,
       detail: z.string().max(3_000).nullable().optional(),
     }),

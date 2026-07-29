@@ -10,6 +10,7 @@ import type {
   LeaveStatus,
   LeaveType,
   LeaveUnit,
+  LifeEventType,
   RedemptionStatus,
   RingiStatus,
   WorkStyle,
@@ -1544,7 +1545,7 @@ export type ResignationRow = InferSelectModel<typeof resignations>
 export const lifeEvents = sqliteTable("life_events", {
   id: text("id").primaryKey(),
   employeeId: integer("employee_id").notNull(),
-  eventType: text("event_type").notNull(),
+  eventType: text("event_type").notNull().$type<LifeEventType>(),
   eventDate: text("event_date").notNull(),
   detail: text("detail"),
   status: text("status").notNull(),

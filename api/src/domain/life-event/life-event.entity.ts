@@ -1,10 +1,12 @@
+import { lifeEventTypeSchema } from "@/lib/schemas"
+import type { LifeEventType } from "@/lib/schemas"
 import type { LifeEventRow } from "@/schema"
 import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
   employeeId: z.number(),
-  eventType: z.string(),
+  eventType: lifeEventTypeSchema,
   eventDate: z.string(),
   detail: z.string().nullable(),
   status: z.enum(["submitted", "approved", "rejected"]),
@@ -41,7 +43,7 @@ export class LifeEvent implements Props {
   /** 新規ライフイベント届出を組み立てる。id は crypto.randomUUID() で採番し、status は "submitted" で作成する。 */
   static create(props: {
     employeeId: number
-    eventType: string
+    eventType: LifeEventType
     eventDate: string
     detail: string | null
     createdAt: string
@@ -74,7 +76,11 @@ export class LifeEvent implements Props {
   }
 
   /** 届出内容を変更した新しいライフイベント届出を返す。 */
-  withDetails(props: { eventType: string; eventDate: string; detail: string | null }): LifeEvent {
+  withDetails(props: {
+    eventType: LifeEventType
+    eventDate: string
+    detail: string | null
+  }): LifeEvent {
     return new LifeEvent({
       ...this.props,
       eventType: props.eventType,

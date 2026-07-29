@@ -2,13 +2,16 @@ import { LifeEventCreateForm } from "@/app/(app)/my/life-events/_components/life
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
+import { getMe } from "@/lib/api/get-me"
 
 export const metadata = { title: "新規ライフイベント届出" }
 
 /**
- * ライフイベント届出の新規作成ページ。
+ * ライフイベント届出の新規作成ページ。転居の電話番号欄は設定済みの本人の電話番号を初期値にする。
  */
-export default function NewLifeEventPage() {
+export default async function NewLifeEventPage() {
+  const me = await getMe()
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -19,7 +22,7 @@ export default function NewLifeEventPage() {
 
       <Card className="max-w-xl">
         <CardContent>
-          <LifeEventCreateForm />
+          <LifeEventCreateForm phone={me.phone} />
         </CardContent>
       </Card>
     </div>

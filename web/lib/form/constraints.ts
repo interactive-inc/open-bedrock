@@ -76,7 +76,6 @@ export const FORM_CONSTRAINTS = {
     reasonMax: 3_000,
   },
   lifeEvent: {
-    eventTypeMax: 200,
     detailMax: 3_000,
   },
   familyCareLeave: {

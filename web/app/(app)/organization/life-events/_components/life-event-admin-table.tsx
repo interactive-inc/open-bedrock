@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatDateTime } from "@/lib/format-date-time"
+import { lifeEventTypeLabel } from "@/lib/life-event-type-label"
 import { statusLabel } from "@/lib/status-label"
 
 type Row = {
@@ -53,7 +54,7 @@ export function LifeEventAdminTable(props: Props) {
           {props.rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <span className="font-medium">{row.event_type}</span>
+                <span className="font-medium">{lifeEventTypeLabel(row.event_type)}</span>
               </TableCell>
 
               <TableCell className="text-muted-foreground">
