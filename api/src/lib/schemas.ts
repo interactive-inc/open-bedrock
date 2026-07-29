@@ -81,6 +81,18 @@ export const leaveUnitSchema = z.enum(["full_day", "half_day_am", "half_day_pm",
 
 export type LeaveUnit = z.infer<typeof leaveUnitSchema>
 
+/** ライフイベント届出の種別 */
+export const lifeEventTypeSchema = z.enum([
+  "marriage",
+  "divorce",
+  "childbirth",
+  "relocation",
+  "dependent_added",
+  "dependent_removed",
+])
+
+export type LifeEventType = z.infer<typeof lifeEventTypeSchema>
+
 /** バッチジョブステータス */
 export const batchJobStatusSchema = z.enum(["running", "completed", "failed"])
 

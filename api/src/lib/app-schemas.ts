@@ -1,4 +1,4 @@
-import { leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
+import { leaveTypeSchema, leaveUnitSchema, lifeEventTypeSchema } from "@/lib/schemas"
 import { z } from "zod"
 
 /** 資産 1 件のレスポンス。廃棄済みは disposed_on / disposal_reason を伴う。 */
@@ -1237,7 +1237,7 @@ export type AppLeaveBalanceList = z.infer<typeof zAppLeaveBalanceList>
 export const zAppLifeEvent = z.object({
   id: z.string(),
   employee_id: z.number(),
-  event_type: z.string(),
+  event_type: lifeEventTypeSchema,
   event_date: z.string(),
   detail: z.string().nullable(),
   status: z.string(),
