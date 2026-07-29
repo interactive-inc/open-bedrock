@@ -3,9 +3,20 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 
+type LeaveTypeFilterValue =
+  | "annual"
+  | "special"
+  | "compensatory"
+  | "summer"
+  | "child_nursing_care"
+  | "prenatal_checkup"
+  | "menstrual"
+  | "caregiving_leave"
+  | ""
+
 type Props = {
   statusValue: "pending" | "approved" | "rejected" | ""
-  leaveTypeValue: "annual" | "special" | ""
+  leaveTypeValue: LeaveTypeFilterValue
   applicantIdValue: string
   fromValue: string
   toValue: string
@@ -22,6 +33,12 @@ const typeOptions = [
   { value: "", label: "すべて" },
   { value: "annual", label: "年次有給" },
   { value: "special", label: "特別休暇" },
+  { value: "compensatory", label: "代休" },
+  { value: "summer", label: "夏季休暇" },
+  { value: "child_nursing_care", label: "子の看護等休暇" },
+  { value: "prenatal_checkup", label: "妊婦通院休暇" },
+  { value: "menstrual", label: "生理休暇" },
+  { value: "caregiving_leave", label: "介護休暇" },
 ]
 
 export function LeaveAdminFilterForm(props: Props) {

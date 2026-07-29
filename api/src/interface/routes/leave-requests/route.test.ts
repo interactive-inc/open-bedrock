@@ -13,7 +13,7 @@ import { z } from "zod"
 const leaveRequestCreateResponseSchema = z.object({
   id: z.number(),
   employee_id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
@@ -236,7 +236,7 @@ const leaveAdminItemSchema = z.object({
   applicant_id: z.number(),
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),

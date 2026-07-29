@@ -74,6 +74,8 @@ export const GET = factory.createHandlers(
         start_date: row.startDate,
         end_date: row.endDate,
         days: row.days,
+        unit: row.unit,
+        hours: row.hours,
         status: row.status,
         created_at: row.createdAt,
       })),

@@ -54,6 +54,8 @@ export const POST = factory.createHandlers(
       start_date: updated.startDate,
       end_date: updated.endDate,
       days: updated.days,
+      unit: updated.unit,
+      hours: updated.hours,
       reason: updated.reason,
       status: updated.status,
       approver_id: updated.approverId,

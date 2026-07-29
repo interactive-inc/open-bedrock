@@ -13,7 +13,7 @@ import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-emp
 import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { factory } from "@/interface/utils/factory"
-import { isoDate, leaveTypeSchema } from "@/lib/schemas"
+import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -171,6 +171,8 @@ export const GET = factory.createHandlers(
         startDate: leaveRequests.startDate,
         endDate: leaveRequests.endDate,
         days: leaveRequests.days,
+        unit: leaveRequests.unit,
+        hours: leaveRequests.hours,
         reason: leaveRequests.reason,
         status: leaveRequests.status,
         createdAt: leaveRequests.createdAt,
@@ -197,6 +199,8 @@ export const GET = factory.createHandlers(
         start_date: row.startDate,
         end_date: row.endDate,
         days: row.days,
+        unit: row.unit,
+        hours: row.hours,
         reason: row.reason,
         status: row.status,
         created_at: row.createdAt,
@@ -219,6 +223,8 @@ export const POST = factory.createHandlers(
         leave_type: leaveTypeSchema,
         start_date: isoDate,
         end_date: isoDate,
+        unit: leaveUnitSchema.optional(),
+        hours: z.number().positive().nullable().optional(),
         reason: z.string().max(3_000).nullable().optional(),
       })
       .refine((d) => d.start_date <= d.end_date, {
@@ -240,6 +246,8 @@ export const POST = factory.createHandlers(
       leaveType: body.leave_type,
       startDate: body.start_date,
       endDate: body.end_date,
+      unit: body.unit ?? "full_day",
+      hours: body.hours ?? null,
       reason: body.reason ?? null,
       createdAt: c.env.NOW ?? new Date().toISOString(),
     })
@@ -255,6 +263,8 @@ export const POST = factory.createHandlers(
       start_date: created.startDate,
       end_date: created.endDate,
       days: created.days,
+      unit: created.unit,
+      hours: created.hours,
       reason: created.reason,
       status: created.status,
       approver_id: created.approverId,

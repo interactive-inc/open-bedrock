@@ -13,7 +13,7 @@ import { z } from "zod"
 const leaveInboxResponseSchema = z.object({
   id: z.number(),
   applicant_name: z.string(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),

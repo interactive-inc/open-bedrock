@@ -12,7 +12,7 @@ import { z } from "zod"
 
 const leaveRequestMineResponseSchema = z.object({
   id: z.number(),
-  leave_type: z.enum(["annual", "special"]),
+  leave_type: z.string(),
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
