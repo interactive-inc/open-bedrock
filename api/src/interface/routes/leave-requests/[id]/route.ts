@@ -8,7 +8,7 @@ import { NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { zAppLeaveRequestDetail } from "@/lib/app-schemas"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
-import { isoDate, leaveTypeSchema } from "@/lib/schemas"
+import { isoDate, leaveTypeSchema, leaveUnitSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -21,6 +21,8 @@ function toResponseBody(leaveRequest: LeaveRequest) {
     start_date: leaveRequest.startDate,
     end_date: leaveRequest.endDate,
     days: leaveRequest.days,
+    unit: leaveRequest.unit,
+    hours: leaveRequest.hours,
     reason: leaveRequest.reason,
     status: leaveRequest.status,
     created_at: leaveRequest.createdAt,
@@ -77,6 +79,8 @@ export const PUT = factory.createHandlers(
         leave_type: leaveTypeSchema,
         start_date: isoDate,
         end_date: isoDate,
+        unit: leaveUnitSchema.optional(),
+        hours: z.number().positive().nullable().optional(),
         reason: z.string().max(3_000).nullable().optional(),
       })
       .refine((d) => d.start_date <= d.end_date, {
@@ -105,6 +109,8 @@ export const PUT = factory.createHandlers(
       leaveType: json.leave_type,
       startDate: json.start_date,
       endDate: json.end_date,
+      unit: json.unit ?? "full_day",
+      hours: json.hours ?? null,
       reason: json.reason ?? null,
     })
 
