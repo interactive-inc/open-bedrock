@@ -37,6 +37,7 @@ describe("LeaveRequest.create", () => {
       days: 3,
       unit: "full_day",
       hours: null,
+      consumedDays: 3,
       reason: "Family trip",
       createdAt: "2026-06-15T09:00:00.000Z",
     })
@@ -65,6 +66,7 @@ describe("LeaveRequest.isModifiable", () => {
       days: 1,
       unit: "full_day",
       hours: null,
+      consumedDays: 1,
       reason: null,
       createdAt: "2026-06-15T09:00:00.000Z",
     })
@@ -82,6 +84,7 @@ describe("LeaveRequest.isModifiable", () => {
       days: 1,
       unit: "full_day",
       hours: null,
+      consumedDays: 1,
       reason: null,
       status: "approved",
       approverId: 2,
@@ -102,6 +105,7 @@ describe("LeaveRequest.isModifiable", () => {
       days: 1,
       unit: "full_day",
       hours: null,
+      consumedDays: 1,
       reason: null,
       status: "rejected",
       approverId: 3,
@@ -123,6 +127,7 @@ describe("LeaveRequest.withRevised", () => {
       days: 3,
       unit: "full_day",
       hours: null,
+      consumedDays: 3,
       reason: "Family trip",
       createdAt: "2026-06-15T09:00:00.000Z",
     })
@@ -134,6 +139,7 @@ describe("LeaveRequest.withRevised", () => {
       days: 3,
       unit: "full_day",
       hours: null,
+      consumedDays: 3,
       reason: "Wedding",
     })
 

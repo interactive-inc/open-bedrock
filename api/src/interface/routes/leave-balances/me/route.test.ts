@@ -52,6 +52,7 @@ async function createTestDb(): Promise<D1Database> {
       start_date: leaveRequest.startDate,
       end_date: leaveRequest.endDate,
       days: leaveRequest.days,
+      consumed_days: leaveRequest.days,
       reason: leaveRequest.reason,
       status: leaveRequest.status,
       approver_id: leaveRequest.approverId,

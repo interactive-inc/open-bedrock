@@ -70,10 +70,11 @@ export class LeaveRequestRepository {
   async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
     try {
       const result = await this.c.var.database.run(
-        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, reason, status, approver_id, decided_comment, created_at)
+        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
             SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
                    ${leaveRequest.startDate}, ${leaveRequest.endDate},
                    ${leaveRequest.days}, ${leaveRequest.unit}, ${leaveRequest.hours},
+                   ${leaveRequest.consumedDays},
                    ${leaveRequest.reason},
                    ${leaveRequest.status}, ${leaveRequest.approverId},
                    ${leaveRequest.decidedComment}, ${leaveRequest.createdAt}
@@ -181,11 +182,11 @@ export class LeaveRequestRepository {
             UPDATE leave_balances
             SET
               used_days = used_days + COALESCE(
-                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                (SELECT consumed_days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
                 0
               ),
               remaining_days = remaining_days - COALESCE(
-                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                (SELECT consumed_days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
                 0
               )
             WHERE employee_id = (
@@ -196,7 +197,7 @@ export class LeaveRequestRepository {
               )
               AND fiscal_year = ?2
               AND remaining_days >= COALESCE(
-                (SELECT days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
+                (SELECT consumed_days FROM leave_requests WHERE id = ?1 AND status = 'pending'),
                 0
               )
             `,
@@ -220,6 +221,7 @@ export class LeaveRequestRepository {
               days,
               unit,
               hours,
+              consumed_days AS consumedDays,
               reason,
               status,
               approver_id AS approverId,
@@ -273,7 +275,7 @@ export class LeaveRequestRepository {
 
       const balance = balanceRows.at(0)
 
-      if (balance !== undefined && balance.remainingDays < current.days) {
+      if (balance !== undefined && balance.remainingDays < current.consumedDays) {
         return "insufficient_balance"
       }
 
@@ -298,13 +300,14 @@ export class LeaveRequestRepository {
 
       const result = await this.c.var.database.run(
         sql`UPDATE leave_requests
-            SET leave_type = ${leaveRequest.leaveType},
-                start_date = ${leaveRequest.startDate},
-                end_date   = ${leaveRequest.endDate},
-                days       = ${leaveRequest.days},
-                unit       = ${leaveRequest.unit},
-                hours      = ${leaveRequest.hours},
-                reason     = ${leaveRequest.reason}
+            SET leave_type    = ${leaveRequest.leaveType},
+                start_date    = ${leaveRequest.startDate},
+                end_date      = ${leaveRequest.endDate},
+                days          = ${leaveRequest.days},
+                unit          = ${leaveRequest.unit},
+                hours         = ${leaveRequest.hours},
+                consumed_days = ${leaveRequest.consumedDays},
+                reason        = ${leaveRequest.reason}
             WHERE id = ${leaveRequest.id}
               AND status = 'pending'
               AND NOT EXISTS (
