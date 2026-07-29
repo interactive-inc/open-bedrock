@@ -180,6 +180,7 @@ import * as lifeEventsAdminRoute from "@/interface/routes/life-events/admin/rout
 import * as lifeEventsMeRoute from "@/interface/routes/life-events/me/route"
 import * as lifeEventsRoute from "@/interface/routes/life-events/route"
 import * as meDepartmentsRoute from "@/interface/routes/me/departments/route"
+import * as mePhoneRoute from "@/interface/routes/me/phone/route"
 import * as meReportsRoute from "@/interface/routes/me/reports/route"
 import * as meRoute from "@/interface/routes/me/route"
 import * as meetingMinutesRecordsIdRoute from "@/interface/routes/meeting-minutes-records/[id]/route"
@@ -560,6 +561,7 @@ export const app = appBase
   .post("/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
   .get("/me", ...meRoute.GET)
   .get("/me/departments", ...meDepartmentsRoute.GET)
+  .put("/me/phone", ...mePhoneRoute.PUT)
   .get("/me/reports", ...meReportsRoute.GET)
   .get("/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
   .put("/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
