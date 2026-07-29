@@ -3,10 +3,11 @@ import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/infrastructure/life-event/life-event-repository"
+import type { LifeEventType } from "@/lib/schemas"
 
 export type Command = {
   employeeId: number
-  eventType: string
+  eventType: LifeEventType
   eventDate: string
   detail: string | null
   createdAt: string
