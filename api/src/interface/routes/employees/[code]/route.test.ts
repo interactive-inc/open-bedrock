@@ -413,7 +413,7 @@ describe("PUT /employees/:code", () => {
 
     if (parsed.success) {
       expect(parsed.data.name).toBe("Drew Sato Updated")
-      expect(parsed.data.position).toBe("Engineering Manager")
+      expect(parsed.data.position).toBe("開発マネージャー")
       expect(parsed.data.role).toBe("manager")
     }
   })

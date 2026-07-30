@@ -50,7 +50,7 @@ describe("POST /personnel-actions", () => {
     expect(await created.json()).toMatchObject({
       kind: "position_changed",
       replayed: false,
-      summary: { positionTitle: "Senior Engineer" },
+      summary: { positionTitle: "シニアエンジニア" },
     })
     const replayed = await requestWithContext(props)
     expect(replayed.status).toBe(200)

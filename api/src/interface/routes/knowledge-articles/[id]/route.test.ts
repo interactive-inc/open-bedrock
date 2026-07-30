@@ -80,9 +80,9 @@ describe("GET /knowledge-articles/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(4)
-      expect(parsed.data.title).toBe("Goal Setting and Evaluation")
-      expect(parsed.data.category).toBe("Evaluation")
-      expect(parsed.data.tags).toBe("goal,evaluation,MBO")
+      expect(parsed.data.title).toBe("目標設定と評価")
+      expect(parsed.data.category).toBe("評価")
+      expect(parsed.data.tags).toBe("目標,評価,MBO")
       expect(parsed.data.body_md.length).toBeGreaterThan(0)
     }
   })

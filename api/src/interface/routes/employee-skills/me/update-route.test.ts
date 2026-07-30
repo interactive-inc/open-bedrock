@@ -107,7 +107,7 @@ describe("PUT /employee-skills/me", () => {
     if (parsed.success) {
       expect(parsed.data.skill_code).toBe("react")
       expect(parsed.data.skill_name).toBe("React")
-      expect(parsed.data.skill_category).toBe("Frontend")
+      expect(parsed.data.skill_category).toBe("フロントエンド")
       expect(parsed.data.level).toBe(4)
       expect(parsed.data.years).toBe(3)
       expect(parsed.data.note).toBeNull()

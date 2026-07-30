@@ -1,12 +1,12 @@
 -- org ドメインの seed
 
 INSERT INTO departments (id, name) VALUES
-  (1, 'Corporate Planning'),
-  (2, 'Human Resources'),
-  (3, 'Engineering'),
-  (4, 'Sales'),
-  (5, 'Customer Success'),
-  (6, 'Administration');
+  (1, '経営企画部'),
+  (2, '人事部'),
+  (3, '開発部'),
+  (4, '営業部'),
+  (5, 'カスタマーサクセス部'),
+  (6, '総務部');
 
 INSERT INTO org_departments (code, department_id, parent_code, manager_employee_code, sort_order) VALUES
   ('D001', 1, NULL, 'E001', 1),

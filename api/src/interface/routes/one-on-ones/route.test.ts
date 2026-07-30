@@ -100,7 +100,7 @@ describe("GET /one-on-ones", () => {
 
       expect(session?.member_name).toBe("Emery Lane")
       expect(session?.manager_name).toBe("Drew Sato")
-      expect(session?.topics).toBe("Goal progress and career direction")
+      expect(session?.topics).toBe("目標の進捗とキャリアの方向性")
     }
   })
 

@@ -17,7 +17,7 @@ export const seedEmployeeEvents: ReadonlyArray<SeedEmployeeEvent> = [
     effectiveDate: "2024-04-01",
     fromDepartmentCode: null,
     toDepartmentCode: "D003",
-    note: "New graduate hire",
+    note: "新卒入社",
     createdAt: "2024-04-01T00:00:00.000Z",
   },
   {
@@ -27,7 +27,7 @@ export const seedEmployeeEvents: ReadonlyArray<SeedEmployeeEvent> = [
     effectiveDate: "2025-10-01",
     fromDepartmentCode: "D003",
     toDepartmentCode: "D003",
-    note: "Team change",
+    note: "チーム異動",
     createdAt: "2025-10-01T00:00:00.000Z",
   },
   {

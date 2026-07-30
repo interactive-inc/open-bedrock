@@ -100,7 +100,7 @@ describe("GET /departments/:code/members", () => {
 
       expect(manager?.is_manager).toBe(true)
       expect(manager?.employee_name).toBe("Drew Sato")
-      expect(manager?.position).toBe("Engineering Manager")
+      expect(manager?.position).toBe("開発マネージャー")
 
       const memberE005 = parsed.data.find((member) => member.employee_code === "E005")
 

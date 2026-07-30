@@ -9,12 +9,12 @@ INSERT INTO application_templates (id, code, name, category, description, schema
   (4, 'equipment', '備品購入申請', 'general_affairs', '業務用備品の購入を申請します', '{"fields":[{"id":"item","label":"品目","type":"text","required":true,"description":null,"options":null},{"id":"amount","label":"金額","type":"number","required":true,"description":null,"options":null},{"id":"reason","label":"理由","type":"text","required":false,"description":null,"options":null}]}', '["manager","root"]');
 
 INSERT INTO application_requests (id, template_id, applicant_id, status, current_step, payload, created_at) VALUES
-  (1, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-06-10","end_date":"2026-06-12","reason":"personal"}', '2026-05-20T01:00:00Z'),
-  (2, 2, 9, 'pending', 'manager_approval', '{"amount":12000,"category":"transport","note":"client visit"}', '2026-05-22T02:30:00Z'),
-  (3, 3, 10, 'approved', NULL, '{"date":"2026-05-15","reason":"focus work"}', '2026-05-10T00:00:00Z'),
-  (4, 4, 13, 'rejected', NULL, '{"item":"monitor","amount":45000,"reason":"dual monitor setup"}', '2026-05-05T05:00:00Z'),
-  (5, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-07-01","end_date":"2026-07-01","reason":"appointment"}', '2026-05-25T03:00:00Z');
+  (1, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-06-10","end_date":"2026-06-12","reason":"私用"}', '2026-05-20T01:00:00Z'),
+  (2, 2, 9, 'pending', 'manager_approval', '{"amount":12000,"category":"transport","note":"取引先訪問"}', '2026-05-22T02:30:00Z'),
+  (3, 3, 10, 'approved', NULL, '{"date":"2026-05-15","reason":"集中作業"}', '2026-05-10T00:00:00Z'),
+  (4, 4, 13, 'rejected', NULL, '{"item":"モニター","amount":45000,"reason":"デュアルモニター環境構築"}', '2026-05-05T05:00:00Z'),
+  (5, 1, 5, 'pending', 'manager_approval', '{"start_date":"2026-07-01","end_date":"2026-07-01","reason":"通院"}', '2026-05-25T03:00:00Z');
 
 INSERT INTO application_approvals (id, application_id, approver_id, action, comment, created_at) VALUES
-  (1, 3, 4, 'approve', 'no issues', '2026-05-11T00:00:00Z'),
-  (2, 4, 13, 'reject', 'over budget for this term', '2026-05-06T00:00:00Z');
+  (1, 3, 4, 'approve', '問題なし', '2026-05-11T00:00:00Z'),
+  (2, 4, 13, 'reject', '今期の予算を超過しているため', '2026-05-06T00:00:00Z');

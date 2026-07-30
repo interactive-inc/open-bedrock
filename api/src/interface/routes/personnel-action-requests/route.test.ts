@@ -140,7 +140,7 @@ describe("POST /personnel-action-requests", () => {
       await db
         .prepare(
           `SELECT COUNT(*) FROM employee_org_assignment_period_versions
-           WHERE employee_id = 5 AND position_title = 'Senior Engineer'`,
+           WHERE employee_id = 5 AND position_title = 'シニアエンジニア'`,
         )
         .first<number>("COUNT(*)"),
     ).toBe(1)
@@ -219,7 +219,7 @@ describe("POST /personnel-action-requests", () => {
       eventOn: "2026-02-01",
       departmentCode: "D003",
       assignmentType: "primary",
-      positionTitle: "Senior Engineer",
+      positionTitle: "シニアエンジニア",
       changeType: "promotion",
     }
     expect(await candidateDetail.json()).toMatchObject({
@@ -370,7 +370,7 @@ describe("POST /personnel-action-requests", () => {
         .bind(body.application_id)
         .first<number>("target_employee_id"),
     ).toBe(employeeId)
-    // positionCode "ENGINEER" は発令の assignment に解決後のマスタ名 "Engineer" で保存される。
+    // positionCode "ENGINEER" は発令の assignment に解決後のマスタ名 "エンジニア" で保存される。
     expect(
       await db
         .prepare(
@@ -379,7 +379,7 @@ describe("POST /personnel-action-requests", () => {
         )
         .bind(employeeId)
         .first<string>("position_title"),
-    ).toBe("Engineer")
+    ).toBe("エンジニア")
   })
 
   test("rejects a hire that sets a position without a department with 422", async () => {

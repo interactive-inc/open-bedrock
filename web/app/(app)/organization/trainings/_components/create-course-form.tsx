@@ -53,7 +53,7 @@ export function CreateCourseForm() {
         <Field>
           <FieldLabel htmlFor="course-category">カテゴリ</FieldLabel>
 
-          <Input id="course-category" name="category" placeholder="compliance" required />
+          <Input id="course-category" name="category" placeholder="コンプライアンス" required />
         </Field>
 
         <Field>

@@ -13,7 +13,7 @@ export const seedEmployeeGrades: ReadonlyArray<SeedEmployeeGrade> = [
     employeeId: 5,
     gradeId: 2,
     effectiveDate: "2025-04-01",
-    reason: "Initial assignment",
+    reason: "初回設定",
     createdAt: "2025-04-01T00:00:00.000Z",
   },
   {
@@ -21,7 +21,7 @@ export const seedEmployeeGrades: ReadonlyArray<SeedEmployeeGrade> = [
     employeeId: 5,
     gradeId: 3,
     effectiveDate: "2026-04-01",
-    reason: "Promotion",
+    reason: "昇格",
     createdAt: "2026-04-01T00:00:00.000Z",
   },
   {

@@ -14,8 +14,8 @@ type SeedLicense = {
 export const seedLicenses: ReadonlyArray<SeedLicense> = [
   {
     id: 1,
-    name: "Project Tracker",
-    vendor: "Example SaaS Inc",
+    name: "プロジェクト管理ツール",
+    vendor: "サンプルSaaS株式会社",
     category: "saas",
     seats: 50,
     renewalDeadline: "2026-03-31",
@@ -26,7 +26,7 @@ export const seedLicenses: ReadonlyArray<SeedLicense> = [
   },
   {
     id: 2,
-    name: "Design Suite",
+    name: "デザイン制作ソフト",
     vendor: null,
     category: "software",
     seats: 10,

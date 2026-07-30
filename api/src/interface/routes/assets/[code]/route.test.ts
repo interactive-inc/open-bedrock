@@ -137,7 +137,7 @@ describe("GET /assets/:code", () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
       code: "A0001",
-      name: "Standard Laptop 14",
+      name: "標準ノートPC 14インチ",
       kind: "pc",
       status: "lent",
       serial: null,

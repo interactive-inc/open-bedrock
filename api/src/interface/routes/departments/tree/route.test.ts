@@ -106,7 +106,7 @@ describe("GET /departments/tree", () => {
     if (parsed.success) {
       expect(parsed.data.length).toBe(1)
       expect(parsed.data[0]?.code).toBe("D001")
-      expect(parsed.data[0]?.name).toBe("Corporate Planning")
+      expect(parsed.data[0]?.name).toBe("経営企画部")
       expect(parsed.data[0]?.children.length).toBe(4)
     }
   })

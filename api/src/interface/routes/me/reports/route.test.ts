@@ -109,8 +109,8 @@ describe("GET /me/reports", () => {
       const first = parsed.data.data.find((report) => report.code === "E002")
 
       expect(first?.name).toBe("Blake Morgan")
-      expect(first?.dept_name).toBe("Human Resources")
-      expect(first?.position).toBe("HR Manager")
+      expect(first?.dept_name).toBe("人事部")
+      expect(first?.position).toBe("人事マネージャー")
     }
   })
 

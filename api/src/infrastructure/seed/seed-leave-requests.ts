@@ -21,7 +21,7 @@ export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
     startDate: "2026-06-01",
     endDate: "2026-06-03",
     days: 3,
-    reason: "personal matters",
+    reason: "私用のため",
     status: "pending",
     approverId: null,
     decidedComment: null,
@@ -37,7 +37,7 @@ export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
     reason: null,
     status: "approved",
     approverId: 4,
-    decidedComment: "approved",
+    decidedComment: "承認しました",
     createdAt: "2026-05-21T00:00:00Z",
   },
 ]
