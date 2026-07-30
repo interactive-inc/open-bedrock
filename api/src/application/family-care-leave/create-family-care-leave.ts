@@ -43,7 +43,7 @@ export class CreateFamilyCareLeave {
 
     // 条件付き INSERT が 0 行だった場合は並行リクエストによる期間重複。
     if (created === null) {
-      return new ConflictError("overlapping family care leave", "overlapping_leave")
+      return new ConflictError("休業期間が既存の申出と重複しています", "overlapping_leave")
     }
 
     return created
