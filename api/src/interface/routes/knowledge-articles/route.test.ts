@@ -96,14 +96,14 @@ describe("GET /knowledge-articles", () => {
 
       const first = parsed.data.data.find((item) => item.id === 1)
 
-      expect(first?.title).toBe("Remote Work Policy")
-      expect(first?.category).toBe("Policy")
+      expect(first?.title).toBe("リモートワーク規程")
+      expect(first?.category).toBe("規程")
       expect(first?.snippet.length).toBeGreaterThan(0)
     }
   })
 
   test("filters by category query", async () => {
-    const response = await request("/knowledge-articles?category=Accounting", await memberToken())
+    const response = await request("/knowledge-articles?category=経理", await memberToken())
 
     expect(response.status).toBe(200)
 
@@ -119,7 +119,7 @@ describe("GET /knowledge-articles", () => {
   })
 
   test("filters by keyword query", async () => {
-    const response = await request("/knowledge-articles?q=remote", await memberToken())
+    const response = await request("/knowledge-articles?q=リモートワーク", await memberToken())
 
     expect(response.status).toBe(200)
 

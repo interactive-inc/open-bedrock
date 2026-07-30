@@ -3,21 +3,21 @@
 -- 値は src/infrastructure/seed/seed-knowledge-articles.ts と一致させること。
 
 INSERT INTO knowledge_articles (id, title, category, tags, body_md, author_id, created_at) VALUES
-(1, 'Remote Work Policy', 'Policy', 'remote,attendance,wfh', '## Remote Work Policy
+(1, 'リモートワーク規程', '規程', 'リモートワーク,勤怠,在宅勤務', '## リモートワーク規程
 
-Up to three days of remote work per week are allowed. Submit a remote work request in advance.', 2, '2026-01-05T00:00:00Z'),
-(2, 'Expense Reimbursement Procedure', 'Accounting', 'expense,reimbursement,advance', '## Expense Reimbursement
+週3日までリモートワークが可能です。事前にリモートワーク申請を提出してください。', 2, '2026-01-05T00:00:00Z'),
+(2, '経費精算手続き', '経理', '経費,精算,立替', '## 経費精算
 
-Attach receipts and submit advanced expenses through the expense request. The cutoff is the last day of each month.', 16, '2026-01-10T00:00:00Z'),
-(3, 'Onboarding Guide', 'Onboarding', 'onboarding,training,newcomer', '## Onboarding
+領収書を添付し、立替経費は経費申請から提出してください。締め切りは毎月末日です。', 16, '2026-01-10T00:00:00Z'),
+(3, 'オンボーディングガイド', 'オンボーディング', 'オンボーディング,研修,新入社員', '## オンボーディング
 
-Accounts are issued on day one, department training happens in week one, and a one-on-one is held in the first month.', 3, '2026-02-01T00:00:00Z'),
-(4, 'Goal Setting and Evaluation', 'Evaluation', 'goal,evaluation,MBO', '## Goal Setting
+初日にアカウントを発行し、1週目に部署研修を行い、初月に1on1を実施します。', 3, '2026-02-01T00:00:00Z'),
+(4, '目標設定と評価', '評価', '目標,評価,MBO', '## 目標設定
 
-Goals are set each half year and evaluated in three stages: self evaluation, manager evaluation, and final evaluation.', 2, '2026-02-15T00:00:00Z'),
-(5, 'Meeting Room Booking Rules', 'Administration', 'meeting room,booking,facility', '## Meeting Room Booking
+半期ごとに目標を設定し、自己評価・上長評価・最終評価の3段階で評価します。', 2, '2026-02-15T00:00:00Z'),
+(5, '会議室予約ルール', '総務', '会議室,予約,設備', '## 会議室予約
 
-Book rooms with the karte room command. Restore the room to its original state after use.', 16, '2026-03-01T00:00:00Z'),
-(6, 'Information Security Policy', 'Security', 'security,information management,compliance', '## Information Security
+会議室予約機能から予約してください。使用後は原状回復してください。', 16, '2026-03-01T00:00:00Z'),
+(6, '情報セキュリティ規程', 'セキュリティ', 'セキュリティ,情報管理,コンプライアンス', '## 情報セキュリティ
 
-Do not take confidential information off premises and change your password regularly.', 1, '2026-03-10T00:00:00Z');
+機密情報を社外に持ち出さず、パスワードは定期的に変更してください。', 1, '2026-03-10T00:00:00Z');

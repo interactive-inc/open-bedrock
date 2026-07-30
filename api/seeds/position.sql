@@ -4,15 +4,15 @@
 -- name は seeds/employee.sql の employees.position と一致させ、発令・登録の code 参照で解決される先にする。
 
 INSERT INTO position_definitions (id, code, name, rank, description, created_at) VALUES
-  (1, 'CTO', 'CTO', 1, 'Chief Technology Officer', '2026-01-01T00:00:00.000Z'),
-  (2, 'HR_MANAGER', 'HR Manager', 2, NULL, '2026-01-01T00:00:00.000Z'),
-  (3, 'ENGINEERING_MANAGER', 'Engineering Manager', 3, NULL, '2026-01-01T00:00:00.000Z'),
-  (4, 'SALES_MANAGER', 'Sales Manager', 4, NULL, '2026-01-01T00:00:00.000Z'),
-  (5, 'CS_MANAGER', 'CS Manager', 5, NULL, '2026-01-01T00:00:00.000Z'),
-  (6, 'ADMIN_MANAGER', 'Admin Manager', 6, NULL, '2026-01-01T00:00:00.000Z'),
-  (7, 'SENIOR_ENGINEER', 'Senior Engineer', 7, NULL, '2026-01-01T00:00:00.000Z'),
-  (8, 'ENGINEER', 'Engineer', 8, NULL, '2026-01-01T00:00:00.000Z'),
-  (9, 'HR_STAFF', 'HR Staff', 9, NULL, '2026-01-01T00:00:00.000Z'),
-  (10, 'SALES_STAFF', 'Sales Staff', 10, NULL, '2026-01-01T00:00:00.000Z'),
-  (11, 'CS_STAFF', 'CS Staff', 11, NULL, '2026-01-01T00:00:00.000Z'),
-  (12, 'ADMIN_STAFF', 'Admin Staff', 12, NULL, '2026-01-01T00:00:00.000Z');
+  (1, 'CTO', '最高技術責任者', 1, 'CTO（Chief Technology Officer）', '2026-01-01T00:00:00.000Z'),
+  (2, 'HR_MANAGER', '人事マネージャー', 2, NULL, '2026-01-01T00:00:00.000Z'),
+  (3, 'ENGINEERING_MANAGER', '開発マネージャー', 3, NULL, '2026-01-01T00:00:00.000Z'),
+  (4, 'SALES_MANAGER', '営業マネージャー', 4, NULL, '2026-01-01T00:00:00.000Z'),
+  (5, 'CS_MANAGER', 'カスタマーサクセスマネージャー', 5, NULL, '2026-01-01T00:00:00.000Z'),
+  (6, 'ADMIN_MANAGER', '総務マネージャー', 6, NULL, '2026-01-01T00:00:00.000Z'),
+  (7, 'SENIOR_ENGINEER', 'シニアエンジニア', 7, NULL, '2026-01-01T00:00:00.000Z'),
+  (8, 'ENGINEER', 'エンジニア', 8, NULL, '2026-01-01T00:00:00.000Z'),
+  (9, 'HR_STAFF', '人事担当', 9, NULL, '2026-01-01T00:00:00.000Z'),
+  (10, 'SALES_STAFF', '営業担当', 10, NULL, '2026-01-01T00:00:00.000Z'),
+  (11, 'CS_STAFF', 'カスタマーサクセス担当', 11, NULL, '2026-01-01T00:00:00.000Z'),
+  (12, 'ADMIN_STAFF', '総務担当', 12, NULL, '2026-01-01T00:00:00.000Z');

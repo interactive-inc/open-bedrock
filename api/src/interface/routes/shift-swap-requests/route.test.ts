@@ -157,7 +157,7 @@ describe("GET /shift-swap-requests", () => {
       expect(parsed.data.data[0]?.status).toBe("pending")
       expect(parsed.data.data[0]?.requester_employee_code).toBe("E005")
       expect(parsed.data.data[0]?.target_employee_code).toBe("E004")
-      expect(parsed.data.data[0]?.note).toBe("Medical appointment")
+      expect(parsed.data.data[0]?.note).toBe("通院のため")
     }
   })
 

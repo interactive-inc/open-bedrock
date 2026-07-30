@@ -17,7 +17,7 @@ export const seedShiftAssignments: ReadonlyArray<SeedShiftAssignment> = [
     note: null,
     publishedAt: "2026-05-20T09:00:00Z",
   },
-  { id: 2, employeeId: 5, patternId: 2, date: "2026-06-02", note: "Training", publishedAt: null },
+  { id: 2, employeeId: 5, patternId: 2, date: "2026-06-02", note: "研修", publishedAt: null },
   {
     id: 3,
     employeeId: 4,

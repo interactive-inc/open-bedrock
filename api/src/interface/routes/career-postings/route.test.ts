@@ -96,8 +96,8 @@ describe("GET /career-postings", () => {
 
       const first = parsed.data.data.find((posting) => posting.id === 1)
 
-      expect(first?.title).toBe("Product Development Lead")
-      expect(first?.dept_name).toBe("Engineering")
+      expect(first?.title).toBe("プロダクト開発リード")
+      expect(first?.dept_name).toBe("開発部")
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
       const closed = parsed.data.data.find((posting) => posting.id === 3)

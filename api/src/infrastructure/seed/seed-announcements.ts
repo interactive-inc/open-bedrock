@@ -11,8 +11,8 @@ type SeedAnnouncement = {
 export const seedAnnouncements: ReadonlyArray<SeedAnnouncement> = [
   {
     id: 1,
-    title: "Office Move Notice",
-    bodyMd: "We are moving to a new office on the 10th floor.",
+    title: "オフィス移転のお知らせ",
+    bodyMd: "10階の新オフィスへ移転します。",
     publishedOn: "2026-02-01",
     authorEmployeeId: 1,
     status: "published",
@@ -20,8 +20,8 @@ export const seedAnnouncements: ReadonlyArray<SeedAnnouncement> = [
   },
   {
     id: 2,
-    title: "Summer Holiday Schedule",
-    bodyMd: "The summer holidays will run from August 12 to 16.",
+    title: "夏季休暇のスケジュール",
+    bodyMd: "夏季休暇は8月12日から16日までです。",
     publishedOn: "2026-06-15",
     authorEmployeeId: 1,
     status: "published",
@@ -29,8 +29,8 @@ export const seedAnnouncements: ReadonlyArray<SeedAnnouncement> = [
   },
   {
     id: 3,
-    title: "Draft: New Expense Policy",
-    bodyMd: "Details of the upcoming expense policy revision.",
+    title: "下書き: 新経費規程",
+    bodyMd: "近日改定予定の経費規程の詳細です。",
     publishedOn: null,
     authorEmployeeId: 1,
     status: "draft",
@@ -38,8 +38,8 @@ export const seedAnnouncements: ReadonlyArray<SeedAnnouncement> = [
   },
   {
     id: 4,
-    title: "Archived: Old Parking Rules",
-    bodyMd: "The old parking rules that no longer apply.",
+    title: "アーカイブ: 旧駐車場ルール",
+    bodyMd: "現在は適用されない旧駐車場ルールです。",
     publishedOn: "2025-01-10",
     authorEmployeeId: 1,
     status: "archived",

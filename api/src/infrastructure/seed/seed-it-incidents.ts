@@ -13,8 +13,8 @@ export const seedItIncidents: ReadonlyArray<SeedItIncident> = [
   {
     id: 1,
     occurredAt: "2026-01-20T09:00:00Z",
-    title: "Login outage",
-    summary: "Users could not sign in for 30 minutes.",
+    title: "ログイン障害",
+    summary: "30分間ログインできない状態が発生した。",
     severity: "high",
     status: "resolved",
     resolvedAt: "2026-01-20T09:30:00Z",
@@ -23,8 +23,8 @@ export const seedItIncidents: ReadonlyArray<SeedItIncident> = [
   {
     id: 2,
     occurredAt: "2026-02-01T14:00:00Z",
-    title: "Slow report generation",
-    summary: "Monthly reports took longer than usual.",
+    title: "レポート生成の遅延",
+    summary: "月次レポートの生成が通常より遅かった。",
     severity: "low",
     status: "open",
     resolvedAt: null,

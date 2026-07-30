@@ -6,9 +6,9 @@ type SeedRoom = {
 }
 
 export const seedRooms: ReadonlyArray<SeedRoom> = [
-  { id: 1, name: "Large Meeting Room A", capacity: 20, location: "5F" },
-  { id: 2, name: "Medium Meeting Room B", capacity: 10, location: "5F" },
-  { id: 3, name: "Small Meeting Room C", capacity: 6, location: "4F" },
-  { id: 4, name: "Focus Booth 1", capacity: 2, location: "4F" },
-  { id: 5, name: "Online Meeting Room", capacity: 8, location: null },
+  { id: 1, name: "大会議室A", capacity: 20, location: "5階" },
+  { id: 2, name: "中会議室B", capacity: 10, location: "5階" },
+  { id: 3, name: "小会議室C", capacity: 6, location: "4階" },
+  { id: 4, name: "集中ブース1", capacity: 2, location: "4階" },
+  { id: 5, name: "オンライン会議室", capacity: 8, location: null },
 ]

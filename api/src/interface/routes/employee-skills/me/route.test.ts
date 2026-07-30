@@ -107,7 +107,7 @@ describe("GET /employee-skills/me", () => {
       const typescript = parsed.data.data.find((row) => row.skill_code === "typescript")
 
       expect(typescript?.skill_name).toBe("TypeScript")
-      expect(typescript?.skill_category).toBe("Programming")
+      expect(typescript?.skill_category).toBe("プログラミング")
       expect(typescript?.level).toBe(5)
       expect(typescript?.years).toBe(8)
     }

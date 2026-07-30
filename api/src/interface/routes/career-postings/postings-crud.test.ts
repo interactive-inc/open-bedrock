@@ -191,7 +191,7 @@ describe("GET /career-postings/:posting_id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(1)
-      expect(parsed.data.title).toBe("Product Development Lead")
+      expect(parsed.data.title).toBe("プロダクト開発リード")
     }
   })
 

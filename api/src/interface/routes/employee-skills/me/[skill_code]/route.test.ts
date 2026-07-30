@@ -112,7 +112,7 @@ describe("GET /employee-skills/me/:skill_code", () => {
     if (parsed.success) {
       expect(parsed.data.skill_code).toBe("typescript")
       expect(parsed.data.skill_name).toBe("TypeScript")
-      expect(parsed.data.skill_category).toBe("Programming")
+      expect(parsed.data.skill_category).toBe("プログラミング")
       expect(parsed.data.level).toBe(5)
       expect(parsed.data.years).toBe(8)
     }

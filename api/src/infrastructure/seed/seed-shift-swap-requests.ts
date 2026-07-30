@@ -15,7 +15,7 @@ export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
     requesterEmployeeId: 5,
     targetEmployeeId: 4,
     date: "2026-06-01",
-    note: "Medical appointment",
+    note: "通院のため",
     status: "pending",
     approvedAt: null,
   },

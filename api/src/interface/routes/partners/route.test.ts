@@ -112,7 +112,7 @@ describe("GET /partners", () => {
   })
 
   test("filters by keyword", async () => {
-    const response = await request("/partners?q=Beta", await tokenFor(5, "member"))
+    const response = await request("/partners?q=商事", await tokenFor(5, "member"))
 
     expect(response.status).toBe(200)
 
