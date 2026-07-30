@@ -714,6 +714,12 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
+        space: "my",
+        label: "サンクス履歴",
+        href: "/my/thanks",
+        visibility: everyone,
+      },
+      {
         space: "organization",
         label: "サンクス",
         href: "/organization/thanks",

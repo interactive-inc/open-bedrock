@@ -1,7 +1,7 @@
 import { Thanks } from "@/domain/thanks/thanks.entity"
 import type { Context } from "@/env"
 import { thanks } from "@/schema"
-import { desc } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 
 export class ThanksRepository {
   constructor(private readonly c: Context) {}
@@ -41,6 +41,27 @@ export class ThanksRepository {
       return rows.map((row) => Thanks.fromRow(row))
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load thanks")
+    }
+  }
+
+  /** 自分が送った感謝を新しい順（同時刻は id 降順）でページング取得する。 */
+  async findBySender(props: {
+    senderEmployeeId: number
+    limit: number
+    offset: number
+  }): Promise<ReadonlyArray<Thanks> | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(thanks)
+        .where(eq(thanks.senderEmployeeId, props.senderEmployeeId))
+        .orderBy(desc(thanks.createdAt), desc(thanks.id))
+        .limit(props.limit)
+        .offset(props.offset)
+
+      return rows.map((row) => Thanks.fromRow(row))
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load sent thanks")
     }
   }
 }
