@@ -351,10 +351,7 @@ export const app = appBase
   .put("/application-requests/:id", ...applicationRequestsIdRoute.PUT)
   .delete("/application-requests/:id", ...applicationRequestsIdRoute.DELETE)
   .post("/application-requests/:id/approve", ...applicationRequestsIdApproveRoute.POST)
-  .post(
-    "/application-requests/:id/reassign-workflow-step",
-    ...applicationRequestsIdReassignWorkflowStepRoute.POST,
-  )
+  .post("/application-requests/:id/reassign-workflow-step", ...applicationRequestsIdReassignWorkflowStepRoute.POST)
   .post("/application-requests/:id/reject", ...applicationRequestsIdRejectRoute.POST)
   .post("/application-requests/:id/resubmit", ...applicationRequestsIdResubmitRoute.POST)
   .get("/application-templates", ...applicationTemplatesRoute.GET)
@@ -398,14 +395,8 @@ export const app = appBase
   .get("/batch", ...batchRoute.GET)
   .post("/batch/employee-lifecycle/backfill", ...batchEmployeeLifecycleBackfillRoute.POST)
   .post("/batch/employee-lifecycle/preflight", ...batchEmployeeLifecyclePreflightRoute.POST)
-  .post(
-    "/batch/employee-lifecycle/process-outbox",
-    ...batchEmployeeLifecycleProcessOutboxRoute.POST,
-  )
-  .post(
-    "/batch/employee-lifecycle/rebuild-projections",
-    ...batchEmployeeLifecycleRebuildProjectionsRoute.POST,
-  )
+  .post("/batch/employee-lifecycle/process-outbox", ...batchEmployeeLifecycleProcessOutboxRoute.POST)
+  .post("/batch/employee-lifecycle/rebuild-projections", ...batchEmployeeLifecycleRebuildProjectionsRoute.POST)
   .post("/batch/employee-lifecycle/verify", ...batchEmployeeLifecycleVerifyRoute.POST)
   .post("/batch/migrate-password-hashes", ...batchMigratePasswordHashesRoute.POST)
   .post("/bootstrap", ...bootstrapRoute.POST)
@@ -518,18 +509,9 @@ export const app = appBase
   .post("/governance-documents/sync", ...governanceDocumentsSyncRoute.POST)
   .get("/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
   .post("/governance-documents/:code/acknowledge", ...governanceDocumentsCodeAcknowledgeRoute.POST)
-  .post(
-    "/governance-documents/:code/versions/:version/publish",
-    ...governanceDocumentsCodeVersionsVersionPublishRoute.POST,
-  )
-  .post(
-    "/governance-documents/:code/versions/:version/review",
-    ...governanceDocumentsCodeVersionsVersionReviewRoute.POST,
-  )
-  .post(
-    "/governance-documents/:code/versions/:version/submit-review",
-    ...governanceDocumentsCodeVersionsVersionSubmitReviewRoute.POST,
-  )
+  .post("/governance-documents/:code/versions/:version/publish", ...governanceDocumentsCodeVersionsVersionPublishRoute.POST)
+  .post("/governance-documents/:code/versions/:version/review", ...governanceDocumentsCodeVersionsVersionReviewRoute.POST)
+  .post("/governance-documents/:code/versions/:version/submit-review", ...governanceDocumentsCodeVersionsVersionSubmitReviewRoute.POST)
   .get("/governance-org-roles", ...governanceOrgRolesRoute.GET)
   .delete("/governance-org-roles/assignments/:id", ...governanceOrgRolesAssignmentsIdRoute.DELETE)
   .post("/governance-org-roles/:code/assignments", ...governanceOrgRolesCodeAssignmentsRoute.POST)
@@ -599,10 +581,7 @@ export const app = appBase
   .delete("/notifications/:id", ...notificationsIdRoute.DELETE)
   .post("/notifications/:id/read", ...notificationsIdReadRoute.POST)
   .post("/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
-  .get(
-    "/onboarding-assignments/employees/:employee_code",
-    ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET,
-  )
+  .get("/onboarding-assignments/employees/:employee_code", ...onboardingAssignmentsEmployeesEmployeeCodeRoute.GET)
   .get("/onboarding-assignments/me", ...onboardingAssignmentsMeRoute.GET)
   .get("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.GET)
   .put("/onboarding-assignments/:id", ...onboardingAssignmentsIdRoute.PUT)
@@ -614,14 +593,8 @@ export const app = appBase
   .get("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.GET)
   .put("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.PUT)
   .delete("/onboarding-templates/:code", ...onboardingTemplatesCodeRoute.DELETE)
-  .put(
-    "/onboarding-templates/:code/lifecycle-binding",
-    ...onboardingTemplatesCodeLifecycleBindingRoute.PUT,
-  )
-  .delete(
-    "/onboarding-templates/:code/lifecycle-binding",
-    ...onboardingTemplatesCodeLifecycleBindingRoute.DELETE,
-  )
+  .put("/onboarding-templates/:code/lifecycle-binding", ...onboardingTemplatesCodeLifecycleBindingRoute.PUT)
+  .delete("/onboarding-templates/:code/lifecycle-binding", ...onboardingTemplatesCodeLifecycleBindingRoute.DELETE)
   .get("/one-on-ones", ...oneOnOnesRoute.GET)
   .post("/one-on-ones", ...oneOnOnesRoute.POST)
   .get("/one-on-ones/me", ...oneOnOnesMeRoute.GET)
@@ -689,10 +662,7 @@ export const app = appBase
   .post("/review-cycles/:cycle_id/open", ...reviewCyclesCycleIdOpenRoute.POST)
   .get("/review-cycles/:cycle_id/policy", ...reviewCyclesCycleIdPolicyRoute.GET)
   .put("/review-cycles/:cycle_id/policy", ...reviewCyclesCycleIdPolicyRoute.PUT)
-  .get(
-    "/review-cycles/:cycle_id/results/:employee_code",
-    ...reviewCyclesCycleIdResultsEmployeeCodeRoute.GET,
-  )
+  .get("/review-cycles/:cycle_id/results/:employee_code", ...reviewCyclesCycleIdResultsEmployeeCodeRoute.GET)
   .get("/review-forms", ...reviewFormsRoute.GET)
   .get("/review-forms/me", ...reviewFormsMeRoute.GET)
   .post("/review-forms/:form_id/submit", ...reviewFormsFormIdSubmitRoute.POST)
