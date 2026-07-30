@@ -31,7 +31,7 @@ describe("GET /employees/:code/lifecycle-state", () => {
       organization_revision: 0,
       primary_assignment: {
         department_code: "D003",
-        department_name: "Engineering",
+        department_name: "開発部",
         manager_employee_code: "E004",
       },
     })

@@ -162,7 +162,7 @@ describe("GET /assets", () => {
 
     expect(asset).toMatchObject({
       code: "A0001",
-      name: "Standard Laptop 14",
+      name: "標準ノートPC 14インチ",
       kind: "pc",
       status: "lent",
       serial: null,

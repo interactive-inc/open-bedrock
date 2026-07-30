@@ -130,7 +130,7 @@ describe("GET /department-budgets", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
-      expect(parsed.data.data[0]?.department_name).toBe("Engineering")
+      expect(parsed.data.data[0]?.department_name).toBe("開発部")
     }
   })
 

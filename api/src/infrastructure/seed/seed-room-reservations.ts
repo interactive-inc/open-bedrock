@@ -14,7 +14,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
     reserverId: 2,
     startAt: "2026-05-29T01:00:00Z",
     endAt: "2026-05-29T02:00:00Z",
-    purpose: "All-hands standup",
+    purpose: "全社定例スタンドアップ",
   },
   {
     id: "00000000-0000-0000-0000-000000000002",
@@ -22,7 +22,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
     reserverId: 4,
     startAt: "2026-05-29T03:00:00Z",
     endAt: "2026-05-29T04:00:00Z",
-    purpose: "Sprint review",
+    purpose: "スプリントレビュー",
   },
   {
     id: "00000000-0000-0000-0000-000000000003",
@@ -30,6 +30,6 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
     reserverId: 9,
     startAt: "2026-05-29T05:00:00Z",
     endAt: "2026-05-29T06:00:00Z",
-    purpose: "Sales strategy meeting",
+    purpose: "営業戦略会議",
   },
 ]

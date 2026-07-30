@@ -110,8 +110,8 @@ describe("GET /employees", () => {
       const lead = parsed.data.data.find((employee) => employee.code === "E001")
 
       expect(lead?.name).toBe("Alex Carter")
-      expect(lead?.dept_name).toBe("Corporate Planning")
-      expect(lead?.position).toBe("CTO")
+      expect(lead?.dept_name).toBe("経営企画部")
+      expect(lead?.position).toBe("最高技術責任者")
       expect(lead?.email).toBe("you+e001@example.com")
       expect(lead?.status).toBe("active")
     }
@@ -188,7 +188,7 @@ describe("GET /employees", () => {
   })
 
   test("filters by department name via dept", async () => {
-    const response = await request("/employees?dept=Engineering", await adminToken())
+    const response = await request("/employees?dept=開発部", await adminToken())
 
     expect(response.status).toBe(200)
 

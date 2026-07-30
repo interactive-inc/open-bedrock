@@ -116,7 +116,7 @@ describe("GET /training-courses", () => {
 
   test("filters by category", async () => {
     const response = await request(
-      "/training-courses?category=compliance",
+      "/training-courses?category=コンプライアンス",
       await tokenFor(5, "member"),
     )
 

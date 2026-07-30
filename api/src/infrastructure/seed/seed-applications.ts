@@ -16,7 +16,7 @@ export const seedApplications: ReadonlyArray<SeedApplication> = [
     applicantId: 5,
     status: "pending",
     currentStep: "manager_approval",
-    payload: { start_date: "2026-06-10", end_date: "2026-06-12", reason: "personal" },
+    payload: { start_date: "2026-06-10", end_date: "2026-06-12", reason: "私用" },
     createdAt: "2026-05-20T01:00:00Z",
   },
   {
@@ -25,7 +25,7 @@ export const seedApplications: ReadonlyArray<SeedApplication> = [
     applicantId: 9,
     status: "pending",
     currentStep: "manager_approval",
-    payload: { amount: 12000, category: "transport", note: "client visit" },
+    payload: { amount: 12000, category: "transport", note: "取引先訪問" },
     createdAt: "2026-05-22T02:30:00Z",
   },
   {
@@ -34,7 +34,7 @@ export const seedApplications: ReadonlyArray<SeedApplication> = [
     applicantId: 10,
     status: "approved",
     currentStep: null,
-    payload: { date: "2026-05-15", reason: "focus work" },
+    payload: { date: "2026-05-15", reason: "集中作業" },
     createdAt: "2026-05-10T00:00:00Z",
   },
   {
@@ -43,7 +43,7 @@ export const seedApplications: ReadonlyArray<SeedApplication> = [
     applicantId: 13,
     status: "rejected",
     currentStep: null,
-    payload: { item: "monitor", amount: 45000, reason: "dual monitor setup" },
+    payload: { item: "モニター", amount: 45000, reason: "デュアルモニター環境構築" },
     createdAt: "2026-05-05T05:00:00Z",
   },
   {
@@ -52,7 +52,7 @@ export const seedApplications: ReadonlyArray<SeedApplication> = [
     applicantId: 5,
     status: "pending",
     currentStep: "manager_approval",
-    payload: { start_date: "2026-07-01", end_date: "2026-07-01", reason: "appointment" },
+    payload: { start_date: "2026-07-01", end_date: "2026-07-01", reason: "通院" },
     createdAt: "2026-05-25T03:00:00Z",
   },
 ]

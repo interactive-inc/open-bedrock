@@ -13,7 +13,7 @@ type SeedAsset = {
 export const seedAssets: ReadonlyArray<SeedAsset> = [
   {
     code: "A0001",
-    name: "Standard Laptop 14",
+    name: "標準ノートPC 14インチ",
     kind: "pc",
     serial: "PF-X1-0001",
     purchasedOn: "2024-04-01",
@@ -24,7 +24,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
   },
   {
     code: "A0002",
-    name: "External Monitor 27inch",
+    name: "外付けモニター 27インチ",
     kind: "monitor",
     serial: "CN-D27-0002",
     purchasedOn: "2024-04-01",
@@ -35,7 +35,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
   },
   {
     code: "A0003",
-    name: "Performance Laptop 14",
+    name: "高性能ノートPC 14インチ",
     kind: "pc",
     serial: "C02-MBP-0003",
     purchasedOn: "2024-06-15",
@@ -46,7 +46,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
   },
   {
     code: "A0004",
-    name: "Company Smartphone",
+    name: "貸与スマートフォン",
     kind: "mobile",
     serial: "IP-15-0004",
     purchasedOn: "2024-09-01",
@@ -57,7 +57,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
   },
   {
     code: "A0010",
-    name: "Mesh Office Chair",
+    name: "メッシュオフィスチェア",
     kind: "furniture",
     serial: null,
     purchasedOn: null,
@@ -68,7 +68,7 @@ export const seedAssets: ReadonlyArray<SeedAsset> = [
   },
   {
     code: "A0011",
-    name: "Old Standard Laptop 13",
+    name: "旧標準ノートPC 13インチ",
     kind: "pc",
     serial: "PF-X0-0011",
     purchasedOn: "2020-04-01",

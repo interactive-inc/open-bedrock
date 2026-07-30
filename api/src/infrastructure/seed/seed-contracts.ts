@@ -14,7 +14,7 @@ export const seedContracts: ReadonlyArray<SeedContract> = [
   {
     id: 1,
     partnerId: 1,
-    title: "Supply Agreement",
+    title: "供給契約",
     contractDate: "2026-01-10",
     startsOn: "2026-02-01",
     endsOn: "2027-01-31",
@@ -25,7 +25,7 @@ export const seedContracts: ReadonlyArray<SeedContract> = [
   {
     id: 2,
     partnerId: 2,
-    title: "Master Sales Contract",
+    title: "基本売買契約",
     contractDate: "2026-01-12",
     startsOn: "2026-01-12",
     endsOn: null,

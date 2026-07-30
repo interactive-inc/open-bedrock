@@ -13,7 +13,7 @@ export const seedApplicationApprovals: ReadonlyArray<SeedApplicationApproval> = 
     applicationId: 3,
     approverId: 4,
     action: "approve",
-    comment: "no issues",
+    comment: "問題なし",
     createdAt: "2026-05-11T00:00:00Z",
   },
   {
@@ -21,7 +21,7 @@ export const seedApplicationApprovals: ReadonlyArray<SeedApplicationApproval> = 
     applicationId: 4,
     approverId: 13,
     action: "reject",
-    comment: "over budget for this term",
+    comment: "今期の予算を超過しているため",
     createdAt: "2026-05-06T00:00:00Z",
   },
 ]

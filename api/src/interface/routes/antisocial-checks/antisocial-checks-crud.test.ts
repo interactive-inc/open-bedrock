@@ -332,9 +332,9 @@ describe("PUT /antisocial-checks/:id", () => {
       token: await requesterToken(),
       method: "PUT",
       body: {
-        partner_name: "Example Trading Co.",
-        partner_address: "1-2-3 Sample, Example City",
-        representative_name: "Pat Example",
+        partner_name: "株式会社サンプル商事",
+        partner_address: "東京都サンプル区サンプル1-2-3",
+        representative_name: "山田 サンプル",
         result: "clear",
       },
     })

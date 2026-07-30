@@ -100,7 +100,7 @@ describe("GET /rooms/availability", () => {
 
       const roomOne = parsed.data.data.find((row) => row.room.id === 1)
 
-      expect(roomOne?.room.name).toBe("Large Meeting Room A")
+      expect(roomOne?.room.name).toBe("大会議室A")
       expect(roomOne?.room.capacity).toBe(20)
       expect(roomOne?.available).toBe(false)
       expect(roomOne?.conflicts[0]?.startAt).toBe("2026-05-29T01:00:00Z")

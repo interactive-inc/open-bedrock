@@ -132,7 +132,7 @@ describe("GET /shift-assignments/me", () => {
       expect(parsed.data.data.every((row) => row.employee_id === 5)).toBe(true)
       expect(parsed.data.data.every((row) => row.published_at !== null)).toBe(true)
       // member はパターン一覧を閲覧できないため、割当にパターン名・時間帯を埋めて返す（patternId=1 = Early）
-      expect(parsed.data.data[0]?.pattern_name).toBe("Early")
+      expect(parsed.data.data[0]?.pattern_name).toBe("早番")
       expect(parsed.data.data[0]?.pattern_start_time).toBe("07:00")
       expect(parsed.data.data[0]?.pattern_end_time).toBe("16:00")
     }

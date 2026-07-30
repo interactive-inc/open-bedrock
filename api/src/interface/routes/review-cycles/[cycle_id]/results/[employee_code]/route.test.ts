@@ -190,7 +190,7 @@ describe("GET /review-cycles/:cycle_id/results/:employee_code", () => {
         {
           id: 3,
           reviewer_employee_id: 4,
-          answers: ["Strong collaboration"],
+          answers: ["優れた協調性"],
           score: 80,
         },
       ],

@@ -3,6 +3,6 @@
 -- migration: migrations/oneonone.sql / 値: src/infrastructure/seed/seed-one-on-ones.ts
 
 INSERT INTO one_on_ones (id, member_id, manager_id, held_at, topics, manager_note, next_action) VALUES
-  ('00000000-0000-0000-0000-000000000001', 5, 4, '2026-05-01T05:00:00Z', 'Goal progress and career direction', 'Promising candidate for a lead role', 'Assign ownership of the next design review'),
-  ('00000000-0000-0000-0000-000000000002', 3, 4, '2026-05-08T05:00:00Z', 'Test coverage targets', 'On track; keep monitoring workload', 'Share progress weekly'),
-  ('00000000-0000-0000-0000-000000000003', 10, 9, '2026-05-12T06:00:00Z', 'New customer acquisition strategy', 'Agreed to narrow the target accounts', 'Draft a priority account list');
+  ('00000000-0000-0000-0000-000000000001', 5, 4, '2026-05-01T05:00:00Z', '目標の進捗とキャリアの方向性', 'リードを任せられる有望な人材', '次回の設計レビューの担当を割り当てる'),
+  ('00000000-0000-0000-0000-000000000002', 3, 4, '2026-05-08T05:00:00Z', 'テストカバレッジの目標', '順調に進行中、引き続き業務量を注視', '毎週進捗を共有する'),
+  ('00000000-0000-0000-0000-000000000003', 10, 9, '2026-05-12T06:00:00Z', '新規顧客獲得の戦略', 'ターゲット企業を絞り込むことで合意', '優先アカウントリストを作成する');

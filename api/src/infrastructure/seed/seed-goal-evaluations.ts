@@ -15,7 +15,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
     evaluatorId: 9,
     kind: "self",
     score: 90,
-    comment: "Automation completed as planned",
+    comment: "計画通り自動化を完了した",
     createdAt: "2026-01-10T09:00:00Z",
   },
   {
@@ -24,7 +24,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
     evaluatorId: 4,
     kind: "manager",
     score: 85,
-    comment: "Quality stayed stable; strong result",
+    comment: "品質が安定しており良い成果",
     createdAt: "2026-01-15T09:00:00Z",
   },
   {
@@ -33,7 +33,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
     evaluatorId: 4,
     kind: "final",
     score: 88,
-    comment: "Final rating A",
+    comment: "最終評価A",
     createdAt: "2026-01-20T09:00:00Z",
   },
 ]

@@ -8,20 +8,20 @@ type SeedCareerSheet = {
 export const seedCareerSheets: ReadonlyArray<SeedCareerSheet> = [
   {
     employeeId: 5,
-    goalsText: "Lead the overall architecture as a tech lead",
-    strengthsText: "Strong design skills and quality improvement through code review",
+    goalsText: "テックリードとして全体アーキテクチャを牽引したい",
+    strengthsText: "設計力とコードレビューによる品質向上",
     updatedAt: "2026-04-01T00:00:00Z",
   },
   {
     employeeId: 6,
-    goalsText: "Broaden my scope as a full-stack engineer",
-    strengthsText: "Frontend development and test automation",
+    goalsText: "フルスタックエンジニアとして担当領域を広げたい",
+    strengthsText: "フロントエンド開発とテスト自動化",
     updatedAt: "2026-04-05T00:00:00Z",
   },
   {
     employeeId: 10,
-    goalsText: "Aim to become a sales manager",
-    strengthsText: "Customer negotiation and proposal skills",
+    goalsText: "営業マネージャーを目指したい",
+    strengthsText: "顧客交渉と提案力",
     updatedAt: "2026-04-10T00:00:00Z",
   },
 ]
