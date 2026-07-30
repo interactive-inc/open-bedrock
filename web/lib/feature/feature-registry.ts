@@ -38,7 +38,6 @@ import {
   UserMinus,
   Users,
   Wallet,
-  Workflow,
   Wrench,
 } from "lucide-react"
 import type {
@@ -105,6 +104,12 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
         label: "全社の勤怠",
         href: "/organization/attendances",
         visibility: { kind: "permission", permission: "attendance:read:all" },
+      },
+      {
+        space: "organization",
+        label: "時間外の集計",
+        href: "/organization/attendances/overtime",
+        visibility: everyone,
       },
     ],
   },
@@ -303,13 +308,13 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     routes: [
       {
         space: "my",
-        label: "介護休業",
+        label: "休業",
         href: "/my/family-care-leaves",
         visibility: everyone,
       },
       {
         space: "organization",
-        label: "介護休業の横断",
+        label: "休業の横断",
         href: "/organization/family-care-leaves",
         visibility: { kind: "permission", permission: "family_care_leave:read:all" },
       },
@@ -742,6 +747,12 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
         href: "/organization/surveys",
         visibility: everyone,
       },
+      {
+        space: "my",
+        label: "自分の回答",
+        href: "/my/survey-responses",
+        visibility: everyone,
+      },
     ],
   },
   {
@@ -823,6 +834,12 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
         href: "/organization/assets",
         visibility: everyone,
       },
+      {
+        space: "organization",
+        label: "棚卸し",
+        href: "/organization/stocktakes",
+        visibility: { kind: "permission", permission: "asset:manage" },
+      },
     ],
   },
   {
@@ -844,6 +861,12 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
         label: "会議室",
         href: "/organization/rooms",
         visibility: everyone,
+      },
+      {
+        space: "organization",
+        label: "会議室マスタ",
+        href: "/organization/rooms/manage",
+        visibility: { kind: "permission", permission: "room:manage" },
       },
     ],
   },
