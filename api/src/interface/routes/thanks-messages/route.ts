@@ -1,6 +1,5 @@
 import { SendThanks } from "@/application/thanks/send-thanks"
 import { Thanks } from "@/domain/thanks/thanks.entity"
-import type { Context } from "@/env"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import {
@@ -9,13 +8,14 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/interface/utils/to-bounded-int"
+import { toEmployeeNameMap } from "@/interface/utils/to-employee-name-map"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/lib/app-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
-import { employees, thanks as thanksTable } from "@/schema"
+import { thanks as thanksTable } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
-import { count, desc, inArray } from "drizzle-orm"
+import { count, desc } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 
@@ -133,22 +133,3 @@ export const POST = factory.createHandlers(
     return c.json(responseBody, 201)
   },
 )
-
-/** 社員 id の配列から id→氏名 の Map を作る。 */
-async function toEmployeeNameMap(
-  c: Context,
-  employeeIds: ReadonlyArray<number>,
-): Promise<Map<number, string>> {
-  const uniqueIds = Array.from(new Set(employeeIds))
-
-  if (uniqueIds.length === 0) {
-    return new Map()
-  }
-
-  const rows = await c.var.database
-    .select({ id: employees.id, name: employees.name })
-    .from(employees)
-    .where(inArray(employees.id, uniqueIds))
-
-  return new Map(rows.map((row) => [row.id, row.name]))
-}

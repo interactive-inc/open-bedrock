@@ -191,6 +191,12 @@ const commands: ReadonlyArray<CommandEntry> = [
     group: "コミュニケーション",
   },
   {
+    label: "サンクス履歴",
+    href: "/my/thanks",
+    icon: HeartHandshake,
+    group: "コミュニケーション",
+  },
+  {
     label: "規程・手続き",
     href: "/organization/governance",
     icon: ShieldCheck,
