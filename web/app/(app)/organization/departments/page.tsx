@@ -1,16 +1,18 @@
 import { Suspense } from "react"
 import { OrgDepartmentManagerSection } from "@/app/(app)/organization/departments/_components/org-department-manager-section"
+import { OrgChartView } from "@/app/(app)/organization/departments/_components/org-chart-view"
 import { OrgTreeView } from "@/app/(app)/organization/departments/_components/org-tree-view"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getMe } from "@/lib/api/get-me"
 import { canManageOrg } from "@/lib/org/can-manage-org"
 
 export const metadata = { title: "組織" }
 
 /**
- * 組織図トップ（部署ツリー /org/tree）。ツリー取得は Suspense 境界で Skeleton をフォールバックにする。
- * 部署ノードの作成・変更・削除を行う管理セクションも併せて表示する。
+ * 組織図トップ。「組織図」（部署→マネージャー→従業員の縦型ボックス）と「リスト」（インデント式一覧）を
+ * タブで切り替える。部署ノードの作成・変更・削除を行う管理セクションも併せて表示する。
  */
 export default async function OrgPage() {
   const currentUser = await getMe()
@@ -22,15 +24,28 @@ export default async function OrgPage() {
       <PageHeader
         title="組織図"
         description={
-          canManage
-            ? "部署ツリーの閲覧と、部署ノードの管理を行います。"
-            : "部署ツリーを閲覧します。"
+          canManage ? "組織図の閲覧と、部署ノードの管理を行います。" : "組織図を閲覧します。"
         }
       />
 
-      <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-8 w-full" />}>
-        <OrgTreeView />
-      </Suspense>
+      <Tabs defaultValue="chart">
+        <TabsList>
+          <TabsTrigger value="chart">組織図</TabsTrigger>
+          <TabsTrigger value="list">リスト</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="chart" className="mt-4">
+          <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-8 w-full" />}>
+            <OrgChartView />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-4">
+          <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-8 w-full" />}>
+            <OrgTreeView />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
 
       {canManage ? (
         <>
