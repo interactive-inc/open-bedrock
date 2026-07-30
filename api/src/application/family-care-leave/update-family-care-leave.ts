@@ -81,7 +81,7 @@ export class UpdateFamilyCareLeave {
         return new ConflictError("family care leave not modifiable", "not_modifiable")
       }
 
-      return new ConflictError("overlapping family care leave", "overlapping_leave")
+      return new ConflictError("休業期間が既存の申出と重複しています", "overlapping_leave")
     }
 
     return saved
