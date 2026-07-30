@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getDepartmentGoals } from "@/lib/api/get-department-goals"
+import { statusLabel } from "@/lib/status-label"
 
 export const metadata = { title: "部署の目標" }
 
@@ -75,7 +76,7 @@ export default async function DepartmentGoalsPage(props: Props) {
 
                   <TableCell>{goal.weight}</TableCell>
 
-                  <TableCell className="whitespace-nowrap">{goal.status}</TableCell>
+                  <TableCell className="whitespace-nowrap">{statusLabel(goal.status)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

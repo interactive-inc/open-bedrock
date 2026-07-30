@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { toFlatGoalRows } from "@/app/(app)/organization/goals/tree/_lib/to-flat-goal-rows"
 import { toOwnerTypeLabel } from "@/app/(app)/organization/goals/tree/_lib/to-owner-type-label"
 import type { GoalTreeNode } from "@/app/(app)/organization/goals/tree/_lib/goal-tree-types"
+import { statusLabel } from "@/lib/status-label"
 
 type Props = {
   roots: ReadonlyArray<GoalTreeNode>
@@ -35,7 +36,7 @@ export function GoalTreeView(props: Props) {
 
           <span className="text-xs text-muted-foreground">重み {row.weight}</span>
 
-          <span className="text-xs text-muted-foreground">{row.status}</span>
+          <span className="text-xs text-muted-foreground">{statusLabel(row.status)}</span>
         </li>
       ))}
     </ul>

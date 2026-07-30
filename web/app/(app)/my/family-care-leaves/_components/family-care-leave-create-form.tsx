@@ -60,6 +60,8 @@ export function FamilyCareLeaveCreateForm() {
             <NativeSelectOption value="childcare">育休</NativeSelectOption>
 
             <NativeSelectOption value="family_care">介護休業</NativeSelectOption>
+
+            <NativeSelectOption value="other">その他（療養等）</NativeSelectOption>
           </NativeSelect>
         </Field>
 

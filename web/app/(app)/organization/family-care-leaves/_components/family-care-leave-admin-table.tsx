@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { familyCareLeaveKindLabel } from "@/lib/family-care-leave-kind-label"
 import { formatDateTime } from "@/lib/format-date-time"
 import { statusLabel } from "@/lib/status-label"
 
@@ -53,7 +54,7 @@ export function FamilyCareLeaveAdminTable(props: Props) {
           {props.rows.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <span className="font-medium">{row.leave_kind}</span>
+                <span className="font-medium">{familyCareLeaveKindLabel(row.leave_kind)}</span>
               </TableCell>
 
               <TableCell className="text-muted-foreground">
