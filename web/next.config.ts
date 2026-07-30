@@ -127,24 +127,24 @@ const nextConfig: NextConfig = {
       { source: "/oneonone/:path*", destination: "/oneonones/:path*", permanent: false },
       { source: "/oneonone", destination: "/oneonones", permanent: false },
       { source: "/recruitment/:path*", destination: "/recruitments/:path*", permanent: false },
-      { source: "/training/me", destination: "/me/trainings", permanent: false },
+      { source: "/training/me", destination: "/my/trainings", permanent: false },
       { source: "/training/:path*", destination: "/trainings/:path*", permanent: false },
       { source: "/training", destination: "/trainings", permanent: false },
       // --- attendance ---
       { source: "/attendance/all", destination: "/attendances", permanent: false },
       { source: "/attendance/overtime", destination: "/attendances/overtime", permanent: false },
-      { source: "/attendance", destination: "/me/attendances", permanent: false },
+      { source: "/attendance", destination: "/my/attendances", permanent: false },
       // --- leave ---
       { source: "/leave/admin", destination: "/leaves", permanent: false },
       { source: "/leave/inbox", destination: "/inbox/leaves", permanent: false },
-      { source: "/leave/new", destination: "/me/leaves/new", permanent: false },
-      { source: "/leave", destination: "/me/leaves", permanent: false },
+      { source: "/leave/new", destination: "/my/leaves/new", permanent: false },
+      { source: "/leave", destination: "/my/leaves", permanent: false },
       // --- expense（詳細は複数形へ改名） ---
       { source: "/expense/admin", destination: "/expenses", permanent: false },
       { source: "/expense/inbox", destination: "/inbox/expenses", permanent: false },
-      { source: "/expense/new", destination: "/me/expenses/new", permanent: false },
+      { source: "/expense/new", destination: "/my/expenses/new", permanent: false },
       { source: "/expense/:id", destination: "/expenses/:id", permanent: false },
-      { source: "/expense", destination: "/me/expenses", permanent: false },
+      { source: "/expense", destination: "/my/expenses", permanent: false },
       // --- applications（詳細 URL は不変なので転送不要） ---
       { source: "/applications/admin", destination: "/applications", permanent: false },
       { source: "/applications/inbox", destination: "/inbox/applications", permanent: false },
@@ -160,7 +160,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/applications/delegations",
-        destination: "/me/approval-delegations",
+        destination: "/teams/approval-delegations",
         permanent: false,
       },
       {
@@ -168,16 +168,16 @@ const nextConfig: NextConfig = {
         destination: "/workflow-repairs",
         permanent: false,
       },
-      { source: "/applications", destination: "/me/applications", permanent: false },
+      { source: "/applications", destination: "/my/applications", permanent: false },
       // --- ringi ---
       { source: "/ringi/admin", destination: "/ringis", permanent: false },
       { source: "/ringi/inbox", destination: "/inbox/ringis", permanent: false },
-      { source: "/ringi/new", destination: "/me/ringis/new", permanent: false },
-      { source: "/ringi", destination: "/me/ringis", permanent: false },
+      { source: "/ringi/new", destination: "/my/ringis/new", permanent: false },
+      { source: "/ringi", destination: "/my/ringis", permanent: false },
       // --- business-trips 系6（admin→base, self→/me） ---
       { source: "/business-trips/admin", destination: "/business-trips", permanent: false },
-      { source: "/business-trips/new", destination: "/me/business-trips/new", permanent: false },
-      { source: "/business-trips", destination: "/me/business-trips", permanent: false },
+      { source: "/business-trips/new", destination: "/my/business-trips/new", permanent: false },
+      { source: "/business-trips", destination: "/my/business-trips", permanent: false },
       {
         source: "/certificate-requests/admin",
         destination: "/certificate-requests",
@@ -185,30 +185,30 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/certificate-requests/new",
-        destination: "/me/certificate-requests/new",
+        destination: "/my/certificate-requests/new",
         permanent: false,
       },
       {
         source: "/certificate-requests",
-        destination: "/me/certificate-requests",
+        destination: "/my/certificate-requests",
         permanent: false,
       },
       { source: "/life-events/admin", destination: "/life-events", permanent: false },
-      { source: "/life-events/new", destination: "/me/life-events/new", permanent: false },
-      { source: "/life-events", destination: "/me/life-events", permanent: false },
+      { source: "/life-events/new", destination: "/my/life-events/new", permanent: false },
+      { source: "/life-events", destination: "/my/life-events", permanent: false },
       { source: "/family-care-leaves/admin", destination: "/family-care-leaves", permanent: false },
       {
         source: "/family-care-leaves/new",
-        destination: "/me/family-care-leaves/new",
+        destination: "/my/family-care-leaves/new",
         permanent: false,
       },
-      { source: "/family-care-leaves", destination: "/me/family-care-leaves", permanent: false },
+      { source: "/family-care-leaves", destination: "/my/family-care-leaves", permanent: false },
       { source: "/resignations/admin", destination: "/resignations", permanent: false },
-      { source: "/resignations/new", destination: "/me/resignations/new", permanent: false },
-      { source: "/resignations", destination: "/me/resignations", permanent: false },
+      { source: "/resignations/new", destination: "/my/resignations/new", permanent: false },
+      { source: "/resignations", destination: "/my/resignations", permanent: false },
       { source: "/rentals/admin", destination: "/rentals", permanent: false },
-      { source: "/rentals/new", destination: "/me/rentals/new", permanent: false },
-      { source: "/rentals", destination: "/me/rentals", permanent: false },
+      { source: "/rentals/new", destination: "/my/rentals/new", permanent: false },
+      { source: "/rentals", destination: "/my/rentals", permanent: false },
       // --- antisocial-checks ---
       {
         source: "/antisocial-checks/admin",
@@ -217,10 +217,10 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/antisocial-checks/new",
-        destination: "/me/antisocial-checks/new",
+        destination: "/my/antisocial-checks/new",
         permanent: false,
       },
-      { source: "/antisocial-checks", destination: "/me/antisocial-checks", permanent: false },
+      { source: "/antisocial-checks", destination: "/my/antisocial-checks", permanent: false },
       // --- shift ---
       { source: "/shift/admin", destination: "/shift-swaps", permanent: false },
       { source: "/shift/inbox", destination: "/inbox/shift-swaps", permanent: false },
@@ -228,7 +228,7 @@ const nextConfig: NextConfig = {
       { source: "/shift/manage", destination: "/shift-assignments", permanent: false },
       { source: "/shift/patterns/new", destination: "/shift-patterns/new", permanent: false },
       { source: "/shift/patterns", destination: "/shift-patterns", permanent: false },
-      { source: "/shift", destination: "/me/shifts", permanent: false },
+      { source: "/shift", destination: "/my/shifts", permanent: false },
       // --- thanks（base/send 据え置き） ---
       { source: "/thanks/admin", destination: "/thanks-redemptions", permanent: false },
       { source: "/thanks/inbox", destination: "/inbox/thanks-redemptions", permanent: false },
@@ -237,18 +237,18 @@ const nextConfig: NextConfig = {
       // --- review ---
       { source: "/review/manage", destination: "/review-cycles", permanent: false },
       { source: "/review/results", destination: "/reviews", permanent: false },
-      { source: "/review", destination: "/me/reviews", permanent: false },
+      { source: "/review", destination: "/my/reviews", permanent: false },
       // --- career ---
       { source: "/career/postings/new", destination: "/job-postings/new", permanent: false },
       { source: "/career/postings/:path*", destination: "/job-postings/:path*", permanent: false },
       { source: "/career/postings", destination: "/job-postings", permanent: false },
-      { source: "/career", destination: "/me/career", permanent: false },
+      { source: "/career", destination: "/my/career", permanent: false },
       // --- skills / surveys ---
-      { source: "/skills/me", destination: "/me/skills", permanent: false },
-      { source: "/surveys/responses", destination: "/me/survey-responses", permanent: false },
+      { source: "/skills/me", destination: "/my/skills", permanent: false },
+      { source: "/surveys/responses", destination: "/my/survey-responses", permanent: false },
       // --- assets / rooms ---
-      { source: "/assets/lent/me", destination: "/me/assets", permanent: false },
-      { source: "/rooms/me", destination: "/me/room-reservations", permanent: false },
+      { source: "/assets/lent/me", destination: "/my/assets", permanent: false },
+      { source: "/rooms/me", destination: "/my/room-reservations", permanent: false },
       // --- onboarding（employee は並べ替え特例） ---
       {
         source: "/onboarding/employee/:code",
@@ -261,7 +261,7 @@ const nextConfig: NextConfig = {
         destination: "/onboarding-assignments/new",
         permanent: false,
       },
-      { source: "/onboarding/me", destination: "/me/onboarding-tasks", permanent: false },
+      { source: "/onboarding/me", destination: "/my/onboarding-tasks", permanent: false },
       {
         source: "/onboarding/templates/new",
         destination: "/onboarding-templates/new",

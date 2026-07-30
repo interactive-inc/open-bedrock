@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { FamilyCareLeaveResponse } from "@/lib/api/types/family-care-leave-types"
+import { familyCareLeaveKindLabel } from "@/lib/family-care-leave-kind-label"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { statusLabel } from "@/lib/status-label"
 
@@ -70,7 +71,9 @@ export function MyFamilyCareLeavesList(props: Props) {
         <TableBody>
           {props.familyCareLeaves.map((familyCareLeave) => (
             <TableRow key={familyCareLeave.id}>
-              <TableCell className="font-medium">{familyCareLeave.leave_kind}</TableCell>
+              <TableCell className="font-medium">
+                {familyCareLeaveKindLabel(familyCareLeave.leave_kind)}
+              </TableCell>
 
               <TableCell>{familyCareLeave.start_date}</TableCell>
 
@@ -135,6 +138,8 @@ function UpdateFamilyCareLeaveDialog(props: { familyCareLeave: FamilyCareLeaveRe
                 <NativeSelectOption value="childcare">育休</NativeSelectOption>
 
                 <NativeSelectOption value="family_care">介護休業</NativeSelectOption>
+
+                <NativeSelectOption value="other">その他（療養等）</NativeSelectOption>
               </NativeSelect>
             </Field>
 
