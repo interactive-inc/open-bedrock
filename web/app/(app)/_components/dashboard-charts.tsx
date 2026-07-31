@@ -113,7 +113,7 @@ export function DashboardCharts({
                 tickLine={false}
                 axisLine={false}
               />
-              <XAxis type="number" tickLine={false} axisLine={false} />
+              <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="count" radius={4}>
                 {departmentBreakdown.map((entry, index) => (
