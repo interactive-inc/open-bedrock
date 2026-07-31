@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Field, FieldLabel } from "@/components/ui/field"
+import { ReorderableItem } from "@/components/reorderable-item"
+import { withMovedItem } from "@/lib/array/with-moved-item"
 
 type QuestionType = "scale" | "choice" | "text"
 
@@ -61,6 +63,10 @@ export function QuestionBuilder(props: Props) {
     setQuestions(questions.filter((_, i) => i !== index))
   }
 
+  function moveQuestion(fromIndex: number, toIndex: number) {
+    setQuestions(withMovedItem(questions, fromIndex, toIndex))
+  }
+
   function updateText(index: number, text: string) {
     setQuestions(questions.map((q, i) => (i === index ? { ...q, text } : q)))
   }
@@ -104,50 +110,57 @@ export function QuestionBuilder(props: Props) {
 
       <div className="flex flex-col gap-3">
         {questions.map((question, index) => (
-          <div key={question.id} className="flex flex-col gap-2 rounded-md border p-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">#{index + 1}</span>
+          <ReorderableItem
+            key={question.id}
+            index={index}
+            dragHandleLabel={`設問${index + 1}を並べ替え（上下キーで移動）`}
+            onMove={moveQuestion}
+          >
+            <div className="flex flex-col gap-2 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">#{index + 1}</span>
 
-              <Input
-                value={question.text}
-                onChange={(e) => updateText(index, e.target.value)}
-                placeholder="設問のテキスト"
-                className="flex-1"
-                required
-              />
+                <Input
+                  value={question.text}
+                  onChange={(e) => updateText(index, e.target.value)}
+                  placeholder="設問のテキスト"
+                  className="flex-1"
+                  required
+                />
 
-              <NativeSelect
-                value={question.type}
-                onChange={(e) => updateType(index, toQuestionType(e.target.value))}
-                className="w-32"
-              >
-                {(Object.keys(TYPE_LABELS) as ReadonlyArray<QuestionType>).map((key) => (
-                  <NativeSelectOption key={key} value={key}>
-                    {TYPE_LABELS[key]}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
+                <NativeSelect
+                  value={question.type}
+                  onChange={(e) => updateType(index, toQuestionType(e.target.value))}
+                  className="w-32"
+                >
+                  {(Object.keys(TYPE_LABELS) as ReadonlyArray<QuestionType>).map((key) => (
+                    <NativeSelectOption key={key} value={key}>
+                      {TYPE_LABELS[key]}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeQuestion(index)}
-                aria-label={`設問${index + 1}を削除`}
-              >
-                削除
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeQuestion(index)}
+                  aria-label={`設問${index + 1}を削除`}
+                >
+                  削除
+                </Button>
+              </div>
+
+              {question.type === "choice" ? (
+                <Input
+                  value={question.options.join(", ")}
+                  onChange={(e) => updateOptions(index, e.target.value)}
+                  placeholder="選択肢をカンマ区切りで入力（例: 月1回, 月2回, 週1回）"
+                  className="text-sm"
+                />
+              ) : null}
             </div>
-
-            {question.type === "choice" ? (
-              <Input
-                value={question.options.join(", ")}
-                onChange={(e) => updateOptions(index, e.target.value)}
-                placeholder="選択肢をカンマ区切りで入力（例: 月1回, 月2回, 週1回）"
-                className="text-sm"
-              />
-            ) : null}
-          </div>
+          </ReorderableItem>
         ))}
 
         <Button type="button" variant="outline" onClick={addQuestion} className="self-start">
