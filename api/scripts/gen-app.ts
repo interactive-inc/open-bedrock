@@ -235,6 +235,26 @@ export function sortRegistrations(
   })
 }
 
+/** 整形器の print width。これを超える登録行は整形器と同じ形にあらかじめ折る。 */
+const LINE_WIDTH = 100
+
+/**
+ * 登録 1 行を描く。1 行に収まらないときは整形器（`vp check`）が作るのと同じ複数行の形で出す。
+ * 生成結果がそのまま整形済みでないと、`bun run gen:app` の直後に `vp check` が落ちて、
+ * 直すと今度は `gen:app:check` が落ちる、という行き場のない状態になる。
+ */
+export function renderRegistration(registration: RouteRegistration): string {
+  const method = registration.method.toLowerCase()
+  const handler = `...${registration.alias}.${registration.method}`
+  const line = `  .${method}("${registration.url}", ${handler})`
+
+  if (line.length <= LINE_WIDTH) {
+    return line
+  }
+
+  return `  .${method}(\n    "${registration.url}",\n    ${handler},\n  )`
+}
+
 const HEADER = `// このファイルは \`bun run gen:app\` が生成する。手で編集しない。
 // ルートを足すときは interface/routes/<URL パス>/route.ts を作り、生成器を再実行する。
 // middleware・エラーハンドラ・/health は手書きの app-base.ts が持つ。
@@ -253,12 +273,7 @@ export function renderApp(registrations: readonly RouteRegistration[]): string {
     .map(([module, alias]) => `import * as ${alias} from "${module}"`)
     .join("\n")
 
-  const chain = sorted
-    .map(
-      (registration) =>
-        `  .${registration.method.toLowerCase()}("${registration.url}", ...${registration.alias}.${registration.method})`,
-    )
-    .join("\n")
+  const chain = sorted.map(renderRegistration).join("\n")
 
   return `${HEADER}
 import { hc } from "hono/client"
