@@ -34,7 +34,7 @@ make dev      # bun install して portless で全アプリ起動
 
 個別に動かす場合は `make help` を参照。
 
-起動後は web（`https://karte.open.localhost`）に開発用シードのアカウントでログインできる。メールは `you+e001@example.com`、パスワードは `password`（`E001` が admin）。seed は全ユーザー共通の既知パスワードで、本番には投入しない。
+起動後は web（`https://bedrock.localhost`）に開発用シードのアカウントでログインできる。メールは `you+e001@example.com`、パスワードは `password`（`E001` が admin）。seed は全ユーザー共通の既知パスワードで、本番には投入しない。
 
 ## CLI
 
