@@ -5,6 +5,7 @@ import {
   collectRegistrations,
   exportedMethods,
   renderApp,
+  renderRegistration,
   sortRegistrations,
   toAlias,
   toRouteShape,
@@ -180,6 +181,39 @@ describe("collectRegistrations", () => {
     }
 
     expect(shadowed).toEqual([])
+  })
+})
+
+describe("renderRegistration", () => {
+  test("100 桁に収まる登録は 1 行で書く", () => {
+    const line = renderRegistration({
+      module: "@/interface/routes/employees/route",
+      url: "/employees",
+      method: "GET",
+      alias: "employeesRoute",
+    })
+    expect(line).toBe('  .get("/employees", ...employeesRoute.GET)')
+  })
+
+  test("100 桁を超える登録は整形器と同じ形に折る", () => {
+    const line = renderRegistration({
+      module: "@/interface/routes/batch/employee-lifecycle/process-outbox/route",
+      url: "/batch/employee-lifecycle/process-outbox",
+      method: "POST",
+      alias: "batchEmployeeLifecycleProcessOutboxRoute",
+    })
+    expect(line).toBe(
+      '  .post(\n    "/batch/employee-lifecycle/process-outbox",\n    ...batchEmployeeLifecycleProcessOutboxRoute.POST,\n  )',
+    )
+  })
+
+  // 生成物がそのまま整形済みでないと、gen:app の直後に vp check が落ちる。
+  test("生成した登録行はどれも 100 桁に収まる（折り返した中身の文字列を除く）", async () => {
+    const rendered = renderApp(await collectRegistrations())
+    const tooLong = rendered
+      .split("\n")
+      .filter((line) => line.startsWith("  .") && line.length > 100)
+    expect(tooLong).toEqual([])
   })
 })
 
