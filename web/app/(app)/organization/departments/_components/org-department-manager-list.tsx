@@ -35,7 +35,7 @@ type Props = {
 }
 
 /**
- * 部署ノードの管理表。各行の変更（Dialog）・削除ボタンを置く。新規作成は /org/departments/new で行う。
+ * 部署ノードの管理表。各行の変更（Dialog）・削除ボタンを置く。新規作成は /organization/departments/new で行う。
  * 変更・削除はいずれも権限が必要で、権限不足時は api がエラーを返す。
  */
 export function OrgDepartmentManagerList(props: Props) {
