@@ -9,8 +9,10 @@
 ガードスクリプト `guard-local-only.sh` を経由して実行してください。`--remote` フラグが指定されると拒否されます。
 
 ```bash
-bash api/seeds/guard-local-only.sh open-karte api/seeds/employee.sql
+bash api/seeds/guard-local-only.sh bedrock api/seeds/employee.sql
 ```
+
+全ファイルをまとめて投入する場合は `cd api && bun run db:seed:local` を使ってください（依存順に 1 ファイルずつ適用します）。
 
 直接 wrangler を実行する場合も `--remote` を付けないでください。
 
