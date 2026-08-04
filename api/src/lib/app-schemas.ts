@@ -1377,6 +1377,22 @@ export const zAppOneOnOneList = z.object({
 
 export type AppOneOnOneList = z.infer<typeof zAppOneOnOneList>
 
+/** 部署マスタ 1 件のレスポンス。 */
+export const zAppDepartmentDefinition = z.object({
+  id: z.number(),
+  name: z.string(),
+})
+
+export type AppDepartmentDefinition = z.infer<typeof zAppDepartmentDefinition>
+
+/** 部署マスタ一覧のレスポンス。 */
+export const zAppDepartmentDefinitionList = z.object({
+  data: z.array(zAppDepartmentDefinition),
+  total: z.number(),
+})
+
+export type AppDepartmentDefinitionList = z.infer<typeof zAppDepartmentDefinitionList>
+
 /** 組織部署ノード 1 件のレスポンス。 */
 export const zAppOrgDepartment = z.object({
   code: z.string(),

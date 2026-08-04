@@ -37,6 +37,9 @@ export const FORM_CONSTRAINTS = {
     rankMax: 9_999,
     descriptionMax: 3_000,
   },
+  departmentDefinition: {
+    nameMax: 200,
+  },
   employeeEvent: {
     departmentCodeMax: 200,
     noteMax: 3_000,
