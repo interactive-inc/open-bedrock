@@ -255,4 +255,73 @@ describe("POST /employee-events", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test("records an event by employee_code", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/employee-events",
+      token: await tokenFor(1, "root"),
+      method: "POST",
+      body: {
+        employee_code: "E009",
+        kind: "return",
+        effective_date: "2026-07-01",
+      },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = eventResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.employee_id).toBe(9)
+    }
+  })
+
+  test("returns 404 for an unknown employee_code", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/employee-events",
+      token: await tokenFor(1, "root"),
+      method: "POST",
+      body: { employee_code: "E999", kind: "transfer", effective_date: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when both employee_id and employee_code are given", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/employee-events",
+      token: await tokenFor(1, "root"),
+      method: "POST",
+      body: {
+        employee_id: 9,
+        employee_code: "E009",
+        kind: "transfer",
+        effective_date: "2026-06-01",
+      },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when neither employee_id nor employee_code is given", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/employee-events",
+      token: await tokenFor(1, "root"),
+      method: "POST",
+      body: { kind: "transfer", effective_date: "2026-06-01" },
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
