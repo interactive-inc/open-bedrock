@@ -19,9 +19,10 @@ export type EmployeeEventSearchQuery = {
   kind: EmployeeEventKind | null
 }
 
-/** POST /employee-events のリクエストボディ。 */
+/** POST /employee-events のリクエストボディ。対象は employee_id / employee_code のどちらか一方で指定する。 */
 export type EmployeeEventCreateRequest = {
-  employee_id: number
+  employee_id?: number
+  employee_code?: string
   kind: EmployeeEventKind
   effective_date: string
   from_department_code?: string

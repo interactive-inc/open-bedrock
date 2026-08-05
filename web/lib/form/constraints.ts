@@ -40,6 +40,16 @@ export const FORM_CONSTRAINTS = {
   departmentDefinition: {
     nameMax: 200,
   },
+  healthCheckup: {
+    fiscalYearMin: 2000,
+    fiscalYearMax: 2100,
+    noteMax: 3_000,
+  },
+  salaryRevision: {
+    baseSalaryMin: 0,
+    baseSalaryMax: 100_000_000,
+    reasonMax: 3_000,
+  },
   employeeEvent: {
     departmentCodeMax: 200,
     noteMax: 3_000,
