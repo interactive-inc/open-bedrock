@@ -70,7 +70,9 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
-api 単体の疎通だけ見るなら `cd api && bun run dev`（= `wrangler dev`、ポート 18787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /auth/login` で access_token を取り `Authorization: Bearer` で叩く。
+api 単体の疎通だけ見るなら `cd api && bun run dev`（wrangler dev の自動再起動ラッパー、ポート 18787）。`/` は 404 が正常、`/employees` は未認証で 401。`POST /auth/login` で access_token を取り `Authorization: Bearer` で叩く。
+
+wrangler dev は「Network connection lost.」で稀にプロセスごと落ちることがある。api だけが落ちると web は生き残り、全ページが 500（`failed to load me (503)`）や api ホストが Next 由来の 404 HTML を返す状態になる。アプリのバグに見えるが、まず api の生死（`curl http://localhost:18787/health`）を疑うこと。`bun run dev`（`scripts/dev-restart.sh`）は落ちたことをログに出して自動で再起動する。再起動なしで素の wrangler を使うときは `bun run dev:no-restart`。
 
 web↔api クライアントの約束:
 
