@@ -158,4 +158,57 @@ describe("POST /salary-revisions", () => {
 
     expect(response.status).toBe(404)
   })
+
+  test("creates a salary revision by employee_code", async () => {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+      employee_code: "E001",
+      effective_date: "2026-04-01",
+      previous_base_salary: 280000,
+      new_base_salary: 300000,
+      reason: "annual_raise",
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = revisionSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.employee_id).toBe(1)
+    }
+  })
+
+  test("returns 404 for an unknown employee_code", async () => {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+      employee_code: "E999",
+      effective_date: "2026-05-01",
+      previous_base_salary: 1,
+      new_base_salary: 2,
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when both employee_id and employee_code are given", async () => {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+      employee_id: 1,
+      employee_code: "E001",
+      effective_date: "2026-05-01",
+      previous_base_salary: 1,
+      new_base_salary: 2,
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when neither employee_id nor employee_code is given", async () => {
+    const response = await request("/salary-revisions", await tokenFor(1, "root"), "POST", {
+      effective_date: "2026-05-01",
+      previous_base_salary: 1,
+      new_base_salary: 2,
+    })
+
+    expect(response.status).toBe(400)
+  })
 })

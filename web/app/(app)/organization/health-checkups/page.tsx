@@ -1,9 +1,13 @@
+import { Plus } from "lucide-react"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { HealthCheckupsSection } from "@/app/(app)/organization/health-checkups/_components/health-checkups-section"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
+import { canManageHealthCheckups } from "@/lib/health-checkup/can-manage-health-checkups"
 import { canViewAllHealthCheckups } from "@/lib/health-checkup/can-view-all-health-checkups"
 
 export const metadata = { title: "健康診断" }
@@ -30,6 +34,14 @@ export default async function HealthCheckupsPage(props: { searchParams: SearchPa
       <PageHeader
         title="健康診断"
         description="健診・ストレスチェックの実施状況を確認します。結果は保持せず、実施日と受診状態のみを記録します。"
+        actions={
+          canManageHealthCheckups(currentUser.permissions) ? (
+            <Button nativeButton={false} render={<Link href="/organization/health-checkups/new" />}>
+              <Plus />
+              実施記録を登録
+            </Button>
+          ) : null
+        }
       />
 
       <Suspense
