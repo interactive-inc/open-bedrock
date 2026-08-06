@@ -21,6 +21,18 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: HealthCheckupActionState = { ok: false, error: null }
 
+/** Select のトリガーに生値でなくラベルを表示するための対応表（Base UI Select の items）。 */
+const checkupKindItems = {
+  regular: "定期健診",
+  stress_check: "ストレスチェック",
+}
+
+const checkupStatusItems = {
+  scheduled: "予定",
+  completed: "受診済み",
+  declined: "辞退",
+}
+
 type Props = {
   employees: ReadonlyArray<{ code: string; name: string }>
   defaultFiscalYear: number
@@ -88,7 +100,7 @@ export function HealthCheckupCreateForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="checkup-kind">種別</FieldLabel>
 
-          <Select name="checkup_kind" defaultValue="regular">
+          <Select name="checkup_kind" defaultValue="regular" items={checkupKindItems}>
             <SelectTrigger id="checkup-kind">
               <SelectValue />
             </SelectTrigger>
@@ -103,7 +115,7 @@ export function HealthCheckupCreateForm(props: Props) {
         <Field>
           <FieldLabel htmlFor="checkup-status">受診状態</FieldLabel>
 
-          <Select name="status" defaultValue="scheduled">
+          <Select name="status" defaultValue="scheduled" items={checkupStatusItems}>
             <SelectTrigger id="checkup-status">
               <SelectValue />
             </SelectTrigger>
