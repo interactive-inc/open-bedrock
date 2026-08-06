@@ -28,6 +28,15 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: FactRecordFormState = { ok: false, error: null }
 
+/** Select のトリガーに生値でなくラベルを表示するための対応表（Base UI Select の items）。 */
+const eventKindItems = {
+  join: "入社",
+  transfer: "異動",
+  leave_of_absence: "休職",
+  return: "復職",
+  retire: "退職",
+}
+
 type Props = {
   employeeCode: string
 }
@@ -84,7 +93,7 @@ export function EmployeeEventCreateForm(props: Props) {
             <Field>
               <FieldLabel htmlFor="event-kind">種別</FieldLabel>
 
-              <Select name="kind" defaultValue="transfer">
+              <Select name="kind" defaultValue="transfer" items={eventKindItems}>
                 <SelectTrigger id="event-kind">
                   <SelectValue />
                 </SelectTrigger>
