@@ -14,6 +14,7 @@ export type Command = {
   ownerType?: GoalOwnerType
   parentGoalId?: number | null
   departmentCode?: string | null
+  evaluationSheetId?: number | null
 }
 
 /**
@@ -34,6 +35,7 @@ export class CreateGoal {
       ownerType: command.ownerType,
       parentGoalId: command.parentGoalId,
       departmentCode: command.departmentCode,
+      evaluationSheetId: command.evaluationSheetId,
     })
 
     const created = await repository.create(goal)

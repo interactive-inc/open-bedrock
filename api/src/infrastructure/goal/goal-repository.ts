@@ -79,6 +79,7 @@ export class GoalRepository {
           ownerType: goal.ownerType,
           parentGoalId: goal.parentGoalId,
           departmentCode: goal.departmentCode,
+          evaluationSheetId: goal.evaluationSheetId,
         })
         .returning()
 

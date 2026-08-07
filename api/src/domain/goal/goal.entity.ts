@@ -17,6 +17,7 @@ const zProps = z.object({
   ownerType: goalOwnerTypeSchema,
   parentGoalId: z.number().nullable(),
   departmentCode: z.string().nullable(),
+  evaluationSheetId: z.number().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -44,6 +45,8 @@ export class Goal implements Props {
 
   readonly departmentCode!: Props["departmentCode"]
 
+  readonly evaluationSheetId!: Props["evaluationSheetId"]
+
   constructor(private readonly props: Props) {
     zProps.parse(props)
 
@@ -62,6 +65,7 @@ export class Goal implements Props {
     ownerType?: GoalOwnerType
     parentGoalId?: number | null
     departmentCode?: string | null
+    evaluationSheetId?: number | null
   }): Goal {
     return new Goal({
       id: null,
@@ -74,6 +78,7 @@ export class Goal implements Props {
       ownerType: props.ownerType ?? "individual",
       parentGoalId: props.parentGoalId ?? null,
       departmentCode: props.departmentCode ?? null,
+      evaluationSheetId: props.evaluationSheetId ?? null,
     })
   }
 
@@ -89,6 +94,7 @@ export class Goal implements Props {
       ownerType: goalOwnerTypeSchema.parse(row.ownerType),
       parentGoalId: row.parentGoalId,
       departmentCode: row.departmentCode,
+      evaluationSheetId: row.evaluationSheetId,
     })
   }
 

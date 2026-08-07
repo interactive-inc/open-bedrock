@@ -124,6 +124,11 @@ export const PERMISSION_CATALOG = [
     category: "goal",
     description: "レポートライン配下の目標を評価する",
   },
+  {
+    key: "evaluation:administer",
+    category: "evaluation",
+    description: "評価テンプレート管理、評価シートの最終確定・再オープン・評価者変更を行う",
+  },
   { key: "attendance:read:all", category: "attendance", description: "全従業員の勤怠を閲覧する" },
   {
     key: "attendance:read:reports",
