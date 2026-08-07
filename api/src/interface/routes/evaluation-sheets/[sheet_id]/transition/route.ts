@@ -1,16 +1,20 @@
-import { TransitionEvaluationSheet } from "@/application/evaluation-sheet/transition-evaluation-sheet"
-import { factory } from "@/interface/utils/factory"
-import { ApplicationError } from "@/lib/errors"
-import { zAppEvaluationSheet } from "@/lib/app-schemas"
-import { evaluationSheetStatusSchema } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { evaluationSheets } from "@/schema"
-import { eq } from "drizzle-orm"
-import { zValidator } from "@hono/zod-validator"
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
-import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { z } from "zod"
+import { zValidator } from "@hono/zod-validator";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { TransitionEvaluationSheet } from "@/application/evaluation-sheet/transition-evaluation-sheet";
+import { evaluationSheetStatusSchema } from "@/domain/evaluation-sheet/evaluation-sheet.entity";
+import {
+	ForbiddenError,
+	NotFoundError,
+	UnauthorizedError,
+} from "@/interface/lib/errors";
+import { toHttpException } from "@/interface/lib/to-http-exception";
+import { verifyBearer } from "@/interface/middlewares/verify-bearer";
+import { factory } from "@/interface/utils/factory";
+import { validateIntParam } from "@/interface/utils/validate-int-param";
+import { zAppEvaluationSheet } from "@/lib/app-schemas";
+import { ApplicationError } from "@/lib/errors";
+import { evaluationSheets } from "@/schema";
 
 // @authorization service - session を application service に渡して判定する
 /**
@@ -30,95 +34,158 @@ import { z } from "zod"
  * - reopened → self_eval: evaluation:administer
  */
 export const POST = factory.createHandlers(
-  verifyBearer,
-  zValidator(
-    "json",
-    z.object({
-      status: evaluationSheetStatusSchema,
-      expected_revision: z.number().int().positive(),
-      note: z.string().max(1_000).nullable().optional(),
-    }),
-  ),
-  async (c) => {
-    const session = c.var.session
+	verifyBearer,
+	zValidator(
+		"json",
+		z.object({
+			status: evaluationSheetStatusSchema,
+			expected_revision: z.number().int().positive(),
+			note: z.string().max(1_000).nullable().optional(),
+		}),
+	),
+	async (c) => {
+		const session = c.var.session;
 
-    if (session === null) {
-      throw new UnauthorizedError()
-    }
+		if (session === null) {
+			throw new UnauthorizedError();
+		}
 
-    const sheetId = validateIntParam(c.req.param("sheet_id"), "evaluation sheet")
-    const json = c.req.valid("json")
+		const sheetId = validateIntParam(
+			c.req.param("sheet_id"),
+			"evaluation sheet",
+		);
+		const json = c.req.valid("json");
 
-    // シートを先読みして権限判定
-    const rows = await c.var.database
-      .select()
-      .from(evaluationSheets)
-      .where(eq(evaluationSheets.id, sheetId))
-      .limit(1)
+		// シートを先読みして権限判定
+		const rows = await c.var.database
+			.select()
+			.from(evaluationSheets)
+			.where(eq(evaluationSheets.id, sheetId))
+			.limit(1);
 
-    const row = rows.at(0)
+		const row = rows.at(0);
 
-    if (row === undefined) {
-      throw new NotFoundError("evaluation sheet not found")
-    }
+		if (row === undefined) {
+			throw new NotFoundError("evaluation sheet not found");
+		}
 
-    const isOwner = row.employeeId === session.employeeId
-    const isPrimaryEvaluator = row.primaryEvaluatorId === session.employeeId
-    const isSecondaryEvaluator = row.secondaryEvaluatorId === session.employeeId
-    const isAdmin = session.hasPermission("evaluation:administer")
+		const isOwner = row.employeeId === session.employeeId;
+		const isPrimaryEvaluator = row.primaryEvaluatorId === session.employeeId;
+		const isSecondaryEvaluator =
+			row.secondaryEvaluatorId === session.employeeId;
+		const isAdmin = session.hasPermission("evaluation:administer");
 
-    // 遷移権限の判定
-    const targetStatus = json.status
-    const allowed = (() => {
-      if (targetStatus === "pending_approval" && isOwner) return true
-      if (targetStatus === "approved" && (isPrimaryEvaluator || isAdmin)) return true
-      if (targetStatus === "rejected" && (isPrimaryEvaluator || isAdmin)) return true
-      if (targetStatus === "draft" && isOwner) return true
-      if (targetStatus === "self_eval" && (isOwner || isAdmin)) return true
-      if (targetStatus === "primary_eval" && isOwner) return true
-      if (targetStatus === "secondary_eval" && isPrimaryEvaluator) return true
-      // finalized: 二次評価者から or 管理者。二次評価者未設定時は一次評価者も可
-      if (targetStatus === "finalized" && (isSecondaryEvaluator || isAdmin)) return true
-      if (targetStatus === "finalized" && isPrimaryEvaluator && row.secondaryEvaluatorId === null)
-        return true
-      if (targetStatus === "reopened" && isAdmin) return true
-      if (targetStatus === "archived" && isAdmin) return true
-      return false
-    })()
+		// 遷移権限の判定 — currentStatus × targetStatus × role マトリクス
+		const currentStatus = row.status;
+		const targetStatus = json.status;
+		const allowed = (() => {
+			if (
+				currentStatus === "draft" &&
+				targetStatus === "pending_approval" &&
+				isOwner
+			)
+				return true;
+			if (
+				currentStatus === "pending_approval" &&
+				targetStatus === "approved" &&
+				isPrimaryEvaluator
+			)
+				return true;
+			if (
+				currentStatus === "pending_approval" &&
+				targetStatus === "rejected" &&
+				isPrimaryEvaluator
+			)
+				return true;
+			if (currentStatus === "rejected" && targetStatus === "draft" && isOwner)
+				return true;
+			if (
+				currentStatus === "approved" &&
+				targetStatus === "self_eval" &&
+				isOwner
+			)
+				return true;
+			if (
+				currentStatus === "self_eval" &&
+				targetStatus === "primary_eval" &&
+				isOwner
+			)
+				return true;
+			if (
+				currentStatus === "primary_eval" &&
+				targetStatus === "secondary_eval" &&
+				isPrimaryEvaluator
+			)
+				return true;
+			// primary_eval → finalized: 一次評価者（二次評価者未設定時のみ）
+			if (
+				currentStatus === "primary_eval" &&
+				targetStatus === "finalized" &&
+				isPrimaryEvaluator &&
+				row.secondaryEvaluatorId === null
+			)
+				return true;
+			// secondary_eval → finalized: 二次評価者 or admin
+			if (
+				currentStatus === "secondary_eval" &&
+				targetStatus === "finalized" &&
+				(isSecondaryEvaluator || isAdmin)
+			)
+				return true;
+			if (
+				currentStatus === "finalized" &&
+				targetStatus === "reopened" &&
+				isAdmin
+			)
+				return true;
+			if (
+				currentStatus === "finalized" &&
+				targetStatus === "archived" &&
+				isAdmin
+			)
+				return true;
+			if (
+				currentStatus === "reopened" &&
+				targetStatus === "self_eval" &&
+				isAdmin
+			)
+				return true;
+			return false;
+		})();
 
-    if (allowed === false) {
-      throw new ForbiddenError()
-    }
+		if (allowed === false) {
+			throw new ForbiddenError();
+		}
 
-    const sheet = await new TransitionEvaluationSheet(c).run({
-      sheetId,
-      targetStatus,
-      actorEmployeeId: session.employeeId,
-      expectedRevision: json.expected_revision,
-      note: json.note ?? null,
-      now: new Date().toISOString(),
-    })
+		const sheet = await new TransitionEvaluationSheet(c).run({
+			sheetId,
+			targetStatus,
+			actorEmployeeId: session.employeeId,
+			expectedRevision: json.expected_revision,
+			note: json.note ?? null,
+			now: new Date().toISOString(),
+		});
 
-    if (sheet instanceof ApplicationError) {
-      throw toHttpException(sheet)
-    }
+		if (sheet instanceof ApplicationError) {
+			throw toHttpException(sheet);
+		}
 
-    const responseBody = zAppEvaluationSheet.parse({
-      id: sheet.id,
-      employee_id: sheet.employeeId,
-      template_id: sheet.templateId,
-      period: sheet.period,
-      status: sheet.status,
-      primary_evaluator_id: sheet.primaryEvaluatorId,
-      secondary_evaluator_id: sheet.secondaryEvaluatorId,
-      submitted_at: sheet.submittedAt,
-      approved_at: sheet.approvedAt,
-      finalized_at: sheet.finalizedAt,
-      revision: sheet.revision,
-      created_at: sheet.createdAt,
-      updated_at: sheet.updatedAt,
-    })
+		const responseBody = zAppEvaluationSheet.parse({
+			id: sheet.id,
+			employee_id: sheet.employeeId,
+			template_id: sheet.templateId,
+			period: sheet.period,
+			status: sheet.status,
+			primary_evaluator_id: sheet.primaryEvaluatorId,
+			secondary_evaluator_id: sheet.secondaryEvaluatorId,
+			submitted_at: sheet.submittedAt,
+			approved_at: sheet.approvedAt,
+			finalized_at: sheet.finalizedAt,
+			revision: sheet.revision,
+			created_at: sheet.createdAt,
+			updated_at: sheet.updatedAt,
+		});
 
-    return c.json(responseBody, 200)
-  },
-)
+		return c.json(responseBody, 200);
+	},
+);
