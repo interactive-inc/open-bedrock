@@ -116,7 +116,7 @@ export const POST = factory.createHandlers(
       actorEmployeeId: session.employeeId,
       expectedRevision: json.expected_revision,
       note: json.note ?? null,
-      now: new Date().toISOString(),
+      now: c.env.NOW ?? new Date().toISOString(),
     })
 
     if (sheet instanceof ApplicationError) {

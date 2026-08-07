@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
+import { createLifecycleRouteDb } from "@/interface/test-helpers/lifecycle-route-fixture"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { requestWithContext } from "@/interface/test-helpers/request-with-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
@@ -578,57 +579,48 @@ describe("createWithAuditLog readback", () => {
     expect(fetched.employee_id).toBe(5)
   })
 
-  test("batch rollback: sheet is not persisted when audit insert fails", async () => {
+  test("createWithAuditLog rolls back sheet when audit insert fails (trigger)", async () => {
     const db = await createTestDb()
 
-    // 作成前のシート数を記録
+    // audit INSERT を失敗させる BEFORE INSERT トリガーを設置
+    await db.exec(`
+      CREATE TRIGGER fail_audit BEFORE INSERT ON evaluation_sheet_audit_logs
+      BEGIN
+        SELECT RAISE(ABORT, 'deliberate audit failure');
+      END;
+    `)
+
     const beforeCount = await db
       .prepare("SELECT COUNT(*) AS c FROM evaluation_sheets")
       .first<{ c: number }>()
 
-    // actor_id NOT NULL 制約違反で audit INSERT を失敗させ、batch 全体をロールバック
-    try {
-      await db.batch([
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheets
-               (employee_id, template_id, period, status, primary_evaluator_id,
-                secondary_evaluator_id, submitted_at, approved_at, finalized_at,
-                revision, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
-          )
-          .bind(
-            5,
-            null,
-            "2026-ROLLBACK",
-            "draft",
-            4,
-            null,
-            null,
-            null,
-            null,
-            1,
-            "2026-01-01T00:00:00.000Z",
-            "2026-01-01T00:00:00.000Z",
-          ),
-        db.prepare("SELECT id FROM evaluation_sheets WHERE id = last_insert_rowid()"),
-        // actor_id に NULL を渡して NOT NULL 制約違反を起こす
-        db.prepare(
-          `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (last_insert_rowid(), NULL, 'test', NULL, NULL, NULL, '2026-01-01T00:00:00.000Z')`,
-        ),
-      ])
-    } catch {
-      // 期待通り失敗
-    }
+    // 実際の API エンドポイント経由で createWithAuditLog を実行
+    const adminTk = await tokenFor(1)
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-ROLLBACK",
+        primary_evaluator_id: 4,
+      },
+    })
 
-    // batch 失敗後、シートがロールバックされていることを確認
+    // batch 全体がロールバックし、500 で返る
+    expect(res.status).toBe(500)
+
     const afterCount = await db
       .prepare("SELECT COUNT(*) AS c FROM evaluation_sheets")
       .first<{ c: number }>()
 
+    // シートも挿入されていないことを確認（batch ロールバック）
     expect(afterCount?.c).toBe(beforeCount?.c ?? 0)
+
+    // トリガーを削除して後続テストに影響しないようにする
+    await db.exec("DROP TRIGGER fail_audit")
   })
 })
 
@@ -941,7 +933,7 @@ describe("sheet status guard for goals", () => {
     expect(body.code).toBe("sheet_not_editable")
   })
 
-  test("allows goal creation when sheet is rejected (back to editable)", async () => {
+  test("allows goal deletion when sheet is rejected (back to editable)", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
@@ -972,25 +964,27 @@ describe("sheet status guard for goals", () => {
 
     expect(rejectRes.status).toBe(200)
 
-    // Now create a goal on rejected sheet — should succeed
-    const goalRes = await requestWithContext({
+    // List goals to get an ID for deletion
+    const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-goals",
+      path: "/performance-goals?period=2026-H1&employee_id=5",
       token: ownerTk,
-      method: "POST",
-      body: {
-        period: "2026-H1",
-        title: "Revised goal",
-        weight: 0,
-        evaluation_sheet_id: sheet.id,
-      },
+      method: "GET",
+    })
+    const goalsList = (await goalsRes.json()) as { data: Array<{ id: number }> }
+    expect(goalsList.data.length).toBeGreaterThan(0)
+
+    // Delete a goal on rejected sheet — should succeed (204)
+    const deleteRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals/${goalsList.data[0].id}`,
+      token: ownerTk,
+      method: "DELETE",
     })
 
-    // weight: 0 is invalid (zod enforces min 1), and existing goals sum to 100,
-    // so this will fail with weight_exceeded. The important thing is it's NOT
-    // "sheet_not_editable" — the rejected sheet allows edits.
-    expect([201, 400, 409]).toContain(goalRes.status)
+    expect(deleteRes.status).toBe(204)
   })
 })
 
@@ -998,7 +992,7 @@ describe("sheet status guard for goals", () => {
 // linked-goal audit logs
 // ---------------------------------------------------------------------------
 describe("linked-goal audit logs", () => {
-  test("goal create writes goal_add audit log", async () => {
+  test("goal create writes goal_add audit log with full snapshot", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
@@ -1031,6 +1025,7 @@ describe("linked-goal audit logs", () => {
       },
     })
     expect(goalRes.status).toBe(201)
+    const goal = (await goalRes.json()) as { id: number }
 
     // 監査ログに goal_add が記録されていることを確認
     const auditRows = await db
@@ -1044,11 +1039,14 @@ describe("linked-goal audit logs", () => {
     expect(auditRows.results[0].action).toBe("goal_add")
 
     const toValue = JSON.parse(auditRows.results[0].to_value)
+    expect(toValue.goal_id).toBe(goal.id)
     expect(toValue.title).toBe("Audit Goal")
     expect(toValue.weight).toBe(50)
+    expect(toValue.period).toBe("2026-H1")
+    expect(toValue.kpi).toBeNull()
   })
 
-  test("goal update writes goal_update audit log", async () => {
+  test("goal update writes goal_update audit log with full snapshot", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
@@ -1077,6 +1075,7 @@ describe("linked-goal audit logs", () => {
         period: "2026-H1",
         title: "Original",
         weight: 50,
+        kpi: "Revenue > 1M",
         evaluation_sheet_id: sheet.id,
       },
     })
@@ -1094,6 +1093,7 @@ describe("linked-goal audit logs", () => {
         period: "2026-H1",
         title: "Updated",
         weight: 60,
+        kpi: "Revenue > 2M",
       },
     })
     expect(updateRes.status).toBe(200)
@@ -1109,15 +1109,21 @@ describe("linked-goal audit logs", () => {
     expect(auditRows.results.length).toBe(1)
 
     const fromValue = JSON.parse(auditRows.results[0].from_value)
+    expect(fromValue.goal_id).toBe(goal.id)
     expect(fromValue.title).toBe("Original")
     expect(fromValue.weight).toBe(50)
+    expect(fromValue.period).toBe("2026-H1")
+    expect(fromValue.kpi).toBe("Revenue > 1M")
 
     const toValue = JSON.parse(auditRows.results[0].to_value)
+    expect(toValue.goal_id).toBe(goal.id)
     expect(toValue.title).toBe("Updated")
     expect(toValue.weight).toBe(60)
+    expect(toValue.period).toBe("2026-H1")
+    expect(toValue.kpi).toBe("Revenue > 2M")
   })
 
-  test("goal delete writes goal_delete audit log", async () => {
+  test("goal delete writes goal_delete audit log with full snapshot", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
@@ -1146,6 +1152,7 @@ describe("linked-goal audit logs", () => {
         period: "2026-H1",
         title: "To Delete",
         weight: 30,
+        kpi: "NPS > 50",
         evaluation_sheet_id: sheet.id,
       },
     })
@@ -1173,15 +1180,18 @@ describe("linked-goal audit logs", () => {
     expect(auditRows.results.length).toBe(1)
 
     const fromValue = JSON.parse(auditRows.results[0].from_value)
+    expect(fromValue.goal_id).toBe(goal.id)
     expect(fromValue.title).toBe("To Delete")
     expect(fromValue.weight).toBe(30)
+    expect(fromValue.period).toBe("2026-H1")
+    expect(fromValue.kpi).toBe("NPS > 50")
   })
 })
 
 // ---------------------------------------------------------------------------
-// atomic delete: sheet status guard in D1 batch
+// atomic operations: submit & delete with sheet status guard
 // ---------------------------------------------------------------------------
-describe("atomic delete with sheet status guard", () => {
+describe("atomic operations with sheet status guard", () => {
   test("delete is rejected atomically when sheet is submitted concurrently", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
@@ -1210,7 +1220,7 @@ describe("atomic delete with sheet status guard", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: `/performance-goals?period=2026-H1&employee_id=5`,
+      path: "/performance-goals?period=2026-H1&employee_id=5",
       token: ownerTk,
       method: "GET",
     })
@@ -1236,5 +1246,266 @@ describe("atomic delete with sheet status guard", () => {
 
     // 409 (atomic guard catches the concurrent submit)
     expect(deleteRes.status).toBe(409)
+  })
+
+  test("submit fails when concurrent goal deletion drops weight below 100", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number; revision: number }
+
+    const ownerTk = await tokenFor(5)
+
+    // Create 2 goals: 60 + 40 = 100
+    await seedGoals(db, sheet.id, [60, 40])
+
+    // Simulate concurrent delete: remove the 40-weight goal directly via SQL
+    await db
+      .prepare("DELETE FROM performance_goals WHERE evaluation_sheet_id = ?1 AND weight = 40")
+      .bind(sheet.id)
+      .run()
+
+    // Try to submit — weight is only 60, atomic guard should catch it
+    const submitRes = await transition(db, sheet.id, "pending_approval", sheet.revision, ownerTk)
+
+    // 400 (pre-validation weight_not_100) or 409 (atomic guard)
+    expect([400, 409]).toContain(submitRes.status)
+  })
+
+  test("submit fails via API after goal deletion via API (non-concurrent)", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number; revision: number }
+    const ownerTk = await tokenFor(5)
+
+    // Create 2 goals: 60 + 40 = 100
+    await seedGoals(db, sheet.id, [60, 40])
+
+    // List goals to get IDs
+    const goalsRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/performance-goals?period=2026-H1&employee_id=5",
+      token: ownerTk,
+      method: "GET",
+    })
+    const goalsList = (await goalsRes.json()) as { data: Array<{ id: number; weight: number }> }
+    const goal40 = goalsList.data.find((g) => g.weight === 40)
+    expect(goal40).toBeDefined()
+
+    // Delete the 40-weight goal via API
+    const deleteRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals/${goal40!.id}`,
+      token: ownerTk,
+      method: "DELETE",
+    })
+    expect(deleteRes.status).toBe(204)
+
+    // Now submit — weight is only 60, should fail with weight_not_100
+    const submitRes = await transition(db, sheet.id, "pending_approval", sheet.revision, ownerTk)
+    expect(submitRes.status).toBe(400)
+    const body = (await submitRes.json()) as { code: string }
+    expect(body.code).toBe("weight_not_100")
+  })
+})
+
+// ---------------------------------------------------------------------------
+// lifecycle evaluator validation
+// ---------------------------------------------------------------------------
+describe("lifecycle evaluator validation", () => {
+  /**
+   * lifecycle migration "verified" な DB を作成し、テストケースに合わせてデータを修正する。
+   *
+   * ベースデータ（createLifecycleRouteDb）:
+   * - employee 5 → D003 (manager=4), starts_on='2025-01-01', ends_on=NULL
+   * - employee 4 → D003, starts_on='2025-01-01', ends_on=NULL
+   * - employee 1 → D001 (admin)
+   */
+  async function createLifecycleMboDb(opts?: {
+    subjectAssignmentStartsOn?: string
+    subjectAssignmentEndsOn?: string | null
+    managerArchivedAt?: number | null
+    departmentArchivedAt?: number | null
+  }): Promise<D1Database> {
+    const db = await createLifecycleRouteDb()
+
+    // lifecycle テーブルは append-only（UPDATE 禁止トリガー付き）。
+    // 日付を変更するには新しい revision を INSERT する。
+    if (
+      opts?.subjectAssignmentStartsOn !== undefined ||
+      opts?.subjectAssignmentEndsOn !== undefined
+    ) {
+      await db
+        .prepare(
+          `INSERT INTO employee_org_assignment_period_versions
+             (period_id, revision, employment_period_id, employee_id, department_code,
+              assignment_type, position_title, manager_employee_id, starts_on, ends_on,
+              is_void, recorded_by_action_id, recorded_at)
+           VALUES ('assignment-5', 2, 'employment-5', 5, 'D003', 'primary', 'Engineer', 4,
+                   ?1, ?2, 0, 'test-fixture', 1)`,
+        )
+        .bind(
+          opts?.subjectAssignmentStartsOn ?? "2025-01-01",
+          opts?.subjectAssignmentEndsOn ?? null,
+        )
+        .run()
+    }
+
+    if (opts?.managerArchivedAt !== undefined) {
+      await db
+        .prepare("UPDATE employees SET archived_at = ?1 WHERE id = 4")
+        .bind(opts.managerArchivedAt)
+        .run()
+    }
+
+    if (opts?.departmentArchivedAt !== undefined) {
+      await db
+        .prepare("UPDATE org_departments SET archived_at = ?1 WHERE code = 'D003'")
+        .bind(opts.departmentArchivedAt)
+        .run()
+    }
+
+    return db
+  }
+
+  test("JST boundary: UTC 14:59 → business date Jan-1 (assignment active)", async () => {
+    // employee 5 の所属 ends_on を 2026-01-02 に設定
+    // UTC 14:59 → JST 23:59 → business date 2026-01-01 → contains: 2025-01-01 <= 2026-01-01 < 2026-01-02 → true
+    const db = await createLifecycleMboDb({ subjectAssignmentEndsOn: "2026-01-02" })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-JST-BEFORE" },
+      now: "2026-01-01T14:59:59.000Z",
+    })
+
+    // 上長自動解決で employee 4 が見つかり、シート作成成功
+    expect(res.status).toBe(201)
+    const created = (await res.json()) as { primary_evaluator_id: number }
+    expect(created.primary_evaluator_id).toBe(4)
+  })
+
+  test("JST boundary: UTC 15:00 → business date Jan-2 (assignment expired)", async () => {
+    // employee 5 の所属 ends_on を 2026-01-02 に設定
+    // UTC 15:00 → JST 00:00 → business date 2026-01-02 → contains: 2026-01-02 < 2026-01-02 → false
+    const db = await createLifecycleMboDb({ subjectAssignmentEndsOn: "2026-01-02" })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-JST-AFTER" },
+      now: "2026-01-01T15:00:00.000Z",
+    })
+
+    // 上長自動解決で所属が見つからず失敗
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { code: string }
+    expect(body.code).toBe("no_manager_found")
+  })
+
+  test("future assignment: auto-resolved manager not found", async () => {
+    // employee 5 の所属 starts_on を将来日に設定
+    const db = await createLifecycleMboDb({ subjectAssignmentStartsOn: "2027-01-01" })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-H1" },
+    })
+
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { code: string }
+    expect(body.code).toBe("no_manager_found")
+  })
+
+  test("expired assignment: auto-resolved manager not found", async () => {
+    // employee 5 の所属 ends_on を過去日に設定
+    const db = await createLifecycleMboDb({ subjectAssignmentEndsOn: "2025-12-01" })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-H1" },
+    })
+
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { code: string }
+    expect(body.code).toBe("no_manager_found")
+  })
+
+  test("archived manager: evaluator_archived", async () => {
+    // employee 4 (manager) を archived に設定
+    const db = await createLifecycleMboDb({ managerArchivedAt: 1 })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-H1", primary_evaluator_id: 4 },
+    })
+
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { code: string }
+    expect(body.code).toBe("evaluator_archived")
+  })
+
+  test("archived department: evaluator_department_archived", async () => {
+    // D003 (employee 4 の所属部門) を archived に設定
+    const db = await createLifecycleMboDb({ departmentArchivedAt: 1 })
+
+    const res = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 5, period: "2026-H1", primary_evaluator_id: 4 },
+    })
+
+    expect(res.status).toBe(400)
+    const body = (await res.json()) as { code: string }
+    expect(body.code).toBe("evaluator_department_archived")
   })
 })

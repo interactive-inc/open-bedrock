@@ -169,19 +169,24 @@ export class CreateGoal {
            FROM performance_goals WHERE id = last_insert_rowid()`,
         ),
         // 評価シートの監査ログをアトミックに記録
+        // json_object + last_insert_rowid() で goal_id を含む完全なスナップショットを記録する。
+        // last_insert_rowid() はステートメント [0] の INSERT で設定され、
+        // 後続の SELECT ステートメント [1][2] では更新されないため正しい goal_id を返す。
         db
           .prepare(
             `INSERT INTO evaluation_sheet_audit_logs
                (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+             VALUES (?1, ?2, 'goal_add', NULL,
+               json_object('goal_id', last_insert_rowid(), 'title', ?3, 'weight', ?4, 'period', ?5, 'kpi', ?6),
+               NULL, ?7)`,
           )
           .bind(
             command.evaluationSheetId,
             command.employeeId,
-            "goal_add",
-            null,
-            JSON.stringify({ title: command.title, weight: command.weight }),
-            null,
+            command.title,
+            command.weight,
+            command.period,
+            command.kpi,
             now,
           ),
       ])

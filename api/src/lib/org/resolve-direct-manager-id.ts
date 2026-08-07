@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
-import { eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 
 /**
@@ -252,11 +252,11 @@ async function resolveDeptManagerViaLegacy(
     return null
   }
 
-  // orgDepartments から部門長コードを取得
+  // orgDepartments から部門長コードを取得（archived 部門を除外）
   const deptRows = await c.var.database
     .select({ managerEmployeeCode: orgDepartments.managerEmployeeCode })
     .from(orgDepartments)
-    .where(eq(orgDepartments.code, deptCode))
+    .where(and(eq(orgDepartments.code, deptCode), isNull(orgDepartments.archivedAt)))
     .limit(1)
 
   const deptManagerCode = deptRows.at(0)?.managerEmployeeCode

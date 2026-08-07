@@ -45,7 +45,7 @@ export const POST = factory.createHandlers(
       primaryEvaluatorId: json.primary_evaluator_id,
       secondaryEvaluatorId: json.secondary_evaluator_id ?? null,
       creatorEmployeeId: session.employeeId,
-      now: new Date().toISOString(),
+      now: c.env.NOW ?? new Date().toISOString(),
     })
 
     if (sheet instanceof ApplicationError) {

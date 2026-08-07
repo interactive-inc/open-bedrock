@@ -43,7 +43,7 @@ export const PUT = factory.createHandlers(
       secondaryEvaluatorId: json.secondary_evaluator_id ?? null,
       expectedRevision: json.expected_revision,
       actorEmployeeId: session.employeeId,
-      now: new Date().toISOString(),
+      now: c.env.NOW ?? new Date().toISOString(),
     })
 
     if (sheet instanceof ApplicationError) {
