@@ -1021,6 +1021,7 @@ export const zAppEvaluationSheet = z.object({
   submitted_at: z.string().nullable(),
   approved_at: z.string().nullable(),
   finalized_at: z.string().nullable(),
+  revision: z.number(),
   created_at: z.string(),
   updated_at: z.string(),
 })

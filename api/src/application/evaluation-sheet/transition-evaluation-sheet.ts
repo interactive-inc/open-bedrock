@@ -11,13 +11,15 @@ export type Command = {
   sheetId: number
   targetStatus: EvaluationSheetStatus
   actorEmployeeId: number
+  expectedRevision: number
   note: string | null
   now: string
 }
 
 /**
  * 評価シートのステータスを遷移させる。
- * ステータス遷移表に照らして不正な遷移を拒否し、監査ログを記録する。
+ * ステータス遷移表に照らして不正な遷移を拒否し、楽観的ロック（revision）で
+ * 同時更新を検出し、状態更新と監査ログを D1 batch でアトミックに記録する。
  */
 export class TransitionEvaluationSheet {
   constructor(private readonly c: Context) {}
@@ -35,6 +37,14 @@ export class TransitionEvaluationSheet {
       return new NotFoundError("evaluation sheet not found", "evaluation_sheet_not_found")
     }
 
+    // 楽観的ロック: クライアントが認識している revision と一致するか確認
+    if (existing.revision !== command.expectedRevision) {
+      return new ConflictError(
+        "evaluation sheet was modified by another request",
+        "revision_conflict",
+      )
+    }
+
     const transitioned = existing.transition(command.targetStatus, command.now)
 
     if (transitioned === null) {
@@ -44,19 +54,8 @@ export class TransitionEvaluationSheet {
       )
     }
 
-    const saved = await repository.update(transitioned)
-
-    if (saved instanceof Error) {
-      return new UnexpectedError("failed to update evaluation sheet", { cause: saved })
-    }
-
-    if (saved === null) {
-      return new NotFoundError("evaluation sheet not found", "evaluation_sheet_not_found")
-    }
-
-    // 監査ログを記録
-    const auditResult = await repository.appendAuditLog({
-      sheetId: command.sheetId,
+    // 状態更新と監査ログをアトミックに実行
+    const saved = await repository.updateWithAuditLog(transitioned, {
       actorId: command.actorEmployeeId,
       action: "status_change",
       fromValue: existing.status,
@@ -65,8 +64,12 @@ export class TransitionEvaluationSheet {
       now: command.now,
     })
 
-    if (auditResult instanceof Error) {
-      // 監査ログの失敗はステータス遷移自体を巻き戻さない
+    if (saved instanceof Error) {
+      if (saved instanceof ConflictError) {
+        return saved
+      }
+
+      return new UnexpectedError("failed to update evaluation sheet", { cause: saved })
     }
 
     return saved

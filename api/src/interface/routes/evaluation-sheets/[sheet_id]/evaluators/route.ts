@@ -20,6 +20,7 @@ export const PUT = factory.createHandlers(
     z.object({
       primary_evaluator_id: z.number().int().positive(),
       secondary_evaluator_id: z.number().int().positive().nullable().optional(),
+      expected_revision: z.number().int().positive(),
     }),
   ),
   async (c) => {
@@ -40,6 +41,7 @@ export const PUT = factory.createHandlers(
       sheetId,
       primaryEvaluatorId: json.primary_evaluator_id,
       secondaryEvaluatorId: json.secondary_evaluator_id ?? null,
+      expectedRevision: json.expected_revision,
       actorEmployeeId: session.employeeId,
       now: new Date().toISOString(),
     })
@@ -59,6 +61,7 @@ export const PUT = factory.createHandlers(
       submitted_at: sheet.submittedAt,
       approved_at: sheet.approvedAt,
       finalized_at: sheet.finalizedAt,
+      revision: sheet.revision,
       created_at: sheet.createdAt,
       updated_at: sheet.updatedAt,
     })

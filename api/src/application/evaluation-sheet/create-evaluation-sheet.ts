@@ -3,7 +3,8 @@ import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
-import { employees, orgMemberships } from "@/schema"
+import { resolveDirectManagerId } from "@/lib/org/resolve-direct-manager-id"
+import { employees, evaluationTemplates } from "@/schema"
 import { eq } from "drizzle-orm"
 
 export type Command = {
@@ -20,7 +21,9 @@ export type Command = {
 
 /**
  * 評価シートを作成する。
- * primary_evaluator_id が未指定の場合、org_memberships から directManager を解決する。
+ * primary_evaluator_id が未指定の場合、resolveDirectManagerId で直属上長を解決する。
+ *
+ * company-optional tier: MBO 機能は会社単位のオプション。
  */
 export class CreateEvaluationSheet {
   constructor(private readonly c: Context) {}
@@ -30,18 +33,16 @@ export class CreateEvaluationSheet {
 
     // 対象社員の存在確認
     const employeeRows = await this.c.var.database
-      .select({ id: employees.id, code: employees.code })
+      .select({ id: employees.id })
       .from(employees)
       .where(eq(employees.id, command.employeeId))
       .limit(1)
 
-    const targetEmployee = employeeRows.at(0)
-
-    if (targetEmployee === undefined) {
+    if (employeeRows.at(0) === undefined) {
       return new ValidationError("employee not found", "employee_not_found")
     }
 
-    // 同一社員・同一評価期に active なシートがないか確認
+    // 同一社員・同一評価期にシートがないか確認（完全一意制約）
     const existingResult = await repository.findAll({
       employeeId: command.employeeId,
       period: command.period,
@@ -49,66 +50,18 @@ export class CreateEvaluationSheet {
       offset: 0,
     })
 
-    if (!(existingResult instanceof Error)) {
-      const activeSheet = existingResult.data.find(
-        (s) => s.status !== "finalized" && s.status !== "archived",
+    if (!(existingResult instanceof Error) && existingResult.data.length > 0) {
+      return new ConflictError(
+        "an evaluation sheet already exists for this employee and period",
+        "duplicate_sheet",
       )
-
-      if (activeSheet !== undefined) {
-        return new ConflictError(
-          "an active evaluation sheet already exists for this employee and period",
-          "duplicate_active_sheet",
-        )
-      }
     }
 
-    let primaryEvaluatorId = command.primaryEvaluatorId ?? null
-    const secondaryEvaluatorId = command.secondaryEvaluatorId ?? null
+    // 一次評価者の解決
+    const primaryEvaluatorId = command.primaryEvaluatorId ?? null
 
-    // 一次評価者が未指定の場合、org_memberships から directManager を自動解決する
-    if (primaryEvaluatorId === null) {
-      if (targetEmployee.code === null) {
-        return new ValidationError(
-          "employee has no employee code; specify primary_evaluator_id explicitly",
-          "no_employee_code",
-        )
-      }
-
-      // 対象社員の上長コードを org_memberships から取得
-      const membershipRows = await this.c.var.database
-        .select({ managerEmployeeCode: orgMemberships.managerEmployeeCode })
-        .from(orgMemberships)
-        .where(eq(orgMemberships.employeeCode, targetEmployee.code))
-        .limit(1)
-
-      const membership = membershipRows.at(0)
-
-      if (membership === undefined || membership.managerEmployeeCode === null) {
-        return new ValidationError(
-          "no direct manager found for the employee; specify primary_evaluator_id explicitly",
-          "no_manager_found",
-        )
-      }
-
-      // 上長コードから employee ID を解決
-      const managerRows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(eq(employees.code, membership.managerEmployeeCode))
-        .limit(1)
-
-      const manager = managerRows.at(0)
-
-      if (manager === undefined) {
-        return new ValidationError(
-          "manager employee code could not be resolved to an employee",
-          "manager_not_found",
-        )
-      }
-
-      primaryEvaluatorId = manager.id
-    } else {
-      // 明示指定された一次評価者の存在確認
+    if (primaryEvaluatorId !== null) {
+      // 明示指定: 存在確認
       const evaluatorRows = await this.c.var.database
         .select({ id: employees.id })
         .from(employees)
@@ -128,6 +81,16 @@ export class CreateEvaluationSheet {
       }
     }
 
+    // 一次評価者が未指定 → 直属上長を自動解決
+    const resolvedPrimaryId =
+      primaryEvaluatorId ?? (await this.resolveManagerOrError(command.employeeId))
+
+    if (resolvedPrimaryId instanceof Error) {
+      return resolvedPrimaryId
+    }
+
+    const secondaryEvaluatorId = command.secondaryEvaluatorId ?? null
+
     // 二次評価者の存在確認（指定時のみ）
     if (secondaryEvaluatorId !== null) {
       const secondaryRows = await this.c.var.database
@@ -139,12 +102,26 @@ export class CreateEvaluationSheet {
       if (secondaryRows.at(0) === undefined) {
         return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
       }
+
+      // 二次評価者 ≠ 対象社員
+      if (secondaryEvaluatorId === command.employeeId) {
+        return new ValidationError(
+          "secondary evaluator cannot be the same as the evaluated employee",
+          "self_evaluation_not_allowed",
+        )
+      }
+
+      // 二次評価者 ≠ 一次評価者
+      if (secondaryEvaluatorId === resolvedPrimaryId) {
+        return new ValidationError(
+          "secondary evaluator cannot be the same as primary evaluator",
+          "evaluator_conflict",
+        )
+      }
     }
 
     // テンプレートの存在確認（指定時のみ）
     if (command.templateId !== null) {
-      const { evaluationTemplates } = await import("@/schema")
-
       const templateRows = await this.c.var.database
         .select({ id: evaluationTemplates.id })
         .from(evaluationTemplates)
@@ -160,7 +137,7 @@ export class CreateEvaluationSheet {
       employeeId: command.employeeId,
       templateId: command.templateId,
       period: command.period,
-      primaryEvaluatorId,
+      primaryEvaluatorId: resolvedPrimaryId,
       secondaryEvaluatorId,
       now: command.now,
     })
@@ -187,5 +164,25 @@ export class CreateEvaluationSheet {
     }
 
     return created
+  }
+
+  /** 直属上長の employee ID を解決する。見つからなければ ValidationError を返す。 */
+  private async resolveManagerOrError(
+    targetEmployeeId: number,
+  ): Promise<number | ApplicationError> {
+    const managerId = await resolveDirectManagerId(this.c, targetEmployeeId)
+
+    if (managerId instanceof Error) {
+      return new UnexpectedError("failed to resolve direct manager", { cause: managerId })
+    }
+
+    if (managerId === null) {
+      return new ValidationError(
+        "no direct manager found for the employee; specify primary_evaluator_id explicitly",
+        "no_manager_found",
+      )
+    }
+
+    return managerId
   }
 }

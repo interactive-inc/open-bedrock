@@ -35,6 +35,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       status: evaluationSheetStatusSchema,
+      expected_revision: z.number().int().positive(),
       note: z.string().max(1_000).nullable().optional(),
     }),
   ),
@@ -92,6 +93,7 @@ export const POST = factory.createHandlers(
       sheetId,
       targetStatus,
       actorEmployeeId: session.employeeId,
+      expectedRevision: json.expected_revision,
       note: json.note ?? null,
       now: new Date().toISOString(),
     })
@@ -111,6 +113,7 @@ export const POST = factory.createHandlers(
       submitted_at: sheet.submittedAt,
       approved_at: sheet.approvedAt,
       finalized_at: sheet.finalizedAt,
+      revision: sheet.revision,
       created_at: sheet.createdAt,
       updated_at: sheet.updatedAt,
     })

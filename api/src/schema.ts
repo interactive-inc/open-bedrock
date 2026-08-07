@@ -1201,6 +1201,7 @@ export const evaluationSheets = sqliteTable(
     submittedAt: text("submitted_at"),
     approvedAt: text("approved_at"),
     finalizedAt: text("finalized_at"),
+    revision: integer("revision").notNull().default(1),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
@@ -1208,9 +1209,7 @@ export const evaluationSheets = sqliteTable(
     index("idx_evaluation_sheets_employee").on(table.employeeId),
     index("idx_evaluation_sheets_period").on(table.period),
     index("idx_evaluation_sheets_status").on(table.status),
-    uniqueIndex("uq_evaluation_sheets_employee_period_active")
-      .on(table.employeeId, table.period)
-      .where(sql`status NOT IN ('finalized', 'archived')`),
+    uniqueIndex("uq_evaluation_sheets_employee_period").on(table.employeeId, table.period),
   ],
 )
 

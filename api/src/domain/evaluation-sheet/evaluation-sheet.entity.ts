@@ -41,6 +41,7 @@ const zProps = z.object({
   submittedAt: z.string().nullable(),
   approvedAt: z.string().nullable(),
   finalizedAt: z.string().nullable(),
+  revision: z.number().int().min(1),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -68,6 +69,8 @@ export class EvaluationSheet implements Props {
   readonly approvedAt!: Props["approvedAt"]
 
   readonly finalizedAt!: Props["finalizedAt"]
+
+  readonly revision!: Props["revision"]
 
   readonly createdAt!: Props["createdAt"]
 
@@ -100,6 +103,7 @@ export class EvaluationSheet implements Props {
       submittedAt: null,
       approvedAt: null,
       finalizedAt: null,
+      revision: 1,
       createdAt: props.now,
       updatedAt: props.now,
     })
@@ -117,6 +121,7 @@ export class EvaluationSheet implements Props {
       submittedAt: row.submittedAt,
       approvedAt: row.approvedAt,
       finalizedAt: row.finalizedAt,
+      revision: row.revision,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     })
@@ -127,7 +132,10 @@ export class EvaluationSheet implements Props {
     return VALID_TRANSITIONS[this.status].includes(next)
   }
 
-  /** ステータスを遷移させた写しを返す。遷移不正なら null。 */
+  /**
+   * ステータスを遷移させた写しを返す。遷移不正なら null。
+   * revision をインクリメントし、楽観的ロックの競合を次回の update で検出可能にする。
+   */
   transition(next: EvaluationSheetStatus, now: string): EvaluationSheet | null {
     if (this.canTransitionTo(next) === false) {
       return null
@@ -147,10 +155,18 @@ export class EvaluationSheet implements Props {
       timestamps.finalizedAt = now
     }
 
-    return new EvaluationSheet({ ...this.props, status: next, ...timestamps })
+    return new EvaluationSheet({
+      ...this.props,
+      status: next,
+      revision: this.revision + 1,
+      ...timestamps,
+    })
   }
 
-  /** 評価者を変更した写しを返す（HR/admin 用）。 */
+  /**
+   * 評価者を変更した写しを返す（HR/admin 用）。
+   * revision をインクリメントする。
+   */
   withEvaluators(props: {
     primaryEvaluatorId: number
     secondaryEvaluatorId: number | null
@@ -160,6 +176,7 @@ export class EvaluationSheet implements Props {
       ...this.props,
       primaryEvaluatorId: props.primaryEvaluatorId,
       secondaryEvaluatorId: props.secondaryEvaluatorId,
+      revision: this.revision + 1,
       updatedAt: props.now,
     })
   }

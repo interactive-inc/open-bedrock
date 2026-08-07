@@ -63,6 +63,7 @@ export const POST = factory.createHandlers(
       submitted_at: sheet.submittedAt,
       approved_at: sheet.approvedAt,
       finalized_at: sheet.finalizedAt,
+      revision: sheet.revision,
       created_at: sheet.createdAt,
       updated_at: sheet.updatedAt,
     })

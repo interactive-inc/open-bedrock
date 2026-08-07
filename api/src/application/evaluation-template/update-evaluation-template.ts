@@ -3,7 +3,7 @@ import type {
   EvaluationTemplateItem,
 } from "@/domain/evaluation-template/evaluation-template.entity"
 import type { Context } from "@/env"
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationTemplateRepository } from "@/infrastructure/evaluation-template/evaluation-template-repository"
 
@@ -29,6 +29,14 @@ export class UpdateEvaluationTemplate {
 
     if (existing === null) {
       return new NotFoundError("evaluation template not found", "evaluation_template_not_found")
+    }
+
+    // テンプレートの編集は draft のみ許可
+    if (existing.status !== "draft") {
+      return new ConflictError(
+        `cannot edit template in ${existing.status} status; only draft templates can be modified`,
+        "template_not_editable",
+      )
     }
 
     const updated = existing.withDetails({

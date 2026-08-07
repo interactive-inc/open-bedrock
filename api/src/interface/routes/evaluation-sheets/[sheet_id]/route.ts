@@ -58,6 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     submitted_at: row.submittedAt,
     approved_at: row.approvedAt,
     finalized_at: row.finalizedAt,
+    revision: row.revision,
     created_at: row.createdAt,
     updated_at: row.updatedAt,
   })

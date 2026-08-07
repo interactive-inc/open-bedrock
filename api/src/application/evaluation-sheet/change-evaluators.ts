@@ -1,20 +1,24 @@
 import type { EvaluationSheet } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { employees } from "@/schema"
+import { inArray } from "drizzle-orm"
 
 export type Command = {
   sheetId: number
   primaryEvaluatorId: number
   secondaryEvaluatorId: number | null
+  expectedRevision: number
   actorEmployeeId: number
   now: string
 }
 
 /**
  * 評価者を変更する（HR/admin 専用）。
- * 監査ログに変更前後を記録する。
+ * 評価者の存在確認・自己評価ガード・重複ガードを行い、
+ * 監査ログに変更前後をアトミックに記録する。
  */
 export class ChangeEvaluators {
   constructor(private readonly c: Context) {}
@@ -32,23 +36,73 @@ export class ChangeEvaluators {
       return new NotFoundError("evaluation sheet not found", "evaluation_sheet_not_found")
     }
 
+    // 楽観的ロック
+    if (existing.revision !== command.expectedRevision) {
+      return new ConflictError(
+        "evaluation sheet was modified by another request",
+        "revision_conflict",
+      )
+    }
+
+    // 一次評価者 ≠ 対象社員
+    if (command.primaryEvaluatorId === existing.employeeId) {
+      return new ValidationError(
+        "primary evaluator cannot be the same as the evaluated employee",
+        "self_evaluation_not_allowed",
+      )
+    }
+
+    // 二次評価者 ≠ 対象社員
+    if (
+      command.secondaryEvaluatorId !== null &&
+      command.secondaryEvaluatorId === existing.employeeId
+    ) {
+      return new ValidationError(
+        "secondary evaluator cannot be the same as the evaluated employee",
+        "self_evaluation_not_allowed",
+      )
+    }
+
+    // 二次評価者 ≠ 一次評価者
+    if (
+      command.secondaryEvaluatorId !== null &&
+      command.secondaryEvaluatorId === command.primaryEvaluatorId
+    ) {
+      return new ValidationError(
+        "secondary evaluator cannot be the same as primary evaluator",
+        "evaluator_conflict",
+      )
+    }
+
+    // 評価者の存在確認
+    const evaluatorIds = [command.primaryEvaluatorId]
+
+    if (command.secondaryEvaluatorId !== null) {
+      evaluatorIds.push(command.secondaryEvaluatorId)
+    }
+
+    const evaluatorRows = await this.c.var.database
+      .select({ id: employees.id })
+      .from(employees)
+      .where(inArray(employees.id, evaluatorIds))
+
+    const foundIds = new Set(evaluatorRows.map((r) => r.id))
+
+    if (!foundIds.has(command.primaryEvaluatorId)) {
+      return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")
+    }
+
+    if (command.secondaryEvaluatorId !== null && !foundIds.has(command.secondaryEvaluatorId)) {
+      return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
+    }
+
     const updated = existing.withEvaluators({
       primaryEvaluatorId: command.primaryEvaluatorId,
       secondaryEvaluatorId: command.secondaryEvaluatorId,
       now: command.now,
     })
 
-    const saved = await repository.update(updated)
-
-    if (saved instanceof Error) {
-      return new UnexpectedError("failed to update evaluators", { cause: saved })
-    }
-
-    if (saved === null) {
-      return new NotFoundError("evaluation sheet not found", "evaluation_sheet_not_found")
-    }
-
-    // 変更前後を監査ログに記録
+    // 変更前後を監査ログにアトミックに記録
     const fromValue = JSON.stringify({
       primary: existing.primaryEvaluatorId,
       secondary: existing.secondaryEvaluatorId,
@@ -59,8 +113,7 @@ export class ChangeEvaluators {
       secondary: command.secondaryEvaluatorId,
     })
 
-    const auditResult = await repository.appendAuditLog({
-      sheetId: command.sheetId,
+    const saved = await repository.updateWithAuditLog(updated, {
       actorId: command.actorEmployeeId,
       action: "evaluator_change",
       fromValue,
@@ -69,8 +122,12 @@ export class ChangeEvaluators {
       now: command.now,
     })
 
-    if (auditResult instanceof Error) {
-      // 監査ログの失敗は変更自体を巻き戻さない
+    if (saved instanceof Error) {
+      if (saved instanceof ConflictError) {
+        return saved
+      }
+
+      return new UnexpectedError("failed to update evaluators", { cause: saved })
     }
 
     return saved
