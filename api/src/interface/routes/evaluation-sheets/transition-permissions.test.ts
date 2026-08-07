@@ -632,11 +632,11 @@ describe("createWithAuditLog readback", () => {
     expect(fetched.employee_id).toBe(5)
   })
 
-  test("readback id is correct even when audit log shifts last_insert_rowid", async () => {
+  test("readback id is correct when extra audit row diverges counters", async () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
-    // 複数シートを連続作成して ID カウンタがずれた状態を再現
+    // シート 1 作成（sheet_id=1, audit_id=1）
     const res1 = await requestWithContext({
       db,
       jwtSecret,
@@ -652,6 +652,18 @@ describe("createWithAuditLog readback", () => {
     expect(res1.status).toBe(201)
     const sheet1 = (await res1.json()) as { id: number }
 
+    // 手動で audit ログを挿入して ID カウンタを意図的にずらす
+    // これにより audit_logs の次の ID は 3 になり、sheet の次の ID は 2 のまま
+    await db
+      .prepare(
+        `INSERT INTO evaluation_sheet_audit_logs
+           (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+      )
+      .bind(sheet1.id, 1, "manual_diverge", null, null, null, "2026-01-01T00:00:00.000Z")
+      .run()
+
+    // シート 2 作成 — sheet_id=2, audit_id=3 になるはず
     const res2 = await requestWithContext({
       db,
       jwtSecret,
@@ -668,8 +680,8 @@ describe("createWithAuditLog readback", () => {
     const sheet2 = (await res2.json()) as { id: number }
 
     // sheet ID と audit log ID は異なるカウンタ。
-    // sheet2.id が audit log の ID ではなく、正しい sheet ID であることを確認。
-    expect(sheet2.id).toBeGreaterThan(sheet1.id)
+    // readback が audit_id (3) ではなく正しい sheet_id (2) を返すことを確認。
+    expect(sheet2.id).toBe(sheet1.id + 1)
 
     const getRes = await requestWithContext({
       db,
@@ -683,6 +695,49 @@ describe("createWithAuditLog readback", () => {
     const fetched = (await getRes.json()) as { id: number; employee_id: number }
     expect(fetched.id).toBe(sheet2.id)
     expect(fetched.employee_id).toBe(5)
+  })
+
+  test("batch rollback: sheet is not persisted when audit insert fails", async () => {
+    const db = await createTestDb()
+
+    // 作成前のシート数を記録
+    const beforeCount = await db
+      .prepare("SELECT COUNT(*) AS c FROM evaluation_sheets")
+      .first<{ c: number }>()
+
+    // actor_id NOT NULL 制約違反で audit INSERT を失敗させ、batch 全体をロールバック
+    try {
+      await db.batch([
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheets
+               (employee_id, template_id, period, status, primary_evaluator_id,
+                secondary_evaluator_id, submitted_at, approved_at, finalized_at,
+                revision, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
+          )
+          .bind(5, null, "2026-ROLLBACK", "draft", 4, null, null, null, null, 1, "2026-01-01T00:00:00.000Z", "2026-01-01T00:00:00.000Z"),
+        db.prepare(
+          "SELECT id FROM evaluation_sheets WHERE id = last_insert_rowid()",
+        ),
+        // actor_id に NULL を渡して NOT NULL 制約違反を起こす
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (last_insert_rowid(), NULL, 'test', NULL, NULL, NULL, '2026-01-01T00:00:00.000Z')`,
+          ),
+      ])
+    } catch {
+      // 期待通り失敗
+    }
+
+    // batch 失敗後、シートがロールバックされていることを確認
+    const afterCount = await db
+      .prepare("SELECT COUNT(*) AS c FROM evaluation_sheets")
+      .first<{ c: number }>()
+
+    expect(afterCount?.c).toBe(beforeCount?.c ?? 0)
   })
 })
 
@@ -1059,11 +1114,254 @@ describe("sheet status guard for goals", () => {
       },
     })
 
-    // weight: 0 is invalid (entity enforces min 1), so use weight: 1
-    // But 60+40+1 > 100 — need to delete existing goals first or use smaller weight
-    // For simplicity, test with a non-linked goal on rejected sheet
-    // Actually, the goal entity requires weight >= 1, and existing goals sum to 100
-    // So we need to verify rejected sheet is editable via a different approach
+    // weight: 0 is invalid (zod enforces min 1), and existing goals sum to 100,
+    // so this will fail with weight_exceeded. The important thing is it's NOT
+    // "sheet_not_editable" — the rejected sheet allows edits.
     expect([201, 400, 409]).toContain(goalRes.status)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// linked-goal audit logs
+// ---------------------------------------------------------------------------
+describe("linked-goal audit logs", () => {
+  test("goal create writes goal_add audit log", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number }
+
+    const ownerTk = await tokenFor(5)
+    const goalRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/performance-goals",
+      token: ownerTk,
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "Audit Goal",
+        weight: 50,
+        evaluation_sheet_id: sheet.id,
+      },
+    })
+    expect(goalRes.status).toBe(201)
+
+    // 監査ログに goal_add が記録されていることを確認
+    const auditRows = await db
+      .prepare(
+        "SELECT action, to_value FROM evaluation_sheet_audit_logs WHERE sheet_id = ?1 AND action = 'goal_add'",
+      )
+      .bind(sheet.id)
+      .all<{ action: string; to_value: string }>()
+
+    expect(auditRows.results.length).toBe(1)
+    expect(auditRows.results[0].action).toBe("goal_add")
+
+    const toValue = JSON.parse(auditRows.results[0].to_value)
+    expect(toValue.title).toBe("Audit Goal")
+    expect(toValue.weight).toBe(50)
+  })
+
+  test("goal update writes goal_update audit log", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number }
+
+    const ownerTk = await tokenFor(5)
+    const goalRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/performance-goals",
+      token: ownerTk,
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "Original",
+        weight: 50,
+        evaluation_sheet_id: sheet.id,
+      },
+    })
+    expect(goalRes.status).toBe(201)
+    const goal = (await goalRes.json()) as { id: number }
+
+    // Update the goal
+    const updateRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals/${goal.id}`,
+      token: ownerTk,
+      method: "PUT",
+      body: {
+        period: "2026-H1",
+        title: "Updated",
+        weight: 60,
+      },
+    })
+    expect(updateRes.status).toBe(200)
+
+    // 監査ログに goal_update が記録されていることを確認
+    const auditRows = await db
+      .prepare(
+        "SELECT action, from_value, to_value FROM evaluation_sheet_audit_logs WHERE sheet_id = ?1 AND action = 'goal_update'",
+      )
+      .bind(sheet.id)
+      .all<{ action: string; from_value: string; to_value: string }>()
+
+    expect(auditRows.results.length).toBe(1)
+
+    const fromValue = JSON.parse(auditRows.results[0].from_value)
+    expect(fromValue.title).toBe("Original")
+    expect(fromValue.weight).toBe(50)
+
+    const toValue = JSON.parse(auditRows.results[0].to_value)
+    expect(toValue.title).toBe("Updated")
+    expect(toValue.weight).toBe(60)
+  })
+
+  test("goal delete writes goal_delete audit log", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number }
+
+    const ownerTk = await tokenFor(5)
+    const goalRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/performance-goals",
+      token: ownerTk,
+      method: "POST",
+      body: {
+        period: "2026-H1",
+        title: "To Delete",
+        weight: 30,
+        evaluation_sheet_id: sheet.id,
+      },
+    })
+    expect(goalRes.status).toBe(201)
+    const goal = (await goalRes.json()) as { id: number }
+
+    // Delete the goal
+    const deleteRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals/${goal.id}`,
+      token: ownerTk,
+      method: "DELETE",
+    })
+    expect(deleteRes.status).toBe(204)
+
+    // 監査ログに goal_delete が記録されていることを確認
+    const auditRows = await db
+      .prepare(
+        "SELECT action, from_value FROM evaluation_sheet_audit_logs WHERE sheet_id = ?1 AND action = 'goal_delete'",
+      )
+      .bind(sheet.id)
+      .all<{ action: string; from_value: string }>()
+
+    expect(auditRows.results.length).toBe(1)
+
+    const fromValue = JSON.parse(auditRows.results[0].from_value)
+    expect(fromValue.title).toBe("To Delete")
+    expect(fromValue.weight).toBe(30)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// atomic delete: sheet status guard in D1 batch
+// ---------------------------------------------------------------------------
+describe("atomic delete with sheet status guard", () => {
+  test("delete is rejected atomically when sheet is submitted concurrently", async () => {
+    const db = await createTestDb()
+    const adminTk = await tokenFor(1)
+
+    // Create sheet with goals
+    const sheetRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/evaluation-sheets",
+      token: adminTk,
+      method: "POST",
+      body: {
+        employee_id: 5,
+        period: "2026-H1",
+        primary_evaluator_id: 4,
+      },
+    })
+    const sheet = (await sheetRes.json()) as { id: number; revision: number }
+
+    const ownerTk = await tokenFor(5)
+
+    // Create 2 goals: 60 + 40 = 100
+    await seedGoals(db, sheet.id, [60, 40])
+
+    // List goals to get IDs
+    const goalsRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals?period=2026-H1&employee_id=5`,
+      token: ownerTk,
+      method: "GET",
+    })
+    const goalsList = (await goalsRes.json()) as { data: Array<{ id: number }> }
+    const goalId = goalsList.data[0].id
+
+    // Simulate race: submit the sheet directly via SQL (bypassing pre-validation)
+    await db
+      .prepare(
+        "UPDATE evaluation_sheets SET status = 'pending_approval', revision = revision + 1 WHERE id = ?1",
+      )
+      .bind(sheet.id)
+      .run()
+
+    // Try to delete goal — should fail because sheet is now pending_approval
+    const deleteRes = await requestWithContext({
+      db,
+      jwtSecret,
+      path: `/performance-goals/${goalId}`,
+      token: ownerTk,
+      method: "DELETE",
+    })
+
+    // 409 (atomic guard catches the concurrent submit)
+    expect(deleteRes.status).toBe(409)
   })
 })

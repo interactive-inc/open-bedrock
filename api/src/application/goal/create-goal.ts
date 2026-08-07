@@ -134,6 +134,8 @@ export class CreateGoal {
     try {
       const db = this.c.env.DB
 
+      const now = this.c.env.NOW ?? new Date().toISOString()
+
       const results = await db.batch([
         db
           .prepare(
@@ -171,6 +173,22 @@ export class CreateGoal {
                   owner_type, parent_goal_id, department_code, evaluation_sheet_id
            FROM performance_goals WHERE id = last_insert_rowid()`,
         ),
+        // 評価シートの監査ログをアトミックに記録
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            command.evaluationSheetId,
+            command.employeeId,
+            "goal_add",
+            null,
+            JSON.stringify({ title: command.title, weight: command.weight }),
+            null,
+            now,
+          ),
       ])
 
       type GoalRow = {

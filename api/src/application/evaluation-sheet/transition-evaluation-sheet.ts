@@ -7,6 +7,8 @@ import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { goals } from "@/schema"
 
 export type Command = {
@@ -68,7 +70,12 @@ export class TransitionEvaluationSheet {
       )
     }
 
-    // 状態更新と監査ログをアトミックに実行
+    // 提出時は weight 条件を UPDATE に埋め込んでアトミックに検証する
+    if (existing.status === "draft" && command.targetStatus === "pending_approval") {
+      return this.submitAtomically(existing, transitioned, command)
+    }
+
+    // 通常の遷移: 状態更新と監査ログをアトミックに実行
     const saved = await repository.updateWithAuditLog(transitioned, {
       actorId: command.actorEmployeeId,
       action: "status_change",
@@ -87,6 +94,82 @@ export class TransitionEvaluationSheet {
     }
 
     return saved
+  }
+
+  /**
+   * draft → pending_approval を weight 条件付きでアトミックに実行する。
+   * UPDATE の WHERE に revision（CAS） + 目標 count > 0 + weight 合計 = 100 を
+   * 埋め込み、concurrent な目標削除による weight 不整合を防ぐ。
+   */
+  private async submitAtomically(
+    existing: EvaluationSheet,
+    transitioned: EvaluationSheet,
+    command: Command,
+  ): Promise<EvaluationSheet | ApplicationError> {
+    try {
+      const db = this.c.env.DB
+
+      await db.batch([
+        db
+          .prepare(
+            `UPDATE evaluation_sheets
+             SET status = ?1, primary_evaluator_id = ?2, secondary_evaluator_id = ?3,
+                 submitted_at = ?4, approved_at = ?5, finalized_at = ?6,
+                 revision = ?7, updated_at = ?8
+             WHERE id = ?9 AND revision = ?10
+               AND (SELECT COUNT(*) FROM performance_goals WHERE evaluation_sheet_id = ?9) > 0
+               AND (SELECT COALESCE(SUM(weight), 0) FROM performance_goals WHERE evaluation_sheet_id = ?9) = 100`,
+          )
+          .bind(
+            transitioned.status,
+            transitioned.primaryEvaluatorId,
+            transitioned.secondaryEvaluatorId,
+            transitioned.submittedAt,
+            transitioned.approvedAt,
+            transitioned.finalizedAt,
+            transitioned.revision,
+            transitioned.updatedAt,
+            transitioned.id,
+            existing.revision,
+          ),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            transitioned.id,
+            command.actorEmployeeId,
+            "status_change",
+            existing.status,
+            command.targetStatus,
+            command.note,
+            command.now,
+          ),
+      ])
+
+      const repository = new EvaluationSheetRepository(this.c)
+      const saved = await repository.findById(command.sheetId)
+
+      if (saved instanceof Error || saved === null) {
+        return new UnexpectedError("failed to read back submitted evaluation sheet")
+      }
+
+      return saved
+    } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return new ConflictError(
+          "submit failed: concurrent modification changed weight, goals, or revision",
+          "concurrent_conflict",
+        )
+      }
+
+      return error instanceof Error
+        ? new UnexpectedError("failed to submit evaluation sheet", { cause: error })
+        : new UnexpectedError("failed to submit evaluation sheet")
+    }
   }
 
   /**

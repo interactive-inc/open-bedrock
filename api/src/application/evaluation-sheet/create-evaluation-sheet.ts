@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { EvaluationSheet } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
+import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
@@ -9,7 +11,7 @@ import {
   resolveDirectManagerId,
 } from "@/lib/org/resolve-direct-manager-id"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { employees, evaluationTemplates } from "@/schema"
+import { employees, evaluationTemplates, orgDepartments } from "@/schema"
 
 export type Command = {
   employeeId: number
@@ -85,6 +87,7 @@ export class CreateEvaluationSheet {
     const primaryActiveError = await this.validateEvaluatorActive(
       resolvedPrimaryId,
       "primary",
+      businessDate,
     )
 
     if (primaryActiveError !== null) {
@@ -107,6 +110,7 @@ export class CreateEvaluationSheet {
       const secondaryActiveError = await this.validateEvaluatorActive(
         resolvedSecondaryId,
         "secondary",
+        businessDate,
       )
 
       if (secondaryActiveError !== null) {
@@ -161,8 +165,101 @@ export class CreateEvaluationSheet {
   /**
    * 評価者が active または leave 状態であることを検証する。
    * archived 済みまたは retired の従業員を評価者に設定させない。
+   *
+   * lifecycle migration が "verified" の場合は EmployeeLifecycleReadRepository.findStatesAt()
+   * を使い、active/leave かつ非 archived かつ所属部門が非 archived であることを確認する。
+   * resolve-workflow-approver-matches.ts と同じ判定基準を共通化している。
    */
   private async validateEvaluatorActive(
+    evaluatorId: number,
+    role: "primary" | "secondary",
+    businessDate: string,
+  ): Promise<ApplicationError | null> {
+    const migrationStatus = await new EmployeeLifecycleRepository(this.c).migrationStatus()
+
+    if (migrationStatus instanceof Error) {
+      return new UnexpectedError("failed to check lifecycle migration status", {
+        cause: migrationStatus,
+      })
+    }
+
+    if (migrationStatus === "verified") {
+      return this.validateEvaluatorViaLifecycle(evaluatorId, role, businessDate)
+    }
+
+    // レガシーパス: employees テーブルから直接判定
+    return this.validateEvaluatorViaLegacy(evaluatorId, role)
+  }
+
+  /**
+   * lifecycle 正本から評価者の active 状態を検証する。
+   * resolve-workflow-approver-matches.ts と同じ判定基準:
+   * - !state.archived && (state.status === "active" || state.status === "leave")
+   * - 所属部門が archived でないこと
+   */
+  private async validateEvaluatorViaLifecycle(
+    evaluatorId: number,
+    role: "primary" | "secondary",
+    businessDate: string,
+  ): Promise<ApplicationError | null> {
+    const states = await new EmployeeLifecycleReadRepository(this.c).findStatesAt(
+      [evaluatorId],
+      businessDate,
+    )
+
+    if (states instanceof Error) {
+      return new UnexpectedError(`failed to load ${role} evaluator lifecycle state`, {
+        cause: states,
+      })
+    }
+
+    const state = states.get(evaluatorId)
+
+    if (state === undefined) {
+      return new ValidationError(
+        `${role} evaluator not found`,
+        `${role}_evaluator_not_found`,
+      )
+    }
+
+    if (state.archived) {
+      return new ValidationError(
+        `${role} evaluator is archived`,
+        "evaluator_archived",
+      )
+    }
+
+    if (state.status !== "active" && state.status !== "leave") {
+      return new ValidationError(
+        `${role} evaluator is not active`,
+        "evaluator_not_active",
+      )
+    }
+
+    // 所属部門が archived でないことを確認（resolve-workflow-approver-matches.ts 同様）
+    if (state.primaryAssignment !== null) {
+      const activeDeptRows = await this.c.var.database
+        .select({ code: orgDepartments.code })
+        .from(orgDepartments)
+        .where(and(
+          eq(orgDepartments.code, state.primaryAssignment.departmentCode),
+          isNull(orgDepartments.archivedAt),
+        ))
+        .limit(1)
+
+      if (activeDeptRows.length === 0) {
+        return new ValidationError(
+          `${role} evaluator belongs to an archived department`,
+          "evaluator_department_archived",
+        )
+      }
+    }
+
+    return null
+  }
+
+  /** レガシーパス: employees テーブルから直接判定する。 */
+  private async validateEvaluatorViaLegacy(
     evaluatorId: number,
     role: "primary" | "secondary",
   ): Promise<ApplicationError | null> {

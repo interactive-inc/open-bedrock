@@ -66,7 +66,11 @@ async function resolveViaLifecycle(
          FROM employee_org_assignment_period_versions AS candidate
          WHERE candidate.period_id = current.period_id
        )
-       AND current.is_void = 0`,
+       AND current.is_void = 0
+       AND EXISTS (
+         SELECT 1 FROM org_departments
+         WHERE code = current.department_code AND archived_at IS NULL
+       )`,
   )
     .bind(targetEmployeeId)
     .all<{ manager_employee_id: number | null; starts_on: string; ends_on: string | null }>()
@@ -163,7 +167,7 @@ async function resolveDeptManagerViaLifecycle(
   targetEmployeeId: number,
   asOf?: string,
 ): Promise<number | null> {
-  // 対象社員の所属部門を取得（MAX(revision) + is_void + date filter）
+  // 対象社員の所属部門を取得（MAX(revision) + is_void + date filter + archived 除外）
   const assignmentRows = await c.env.DB.prepare(
     `SELECT current.department_code, current.starts_on, current.ends_on
      FROM employee_org_assignment_period_versions AS current
@@ -174,7 +178,11 @@ async function resolveDeptManagerViaLifecycle(
          FROM employee_org_assignment_period_versions AS candidate
          WHERE candidate.period_id = current.period_id
        )
-       AND current.is_void = 0`,
+       AND current.is_void = 0
+       AND EXISTS (
+         SELECT 1 FROM org_departments
+         WHERE code = current.department_code AND archived_at IS NULL
+       )`,
   )
     .bind(targetEmployeeId)
     .all<{ department_code: string; starts_on: string; ends_on: string | null }>()

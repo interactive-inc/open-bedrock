@@ -84,23 +84,61 @@ export class DeleteGoal {
     }
 
     // goal_evaluations と goals を D1 batch でアトミックに削除する。
-    // goals の DELETE に status != 'done' ガードを付け、確定済み目標の TOCTOU 競合を防ぐ。
+    // goals の DELETE に status != 'done' + sheet status ガードを付け、
+    // 確定済み目標の TOCTOU 競合およびシート提出と削除の競合を防ぐ。
+    const sheetId = current.evaluationSheetId
+    const now = this.c.env.NOW ?? new Date().toISOString()
+
     try {
       const db = this.c.env.DB
-      await db.batch([
+      const statements: Parameters<typeof db.batch>[0] = [
         db
           .prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1")
           .bind(command.goalId),
         db
           .prepare(
-            "DELETE FROM performance_goals WHERE id = ?1 AND status != 'done'",
+            sheetId !== null && sheetId !== undefined
+              ? `DELETE FROM performance_goals
+                 WHERE id = ?1 AND status != 'done'
+                   AND (SELECT status FROM evaluation_sheets WHERE id = ?2)
+                       IN ('draft', 'rejected')`
+              : "DELETE FROM performance_goals WHERE id = ?1 AND status != 'done'",
           )
-          .bind(command.goalId),
+          .bind(
+            command.goalId,
+            ...(sheetId !== null && sheetId !== undefined ? [sheetId] : []),
+          ),
         abortWhenPreviousStatementChangedNoRows(db),
-      ])
+      ]
+
+      // 評価シートに紐づく場合は監査ログをアトミックに記録
+      if (sheetId !== null && sheetId !== undefined) {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO evaluation_sheet_audit_logs
+                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+            )
+            .bind(
+              sheetId,
+              command.employeeId,
+              "goal_delete",
+              JSON.stringify({ id: command.goalId, title: current.title, weight: current.weight }),
+              null,
+              null,
+              now,
+            ),
+        )
+      }
+
+      await db.batch(statements)
     } catch (error) {
       if (isAbortedByGuard(error)) {
-        return new ConflictError("goal is already finalized", "goal_finalized")
+        return new ConflictError(
+          "concurrent modification: goal status or sheet status changed",
+          "concurrent_conflict",
+        )
       }
 
       return new UnexpectedError("failed to delete goal", { cause: error })

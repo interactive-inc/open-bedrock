@@ -116,7 +116,7 @@ export class UpdateGoal {
       current.evaluationSheetId !== null &&
       current.evaluationSheetId !== undefined
     ) {
-      return this.updateGoalAtomic(updated, current.evaluationSheetId, command)
+      return this.updateGoalAtomic(updated, current, current.evaluationSheetId, command)
     }
 
     const saved = await repository.update(updated)
@@ -139,11 +139,13 @@ export class UpdateGoal {
    */
   private async updateGoalAtomic(
     goal: Goal,
+    previous: Goal,
     sheetId: number,
     command: Command,
   ): Promise<Goal | ApplicationError> {
     try {
       const db = this.c.env.DB
+      const now = this.c.env.NOW ?? new Date().toISOString()
 
       await db.batch([
         db
@@ -174,6 +176,22 @@ export class UpdateGoal {
             sheetId,
           ),
         abortWhenPreviousStatementChangedNoRows(db),
+        // 評価シートの監査ログをアトミックに記録
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            sheetId,
+            command.employeeId,
+            "goal_update",
+            JSON.stringify({ title: previous.title, weight: previous.weight }),
+            JSON.stringify({ title: command.title, weight: command.weight }),
+            null,
+            now,
+          ),
       ])
 
       // re-fetch the updated goal
