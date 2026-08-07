@@ -3,11 +3,7 @@ import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { TransitionEvaluationSheet } from "@/application/evaluation-sheet/transition-evaluation-sheet"
 import { evaluationSheetStatusSchema } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
-import {
-  ForbiddenError,
-  NotFoundError,
-  UnauthorizedError,
-} from "@/interface/lib/errors"
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { factory } from "@/interface/utils/factory"
@@ -50,10 +46,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const sheetId = validateIntParam(
-      c.req.param("sheet_id"),
-      "evaluation sheet",
-    )
+    const sheetId = validateIntParam(c.req.param("sheet_id"), "evaluation sheet")
     const json = c.req.valid("json")
 
     // シートを先読みして権限判定
@@ -71,46 +64,21 @@ export const POST = factory.createHandlers(
 
     const isOwner = row.employeeId === session.employeeId
     const isPrimaryEvaluator = row.primaryEvaluatorId === session.employeeId
-    const isSecondaryEvaluator =
-      row.secondaryEvaluatorId === session.employeeId
+    const isSecondaryEvaluator = row.secondaryEvaluatorId === session.employeeId
     const isAdmin = session.hasPermission("evaluation:administer")
 
     // 遷移権限の判定 — currentStatus × targetStatus × role マトリクス
     const currentStatus = row.status
     const targetStatus = json.status
     const allowed = (() => {
-      if (
-        currentStatus === "draft" &&
-        targetStatus === "pending_approval" &&
-        isOwner
-      )
+      if (currentStatus === "draft" && targetStatus === "pending_approval" && isOwner) return true
+      if (currentStatus === "pending_approval" && targetStatus === "approved" && isPrimaryEvaluator)
         return true
-      if (
-        currentStatus === "pending_approval" &&
-        targetStatus === "approved" &&
-        isPrimaryEvaluator
-      )
+      if (currentStatus === "pending_approval" && targetStatus === "rejected" && isPrimaryEvaluator)
         return true
-      if (
-        currentStatus === "pending_approval" &&
-        targetStatus === "rejected" &&
-        isPrimaryEvaluator
-      )
-        return true
-      if (currentStatus === "rejected" && targetStatus === "draft" && isOwner)
-        return true
-      if (
-        currentStatus === "approved" &&
-        targetStatus === "self_eval" &&
-        isOwner
-      )
-        return true
-      if (
-        currentStatus === "self_eval" &&
-        targetStatus === "primary_eval" &&
-        isOwner
-      )
-        return true
+      if (currentStatus === "rejected" && targetStatus === "draft" && isOwner) return true
+      if (currentStatus === "approved" && targetStatus === "self_eval" && isOwner) return true
+      if (currentStatus === "self_eval" && targetStatus === "primary_eval" && isOwner) return true
       if (
         currentStatus === "primary_eval" &&
         targetStatus === "secondary_eval" &&
@@ -132,24 +100,9 @@ export const POST = factory.createHandlers(
         (isSecondaryEvaluator || isAdmin)
       )
         return true
-      if (
-        currentStatus === "finalized" &&
-        targetStatus === "reopened" &&
-        isAdmin
-      )
-        return true
-      if (
-        currentStatus === "finalized" &&
-        targetStatus === "archived" &&
-        isAdmin
-      )
-        return true
-      if (
-        currentStatus === "reopened" &&
-        targetStatus === "self_eval" &&
-        isAdmin
-      )
-        return true
+      if (currentStatus === "finalized" && targetStatus === "reopened" && isAdmin) return true
+      if (currentStatus === "finalized" && targetStatus === "archived" && isAdmin) return true
+      if (currentStatus === "reopened" && targetStatus === "self_eval" && isAdmin) return true
       return false
     })()
 

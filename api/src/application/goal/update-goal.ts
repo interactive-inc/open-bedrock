@@ -55,10 +55,7 @@ export class UpdateGoal {
     }
 
     // 評価シートに紐づく場合の検証
-    if (
-      current.evaluationSheetId !== null &&
-      current.evaluationSheetId !== undefined
-    ) {
+    if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
       const sheetRows = await this.c.var.database
         .select({
           status: evaluationSheets.status,
@@ -71,10 +68,7 @@ export class UpdateGoal {
       const sheet = sheetRows.at(0)
       const EDITABLE_SHEET_STATUSES = ["draft", "rejected"]
 
-      if (
-        sheet !== undefined &&
-        EDITABLE_SHEET_STATUSES.includes(sheet.status) === false
-      ) {
+      if (sheet !== undefined && EDITABLE_SHEET_STATUSES.includes(sheet.status) === false) {
         return new ConflictError(
           "goals can only be modified when evaluation sheet is in draft or rejected status",
           "sheet_not_editable",
@@ -90,9 +84,7 @@ export class UpdateGoal {
       }
     }
 
-    const evaluations = await new GoalEvaluationRepository(this.c).findByGoalId(
-      command.goalId,
-    )
+    const evaluations = await new GoalEvaluationRepository(this.c).findByGoalId(command.goalId)
 
     if (evaluations instanceof Error) {
       return new UnexpectedError("failed to find goal evaluations", {
@@ -112,10 +104,7 @@ export class UpdateGoal {
     })
 
     // 評価シートに紐づく場合は atomic UPDATE（weight + status guard 付き）
-    if (
-      current.evaluationSheetId !== null &&
-      current.evaluationSheetId !== undefined
-    ) {
+    if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
       return this.updateGoalAtomic(updated, current, current.evaluationSheetId, command)
     }
 

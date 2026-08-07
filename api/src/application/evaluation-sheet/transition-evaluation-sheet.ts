@@ -177,9 +177,7 @@ export class TransitionEvaluationSheet {
    * - 目標が 1 件以上存在すること
    * - weight 合計がちょうど 100% であること
    */
-  private async validateSubmitWeights(
-    sheetId: number,
-  ): Promise<ApplicationError | null> {
+  private async validateSubmitWeights(sheetId: number): Promise<ApplicationError | null> {
     const rows = await this.c.var.database
       .select({ total: sum(goals.weight) })
       .from(goals)

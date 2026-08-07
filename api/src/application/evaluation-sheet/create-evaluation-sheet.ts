@@ -127,10 +127,7 @@ export class CreateEvaluationSheet {
         .limit(1)
 
       if (templateRows.at(0) === undefined) {
-        return new ValidationError(
-          "evaluation template not found",
-          "template_not_found",
-        )
+        return new ValidationError("evaluation template not found", "template_not_found")
       }
     }
 
@@ -216,24 +213,15 @@ export class CreateEvaluationSheet {
     const state = states.get(evaluatorId)
 
     if (state === undefined) {
-      return new ValidationError(
-        `${role} evaluator not found`,
-        `${role}_evaluator_not_found`,
-      )
+      return new ValidationError(`${role} evaluator not found`, `${role}_evaluator_not_found`)
     }
 
     if (state.archived) {
-      return new ValidationError(
-        `${role} evaluator is archived`,
-        "evaluator_archived",
-      )
+      return new ValidationError(`${role} evaluator is archived`, "evaluator_archived")
     }
 
     if (state.status !== "active" && state.status !== "leave") {
-      return new ValidationError(
-        `${role} evaluator is not active`,
-        "evaluator_not_active",
-      )
+      return new ValidationError(`${role} evaluator is not active`, "evaluator_not_active")
     }
 
     // 所属部門が archived でないことを確認（resolve-workflow-approver-matches.ts 同様）
@@ -241,10 +229,12 @@ export class CreateEvaluationSheet {
       const activeDeptRows = await this.c.var.database
         .select({ code: orgDepartments.code })
         .from(orgDepartments)
-        .where(and(
-          eq(orgDepartments.code, state.primaryAssignment.departmentCode),
-          isNull(orgDepartments.archivedAt),
-        ))
+        .where(
+          and(
+            eq(orgDepartments.code, state.primaryAssignment.departmentCode),
+            isNull(orgDepartments.archivedAt),
+          ),
+        )
         .limit(1)
 
       if (activeDeptRows.length === 0) {
@@ -276,24 +266,15 @@ export class CreateEvaluationSheet {
     const row = rows.at(0)
 
     if (row === undefined) {
-      return new ValidationError(
-        `${role} evaluator not found`,
-        `${role}_evaluator_not_found`,
-      )
+      return new ValidationError(`${role} evaluator not found`, `${role}_evaluator_not_found`)
     }
 
     if (row.archivedAt !== null) {
-      return new ValidationError(
-        `${role} evaluator is archived`,
-        "evaluator_archived",
-      )
+      return new ValidationError(`${role} evaluator is archived`, "evaluator_archived")
     }
 
     if (row.status === "retired") {
-      return new ValidationError(
-        `${role} evaluator is retired`,
-        "evaluator_retired",
-      )
+      return new ValidationError(`${role} evaluator is retired`, "evaluator_retired")
     }
 
     return null
@@ -315,10 +296,7 @@ export class CreateEvaluationSheet {
         .limit(1)
 
       if (evaluatorRows.at(0) === undefined) {
-        return new ValidationError(
-          "primary evaluator not found",
-          "primary_evaluator_not_found",
-        )
+        return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")
       }
 
       // 自分自身を一次評価者にしない
@@ -333,11 +311,7 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 直属上長を自動解決（基準日 = 会社営業日）
-    const managerId = await resolveDirectManagerId(
-      this.c,
-      command.employeeId,
-      businessDate,
-    )
+    const managerId = await resolveDirectManagerId(this.c, command.employeeId, businessDate)
 
     if (managerId instanceof Error) {
       return new UnexpectedError("failed to resolve direct manager", {
@@ -384,10 +358,7 @@ export class CreateEvaluationSheet {
         .limit(1)
 
       if (secondaryRows.at(0) === undefined) {
-        return new ValidationError(
-          "secondary evaluator not found",
-          "secondary_evaluator_not_found",
-        )
+        return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
       }
 
       // 二次評価者 ≠ 対象社員
@@ -410,11 +381,7 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
-    const deptManagerId = await resolveDepartmentManagerId(
-      this.c,
-      command.employeeId,
-      businessDate,
-    )
+    const deptManagerId = await resolveDepartmentManagerId(this.c, command.employeeId, businessDate)
 
     if (deptManagerId instanceof Error) {
       return new UnexpectedError("failed to resolve department manager", {
@@ -427,10 +394,7 @@ export class CreateEvaluationSheet {
     }
 
     // 部門長が本人 or 一次評価者と同一なら設定しない
-    if (
-      deptManagerId === command.employeeId ||
-      deptManagerId === primaryEvaluatorId
-    ) {
+    if (deptManagerId === command.employeeId || deptManagerId === primaryEvaluatorId) {
       return null
     }
 

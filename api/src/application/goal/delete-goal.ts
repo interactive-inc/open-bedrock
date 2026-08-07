@@ -6,12 +6,7 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import type { ApplicationError } from "@/lib/errors"
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  UnexpectedError,
-} from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { evaluationSheets } from "@/schema"
 
 export type Command = {
@@ -45,10 +40,7 @@ export class DeleteGoal {
     }
 
     // 評価シートに紐づく場合、シートが編集可能ステータスか確認
-    if (
-      current.evaluationSheetId !== null &&
-      current.evaluationSheetId !== undefined
-    ) {
+    if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
       const sheetRows = await this.c.var.database
         .select({ status: evaluationSheets.status })
         .from(evaluationSheets)
@@ -58,10 +50,7 @@ export class DeleteGoal {
       const sheet = sheetRows.at(0)
       const EDITABLE_SHEET_STATUSES = ["draft", "rejected"]
 
-      if (
-        sheet !== undefined &&
-        EDITABLE_SHEET_STATUSES.includes(sheet.status) === false
-      ) {
+      if (sheet !== undefined && EDITABLE_SHEET_STATUSES.includes(sheet.status) === false) {
         return new ConflictError(
           "goals can only be deleted when evaluation sheet is in draft or rejected status",
           "sheet_not_editable",
@@ -92,9 +81,7 @@ export class DeleteGoal {
     try {
       const db = this.c.env.DB
       const statements: Parameters<typeof db.batch>[0] = [
-        db
-          .prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1")
-          .bind(command.goalId),
+        db.prepare("DELETE FROM goal_evaluations WHERE goal_id = ?1").bind(command.goalId),
         db
           .prepare(
             sheetId !== null && sheetId !== undefined
@@ -104,10 +91,7 @@ export class DeleteGoal {
                        IN ('draft', 'rejected')`
               : "DELETE FROM performance_goals WHERE id = ?1 AND status != 'done'",
           )
-          .bind(
-            command.goalId,
-            ...(sheetId !== null && sheetId !== undefined ? [sheetId] : []),
-          ),
+          .bind(command.goalId, ...(sheetId !== null && sheetId !== undefined ? [sheetId] : [])),
         abortWhenPreviousStatementChangedNoRows(db),
       ]
 

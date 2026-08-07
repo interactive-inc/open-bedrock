@@ -62,8 +62,7 @@ async function createSheetWithEvaluators(
     email: "admin@example.com",
   })
 
-  const secondaryId =
-    opts?.secondaryEvaluatorId !== undefined ? opts.secondaryEvaluatorId : 6
+  const secondaryId = opts?.secondaryEvaluatorId !== undefined ? opts.secondaryEvaluatorId : 6
 
   const response = await requestWithContext({
     db,
@@ -159,9 +158,7 @@ async function advanceTo(
 
     if (res.status !== 200) {
       const body = await res.text()
-      throw new Error(
-        `advanceTo failed at ${step.status}: ${res.status} ${body}`,
-      )
+      throw new Error(`advanceTo failed at ${step.status}: ${res.status} ${body}`)
     }
 
     const json = (await res.json()) as { revision: number }
@@ -269,57 +266,24 @@ describe("transition permissions matrix", () => {
   test("primary evaluator can approve (pending_approval → approved)", async () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
-    const rev = await advanceToWithGoals(
-      db,
-      sheet.id,
-      sheet.revision,
-      "pending_approval",
-    )
-    const res = await transition(
-      db,
-      sheet.id,
-      "approved",
-      rev,
-      await tokenFor(4),
-    )
+    const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "pending_approval")
+    const res = await transition(db, sheet.id, "approved", rev, await tokenFor(4))
     expect(res.status).toBe(200)
   })
 
   test("admin (non-evaluator) cannot approve (pending_approval → approved)", async () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
-    const rev = await advanceToWithGoals(
-      db,
-      sheet.id,
-      sheet.revision,
-      "pending_approval",
-    )
-    const res = await transition(
-      db,
-      sheet.id,
-      "approved",
-      rev,
-      await tokenFor(1),
-    )
+    const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "pending_approval")
+    const res = await transition(db, sheet.id, "approved", rev, await tokenFor(1))
     expect(res.status).toBe(403)
   })
 
   test("owner cannot approve their own sheet", async () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
-    const rev = await advanceToWithGoals(
-      db,
-      sheet.id,
-      sheet.revision,
-      "pending_approval",
-    )
-    const res = await transition(
-      db,
-      sheet.id,
-      "approved",
-      rev,
-      await tokenFor(5),
-    )
+    const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "pending_approval")
+    const res = await transition(db, sheet.id, "approved", rev, await tokenFor(5))
     expect(res.status).toBe(403)
   })
 
@@ -327,19 +291,8 @@ describe("transition permissions matrix", () => {
   test("primary evaluator can reject (pending_approval → rejected)", async () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
-    const rev = await advanceToWithGoals(
-      db,
-      sheet.id,
-      sheet.revision,
-      "pending_approval",
-    )
-    const res = await transition(
-      db,
-      sheet.id,
-      "rejected",
-      rev,
-      await tokenFor(4),
-    )
+    const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "pending_approval")
+    const res = await transition(db, sheet.id, "rejected", rev, await tokenFor(4))
     expect(res.status).toBe(200)
   })
 
@@ -348,13 +301,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "approved")
-    const res = await transition(
-      db,
-      sheet.id,
-      "self_eval",
-      rev,
-      await tokenFor(5),
-    )
+    const res = await transition(db, sheet.id, "self_eval", rev, await tokenFor(5))
     expect(res.status).toBe(200)
   })
 
@@ -362,13 +309,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "approved")
-    const res = await transition(
-      db,
-      sheet.id,
-      "self_eval",
-      rev,
-      await tokenFor(1),
-    )
+    const res = await transition(db, sheet.id, "self_eval", rev, await tokenFor(1))
     expect(res.status).toBe(403)
   })
 
@@ -377,13 +318,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "self_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "primary_eval",
-      rev,
-      await tokenFor(5),
-    )
+    const res = await transition(db, sheet.id, "primary_eval", rev, await tokenFor(5))
     expect(res.status).toBe(200)
   })
 
@@ -392,13 +327,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "primary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "secondary_eval",
-      rev,
-      await tokenFor(4),
-    )
+    const res = await transition(db, sheet.id, "secondary_eval", rev, await tokenFor(4))
     expect(res.status).toBe(200)
   })
 
@@ -409,13 +338,7 @@ describe("transition permissions matrix", () => {
       secondaryEvaluatorId: null,
     })
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "primary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "finalized",
-      rev,
-      await tokenFor(4),
-    )
+    const res = await transition(db, sheet.id, "finalized", rev, await tokenFor(4))
     expect(res.status).toBe(200)
   })
 
@@ -425,13 +348,7 @@ describe("transition permissions matrix", () => {
       secondaryEvaluatorId: null,
     })
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "primary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "finalized",
-      rev,
-      await tokenFor(1),
-    )
+    const res = await transition(db, sheet.id, "finalized", rev, await tokenFor(1))
     expect(res.status).toBe(200)
   })
 
@@ -439,13 +356,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "primary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "finalized",
-      rev,
-      await tokenFor(4),
-    )
+    const res = await transition(db, sheet.id, "finalized", rev, await tokenFor(4))
     // Entity rejects this transition (primary_eval→finalized requires secondary_eval first when secondary exists)
     // Route should return 403 or entity should return 409
     expect([403, 409]).toContain(res.status)
@@ -456,13 +367,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "secondary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "finalized",
-      rev,
-      await tokenFor(6),
-    )
+    const res = await transition(db, sheet.id, "finalized", rev, await tokenFor(6))
     expect(res.status).toBe(200)
   })
 
@@ -470,13 +375,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "secondary_eval")
-    const res = await transition(
-      db,
-      sheet.id,
-      "finalized",
-      rev,
-      await tokenFor(1),
-    )
+    const res = await transition(db, sheet.id, "finalized", rev, await tokenFor(1))
     expect(res.status).toBe(200)
   })
 
@@ -485,13 +384,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "finalized")
-    const res = await transition(
-      db,
-      sheet.id,
-      "reopened",
-      rev,
-      await tokenFor(1),
-    )
+    const res = await transition(db, sheet.id, "reopened", rev, await tokenFor(1))
     expect(res.status).toBe(200)
   })
 
@@ -499,13 +392,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "finalized")
-    const res = await transition(
-      db,
-      sheet.id,
-      "reopened",
-      rev,
-      await tokenFor(5),
-    )
+    const res = await transition(db, sheet.id, "reopened", rev, await tokenFor(5))
     expect(res.status).toBe(403)
   })
 
@@ -513,13 +400,7 @@ describe("transition permissions matrix", () => {
     const db = await createTestDb()
     const sheet = await createSheetWithEvaluators(db)
     const rev = await advanceToWithGoals(db, sheet.id, sheet.revision, "finalized")
-    const res = await transition(
-      db,
-      sheet.id,
-      "archived",
-      rev,
-      await tokenFor(1),
-    )
+    const res = await transition(db, sheet.id, "archived", rev, await tokenFor(1))
     expect(res.status).toBe(200)
   })
 })
@@ -716,17 +597,27 @@ describe("createWithAuditLog readback", () => {
                 revision, created_at, updated_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
           )
-          .bind(5, null, "2026-ROLLBACK", "draft", 4, null, null, null, null, 1, "2026-01-01T00:00:00.000Z", "2026-01-01T00:00:00.000Z"),
-        db.prepare(
-          "SELECT id FROM evaluation_sheets WHERE id = last_insert_rowid()",
-        ),
+          .bind(
+            5,
+            null,
+            "2026-ROLLBACK",
+            "draft",
+            4,
+            null,
+            null,
+            null,
+            null,
+            1,
+            "2026-01-01T00:00:00.000Z",
+            "2026-01-01T00:00:00.000Z",
+          ),
+        db.prepare("SELECT id FROM evaluation_sheets WHERE id = last_insert_rowid()"),
         // actor_id に NULL を渡して NOT NULL 制約違反を起こす
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheet_audit_logs
+        db.prepare(
+          `INSERT INTO evaluation_sheet_audit_logs
                (sheet_id, actor_id, action, from_value, to_value, note, created_at)
              VALUES (last_insert_rowid(), NULL, 'test', NULL, NULL, NULL, '2026-01-01T00:00:00.000Z')`,
-          ),
+        ),
       ])
     } catch {
       // 期待通り失敗
@@ -1024,13 +915,7 @@ describe("sheet status guard for goals", () => {
 
     // Seed goals and submit
     await seedGoals(db, sheet.id, [60, 40])
-    const submitRes = await transition(
-      db,
-      sheet.id,
-      "pending_approval",
-      sheet.revision,
-      ownerTk,
-    )
+    const submitRes = await transition(db, sheet.id, "pending_approval", sheet.revision, ownerTk)
 
     expect(submitRes.status).toBe(200)
 
@@ -1078,24 +963,12 @@ describe("sheet status guard for goals", () => {
 
     // Seed goals and submit → pending_approval
     await seedGoals(db, sheet.id, [60, 40])
-    const submitRes = await transition(
-      db,
-      sheet.id,
-      "pending_approval",
-      sheet.revision,
-      ownerTk,
-    )
+    const submitRes = await transition(db, sheet.id, "pending_approval", sheet.revision, ownerTk)
     const submitted = (await submitRes.json()) as { revision: number }
 
     // Reject → rejected
     const evaluatorTk = await tokenFor(4)
-    const rejectRes = await transition(
-      db,
-      sheet.id,
-      "rejected",
-      submitted.revision,
-      evaluatorTk,
-    )
+    const rejectRes = await transition(db, sheet.id, "rejected", submitted.revision, evaluatorTk)
 
     expect(rejectRes.status).toBe(200)
 

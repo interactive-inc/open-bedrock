@@ -22,9 +22,7 @@ export class EvaluationSheetRepository {
 
       return row === undefined ? null : EvaluationSheet.fromRow(row)
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to load evaluation sheet")
+      return error instanceof Error ? error : new Error("failed to load evaluation sheet")
     }
   }
 
@@ -70,9 +68,7 @@ export class EvaluationSheetRepository {
         total: totalRows.at(0)?.total ?? 0,
       }
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to list evaluation sheets")
+      return error instanceof Error ? error : new Error("failed to list evaluation sheets")
     }
   }
 
@@ -102,9 +98,7 @@ export class EvaluationSheetRepository {
         ? new Error("failed to create evaluation sheet")
         : EvaluationSheet.fromRow(row)
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to create evaluation sheet")
+      return error instanceof Error ? error : new Error("failed to create evaluation sheet")
     }
   }
 
@@ -112,9 +106,7 @@ export class EvaluationSheetRepository {
    * 楽観的ロック付きで評価シートを更新する。
    * WHERE に revision を含め、一致しない場合は ConflictError を返す。
    */
-  async update(
-    sheet: EvaluationSheet,
-  ): Promise<EvaluationSheet | null | Error> {
+  async update(sheet: EvaluationSheet): Promise<EvaluationSheet | null | Error> {
     try {
       if (sheet.id === null) {
         return new Error("cannot update unsaved evaluation sheet")
@@ -153,9 +145,7 @@ export class EvaluationSheetRepository {
 
       return EvaluationSheet.fromRow(row)
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to update evaluation sheet")
+      return error instanceof Error ? error : new Error("failed to update evaluation sheet")
     }
   }
 
@@ -211,14 +201,7 @@ export class EvaluationSheetRepository {
                (sheet_id, actor_id, action, from_value, to_value, note, created_at)
              VALUES (last_insert_rowid(), ?1, ?2, ?3, ?4, ?5, ?6)`,
           )
-          .bind(
-            audit.actorId,
-            audit.action,
-            audit.fromValue,
-            audit.toValue,
-            audit.note,
-            audit.now,
-          ),
+          .bind(audit.actorId, audit.action, audit.fromValue, audit.toValue, audit.note, audit.now),
       ])
 
       type SheetRow = {
@@ -259,9 +242,7 @@ export class EvaluationSheetRepository {
         updatedAt: row.updated_at,
       })
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to create evaluation sheet")
+      return error instanceof Error ? error : new Error("failed to create evaluation sheet")
     }
   }
 
@@ -343,9 +324,7 @@ export class EvaluationSheetRepository {
         )
       }
 
-      return error instanceof Error
-        ? error
-        : new Error("failed to update evaluation sheet")
+      return error instanceof Error ? error : new Error("failed to update evaluation sheet")
     }
   }
 
@@ -372,9 +351,7 @@ export class EvaluationSheetRepository {
 
       return null
     } catch (error) {
-      return error instanceof Error
-        ? error
-        : new Error("failed to append audit log")
+      return error instanceof Error ? error : new Error("failed to append audit log")
     }
   }
 }

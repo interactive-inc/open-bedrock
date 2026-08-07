@@ -48,10 +48,7 @@ export class CreateGoal {
       const sheet = sheetRows.at(0)
 
       if (sheet === undefined) {
-        return new ValidationError(
-          "evaluation sheet not found",
-          "evaluation_sheet_not_found",
-        )
+        return new ValidationError("evaluation sheet not found", "evaluation_sheet_not_found")
       }
 
       if (sheet.employeeId !== command.employeeId) {
@@ -128,9 +125,7 @@ export class CreateGoal {
    * 同一ステートメントで検証し、abortWhenPreviousStatementChangedNoRows で
    * 0 行挿入（guard 失敗）を検出する。
    */
-  private async createGoalAtomic(
-    command: Command,
-  ): Promise<Goal | ApplicationError> {
+  private async createGoalAtomic(command: Command): Promise<Goal | ApplicationError> {
     try {
       const db = this.c.env.DB
 
