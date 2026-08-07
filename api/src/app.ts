@@ -102,6 +102,8 @@ import * as decisionRecordsRoute from "@/interface/routes/decision-records/route
 import * as departmentBudgetsIdRoute from "@/interface/routes/department-budgets/[id]/route"
 import * as departmentBudgetsRoute from "@/interface/routes/department-budgets/route"
 import * as departmentBudgetsSummaryRoute from "@/interface/routes/department-budgets/summary/route"
+import * as departmentDefinitionsCreateRoute from "@/interface/routes/department-definitions/create-route"
+import * as departmentDefinitionsRoute from "@/interface/routes/department-definitions/route"
 import * as departmentsCodeMembersRoute from "@/interface/routes/departments/[code]/members/route"
 import * as departmentsCodeRoute from "@/interface/routes/departments/[code]/route"
 import * as departmentsRoute from "@/interface/routes/departments/route"
@@ -460,6 +462,8 @@ export const app = appBase
   .get("/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
   .patch("/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
   .delete("/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
+  .get("/department-definitions", ...departmentDefinitionsRoute.GET)
+  .post("/department-definitions", ...departmentDefinitionsCreateRoute.POST)
   .get("/departments", ...departmentsRoute.GET)
   .post("/departments", ...departmentsRoute.POST)
   .get("/departments/tree", ...departmentsTreeRoute.GET)

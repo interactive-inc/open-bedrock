@@ -226,6 +226,58 @@ describe("POST /health-checkups", () => {
 
     expect(response.status).toBe(403)
   })
+
+  test("creates a record by employee_code", async () => {
+    const response = await request({
+      path: "/health-checkups",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_code: "E006", fiscal_year: 2026, checkup_kind: "stress_check" },
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = healthCheckupSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.employee_id).toBe(6)
+    }
+  })
+
+  test("returns 404 for an unknown employee_code", async () => {
+    const response = await request({
+      path: "/health-checkups",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_code: "E999", fiscal_year: 2026, checkup_kind: "regular" },
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when both employee_id and employee_code are given", async () => {
+    const response = await request({
+      path: "/health-checkups",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { employee_id: 6, employee_code: "E006", fiscal_year: 2026, checkup_kind: "regular" },
+    })
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when neither employee_id nor employee_code is given", async () => {
+    const response = await request({
+      path: "/health-checkups",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { fiscal_year: 2026, checkup_kind: "regular" },
+    })
+
+    expect(response.status).toBe(400)
+  })
 })
 
 describe("POST /health-checkups/:id/complete", () => {

@@ -10,6 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
+import { canManageEmployeeEvents } from "@/lib/employee-event/can-manage-employee-events"
+import { canManageSalaryRevisions } from "@/lib/salary-revision/can-manage-salary-revisions"
+import { canViewAllSalaryRevisions } from "@/lib/salary-revision/can-view-all-salary-revisions"
 import { notFound } from "next/navigation"
 
 export const metadata = { title: "従業員詳細" }
@@ -48,16 +51,24 @@ export default async function EmployeeDetailPage(props: Props) {
         <EmployeeGradeHistory code={params.employee} />
       </Suspense>
 
-      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-        <EmployeeSalaryRevisionHistory code={params.employee} />
-      </Suspense>
+      {canViewAllSalaryRevisions(currentUser.permissions) ? (
+        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <EmployeeSalaryRevisionHistory
+            code={params.employee}
+            canManage={canManageSalaryRevisions(currentUser.permissions)}
+          />
+        </Suspense>
+      ) : null}
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
         <EmployeeWorkStyleHistory code={params.employee} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-        <EmployeeEventHistory code={params.employee} />
+        <EmployeeEventHistory
+          code={params.employee}
+          canManage={canManageEmployeeEvents(currentUser.permissions)}
+        />
       </Suspense>
     </div>
   )
