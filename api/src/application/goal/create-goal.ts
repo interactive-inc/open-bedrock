@@ -4,8 +4,8 @@ import type { Context } from "@/env"
 import { UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { GoalRepository } from "@/infrastructure/goal/goal-repository"
-import { evaluationSheets } from "@/schema"
-import { eq } from "drizzle-orm"
+import { evaluationSheets, goals } from "@/schema"
+import { eq, sum } from "drizzle-orm"
 
 export type Command = {
   employeeId: number
@@ -55,6 +55,21 @@ export class CreateGoal {
         return new ValidationError(
           "goal period does not match evaluation sheet period",
           "period_mismatch",
+        )
+      }
+
+      // weight 合計が 100% を超えないか検証
+      const weightRows = await this.c.var.database
+        .select({ total: sum(goals.weight) })
+        .from(goals)
+        .where(eq(goals.evaluationSheetId, command.evaluationSheetId))
+
+      const currentTotal = Number(weightRows.at(0)?.total ?? 0)
+
+      if (currentTotal + command.weight > 100) {
+        return new ValidationError(
+          `total weight would exceed 100% (current: ${currentTotal}%, adding: ${command.weight}%)`,
+          "weight_exceeded",
         )
       }
     }

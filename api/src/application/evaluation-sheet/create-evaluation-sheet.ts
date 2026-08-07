@@ -141,8 +141,8 @@ export class CreateEvaluationSheet {
       return explicitId
     }
 
-    // 未指定 → 直属上長を自動解決
-    const managerId = await resolveDirectManagerId(this.c, command.employeeId)
+    // 未指定 → 直属上長を自動解決（基準日 = シート作成日時）
+    const managerId = await resolveDirectManagerId(this.c, command.employeeId, command.now)
 
     if (managerId instanceof Error) {
       return new UnexpectedError("failed to resolve direct manager", { cause: managerId })
@@ -209,9 +209,13 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
-    const deptManagerId = await resolveDepartmentManagerId(this.c, command.employeeId)
+    const deptManagerId = await resolveDepartmentManagerId(this.c, command.employeeId, command.now)
 
-    if (deptManagerId instanceof Error || deptManagerId === null) {
+    if (deptManagerId instanceof Error) {
+      return new UnexpectedError("failed to resolve department manager", { cause: deptManagerId })
+    }
+
+    if (deptManagerId === null) {
       return null
     }
 

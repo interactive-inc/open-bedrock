@@ -166,6 +166,9 @@ export class EvaluationSheetRepository {
     try {
       const db = this.c.env.DB
 
+      // シート作成と監査ログ挿入を同一 batch でアトミックに実行する。
+      // last_insert_rowid() は同一トランザクション内で有効なため、
+      // 3 番目の statement で audit_log に sheet_id を渡せる。
       const results = await db.batch([
         db
           .prepare(
@@ -189,40 +192,55 @@ export class EvaluationSheetRepository {
             sheet.createdAt,
             sheet.updatedAt,
           ),
-        db.prepare("SELECT last_insert_rowid() AS id"),
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (last_insert_rowid(), ?1, ?2, ?3, ?4, ?5, ?6)`,
+          )
+          .bind(audit.actorId, audit.action, audit.fromValue, audit.toValue, audit.note, audit.now),
+        db.prepare(
+          "SELECT id, employee_id, template_id, period, status, primary_evaluator_id, secondary_evaluator_id, submitted_at, approved_at, finalized_at, revision, created_at, updated_at FROM evaluation_sheets WHERE id = last_insert_rowid()",
+        ),
       ])
 
-      const insertedId = (results[1] as D1Result<{ id: number }>).results?.at(0)?.id
-
-      if (insertedId === undefined) {
-        return new Error("failed to retrieve inserted evaluation sheet id")
+      type SheetRow = {
+        id: number
+        employee_id: number
+        template_id: number | null
+        period: string
+        status: string
+        primary_evaluator_id: number
+        secondary_evaluator_id: number | null
+        submitted_at: string | null
+        approved_at: string | null
+        finalized_at: string | null
+        revision: number
+        created_at: string
+        updated_at: string
       }
 
-      // 監査ログを挿入（作成の直後なので ID は確定）
-      await db
-        .prepare(
-          `INSERT INTO evaluation_sheet_audit_logs
-             (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
-        )
-        .bind(
-          insertedId,
-          audit.actorId,
-          audit.action,
-          audit.fromValue,
-          audit.toValue,
-          audit.note,
-          audit.now,
-        )
-        .run()
+      const row = (results[2] as D1Result<SheetRow>).results?.at(0)
 
-      const created = await this.findById(insertedId)
-
-      if (created instanceof Error || created === null) {
+      if (row === undefined) {
         return new Error("failed to read back created evaluation sheet")
       }
 
-      return created
+      return EvaluationSheet.fromRow({
+        id: row.id,
+        employeeId: row.employee_id,
+        templateId: row.template_id,
+        period: row.period,
+        status: row.status,
+        primaryEvaluatorId: row.primary_evaluator_id,
+        secondaryEvaluatorId: row.secondary_evaluator_id,
+        submittedAt: row.submitted_at,
+        approvedAt: row.approved_at,
+        finalizedAt: row.finalized_at,
+        revision: row.revision,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      })
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to create evaluation sheet")
     }

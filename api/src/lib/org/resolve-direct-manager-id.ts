@@ -1,7 +1,15 @@
 import type { Context } from "@/env"
-import { employees, orgAssignmentPeriodVersions, orgMemberships } from "@/schema"
-import { and, desc, eq } from "drizzle-orm"
+import { employees, orgDepartments, orgMemberships } from "@/schema"
+import { eq } from "drizzle-orm"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+
+/**
+ * lifecycle 日付フィルタ。
+ * starts_on <= asOf < ends_on (ends_on が null なら上限なし)。
+ */
+function contains(row: { starts_on: string; ends_on: string | null }, asOf: string): boolean {
+  return row.starts_on <= asOf && (row.ends_on === null || asOf < row.ends_on)
+}
 
 /**
  * 対象社員の直属上長の employee ID を解決する。
@@ -10,10 +18,13 @@ import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle
  * それ以外は orgMemberships（レガシー）から解決する。
  *
  * 社員コードが未設定、上長が未設定、上長に対応する社員が見つからない場合は null を返す。
+ *
+ * @param asOf lifecycle パスで有効な所属を判定する基準日（YYYY-MM-DD）。省略時は全件から最新を返す（後方互換）。
  */
 export async function resolveDirectManagerId(
   c: Context,
   targetEmployeeId: number,
+  asOf?: string,
 ): Promise<number | null | Error> {
   try {
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
@@ -23,7 +34,7 @@ export async function resolveDirectManagerId(
     }
 
     if (migrationStatus === "verified") {
-      return resolveViaLifecycle(c, targetEmployeeId)
+      return resolveViaLifecycle(c, targetEmployeeId, asOf)
     }
 
     return resolveViaLegacy(c, targetEmployeeId)
@@ -34,23 +45,39 @@ export async function resolveDirectManagerId(
 
 /**
  * lifecycle 正本（orgAssignmentPeriodVersions）から上長を解決する。
- * managerEmployeeId が直接 employee ID で格納されている。
+ *
+ * 正規パターン:
+ *   1. MAX(revision) per period_id で最新版のみ取得
+ *   2. is_void = 0 で論理削除を除外
+ *   3. contains(row, asOf) で基準日に有効な期間のみ残す
  */
-async function resolveViaLifecycle(c: Context, targetEmployeeId: number): Promise<number | null> {
-  const rows = await c.var.database
-    .select({ managerEmployeeId: orgAssignmentPeriodVersions.managerEmployeeId })
-    .from(orgAssignmentPeriodVersions)
-    .where(
-      and(
-        eq(orgAssignmentPeriodVersions.employeeId, targetEmployeeId),
-        eq(orgAssignmentPeriodVersions.isVoid, false),
-        eq(orgAssignmentPeriodVersions.assignmentType, "primary"),
-      ),
-    )
-    .orderBy(desc(orgAssignmentPeriodVersions.revision))
-    .limit(1)
+async function resolveViaLifecycle(
+  c: Context,
+  targetEmployeeId: number,
+  asOf?: string,
+): Promise<number | null> {
+  const rows = await c.env.DB.prepare(
+    `SELECT current.manager_employee_id, current.starts_on, current.ends_on
+     FROM employee_org_assignment_period_versions AS current
+     WHERE current.employee_id = ?1
+       AND current.assignment_type = 'primary'
+       AND current.revision = (
+         SELECT MAX(candidate.revision)
+         FROM employee_org_assignment_period_versions AS candidate
+         WHERE candidate.period_id = current.period_id
+       )
+       AND current.is_void = 0`,
+  )
+    .bind(targetEmployeeId)
+    .all<{ manager_employee_id: number | null; starts_on: string; ends_on: string | null }>()
 
-  return rows.at(0)?.managerEmployeeId ?? null
+  if (asOf !== undefined) {
+    const active = rows.results.find((row) => contains(row, asOf))
+    return active?.manager_employee_id ?? null
+  }
+
+  // asOf 未指定（後方互換）: 最新のレコードをそのまま返す
+  return rows.results.at(0)?.manager_employee_id ?? null
 }
 
 /**
@@ -96,12 +123,17 @@ async function resolveViaLegacy(c: Context, targetEmployeeId: number): Promise<n
 
 /**
  * 対象社員の部門長（department manager）の employee ID を解決する。
- * orgMemberships → orgDepartments → employees の経路で解決する。
+ *
+ * lifecycle migration が "verified" の場合は正本テーブルから、
+ * それ以外は orgMemberships → orgDepartments → employees の経路で解決する。
  * 見つからない場合は null を返す。
+ *
+ * @param asOf lifecycle パスで有効な所属を判定する基準日（YYYY-MM-DD）。
  */
 export async function resolveDepartmentManagerId(
   c: Context,
   targetEmployeeId: number,
+  asOf?: string,
 ): Promise<number | null | Error> {
   try {
     const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
@@ -111,7 +143,7 @@ export async function resolveDepartmentManagerId(
     }
 
     if (migrationStatus === "verified") {
-      return resolveDeptManagerViaLifecycle(c, targetEmployeeId)
+      return resolveDeptManagerViaLifecycle(c, targetEmployeeId, asOf)
     }
 
     return resolveDeptManagerViaLegacy(c, targetEmployeeId)
@@ -120,47 +152,65 @@ export async function resolveDepartmentManagerId(
   }
 }
 
-/** lifecycle 正本から部門責任者を解決する。 */
+/**
+ * lifecycle 正本から部門責任者を解決する。
+ *
+ * 1. 対象社員の現在有効な所属（assignment）から部門コードを取得
+ * 2. その部門の現在有効な責任者（responsibility）を取得
+ */
 async function resolveDeptManagerViaLifecycle(
   c: Context,
   targetEmployeeId: number,
+  asOf?: string,
 ): Promise<number | null> {
-  const { orgResponsibilityPeriodVersions } = await import("@/schema")
+  // 対象社員の所属部門を取得（MAX(revision) + is_void + date filter）
+  const assignmentRows = await c.env.DB.prepare(
+    `SELECT current.department_code, current.starts_on, current.ends_on
+     FROM employee_org_assignment_period_versions AS current
+     WHERE current.employee_id = ?1
+       AND current.assignment_type = 'primary'
+       AND current.revision = (
+         SELECT MAX(candidate.revision)
+         FROM employee_org_assignment_period_versions AS candidate
+         WHERE candidate.period_id = current.period_id
+       )
+       AND current.is_void = 0`,
+  )
+    .bind(targetEmployeeId)
+    .all<{ department_code: string; starts_on: string; ends_on: string | null }>()
 
-  // 対象社員の所属部門を取得
-  const assignmentRows = await c.var.database
-    .select({ departmentCode: orgAssignmentPeriodVersions.departmentCode })
-    .from(orgAssignmentPeriodVersions)
-    .where(
-      and(
-        eq(orgAssignmentPeriodVersions.employeeId, targetEmployeeId),
-        eq(orgAssignmentPeriodVersions.isVoid, false),
-        eq(orgAssignmentPeriodVersions.assignmentType, "primary"),
-      ),
-    )
-    .orderBy(desc(orgAssignmentPeriodVersions.revision))
-    .limit(1)
+  let deptCode: string | undefined
 
-  const deptCode = assignmentRows.at(0)?.departmentCode
+  if (asOf !== undefined) {
+    deptCode = assignmentRows.results.find((row) => contains(row, asOf))?.department_code
+  } else {
+    deptCode = assignmentRows.results.at(0)?.department_code
+  }
 
   if (deptCode === undefined) {
     return null
   }
 
-  // 部門責任者を取得
-  const respRows = await c.var.database
-    .select({ employeeId: orgResponsibilityPeriodVersions.employeeId })
-    .from(orgResponsibilityPeriodVersions)
-    .where(
-      and(
-        eq(orgResponsibilityPeriodVersions.departmentCode, deptCode),
-        eq(orgResponsibilityPeriodVersions.isVoid, false),
-      ),
-    )
-    .orderBy(desc(orgResponsibilityPeriodVersions.revision))
-    .limit(1)
+  // 部門責任者を取得（MAX(revision) + is_void + date filter）
+  const respRows = await c.env.DB.prepare(
+    `SELECT current.employee_id, current.starts_on, current.ends_on
+     FROM employee_org_responsibility_period_versions AS current
+     WHERE current.department_code = ?1
+       AND current.revision = (
+         SELECT MAX(candidate.revision)
+         FROM employee_org_responsibility_period_versions AS candidate
+         WHERE candidate.period_id = current.period_id
+       )
+       AND current.is_void = 0`,
+  )
+    .bind(deptCode)
+    .all<{ employee_id: number; starts_on: string; ends_on: string | null }>()
 
-  return respRows.at(0)?.employeeId ?? null
+  if (asOf !== undefined) {
+    return respRows.results.find((row) => contains(row, asOf))?.employee_id ?? null
+  }
+
+  return respRows.results.at(0)?.employee_id ?? null
 }
 
 /** レガシーから部門長を解決する。 */
@@ -168,8 +218,6 @@ async function resolveDeptManagerViaLegacy(
   c: Context,
   targetEmployeeId: number,
 ): Promise<number | null> {
-  const { orgDepartments } = await import("@/schema")
-
   // 対象社員のコードを取得
   const employeeRows = await c.var.database
     .select({ code: employees.code })
