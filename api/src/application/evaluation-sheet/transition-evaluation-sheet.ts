@@ -1,11 +1,13 @@
+import { eq, sum } from "drizzle-orm"
 import type {
   EvaluationSheet,
   EvaluationSheetStatus,
 } from "@/domain/evaluation-sheet/evaluation-sheet.entity"
 import type { Context } from "@/env"
-import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
+import { goals } from "@/schema"
 
 export type Command = {
   sheetId: number
@@ -20,6 +22,9 @@ export type Command = {
  * 評価シートのステータスを遷移させる。
  * ステータス遷移表に照らして不正な遷移を拒否し、楽観的ロック（revision）で
  * 同時更新を検出し、状態更新と監査ログを D1 batch でアトミックに記録する。
+ *
+ * draft → pending_approval（提出）時は目標が 1 件以上存在し、
+ * weight 合計がちょうど 100% であることを検証する。
  */
 export class TransitionEvaluationSheet {
   constructor(private readonly c: Context) {}
@@ -43,6 +48,15 @@ export class TransitionEvaluationSheet {
         "evaluation sheet was modified by another request",
         "revision_conflict",
       )
+    }
+
+    // 提出時（draft → pending_approval）: 目標の weight 合計が 100% であることを検証
+    if (existing.status === "draft" && command.targetStatus === "pending_approval") {
+      const weightError = await this.validateSubmitWeights(command.sheetId)
+
+      if (weightError !== null) {
+        return weightError
+      }
     }
 
     const transitioned = existing.transition(command.targetStatus, command.now)
@@ -73,5 +87,37 @@ export class TransitionEvaluationSheet {
     }
 
     return saved
+  }
+
+  /**
+   * 提出時の目標 weight 不変条件を検証する。
+   * - 目標が 1 件以上存在すること
+   * - weight 合計がちょうど 100% であること
+   */
+  private async validateSubmitWeights(
+    sheetId: number,
+  ): Promise<ApplicationError | null> {
+    const rows = await this.c.var.database
+      .select({ total: sum(goals.weight) })
+      .from(goals)
+      .where(eq(goals.evaluationSheetId, sheetId))
+
+    const total = Number(rows.at(0)?.total ?? 0)
+
+    if (total === 0) {
+      return new ValidationError(
+        "cannot submit: no goals are linked to this evaluation sheet",
+        "no_goals",
+      )
+    }
+
+    if (total !== 100) {
+      return new ValidationError(
+        `cannot submit: total goal weight must be exactly 100% (current: ${total}%)`,
+        "weight_not_100",
+      )
+    }
+
+    return null
   }
 }

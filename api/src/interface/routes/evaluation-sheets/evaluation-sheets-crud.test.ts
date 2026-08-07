@@ -207,6 +207,22 @@ describe("GET /evaluation-sheets/me", () => {
   })
 })
 
+/** ヘルパー: シートに weight 合計 100% の目標をセットする（submit に必須） */
+async function seedGoals(db: D1Database, sheetId: number): Promise<void> {
+  const token = await ownerToken()
+  const res = await requestWithContext({
+    db,
+    jwtSecret,
+    path: "/performance-goals",
+    token,
+    method: "POST",
+    body: { period: "2026-H1", title: "Goal", weight: 100, evaluation_sheet_id: sheetId },
+  })
+  if (res.status !== 201) {
+    throw new Error(`seedGoals failed: ${res.status}`)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // POST /evaluation-sheets/:sheet_id/transition
 // ---------------------------------------------------------------------------
@@ -214,6 +230,7 @@ describe("POST /evaluation-sheets/:sheet_id/transition", () => {
   test("owner can submit (draft → pending_approval)", async () => {
     const db = await createTestDb()
     const sheet = await createSheet(db)
+    await seedGoals(db, sheet.id)
 
     const token = await ownerToken()
 
@@ -265,6 +282,7 @@ describe("POST /evaluation-sheets/:sheet_id/transition", () => {
   test("evaluator can approve (pending_approval → approved)", async () => {
     const db = await createTestDb()
     const sheet = await createSheet(db)
+    await seedGoals(db, sheet.id)
 
     // First: owner submits
     const ownerTk = await ownerToken()
