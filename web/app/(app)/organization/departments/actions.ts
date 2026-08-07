@@ -37,7 +37,7 @@ export async function createOrgDepartmentAction(
   const departmentId = toPositiveIntId(formData.get("department_id"))
 
   if (departmentId === null) {
-    return { ok: false, error: "部署マスタ ID を入力してください" }
+    return { ok: false, error: "部署マスタを選択してください" }
   }
 
   const order = toNumber(formData.get("order"))

@@ -9,8 +9,10 @@ import {
   BadRequestError,
   ForbiddenError,
   InternalError,
+  NotFoundError,
   UnauthorizedError,
 } from "@/interface/lib/errors"
+import { resolveEmployeeIdFromBody } from "@/interface/utils/resolve-employee-id-from-body"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -97,19 +99,24 @@ export const GET = factory.createHandlers(
 )
 
 // @authorization permission - 権限キーで判定する
-/** POST /health-checkups — 実施記録を作成する。health_checkup:manage が必要。結果カラムは受け取らない。 */
+/** POST /health-checkups — 実施記録を作成する。health_checkup:manage が必要。結果カラムは受け取らない。対象は employee_id / employee_code のいずれかで指定する */
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      employee_id: z.number().int().positive(),
-      fiscal_year: z.number().int(),
-      checkup_kind: z.enum(["regular", "stress_check"]),
-      conducted_on: isoDate.nullable().optional(),
-      status: z.enum(["scheduled", "completed", "declined"]).optional(),
-      note: z.string().max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        employee_id: z.number().int().positive().optional(),
+        employee_code: z.string().min(1).max(200).optional(),
+        fiscal_year: z.number().int(),
+        checkup_kind: z.enum(["regular", "stress_check"]),
+        conducted_on: isoDate.nullable().optional(),
+        status: z.enum(["scheduled", "completed", "declined"]).optional(),
+        note: z.string().max(3_000).nullable().optional(),
+      })
+      .refine((json) => (json.employee_id === undefined) !== (json.employee_code === undefined), {
+        message: "specify exactly one of employee_id or employee_code",
+      }),
   ),
   async (c) => {
     const session = c.var.session
@@ -124,8 +131,22 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const record = await new CreateHealthCheckup(c).run({
+    const targetEmployeeId = await resolveEmployeeIdFromBody({
+      c,
       employeeId: json.employee_id,
+      employeeCode: json.employee_code,
+    })
+
+    if (targetEmployeeId instanceof Error) {
+      throw new InternalError("failed to resolve target employee")
+    }
+
+    if (targetEmployeeId === null) {
+      throw new NotFoundError("employee not found")
+    }
+
+    const record = await new CreateHealthCheckup(c).run({
+      employeeId: targetEmployeeId,
       fiscalYear: json.fiscal_year,
       checkupKind: json.checkup_kind,
       conductedOn: json.conducted_on ?? null,

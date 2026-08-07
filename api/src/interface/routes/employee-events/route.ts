@@ -2,6 +2,7 @@ import { CreateEmployeeEvent } from "@/application/employee-event/create-employe
 import { canReadEmployeeEventsOf } from "@/interface/routes/employee-events/can-read-employee-events-of"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
+import { resolveEmployeeIdFromBody } from "@/interface/utils/resolve-employee-id-from-body"
 import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppEmployeeEvent, zAppEmployeeEventList } from "@/lib/app-schemas"
@@ -119,19 +120,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 })
 
 // @authorization service - session を application service に渡して判定する
-/** POST /employee-events — 異動・在籍イベントを記録（employee_event:manage） */
+/** POST /employee-events — 異動・在籍イベントを記録（employee_event:manage）。対象は employee_id / employee_code のいずれかで指定する */
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
-      employee_id: z.number().int().positive(),
-      kind: z.enum(["join", "transfer", "leave_of_absence", "return", "retire"]),
-      effective_date: isoDate,
-      from_department_code: z.string().max(100).nullable().optional(),
-      to_department_code: z.string().max(100).nullable().optional(),
-      note: z.string().max(3_000).nullable().optional(),
-    }),
+    z
+      .object({
+        employee_id: z.number().int().positive().optional(),
+        employee_code: z.string().min(1).max(200).optional(),
+        kind: z.enum(["join", "transfer", "leave_of_absence", "return", "retire"]),
+        effective_date: isoDate,
+        from_department_code: z.string().max(100).nullable().optional(),
+        to_department_code: z.string().max(100).nullable().optional(),
+        note: z.string().max(3_000).nullable().optional(),
+      })
+      .refine((json) => (json.employee_id === undefined) !== (json.employee_code === undefined), {
+        message: "specify exactly one of employee_id or employee_code",
+      }),
   ),
   async (c) => {
     const session = c.var.session
@@ -142,9 +148,23 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
+    const targetEmployeeId = await resolveEmployeeIdFromBody({
+      c,
+      employeeId: json.employee_id,
+      employeeCode: json.employee_code,
+    })
+
+    if (targetEmployeeId instanceof Error) {
+      throw new InternalError("failed to resolve target employee")
+    }
+
+    if (targetEmployeeId === null) {
+      throw new NotFoundError("employee not found")
+    }
+
     const event = await new CreateEmployeeEvent(c).run({
       session,
-      employeeId: json.employee_id,
+      employeeId: targetEmployeeId,
       kind: json.kind,
       effectiveDate: json.effective_date,
       fromDepartmentCode: json.from_department_code ?? null,

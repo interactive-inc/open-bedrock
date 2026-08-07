@@ -55,10 +55,20 @@ export default async function OrgPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-xl font-semibold">部署ノードの管理</h2>
 
-            <Button nativeButton={false} render={<Link href="/organization/departments/new" />}>
-              <Plus />
-              新規部署
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/organization/departments/definitions" />}
+              >
+                部署マスタの管理
+              </Button>
+
+              <Button nativeButton={false} render={<Link href="/organization/departments/new" />}>
+                <Plus />
+                新規部署
+              </Button>
+            </div>
           </div>
 
           <Suspense fallback={<ListSkeleton rows={5} rowClassName="h-8 w-full" />}>
