@@ -39,6 +39,8 @@ const requestStateMigrationPath = join(migrationsDirectory, requestStateMigratio
 const postLifecycleMigrationFiles = new Set([
   "0030_identity_provisioning.sql",
   "0114_tables_rename.sql",
+  "0123_mbo_evaluation.sql",
+  "0124_mbo_evaluation_fixes.sql",
 ])
 
 function migrationFiles(): string[] {

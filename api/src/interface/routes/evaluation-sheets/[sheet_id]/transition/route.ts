@@ -69,21 +69,22 @@ export const POST = factory.createHandlers(
 
     // 遷移権限の判定
     const targetStatus = json.status
-    let allowed = false
-
-    if (targetStatus === "pending_approval" && isOwner) allowed = true
-    if (targetStatus === "approved" && (isPrimaryEvaluator || isAdmin)) allowed = true
-    if (targetStatus === "rejected" && (isPrimaryEvaluator || isAdmin)) allowed = true
-    if (targetStatus === "draft" && isOwner) allowed = true
-    if (targetStatus === "self_eval" && (isOwner || isAdmin)) allowed = true
-    if (targetStatus === "primary_eval" && isOwner) allowed = true
-    if (targetStatus === "secondary_eval" && isPrimaryEvaluator) allowed = true
-    // finalized: 二次評価者から or 管理者。二次評価者未設定時は一次評価者も可
-    if (targetStatus === "finalized" && (isSecondaryEvaluator || isAdmin)) allowed = true
-    if (targetStatus === "finalized" && isPrimaryEvaluator && row.secondaryEvaluatorId === null)
-      allowed = true
-    if (targetStatus === "reopened" && isAdmin) allowed = true
-    if (targetStatus === "archived" && isAdmin) allowed = true
+    const allowed = (() => {
+      if (targetStatus === "pending_approval" && isOwner) return true
+      if (targetStatus === "approved" && (isPrimaryEvaluator || isAdmin)) return true
+      if (targetStatus === "rejected" && (isPrimaryEvaluator || isAdmin)) return true
+      if (targetStatus === "draft" && isOwner) return true
+      if (targetStatus === "self_eval" && (isOwner || isAdmin)) return true
+      if (targetStatus === "primary_eval" && isOwner) return true
+      if (targetStatus === "secondary_eval" && isPrimaryEvaluator) return true
+      // finalized: 二次評価者から or 管理者。二次評価者未設定時は一次評価者も可
+      if (targetStatus === "finalized" && (isSecondaryEvaluator || isAdmin)) return true
+      if (targetStatus === "finalized" && isPrimaryEvaluator && row.secondaryEvaluatorId === null)
+        return true
+      if (targetStatus === "reopened" && isAdmin) return true
+      if (targetStatus === "archived" && isAdmin) return true
+      return false
+    })()
 
     if (allowed === false) {
       throw new ForbiddenError()

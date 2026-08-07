@@ -150,6 +150,85 @@ export class EvaluationSheetRepository {
   }
 
   /**
+   * 作成と監査ログ追記を D1 batch でアトミックに実行する。
+   */
+  async createWithAuditLog(
+    sheet: EvaluationSheet,
+    audit: {
+      actorId: number
+      action: string
+      fromValue: string | null
+      toValue: string | null
+      note: string | null
+      now: string
+    },
+  ): Promise<EvaluationSheet | Error> {
+    try {
+      const db = this.c.env.DB
+
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheets
+               (employee_id, template_id, period, status, primary_evaluator_id,
+                secondary_evaluator_id, submitted_at, approved_at, finalized_at,
+                revision, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
+          )
+          .bind(
+            sheet.employeeId,
+            sheet.templateId,
+            sheet.period,
+            sheet.status,
+            sheet.primaryEvaluatorId,
+            sheet.secondaryEvaluatorId,
+            sheet.submittedAt,
+            sheet.approvedAt,
+            sheet.finalizedAt,
+            sheet.revision,
+            sheet.createdAt,
+            sheet.updatedAt,
+          ),
+        db.prepare("SELECT last_insert_rowid() AS id"),
+      ])
+
+      const insertedId = (results[1] as D1Result<{ id: number }>).results?.at(0)?.id
+
+      if (insertedId === undefined) {
+        return new Error("failed to retrieve inserted evaluation sheet id")
+      }
+
+      // 監査ログを挿入（作成の直後なので ID は確定）
+      await db
+        .prepare(
+          `INSERT INTO evaluation_sheet_audit_logs
+             (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+        )
+        .bind(
+          insertedId,
+          audit.actorId,
+          audit.action,
+          audit.fromValue,
+          audit.toValue,
+          audit.note,
+          audit.now,
+        )
+        .run()
+
+      const created = await this.findById(insertedId)
+
+      if (created instanceof Error || created === null) {
+        return new Error("failed to read back created evaluation sheet")
+      }
+
+      return created
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to create evaluation sheet")
+    }
+  }
+
+  /**
    * 状態更新と監査ログ追記を D1 batch でアトミックに実行する。
    * batch 全体が成功するか、全体が rollback される。
    */

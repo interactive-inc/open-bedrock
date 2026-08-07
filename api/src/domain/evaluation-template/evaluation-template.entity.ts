@@ -21,7 +21,7 @@ const VALID_TEMPLATE_TRANSITIONS: Record<
 > = {
   draft: ["active"],
   active: ["archived"],
-  archived: ["draft"],
+  archived: [],
 }
 
 const zProps = z.object({

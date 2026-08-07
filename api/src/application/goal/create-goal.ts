@@ -26,10 +26,14 @@ export class CreateGoal {
   constructor(private readonly c: Context) {}
 
   async run(command: Command): Promise<Goal | ApplicationError> {
-    // evaluation_sheet_id が指定された場合、シートの存在と所有者を検証する
+    // evaluation_sheet_id が指定された場合、シートの存在・所有者・評価期を検証する
     if (command.evaluationSheetId !== undefined && command.evaluationSheetId !== null) {
       const sheetRows = await this.c.var.database
-        .select({ id: evaluationSheets.id, employeeId: evaluationSheets.employeeId })
+        .select({
+          id: evaluationSheets.id,
+          employeeId: evaluationSheets.employeeId,
+          period: evaluationSheets.period,
+        })
         .from(evaluationSheets)
         .where(eq(evaluationSheets.id, command.evaluationSheetId))
         .limit(1)
@@ -44,6 +48,13 @@ export class CreateGoal {
         return new ValidationError(
           "evaluation sheet does not belong to this employee",
           "evaluation_sheet_owner_mismatch",
+        )
+      }
+
+      if (sheet.period !== command.period) {
+        return new ValidationError(
+          "goal period does not match evaluation sheet period",
+          "period_mismatch",
         )
       }
     }

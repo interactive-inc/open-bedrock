@@ -3,7 +3,10 @@ import type { Context } from "@/env"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EvaluationSheetRepository } from "@/infrastructure/evaluation-sheet/evaluation-sheet-repository"
-import { resolveDirectManagerId } from "@/lib/org/resolve-direct-manager-id"
+import {
+  resolveDirectManagerId,
+  resolveDepartmentManagerId,
+} from "@/lib/org/resolve-direct-manager-id"
 import { employees, evaluationTemplates } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -22,6 +25,7 @@ export type Command = {
 /**
  * 評価シートを作成する。
  * primary_evaluator_id が未指定の場合、resolveDirectManagerId で直属上長を解決する。
+ * secondary_evaluator_id が未指定の場合、resolveDepartmentManagerId で部門長を解決する。
  *
  * company-optional tier: MBO 機能は会社単位のオプション。
  */
@@ -58,66 +62,17 @@ export class CreateEvaluationSheet {
     }
 
     // 一次評価者の解決
-    const primaryEvaluatorId = command.primaryEvaluatorId ?? null
-
-    if (primaryEvaluatorId !== null) {
-      // 明示指定: 存在確認
-      const evaluatorRows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(eq(employees.id, primaryEvaluatorId))
-        .limit(1)
-
-      if (evaluatorRows.at(0) === undefined) {
-        return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")
-      }
-
-      // 自分自身を一次評価者にしない
-      if (primaryEvaluatorId === command.employeeId) {
-        return new ValidationError(
-          "primary evaluator cannot be the same as the evaluated employee",
-          "self_evaluation_not_allowed",
-        )
-      }
-    }
-
-    // 一次評価者が未指定 → 直属上長を自動解決
-    const resolvedPrimaryId =
-      primaryEvaluatorId ?? (await this.resolveManagerOrError(command.employeeId))
+    const resolvedPrimaryId = await this.resolvePrimaryEvaluator(command)
 
     if (resolvedPrimaryId instanceof Error) {
       return resolvedPrimaryId
     }
 
-    const secondaryEvaluatorId = command.secondaryEvaluatorId ?? null
+    // 二次評価者の解決
+    const resolvedSecondaryId = await this.resolveSecondaryEvaluator(command, resolvedPrimaryId)
 
-    // 二次評価者の存在確認（指定時のみ）
-    if (secondaryEvaluatorId !== null) {
-      const secondaryRows = await this.c.var.database
-        .select({ id: employees.id })
-        .from(employees)
-        .where(eq(employees.id, secondaryEvaluatorId))
-        .limit(1)
-
-      if (secondaryRows.at(0) === undefined) {
-        return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
-      }
-
-      // 二次評価者 ≠ 対象社員
-      if (secondaryEvaluatorId === command.employeeId) {
-        return new ValidationError(
-          "secondary evaluator cannot be the same as the evaluated employee",
-          "self_evaluation_not_allowed",
-        )
-      }
-
-      // 二次評価者 ≠ 一次評価者
-      if (secondaryEvaluatorId === resolvedPrimaryId) {
-        return new ValidationError(
-          "secondary evaluator cannot be the same as primary evaluator",
-          "evaluator_conflict",
-        )
-      }
+    if (resolvedSecondaryId instanceof Error) {
+      return resolvedSecondaryId
     }
 
     // テンプレートの存在確認（指定時のみ）
@@ -138,19 +93,12 @@ export class CreateEvaluationSheet {
       templateId: command.templateId,
       period: command.period,
       primaryEvaluatorId: resolvedPrimaryId,
-      secondaryEvaluatorId,
+      secondaryEvaluatorId: resolvedSecondaryId,
       now: command.now,
     })
 
-    const created = await repository.create(sheet)
-
-    if (created instanceof Error) {
-      return new UnexpectedError("failed to create evaluation sheet", { cause: created })
-    }
-
-    // 作成を監査ログに記録
-    const auditResult = await repository.appendAuditLog({
-      sheetId: created.id!,
+    // 作成と監査ログをアトミックに実行
+    const created = await repository.createWithAuditLog(sheet, {
       actorId: command.creatorEmployeeId,
       action: "created",
       fromValue: null,
@@ -159,18 +107,42 @@ export class CreateEvaluationSheet {
       now: command.now,
     })
 
-    if (auditResult instanceof Error) {
-      // 監査ログの失敗はシート作成自体を巻き戻さない（ログ欠損として記録可能）
+    if (created instanceof Error) {
+      return new UnexpectedError("failed to create evaluation sheet", { cause: created })
     }
 
     return created
   }
 
-  /** 直属上長の employee ID を解決する。見つからなければ ValidationError を返す。 */
-  private async resolveManagerOrError(
-    targetEmployeeId: number,
-  ): Promise<number | ApplicationError> {
-    const managerId = await resolveDirectManagerId(this.c, targetEmployeeId)
+  /** 一次評価者を解決する。明示指定があればバリデーション後に返し、なければ自動解決する。 */
+  private async resolvePrimaryEvaluator(command: Command): Promise<number | ApplicationError> {
+    const explicitId = command.primaryEvaluatorId ?? null
+
+    if (explicitId !== null) {
+      // 明示指定: 存在確認
+      const evaluatorRows = await this.c.var.database
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.id, explicitId))
+        .limit(1)
+
+      if (evaluatorRows.at(0) === undefined) {
+        return new ValidationError("primary evaluator not found", "primary_evaluator_not_found")
+      }
+
+      // 自分自身を一次評価者にしない
+      if (explicitId === command.employeeId) {
+        return new ValidationError(
+          "primary evaluator cannot be the same as the evaluated employee",
+          "self_evaluation_not_allowed",
+        )
+      }
+
+      return explicitId
+    }
+
+    // 未指定 → 直属上長を自動解決
+    const managerId = await resolveDirectManagerId(this.c, command.employeeId)
 
     if (managerId instanceof Error) {
       return new UnexpectedError("failed to resolve direct manager", { cause: managerId })
@@ -183,6 +155,71 @@ export class CreateEvaluationSheet {
       )
     }
 
+    // 自動解決された上長が本人と同一（循環データ）の場合
+    if (managerId === command.employeeId) {
+      return new ValidationError(
+        "auto-resolved manager is the same as the employee; specify primary_evaluator_id explicitly",
+        "circular_manager",
+      )
+    }
+
     return managerId
+  }
+
+  /**
+   * 二次評価者を解決する。
+   * 明示指定があればバリデーション後に返す。
+   * 未指定の場合は部門長を自動解決する（解決失敗時は null）。
+   */
+  private async resolveSecondaryEvaluator(
+    command: Command,
+    primaryEvaluatorId: number,
+  ): Promise<number | null | ApplicationError> {
+    const explicitId = command.secondaryEvaluatorId ?? null
+
+    if (explicitId !== null) {
+      // 明示指定: 存在確認
+      const secondaryRows = await this.c.var.database
+        .select({ id: employees.id })
+        .from(employees)
+        .where(eq(employees.id, explicitId))
+        .limit(1)
+
+      if (secondaryRows.at(0) === undefined) {
+        return new ValidationError("secondary evaluator not found", "secondary_evaluator_not_found")
+      }
+
+      // 二次評価者 ≠ 対象社員
+      if (explicitId === command.employeeId) {
+        return new ValidationError(
+          "secondary evaluator cannot be the same as the evaluated employee",
+          "self_evaluation_not_allowed",
+        )
+      }
+
+      // 二次評価者 ≠ 一次評価者
+      if (explicitId === primaryEvaluatorId) {
+        return new ValidationError(
+          "secondary evaluator cannot be the same as primary evaluator",
+          "evaluator_conflict",
+        )
+      }
+
+      return explicitId
+    }
+
+    // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
+    const deptManagerId = await resolveDepartmentManagerId(this.c, command.employeeId)
+
+    if (deptManagerId instanceof Error || deptManagerId === null) {
+      return null
+    }
+
+    // 部門長が本人 or 一次評価者と同一なら設定しない
+    if (deptManagerId === command.employeeId || deptManagerId === primaryEvaluatorId) {
+      return null
+    }
+
+    return deptManagerId
   }
 }
