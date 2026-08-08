@@ -1,7 +1,9 @@
-import { tokenPayloadSchema } from "@/lib/auth/token-payload"
 import { Session } from "@/lib/auth/session"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
+import { accessTokenService } from "@/infrastructure/auth/jose-token-signer"
+import { legacyTokenPayloadSchema } from "@/lib/auth/token-payload"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { createMiddleware } from "hono/factory"
@@ -27,9 +29,7 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  const accountRepository = new AccountAuthRepository(c)
-
-  const account = await accountRepository.resolveById(payload.accountId)
+  const account = await new AccountEmployeeLinkRepository(c).findLinkedAccount(payload.accountId)
 
   if (account === null || account instanceof Error) {
     throw new UnauthorizedError("account not found")
@@ -49,6 +49,13 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("account has no employee")
   }
 
+  const authorization = await new AccountAuthRepository(c).resolveAuthorizationById(
+    account.accountId,
+  )
+  if (authorization instanceof Error) {
+    throw new UnauthorizedError("account authorization is unavailable")
+  }
+
   const access = await resolveLiveEmployeeAccess(c, account.employeeId)
   if (access === null || access instanceof Error)
     throw new UnauthorizedError("employee is unavailable")
@@ -59,8 +66,8 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
       accountId: account.accountId,
       employeeId: account.employeeId,
       employeeStatus: access.status,
-      permissions: account.permissions,
-      roleKeys: account.roleKeys,
+      permissions: authorization.permissions,
+      roleKeys: authorization.roleKeys,
     }),
   )
 
@@ -69,17 +76,34 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
 
 async function toVerifiedPayload(token: string, jwtSecret: string) {
   try {
+    const claims = await accessTokenService.verify(token, jwtSecret)
+    const accountId = Number(claims.sub)
+
+    if (!Number.isSafeInteger(accountId) || accountId <= 0) {
+      return new Error("token subject is invalid")
+    }
+
+    return { accountId, tokenVersion: claims.ver }
+  } catch {
+    return toLegacyVerifiedPayload(token, jwtSecret)
+  }
+}
+
+async function toLegacyVerifiedPayload(token: string, jwtSecret: string) {
+  try {
     const verified = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
       algorithms: ["HS256"],
     })
 
-    const parsed = tokenPayloadSchema.safeParse(verified.payload)
-
-    if (!parsed.success) {
-      return new Error("token payload shape is invalid")
+    if (verified.protectedHeader.typ !== undefined) {
+      return new Error("token type is invalid")
     }
 
-    return parsed.data
+    const legacy = legacyTokenPayloadSchema.safeParse(verified.payload)
+
+    return legacy.success
+      ? { accountId: legacy.data.accountId, tokenVersion: legacy.data.tokenVersion }
+      : new Error("legacy token payload shape is invalid")
   } catch (caught) {
     return caught instanceof Error ? caught : new Error("token verification failed")
   }

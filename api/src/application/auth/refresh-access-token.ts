@@ -3,7 +3,7 @@ import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
 import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
-import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
@@ -138,7 +138,9 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    const account = await new AccountAuthRepository(this.c).findById(existing.accountId)
+    const account = await new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
+      existing.accountId,
+    )
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })
     }
@@ -183,7 +185,6 @@ export class RefreshAccessToken {
     const accessToken = await new JoseTokenSigner().sign(
       {
         accountId: existing.accountId,
-        employeeId: account.employeeId,
         tokenVersion: account.tokenVersion,
       },
       command.jwtSecret,
