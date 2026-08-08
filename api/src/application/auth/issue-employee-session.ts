@@ -42,7 +42,6 @@ export class IssueEmployeeSession {
     const accessToken = await tokenSigner.sign(
       {
         accountId: command.accountId,
-        employeeId: command.employeeId,
         tokenVersion: command.tokenVersion,
       },
       command.jwtSecret,

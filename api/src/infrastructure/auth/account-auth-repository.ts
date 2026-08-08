@@ -4,12 +4,13 @@ import { eq, inArray } from "drizzle-orm"
 
 export type ResolvedAccount = {
   accountId: number
-  employeeId: number | null
   status: string
   tokenVersion: number
   roleKeys: ReadonlyArray<string>
   permissions: ReadonlySet<string>
 }
+
+export type ResolvedAccountAuthorization = Pick<ResolvedAccount, "roleKeys" | "permissions">
 
 /**
  * verify-bearer / 認証フローが使う、アカウントの認証・認可状態の解決。account 不在は null。
@@ -23,7 +24,6 @@ export class AccountAuthRepository {
   async findById(accountId: number): Promise<
     | {
         accountId: number
-        employeeId: number | null
         status: string
         tokenVersion: number
       }
@@ -43,7 +43,6 @@ export class AccountAuthRepository {
 
       return {
         accountId: account.id,
-        employeeId: account.employeeId,
         status: account.status,
         tokenVersion: account.tokenVersion,
       }
@@ -53,21 +52,18 @@ export class AccountAuthRepository {
   }
 
   async resolveById(accountId: number): Promise<ResolvedAccount | null | Error> {
+    const account = await this.findById(accountId)
+    if (account === null || account instanceof Error) return account
+
+    const authorization = await this.resolveAuthorizationById(accountId)
+    if (authorization instanceof Error) return authorization
+
+    return { ...account, ...authorization }
+  }
+
+  async resolveAuthorizationById(accountId: number): Promise<ResolvedAccountAuthorization | Error> {
     try {
       const db = this.c.var.database
-
-      const accountRows = await db
-        .select()
-        .from(accounts)
-        .where(eq(accounts.id, accountId))
-        .limit(1)
-
-      const account = accountRows.at(0)
-
-      if (account === undefined) {
-        return null
-      }
-
       const grantedRoles = await db
         .select()
         .from(accountRoles)
@@ -83,10 +79,6 @@ export class AccountAuthRepository {
       const permissionKeys = await this.toPermissionKeys(roleIds)
 
       return {
-        accountId: account.id,
-        employeeId: account.employeeId,
-        status: account.status,
-        tokenVersion: account.tokenVersion,
         roleKeys: roleKeys,
         permissions: new Set(permissionKeys),
       }
