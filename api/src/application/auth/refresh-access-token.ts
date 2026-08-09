@@ -1,4 +1,5 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
@@ -169,12 +170,16 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    if (
-      account === null ||
-      account.status !== "active" ||
-      account.employeeId === null ||
-      account.tokenVersion !== existing.tokenVersion
-    ) {
+    const accountSessionRejection =
+      account === null
+        ? null
+        : getAccountSessionRejection({
+            isAccountActive: account.status === "active",
+            accountTokenVersion: account.tokenVersion,
+            sessionTokenVersion: existing.tokenVersion,
+          })
+
+    if (account === null || accountSessionRejection !== null || account.employeeId === null) {
       return revokeInvalidFamily()
     }
 
