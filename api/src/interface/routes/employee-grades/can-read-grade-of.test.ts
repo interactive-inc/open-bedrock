@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import { canReadGradeOf } from "@/interface/routes/employee-grades/can-read-grade-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { describe, expect, test } from "bun:test"

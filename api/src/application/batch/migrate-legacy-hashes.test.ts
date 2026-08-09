@@ -13,7 +13,6 @@ async function insertPasswordIdentity(
   await seedD1(db, "accounts", [
     {
       id: props.id,
-      employee_id: props.id,
       status: "active",
       token_version: 0,
       created_at: 0,

@@ -40,10 +40,15 @@ async function setupRefreshToken(rawToken: string, options: SetupOptions = {}) {
     await db
       .prepare(
         `INSERT INTO accounts
-           (id, employee_id, status, token_version, created_at, updated_at)
-         VALUES (1, 1, ?1, ?2, ?3, ?3)`,
+           (id, status, token_version, created_at, updated_at)
+         VALUES (1, ?1, ?2, ?3, ?3)`,
       )
       .bind(options.accountStatus ?? "active", options.accountTokenVersion ?? 0, nowEpoch - 100)
+      .run()
+  }
+  if (options.includeAccount !== false && options.includeEmployee !== false) {
+    await db
+      .prepare("INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1)")
       .run()
   }
   if (options.includeToken !== false) {

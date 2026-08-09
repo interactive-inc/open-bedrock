@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 
 /**
  * 対象の実効権限をすべて実行者も持つか判定する。

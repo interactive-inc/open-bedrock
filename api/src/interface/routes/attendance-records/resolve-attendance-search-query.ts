@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import type { AttendanceSearchQuery } from "@/interface/routes/attendance-records/attendance-search-query"
 import { canReadAttendanceOf } from "@/interface/routes/attendance-records/can-read-attendance-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"

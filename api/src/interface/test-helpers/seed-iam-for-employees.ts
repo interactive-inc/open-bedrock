@@ -23,8 +23,16 @@ export async function seedIamForEmployees(
     // account.id = employee.id に固定して 1:1。token_version は 0。
     await db
       .prepare(
-        `INSERT OR IGNORE INTO accounts (id, employee_id, status, token_version, created_at, updated_at)
-         VALUES (?1, ?1, 'active', 0, 0, 0)`,
+        `INSERT OR IGNORE INTO accounts (id, status, token_version, created_at, updated_at)
+         VALUES (?1, 'active', 0, 0, 0)`,
+      )
+      .bind(employee.id)
+      .run()
+
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO account_employee_links (account_id, employee_id)
+         VALUES (?1, ?1)`,
       )
       .bind(employee.id)
       .run()

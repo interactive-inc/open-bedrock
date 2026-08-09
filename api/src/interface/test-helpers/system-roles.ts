@@ -1,4 +1,4 @@
-import type { PermissionKey } from "@/lib/auth/permission-keys"
+import type { PermissionKey } from "@/composition/iam/permission-key.catalog"
 import { EFFECTIVE_ROOT_PERMISSION_KEYS } from "@/lib/auth/effective-root-permissions"
 
 /** 全従業員が持つガバナンスの基本権限。 */
@@ -108,6 +108,9 @@ const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 
 /** root が hr に加えて持つ permission（IAM・アカウント管理・ロール割当・監査）。 */
 const ROOT_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  "system:admin",
+  "iam:read",
+  "iam:write",
   ...EFFECTIVE_ROOT_PERMISSION_KEYS,
   "audit:read",
   "audit:export",

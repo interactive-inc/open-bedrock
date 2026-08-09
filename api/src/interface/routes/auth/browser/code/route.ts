@@ -12,7 +12,7 @@ const CODE_TTL_SECONDS = 60
 /**
  * POST /auth/browser/code — 認証済みの呼び出し元が、自分のセッションをブラウザへ
  * 受け渡すための one-time code を発行する。呼び出し元は Bearer トークンで本人確認済みなので、
- * ここでは identity の再検証をせず c.var.session の account/employee をそのまま code に紐づける。
+ * ここでは identity の再検証をせず c.var.session の account を code に紐づける。
  * code は生の値を保存せずハッシュのみ格納し、1 回きり・60 秒 TTL。
  * ブラウザ側は受け取った code を POST /auth/browser/token に渡してセッションへ交換する。
  */
@@ -31,7 +31,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const created = await new BrowserLoginCodeRepository(c).create(
     codeHash,
-    { accountId: session.accountId, employeeId: session.employeeId },
+    { accountId: session.accountId },
     nowEpoch + CODE_TTL_SECONDS,
   )
 

@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/lib/schemas"
-import { accountRoles, accounts, identities, roles } from "@/schema"
+import { accountEmployeeLinks, accountRoles, accounts, identities, roles } from "@/schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
@@ -81,7 +81,6 @@ export class AccountProvisioner {
       const accountRows = await db
         .insert(accounts)
         .values({
-          employeeId: input.employeeId,
           status: "active",
           tokenVersion: 0,
           createdAt: input.now,
@@ -94,6 +93,11 @@ export class AccountProvisioner {
       if (account === undefined) {
         return new Error("failed to create account")
       }
+
+      await db.insert(accountEmployeeLinks).values({
+        accountId: account.id,
+        employeeId: input.employeeId,
+      })
 
       await db.insert(identities).values({
         accountId: account.id,
@@ -141,24 +145,42 @@ export class AccountProvisioner {
           .prepare("INSERT INTO employees (code, name, status) VALUES (NULL, ?1, 'active')")
           .bind(input.name),
 
-        // 2. account を作成する（直前に作った employee を last_insert_rowid() で参照）。
+        // 2. System account を作成する。
         db
           .prepare(
-            `INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at)
-             VALUES (last_insert_rowid(), 'active', 0, ?1, ?1)`,
+            `INSERT INTO accounts (status, token_version, created_at, updated_at)
+             VALUES ('active', 0, ?1, ?1)`,
           )
           .bind(input.now),
 
-        // 3. identity を作成する（直前に作った account を last_insert_rowid() で参照）。
+        // 3. Company 所有の account / employee 対応を作る。
+        db.prepare(
+          `INSERT INTO account_employee_links (account_id, employee_id)
+           VALUES (
+             last_insert_rowid(),
+             (SELECT id FROM employees WHERE code IS NULL ORDER BY id DESC LIMIT 1)
+           )`,
+        ),
+
+        // 4. identity を account / employee 対応から解決して作成する。
         db
           .prepare(
             `INSERT INTO identities
                (account_id, provider, subject, secret, email, email_verified, created_at)
-             VALUES (last_insert_rowid(), ?1, ?2, NULL, ?3, 1, ?4)`,
+             VALUES (
+               (
+                 SELECT account_id
+                 FROM account_employee_links
+                 WHERE employee_id = (
+                   SELECT id FROM employees WHERE code IS NULL ORDER BY id DESC LIMIT 1
+                 )
+               ),
+               ?1, ?2, NULL, ?3, 1, ?4
+             )`,
           )
           .bind(input.provider, input.subject, input.email, input.now),
 
-        // 4. account_role を作成する。account は subject 経由で逆引きし、role 不在なら 0 行。
+        // 5. account_role を作成する。account は subject 経由で逆引きし、role 不在なら 0 行。
         db
           .prepare(
             `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
@@ -216,11 +238,19 @@ export class AccountProvisioner {
     return [
       db
         .prepare(
-          `INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at)
-           SELECT id, 'active', 0, ?2, ?2 FROM employees WHERE code = ?1
+          `INSERT INTO accounts (status, token_version, created_at, updated_at)
+           SELECT 'active', 0, ?2, ?2 FROM employees WHERE code = ?1
            RETURNING id`,
         )
         .bind(input.employeeCode, input.now),
+      abortWhenPreviousStatementChangedNoRows(db),
+      db
+        .prepare(
+          `INSERT INTO account_employee_links (account_id, employee_id)
+           SELECT last_insert_rowid(), id FROM employees WHERE code = ?1
+           RETURNING account_id`,
+        )
+        .bind(input.employeeCode),
       abortWhenPreviousStatementChangedNoRows(db),
       db
         .prepare(
@@ -228,7 +258,8 @@ export class AccountProvisioner {
              (account_id, provider, subject, secret, email, email_verified, created_at)
            SELECT account.id, 'password', ?2, ?3, ?4, 1, ?5
            FROM accounts account
-           INNER JOIN employees employee ON employee.id = account.employee_id
+           INNER JOIN account_employee_links link ON link.account_id = account.id
+           INNER JOIN employees employee ON employee.id = link.employee_id
            WHERE employee.code = ?1
            RETURNING account_id`,
         )
@@ -258,7 +289,8 @@ export class AccountProvisioner {
           `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
            SELECT account.id, role.id, ?3, ?4
            FROM accounts account
-           INNER JOIN employees employee ON employee.id = account.employee_id
+           INNER JOIN account_employee_links link ON link.account_id = account.id
+           INNER JOIN employees employee ON employee.id = link.employee_id
            INNER JOIN roles role ON role.key = ?2
            WHERE employee.code = ?1
            RETURNING account_id`,
@@ -292,20 +324,33 @@ export class AccountProvisioner {
             input.employee.status,
           ),
 
-        // 2. account を作成する（employee_id は code で逆引き）
+        // 2. System account を作成する
         db
           .prepare(
-            `INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at)
-           VALUES ((SELECT id FROM employees WHERE code = ?1), 'active', 0, ?2, ?2)`,
+            `INSERT INTO accounts (status, token_version, created_at, updated_at)
+             SELECT 'active', 0, ?2, ?2 FROM employees WHERE code = ?1`,
           )
           .bind(input.employee.code, input.now),
 
-        // 3. identity を作成する（account_id は employee code 経由で逆引き）
+        // 3. Company 所有の account / employee 対応を作る
+        db
+          .prepare(
+            `INSERT INTO account_employee_links (account_id, employee_id)
+             SELECT last_insert_rowid(), id FROM employees WHERE code = ?1`,
+          )
+          .bind(input.employee.code),
+
+        // 4. identity を作成する（account_id は link 経由で逆引き）
         db
           .prepare(
             `INSERT INTO identities (account_id, provider, subject, secret, email, email_verified, created_at)
            VALUES (
-             (SELECT a.id FROM accounts a JOIN employees e ON e.id = a.employee_id WHERE e.code = ?1),
+             (
+               SELECT link.account_id
+               FROM account_employee_links link
+               JOIN employees employee ON employee.id = link.employee_id
+               WHERE employee.code = ?1
+             ),
              'password', ?2, ?3, ?4, 1, ?5
            )`,
           )
@@ -317,7 +362,7 @@ export class AccountProvisioner {
             input.now,
           ),
 
-        // 4. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
+        // 5. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
         new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
           actorAccountId: input.grantedByAccountId,
           targetRoleKey: input.roleKey,
@@ -327,13 +372,14 @@ export class AccountProvisioner {
               : ["employee:create", "employee:assign_role"],
         }),
 
-        // 5. account_role を作成する。role 不在・live 権限不足は直前の guard が中止する。
+        // 6. account_role を作成する。role 不在・live 権限不足は直前の guard が中止する。
         db
           .prepare(
             `INSERT INTO account_roles (account_id, role_id, granted_by, granted_at)
              SELECT a.id, r.id, ?3, ?4
              FROM accounts a
-             JOIN employees e ON e.id = a.employee_id
+             JOIN account_employee_links link ON link.account_id = a.id
+             JOIN employees e ON e.id = link.employee_id
              JOIN roles r ON r.key = ?2
              WHERE e.code = ?1`,
           )
