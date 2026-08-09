@@ -1,23 +1,11 @@
-import type { NotificationRow } from "@/schema"
 import { z } from "zod"
-
-export const notificationKindSchema = z.enum([
-  "task",
-  "approval_request",
-  "approval_result",
-  "reminder",
-  "announcement",
-  "thanks",
-])
-
-export type NotificationKind = z.infer<typeof notificationKindSchema>
 
 const zProps = z.object({
   id: z.number().nullable(),
-  recipientEmployeeId: z.number(),
+  recipientAccountId: z.number(),
   sourceDomain: z.string(),
   sourceId: z.number().nullable(),
-  kind: notificationKindSchema,
+  kind: z.string().min(1),
   title: z.string(),
   body: z.string().nullable(),
   isRead: z.boolean(),
@@ -26,12 +14,24 @@ const zProps = z.object({
 
 type Props = z.infer<typeof zProps>
 
-/** 社員宛ての通知1件。集約ルート。 */
+export type StoredNotification = Readonly<{
+  id: number
+  recipientAccountId: number
+  sourceDomain: string
+  sourceId: number | null
+  kind: string
+  title: string
+  body: string | null
+  isRead: number
+  createdAt: string
+}>
+
+/** Account 宛ての汎用通知エンベロープ。業務上の受信者解決と種別定義は上位層が担う。 */
 export class Notification implements Props {
   /** 永続化前は null、DB 採番後に確定する。 */
   readonly id!: Props["id"]
 
-  readonly recipientEmployeeId!: Props["recipientEmployeeId"]
+  readonly recipientAccountId!: Props["recipientAccountId"]
 
   readonly sourceDomain!: Props["sourceDomain"]
 
@@ -57,8 +57,8 @@ export class Notification implements Props {
 
   /** 新規作成する通知を組み立てる。id は未採番、初期状態は未読。 */
   static create(props: {
-    recipientEmployeeId: number
-    kind: NotificationKind
+    recipientAccountId: number
+    kind: string
     title: string
     body: string | null
     sourceDomain: string
@@ -67,7 +67,7 @@ export class Notification implements Props {
   }): Notification {
     return new Notification({
       id: null,
-      recipientEmployeeId: props.recipientEmployeeId,
+      recipientAccountId: props.recipientAccountId,
       sourceDomain: props.sourceDomain,
       sourceId: props.sourceId,
       kind: props.kind,
@@ -78,13 +78,14 @@ export class Notification implements Props {
     })
   }
 
-  static fromRow(row: NotificationRow): Notification {
+  /** 永続化表現から復元する。DB や ORM の型には依存しない。 */
+  static restore(row: StoredNotification): Notification {
     return new Notification({
       id: row.id,
-      recipientEmployeeId: row.recipientEmployeeId,
+      recipientAccountId: row.recipientAccountId,
       sourceDomain: row.sourceDomain,
       sourceId: row.sourceId,
-      kind: notificationKindSchema.parse(row.kind),
+      kind: row.kind,
       title: row.title,
       body: row.body,
       isRead: row.isRead !== 0,
@@ -92,7 +93,7 @@ export class Notification implements Props {
     })
   }
 
-  markRead() {
+  markRead(): Notification {
     return new Notification({ ...this.props, isRead: true })
   }
 }

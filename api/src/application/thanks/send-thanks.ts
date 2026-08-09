@@ -1,4 +1,3 @@
-import { Notification } from "@/domain/notification/notification.entity"
 import { Thanks, thanksRowSchema } from "@/domain/thanks/thanks.entity"
 import { parseD1Row } from "@/infrastructure/shared/parse-d1-row"
 import {
@@ -13,7 +12,7 @@ import { periodOf } from "@/lib/thanks-points/period-of"
 import { toNonNegativePoints } from "@/application/thanks/to-non-negative-points"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
-import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
 import { ThanksPointBudgetRepository } from "@/infrastructure/thanks-points/thanks-point-budget-repository"
 
 export type Command = {
@@ -26,7 +25,7 @@ export type Command = {
 
 /**
  * 全従業員が他の従業員へ感謝を送る。感謝を保存し、受信者にだけ通知を作成する。
- * 既存 SendNotification の role gate は感謝に不適合なため NotificationRepository を直接使う。
+ * 既存 SendNotification の role gate は感謝に不適合なため Company gateway を直接使う。
  */
 export class SendThanks {
   constructor(private readonly c: Context) {}
@@ -34,7 +33,7 @@ export class SendThanks {
   async run(command: Command): Promise<Thanks | ApplicationError> {
     const employeeRepository = new EmployeeRepository(this.c)
 
-    const notificationRepository = new NotificationRepository(this.c)
+    const notificationGateway = new EmployeeNotificationGateway(this.c)
 
     const sender = await employeeRepository.findById(command.senderEmployeeId)
 
@@ -120,7 +119,7 @@ export class SendThanks {
       return new ValidationError("insufficient thanks point budget", "insufficient_budget")
     }
 
-    const notification = Notification.create({
+    const notified = await notificationGateway.create({
       recipientEmployeeId: recipient.id,
       kind: "thanks",
       title: `${sender.name}さんから感謝が届きました`,
@@ -129,8 +128,6 @@ export class SendThanks {
       sourceId: created.id,
       createdAt: command.createdAt,
     })
-
-    const notified = await notificationRepository.create(notification)
 
     // 通知作成はベストエフォート。感謝は保存済みなので、通知が失敗してもログのみ残して感謝を返す。
     // ここでエラーを返すと「保存済みなのに失敗応答」になり再送＝二重登録を招くため。

@@ -102,12 +102,12 @@ export const orgMemberships = sqliteTable(
 
 export type OrgMembershipRow = InferSelectModel<typeof orgMemberships>
 
-/** 通知（社員宛ての申請・承認・リマインド・お知らせ）。is_read は 0/1 で保存する。 */
+/** System の Account 宛て汎用通知。is_read は 0/1 で保存する。 */
 export const notifications = sqliteTable(
   "notifications",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    recipientEmployeeId: integer("recipient_employee_id").notNull(),
+    recipientAccountId: integer("recipient_account_id").notNull(),
     sourceDomain: text("source_domain").notNull(),
     sourceId: integer("source_id"),
     kind: text("kind").notNull(),
@@ -118,7 +118,7 @@ export const notifications = sqliteTable(
   },
   (table) => [
     index("idx_notifications_recipient_unread")
-      .on(table.recipientEmployeeId)
+      .on(table.recipientAccountId)
       .where(sql`is_read = 0`),
   ],
 )

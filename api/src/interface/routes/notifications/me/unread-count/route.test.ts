@@ -23,7 +23,7 @@ async function createTestDb(): Promise<D1Database> {
     "notifications",
     seedNotifications.map((notification) => ({
       id: notification.id,
-      recipient_employee_id: notification.recipientEmployeeId,
+      recipient_account_id: notification.recipientEmployeeId,
       source_domain: notification.sourceDomain,
       source_id: notification.sourceId,
       kind: notification.kind,
