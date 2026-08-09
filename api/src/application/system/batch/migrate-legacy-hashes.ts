@@ -1,7 +1,7 @@
+import type { Context } from "@/env"
+import { LegacySecretRepository } from "@/infrastructure/system/auth/legacy-secret-repository"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
-import type { Context } from "@/env"
-import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 
 export type MigrationResult = {
   total: number
@@ -10,18 +10,12 @@ export type MigrationResult = {
   failed: number
 }
 
-/**
- * 旧形式ハッシュ（固定ソルト SHA-256）を PBKDF2 ラップ形式に一括移行する。
- * ユーザーの平文パスワード不要で実行できる hash-of-hash 方式。
- * 認証情報は identities.secret が正で、その password identity を対象にする。
- * 次回ログイン時に authenticate-employee が純正 PBKDF2 へ昇格する
- */
+/** System Identity の旧形式 password secret を PBKDF2 ラップ形式に一括移行する。 */
 export class MigrateLegacyHashes {
   constructor(private readonly c: Context) {}
 
   async run(): Promise<MigrationResult | Error> {
-    const repository = new IdentityRepository(this.c)
-
+    const repository = new LegacySecretRepository(this.c)
     const found = await repository.findPasswordIdentitiesWithNonPbkdf2Secret()
 
     if (found instanceof Error) {

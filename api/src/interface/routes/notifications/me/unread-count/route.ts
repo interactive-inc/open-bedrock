@@ -17,7 +17,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select({ total: count() })
     .from(notifications)
     .where(
-      and(eq(notifications.recipientEmployeeId, session.employeeId), eq(notifications.isRead, 0)),
+      and(eq(notifications.recipientAccountId, session.accountId), eq(notifications.isRead, 0)),
     )
 
   const responseBody = { count: rows.at(0)?.total ?? 0 }

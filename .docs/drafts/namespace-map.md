@@ -55,6 +55,8 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 `roles` と `notifications` はシステム層が汎用名を所有する例である。下位の段は主語を付けて区別する。
 
+`notifications` の受信者は `recipient_account_id` で Account を参照する。Company の Employee 宛て通知は `account_employee_links` で Account を解決してから作成し、System 側に Employee 識別子を保存しない。
+
 システム層は 16 表とする。
 
 ## company-core のテーブル

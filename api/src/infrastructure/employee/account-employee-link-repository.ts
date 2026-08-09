@@ -34,4 +34,26 @@ export class AccountEmployeeLinkRepository {
       return caught instanceof Error ? caught : new Error("failed to resolve account employee link")
     }
   }
+
+  async findLinkedAccountByEmployeeId(
+    employeeId: number,
+  ): Promise<LinkedEmployeeAccount | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select({
+          accountId: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
+        .from(accountEmployeeLinks)
+        .innerJoin(accounts, eq(accounts.id, accountEmployeeLinks.accountId))
+        .where(eq(accountEmployeeLinks.employeeId, employeeId))
+        .limit(1)
+
+      return rows.at(0) ?? null
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to resolve employee account link")
+    }
+  }
 }

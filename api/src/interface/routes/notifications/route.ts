@@ -1,5 +1,5 @@
 import { SendNotification } from "@/application/notification/send-notification"
-import { notificationKindSchema } from "@/domain/notification/notification.entity"
+import { companyNotificationKindSchema } from "@/domain/company/notifications/notification-kind"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       recipient_employee_code: codeSchema,
-      kind: notificationKindSchema.default("announcement"),
+      kind: companyNotificationKindSchema.default("announcement"),
       title: z.string().min(1).max(500),
       body: z.string().max(5_000).optional(),
       source_domain: z.string().max(100).optional(),
@@ -50,15 +50,15 @@ export const POST = factory.createHandlers(
     }
 
     const responseBody = zAppNotification.parse({
-      id: result.id,
+      id: result.notification.id,
       recipient_employee_id: result.recipientEmployeeId,
-      source_domain: result.sourceDomain,
-      source_id: result.sourceId,
-      kind: result.kind,
-      title: result.title,
-      body: result.body,
-      is_read: result.isRead,
-      created_at: result.createdAt,
+      source_domain: result.notification.sourceDomain,
+      source_id: result.notification.sourceId,
+      kind: result.notification.kind,
+      title: result.notification.title,
+      body: result.notification.body,
+      is_read: result.notification.isRead,
+      created_at: result.notification.createdAt,
     })
 
     return c.json(responseBody, 201)

@@ -358,14 +358,14 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     })
 
     const notifications = await db
-      .prepare("SELECT recipient_employee_id, kind, source_domain FROM notifications")
-      .all<{ recipient_employee_id: number; kind: string; source_domain: string }>()
+      .prepare("SELECT recipient_account_id, kind, source_domain FROM notifications")
+      .all<{ recipient_account_id: number; kind: string; source_domain: string }>()
 
     const results = notifications.results
 
     expect(results.length).toBe(2)
 
-    const recipientIds = results.map((r) => r.recipient_employee_id).sort((a, b) => a - b)
+    const recipientIds = results.map((r) => r.recipient_account_id).sort((a, b) => a - b)
     expect(recipientIds).toEqual([4, 5])
 
     for (const row of results) {

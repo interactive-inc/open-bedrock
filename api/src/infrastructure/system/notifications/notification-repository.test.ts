@@ -1,21 +1,19 @@
-import { Notification } from "@/domain/notification/notification.entity"
-import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { Notification } from "@/domain/system/notifications/notification.entity"
+import { NotificationRepository } from "@/infrastructure/system/notifications/notification-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 describe("NotificationRepository", () => {
   test("create then findById round-trips the notification", async () => {
     const { context } = createTestContext()
-
     const repository = new NotificationRepository(context)
-
     const created = await repository.create(
       Notification.create({
-        recipientEmployeeId: 1,
-        kind: "task",
-        title: "テスト通知",
-        body: "本文",
-        sourceDomain: "expense",
+        recipientAccountId: 1,
+        kind: "resource_changed",
+        title: "Test notification",
+        body: "Body",
+        sourceDomain: "resource",
         sourceId: 10,
         createdAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -35,22 +33,20 @@ describe("NotificationRepository", () => {
       throw new Error("findById failed")
     }
 
-    expect(found.title).toBe("テスト通知")
+    expect(found.title).toBe("Test notification")
     expect(found.isRead).toBe(false)
   })
 
   test("update persists the read flag", async () => {
     const { context } = createTestContext()
-
     const repository = new NotificationRepository(context)
-
     const created = await repository.create(
       Notification.create({
-        recipientEmployeeId: 1,
-        kind: "task",
-        title: "テスト通知",
+        recipientAccountId: 1,
+        kind: "resource_changed",
+        title: "Test notification",
         body: null,
-        sourceDomain: "expense",
+        sourceDomain: "resource",
         sourceId: null,
         createdAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -73,16 +69,15 @@ describe("NotificationRepository", () => {
 
   test("markAllRead returns the number of updated notifications", async () => {
     const { context } = createTestContext()
-
     const repository = new NotificationRepository(context)
 
     await repository.create(
       Notification.create({
-        recipientEmployeeId: 1,
-        kind: "task",
-        title: "1件目",
+        recipientAccountId: 1,
+        kind: "resource_changed",
+        title: "First",
         body: null,
-        sourceDomain: "expense",
+        sourceDomain: "resource",
         sourceId: null,
         createdAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -90,11 +85,11 @@ describe("NotificationRepository", () => {
 
     await repository.create(
       Notification.create({
-        recipientEmployeeId: 1,
-        kind: "task",
-        title: "2件目",
+        recipientAccountId: 1,
+        kind: "resource_changed",
+        title: "Second",
         body: null,
-        sourceDomain: "expense",
+        sourceDomain: "resource",
         sourceId: null,
         createdAt: "2026-01-01T00:00:00.000Z",
       }),

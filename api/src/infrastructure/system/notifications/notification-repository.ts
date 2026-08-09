@@ -1,4 +1,4 @@
-import { Notification } from "@/domain/notification/notification.entity"
+import { Notification } from "@/domain/system/notifications/notification.entity"
 import type { Context } from "@/env"
 import { notifications } from "@/schema"
 import { and, eq } from "drizzle-orm"
@@ -16,7 +16,7 @@ export class NotificationRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : Notification.fromRow(row)
+      return row === undefined ? null : Notification.restore(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load notification")
     }
@@ -27,7 +27,7 @@ export class NotificationRepository {
       const rows = await this.c.var.database
         .insert(notifications)
         .values({
-          recipientEmployeeId: notification.recipientEmployeeId,
+          recipientAccountId: notification.recipientAccountId,
           sourceDomain: notification.sourceDomain,
           sourceId: notification.sourceId,
           kind: notification.kind,
@@ -42,7 +42,7 @@ export class NotificationRepository {
 
       return row === undefined
         ? new Error("failed to insert notification")
-        : Notification.fromRow(row)
+        : Notification.restore(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to insert notification")
     }
@@ -62,20 +62,20 @@ export class NotificationRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : Notification.fromRow(row)
+      return row === undefined ? null : Notification.restore(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to mark notification read")
     }
   }
 
-  async markAllRead(recipientEmployeeId: number): Promise<number | Error> {
+  async markAllRead(recipientAccountId: number): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .update(notifications)
         .set({ isRead: 1 })
         .where(
           and(
-            eq(notifications.recipientEmployeeId, recipientEmployeeId),
+            eq(notifications.recipientAccountId, recipientAccountId),
             eq(notifications.isRead, 0),
           ),
         )
@@ -88,14 +88,14 @@ export class NotificationRepository {
   }
 
   /** 通知を1件削除する。所有権ガード付き。 */
-  async delete(notificationId: number, recipientEmployeeId: number): Promise<true | null | Error> {
+  async delete(notificationId: number, recipientAccountId: number): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(notifications)
         .where(
           and(
             eq(notifications.id, notificationId),
-            eq(notifications.recipientEmployeeId, recipientEmployeeId),
+            eq(notifications.recipientAccountId, recipientAccountId),
           ),
         )
         .returning({ id: notifications.id })

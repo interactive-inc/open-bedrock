@@ -28,6 +28,18 @@ async function seedEmployee(
     throw new Error("seed failed")
   }
 
+  await context.env.DB.prepare(
+    `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+     VALUES (?1, 'active', 0, 0, 0)`,
+  )
+    .bind(created.id)
+    .run()
+  await context.env.DB.prepare(
+    "INSERT INTO account_employee_links (account_id, employee_id) VALUES (?1, ?1)",
+  )
+    .bind(created.id)
+    .run()
+
   return created.id
 }
 

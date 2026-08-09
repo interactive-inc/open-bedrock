@@ -1,11 +1,11 @@
-import type { NotificationKind } from "@/domain/notification/notification.entity"
+import type { CompanyNotificationKind } from "@/domain/company/notifications/notification-kind"
 
 type SeedNotification = {
   id: number
   recipientEmployeeId: number
   sourceDomain: string
   sourceId: number | null
-  kind: NotificationKind
+  kind: CompanyNotificationKind
   title: string
   body: string | null
   isRead: boolean
