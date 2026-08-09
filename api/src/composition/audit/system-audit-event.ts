@@ -1,7 +1,8 @@
-import { toStableAuditJson } from "@/lib/audit/stable-json"
-import type { AuditJsonValue } from "@/lib/audit/stable-json"
-import { ValidationError } from "@/lib/errors"
 import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/domain/system/audit/create-system-audit-event"
+import type { SystemAuditEventRecord } from "@/infrastructure/system/audit/system-audit-event-repository"
+import type { AuditJsonValue } from "@/lib/audit/stable-json"
+import { toStableAuditJson } from "@/lib/audit/stable-json"
+import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
@@ -48,23 +49,7 @@ export type SystemAuditEventInput = Readonly<{
   now: Date
 }>
 
-export type SystemAuditEventRecord = Readonly<{
-  eventId: string
-  requestId: string
-  actorAccountId: number | null
-  action: string
-  targetType: string
-  targetId: string | null
-  outcome: AuditOutcome
-  reasonCode: string | null
-  authorizationJson: string | null
-  beforeJson: string | null
-  afterJson: string | null
-  metadataJson: string | null
-  clientIp: string | null
-  clientName: AuditClientName
-  createdAt: number
-}>
+export type { SystemAuditEventRecord }
 
 export type SystemAuditEventSummary = Readonly<{
   eventId: string

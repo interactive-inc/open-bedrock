@@ -4,14 +4,14 @@ import {
   auditOutcomeSchema,
   auditRequestContextSchema,
   createSystemAuditEvent,
-} from "@/domain/system/audit/audit-event"
+} from "@/composition/audit/system-audit-event"
 import type {
   AuditClientName,
   AuditOutcome,
   SystemAuditEventDetail,
   SystemAuditEventRecord,
   SystemAuditEventSummary,
-} from "@/domain/system/audit/audit-event"
+} from "@/composition/audit/system-audit-event"
 import type { AuditJsonValue } from "@/lib/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
