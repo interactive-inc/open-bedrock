@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"

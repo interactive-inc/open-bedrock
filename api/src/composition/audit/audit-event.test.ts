@@ -6,13 +6,13 @@ import {
   auditOutcomeSchema,
   auditTargetTypeSchema,
   createAuditEvent,
-} from "@/domain/audit/audit-event"
+} from "@/composition/audit/audit-event"
 import type {
   AuditAction,
   AuditEventInput,
   AuditOutcome,
   AuditTargetType,
-} from "@/domain/audit/audit-event"
+} from "@/composition/audit/audit-event"
 
 const actions = [
   "auth.session.login_succeeded",

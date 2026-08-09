@@ -1,7 +1,7 @@
 import type { Session } from "@/domain/company/iam/session"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 
 export type LifecycleReadAuthorization = {

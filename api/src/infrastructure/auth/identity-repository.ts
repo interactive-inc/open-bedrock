@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { IdentityProvider } from "@/lib/schemas"
+import type { IdentityProvider } from "@/domain/system/auth/identity-provider"
 import { accountEmployeeLinks, accounts, employees, identities } from "@/schema"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 

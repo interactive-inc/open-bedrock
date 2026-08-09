@@ -60,10 +60,10 @@ async function seedDetail(db: D1Database, eventId: string, createdAt: number): P
   await db
     .prepare(
       `INSERT INTO audit_events
-       (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
+       (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, 'legacy request', -41, NULL, 'legacy.action', 'legacy_target', NULL,
+       VALUES (?1, 'legacy request', -41, 'legacy.action', 'legacy_target', NULL,
                'succeeded', 'legacy_reason', '7', '"legacy before"', '[1,2]',
                '{"legacy_text":"private"}', '192.0.2.41', 'cli', ?2)`,
     )
