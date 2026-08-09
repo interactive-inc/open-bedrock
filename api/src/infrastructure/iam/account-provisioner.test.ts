@@ -40,7 +40,9 @@ describe("AccountProvisioner.provisionWithEmployee", () => {
     expect(employee).not.toBeNull()
 
     const account = await db
-      .prepare("SELECT * FROM accounts WHERE employee_id = ?1")
+      .prepare(
+        "SELECT account.* FROM accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
+      )
       .bind((employee as { id: number }).id)
       .first()
 

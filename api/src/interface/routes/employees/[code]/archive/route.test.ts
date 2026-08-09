@@ -57,7 +57,11 @@ describe("POST /employees/:code/archive", () => {
         .first<number>("archived_at IS NOT NULL"),
     ).toBe(1)
     expect(
-      await db.prepare("SELECT status FROM accounts WHERE employee_id = 5").first<string>("status"),
+      await db
+        .prepare(
+          "SELECT account.status FROM accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = 5",
+        )
+        .first<string>("status"),
     ).toBe("suspended")
     expect(
       await db

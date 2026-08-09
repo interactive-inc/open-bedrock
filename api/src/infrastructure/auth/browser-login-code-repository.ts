@@ -2,7 +2,6 @@ import type { Context } from "@/env"
 
 export type BrowserLoginCodeAccount = {
   accountId: number
-  employeeId: number
 }
 
 /**
@@ -10,7 +9,7 @@ export type BrowserLoginCodeAccount = {
  * POST /auth/browser/code が認証済みの呼び出し元に払い出し、
  * POST /auth/browser/token が 1 回だけ消費してセッションを発行する。
  * access/refresh トークンは持たない（平文で保存領域に置かないため）。
- * 呼び出し元の account/employee の id のみを保持し、code 自体は保存せずハッシュ（code_hash）のみを主キーにする。
+ * 呼び出し元の account id のみを保持し、code 自体は保存せずハッシュ（code_hash）のみを主キーにする。
  */
 export class BrowserLoginCodeRepository {
   constructor(private readonly c: Context) {
@@ -25,10 +24,10 @@ export class BrowserLoginCodeRepository {
   ): Promise<null | Error> {
     try {
       await this.c.env.DB.prepare(
-        `INSERT INTO browser_login_codes (code_hash, account_id, employee_id, expires_at)
-         VALUES (?1, ?2, ?3, ?4)`,
+        `INSERT INTO browser_login_codes (code_hash, account_id, expires_at)
+         VALUES (?1, ?2, ?3)`,
       )
-        .bind(codeHash, account.accountId, account.employeeId, expiresAt)
+        .bind(codeHash, account.accountId, expiresAt)
         .run()
 
       return null
@@ -49,16 +48,16 @@ export class BrowserLoginCodeRepository {
       const row = await this.c.env.DB.prepare(
         `DELETE FROM browser_login_codes
          WHERE code_hash = ?1 AND expires_at > ?2
-         RETURNING account_id, employee_id`,
+         RETURNING account_id`,
       )
         .bind(codeHash, nowEpoch)
-        .first<{ account_id: number; employee_id: number }>()
+        .first<{ account_id: number }>()
 
       if (row === null) {
         return null
       }
 
-      return { accountId: row.account_id, employeeId: row.employee_id }
+      return { accountId: row.account_id }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to consume browser login code")
     }

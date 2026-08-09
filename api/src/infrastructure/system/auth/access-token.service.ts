@@ -22,7 +22,7 @@ export type AccessTokenService = Readonly<{
   verify(token: string, secret: string): Promise<AccessTokenClaims>
 }>
 
-/** Company の Person / Employee を知らない、Account 主体の access token 境界。 */
+/** Account だけを主体にする access token 境界。 */
 export function createAccessTokenService(profile: AccessTokenProfile): AccessTokenService {
   if (
     profile.issuer.length === 0 ||

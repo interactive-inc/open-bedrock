@@ -4,7 +4,15 @@ import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifec
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { accounts, accountRoles, employees, orgDepartments, orgMemberships, roles } from "@/schema"
+import {
+  accountEmployeeLinks,
+  accounts,
+  accountRoles,
+  employees,
+  orgDepartments,
+  orgMemberships,
+  roles,
+} from "@/schema"
 import { and, eq, isNotNull, isNull } from "drizzle-orm"
 
 export type WorkflowApproverProvenance = {
@@ -200,17 +208,18 @@ export async function resolveWorkflowApproverMatches(props: {
         const rows = await props.c.var.database
           .select({
             accountId: accounts.id,
-            employeeId: accounts.employeeId,
+            employeeId: accountEmployeeLinks.employeeId,
             roleId: roles.id,
           })
           .from(accounts)
+          .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
           .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
           .innerJoin(roles, eq(roles.id, accountRoles.roleId))
           .where(
             and(
               eq(roles.key, selector.role_key),
               eq(accounts.status, "active"),
-              isNotNull(accounts.employeeId),
+              isNotNull(accountEmployeeLinks.employeeId),
             ),
           )
 

@@ -229,8 +229,8 @@ describe("GET /application-requests/inbox", () => {
       { id: 5, email: "you+e005@example.com", passwordHash: "hash", role: "member" },
     ])
     const managerAccountId = await db
-      .prepare("SELECT id FROM accounts WHERE employee_id = 2")
-      .first<number>("id")
+      .prepare("SELECT account_id FROM account_employee_links WHERE employee_id = 2")
+      .first<number>("account_id")
     if (managerAccountId === null) throw new Error("manager account was not seeded")
 
     const definition = JSON.stringify({

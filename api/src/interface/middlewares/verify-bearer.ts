@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"

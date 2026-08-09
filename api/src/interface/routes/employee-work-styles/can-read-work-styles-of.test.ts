@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import { canReadWorkStylesOf } from "@/interface/routes/employee-work-styles/can-read-work-styles-of"
 import { describe, expect, test } from "bun:test"
 

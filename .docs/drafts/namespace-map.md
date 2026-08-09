@@ -51,11 +51,11 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 次はいずれも主語を含む複数形であり、システム層の汎用名として妥当である。
 
-`accounts`、`identities`、`cli_login_states`、`cli_login_codes`、`refresh_tokens`、`roles`、`role_permissions`、`account_roles`、`audit_batch_decisions`、`batch_jobs`、`notifications`、`permissions`。
+`accounts`、`identities`、`identity_login_tokens`、`cli_login_states`、`cli_login_codes`、`browser_login_codes`、`refresh_tokens`、`roles`、`role_permissions`、`account_roles`、`audit_events`、`audit_batch_decisions`、`batch_jobs`、`notifications`、`permissions`。
 
 `roles` と `notifications` はシステム層が汎用名を所有する例である。下位の段は主語を付けて区別する。
 
-システム層は 15 表とする。
+システム層は 16 表とする。
 
 ## company-core のテーブル
 
@@ -83,11 +83,11 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 ### 変更しないもの
 
-`employees`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
+`employees`、`account_employee_links`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
 
 `governance_org_roles` はシステム層の `roles` と競合しないよう主語を持つ。この分離は既に成立しており維持する。
 
-company-core は 50 表とする。
+company-core は 51 表とする。
 
 ## company-standard のテーブル
 
@@ -139,7 +139,7 @@ company-optional は 20 表とする。
 
 ### 網羅性
 
-システム層 15、company-core 50、company-standard 41、company-optional 20 の合計は 126 であり、`api/src/schema.ts` の `sqliteTable` 定義数と一致する。各表はいずれか一つの段にのみ属する。改名は 21 件、変更なしは 105 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
+システム層 16、company-core 51、company-standard 41、company-optional 20 の合計は 128 であり、`api/src/schema.ts` の `sqliteTable` 定義数と一致する。各表はいずれか一つの段にのみ属する。改名は 21 件、変更なしは 107 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
 
 ## URL
 

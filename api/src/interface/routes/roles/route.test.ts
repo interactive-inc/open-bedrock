@@ -117,7 +117,7 @@ describe("GET /roles", () => {
 
     await db
       .prepare(
-        "INSERT INTO account_roles (account_id, role_id, granted_at) SELECT a.id, r.id, 0 FROM accounts a, roles r WHERE a.employee_id = 5 AND r.key = 'assigner'",
+        "INSERT INTO account_roles (account_id, role_id, granted_at) SELECT link.account_id, role.id, 0 FROM account_employee_links link, roles role WHERE link.employee_id = 5 AND role.key = 'assigner'",
       )
       .run()
 

@@ -52,8 +52,12 @@ describe("conditional application workflow payload", () => {
       { department_code: "TEAM", employee_code: "E005", manager_employee_code: "E002" },
     ])
     await seedD1(db, "accounts", [
-      { id: 2, employee_id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
-      { id: 3, employee_id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+      { id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+      { id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    ])
+    await seedD1(db, "account_employee_links", [
+      { account_id: 2, employee_id: 2 },
+      { account_id: 3, employee_id: 3 },
     ])
 
     const template = await new ApplicationTemplateRepository(context).create(
