@@ -54,6 +54,12 @@ API、Web、CLI、AI に法人 selector を設けない。全社共通の table 
 
 route は App Router 形式の directory に置き、`app.ts` が Hono path へ登録する。route を追加しただけでは API に公開されないため、登録と型再生成を一つの変更として扱う。
 
+## コンテキスト境界
+
+業務上の依存方向は `業務 → Company → System` とする。System は Account、Identity、Session、IAM、監査エンベロープ、通知エンベロープ、汎用 batch を所有し、Employee、組織、雇用、個別業務を参照しない。Company は Account と Employee の対応を `account_employee_links` で所有し、業務は Company の語彙を使って System の機能へ接続する。
+
+System の実装は `api/src/domain/system`、`api/src/application/system`、`api/src/infrastructure/system` に置く。これらから上位コンテキストへの import と語彙の混入は `bun run --filter api lint:system-boundary` で検査する。HTTP の既存契約で Employee 識別子を返す必要がある場合は interface または Company adapter で変換し、System の entity と schema には持ち込まない。
+
 ## Web と CLI
 
 Web と CLI は提供面であり、業務規則と認可を定義しない。

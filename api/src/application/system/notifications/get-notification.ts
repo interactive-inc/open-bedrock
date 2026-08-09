@@ -1,17 +1,15 @@
-import type { Notification } from "@/domain/notification/notification.entity"
+import type { Notification } from "@/domain/system/notifications/notification.entity"
 import type { Context } from "@/env"
-import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { NotificationRepository } from "@/infrastructure/system/notifications/notification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
   notificationId: number
-  viewerEmployeeId: number
+  viewerAccountId: number
 }
 
-/**
- * 本人宛ての通知を1件取得する。他人宛ての閲覧を拒否する。
- */
+/** Account 本人宛ての通知を1件取得する。他の Account 宛ての閲覧を拒否する。 */
 export class GetNotification {
   constructor(private readonly c: Context) {}
 
@@ -28,8 +26,7 @@ export class GetNotification {
       return new NotFoundError("notification not found", "notification_not_found")
     }
 
-    if (notification.recipientEmployeeId !== command.viewerEmployeeId) {
-      // 他人宛ては存在を伏せるため not found 扱いにして列挙を防ぐ。
+    if (notification.recipientAccountId !== command.viewerAccountId) {
       return new NotFoundError("notification not found", "notification_forbidden")
     }
 
