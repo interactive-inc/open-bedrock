@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/lib/schemas"
-import { accounts, employees, identities } from "@/schema"
+import { accountEmployeeLinks, accounts, employees, identities } from "@/schema"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
 export type PasswordIdentity = {
@@ -68,8 +68,14 @@ export class IdentityRepository {
       }
 
       const accountRows = await db
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, identity.accountId))
         .limit(1)
 
@@ -116,8 +122,14 @@ export class IdentityRepository {
       }
 
       const accountRows = await db
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, identity.accountId))
         .limit(1)
 
@@ -178,8 +190,14 @@ export class IdentityRepository {
   async findAccountById(accountId: number): Promise<AccountAuthState | null | Error> {
     try {
       const rows = await this.c.var.database
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, accountId))
         .limit(1)
 
@@ -245,9 +263,10 @@ export class IdentityRepository {
       const subject = email.toLowerCase()
 
       const rows = await db
-        .select({ employeeId: accounts.employeeId })
+        .select({ employeeId: accountEmployeeLinks.employeeId })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(and(eq(identities.provider, "password"), eq(identities.subject, subject)))
         .limit(1)
 
@@ -277,14 +296,15 @@ export class IdentityRepository {
 
       const rows = await this.c.var.database
         .select({
-          employeeId: accounts.employeeId,
+          employeeId: accountEmployeeLinks.employeeId,
           email: identities.email,
           identityId: identities.id,
           provider: identities.provider,
         })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
-        .where(inArray(accounts.employeeId, [...employeeIds]))
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
+        .where(inArray(accountEmployeeLinks.employeeId, [...employeeIds]))
         .orderBy(
           // password を先に、次に作成順(id 昇順)。同一従業員の複数 identity で結果を揺らさない。
           sql`CASE WHEN ${identities.provider} = 'password' THEN 0 ELSE 1 END`,

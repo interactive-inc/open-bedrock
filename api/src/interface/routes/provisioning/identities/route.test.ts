@@ -141,8 +141,8 @@ describe("POST /provisioning/identities", () => {
     const employee = await db
       .prepare(
         `SELECT e.name FROM employees e
-         JOIN accounts a ON a.employee_id = e.id
-         JOIN identities i ON i.account_id = a.id
+         JOIN account_employee_links link ON link.employee_id = e.id
+         JOIN identities i ON i.account_id = link.account_id
          WHERE i.subject = 'ext-300'`,
       )
       .first<{ name: string }>()

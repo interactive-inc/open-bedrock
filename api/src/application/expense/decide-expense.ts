@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ExpenseApproval } from "@/domain/expense/expense-approval.entity"
 import type { Context } from "@/env"

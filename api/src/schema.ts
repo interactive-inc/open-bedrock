@@ -56,6 +56,18 @@ export const employees = sqliteTable("employees", {
 
 export type EmployeeRow = InferSelectModel<typeof employees>
 
+/** Company: System Account と従業員台帳の対応。System の accounts は Employee を知らない。 */
+export const accountEmployeeLinks = sqliteTable(
+  "account_employee_links",
+  {
+    accountId: integer("account_id").primaryKey(),
+    employeeId: integer("employee_id").notNull().unique(),
+  },
+  (table) => [index("idx_account_employee_links_employee").on(table.employeeId)],
+)
+
+export type AccountEmployeeLinkRow = InferSelectModel<typeof accountEmployeeLinks>
+
 /** 部署マスタ（id と表示名） */
 export const departments = sqliteTable("departments", {
   id: integer("id").primaryKey(),
@@ -1775,26 +1787,14 @@ export const itIncidents = sqliteTable("it_incidents", {
 
 export type ItIncidentRow = InferSelectModel<typeof itIncidents>
 
-/**
- * drizzle(c.env.DB, { schema }) と c.var.database の型に渡すための集約。
- * IAM: 認証主体。従業員台帳から分離。employee_id は論理参照(null 可)。
- */
-export const accounts = sqliteTable(
-  "accounts",
-  {
-    id: integer("id").primaryKey(),
-    employeeId: integer("employee_id"),
-    status: text("status").notNull().$type<AccountStatus>(),
-    tokenVersion: integer("token_version").notNull().default(0),
-    createdAt: integer("created_at").notNull(),
-    updatedAt: integer("updated_at").notNull(),
-  },
-  (table) => [
-    uniqueIndex("uniq_accounts_employee")
-      .on(table.employeeId)
-      .where(sql`employee_id IS NOT NULL`),
-  ],
-)
+/** System: 認証主体。Company の Person / Employee を参照しない。 */
+export const accounts = sqliteTable("accounts", {
+  id: integer("id").primaryKey(),
+  status: text("status").notNull().$type<AccountStatus>(),
+  tokenVersion: integer("token_version").notNull().default(0),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+})
 
 export type AccountRow = InferSelectModel<typeof accounts>
 
@@ -1858,7 +1858,7 @@ export type CliLoginStateRow = InferSelectModel<typeof cliLoginStates>
  * CLI（ネイティブアプリ）ログインの one-time code。
  * GET /auth/cli/callback が identity 検証・プロビジョニング成功後に払い出し、
  * POST /auth/cli/token が 1 回だけ消費してセッションを発行する。
- * トークンは持たず、解決済みの account/employee の id のみを保持する
+ * トークンは持たず、解決済みの account id のみを保持する
  * （access/refresh トークンを平文で保存領域に置かないため）。code 自体は主キーに持たずハッシュ
  * （code_hash）で照合する。
  */
@@ -1867,13 +1867,28 @@ export const cliLoginCodes = sqliteTable(
   {
     codeHash: text("code_hash").primaryKey(),
     accountId: integer("account_id").notNull(),
-    employeeId: integer("employee_id").notNull(),
     expiresAt: integer("expires_at").notNull(),
   },
   (table) => [index("idx_cli_login_codes_expires").on(table.expiresAt)],
 )
 
 export type CliLoginCodeRow = InferSelectModel<typeof cliLoginCodes>
+
+/**
+ * ブラウザログインの one-time code。
+ * 認証済みクライアントからブラウザへ System Account を安全に受け渡す。
+ */
+export const browserLoginCodes = sqliteTable(
+  "browser_login_codes",
+  {
+    codeHash: text("code_hash").primaryKey(),
+    accountId: integer("account_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (table) => [index("idx_browser_login_codes_expires").on(table.expiresAt)],
+)
+
+export type BrowserLoginCodeRow = InferSelectModel<typeof browserLoginCodes>
 
 /** IAM: ロール。system role は is_system=1 で key 改名・削除不可。 */
 export const roles = sqliteTable("roles", {
@@ -2272,10 +2287,12 @@ export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
 
 export const schema = {
   accounts,
+  accountEmployeeLinks,
   identities,
   identityLoginJti,
   cliLoginStates,
   cliLoginCodes,
+  browserLoginCodes,
   roles,
   permissions,
   rolePermissions,

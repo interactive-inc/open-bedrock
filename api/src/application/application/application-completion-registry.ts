@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"

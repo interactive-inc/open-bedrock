@@ -14,7 +14,7 @@ import { z } from "zod"
 /**
  * POST /auth/browser/token — ブラウザ受け渡しの one-time code をセッションに交換する。
  * code は POST /auth/browser/code が認証済みの呼び出し元へ払い出した値で、1 回きり・60 秒 TTL。
- * code 自体は account/employee の id しか保持していない（トークンを保存領域に平文で置かないため）。
+ * code 自体は account id しか保持していない（トークンを保存領域に平文で置かないため）。
  * ここで account の最新状態を読み直し、有効なら初めて IssueEmployeeSession でセッションを発行する。
  * 無効・期限切れ・発行後にアカウントが無効化されていた場合は 401。
  */
@@ -47,17 +47,13 @@ export const POST = factory.createHandlers(
         503,
       )
     }
-    if (
-      account === null ||
-      account.employeeId !== consumed.employeeId ||
-      account.accountStatus !== "active"
-    ) {
+    if (account === null || account.employeeId === null || account.accountStatus !== "active") {
       throw new UnauthorizedError("invalid or expired code")
     }
 
     const issued = await new IssueEmployeeSession(c).run({
       accountId: account.accountId,
-      employeeId: consumed.employeeId,
+      employeeId: account.employeeId,
       tokenVersion: account.tokenVersion,
       jwtSecret: c.env.JWT_SECRET,
       userAgent: c.req.header("User-Agent") ?? null,

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { Notification } from "@/domain/notification/notification.entity"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"

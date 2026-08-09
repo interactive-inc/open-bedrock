@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import type { AuditEventInput } from "@/domain/audit/audit-event"
 import { createAuditEvent } from "@/domain/audit/audit-event"
 import type { Context } from "@/env"

@@ -66,8 +66,9 @@ async function setup() {
   await db.exec(`
     INSERT INTO employees (id, code, name, status)
     VALUES (1, 'E001', 'Test Worker', 'active');
-    INSERT INTO accounts (id, employee_id, status, token_version, created_at, updated_at)
-    VALUES (1, 1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+    VALUES (1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1);
   `)
   await insertRefreshToken(db)
 

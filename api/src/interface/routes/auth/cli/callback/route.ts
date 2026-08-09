@@ -157,7 +157,7 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
 
   const codeCreated = await new CliLoginCodeRepository(c).create(
     codeHash,
-    { accountId: result.accountId, employeeId: result.employeeId },
+    { accountId: result.accountId },
     nowEpoch + CODE_TTL_SECONDS,
   )
   if (codeCreated instanceof Error) {

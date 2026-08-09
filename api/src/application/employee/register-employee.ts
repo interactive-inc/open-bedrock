@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import type { Employee } from "@/domain/employee/employee.entity"
 import type { Context } from "@/env"

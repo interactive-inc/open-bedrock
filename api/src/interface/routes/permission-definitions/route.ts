@@ -1,4 +1,4 @@
-import { PERMISSION_CATALOG } from "@/lib/auth/permission-keys"
+import { PERMISSION_CATALOG } from "@/composition/iam/permission.catalog"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/interface/lib/errors"
