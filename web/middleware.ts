@@ -50,6 +50,9 @@ function buildCsp(nonce: string): string {
     ...(process.env.NODE_ENV === "development" ? ["'unsafe-eval'"] : []),
   ].join(" ")
 
+  // base-uri と form-action は default-src にフォールバックしないため個別に閉じる。
+  // 未指定だと HTML 混入時に <base href> でスクリプトの取得元をすり替えられ、
+  // フォームの送信先を外部へ向けられる。
   return [
     "default-src 'self'",
     `script-src ${scriptSrc}`,
@@ -58,6 +61,8 @@ function buildCsp(nonce: string): string {
     "font-src 'self'",
     "connect-src 'self'",
     "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
   ].join("; ")
 }
 
