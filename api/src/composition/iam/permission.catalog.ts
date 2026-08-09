@@ -1,4 +1,10 @@
-import { z } from "zod"
+import type { PermissionKey } from "@/composition/iam/permission-key.catalog"
+
+type PermissionEntry = {
+  key: PermissionKey
+  category: string
+  description: string
+}
 
 /**
  * 全 permission のカタログ。認可の唯一の正(SSOT)で、key とカテゴリ(UI グルーピング用)の対応。
@@ -8,6 +14,9 @@ import { z } from "zod"
  * 所有者判定としてコードの不変条件に残す
  */
 export const PERMISSION_CATALOG = [
+  { key: "system:admin", category: "system", description: "System全体を管理する" },
+  { key: "iam:read", category: "iam", description: "IAM設定と割当を閲覧する" },
+  { key: "iam:write", category: "iam", description: "IAM設定と割当を変更する" },
   { key: "dashboard:view", category: "general", description: "ダッシュボードを閲覧する" },
   { key: "employee:read", category: "employee", description: "従業員を閲覧する" },
   { key: "employee:create", category: "employee", description: "従業員を登録する" },
@@ -384,14 +393,4 @@ export const PERMISSION_CATALOG = [
     category: "iam",
     description: "アカウントを管理する(作成・停止・失効・identity)",
   },
-] as const
-
-/** permission キーの文字列ユニオン。 */
-export const permissionKeySchema = z.enum(
-  PERMISSION_CATALOG.map((entry) => entry.key) as [string, ...string[]],
-)
-
-export type PermissionKey = z.infer<typeof permissionKeySchema>
-
-/** 全 permission キーの配列。 */
-export const PERMISSION_KEYS: ReadonlyArray<string> = PERMISSION_CATALOG.map((entry) => entry.key)
+] satisfies ReadonlyArray<PermissionEntry>

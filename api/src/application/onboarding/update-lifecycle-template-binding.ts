@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import type { Context } from "@/env"
 import { OnboardingTemplateRepository } from "@/infrastructure/onboarding/onboarding-template-repository"
 import {

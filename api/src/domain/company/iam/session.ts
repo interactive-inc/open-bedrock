@@ -1,4 +1,4 @@
-import type { PermissionKey } from "@/lib/auth/permission-keys"
+import { PermissionValue } from "@/domain/system/iam/permission.value"
 import type { EmployeeStatus } from "@/lib/schemas"
 
 type Props = {
@@ -43,7 +43,10 @@ export class Session implements Props {
    * DB 解決済みの permissions Set を見るだけで、role 文字列ではなく permission キーで判定する。
    * 未知キー・解決失敗は permissions に無いので deny(fail-closed)
    */
-  hasPermission(key: PermissionKey): boolean {
-    return this.props.permissions.has(key)
+  hasPermission(permission: PermissionValue | string): boolean {
+    const value = typeof permission === "string" ? PermissionValue.from(permission) : permission
+    if (value === null) return false
+
+    return PermissionValue.hasAny(this.props.permissions, value)
   }
 }

@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import { canReadLeaveOf } from "@/interface/routes/leave-requests/can-read-leave-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"

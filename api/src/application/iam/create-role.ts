@@ -1,5 +1,5 @@
-import type { Session } from "@/lib/auth/session"
-import { permissionKeySchema } from "@/lib/auth/permission-keys"
+import type { Session } from "@/domain/company/iam/session"
+import { permissionKeySchema } from "@/composition/iam/permission-key.catalog"
 import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"

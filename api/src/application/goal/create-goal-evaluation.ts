@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { GoalEvaluation, type GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/application/goal/resolve-evaluation-permission"
 import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"

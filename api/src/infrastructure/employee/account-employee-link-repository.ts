@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { accounts } from "@/schema"
+import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"
 
 export type LinkedEmployeeAccount = Readonly<{
@@ -22,9 +22,10 @@ export class AccountEmployeeLinkRepository {
           accountId: accounts.id,
           status: accounts.status,
           tokenVersion: accounts.tokenVersion,
-          employeeId: accounts.employeeId,
+          employeeId: accountEmployeeLinks.employeeId,
         })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, accountId))
         .limit(1)
 

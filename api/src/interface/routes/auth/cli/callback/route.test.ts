@@ -144,11 +144,11 @@ describe("GET /auth/cli/callback", () => {
       .first()
     expect(stateRow).toBeNull()
 
-    // code は解決済み account/employee の id だけを保持し、トークンは一切保存しない。
+    // code は解決済み account id だけを保持し、トークンは一切保存しない。
     const codeRow = await db
-      .prepare("SELECT code_hash, account_id, employee_id FROM cli_login_codes")
-      .first<{ code_hash: string; account_id: number; employee_id: number }>()
-    expect(codeRow).toEqual({ code_hash: codeRow?.code_hash ?? "", account_id: 1, employee_id: 1 })
+      .prepare("SELECT code_hash, account_id FROM cli_login_codes")
+      .first<{ code_hash: string; account_id: number }>()
+    expect(codeRow).toEqual({ code_hash: codeRow?.code_hash ?? "", account_id: 1 })
     const persisted = JSON.stringify(codeRow)
     expect(persisted).not.toContain(code)
 
@@ -182,7 +182,7 @@ describe("GET /auth/cli/callback", () => {
     const columns = (
       await db.prepare("PRAGMA table_info(cli_login_codes)").all<{ name: string }>()
     ).results.map((column) => column.name)
-    expect(columns.sort()).toEqual(["account_id", "code_hash", "employee_id", "expires_at"])
+    expect(columns.sort()).toEqual(["account_id", "code_hash", "expires_at"])
     expect(columns).not.toContain("access_token")
     expect(columns).not.toContain("refresh_token")
 

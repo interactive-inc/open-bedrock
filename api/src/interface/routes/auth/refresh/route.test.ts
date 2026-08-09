@@ -66,8 +66,8 @@ async function createScenario(scenario: Scenario): Promise<{
   await db
     .prepare(
       `INSERT INTO accounts
-         (id, employee_id, status, token_version, created_at, updated_at)
-       VALUES (1, 1, ?1, ?2, ?3, ?3)`,
+         (id, status, token_version, created_at, updated_at)
+       VALUES (1, ?1, ?2, ?3, ?3)`,
     )
     .bind(
       scenario === "inactive_account" ? "suspended" : "active",
@@ -75,6 +75,11 @@ async function createScenario(scenario: Scenario): Promise<{
       nowEpoch - 100,
     )
     .run()
+  if (scenario !== "missing_employee") {
+    await db
+      .prepare("INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1)")
+      .run()
+  }
 
   if (scenario !== "missing") {
     await db
