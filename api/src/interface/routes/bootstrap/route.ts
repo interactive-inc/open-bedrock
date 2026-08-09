@@ -1,8 +1,8 @@
 import { BootstrapInitialAccount } from "@/application/iam/bootstrap-initial-account"
+import { timingSafeStringEqual } from "@/infrastructure/system/auth/timing-safe-string-equal"
 import { factory } from "@/interface/utils/factory"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppBootstrapResult } from "@/lib/app-schemas"
-import { timingSafeEqual } from "@/lib/auth/timing-safe-equal"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -44,7 +44,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const tokenMatches = await timingSafeEqual(json.token, expectedToken)
+    const tokenMatches = await timingSafeStringEqual(json.token, expectedToken)
 
     if (tokenMatches === false) {
       return c.json({ error: "unauthorized" }, 401)
