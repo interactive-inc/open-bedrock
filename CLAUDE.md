@@ -66,7 +66,7 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
-- `cp api/.dev.vars.example api/.dev.vars` で `JWT_SECRET` を用意する（無いとログインが 500 になる。`.dev.vars` は gitignore 済み）
+- `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 

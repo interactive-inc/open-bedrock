@@ -1,3 +1,4 @@
+import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
 import { tokenPayloadSchema } from "@/lib/auth/token-payload"
 import { Session } from "@/lib/auth/session"
 import type { HonoEnv } from "@/env"
@@ -20,6 +21,8 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   }
 
   const token = header.slice("Bearer ".length)
+
+  assertJwtSecret(c.env.JWT_SECRET)
 
   const payload = await toVerifiedPayload(token, c.env.JWT_SECRET)
 

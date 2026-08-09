@@ -3,6 +3,7 @@ import { factory } from "@/interface/utils/factory"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppBootstrapResult } from "@/lib/app-schemas"
 import { timingSafeEqual } from "@/lib/auth/timing-safe-equal"
+import { isPlaceholderSecret } from "@/lib/config/is-placeholder-secret"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -20,6 +21,11 @@ export const POST = factory.createHandlers(
     const expectedToken = c.env.BOOTSTRAP_TOKEN
 
     if (expectedToken === undefined || expectedToken === "") {
+      return c.json({ error: "not_found" }, 404)
+    }
+
+    // 例示値のままなら公開リポジトリを読んだ誰でも ROOT を作れる。未設定と同じく隠す。
+    if (isPlaceholderSecret(expectedToken)) {
       return c.json({ error: "not_found" }, 404)
     }
 

@@ -1,10 +1,17 @@
-JWT_SECRET="local-dev-secret-change-me"
-AUDIT_HMAC_SECRET="local-dev-audit-hmac-secret-change-me"
+# このファイルは公開リポジトリに入るため、実際に使える秘密値を書かない。
+# `bun run setup:dev-vars` を実行すると .dev.vars がランダムな秘密値付きで生成される。
+# 手で用意する場合は `openssl rand -base64 32` の出力を使う。
+#
+# api は「未設定」「16 文字未満」「-change-me で終わる値」を実行時に拒否する。
+JWT_SECRET=
+AUDIT_HMAC_SECRET=
 COMPANY_TIME_ZONE="Asia/Tokyo"
-PROVISIONING_API_KEY="local-dev-provisioning-key-change-me"
+# 外部 identity 同期を使うときだけ設定する。未設定なら /provisioning/* は全拒否。
+PROVISIONING_API_KEY=
 IDENTITY_JWKS=
 IDENTITY_ISSUER="http://localhost:18790"
 IDENTITY_AUDIENCE="http://localhost:3000"
 IDENTITY_LOGIN_URL="http://localhost:18790"
 API_ORIGIN="http://localhost:18787"
-BOOTSTRAP_TOKEN="local-dev-bootstrap-token-change-me"
+# 初期 ROOT の作成時だけ設定し、作成後は削除する。未設定なら POST /bootstrap は 404。
+BOOTSTRAP_TOKEN=
