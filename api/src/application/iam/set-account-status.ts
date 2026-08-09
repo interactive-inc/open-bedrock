@@ -1,5 +1,5 @@
 import type { Session } from "@/domain/company/iam/session"
-import { accountStatusSchema } from "@/lib/schemas"
+import { accountStatusSchema } from "@/domain/system/auth/account-status"
 import {
   ConflictError,
   ForbiddenError,

@@ -57,6 +57,8 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 `notifications` の受信者は `recipient_account_id` で Account を参照する。Company の Employee 宛て通知は `account_employee_links` で Account を解決してから作成し、System 側に Employee 識別子を保存しない。
 
+`audit_events` は Account 主体の汎用監査イベントだけを保存する。Employee 文脈は company-core の `audit_event_employee_contexts` が所有する。
+
 システム層は 16 表とする。
 
 ## company-core のテーブル
@@ -85,11 +87,13 @@ URL と CLI の実装で本書から外れた点が三つある。いずれも�
 
 ### 変更しないもの
 
-`employees`、`account_employee_links`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
+`employees`、`account_employee_links`、`audit_event_employee_contexts`、`departments`、`org_departments`、`org_memberships`、`employee_events`、`employee_grades`、`employment_period_versions`、`employee_status_period_versions`、`employee_lifecycle_revisions`、`personnel_actions`、`personnel_action_requests`、`application_templates`、`application_approvals`、`application_subjects`、`application_completion_bindings`、`application_workflows`、`application_workflow_revisions`、`application_workflow_instances`、`application_workflow_step_snapshots`、`application_workflow_step_candidates`、`application_workflow_approvals`、`application_workflow_events`、`lifecycle_effect_template_bindings`、`approval_delegations`、`onboarding_templates`、`onboarding_template_tasks`、`onboarding_assignments`、`onboarding_tasks`、`governance_capabilities`、`governance_org_roles`、`governance_org_role_assignments`、`governance_documents`、`governance_document_versions`、`governance_document_references`、`governance_publication_approvals`、`governance_acknowledgements`、`regulations`、`regulation_versions`、`announcements`、`resignations`、`certificate_requests`。
 
 `governance_org_roles` はシステム層の `roles` と競合しないよう主語を持つ。この分離は既に成立しており維持する。
 
-company-core は 51 表とする。
+`company_audit_event_appends` は Company の監査書き込みを分配後に必ず削除する transaction adapter であり、永続リソースの表数には含めない。`company_audit_events` は System イベントと Company 文脈の互換 view である。
+
+company-core は 52 表とする。
 
 ## company-standard のテーブル
 
@@ -141,7 +145,7 @@ company-optional は 20 表とする。
 
 ### 網羅性
 
-システム層 16、company-core 51、company-standard 41、company-optional 20 の合計は 128 であり、`api/src/schema.ts` の `sqliteTable` 定義数と一致する。各表はいずれか一つの段にのみ属する。改名は 21 件、変更なしは 107 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
+システム層 16、company-core 52、company-standard 41、company-optional 20 の合計は 129 である。System の Drizzle 定義は `api/src/schema/system.ts`、全体の合成は `api/src/schema.ts` に置く。各永続リソース表はいずれか一つの段にのみ属する。分配後に行を残さない `company_audit_event_appends` と互換 view はこの表数に含めない。改名は 21 件、変更なしは 108 件とする。`permissions` を改名しない決定により、改名は 22 件から 21 件になった。
 
 ## URL
 

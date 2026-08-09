@@ -7,12 +7,15 @@ const SYSTEM_ROOTS = [
   resolve(API_ROOT, "src/domain/system"),
   resolve(API_ROOT, "src/application/system"),
   resolve(API_ROOT, "src/infrastructure/system"),
+  resolve(API_ROOT, "src/schema"),
 ] as const
 
 const FORBIDDEN_VOCABULARY =
   /employee|employment|organization|department|company|facility|personnel|workforce|humanresource|thanks|shift|expense|leave|ringi|announcement|twit|chat|care/i
 
-const CONTEXT_IMPORT = /from\s+["']@\/(domain|application|infrastructure)\/([^"']+)["']/g
+const CONTEXT_IMPORT =
+  /from\s+["']@\/(domain|application|infrastructure|schema)(?:\/([^"']+))?["']/g
+const RELATIVE_IMPORT = /from\s+["']\.{1,2}\//g
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
@@ -35,6 +38,7 @@ export function inspectSystemSource(file: string, source: string): SystemBoundar
     const importedPath = match[2] ?? ""
 
     if (
+      importedPath !== "system" &&
       importedPath.startsWith("system/") === false &&
       importedPath.startsWith("shared/") === false
     ) {
@@ -43,6 +47,13 @@ export function inspectSystemSource(file: string, source: string): SystemBoundar
         reason: `System から上位コンテキストへ依存しています: ${match[0]}`,
       })
     }
+  }
+
+  if (RELATIVE_IMPORT.test(source)) {
+    violations.push({
+      file,
+      reason: "System の依存境界を迂回する相対 import があります",
+    })
   }
 
   return violations
