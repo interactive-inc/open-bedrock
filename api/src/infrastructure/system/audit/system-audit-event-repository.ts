@@ -1,6 +1,23 @@
-import type { SystemAuditEventRecord } from "@/domain/system/audit/audit-event"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+
+export type SystemAuditEventRecord = Readonly<{
+  eventId: string
+  requestId: string
+  actorAccountId: number | null
+  action: string
+  targetType: string
+  targetId: string | null
+  outcome: "succeeded" | "denied" | "failed"
+  reasonCode: string | null
+  authorizationJson: string | null
+  beforeJson: string | null
+  afterJson: string | null
+  metadataJson: string | null
+  clientIp: string | null
+  clientName: "web" | "cli" | "api" | "system"
+  createdAt: number
+}>
 
 /** 上位コンテキストを持たない System 監査イベントの append 専用 repository。 */
 export class SystemAuditEventRepository {
