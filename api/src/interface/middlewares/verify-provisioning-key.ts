@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "@/lib/auth/timing-safe-equal"
+import { timingSafeStringEqual } from "@/infrastructure/system/auth/timing-safe-string-equal"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/interface/utils/factory"
 
@@ -23,7 +23,7 @@ export const verifyProvisioningKey = factory.createMiddleware(async (c, next) =>
 
   const presented = header.slice("Bearer ".length)
 
-  const matches = await timingSafeEqual(presented, configured)
+  const matches = await timingSafeStringEqual(presented, configured)
 
   if (!matches) {
     throw new UnauthorizedError("invalid provisioning key")
