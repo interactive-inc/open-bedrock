@@ -84,6 +84,15 @@ describe("inspectSystemSource", () => {
     expect(stringViolations[0]?.reason).toContain('語彙 "company"')
   })
 
+  test("accepts longer identifiers that only contain a forbidden spelling", () => {
+    const violations = inspectSystemSource(
+      "src/domain/system/example.ts",
+      'const serialized = JSON.stringify({ value: "stringify" })',
+    )
+
+    expect(violations).toEqual([])
+  })
+
   test("rejects a dynamic dependency whose destination cannot be inspected", () => {
     const violations = inspectSystemSource(
       "src/application/system/example.ts",
