@@ -1,6 +1,7 @@
 import { Glob } from "bun"
 import { readFileSync } from "node:fs"
 import { relative, resolve } from "node:path"
+import ts from "typescript"
 
 const API_ROOT = resolve(import.meta.dir, "..")
 const SYSTEM_ROOTS = [
@@ -12,47 +13,119 @@ const SYSTEM_ROOTS = [
 
 const FORBIDDEN_VOCABULARY =
   /employee|employment|organization|department|company|facility|personnel|workforce|humanresource|thanks|shift|expense|leave|ringi|announcement|twit|chat|care/i
-
-const CONTEXT_IMPORT =
-  /from\s+["']@\/(domain|application|infrastructure|schema)(?:\/([^"']+))?["']/g
-const RELATIVE_IMPORT = /from\s+["']\.{1,2}\//g
+const CONTEXT_MODULE = /^@\/(domain|application|infrastructure|schema)(?:\/(.*))?$/
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
   reason: string
 }>
 
+function getModuleSpecifier(node: ts.Node): string | null | Error {
+  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+    const moduleSpecifier = node.moduleSpecifier
+
+    return moduleSpecifier !== undefined && ts.isStringLiteralLike(moduleSpecifier)
+      ? moduleSpecifier.text
+      : null
+  }
+
+  if (ts.isImportEqualsDeclaration(node)) {
+    const moduleReference = node.moduleReference
+
+    return ts.isExternalModuleReference(moduleReference) &&
+      moduleReference.expression !== undefined &&
+      ts.isStringLiteralLike(moduleReference.expression)
+      ? moduleReference.expression.text
+      : null
+  }
+
+  if (ts.isImportTypeNode(node)) {
+    return ts.isLiteralTypeNode(node.argument) && ts.isStringLiteralLike(node.argument.literal)
+      ? node.argument.literal.text
+      : new Error("System の型import先を静的に確認できません")
+  }
+
+  if (!ts.isCallExpression(node)) {
+    return null
+  }
+
+  const isDynamicImport = node.expression.kind === ts.SyntaxKind.ImportKeyword
+  const isRequire = ts.isIdentifier(node.expression) && node.expression.text === "require"
+
+  if (!isDynamicImport && !isRequire) {
+    return null
+  }
+
+  const moduleSpecifier = node.arguments[0]
+
+  return moduleSpecifier !== undefined && ts.isStringLiteralLike(moduleSpecifier)
+    ? moduleSpecifier.text
+    : new Error("System の動的依存先を静的に確認できません")
+}
+
+function inspectModuleSpecifier(file: string, moduleSpecifier: string): SystemBoundaryViolation[] {
+  if (moduleSpecifier.startsWith("./") || moduleSpecifier.startsWith("../")) {
+    return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
+  }
+
+  const contextModule = moduleSpecifier.match(CONTEXT_MODULE)
+
+  if (contextModule === null) {
+    return []
+  }
+
+  const importedPath = contextModule[2] ?? ""
+  const isAllowed =
+    importedPath === "system" ||
+    importedPath.startsWith("system/") ||
+    importedPath.startsWith("shared/")
+
+  return isAllowed
+    ? []
+    : [{ file, reason: `System から上位コンテキストへ依存しています: ${moduleSpecifier}` }]
+}
+
 /** System 実装1ファイルに、上位コンテキストの語彙または依存が混入していないか調べる。 */
 export function inspectSystemSource(file: string, source: string): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
-  const forbiddenVocabulary = source.match(FORBIDDEN_VOCABULARY)?.[0]
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  )
+  const forbiddenVocabularies: string[] = []
+
+  function visit(node: ts.Node): void {
+    const vocabularySource =
+      ts.isIdentifier(node) || ts.isPrivateIdentifier(node) || ts.isStringLiteralLike(node)
+        ? node.text
+        : null
+    const matchedVocabulary = vocabularySource?.match(FORBIDDEN_VOCABULARY)?.[0]
+
+    if (forbiddenVocabularies.length === 0 && matchedVocabulary !== undefined) {
+      forbiddenVocabularies.push(matchedVocabulary)
+    }
+
+    const moduleSpecifier = getModuleSpecifier(node)
+
+    if (moduleSpecifier instanceof Error) {
+      violations.push({ file, reason: moduleSpecifier.message })
+    } else if (moduleSpecifier !== null) {
+      violations.push(...inspectModuleSpecifier(file, moduleSpecifier))
+    }
+
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  const forbiddenVocabulary = forbiddenVocabularies[0]
 
   if (forbiddenVocabulary !== undefined) {
-    violations.push({
+    violations.unshift({
       file,
       reason: `System に上位コンテキストの語彙 "${forbiddenVocabulary}" があります`,
-    })
-  }
-
-  for (const match of source.matchAll(CONTEXT_IMPORT)) {
-    const importedPath = match[2] ?? ""
-
-    if (
-      importedPath !== "system" &&
-      importedPath.startsWith("system/") === false &&
-      importedPath.startsWith("shared/") === false
-    ) {
-      violations.push({
-        file,
-        reason: `System から上位コンテキストへ依存しています: ${match[0]}`,
-      })
-    }
-  }
-
-  if (RELATIVE_IMPORT.test(source)) {
-    violations.push({
-      file,
-      reason: "System の依存境界を迂回する相対 import があります",
     })
   }
 
