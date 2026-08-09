@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { createAccessTokenService, type AccessTokenProfile } from "./access-token.service"
+import {
+  createAccessTokenService,
+  type AccessTokenProfile,
+} from "@/infrastructure/system/auth/access-token.service"
 
 const SECRET = "shared-test-secret"
 const PROFILE = Object.freeze({
@@ -24,8 +27,9 @@ describe("AccessTokenService", () => {
     expect(claims.purpose).toBe(PROFILE.purpose)
     expect(claims.exp - claims.iat).toBe(PROFILE.maxAgeSeconds)
     expect(claims.jti).toBeString()
-    expect("employeeId" in claims).toBe(false)
-    expect("permissions" in claims).toBe(false)
+    expect(Object.keys(claims).sort()).toEqual(
+      ["aud", "exp", "iat", "iss", "issuedAtMs", "jti", "purpose", "sub", "ver"].sort(),
+    )
   })
 
   test("issuer・audience・purpose・最大寿命が違うprofile間ではtokenを流用できない", async () => {
