@@ -1,6 +1,7 @@
 import { toStableAuditJson } from "@/lib/audit/stable-json"
 import type { AuditJsonValue } from "@/lib/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
+import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/domain/system/audit/create-system-audit-event"
 import { z } from "zod"
 
 export const auditOutcomeSchema = z.enum(["succeeded", "denied", "failed"])
@@ -137,9 +138,7 @@ export function createSystemAuditEvent(
     throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
   }
 
-  return {
-    eventId: crypto.randomUUID(),
-    requestId: auditContext.requestId,
+  const event = createSystemAuditEventEnvelope({
     actorAccountId: eventInput.actorAccountId,
     action: eventInput.action,
     targetType: eventInput.target.type,
@@ -150,8 +149,29 @@ export function createSystemAuditEvent(
     beforeJson: serializeOptionalProjection(input.before),
     afterJson: serializeOptionalProjection(input.after),
     metadataJson: serializeOptionalProjection(input.metadata),
+    occurredAt: eventTime,
+  })
+  if (event instanceof Error) {
+    throw new ValidationError("audit event input is invalid", "audit_invalid_event", {
+      cause: event,
+    })
+  }
+
+  return {
+    eventId: event.eventId,
+    requestId: auditContext.requestId,
+    actorAccountId: event.actorAccountId,
+    action: event.action,
+    targetType: event.targetType,
+    targetId: event.targetId,
+    outcome: event.outcome,
+    reasonCode: event.reasonCode,
+    authorizationJson: event.authorizationJson,
+    beforeJson: event.beforeJson,
+    afterJson: event.afterJson,
+    metadataJson: event.metadataJson,
     clientIp: auditContext.clientIp,
     clientName: auditContext.clientName,
-    createdAt: Math.floor(timestamp / 1_000),
+    createdAt: Math.floor(event.occurredAtEpochMilliseconds / 1_000),
   }
 }
