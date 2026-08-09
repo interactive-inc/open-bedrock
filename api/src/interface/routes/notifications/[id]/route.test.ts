@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { notificationKindSchema } from "@/domain/notification/notification.entity"
+import { companyNotificationKindSchema } from "@/domain/company/notifications/notification-kind"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { seedNotifications } from "@/infrastructure/seed/seed-notifications"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
@@ -15,7 +15,7 @@ const notificationResponseSchema = z.object({
   recipient_employee_id: z.number(),
   source_domain: z.string(),
   source_id: z.number().nullable(),
-  kind: notificationKindSchema,
+  kind: companyNotificationKindSchema,
   title: z.string(),
   body: z.string().nullable(),
   is_read: z.boolean(),
@@ -32,7 +32,7 @@ async function createTestDb(): Promise<D1Database> {
     "notifications",
     seedNotifications.map((notification) => ({
       id: notification.id,
-      recipient_employee_id: notification.recipientEmployeeId,
+      recipient_account_id: notification.recipientEmployeeId,
       source_domain: notification.sourceDomain,
       source_id: notification.sourceId,
       kind: notification.kind,
@@ -148,7 +148,7 @@ describe("DELETE /notifications/:id", () => {
       method: "DELETE",
     })
 
-    // DB-level recipientEmployeeId guard returns 404 instead of 403
+    // DB-level recipientAccountId guard returns 404 instead of 403
     // to avoid leaking existence of other employees' notifications.
     expect(response.status).toBe(404)
   })

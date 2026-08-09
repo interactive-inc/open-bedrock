@@ -1,14 +1,14 @@
-import { Notification } from "@/domain/notification/notification.entity"
+import { Notification } from "@/domain/system/notifications/notification.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Notification.create", () => {
   test("builds with null id and isRead false", () => {
     const notification = Notification.create({
-      recipientEmployeeId: 1,
-      kind: "task",
-      title: "新しいタスク",
-      body: "確認してください",
-      sourceDomain: "application",
+      recipientAccountId: 1,
+      kind: "resource_changed",
+      title: "Resource changed",
+      body: "Review the change",
+      sourceDomain: "resource",
       sourceId: 42,
       createdAt: "2026-06-11T09:00:00.000Z",
     })
@@ -16,20 +16,20 @@ describe("Notification.create", () => {
     expect(notification).toBeInstanceOf(Notification)
     expect(notification.id).toBeNull()
     expect(notification.isRead).toBe(false)
-    expect(notification.recipientEmployeeId).toBe(1)
-    expect(notification.kind).toBe("task")
-    expect(notification.title).toBe("新しいタスク")
-    expect(notification.body).toBe("確認してください")
-    expect(notification.sourceDomain).toBe("application")
+    expect(notification.recipientAccountId).toBe(1)
+    expect(notification.kind).toBe("resource_changed")
+    expect(notification.title).toBe("Resource changed")
+    expect(notification.body).toBe("Review the change")
+    expect(notification.sourceDomain).toBe("resource")
     expect(notification.sourceId).toBe(42)
     expect(notification.createdAt).toBe("2026-06-11T09:00:00.000Z")
   })
 
   test("accepts null body and null sourceId", () => {
     const notification = Notification.create({
-      recipientEmployeeId: 2,
-      kind: "announcement",
-      title: "お知らせ",
+      recipientAccountId: 2,
+      kind: "system_message",
+      title: "System message",
       body: null,
       sourceDomain: "system",
       sourceId: null,
@@ -44,11 +44,11 @@ describe("Notification.create", () => {
 describe("Notification.markRead", () => {
   test("returns new notification with isRead true", () => {
     const notification = Notification.create({
-      recipientEmployeeId: 1,
+      recipientAccountId: 1,
       kind: "reminder",
-      title: "リマインダー",
+      title: "Reminder",
       body: null,
-      sourceDomain: "attendance",
+      sourceDomain: "resource",
       sourceId: 10,
       createdAt: "2026-06-11T09:00:00.000Z",
     })
@@ -57,7 +57,7 @@ describe("Notification.markRead", () => {
 
     expect(read).toBeInstanceOf(Notification)
     expect(read.isRead).toBe(true)
-    expect(read.recipientEmployeeId).toBe(1)
-    expect(read.title).toBe("リマインダー")
+    expect(read.recipientAccountId).toBe(1)
+    expect(read.title).toBe("Reminder")
   })
 })
