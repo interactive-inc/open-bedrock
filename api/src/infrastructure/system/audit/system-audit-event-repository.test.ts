@@ -1,4 +1,4 @@
-import { createSystemAuditEvent } from "@/domain/system/audit/audit-event"
+import { createSystemAuditEvent } from "@/composition/audit/system-audit-event"
 import { SystemAuditEventRepository } from "@/infrastructure/system/audit/system-audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
