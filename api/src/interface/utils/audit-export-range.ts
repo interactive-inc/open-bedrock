@@ -1,5 +1,5 @@
-import { auditOutcomeSchema } from "@/domain/audit/audit-event"
-import type { AuditEventFilters } from "@/infrastructure/audit/audit-event-repository"
+import { auditOutcomeSchema } from "@/composition/audit/audit-event"
+import type { AuditEventFilters } from "@/infrastructure/company/audit/audit-event-repository"
 import { parseExactSecond } from "@/interface/utils/parse-exact-second"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"

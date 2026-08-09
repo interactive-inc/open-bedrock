@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { app } from "@/app"
-import type { AuditEventDetail } from "@/domain/audit/audit-event"
+import type { AuditEventDetail } from "@/composition/audit/audit-event"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
@@ -71,10 +71,10 @@ async function seedExportRow(db: D1Database): Promise<void> {
   await db
     .prepare(
       `INSERT INTO audit_events
-       (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
+       (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES ('legacy-41', 'legacy-request', -41, NULL, 'legacy.action', 'legacy_target',
+       VALUES ('legacy-41', 'legacy-request', -41, 'legacy.action', 'legacy_target',
                '=formula', 'succeeded', 'legacy_reason', '7', '"before"', '[1,2]',
                '{"legacy_text":"value"}', '192.0.2.41', 'cli', 1767225600)`,
     )

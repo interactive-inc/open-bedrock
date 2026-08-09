@@ -1,5 +1,5 @@
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
-import { auditBatchDecisions, auditLogs } from "@/schema"
+import { auditBatchDecisions, auditLogs } from "@/schema/system"
 import { describe, expect, test } from "bun:test"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
@@ -7,14 +7,17 @@ import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const auditEventsMigrationPath = join(import.meta.dir, "../../../migrations/0015_audit_events.sql")
+const auditEventsMigrationPath = join(
+  import.meta.dir,
+  "../../../../migrations/0015_audit_events.sql",
+)
 const appendGuardMigrationPath = join(
   import.meta.dir,
-  "../../../migrations/0016_audit_append_guard.sql",
+  "../../../../migrations/0016_audit_append_guard.sql",
 )
 const batchDecisionMigrationPath = join(
   import.meta.dir,
-  "../../../migrations/0017_audit_batch_decisions.sql",
+  "../../../../migrations/0017_audit_batch_decisions.sql",
 )
 
 type LegacyRowOverrides = {
@@ -483,7 +486,6 @@ describe("audit event migration", () => {
       eventId: "event-42",
       requestId: "request-42",
       actorAccountId: 8,
-      actorEmployeeId: 18,
       action: "employee.updated",
       targetType: "employee",
       targetId: "E018",
@@ -509,7 +511,6 @@ describe("audit event migration", () => {
       eventId: "event-42",
       requestId: "request-42",
       actorAccountId: 8,
-      actorEmployeeId: 18,
       action: "employee.updated",
       targetType: "employee",
       targetId: "E018",

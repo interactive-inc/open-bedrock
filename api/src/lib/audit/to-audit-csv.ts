@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/domain/audit/audit-event"
+import type { AuditEventDetail } from "@/composition/audit/audit-event"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { AUDIT_CSV_HEADER, AUDIT_CSV_MAX_BYTES, toAuditCsvRow } from "@/lib/audit/to-audit-csv-row"
 

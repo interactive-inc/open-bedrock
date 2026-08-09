@@ -1,6 +1,6 @@
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
-import { createAuditEvent } from "@/domain/audit/audit-event"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { createAuditEvent } from "@/composition/audit/audit-event"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { ApplicationError, UnavailableError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"

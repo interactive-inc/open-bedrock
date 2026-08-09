@@ -3,9 +3,9 @@ import {
   createAuditEvent,
   type AuditAction,
   type AuditTargetType,
-} from "@/domain/audit/audit-event"
+} from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import type { AuditJsonValue } from "@/lib/audit/stable-json"
 
 export function prepareGovernanceAudit(props: {

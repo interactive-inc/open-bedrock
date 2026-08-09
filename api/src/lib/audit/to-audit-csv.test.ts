@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { PayloadTooLargeError } from "@/lib/errors"
 import { toAuditCsv } from "@/lib/audit/to-audit-csv"
 import { AUDIT_CSV_MAX_BYTES } from "@/lib/audit/to-audit-csv-row"
-import type { AuditEventDetail } from "@/domain/audit/audit-event"
+import type { AuditEventDetail } from "@/composition/audit/audit-event"
 
 function detail(overrides: Partial<AuditEventDetail> = {}): AuditEventDetail {
   return {

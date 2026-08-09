@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { AuditEventRecord } from "@/domain/audit/audit-event"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import type { AuditEventRecord } from "@/composition/audit/audit-event"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ValidationError } from "@/lib/errors"
 
