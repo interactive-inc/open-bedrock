@@ -19,6 +19,20 @@ describe("inspectSystemSource", () => {
 
     expect(violations.length).toBe(2)
   })
+
+  test("rejects the mixed schema and relative import escape hatches", () => {
+    const mixedSchema = inspectSystemSource(
+      "src/infrastructure/system/example.ts",
+      'import { accounts } from "@/schema"',
+    )
+    const relativeImport = inspectSystemSource(
+      "src/infrastructure/system/example.ts",
+      'import { Token } from "../../../domain/system/auth/token"',
+    )
+
+    expect(mixedSchema.length).toBe(1)
+    expect(relativeImport.length).toBe(1)
+  })
 })
 
 describe("checkSystemContextBoundary", () => {

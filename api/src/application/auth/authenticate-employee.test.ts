@@ -74,7 +74,7 @@ describe("AuthenticateEmployee", () => {
           `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                   outcome, reason_code, authorization_json, before_json, after_json,
                   metadata_json, client_ip, client_name, request_id, created_at
-           FROM audit_events`,
+           FROM company_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({

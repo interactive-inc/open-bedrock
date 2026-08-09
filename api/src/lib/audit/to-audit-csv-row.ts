@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/domain/audit/audit-event"
+import type { AuditEventDetail } from "@/composition/audit/audit-event"
 
 export const AUDIT_CSV_MAX_BYTES = 16 * 1024 * 1024
 

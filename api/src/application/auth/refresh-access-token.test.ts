@@ -147,7 +147,7 @@ async function auditRows(db: D1Database) {
         `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                 outcome, reason_code, metadata_json, client_ip, client_name,
                 request_id, created_at
-         FROM audit_events ORDER BY id`,
+         FROM company_audit_events ORDER BY id`,
       )
       .all<{
         actor_account_id: number | null

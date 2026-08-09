@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { AuditEventDetail, AuditEventRecord } from "@/domain/audit/audit-event"
+import type { AuditEventDetail, AuditEventRecord } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
@@ -78,10 +78,10 @@ async function insertLegacyRow(
   await db
     .prepare(
       `INSERT INTO audit_events
-         (id, event_id, request_id, actor_account_id, actor_employee_id, action,
+         (id, event_id, request_id, actor_account_id, action,
           target_type, target_id, outcome, reason_code, authorization_json,
           before_json, after_json, metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, ?2, ?3, ?4, 11, ?5, ?6, ?7, 'succeeded', ?8, ?9,
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'succeeded', ?8, ?9,
                ?10, ?11, ?12, ?13, 'api', ?14)`,
     )
     .bind(
@@ -102,6 +102,13 @@ async function insertLegacyRow(
       overrides.clientIp === undefined ? "198.51.100.7" : overrides.clientIp,
       overrides.createdAt ?? 1_700_000_000,
     )
+    .run()
+  await db
+    .prepare(
+      `INSERT INTO audit_event_employee_contexts (audit_event_id, employee_id)
+       VALUES (?1, 11)`,
+    )
+    .bind(id)
     .run()
 }
 
@@ -630,7 +637,7 @@ async function readStoredAuditRowMetrics(
                 length(CAST(created_at AS BLOB))) AS stored_bytes,
               max(${textByteExpressions.join(", ")}) AS max_text_bytes,
               2 * (${textByteExpressions.join(" + ")}) AS exact_hex_payload_bytes
-       FROM audit_events WHERE event_id = ?1`,
+       FROM company_audit_events WHERE event_id = ?1`,
     )
     .bind(eventId)
     .first<{
@@ -706,7 +713,7 @@ describe("AuditEventRepository write contract", () => {
           `SELECT event_id, request_id, actor_account_id, actor_employee_id, action,
                   target_type, target_id, outcome, reason_code, authorization_json,
                   before_json, after_json, metadata_json, client_ip, client_name, created_at
-           FROM audit_events WHERE event_id = ?1`,
+           FROM company_audit_events WHERE event_id = ?1`,
         )
         .bind("event-1")
         .first<Record<string, unknown>>(),
@@ -1578,16 +1585,21 @@ describe("AuditEventRepository detail and corruption contract", () => {
     await db
       .prepare(
         `INSERT INTO audit_events
-           (id, event_id, request_id, actor_account_id, actor_employee_id, action,
+           (id, event_id, request_id, actor_account_id, action,
             target_type, target_id, outcome, reason_code, authorization_json,
             before_json, after_json, metadata_json, client_ip, client_name, created_at)
-         VALUES (-1, ?1, ${bomText} || 'legacy-request', 7, 11,
+         VALUES (-1, ?1, ${bomText} || 'legacy-request', 7,
                  ${bomText} || 'legacy.action', ${bomText} || 'legacy_target',
                  ${bomText} || 'legacy-target', 'succeeded',
                  ${bomText} || 'legacy_reason', ?2, ?3, ?4, ?5,
                  ${bomText} || '198.51.100.7', 'api', 1700000000)`,
       )
       .bind("e".repeat(4 * 1024 * 1024), authorizationJson, beforeJson, afterJson, metadataJson)
+      .run()
+    await db
+      .prepare(
+        "INSERT INTO audit_event_employee_contexts (audit_event_id, employee_id) VALUES (-1, 11)",
+      )
       .run()
     const expected: AuditEventDetail = {
       eventId,
@@ -1618,16 +1630,21 @@ describe("AuditEventRepository detail and corruption contract", () => {
     await db
       .prepare(
         `INSERT INTO audit_events
-           (id, event_id, request_id, actor_account_id, actor_employee_id, action,
+           (id, event_id, request_id, actor_account_id, action,
             target_type, target_id, outcome, reason_code, authorization_json,
             before_json, after_json, metadata_json, client_ip, client_name, created_at)
-         VALUES (-1, 'bom-invalid-json', 'legacy-request--1', 7, 11,
+         VALUES (-1, 'bom-invalid-json', 'legacy-request--1', 7,
                  'legacy.unknown.action', 'legacy_target', 'legacy--1', 'succeeded',
                  'legacy_reason', '{"scope":"legacy"}', '{"state":"before"}',
                  '{"state":"after"}', CAST(X'EFBBBF' AS TEXT) || ?1,
                  '198.51.100.7', 'api', 1700000000)`,
       )
       .bind(JSON.stringify("x".repeat(4 * 1024 * 1024)))
+      .run()
+    await db
+      .prepare(
+        "INSERT INTO audit_event_employee_contexts (audit_event_id, employee_id) VALUES (-1, 11)",
+      )
       .run()
     const repository = new AuditEventRepository(context)
 

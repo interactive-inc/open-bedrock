@@ -1,4 +1,4 @@
-import { batchJobStatusSchema } from "@/lib/schemas"
+import { batchJobStatusSchema } from "@/domain/system/batch/batch-job-status"
 import { z } from "zod"
 
 const zProps = z.object({

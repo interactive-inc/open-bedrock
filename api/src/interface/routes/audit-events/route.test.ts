@@ -99,10 +99,10 @@ async function seedAuditEvent(
   await db
     .prepare(
       `INSERT INTO audit_events
-       (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
+       (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6, ?7, 'legacy_reason',
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'legacy_reason',
                '{"legacy":true}', '{"before":1}', '{"after":2}',
                '{"private":"value"}', '192.0.2.10', 'api', ?8)`,
     )
