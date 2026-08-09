@@ -8,21 +8,31 @@ export const config = {
 }
 
 /**
- * Mutex for refresh token rotation — prevents concurrent requests from triggering
- * simultaneous refreshes that cause token conflicts and unexpected logouts.
+ * refresh token ごとの実行中 rotation。同じ token を提示した並行リクエストだけを束ね、
+ * reuse detection による自己 DoS を防ぐ。
+ *
+ * キーは必ず refresh token 自身にする。module 全域変数は同一 isolate の全リクエストで
+ * 共有されるため、token を跨いで 1 本の Promise を配ると別ユーザーのセッションが
+ * 発行される。
  */
-let inflightRefresh: Promise<Awaited<ReturnType<typeof postRefreshToken>>> | null = null
+const inflightRefreshes = new Map<string, Promise<Awaited<ReturnType<typeof postRefreshToken>>>>()
 
 function deduplicatedRefresh(
   refreshToken: string,
 ): Promise<Awaited<ReturnType<typeof postRefreshToken>>> {
-  if (inflightRefresh !== null) {
-    return inflightRefresh
+  const inflight = inflightRefreshes.get(refreshToken)
+
+  if (inflight !== undefined) {
+    return inflight
   }
-  inflightRefresh = postRefreshToken(refreshToken).finally(() => {
-    inflightRefresh = null
+
+  const started = postRefreshToken(refreshToken).finally(() => {
+    inflightRefreshes.delete(refreshToken)
   })
-  return inflightRefresh
+
+  inflightRefreshes.set(refreshToken, started)
+
+  return started
 }
 
 /**
