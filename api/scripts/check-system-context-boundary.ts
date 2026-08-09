@@ -12,13 +12,17 @@ const SYSTEM_ROOTS = [
 ] as const
 
 const FORBIDDEN_VOCABULARY =
-  /employee|employment|organization|department|company|facility|personnel|workforce|humanresource|thanks|shift|expense|leave|ringi|announcement|twit|chat|care/i
+  /\b(employees?|employments?|organizations?|departments?|company|companies|facility|facilities|personnel|workforces?|human\s+resources?|thanks|shifts?|expenses?|leaves?|ringi|announcements?|twit|chats?|care)\b/i
 const CONTEXT_MODULE = /^@\/(domain|application|infrastructure|schema)(?:\/(.*))?$/
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
   reason: string
 }>
+
+function normalizeVocabularyBoundaries(value: string): string {
+  return value.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll(/[_./:-]+/g, " ")
+}
 
 function getModuleSpecifier(node: ts.Node): string | null | Error {
   if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -102,7 +106,10 @@ export function inspectSystemSource(file: string, source: string): SystemBoundar
       ts.isIdentifier(node) || ts.isPrivateIdentifier(node) || ts.isStringLiteralLike(node)
         ? node.text
         : null
-    const matchedVocabulary = vocabularySource?.match(FORBIDDEN_VOCABULARY)?.[0]
+    const matchedVocabulary =
+      vocabularySource === null
+        ? undefined
+        : normalizeVocabularyBoundaries(vocabularySource).match(FORBIDDEN_VOCABULARY)?.[0]
 
     if (forbiddenVocabularies.length === 0 && matchedVocabulary !== undefined) {
       forbiddenVocabularies.push(matchedVocabulary)
