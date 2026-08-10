@@ -1,6 +1,7 @@
 import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
 import { Session } from "@/domain/company/iam/session"
 import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
+import { parseBearerAuthorization } from "@/domain/system/auth/parse-bearer-authorization"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
@@ -18,16 +19,15 @@ import { jwtVerify } from "jose"
  */
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   const header = c.req.header("Authorization")
+  const bearerAuthorization = parseBearerAuthorization(header)
 
-  if (!header || !header.startsWith("Bearer ")) {
+  if (bearerAuthorization.kind !== "token") {
     throw new UnauthorizedError("missing bearer token")
   }
 
-  const token = header.slice("Bearer ".length)
-
   assertJwtSecret(c.env.JWT_SECRET)
 
-  const payload = await toVerifiedPayload(token, c.env.JWT_SECRET)
+  const payload = await toVerifiedPayload(bearerAuthorization.token, c.env.JWT_SECRET)
 
   if (payload instanceof Error) {
     throw new UnauthorizedError("invalid token")
