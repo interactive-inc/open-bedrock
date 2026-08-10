@@ -332,7 +332,7 @@ describe("createAuditEvent", () => {
     }
   })
 
-  test("creates a flattened Drizzle-compatible record", () => {
+  test("keeps the numeric persistence Account ID across the opaque Domain boundary", () => {
     const record = createAuditEvent(makeInput(), context)
 
     expect(record).toEqual({
