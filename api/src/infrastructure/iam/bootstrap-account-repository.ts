@@ -1,4 +1,5 @@
 import type { AuditEventRecord } from "@/composition/audit/audit-event"
+import type { IdentitySubject } from "@/domain/system/auth/identity-subject"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
@@ -8,7 +9,7 @@ export type BootstrapProps = {
   code: string
   name: string
   email: string
-  subject: string
+  subject: IdentitySubject
   secret: string
   now: number
   audit: AuditEventRecord

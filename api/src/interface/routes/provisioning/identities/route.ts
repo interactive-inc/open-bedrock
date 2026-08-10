@@ -1,4 +1,5 @@
 import { SyncExternalIdentities } from "@/application/iam/sync-external-identities"
+import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 import { verifyProvisioningKey } from "@/interface/middlewares/verify-provisioning-key"
@@ -8,7 +9,7 @@ import { toHttpException } from "@/interface/lib/to-http-exception"
 import { z } from "zod"
 
 const identityInputSchema = z.object({
-  subject: z.string().min(1).max(255),
+  subject: identitySubjectSchema,
   email: z.string().min(1).max(254),
   name: z.string().min(1).max(200),
 })
