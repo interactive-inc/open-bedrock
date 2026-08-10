@@ -34,6 +34,15 @@
 
 テーブル、URL、CLI コマンドの名前の取り合いは上位の段が勝つ。勾配の規則と個別の名前は [[drafts/namespace-map|名前空間マップ]] に従う。
 
+## 切替の強制
+
+api は環境変数で機能の有効と無効を強制する。無効な機能のルートへのリクエストは認証より前に 404 で拒否される。機能キーとルート接頭辞の対応は `api/src/lib/feature/feature-route-registry.ts` が持つ。
+
+- `ENABLED_OPTIONAL_FEATURES` … 有効化する company-optional 機能。`all` か機能キーのカンマ区切り。未設定・空・`none` は全 company-optional 機能が無効（本書の既定どおり）
+- `DISABLED_STANDARD_FEATURES` … 停止する company-standard 機能のカンマ区切り。`all` で全停止。未設定は全て有効
+
+`api/.dev.vars.example` は `ENABLED_OPTIONAL_FEATURES="all"` を含み、これを写したローカル開発では全機能が有効になる。デプロイ環境では運用者が変数を設定する。未設定の環境は company-optional 機能が無効で動く。
+
 ## 現行実装差分
 
-機能の有効と無効を切り替える設定は未実装である。company-standard の停止と company-optional の有効化は runtime で強制されない。新機能の設計は、属する区分の明示と、環境変数または設定による切替を含めなければならない。
+web の画面とナビゲーションは機能の無効化に追従しない。無効な機能の画面は api の 404 によりデータ取得に失敗する。新機能の設計は、属する区分の明示と、環境変数または設定による切替を含めなければならない。
