@@ -40,7 +40,7 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   }
 
   const accountSessionRejection = getAccountSessionRejection({
-    isAccountActive: account.status === "active",
+    accountStatus: account.status,
     accountTokenVersion: account.tokenVersion,
     sessionTokenVersion: payload.tokenVersion,
   })

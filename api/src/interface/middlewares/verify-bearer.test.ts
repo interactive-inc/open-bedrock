@@ -76,6 +76,32 @@ describe("verifyBearer lifecycle status", () => {
     expect((await me({ db, employeeId: 5 })).status).toBe(401)
   })
 
+  test("denies suspended and locked Accounts with the same public 401 response", async () => {
+    const responses: Array<{ status: number; body: string }> = []
+
+    for (const accountStatus of ["suspended", "locked"]) {
+      const db = await database()
+      await db
+        .prepare(
+          `UPDATE accounts
+           SET status = ?1
+           WHERE id = (
+             SELECT account_id FROM account_employee_links WHERE employee_id = 1
+           )`,
+        )
+        .bind(accountStatus)
+        .run()
+
+      const response = await me({ db, employeeId: 1 })
+      responses.push({ status: response.status, body: await response.text() })
+    }
+
+    expect(responses).toEqual([
+      { status: 401, body: '{"error":"account is not active"}' },
+      { status: 401, body: '{"error":"account is not active"}' },
+    ])
+  })
+
   test("switches at the company date boundary and fails closed for an unknown time zone", async () => {
     const db = await database()
     expect((await me({ db, employeeId: 4, now: "2026-06-01T14:59:59.000Z" })).status).toBe(200)
