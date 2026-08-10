@@ -9,6 +9,7 @@ import { rateLimitMiddleware } from "@/interface/middlewares/rate-limit-middlewa
 import { requestContextMiddleware } from "@/interface/middlewares/request-context-middleware"
 import { factory } from "@/interface/utils/factory"
 import { auditNoStore } from "@/interface/middlewares/audit-no-store"
+import { toNegotiatedProblemResponse } from "@/interface/lib/to-negotiated-problem-response"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
@@ -88,12 +89,18 @@ export const appBase = factory
   .use("*", nowProductionGuardMiddleware)
   .use("*", featureGate)
   .use("*", databaseMiddleware)
-  .onError((error, c) => {
+  .onError(async (error, c) => {
     if (error instanceof HTTPException) {
       // toHttpException 経由の例外は res に {error, code} の JSON を積んでいる。
       // それを尊重して返し、CLI/AI が理由（message）と code を受け取れるようにする。
       // res 未設定の素の HTTPException（401/413/429 等）は従来どおり {error: message} を返す。
       if (error.res) {
+        const negotiated = await toNegotiatedProblemResponse({
+          error,
+          accept: c.req.header("accept") ?? null,
+        })
+        if (negotiated !== null) return negotiated
+
         return error.getResponse()
       }
 
