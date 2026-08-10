@@ -257,6 +257,7 @@ describe("RefreshAccessToken", () => {
     if (!isIssued(first) || first.refreshToken === null) {
       throw new Error("expected the first rotation to succeed")
     }
+    expect(first.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     const reused = await service.run(command(rawToken, "second-client"))
 
     expect(reused).toEqual({ reason: "invalid_token" })
