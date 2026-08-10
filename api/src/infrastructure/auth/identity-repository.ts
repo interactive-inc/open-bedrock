@@ -338,23 +338,6 @@ export class IdentityRepository {
   }
 
   /**
-   * account の password identity の id を返す。不在は null。
-   */
-  async findPasswordIdentityIdByAccount(accountId: number): Promise<number | null | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ id: identities.id })
-        .from(identities)
-        .where(and(eq(identities.accountId, accountId), eq(identities.provider, "password")))
-        .limit(1)
-
-      return rows.at(0)?.id ?? null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find identity")
-    }
-  }
-
-  /**
    * password identity の secret(PBKDF2)を書き戻す(レガシーハッシュ昇格・パスワード再設定)。
    */
   async updateSecret(identityId: number, secret: string): Promise<null | Error> {
@@ -367,33 +350,6 @@ export class IdentityRepository {
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to update identity secret")
-    }
-  }
-
-  /**
-   * パスワード更新と対象アカウントの tokenVersion bump を原子的に行う。
-   * 途中失敗で旧トークンが有効なまま残ることを防ぐ。
-   */
-  async updateSecretAndBumpTokenVersion(
-    identityId: number,
-    secret: string,
-    accountId: number,
-    now: number,
-  ): Promise<null | Error> {
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare("UPDATE identities SET secret = ?2 WHERE id = ?1").bind(
-          identityId,
-          secret,
-        ),
-        this.c.env.DB.prepare(
-          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
-        ).bind(accountId, now),
-      ])
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to reset password")
     }
   }
 
