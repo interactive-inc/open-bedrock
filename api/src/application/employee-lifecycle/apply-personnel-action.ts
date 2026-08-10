@@ -1,5 +1,5 @@
-import type { Session } from "@/lib/auth/session"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import type { Session } from "@/domain/company/iam/session"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import { containsDate } from "@/domain/employee-lifecycle/contains-date"
 import type {
   LifecycleSchedule,
@@ -13,7 +13,7 @@ import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle
 import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
 import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {
   PersonnelActionRepository,

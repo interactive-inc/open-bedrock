@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"
@@ -166,8 +166,8 @@ export class RefreshTokenRepository {
                    WHEN rt.revoked_at IS NOT NULL THEN 'reused'
                    WHEN a.id IS NULL
                      OR a.status <> 'active'
-                     OR a.employee_id IS NULL
-                     OR a.employee_id <> ?7
+                     OR link.employee_id IS NULL
+                     OR link.employee_id <> ?7
                      OR a.token_version <> rt.token_version
                      OR a.token_version <> ?8
                      OR e.id IS NULL
@@ -195,7 +195,8 @@ export class RefreshTokenRepository {
                  END
                  FROM refresh_tokens AS rt
                  LEFT JOIN accounts AS a ON a.id = rt.account_id
-                 LEFT JOIN employees AS e ON e.id = a.employee_id
+                 LEFT JOIN account_employee_links AS link ON link.account_id = a.id
+                 LEFT JOIN employees AS e ON e.id = link.employee_id
                  WHERE rt.id = ?2
                    AND rt.token_hash = ?3
                    AND rt.account_id = ?4

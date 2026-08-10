@@ -133,7 +133,7 @@ describe("POST /auth/login", () => {
           `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                   outcome, reason_code, authorization_json, before_json, after_json,
                   metadata_json, client_ip, client_name, request_id, created_at
-           FROM audit_events`,
+           FROM company_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
@@ -154,7 +154,7 @@ describe("POST /auth/login", () => {
       created_at: nowEpoch,
     })
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM company_audit_events").all())
     for (const secret of [
       "you+e001@example.com",
       "password",
@@ -220,7 +220,7 @@ describe("POST /auth/login", () => {
     }
 
     const rows = (
-      await db.prepare("SELECT * FROM audit_events ORDER BY id").all<AuditDatabaseRow>()
+      await db.prepare("SELECT * FROM company_audit_events ORDER BY id").all<AuditDatabaseRow>()
     ).results
     const expectedHash = await hashAuditIdentifier(variants[0], auditHmacSecret)
     expect(expectedHash).toMatch(/^[0-9a-f]{64}$/)
@@ -251,7 +251,7 @@ describe("POST /auth/login", () => {
       })),
     )
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM company_audit_events").all())
     expect(persisted).not.toContain("you+e001@example.com")
     expect(persisted).not.toContain("wrong-password")
     expect(persisted).not.toContain("denied-private-agent")

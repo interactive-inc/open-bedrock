@@ -1,6 +1,6 @@
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
 import type { Context } from "@/env"
-import { accounts } from "@/schema"
+import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"
 import { dueAt } from "@/lib/application/due-at"
 import { filterLiveWorkflowAccounts } from "@/lib/application/filter-live-workflow-accounts"
@@ -64,8 +64,9 @@ export async function resolveWorkflowStepSnapshot(props: {
 
   try {
     const accountRows = await props.c.var.database
-      .select({ id: accounts.id, employeeId: accounts.employeeId })
+      .select({ id: accounts.id, employeeId: accountEmployeeLinks.employeeId })
       .from(accounts)
+      .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
       .where(eq(accounts.status, "active"))
 
     const liveAccounts = await filterLiveWorkflowAccounts(

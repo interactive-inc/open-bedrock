@@ -1,7 +1,7 @@
-import type { Session } from "@/lib/auth/session"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import type { Session } from "@/domain/company/iam/session"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import {

@@ -1,8 +1,8 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/domain/company/iam/session"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
@@ -86,7 +86,10 @@ export class ArchiveEmployee {
       )
     }
     const account = await this.c.env.DB.prepare(
-      "SELECT id, token_version FROM accounts WHERE employee_id = ?1",
+      `SELECT account.id, account.token_version
+       FROM accounts account
+       JOIN account_employee_links link ON link.account_id = account.id
+       WHERE link.employee_id = ?1`,
     )
       .bind(employee.id)
       .first<{ id: number; token_version: number }>()
@@ -132,7 +135,9 @@ export class ArchiveEmployee {
         this.c.env.DB.prepare(
           `UPDATE accounts SET status = 'suspended', token_version = token_version + 1,
                                  updated_at = ?2
-             WHERE employee_id = ?1`,
+             WHERE id = (
+               SELECT account_id FROM account_employee_links WHERE employee_id = ?1
+             )`,
         ).bind(employee.id, archivedAtSeconds),
         this.c.env.DB.prepare("DELETE FROM org_memberships WHERE employee_code = ?1").bind(
           employee.code,

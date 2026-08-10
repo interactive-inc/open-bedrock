@@ -40,10 +40,15 @@ async function setupRefreshToken(rawToken: string, options: SetupOptions = {}) {
     await db
       .prepare(
         `INSERT INTO accounts
-           (id, employee_id, status, token_version, created_at, updated_at)
-         VALUES (1, 1, ?1, ?2, ?3, ?3)`,
+           (id, status, token_version, created_at, updated_at)
+         VALUES (1, ?1, ?2, ?3, ?3)`,
       )
       .bind(options.accountStatus ?? "active", options.accountTokenVersion ?? 0, nowEpoch - 100)
+      .run()
+  }
+  if (options.includeAccount !== false && options.includeEmployee !== false) {
+    await db
+      .prepare("INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1)")
       .run()
   }
   if (options.includeToken !== false) {
@@ -142,7 +147,7 @@ async function auditRows(db: D1Database) {
         `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                 outcome, reason_code, metadata_json, client_ip, client_name,
                 request_id, created_at
-         FROM audit_events ORDER BY id`,
+         FROM company_audit_events ORDER BY id`,
       )
       .all<{
         actor_account_id: number | null

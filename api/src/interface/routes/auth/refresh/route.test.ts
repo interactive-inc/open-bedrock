@@ -66,8 +66,8 @@ async function createScenario(scenario: Scenario): Promise<{
   await db
     .prepare(
       `INSERT INTO accounts
-         (id, employee_id, status, token_version, created_at, updated_at)
-       VALUES (1, 1, ?1, ?2, ?3, ?3)`,
+         (id, status, token_version, created_at, updated_at)
+       VALUES (1, ?1, ?2, ?3, ?3)`,
     )
     .bind(
       scenario === "inactive_account" ? "suspended" : "active",
@@ -75,6 +75,11 @@ async function createScenario(scenario: Scenario): Promise<{
       nowEpoch - 100,
     )
     .run()
+  if (scenario !== "missing_employee") {
+    await db
+      .prepare("INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1)")
+      .run()
+  }
 
   if (scenario !== "missing") {
     await db
@@ -264,7 +269,7 @@ describe("POST /auth/refresh", () => {
                   outcome, reason_code, authorization_json, before_json, after_json,
                   metadata_json, client_ip, client_name,
                   request_id, created_at
-           FROM audit_events`,
+           FROM company_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
@@ -291,7 +296,7 @@ describe("POST /auth/refresh", () => {
         .first<number>("count"),
     ).toBe(0)
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM company_audit_events").all())
     for (const secret of [
       refreshToken,
       await refreshTokenHash(refreshToken),
@@ -339,7 +344,7 @@ describe("POST /auth/refresh", () => {
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       )
       expect(internalRequestId).not.toBe(incomingRequestId)
-      const row = await db.prepare("SELECT * FROM audit_events").first<AuditDatabaseRow>()
+      const row = await db.prepare("SELECT * FROM company_audit_events").first<AuditDatabaseRow>()
       if (internalRequestId === null) throw new Error("internal request ID is missing")
       if (row === null) throw new Error("audit event is missing")
       expect(row.event_id).toMatch(

@@ -1,10 +1,10 @@
 import type { Context } from "@/env"
-import type { AccountStatus } from "@/lib/schemas"
+import type { AccountStatus } from "@/domain/system/auth/account-status"
 import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
 import { LivePermissionGuardError } from "@/infrastructure/iam/live-permission-guard-error"
-import { accountRoles, accounts, employees, roles } from "@/schema"
+import { accountEmployeeLinks, accountRoles, accounts, employees, roles } from "@/schema"
 import { eq, inArray, sql } from "drizzle-orm"
 
 export type AccountSummary = {
@@ -33,9 +33,12 @@ export class AccountRepository {
 
       const accountRows = await db.select().from(accounts)
 
-      const employeeIds = accountRows
-        .map((row) => row.employeeId)
-        .filter((id): id is number => id !== null)
+      const linkRows = await db.select().from(accountEmployeeLinks)
+      const employeeIdByAccountId = new Map(
+        linkRows.map((link) => [link.accountId, link.employeeId]),
+      )
+
+      const employeeIds = linkRows.map((link) => link.employeeId)
 
       const employeeRows =
         employeeIds.length === 0
@@ -50,17 +53,20 @@ export class AccountRepository {
 
       const keyByRoleId = new Map(roleRows.map((row) => [row.id, row.key]))
 
-      return accountRows.map((account) => ({
-        id: account.id,
-        employeeId: account.employeeId,
-        employeeName:
-          account.employeeId === null ? null : (nameByEmployeeId.get(account.employeeId) ?? null),
-        status: account.status,
-        roleKeys: grantRows
-          .filter((grant) => grant.accountId === account.id)
-          .map((grant) => keyByRoleId.get(grant.roleId))
-          .filter((key): key is string => key !== undefined),
-      }))
+      return accountRows.map((account) => {
+        const employeeId = employeeIdByAccountId.get(account.id) ?? null
+
+        return {
+          id: account.id,
+          employeeId,
+          employeeName: employeeId === null ? null : (nameByEmployeeId.get(employeeId) ?? null),
+          status: account.status,
+          roleKeys: grantRows
+            .filter((grant) => grant.accountId === account.id)
+            .map((grant) => keyByRoleId.get(grant.roleId))
+            .filter((key): key is string => key !== undefined),
+        }
+      })
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to list accounts")
     }
@@ -265,19 +271,16 @@ export class AccountRepository {
       }
 
       const rows = await this.c.var.database
-        .select({ employeeId: accounts.employeeId, roleKey: roles.key })
+        .select({ employeeId: accountEmployeeLinks.employeeId, roleKey: roles.key })
         .from(accounts)
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .innerJoin(accountRoles, eq(accountRoles.accountId, accounts.id))
         .innerJoin(roles, eq(roles.id, accountRoles.roleId))
-        .where(inArray(accounts.employeeId, [...employeeIds]))
+        .where(inArray(accountEmployeeLinks.employeeId, [...employeeIds]))
 
       const result = new Map<number, Array<string>>()
 
       for (const row of rows) {
-        if (row.employeeId === null) {
-          continue
-        }
-
         const existing = result.get(row.employeeId)
 
         if (existing === undefined) {

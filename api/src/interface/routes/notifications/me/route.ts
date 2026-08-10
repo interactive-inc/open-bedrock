@@ -1,4 +1,4 @@
-import { notificationKindSchema } from "@/domain/notification/notification.entity"
+import { companyNotificationKindSchema } from "@/domain/company/notifications/notification-kind"
 import { factory } from "@/interface/utils/factory"
 import { zAppNotificationList } from "@/lib/app-schemas"
 import { toNotificationSearchQuery } from "@/interface/routes/notifications/me/to-notification-search-query"
@@ -23,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     offset: c.req.query("offset"),
   })
 
-  const conditions: Array<SQL> = [eq(notifications.recipientEmployeeId, session.employeeId)]
+  const conditions: Array<SQL> = [eq(notifications.recipientAccountId, session.accountId)]
 
   if (query.isRead !== null) {
     conditions.push(eq(notifications.isRead, query.isRead ? 1 : 0))
@@ -43,7 +43,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(and(...conditions))
 
   const data = rows.flatMap((row) => {
-    const kind = notificationKindSchema.safeParse(row.kind)
+    const kind = companyNotificationKindSchema.safeParse(row.kind)
 
     if (!kind.success) {
       return []
@@ -52,7 +52,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     return [
       {
         id: row.id,
-        recipient_employee_id: row.recipientEmployeeId,
+        recipient_employee_id: session.employeeId,
         source_domain: row.sourceDomain,
         source_id: row.sourceId,
         kind: kind.data,

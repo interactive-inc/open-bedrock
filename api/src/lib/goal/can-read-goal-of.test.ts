@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"

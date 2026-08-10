@@ -9,7 +9,13 @@ import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
-import { accounts, approvalDelegations, applicationTemplates, employees } from "@/schema"
+import {
+  accountEmployeeLinks,
+  accounts,
+  approvalDelegations,
+  applicationTemplates,
+  employees,
+} from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, eq, or } from "drizzle-orm"
 import { z } from "zod"
@@ -77,9 +83,10 @@ export const POST = factory.createHandlers(
     const delegate = await c.var.database
       .select({ id: employees.id })
       .from(employees)
+      .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.employeeId, employees.id))
       .innerJoin(
         accounts,
-        and(eq(accounts.employeeId, employees.id), eq(accounts.status, "active")),
+        and(eq(accounts.id, accountEmployeeLinks.accountId), eq(accounts.status, "active")),
       )
       .where(eq(employees.code, body.delegate_employee_code))
       .limit(1)

@@ -67,6 +67,7 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
 - `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
+- `.dev.vars` には `ENABLED_OPTIONAL_FEATURES="all"` も必要（無いと 1on1・サンクス・目標などの company-optional 機能が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
@@ -107,7 +108,7 @@ web↔api クライアントの約束:
 
 **この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。** 宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
 
-両検査は `bun run check`（api）に組み込んである。
+これらの検査（gen:app:check、lint:route-authorization、lint:system-boundary、verify-seed）は `bun run check`（api）に組み込んである。`lint:system-boundary` はシステム層（`src/domain/system` ほか）が company の語彙・モジュールへ依存していないことを TypeScript AST で検査する。`verify-seed` は migration と `seeds/*.sql` を in-memory SQLite に適用し、schema 変更への seed の追従漏れを検出する。
 
 ## ドキュメント
 

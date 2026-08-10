@@ -70,16 +70,14 @@ describe("POST /auth/browser/code", () => {
     expect(body.expires_in).toBe(60)
 
     const row = await db
-      .prepare("SELECT code_hash, account_id, employee_id, expires_at FROM browser_login_codes")
+      .prepare("SELECT code_hash, account_id, expires_at FROM browser_login_codes")
       .first<{
         code_hash: string
         account_id: number
-        employee_id: number
         expires_at: number
       }>()
 
     expect(row?.account_id).toBe(1)
-    expect(row?.employee_id).toBe(1)
     expect(row?.expires_at).toBe(nowEpoch + 60)
     // 生 code は保存されず、ハッシュのみが主キーとして残る。
     expect(row?.code_hash).toBe(await loginCodeHash(body.code))

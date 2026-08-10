@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { AuditEventRecord } from "@/domain/audit/audit-event"
+import type { AuditEventRecord } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
@@ -66,8 +66,9 @@ async function setup() {
   await db.exec(`
     INSERT INTO employees (id, code, name, status)
     VALUES (1, 'E001', 'Test Worker', 'active');
-    INSERT INTO accounts (id, employee_id, status, token_version, created_at, updated_at)
-    VALUES (1, 1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+    VALUES (1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1);
   `)
   await insertRefreshToken(db)
 

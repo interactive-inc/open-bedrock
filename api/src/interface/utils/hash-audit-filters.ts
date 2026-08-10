@@ -1,4 +1,4 @@
-import type { AuditEventFilters } from "@/infrastructure/audit/audit-event-repository"
+import type { AuditEventFilters } from "@/infrastructure/company/audit/audit-event-repository"
 import { toStableAuditJson } from "@/lib/audit/stable-json"
 import { auditUnavailable } from "@/interface/utils/audit-unavailable"
 

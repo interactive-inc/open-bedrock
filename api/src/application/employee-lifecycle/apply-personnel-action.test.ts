@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/domain/company/iam/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"

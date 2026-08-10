@@ -1,4 +1,4 @@
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { AuditTrail } from "@/interface/utils/audit-trail"
 import { throwAuditRouteError } from "@/interface/utils/throw-audit-route-error"
 import { toPublicAuditPage } from "@/interface/utils/to-public-audit-page"
