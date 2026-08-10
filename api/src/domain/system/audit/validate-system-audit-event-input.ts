@@ -6,13 +6,10 @@ const vocabularyPattern = /^[a-z][a-z0-9_-]*(?:[.:][a-z][a-z0-9_-]*)*$/u
 /** 保存方式に依存しないSystem監査イベントのscalar不変条件を検査する。 */
 export function validateSystemAuditEventInput(input: SystemAuditEventInput): Error | null {
   const actor = input.actorAccountId
-  if (actor !== null && typeof actor !== "string" && typeof actor !== "number") {
-    return new Error("audit actor identifier is invalid")
-  }
-  if (typeof actor === "string" && (actor.trim().length === 0 || actor.length > 256)) {
-    return new Error("audit actor identifier is invalid")
-  }
-  if (typeof actor === "number" && (!Number.isSafeInteger(actor) || actor <= 0)) {
+  if (
+    actor !== null &&
+    (typeof actor !== "string" || actor.trim().length === 0 || actor.length > 256)
+  ) {
     return new Error("audit actor identifier is invalid")
   }
   if (

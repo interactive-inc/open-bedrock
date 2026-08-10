@@ -1,4 +1,5 @@
-export type SystemAuditIdentifier = string | number
+/** 永続化方式を露出しない、opaqueなSystem識別子。 */
+export type SystemAuditIdentifier = string
 
 export type SystemAuditOutcome = "succeeded" | "denied" | "failed"
 
