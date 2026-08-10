@@ -174,7 +174,7 @@ export class RefreshAccessToken {
       account === null
         ? null
         : getAccountSessionRejection({
-            isAccountActive: account.status === "active",
+            accountStatus: account.status,
             accountTokenVersion: account.tokenVersion,
             sessionTokenVersion: existing.tokenVersion,
           })

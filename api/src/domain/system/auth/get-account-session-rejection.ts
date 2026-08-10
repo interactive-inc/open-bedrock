@@ -1,3 +1,5 @@
+import type { AccountStatus } from "@/domain/system/auth/account-status"
+
 export type AccountSessionRejection =
   | "account_inactive"
   | "invalid_account_token_version"
@@ -5,14 +7,14 @@ export type AccountSessionRejection =
   | "token_version_mismatch"
 
 type Props = Readonly<{
-  isAccountActive: boolean
+  accountStatus: AccountStatus
   accountTokenVersion: number
   sessionTokenVersion: number
 }>
 
 /** Accountの現在状態だけでSessionを継続できるかfail-closedで判定する。 */
 export function getAccountSessionRejection(props: Props): AccountSessionRejection | null {
-  if (props.isAccountActive === false) {
+  if (props.accountStatus !== "active") {
     return "account_inactive"
   }
 

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
+import type { AccountStatus } from "@/domain/system/auth/account-status"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
@@ -15,7 +16,7 @@ const familyId = "test-family"
 type SetupOptions = {
   expiresAt?: number
   revokedAt?: number | null
-  accountStatus?: "active" | "suspended"
+  accountStatus?: AccountStatus
   accountTokenVersion?: number
   tokenVersion?: number
   employeeStatus?: "active" | "leave" | "retired"
@@ -368,6 +369,7 @@ describe("RefreshAccessToken", () => {
 
   test.each([
     ["suspended account", { accountStatus: "suspended" as const }],
+    ["locked account", { accountStatus: "locked" as const }],
     ["token version mismatch", { accountTokenVersion: 1 }],
     ["missing employee", { includeEmployee: false }],
     ["retired employee", { employeeStatus: "retired" as const }],
