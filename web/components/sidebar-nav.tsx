@@ -36,6 +36,8 @@ type Props = {
   myDepartments: ReadonlyArray<MyDepartment>
   // 全部署（組織ツリーの表示順・深さ付き）。部署タブの Select の選択肢に使う。
   allDepartments: ReadonlyArray<FlatDepartment>
+  // 機能ゲートで無効化されている機能キー。該当機能の項目は表示しない。
+  disabledFeatures: ReadonlyArray<string>
 }
 
 type SpaceKey = "my" | "teams" | "organization" | "system"
@@ -197,25 +199,33 @@ export function SidebarNav(props: Props) {
       key: "my",
       label: "自分",
       icon: User,
-      sections: getFeatureNavigationSections(getFeatureNavigationItems("my", null)),
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("my", null, props.disabledFeatures),
+      ),
     },
     {
       key: "teams",
       label: "部署",
       icon: Users,
-      sections: getFeatureNavigationSections(getFeatureNavigationItems("teams", currentTeam)),
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("teams", currentTeam, props.disabledFeatures),
+      ),
     },
     {
       key: "organization",
       label: "会社",
       icon: Building2,
-      sections: getFeatureNavigationSections(getFeatureNavigationItems("organization", null)),
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("organization", null, props.disabledFeatures),
+      ),
     },
     {
       key: "system",
       label: "システム",
       icon: Wrench,
-      sections: getFeatureNavigationSections(getFeatureNavigationItems("system", null)),
+      sections: getFeatureNavigationSections(
+        getFeatureNavigationItems("system", null, props.disabledFeatures),
+      ),
     },
   ]
 

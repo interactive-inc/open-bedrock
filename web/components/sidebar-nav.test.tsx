@@ -275,6 +275,7 @@ function renderSidebar(permissions: ReadonlyArray<string>) {
         inboxCounts={inboxCounts}
         unreadNotificationCount={0}
         permissions={permissions}
+        disabledFeatures={[]}
         myDepartments={[{ code: "D001", name: "Corporate Planning", assignment_type: "primary" }]}
         allDepartments={[
           { code: "D001", name: "Corporate Planning", depth: 0 },

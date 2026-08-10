@@ -139,6 +139,7 @@ import * as familyCareLeavesIdRoute from "@/interface/routes/family-care-leaves/
 import * as familyCareLeavesAdminRoute from "@/interface/routes/family-care-leaves/admin/route"
 import * as familyCareLeavesMeRoute from "@/interface/routes/family-care-leaves/me/route"
 import * as familyCareLeavesRoute from "@/interface/routes/family-care-leaves/route"
+import * as featuresRoute from "@/interface/routes/features/route"
 import * as governanceCapabilitiesRoute from "@/interface/routes/governance-capabilities/route"
 import * as governanceDocumentsCodeAcknowledgeRoute from "@/interface/routes/governance-documents/[code]/acknowledge/route"
 import * as governanceDocumentsCodeRoute from "@/interface/routes/governance-documents/[code]/route"
@@ -516,6 +517,7 @@ export const app = appBase
   .delete("/family-care-leaves/:id", ...familyCareLeavesIdRoute.DELETE)
   .post("/family-care-leaves/:id/approve", ...familyCareLeavesIdApproveRoute.POST)
   .post("/family-care-leaves/:id/cancel", ...familyCareLeavesIdCancelRoute.POST)
+  .get("/features", ...featuresRoute.GET)
   .get("/governance-capabilities", ...governanceCapabilitiesRoute.GET)
   .get("/governance-documents", ...governanceDocumentsRoute.GET)
   .get("/governance-documents/impact", ...governanceDocumentsImpactRoute.GET)
