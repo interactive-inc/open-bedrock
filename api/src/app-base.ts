@@ -4,6 +4,7 @@ import { cors } from "hono/cors"
 import { secureHeaders } from "hono/secure-headers"
 import { contextStorage } from "hono/context-storage"
 import { databaseMiddleware } from "@/interface/middlewares/database-middleware"
+import { featureGate } from "@/interface/middlewares/feature-gate"
 import { rateLimitMiddleware } from "@/interface/middlewares/rate-limit-middleware"
 import { requestContextMiddleware } from "@/interface/middlewares/request-context-middleware"
 import { factory } from "@/interface/utils/factory"
@@ -85,6 +86,7 @@ export const appBase = factory
   .use("*", secureHeaders({ crossOriginResourcePolicy: false, crossOriginOpenerPolicy: false }))
   .use("*", contextStorage())
   .use("*", nowProductionGuardMiddleware)
+  .use("*", featureGate)
   .use("*", databaseMiddleware)
   .onError((error, c) => {
     if (error instanceof HTTPException) {
