@@ -107,7 +107,7 @@ web↔api クライアントの約束:
 
 **この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。** 宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
 
-両検査は `bun run check`（api）に組み込んである。
+これらの検査（gen:app:check、lint:route-authorization、lint:system-boundary）は `bun run check`（api）に組み込んである。`lint:system-boundary` はシステム層（`src/domain/system` ほか）が company の語彙・モジュールへ依存していないことを TypeScript AST で検査する。
 
 ## ドキュメント
 
