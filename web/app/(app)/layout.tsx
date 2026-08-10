@@ -2,6 +2,7 @@ import { logoutAction } from "@/app/(app)/actions/logout"
 import { AppShell } from "@/components/app-shell"
 import { AuthProvider } from "@/components/auth-provider"
 import { getMe } from "@/lib/api/get-me"
+import { getFeatureAvailability } from "@/lib/api/get-feature-availability"
 import { getInboxCounts } from "@/lib/api/get-inbox-counts"
 import { getMyDepartments } from "@/lib/api/get-my-departments"
 import { getOrgTree } from "@/lib/api/get-org-tree"
@@ -23,14 +24,21 @@ export default async function AppLayout(props: Props) {
 
   // 未読数・受信箱件数バッジは補助情報なので、取得失敗時はページ描画を止めず 0 にフォールバックする
   // （意図的なグレースフルデグレード）。
-  const [unreadCount, inboxCountsResult, locale, myDepartmentsResult, orgTreeResult] =
-    await Promise.all([
-      getMyUnreadCount(),
-      getInboxCounts(),
-      getLocale(),
-      getMyDepartments(),
-      getOrgTree(),
-    ])
+  const [
+    unreadCount,
+    inboxCountsResult,
+    locale,
+    myDepartmentsResult,
+    orgTreeResult,
+    disabledFeatures,
+  ] = await Promise.all([
+    getMyUnreadCount(),
+    getInboxCounts(),
+    getLocale(),
+    getMyDepartments(),
+    getOrgTree(),
+    getFeatureAvailability(),
+  ])
 
   const unreadNotificationCount = unreadCount instanceof Error ? 0 : unreadCount.count
 
@@ -53,6 +61,7 @@ export default async function AppLayout(props: Props) {
         locale={locale}
         onLogout={logoutAction}
         unreadNotificationCount={unreadNotificationCount}
+        disabledFeatures={disabledFeatures}
       >
         {props.children}
       </AppShell>
