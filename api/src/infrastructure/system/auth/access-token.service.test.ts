@@ -20,7 +20,7 @@ describe("AccessTokenService", () => {
       SECRET,
     )
 
-    expect(claims.sub).toBe("account-1")
+    expect(String(claims.sub)).toBe("account-1")
     expect(claims.ver).toBe(7)
     expect(claims.iss).toBe(PROFILE.issuer)
     expect(claims.aud).toBe(PROFILE.audience)
@@ -62,5 +62,16 @@ describe("AccessTokenService", () => {
       ),
     ).toBe(true)
     expect(() => createAccessTokenService({ ...PROFILE, maxAgeSeconds: 0 })).toThrow()
+  })
+
+  test("共通opaque ID契約の範囲外にあるAccount IDを拒否する", async () => {
+    const service = createAccessTokenService(PROFILE)
+
+    expect(
+      await service.create({ accountId: "a".repeat(256), tokenVersion: 0 }, SECRET).then(
+        () => false,
+        () => true,
+      ),
+    ).toBe(true)
   })
 })

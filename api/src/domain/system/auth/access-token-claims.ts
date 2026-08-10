@@ -1,10 +1,11 @@
 import { z } from "zod"
+import { zAccountId } from "@/domain/system/auth/account-id"
 
 export const ACCESS_TOKEN_TYPE = "at+jwt"
 
 export const zAccessTokenClaims = z
   .object({
-    sub: z.string().min(1),
+    sub: zAccountId,
     ver: z.number().int().nonnegative(),
     purpose: z.enum(["web-session", "mobile-session", "api-session"]),
     iss: z.string().min(1),
