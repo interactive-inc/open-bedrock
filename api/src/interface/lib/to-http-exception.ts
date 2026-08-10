@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception"
+import { createSystemProblemDetails } from "@/domain/system/http/create-system-problem-details"
 import {
   ConflictError,
   ForbiddenError,
@@ -17,10 +18,15 @@ import type { ApplicationError } from "@/lib/errors"
  */
 export function toHttpException(error: ApplicationError): HTTPException {
   const status = toStatus(error)
+  const problem = createSystemProblemDetails({
+    status: status,
+    code: error.code,
+    detail: error.message,
+  })
 
-  return new HTTPException(status, {
-    res: new Response(JSON.stringify({ error: error.message, code: error.code }), {
-      status: status,
+  return new HTTPException(problem.status, {
+    res: new Response(JSON.stringify({ error: problem.detail, code: problem.code }), {
+      status: problem.status,
       headers: { "content-type": "application/json" },
     }),
   })
