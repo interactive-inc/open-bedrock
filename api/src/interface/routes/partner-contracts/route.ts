@@ -84,7 +84,9 @@ export const GET = factory.createHandlers(
 
     const order = query.order ?? ""
 
-    const sortKey: SortKey = order in SORT_OPTIONS ? (order as SortKey) : "contract_date_desc"
+    const sortKey: SortKey = Object.hasOwn(SORT_OPTIONS, order)
+      ? (order as SortKey)
+      : "contract_date_desc"
 
     const rows = await c.var.database
       .select()

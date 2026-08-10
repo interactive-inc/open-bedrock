@@ -21,7 +21,9 @@ wrangler.jsonc
 # env
 .env
 .env.production
-.dev.vars
+# .dev.vars とその派生（.bak / .local など）。公開リポジトリなので接頭辞で丸ごと除外する。
+.dev.vars*
+!.dev.vars.example
 
 # logs
 logs/

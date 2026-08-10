@@ -83,8 +83,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json(responseBody, 200)
 })
 
-// @authorization owner - 本人のリソースに限定する
-/** POST /meetings/:code/minutes — 議事録を記録（全認証者。記録文化を阻害しない） */
+// @authorization authenticated - ログインしていれば誰でも書ける共有データ
+/**
+ * POST /meetings/:code/minutes — 議事録を記録（全認証者。記録文化を阻害しない）
+ *
+ * 会議体の所属・権限を問わないため、任意の認証者が任意の会議体に記録を足せる。
+ * 作成後の訂正は作成者本人か meeting:manage に限定される（PUT 側）。
+ */
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

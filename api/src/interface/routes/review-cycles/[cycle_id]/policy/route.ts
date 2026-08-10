@@ -21,7 +21,7 @@ function authorize(c: Context) {
   if (session.hasPermission("review:administer") === false) throw new ForbiddenError()
 }
 
-// @authorization authenticated - ログインしていれば誰でも読める共有データ
+// @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   authorize(c)
   const cycleId = validateIntParam(c.req.param("cycle_id"), "review cycle")
@@ -37,7 +37,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   return c.json({ policy }, 200)
 })
 
-// @authorization authenticated - ログインしていれば誰でも読める共有データ
+// @authorization permission - 権限キーで判定する
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator("json", zReviewCyclePolicy),

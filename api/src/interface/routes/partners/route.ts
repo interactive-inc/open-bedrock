@@ -1,5 +1,6 @@
 import { RegisterPartner } from "@/application/partner/register-partner"
 import { factory } from "@/interface/utils/factory"
+import { likeKeyword } from "@/interface/utils/like-keyword"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -8,7 +9,7 @@ import {
 } from "@/interface/utils/to-bounded-int"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { partners } from "@/schema"
-import { and, asc, count, eq, like, or } from "drizzle-orm"
+import { and, asc, count, eq, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
@@ -57,9 +58,10 @@ export const GET = factory.createHandlers(
     const conditions: Array<SQL> = []
 
     if (query.q !== undefined && query.q !== "") {
-      const keyword = `%${query.q}%`
-
-      const keywordCondition = or(like(partners.name, keyword), like(partners.code, keyword))
+      const keywordCondition = or(
+        likeKeyword(partners.name, query.q),
+        likeKeyword(partners.code, query.q),
+      )
 
       if (keywordCondition !== undefined) {
         conditions.push(keywordCondition)

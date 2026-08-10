@@ -53,6 +53,35 @@ describe("session refresh middleware", () => {
     expect(response.cookies.get("session")?.value).toContain("eyJhbGciOiJIUzI1NiJ9")
     expect(response.cookies.get("refresh_token")?.value).toBe("rotated-refresh-token")
   })
+
+  test("never hands one user's refreshed session to a concurrent request holding another token", async () => {
+    mocks.postRefreshToken.mockImplementation(
+      (refreshToken: string) =>
+        new Promise((resolve) => {
+          setTimeout(
+            () =>
+              resolve({
+                access_token: `access-for-${refreshToken}`,
+                refresh_token: `rotated-${refreshToken}`,
+              }),
+            10,
+          )
+        }),
+    )
+
+    const requestA = new NextRequest("https://karte.open.localhost/employees")
+    requestA.cookies.set("refresh_token", "token-a")
+
+    const requestB = new NextRequest("https://karte.open.localhost/employees")
+    requestB.cookies.set("refresh_token", "token-b")
+
+    const responses = await Promise.all([middleware(requestA), middleware(requestB)])
+
+    expect(responses[0].cookies.get("session")?.value).toBe("access-for-token-a")
+    expect(responses[0].cookies.get("refresh_token")?.value).toBe("rotated-token-a")
+    expect(responses[1].cookies.get("session")?.value).toBe("access-for-token-b")
+    expect(responses[1].cookies.get("refresh_token")?.value).toBe("rotated-token-b")
+  })
 })
 
 describe("nonce-based CSP", () => {
