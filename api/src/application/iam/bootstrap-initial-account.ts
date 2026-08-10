@@ -1,4 +1,5 @@
 import { createAuditEvent } from "@/composition/audit/audit-event"
+import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
 import type { Context } from "@/env"
 import { BootstrapAccountRepository } from "@/infrastructure/iam/bootstrap-account-repository"
 import type { AlreadyInitialized } from "@/infrastructure/iam/bootstrap-account-repository"
@@ -37,6 +38,11 @@ export class BootstrapInitialAccount {
     }
 
     const normalizedEmail = command.email.trim().toLowerCase()
+    const subject = identitySubjectSchema.safeParse(normalizedEmail)
+
+    if (!subject.success) {
+      return new UnexpectedError("invalid bootstrap identity subject", { cause: subject.error })
+    }
 
     const secret = await toPasswordHash(command.password)
 
@@ -70,7 +76,7 @@ export class BootstrapInitialAccount {
       code: command.code,
       name: command.name,
       email: command.email,
-      subject: normalizedEmail,
+      subject: subject.data,
       secret,
       now: Math.floor(command.now.getTime() / 1_000),
       audit,

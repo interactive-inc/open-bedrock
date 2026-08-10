@@ -199,6 +199,23 @@ describe("POST /provisioning/identities", () => {
     expect(response.status).toBe(400)
   })
 
+  test.each(["line\nbreak", "ユーザー", "a".repeat(256)])(
+    "rejects an invalid subject before persistence",
+    async (subject) => {
+      const db = createTestDb()
+
+      const response = await postProvisioning(db, {
+        subject,
+        email: "invalid-subject@example.com",
+        name: "Invalid Subject",
+      })
+
+      expect(response.status).toBe(400)
+      expect(await count(db, "identities")).toBe(0)
+      expect(await count(db, "accounts")).toBe(0)
+    },
+  )
+
   test("rejects with 401 when PROVISIONING_API_KEY is not configured", async () => {
     const db = createTestDb()
 
