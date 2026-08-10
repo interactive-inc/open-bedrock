@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
+import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
@@ -66,6 +67,7 @@ describe("AuthenticateEmployee", () => {
     }
 
     expect(result.accessToken.length > 0).toBe(true)
+    expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     expect(result.accountId).toBe(1)
     expect(result.employeeId).toBe(1)
     expect(
@@ -96,9 +98,13 @@ describe("AuthenticateEmployee", () => {
     })
     expect(
       await db
-        .prepare("SELECT created_at, expires_at FROM refresh_tokens")
-        .first<{ created_at: number; expires_at: number }>(),
-    ).toEqual({ created_at: 1_767_225_600, expires_at: 1_767_830_400 })
+        .prepare("SELECT token_hash, created_at, expires_at FROM refresh_tokens")
+        .first<{ token_hash: string; created_at: number; expires_at: number }>(),
+    ).toEqual({
+      token_hash: await refreshTokenHash(result.refreshToken),
+      created_at: 1_767_225_600,
+      expires_at: 1_767_830_400,
+    })
 
     const persistedAudit = JSON.stringify(
       await db.prepare("SELECT * FROM audit_events").first<Record<string, unknown>>(),

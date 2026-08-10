@@ -12,6 +12,7 @@ import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-emplo
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 
 export type Command = {
@@ -198,7 +199,7 @@ export class RefreshAccessToken {
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
-    const newRawRefreshToken = crypto.randomUUID()
+    const newRawRefreshToken = generateOpaqueToken()
     const newHashedToken = await refreshTokenHash(newRawRefreshToken)
     let audit: AuditDecisionAppendFragment<RotationDecision>
     try {

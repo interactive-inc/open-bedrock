@@ -7,6 +7,7 @@ import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
 
 export type IssueSessionCommand = {
   accountId: number
@@ -51,7 +52,7 @@ export class IssueEmployeeSession {
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
-    const rawRefreshToken = crypto.randomUUID()
+    const rawRefreshToken = generateOpaqueToken()
 
     const hashedToken = await refreshTokenHash(rawRefreshToken)
 
