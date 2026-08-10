@@ -1,5 +1,9 @@
 import { ACCESS_TOKEN_TYPE } from "@/domain/system/auth/access-token-claims"
-import { ACCESS_TOKEN_AUDIENCE, ACCESS_TOKEN_ISSUER } from "@/infrastructure/auth/jose-token-signer"
+import {
+  ACCESS_TOKEN_AUDIENCE,
+  ACCESS_TOKEN_ISSUER,
+  JoseTokenSigner,
+} from "@/infrastructure/auth/jose-token-signer"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { requestWithContext } from "@/interface/test-helpers/request-with-context"
@@ -31,6 +35,24 @@ async function request(token: string): Promise<Response> {
 }
 
 describe("verifyBearer access token profile", () => {
+  test("accepts the case-insensitive Bearer scheme through the shared parser", async () => {
+    const token = await new JoseTokenSigner().sign({ accountId: 1, tokenVersion: 0 }, secret)
+
+    expect(token).not.toBeInstanceOf(Error)
+    if (token instanceof Error) return
+
+    const response = await requestWithContext({
+      db: await database(),
+      jwtSecret: secret,
+      path: "/me",
+      token: null,
+      now: "2026-06-01T00:00:00.000Z",
+      headers: { Authorization: `bearer ${token}` },
+    })
+
+    expect(response.status).toBe(200)
+  })
+
   test("issuer・audience・typeの取り違えを拒否する", async () => {
     const now = Math.floor(Date.now() / 1000)
     const claims = {
