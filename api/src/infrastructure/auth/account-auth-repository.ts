@@ -1,10 +1,11 @@
+import type { AccountStatus } from "@/domain/system/auth/account-status"
 import type { Context } from "@/env"
 import { accountRoles, accounts, permissions, rolePermissions, roles } from "@/schema"
 import { eq, inArray } from "drizzle-orm"
 
 export type ResolvedAccount = {
   accountId: number
-  status: string
+  status: AccountStatus
   tokenVersion: number
   roleKeys: ReadonlyArray<string>
   permissions: ReadonlySet<string>
@@ -24,7 +25,7 @@ export class AccountAuthRepository {
   async findById(accountId: number): Promise<
     | {
         accountId: number
-        status: string
+        status: AccountStatus
         tokenVersion: number
       }
     | null

@@ -5,24 +5,31 @@ describe("getAccountSessionRejection", () => {
   test("activeかつ同じ安全なtoken versionならSessionを許可する", () => {
     expect(
       getAccountSessionRejection({
-        isAccountActive: true,
+        accountStatus: "active",
         accountTokenVersion: 0,
         sessionTokenVersion: 0,
       }),
     ).toBeNull()
     expect(
       getAccountSessionRejection({
-        isAccountActive: true,
+        accountStatus: "active",
         accountTokenVersion: Number.MAX_SAFE_INTEGER,
         sessionTokenVersion: Number.MAX_SAFE_INTEGER,
       }),
     ).toBeNull()
   })
 
-  test("inactive Accountはtoken versionが一致しても拒否する", () => {
+  test("suspendedまたはlocked Accountはtoken versionが一致しても拒否する", () => {
     expect(
       getAccountSessionRejection({
-        isAccountActive: false,
+        accountStatus: "suspended",
+        accountTokenVersion: 3,
+        sessionTokenVersion: 3,
+      }),
+    ).toBe("account_inactive")
+    expect(
+      getAccountSessionRejection({
+        accountStatus: "locked",
         accountTokenVersion: 3,
         sessionTokenVersion: 3,
       }),
@@ -35,7 +42,7 @@ describe("getAccountSessionRejection", () => {
     for (const accountTokenVersion of invalidVersions) {
       expect(
         getAccountSessionRejection({
-          isAccountActive: true,
+          accountStatus: "active",
           accountTokenVersion,
           sessionTokenVersion: 0,
         }),
@@ -49,7 +56,7 @@ describe("getAccountSessionRejection", () => {
     for (const sessionTokenVersion of invalidVersions) {
       expect(
         getAccountSessionRejection({
-          isAccountActive: true,
+          accountStatus: "active",
           accountTokenVersion: 0,
           sessionTokenVersion,
         }),
@@ -60,7 +67,7 @@ describe("getAccountSessionRejection", () => {
   test("安全なtoken versionでも世代が違えば拒否する", () => {
     expect(
       getAccountSessionRejection({
-        isAccountActive: true,
+        accountStatus: "active",
         accountTokenVersion: 2,
         sessionTokenVersion: 1,
       }),

@@ -1,10 +1,11 @@
+import type { AccountStatus } from "@/domain/system/auth/account-status"
 import type { Context } from "@/env"
 import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"
 
 export type LinkedEmployeeAccount = Readonly<{
   accountId: number
-  status: string
+  status: AccountStatus
   tokenVersion: number
   employeeId: number | null
 }>
