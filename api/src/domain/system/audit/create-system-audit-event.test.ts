@@ -34,30 +34,34 @@ describe("createSystemAuditEvent", () => {
     expect(Object.isFrozen(event)).toBe(true)
   })
 
-  test.each([7, null])("accepts numeric and anonymous Account actors: %p", (actorAccountId) => {
-    const event = createSystemAuditEvent({
-      actorAccountId,
-      action: "auth.session.logout",
-      targetType: "account",
-      targetId: null,
-      outcome: "succeeded",
-      reasonCode: null,
-      authorizationJson: null,
-      beforeJson: null,
-      afterJson: null,
-      metadataJson: null,
-      occurredAt: new Date(0),
-    })
+  test.each(["account-7", null])(
+    "accepts opaque and anonymous Account actors: %p",
+    (actorAccountId) => {
+      const event = createSystemAuditEvent({
+        actorAccountId,
+        action: "auth.session.logout",
+        targetType: "account",
+        targetId: null,
+        outcome: "succeeded",
+        reasonCode: null,
+        authorizationJson: null,
+        beforeJson: null,
+        afterJson: null,
+        metadataJson: null,
+        occurredAt: new Date(0),
+      })
 
-    expect(event).not.toBeInstanceOf(Error)
-    if (event instanceof Error) return
-    expect(event.actorAccountId).toBe(actorAccountId)
-  })
+      expect(event).not.toBeInstanceOf(Error)
+      if (event instanceof Error) return
+      expect(event.actorAccountId).toBe(actorAccountId)
+    },
+  )
 
   test.each([
     ["actorAccountId", true],
+    ["actorAccountId", 7],
     ["actorAccountId", " "],
-    ["actorAccountId", 0],
+    ["actorAccountId", "x".repeat(257)],
     ["action", "not valid"],
     ["targetType", "not valid"],
     ["targetId", ""],

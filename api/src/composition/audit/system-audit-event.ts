@@ -123,8 +123,10 @@ export function createSystemAuditEvent(
     throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
   }
 
+  const actorAccountId =
+    eventInput.actorAccountId === null ? null : String(eventInput.actorAccountId)
   const event = createSystemAuditEventEnvelope({
-    actorAccountId: eventInput.actorAccountId,
+    actorAccountId,
     action: eventInput.action,
     targetType: eventInput.target.type,
     targetId: eventInput.target.id,
@@ -145,7 +147,7 @@ export function createSystemAuditEvent(
   return {
     eventId: event.eventId,
     requestId: auditContext.requestId,
-    actorAccountId: event.actorAccountId,
+    actorAccountId: eventInput.actorAccountId,
     action: event.action,
     targetType: event.targetType,
     targetId: event.targetId,
