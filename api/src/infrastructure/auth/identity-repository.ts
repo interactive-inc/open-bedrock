@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/domain/system/auth/identity-provider"
+import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
 import { accountEmployeeLinks, accounts, employees, identities } from "@/schema"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
@@ -53,12 +54,13 @@ export class IdentityRepository {
     try {
       const db = this.c.var.database
 
-      const subject = email.toLowerCase()
+      const parsedSubject = identitySubjectSchema.safeParse(email.toLowerCase())
+      if (!parsedSubject.success) return null
 
       const identityRows = await db
         .select()
         .from(identities)
-        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject)))
+        .where(and(eq(identities.provider, "password"), eq(identities.subject, parsedSubject.data)))
         .limit(1)
 
       const identity = identityRows.at(0)
@@ -108,11 +110,13 @@ export class IdentityRepository {
   ): Promise<ProviderIdentity | null | Error> {
     try {
       const db = this.c.var.database
+      const parsedSubject = identitySubjectSchema.safeParse(subject)
+      if (!parsedSubject.success) return null
 
       const identityRows = await db
         .select()
         .from(identities)
-        .where(and(eq(identities.provider, provider), eq(identities.subject, subject)))
+        .where(and(eq(identities.provider, provider), eq(identities.subject, parsedSubject.data)))
         .limit(1)
 
       const identity = identityRows.at(0)
@@ -260,14 +264,15 @@ export class IdentityRepository {
     try {
       const db = this.c.var.database
 
-      const subject = email.toLowerCase()
+      const subject = identitySubjectSchema.safeParse(email.toLowerCase())
+      if (!subject.success) return null
 
       const rows = await db
         .select({ employeeId: accountEmployeeLinks.employeeId })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
         .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
-        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject)))
+        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject.data)))
         .limit(1)
 
       const row = rows.at(0)

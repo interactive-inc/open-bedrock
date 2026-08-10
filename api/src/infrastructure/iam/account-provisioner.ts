@@ -1,5 +1,6 @@
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@/domain/system/auth/identity-provider"
+import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
 import { accountEmployeeLinks, accountRoles, accounts, identities, roles } from "@/schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
@@ -75,6 +76,9 @@ export class AccountProvisioner {
   }
 
   async provision(input: ProvisionInput): Promise<null | Error> {
+    const subject = identitySubjectSchema.safeParse(input.subject)
+    if (!subject.success) return new Error("invalid identity subject", { cause: subject.error })
+
     try {
       const db = this.c.var.database
 
@@ -102,7 +106,7 @@ export class AccountProvisioner {
       await db.insert(identities).values({
         accountId: account.id,
         provider: input.provider,
-        subject: input.subject,
+        subject: subject.data,
         secret: input.secret,
         email: input.email,
         emailVerified: 1,
@@ -136,6 +140,9 @@ export class AccountProvisioner {
    * 作成した employee の id を返す。
    */
   async provisionExternalEmployee(input: ProvisionExternalEmployeeInput): Promise<number | Error> {
+    const subject = identitySubjectSchema.safeParse(input.subject)
+    if (!subject.success) return new Error("invalid identity subject", { cause: subject.error })
+
     try {
       const db = this.c.env.DB
 
@@ -178,7 +185,7 @@ export class AccountProvisioner {
                ?1, ?2, NULL, ?3, 1, ?4
              )`,
           )
-          .bind(input.provider, input.subject, input.email, input.now),
+          .bind(input.provider, subject.data, input.email, input.now),
 
         // 5. account_role を作成する。account は subject 経由で逆引きし、role 不在なら 0 行。
         db
@@ -189,7 +196,7 @@ export class AccountProvisioner {
              JOIN roles role ON role.key = ?2
              WHERE identity.provider = ?4 AND identity.subject = ?1`,
           )
-          .bind(input.subject, input.roleKey, input.now, input.provider),
+          .bind(subject.data, input.roleKey, input.now, input.provider),
 
         // role 不在なら直前 INSERT は 0 行。孤立した employee/account/identity も rollback する。
         abortWhenPreviousStatementChangedNoRows(db),
@@ -214,11 +221,14 @@ export class AccountProvisioner {
    * (provider, subject) の一意制約により、同じ外部 identity の二重紐付けは失敗する。
    */
   async attachExternalIdentity(input: AttachExternalIdentityInput): Promise<null | Error> {
+    const subject = identitySubjectSchema.safeParse(input.subject)
+    if (!subject.success) return new Error("invalid identity subject", { cause: subject.error })
+
     try {
       await this.c.var.database.insert(identities).values({
         accountId: input.accountId,
         provider: input.provider,
-        subject: input.subject,
+        subject: subject.data,
         secret: null,
         email: input.email,
         emailVerified: 1,
@@ -235,6 +245,7 @@ export class AccountProvisioner {
     input: PreparedProvisionInput,
   ): ReadonlyArray<D1PreparedStatement> {
     const db = this.c.env.DB
+    const subject = identitySubjectSchema.parse(input.email.toLowerCase())
     return [
       db
         .prepare(
@@ -263,13 +274,7 @@ export class AccountProvisioner {
            WHERE employee.code = ?1
            RETURNING account_id`,
         )
-        .bind(
-          input.employeeCode,
-          input.email.toLowerCase(),
-          input.passwordHash,
-          input.email,
-          input.now,
-        ),
+        .bind(input.employeeCode, subject, input.passwordHash, input.email, input.now),
       abortWhenPreviousStatementChangedNoRows(db),
       new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
         actorAccountId: input.grantedByAccountId,
@@ -306,6 +311,9 @@ export class AccountProvisioner {
    * employee code をサブクエリのキーに使い、前段 INSERT の ID を後段で参照する。
    */
   async provisionWithEmployee(input: ProvisionWithEmployeeInput): Promise<number | Error> {
+    const subject = identitySubjectSchema.safeParse(input.email.toLowerCase())
+    if (!subject.success) return new Error("invalid identity subject", { cause: subject.error })
+
     try {
       const db = this.c.env.DB
 
@@ -354,13 +362,7 @@ export class AccountProvisioner {
              'password', ?2, ?3, ?4, 1, ?5
            )`,
           )
-          .bind(
-            input.employee.code,
-            input.email.toLowerCase(),
-            input.passwordHash,
-            input.email,
-            input.now,
-          ),
+          .bind(input.employee.code, subject.data, input.passwordHash, input.email, input.now),
 
         // 5. 認証時点の session ではなく、この batch の DB snapshot で付与者を再認可する。
         new LivePermissionGuard(this.c).abortWhenActorCannotManageRoleByKey({
