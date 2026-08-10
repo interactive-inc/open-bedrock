@@ -15,6 +15,11 @@ export type Bindings = {
   CORS_ORIGIN?: string
   // テストで現在時刻を固定するための注入点（本番では未設定 = 実時計）。
   NOW?: string
+  // 有効化する company-optional 機能。"all" か機能キーのカンマ区切り（例: "thanks,one-on-ones"）。
+  // 未設定・空・"none" は全 company-optional 機能を無効にする（.docs/feature-tiers.md の既定）。
+  ENABLED_OPTIONAL_FEATURES?: string
+  // 停止する company-standard 機能のカンマ区切り（例: "rooms,rentals"）。"all" で全停止。未設定は全て有効。
+  DISABLED_STANDARD_FEATURES?: string
   // ログインエンドポイントのレート制限カウンターを保持する KV namespace。
   // `wrangler kv:namespace create RATE_LIMIT` で発行し wrangler.jsonc に設定する。
   RATE_LIMIT?: KVNamespace
