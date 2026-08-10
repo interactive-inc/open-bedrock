@@ -6,16 +6,28 @@
 -- 値は src/infrastructure/seed/seed-employees.ts / seeds/employee.sql と一致させる。
 -- roles マスタは 0004_iam_seed.sql 投入済み前提。
 
-INSERT INTO accounts (id, employee_id, status, token_version, created_at, updated_at) VALUES
-  (1, 1, 'active', 0, 0, 0),
-  (2, 2, 'active', 0, 0, 0),
-  (3, 3, 'active', 0, 0, 0),
-  (4, 4, 'active', 0, 0, 0),
-  (5, 5, 'active', 0, 0, 0),
-  (9, 9, 'active', 0, 0, 0),
-  (10, 10, 'active', 0, 0, 0),
-  (13, 13, 'active', 0, 0, 0),
-  (16, 16, 'active', 0, 0, 0);
+-- 0123 で accounts から employee_id が分離されたため、リンクは account_employee_links に持つ。
+INSERT INTO accounts (id, status, token_version, created_at, updated_at) VALUES
+  (1, 'active', 0, 0, 0),
+  (2, 'active', 0, 0, 0),
+  (3, 'active', 0, 0, 0),
+  (4, 'active', 0, 0, 0),
+  (5, 'active', 0, 0, 0),
+  (9, 'active', 0, 0, 0),
+  (10, 'active', 0, 0, 0),
+  (13, 'active', 0, 0, 0),
+  (16, 'active', 0, 0, 0);
+
+INSERT INTO account_employee_links (account_id, employee_id) VALUES
+  (1, 1),
+  (2, 2),
+  (3, 3),
+  (4, 4),
+  (5, 5),
+  (9, 9),
+  (10, 10),
+  (13, 13),
+  (16, 16);
 
 INSERT INTO identities (account_id, provider, subject, secret, email, email_verified, created_at) VALUES
   (1, 'password', 'you+e001@example.com', 'pbkdf2:100000:c2VlZC1zYWx0LW9wZW4ta2FydGUtZGV2LW9ubHk=:coaTuzsuvK/WAPk7FuQ1ckIbBbsJXq2QncSPrz6ksi8=', 'you+e001@example.com', 1, 0),
