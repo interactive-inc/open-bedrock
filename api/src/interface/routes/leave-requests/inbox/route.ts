@@ -69,7 +69,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const sortQuery = c.req.query("sort") ?? ""
 
-  const sortKey: SortKey = sortQuery in SORT_OPTIONS ? (sortQuery as SortKey) : "created_at_desc"
+  const sortKey: SortKey = Object.hasOwn(SORT_OPTIONS, sortQuery)
+    ? (sortQuery as SortKey)
+    : "created_at_desc"
 
   const rows = await c.var.database
     .select({ leaveRequest: leaveRequests, applicantName: employees.name })

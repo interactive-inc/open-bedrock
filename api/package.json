@@ -16,6 +16,7 @@
     "lint:system-boundary": "bun run scripts/check-system-context-boundary.ts",
     "verify-seed": "bun run scripts/verify-seed.ts",
     "check": "bun run gen:app:check && bun run lint:route-authorization && bun run lint:system-boundary && bun run verify-seed && bun run build:types && tsc --noEmit",
+    "setup:dev-vars": "bash scripts/init-dev-vars.sh",
     "dev": "bash scripts/dev-restart.sh",
     "dev:no-restart": "wrangler dev",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
