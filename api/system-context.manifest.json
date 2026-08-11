@@ -1,6 +1,7 @@
 {
   "version": 1,
   "capabilities": ["audit", "auth", "batch", "http", "iam", "notifications"],
+  "forbiddenProductMarkers": ["bedrock"],
   "schemaTables": [
     "accountRoles",
     "accounts",

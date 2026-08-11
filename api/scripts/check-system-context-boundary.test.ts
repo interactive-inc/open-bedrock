@@ -15,6 +15,7 @@ describe("System ownership manifest", () => {
   const manifest = {
     version: 1,
     capabilities: ["audit", "auth"],
+    forbiddenProductMarkers: ["productx", "vendorx"],
     schemaTables: ["accounts", "auditLogs"],
   }
 
@@ -54,6 +55,11 @@ describe("System ownership manifest", () => {
       { ...manifest, capabilities: ["Auth"] },
       { ...manifest, capabilities: ["auth", "auth"] },
       { ...manifest, capabilities: ["auth", "audit"] },
+      { ...manifest, forbiddenProductMarkers: "productx" },
+      { ...manifest, forbiddenProductMarkers: ["ProductX"] },
+      { ...manifest, forbiddenProductMarkers: ["product-x"] },
+      { ...manifest, forbiddenProductMarkers: ["productx", "productx"] },
+      { ...manifest, forbiddenProductMarkers: ["vendorx", "productx"] },
       { ...manifest, schemaTables: ["accounts", 1] },
       { ...manifest, schemaTables: ["Accounts"] },
       { ...manifest, schemaTables: ["accounts", "accounts"] },
@@ -238,6 +244,54 @@ describe("inspectSystemSource", () => {
       "src/domain/system/example.ts",
       'const serialized = JSON.stringify({ value: "stringify" })',
       downstreamContexts,
+    )
+
+    expect(violations).toEqual([])
+  })
+
+  test("宣言された製品markerを識別子と実行時文字列から拒否する", () => {
+    const forbiddenProductMarkers = new Set(["productx"])
+    const identifierViolations = inspectSystemSource(
+      "src/domain/system/example.ts",
+      "const productxClient = true",
+      downstreamContexts,
+      forbiddenProductMarkers,
+    )
+    const stringViolations = inspectSystemSource(
+      "src/application/system/example.ts",
+      'const issuer = "https://auth.productx.example"',
+      downstreamContexts,
+      forbiddenProductMarkers,
+    )
+    const templateViolations = inspectSystemSource(
+      "src/application/system/example.ts",
+      "const issuer = `https://${tenant}.productx.example`",
+      downstreamContexts,
+      forbiddenProductMarkers,
+    )
+    const regularExpressionViolations = inspectSystemSource(
+      "src/domain/system/example.ts",
+      "const allowedHost = /productx\\.example/",
+      downstreamContexts,
+      forbiddenProductMarkers,
+    )
+
+    expect(identifierViolations[0]?.reason).toContain('製品 marker "productx"')
+    expect(stringViolations[0]?.reason).toContain('製品 marker "productx"')
+    expect(templateViolations[0]?.reason).toContain('製品 marker "productx"')
+    expect(regularExpressionViolations[0]?.reason).toContain('製品 marker "productx"')
+  })
+
+  test("製品markerのコメント・部分綴り・未宣言markerを拒否しない", () => {
+    const violations = inspectSystemSource(
+      "src/domain/system/example.ts",
+      [
+        "// productx configuration belongs to composition",
+        "const unproductxable = true",
+        'const vendor = "vendory"',
+      ].join("\n"),
+      downstreamContexts,
+      new Set(["productx"]),
     )
 
     expect(violations).toEqual([])

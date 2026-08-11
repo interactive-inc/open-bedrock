@@ -11,12 +11,16 @@ const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
   : SOURCE_ROOT
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
+const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const
 const SYSTEM_SCHEMA_PATH = resolve(SOURCE_ROOT, "schema/system.ts")
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
   SYSTEM_SCHEMA_PATH,
 ] as const
+const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
+  PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
+)
 const TYPESCRIPT_CONFIG_PATHS = [
   "tsconfig.json",
   "tsconfig.api.json",
@@ -49,6 +53,20 @@ export type SystemBoundaryViolation = Readonly<{
 
 function normalizeVocabularyBoundaries(value: string): string {
   return value.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll(/[_./:-]+/g, " ")
+}
+
+function normalizeProductMarkerBoundaries(value: string): string {
+  return value.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll(/[^A-Za-z0-9]+/g, " ")
+}
+
+function vocabularySourceOf(node: ts.Node): string | null {
+  return ts.isIdentifier(node) ||
+    ts.isPrivateIdentifier(node) ||
+    ts.isStringLiteralLike(node) ||
+    ts.isTemplateLiteralToken(node) ||
+    ts.isRegularExpressionLiteral(node)
+    ? node.text
+    : null
 }
 
 function isUnknownRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -237,7 +255,7 @@ export function inspectSystemOwnershipManifest(
     return [{ file, reason: "System ownership manifest は object で宣言してください" }]
   }
 
-  const expectedFields = ["capabilities", "schemaTables", "version"]
+  const expectedFields = ["capabilities", "forbiddenProductMarkers", "schemaTables", "version"]
   const actualFields = Object.keys(manifest).toSorted()
 
   if (
@@ -257,13 +275,23 @@ export function inspectSystemOwnershipManifest(
     manifest.capabilities,
     /^[a-z][a-z0-9-]*$/,
   )
+  const forbiddenProductMarkers = inspectSortedUniqueStringList(
+    file,
+    "forbiddenProductMarkers",
+    manifest.forbiddenProductMarkers,
+    /^[a-z][a-z0-9]*$/,
+  )
   const schemaTables = inspectSortedUniqueStringList(
     file,
     "schemaTables",
     manifest.schemaTables,
     /^[a-z][A-Za-z0-9]*$/,
   )
-  const violations = [...capabilities.violations, ...schemaTables.violations]
+  const violations = [
+    ...capabilities.violations,
+    ...forbiddenProductMarkers.violations,
+    ...schemaTables.violations,
+  ]
 
   if (violations.length > 0) return violations
 
@@ -453,6 +481,7 @@ export function inspectSystemSource(
   file: string,
   source: string,
   downstreamContexts: ReadonlySet<string> = discoverDownstreamContexts(),
+  forbiddenProductMarkers: ReadonlySet<string> = new Set(),
 ): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
   const sourceFile = ts.createSourceFile(
@@ -463,19 +492,28 @@ export function inspectSystemSource(
     file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   )
   let forbiddenVocabulary: string | undefined
+  let forbiddenProductMarker: string | undefined
 
   function visit(node: ts.Node): void {
-    const vocabularySource =
-      ts.isIdentifier(node) || ts.isPrivateIdentifier(node) || ts.isStringLiteralLike(node)
-        ? node.text
-        : null
+    const vocabularySource = vocabularySourceOf(node)
     const matchedVocabulary =
       vocabularySource === null
         ? undefined
         : normalizeVocabularyBoundaries(vocabularySource).match(FORBIDDEN_VOCABULARY)?.[0]
+    const matchedProductMarker =
+      vocabularySource === null
+        ? undefined
+        : normalizeProductMarkerBoundaries(vocabularySource)
+            .toLowerCase()
+            .split(/\s+/)
+            .find((token) => forbiddenProductMarkers.has(token))
 
     if (forbiddenVocabulary === undefined && matchedVocabulary !== undefined) {
       forbiddenVocabulary = matchedVocabulary
+    }
+
+    if (forbiddenProductMarker === undefined && matchedProductMarker !== undefined) {
+      forbiddenProductMarker = matchedProductMarker
     }
 
     const moduleSpecifier = getModuleSpecifier(node)
@@ -498,12 +536,20 @@ export function inspectSystemSource(
     })
   }
 
+  if (forbiddenProductMarker !== undefined) {
+    violations.unshift({
+      file,
+      reason: `System core に製品 marker "${forbiddenProductMarker}" があります`,
+    })
+  }
+
   return violations
 }
 
 async function inspectSystemPath(
   path: string,
   downstreamContexts: ReadonlySet<string>,
+  forbiddenProductMarkers: ReadonlySet<string>,
 ): Promise<SystemBoundaryViolation[]> {
   if (!existsSync(path)) {
     return []
@@ -526,8 +572,23 @@ async function inspectSystemPath(
       relative(PROJECT_ROOT, file),
       readFileSync(file, "utf8"),
       downstreamContexts,
+      forbiddenProductMarkers,
     ),
   )
+}
+
+function readForbiddenProductMarkers(): ReadonlySet<string> {
+  try {
+    const manifest: unknown = JSON.parse(readFileSync(SYSTEM_OWNERSHIP_MANIFEST_PATH, "utf8"))
+
+    return isUnknownRecord(manifest) &&
+      Array.isArray(manifest.forbiddenProductMarkers) &&
+      manifest.forbiddenProductMarkers.every((marker) => typeof marker === "string")
+      ? new Set(manifest.forbiddenProductMarkers)
+      : new Set()
+  } catch {
+    return new Set()
+  }
 }
 
 function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
@@ -574,13 +635,20 @@ function inspectSystemOwnership(): SystemBoundaryViolation[] {
 
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
   const downstreamContexts = discoverDownstreamContexts()
+  const forbiddenProductMarkers = readForbiddenProductMarkers()
   const violations: SystemBoundaryViolation[] = [
     ...inspectSystemOwnership(),
     ...inspectSystemCapabilityLayout(),
   ]
 
   for (const path of SYSTEM_SOURCE_PATHS) {
-    violations.push(...(await inspectSystemPath(path, downstreamContexts)))
+    violations.push(
+      ...(await inspectSystemPath(
+        path,
+        downstreamContexts,
+        PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS.has(path) ? forbiddenProductMarkers : new Set(),
+      )),
+    )
   }
 
   for (const path of TYPESCRIPT_CONFIG_PATHS) {
