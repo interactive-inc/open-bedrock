@@ -2,8 +2,8 @@ import type {
   SystemAuditEvent,
   SystemAuditEventInput,
   SystemAuditIdentifier,
-} from "@/domain/system/audit/system-audit-event"
-import { validateSystemAuditEventInput } from "@/domain/system/audit/validate-system-audit-event-input"
+} from "@system/domain/audit/system-audit-event"
+import { validateSystemAuditEventInput } from "@system/domain/audit/validate-system-audit-event-input"
 
 /** ID表現と永続化方式に依存しないimmutableなSystem監査イベントを生成する。 */
 export function createSystemAuditEvent<ActorAccountId extends SystemAuditIdentifier>(

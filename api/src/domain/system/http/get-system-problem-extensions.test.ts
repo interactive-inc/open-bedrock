@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { getSystemProblemExtensions } from "@/domain/system/http/get-system-problem-extensions"
+import { getSystemProblemExtensions } from "@system/domain/http/get-system-problem-extensions"
 
 describe("getSystemProblemExtensions", () => {
   test("retains existing public diagnostics but removes reserved and internal members", () => {

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { zAccountId } from "@/domain/system/auth/account-id"
+import { zAccountId } from "@system/domain/auth/account-id"
 
 export const ACCESS_TOKEN_TYPE = "at+jwt"
 

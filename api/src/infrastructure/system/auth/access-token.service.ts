@@ -3,7 +3,7 @@ import {
   ACCESS_TOKEN_TYPE,
   type AccessTokenClaims,
   zAccessTokenClaims,
-} from "@/domain/system/auth/access-token-claims"
+} from "@system/domain/auth/access-token-claims"
 
 export type AccessTokenProfile = Readonly<{
   issuer: string

@@ -1,4 +1,4 @@
-import { SYSTEM_PERMISSION_KEYS } from "@/domain/system/iam/system-permission-key.catalog"
+import { SYSTEM_PERMISSION_KEYS } from "@system/domain/iam/system-permission-key.catalog"
 import { expect, test } from "bun:test"
 
 test("portable System IAM core owns only the universal permission keys", () => {

@@ -1,4 +1,4 @@
-import { getAcceptQuality } from "@/domain/system/http/get-accept-quality"
+import { getAcceptQuality } from "@system/domain/http/get-accept-quality"
 
 /** 明示的かつ選択可能なapplication/problem+jsonだけをopt-inとして扱う。 */
 export function acceptsSystemProblemDetails(accept: string | null): boolean {

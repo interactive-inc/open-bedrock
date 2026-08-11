@@ -1,5 +1,5 @@
-import { getSystemProblemTitle } from "@/domain/system/http/get-system-problem-title"
-import type { SystemProblemStatus } from "@/domain/system/http/get-system-problem-title"
+import { getSystemProblemTitle } from "@system/domain/http/get-system-problem-title"
+import type { SystemProblemStatus } from "@system/domain/http/get-system-problem-title"
 
 type Props = Readonly<{
   status: SystemProblemStatus
