@@ -26,7 +26,18 @@
     "permissions",
     "refreshTokens",
     "rolePermissions",
-    "roles"
+    "roles",
+    "systemAccounts",
+    "systemAuditEvents",
+    "systemBootstrapState",
+    "systemIamRolePermissions",
+    "systemIamRoles",
+    "systemIdentityBindings",
+    "systemNotificationDeliveries",
+    "systemNotificationMessages",
+    "systemPasswordCredentials",
+    "systemRoleBindings",
+    "systemSessions"
   ],
   "targetCapabilities": [
     "audit",
