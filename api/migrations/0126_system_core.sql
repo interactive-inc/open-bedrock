@@ -13,7 +13,7 @@ CREATE TABLE system_accounts (
     CHECK (updated_at >= created_at)
 );
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_accounts_monotonic_security_state
 BEFORE UPDATE ON system_accounts
 WHEN
@@ -55,14 +55,14 @@ CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
 CREATE INDEX system_identity_bindings_account_idx
   ON system_identity_bindings (account_id);
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_identity_bindings_immutable_identity
 BEFORE UPDATE OF account_id, provider, subject, created_at ON system_identity_bindings
 BEGIN
   SELECT RAISE(ABORT, 'identity binding identity is immutable');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_identity_bindings_monotonic_lifecycle
 BEFORE UPDATE ON system_identity_bindings
 WHEN
@@ -83,7 +83,7 @@ CREATE TABLE system_password_credentials (
     CHECK (changed_at >= created_at AND updated_at >= changed_at)
 );
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_password_credentials_provider_insert
 BEFORE INSERT ON system_password_credentials
 WHEN NOT EXISTS (
@@ -94,7 +94,7 @@ BEGIN
   SELECT RAISE(ABORT, 'password credential requires password identity');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_password_credentials_provider_update
 BEFORE UPDATE OF identity_id ON system_password_credentials
 WHEN NOT EXISTS (
@@ -105,7 +105,7 @@ BEGIN
   SELECT RAISE(ABORT, 'password credential requires password identity');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_password_credentials_monotonic_change
 BEFORE UPDATE ON system_password_credentials
 WHEN
@@ -153,7 +153,7 @@ CREATE INDEX system_sessions_account_idx
 CREATE INDEX system_sessions_active_family_idx
   ON system_sessions (family_id) WHERE revoked_at IS NULL;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_sessions_monotonic_lifecycle
 BEFORE UPDATE ON system_sessions
 WHEN
@@ -195,7 +195,7 @@ CREATE TABLE system_iam_role_permissions (
   PRIMARY KEY (role_id, permission_key)
 ) WITHOUT ROWID;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_iam_roles_immutable_identity
 BEFORE UPDATE OF id, key, kind, created_at ON system_iam_roles
 BEGIN
@@ -238,7 +238,7 @@ CREATE INDEX system_role_bindings_role_idx
 CREATE INDEX system_role_bindings_resource_idx
   ON system_role_bindings (resource_type, resource_id);
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_role_bindings_monotonic_lifecycle
 BEFORE UPDATE ON system_role_bindings
 WHEN
@@ -277,14 +277,14 @@ CREATE TABLE system_notification_messages (
 CREATE INDEX system_notification_messages_source_idx
   ON system_notification_messages (source_type, source_id);
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_messages_prevent_update
 BEFORE UPDATE ON system_notification_messages
 BEGIN
   SELECT RAISE(ABORT, 'notification message is immutable');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_messages_prevent_delete
 BEFORE DELETE ON system_notification_messages
 BEGIN
@@ -311,7 +311,7 @@ CREATE INDEX system_notification_deliveries_unread_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at)
   WHERE read_at IS NULL;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_deliveries_monotonic_read
 BEFORE UPDATE ON system_notification_deliveries
 WHEN
@@ -356,14 +356,14 @@ CREATE INDEX system_audit_events_target_idx
 CREATE INDEX system_audit_events_outcome_idx
   ON system_audit_events (outcome, occurred_at);
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_audit_events_prevent_update
 BEFORE UPDATE ON system_audit_events
 BEGIN
   SELECT RAISE(ABORT, 'system audit event is append-only');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_audit_events_prevent_delete
 BEFORE DELETE ON system_audit_events
 BEGIN
@@ -380,7 +380,7 @@ CREATE TABLE system_bootstrap_state (
   completed_at INTEGER NOT NULL
 );
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_bootstrap_state_validate_root
 BEFORE INSERT ON system_bootstrap_state
 WHEN NOT EXISTS (
@@ -402,14 +402,14 @@ BEGIN
   SELECT RAISE(ABORT, 'bootstrap requires an active global System root binding');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_bootstrap_state_prevent_update
 BEFORE UPDATE ON system_bootstrap_state
 BEGIN
   SELECT RAISE(ABORT, 'bootstrap state is immutable');
 END;
 
-/* DDL-only test harnesses skip compound triggers; full migration loaders apply this statement. */
+/* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_bootstrap_state_prevent_delete
 BEFORE DELETE ON system_bootstrap_state
 BEGIN
