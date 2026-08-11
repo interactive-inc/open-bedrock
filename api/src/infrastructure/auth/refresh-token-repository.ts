@@ -1,4 +1,9 @@
 import type { Context } from "@/env"
+import {
+  hasExactRefreshTokenRotationDecisions,
+  parseRefreshTokenRotationDecision,
+} from "@/domain/system/auth/refresh-token-rotation-decision"
+import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
 import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { refreshTokens } from "@/schema"
@@ -14,8 +19,6 @@ export type CreateRefreshTokenProps = Readonly<{
   userAgent: string | null
   nowEpoch: number
 }>
-
-export type RotationDecision = "rotated" | "reused" | "invalid"
 
 export type RotateRefreshTokenProps = Readonly<{
   tokenId: number
@@ -37,23 +40,6 @@ type AuditAppendStatements = readonly [D1PreparedStatement, D1PreparedStatement]
 
 function toRepositoryError(caught: unknown, message: string): Error {
   return caught instanceof Error ? caught : new Error(message)
-}
-
-function hasExactRotationDecisions(
-  decisions: readonly string[],
-): decisions is readonly RotationDecision[] {
-  return (
-    decisions.length === 3 &&
-    new Set(decisions).size === 3 &&
-    decisions.includes("rotated") &&
-    decisions.includes("reused") &&
-    decisions.includes("invalid")
-  )
-}
-
-function parseRotationDecision(value: unknown): RotationDecision | null {
-  if (value === "rotated" || value === "reused" || value === "invalid") return value
-  return null
 }
 
 export class RefreshTokenRepository {
@@ -146,10 +132,10 @@ export class RefreshTokenRepository {
 
   async rotateWithAudit(
     props: RotateRefreshTokenProps,
-    audit: AuditDecisionAppendFragment<RotationDecision>,
-  ): Promise<RotationDecision | Error> {
+    audit: AuditDecisionAppendFragment<RefreshTokenRotationDecision>,
+  ): Promise<RefreshTokenRotationDecision | Error> {
     try {
-      if (!hasExactRotationDecisions(audit.decisions)) {
+      if (!hasExactRefreshTokenRotationDecisions(audit.decisions)) {
         throw new Error("rotation audit decisions are invalid")
       }
 
@@ -319,7 +305,9 @@ export class RefreshTokenRepository {
       if (typeof row !== "object" || row === null || Array.isArray(row)) {
         throw new Error("rotation decision row is invalid")
       }
-      const decision = parseRotationDecision((row as Record<string, unknown>).decision_value)
+      const decision = parseRefreshTokenRotationDecision(
+        (row as Record<string, unknown>).decision_value,
+      )
       if (decision === null) throw new Error("rotation decision value is invalid")
 
       return decision
