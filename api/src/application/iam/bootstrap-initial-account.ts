@@ -1,5 +1,5 @@
 import { createAuditEvent } from "@/composition/audit/audit-event"
-import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
+import { identitySubjectSchema } from "@/domain/system/identity/identity-subject"
 import type { Context } from "@/env"
 import { BootstrapAccountRepository } from "@/infrastructure/iam/bootstrap-account-repository"
 import type { AlreadyInitialized } from "@/infrastructure/iam/bootstrap-account-repository"
