@@ -1,6 +1,14 @@
 {
-  "version": 1,
-  "capabilities": ["audit", "auth", "batch", "http", "iam", "notifications"],
+  "version": 2,
+  "implementedCapabilities": [
+    "audit",
+    "auth",
+    "batch",
+    "configuration",
+    "http",
+    "iam",
+    "notifications"
+  ],
   "forbiddenProductMarkers": ["bedrock"],
   "schemaTables": [
     "accountRoles",
@@ -18,5 +26,18 @@
     "refreshTokens",
     "rolePermissions",
     "roles"
+  ],
+  "targetCapabilities": [
+    "audit",
+    "auth",
+    "batch",
+    "configuration",
+    "events",
+    "http",
+    "iam",
+    "idempotency",
+    "identity",
+    "notifications",
+    "oauth"
   ]
 }
