@@ -15,7 +15,12 @@ const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
   resolve(SOURCE_ROOT, "schema/system.ts"),
 ] as const
-const TYPESCRIPT_CONFIG_PATHS = ["tsconfig.json", "tsconfig.app.json", "tsconfig.seed.json"]
+const TYPESCRIPT_CONFIG_PATHS = [
+  "tsconfig.json",
+  "tsconfig.api.json",
+  "tsconfig.app.json",
+  "tsconfig.seed.json",
+]
   .map((file) => resolve(PROJECT_ROOT, file))
   .filter(existsSync)
 const NON_CONTEXT_DIRECTORIES = new Set([
