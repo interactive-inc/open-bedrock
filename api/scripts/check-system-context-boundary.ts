@@ -14,6 +14,10 @@ const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"]
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const
 const SYSTEM_SCHEMA_PATH = resolve(SOURCE_ROOT, "schema/system.ts")
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
+const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
+  API_SOURCE_ROOT,
+  "domain/system/configuration/system-capability.catalog.ts",
+)
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
   SYSTEM_SCHEMA_PATH,
@@ -241,6 +245,115 @@ function inspectSortedUniqueStringList(
   return { values, violations: [] }
 }
 
+export function inspectSystemCapabilityCatalog(
+  file: string,
+  source: string,
+): { capabilities: string[]; violations: SystemBoundaryViolation[] } {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  )
+  const declarations: ts.VariableDeclaration[] = []
+
+  for (const statement of sourceFile.statements) {
+    if (
+      !ts.isVariableStatement(statement) ||
+      statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) !==
+        true
+    ) {
+      continue
+    }
+
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        ts.isIdentifier(declaration.name) &&
+        declaration.name.text === "SYSTEM_CAPABILITY_NAMES"
+      ) {
+        declarations.push(declaration)
+      }
+    }
+  }
+
+  if (declarations.length !== 1) {
+    return {
+      capabilities: [],
+      violations: [
+        { file, reason: "SYSTEM_CAPABILITY_NAMES はexport constで1件だけ宣言してください" },
+      ],
+    }
+  }
+
+  const declaration = declarations[0]
+  const declarationList = declaration?.parent
+  const declarationInitializer = declaration?.initializer
+
+  if (
+    declarationList === undefined ||
+    !ts.isVariableDeclarationList(declarationList) ||
+    (declarationList.flags & ts.NodeFlags.Const) === 0 ||
+    declarationInitializer === undefined ||
+    !isConstAssertion(declarationInitializer)
+  ) {
+    return {
+      capabilities: [],
+      violations: [
+        { file, reason: "SYSTEM_CAPABILITY_NAMES はexport constのconst assertionにしてください" },
+      ],
+    }
+  }
+
+  const initializer = unwrapExpression(declarationInitializer)
+
+  if (
+    initializer === undefined ||
+    !ts.isArrayLiteralExpression(initializer) ||
+    initializer.elements.some((element) => !ts.isStringLiteralLike(element))
+  ) {
+    return {
+      capabilities: [],
+      violations: [
+        { file, reason: "SYSTEM_CAPABILITY_NAMES は文字列array literalで宣言してください" },
+      ],
+    }
+  }
+
+  const inspected = inspectSortedUniqueStringList(
+    file,
+    "SYSTEM_CAPABILITY_NAMES",
+    initializer.elements.map((element) => (element as ts.StringLiteralLike).text),
+    /^[a-z][a-z0-9-]*$/,
+  )
+
+  return { capabilities: inspected.values, violations: inspected.violations }
+}
+
+function isConstAssertion(expression: ts.Expression): boolean {
+  return (
+    ts.isAsExpression(expression) &&
+    ts.isTypeReferenceNode(expression.type) &&
+    ts.isIdentifier(expression.type.typeName) &&
+    expression.type.typeName.text === "const"
+  )
+}
+
+function unwrapExpression(expression: ts.Expression | undefined): ts.Expression | undefined {
+  let current = expression
+
+  while (
+    current !== undefined &&
+    (ts.isAsExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isParenthesizedExpression(current))
+  ) {
+    current = current.expression
+  }
+
+  return current
+}
+
 /**
  * System の拡張責務を明示した manifest と実装を完全一致で検査する。
  * 正当な拡張は manifest と実装を同じ変更で更新し、暗黙の責務追加だけを fail closed にする。
@@ -250,12 +363,19 @@ export function inspectSystemOwnershipManifest(
   manifest: unknown,
   actualCapabilities: Iterable<string>,
   actualSchemaTables: Iterable<string>,
+  canonicalCapabilities: Iterable<string>,
 ): SystemBoundaryViolation[] {
   if (!isUnknownRecord(manifest)) {
     return [{ file, reason: "System ownership manifest は object で宣言してください" }]
   }
 
-  const expectedFields = ["capabilities", "forbiddenProductMarkers", "schemaTables", "version"]
+  const expectedFields = [
+    "forbiddenProductMarkers",
+    "implementedCapabilities",
+    "schemaTables",
+    "targetCapabilities",
+    "version",
+  ]
   const actualFields = Object.keys(manifest).toSorted()
 
   if (
@@ -265,14 +385,14 @@ export function inspectSystemOwnershipManifest(
     return [{ file, reason: `manifest field は ${expectedFields.join(", ")} だけを許可します` }]
   }
 
-  if (manifest.version !== 1) {
-    return [{ file, reason: "System ownership manifest の version は 1 だけを許可します" }]
+  if (manifest.version !== 2) {
+    return [{ file, reason: "System ownership manifest の version は 2 だけを許可します" }]
   }
 
-  const capabilities = inspectSortedUniqueStringList(
+  const implementedCapabilities = inspectSortedUniqueStringList(
     file,
-    "capabilities",
-    manifest.capabilities,
+    "implementedCapabilities",
+    manifest.implementedCapabilities,
     /^[a-z][a-z0-9-]*$/,
   )
   const forbiddenProductMarkers = inspectSortedUniqueStringList(
@@ -287,28 +407,61 @@ export function inspectSystemOwnershipManifest(
     manifest.schemaTables,
     /^[a-z][A-Za-z0-9]*$/,
   )
+  const targetCapabilities = inspectSortedUniqueStringList(
+    file,
+    "targetCapabilities",
+    manifest.targetCapabilities,
+    /^[a-z][a-z0-9-]*$/,
+  )
   const violations = [
-    ...capabilities.violations,
+    ...implementedCapabilities.violations,
     ...forbiddenProductMarkers.violations,
     ...schemaTables.violations,
+    ...targetCapabilities.violations,
   ]
 
   if (violations.length > 0) return violations
 
-  const declaredCapabilities = new Set(capabilities.values)
-  const implementedCapabilities = new Set(actualCapabilities)
+  const declaredImplementedCapabilities = new Set(implementedCapabilities.values)
+  const actualImplementedCapabilities = new Set(actualCapabilities)
+  const declaredTargetCapabilities = new Set(targetCapabilities.values)
+  const canonicalTargetCapabilities = new Set(canonicalCapabilities)
   const declaredSchemaTables = new Set(schemaTables.values)
   const implementedSchemaTables = new Set(actualSchemaTables)
 
-  for (const capability of [...implementedCapabilities].toSorted()) {
-    if (!declaredCapabilities.has(capability)) {
+  for (const capability of [...actualImplementedCapabilities].toSorted()) {
+    if (!declaredImplementedCapabilities.has(capability)) {
       violations.push({ file, reason: `未宣言の System capability です: ${capability}` })
     }
   }
 
-  for (const capability of capabilities.values) {
-    if (!implementedCapabilities.has(capability)) {
+  for (const capability of implementedCapabilities.values) {
+    if (!actualImplementedCapabilities.has(capability)) {
       violations.push({ file, reason: `実装がない System capability 宣言です: ${capability}` })
+    }
+  }
+
+  for (const capability of [...canonicalTargetCapabilities].toSorted()) {
+    if (!declaredTargetCapabilities.has(capability)) {
+      violations.push({
+        file,
+        reason: `targetCapabilities に共通 capability がありません: ${capability}`,
+      })
+    }
+  }
+
+  for (const capability of targetCapabilities.values) {
+    if (!canonicalTargetCapabilities.has(capability)) {
+      violations.push({
+        file,
+        reason: `targetCapabilities にcatalog外の capability があります: ${capability}`,
+      })
+    }
+  }
+
+  for (const capability of implementedCapabilities.values) {
+    if (!declaredTargetCapabilities.has(capability)) {
+      violations.push({ file, reason: `実装 capability が共通targetにありません: ${capability}` })
     }
   }
 
@@ -624,13 +777,27 @@ function inspectSystemOwnership(): SystemBoundaryViolation[] {
   const schemaSource = existsSync(SYSTEM_SCHEMA_PATH)
     ? readFileSync(SYSTEM_SCHEMA_PATH, "utf8")
     : ""
+  const catalogFile = relative(PROJECT_ROOT, SYSTEM_CAPABILITY_CATALOG_PATH)
+  const catalog = existsSync(SYSTEM_CAPABILITY_CATALOG_PATH)
+    ? inspectSystemCapabilityCatalog(
+        catalogFile,
+        readFileSync(SYSTEM_CAPABILITY_CATALOG_PATH, "utf8"),
+      )
+    : {
+        capabilities: [],
+        violations: [{ file: catalogFile, reason: "System capability catalog がありません" }],
+      }
 
-  return inspectSystemOwnershipManifest(
-    file,
-    manifest,
-    discoverSystemCapabilityNames(),
-    collectSystemSchemaTableNames(relative(PROJECT_ROOT, SYSTEM_SCHEMA_PATH), schemaSource),
-  )
+  return [
+    ...catalog.violations,
+    ...inspectSystemOwnershipManifest(
+      file,
+      manifest,
+      discoverSystemCapabilityNames(),
+      collectSystemSchemaTableNames(relative(PROJECT_ROOT, SYSTEM_SCHEMA_PATH), schemaSource),
+      catalog.capabilities,
+    ),
+  ]
 }
 
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
