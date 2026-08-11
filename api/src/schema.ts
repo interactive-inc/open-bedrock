@@ -30,6 +30,7 @@ import {
   rolePermissions,
   roles,
 } from "@/schema/system"
+import { systemCoreSchema } from "@/schema/system-core"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -78,6 +79,7 @@ export type {
   RolePermissionRow,
   RoleRow,
 } from "@/schema/system"
+export * from "@/schema/system-core"
 
 /**
  * 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
@@ -2084,6 +2086,7 @@ export const headcountPlans = sqliteTable(
 
 export type HeadcountPlanRow = InferSelectModel<typeof headcountPlans>
 export const schema = {
+  ...systemCoreSchema,
   accounts,
   accountEmployeeLinks,
   identities,
