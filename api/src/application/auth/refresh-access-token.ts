@@ -1,5 +1,6 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
+import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
@@ -7,7 +8,6 @@ import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
@@ -201,7 +201,7 @@ export class RefreshAccessToken {
 
     const newRawRefreshToken = generateOpaqueToken()
     const newHashedToken = await refreshTokenHash(newRawRefreshToken)
-    let audit: AuditDecisionAppendFragment<RotationDecision>
+    let audit: AuditDecisionAppendFragment<RefreshTokenRotationDecision>
     try {
       const familyHash = await hashAuditIdentifier(
         `refresh-family:${existing.familyId}`,
