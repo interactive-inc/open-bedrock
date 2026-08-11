@@ -72,12 +72,13 @@ export class IamGraph {
     const accountId = zAccountId.safeParse(props.accountId)
     const permissionKey = permissionKeySchema.safeParse(props.permissionKey)
     const resource = IamGraph.parseResource(props.resource)
+    const at = props.at
 
-    if (!(props.at instanceof Date) || !Number.isFinite(props.at.getTime())) return "invalid"
+    if (!(at instanceof Date) || !Number.isFinite(at.getTime())) return "invalid"
     if (!accountId.success || !permissionKey.success || resource instanceof Error) return "invalid"
 
     const hasPermission = this.#bindings.some((binding) => {
-      if (binding.accountId !== accountId.data || !binding.isActiveAt(props.at)) return false
+      if (binding.accountId !== accountId.data || !binding.isActiveAt(at)) return false
       if (!binding.appliesTo(resource)) return false
 
       const role = this.#rolesById.get(binding.roleId)
@@ -95,20 +96,21 @@ export class IamGraph {
   getBindingRevocationRejection(props: RevocationProps): RoleBindingRevocationRejection | null {
     const bindingId = roleBindingIdSchema.safeParse(props.bindingId)
     const activeAccountIds = this.parseActiveAccountIds(props.activeAccountIds)
+    const at = props.at
 
-    if (!(props.at instanceof Date) || !Number.isFinite(props.at.getTime())) {
+    if (!(at instanceof Date) || !Number.isFinite(at.getTime())) {
       return "invalid_evaluation_input"
     }
     if (!bindingId.success || activeAccountIds instanceof Error) return "invalid_evaluation_input"
 
     const target = this.#bindings.find((binding) => binding.id === bindingId.data)
-    if (target === undefined || !target.isActiveAt(props.at)) return "binding_not_active"
-    if (!this.isEffectiveRootBinding(target, activeAccountIds, props.at)) return null
+    if (target === undefined || !target.isActiveAt(at)) return "binding_not_active"
+    if (!this.isEffectiveRootBinding(target, activeAccountIds, at)) return null
 
     const remainingRootAccounts = new Set(
       this.#bindings
         .filter((binding) => binding.id !== target.id)
-        .filter((binding) => this.isEffectiveRootBinding(binding, activeAccountIds, props.at))
+        .filter((binding) => this.isEffectiveRootBinding(binding, activeAccountIds, at))
         .map((binding) => binding.accountId),
     )
 
