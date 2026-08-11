@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { NotificationRepository } from "@/infrastructure/system/notifications/notification-repository"
+import { NotificationRepository } from "@system/infrastructure/notifications/notification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 

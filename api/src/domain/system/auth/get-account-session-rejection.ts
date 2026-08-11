@@ -1,4 +1,4 @@
-import type { AccountStatus } from "@/domain/system/auth/account-status"
+import type { AccountStatus } from "@system/domain/auth/account-status"
 
 export type AccountSessionRejection =
   | "account_inactive"

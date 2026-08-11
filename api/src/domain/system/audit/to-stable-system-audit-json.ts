@@ -1,5 +1,5 @@
-import { SystemAuditJsonError } from "@/domain/system/audit/system-audit-json-error"
-import type { SystemAuditJsonValue } from "@/domain/system/audit/system-audit-json-value"
+import { SystemAuditJsonError } from "@system/domain/audit/system-audit-json-error"
+import type { SystemAuditJsonValue } from "@system/domain/audit/system-audit-json-value"
 
 const maximumAuditJsonBytes = 65_536
 const maximumAuditJsonDepth = 100

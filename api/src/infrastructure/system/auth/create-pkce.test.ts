@@ -1,5 +1,5 @@
-import { createPkce } from "@/infrastructure/system/auth/create-pkce"
-import { verifyPkceS256Challenge } from "@/infrastructure/system/auth/pkce-s256"
+import { createPkce } from "@system/infrastructure/auth/create-pkce"
+import { verifyPkceS256Challenge } from "@system/infrastructure/auth/pkce-s256"
 import { describe, expect, test } from "bun:test"
 
 describe("createPkce", () => {

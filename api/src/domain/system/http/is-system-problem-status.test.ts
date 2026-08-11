@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { isSystemProblemStatus } from "@/domain/system/http/is-system-problem-status"
+import { isSystemProblemStatus } from "@system/domain/http/is-system-problem-status"
 
 describe("isSystemProblemStatus", () => {
   test("accepts every status with a stable System title", () => {

@@ -1,4 +1,4 @@
-import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
+import { generateOpaqueToken } from "@system/infrastructure/auth/generate-opaque-token"
 import { describe, expect, test } from "bun:test"
 
 describe("generateOpaqueToken", () => {

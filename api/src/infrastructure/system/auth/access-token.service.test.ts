@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import {
   createAccessTokenService,
   type AccessTokenProfile,
-} from "@/infrastructure/system/auth/access-token.service"
+} from "@system/infrastructure/auth/access-token.service"
 
 const SECRET = "shared-test-secret"
 const PROFILE = Object.freeze({

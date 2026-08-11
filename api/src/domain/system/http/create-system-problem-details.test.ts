@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createSystemProblemDetails } from "@/domain/system/http/create-system-problem-details"
+import { createSystemProblemDetails } from "@system/domain/http/create-system-problem-details"
 
 describe("createSystemProblemDetails", () => {
   test("creates a stable type without mixing occurrence detail into it", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { accountStatusSchema } from "@/domain/system/auth/account-status"
+import { accountStatusSchema } from "@system/domain/auth/account-status"
 
 describe("accountStatusSchema", () => {
   test("System Accountの3状態を受理する", () => {

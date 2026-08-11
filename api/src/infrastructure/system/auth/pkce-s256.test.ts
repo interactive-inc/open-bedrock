@@ -1,7 +1,4 @@
-import {
-  toPkceS256Challenge,
-  verifyPkceS256Challenge,
-} from "@/infrastructure/system/auth/pkce-s256"
+import { toPkceS256Challenge, verifyPkceS256Challenge } from "@system/infrastructure/auth/pkce-s256"
 import { describe, expect, test } from "bun:test"
 
 const RFC_VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"

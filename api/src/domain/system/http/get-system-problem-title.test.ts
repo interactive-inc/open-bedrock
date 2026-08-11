@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { getSystemProblemTitle } from "@/domain/system/http/get-system-problem-title"
-import type { SystemProblemStatus } from "@/domain/system/http/get-system-problem-title"
+import { getSystemProblemTitle } from "@system/domain/http/get-system-problem-title"
+import type { SystemProblemStatus } from "@system/domain/http/get-system-problem-title"
 
 describe("getSystemProblemTitle", () => {
   const cases: ReadonlyArray<Readonly<{ status: SystemProblemStatus; title: string }>> = [

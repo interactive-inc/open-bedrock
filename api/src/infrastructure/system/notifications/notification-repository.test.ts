@@ -1,5 +1,5 @@
-import { Notification } from "@/domain/system/notifications/notification.entity"
-import { NotificationRepository } from "@/infrastructure/system/notifications/notification-repository"
+import { Notification } from "@system/domain/notifications/notification.entity"
+import { NotificationRepository } from "@system/infrastructure/notifications/notification-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 

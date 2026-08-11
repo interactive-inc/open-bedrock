@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { negotiateSystemProblemDetails } from "@/domain/system/http/negotiate-system-problem-details"
+import { negotiateSystemProblemDetails } from "@system/domain/http/negotiate-system-problem-details"
 
 describe("negotiateSystemProblemDetails", () => {
   test("returns a safe Problem Details body for an explicit opt-in", () => {

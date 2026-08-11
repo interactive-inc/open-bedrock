@@ -1,4 +1,4 @@
-import { identityProviderSchema } from "@/domain/system/auth/identity-provider"
+import { identityProviderSchema } from "@system/domain/auth/identity-provider"
 import { describe, expect, test } from "bun:test"
 
 describe("identityProviderSchema", () => {

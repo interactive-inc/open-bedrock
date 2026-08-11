@@ -10,7 +10,10 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@system/application/*": ["./src/application/system/*"],
+      "@system/domain/*": ["./src/domain/system/*"],
+      "@system/infrastructure/*": ["./src/infrastructure/system/*"]
     }
   }
 }

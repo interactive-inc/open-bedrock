@@ -1,4 +1,4 @@
-import type { SystemProblemStatus } from "@/domain/system/http/get-system-problem-title"
+import type { SystemProblemStatus } from "@system/domain/http/get-system-problem-title"
 
 /** 共通Problem Detailsが定義する4xx/5xx statusだけを受理する。 */
 export function isSystemProblemStatus(status: number): status is SystemProblemStatus {

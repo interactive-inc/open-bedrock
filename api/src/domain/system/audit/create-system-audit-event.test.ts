@@ -1,5 +1,5 @@
-import { createSystemAuditEvent } from "@/domain/system/audit/create-system-audit-event"
-import type { SystemAuditEventInput } from "@/domain/system/audit/system-audit-event"
+import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import type { SystemAuditEventInput } from "@system/domain/audit/system-audit-event"
 import { describe, expect, test } from "bun:test"
 
 describe("createSystemAuditEvent", () => {

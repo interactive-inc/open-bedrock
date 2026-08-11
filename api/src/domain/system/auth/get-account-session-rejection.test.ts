@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
+import { getAccountSessionRejection } from "@system/domain/auth/get-account-session-rejection"
 
 describe("getAccountSessionRejection", () => {
   test("activeかつ同じ安全なtoken versionならSessionを許可する", () => {
