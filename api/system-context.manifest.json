@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "capabilities": ["audit", "auth", "batch", "http", "iam", "notifications"],
+  "schemaTables": [
+    "accountRoles",
+    "accounts",
+    "auditBatchDecisions",
+    "auditLogs",
+    "batchJobs",
+    "browserLoginCodes",
+    "cliLoginCodes",
+    "cliLoginStates",
+    "identities",
+    "identityLoginJti",
+    "notifications",
+    "permissions",
+    "refreshTokens",
+    "rolePermissions",
+    "roles"
+  ]
+}
