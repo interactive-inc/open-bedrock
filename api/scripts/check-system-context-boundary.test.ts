@@ -1,5 +1,8 @@
 import {
   checkSystemContextBoundary,
+  collectSystemSchemaTableNames,
+  inspectSystemCapabilityRootEntries,
+  inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
   selectDownstreamContextNames,
@@ -7,6 +10,100 @@ import {
 import { describe, expect, test } from "bun:test"
 
 const downstreamContexts = new Set(["care", "company", "warehouse"])
+
+describe("System ownership manifest", () => {
+  const manifest = {
+    version: 1,
+    capabilities: ["audit", "auth"],
+    schemaTables: ["accounts", "auditLogs"],
+  }
+
+  test("宣言と実装が完全一致すれば拡張可能な System として受理する", () => {
+    expect(
+      inspectSystemOwnershipManifest(
+        "system-context.manifest.json",
+        manifest,
+        ["auth", "audit"],
+        ["auditLogs", "accounts"],
+      ),
+    ).toEqual([])
+  })
+
+  test("未宣言実装と実装のない宣言を capability / schema table の両方で拒否する", () => {
+    const violations = inspectSystemOwnershipManifest(
+      "system-context.manifest.json",
+      manifest,
+      ["auth", "features"],
+      ["accounts", "settings"],
+    )
+
+    expect(violations.map((violation) => violation.reason)).toEqual([
+      "未宣言の System capability です: features",
+      "実装がない System capability 宣言です: audit",
+      "未宣言の System schema table です: settings",
+      "実装がない System schema table 宣言です: auditLogs",
+    ])
+  })
+
+  test("未知 field・version・配列形式・名前・重複・未整列を fail closed で拒否する", () => {
+    const invalidManifests: unknown[] = [
+      null,
+      { ...manifest, extra: true },
+      { ...manifest, version: 2 },
+      { ...manifest, capabilities: "auth" },
+      { ...manifest, capabilities: ["Auth"] },
+      { ...manifest, capabilities: ["auth", "auth"] },
+      { ...manifest, capabilities: ["auth", "audit"] },
+      { ...manifest, schemaTables: ["accounts", 1] },
+      { ...manifest, schemaTables: ["Accounts"] },
+      { ...manifest, schemaTables: ["accounts", "accounts"] },
+      { ...manifest, schemaTables: ["auditLogs", "accounts"] },
+    ]
+
+    for (const invalidManifest of invalidManifests) {
+      expect(
+        inspectSystemOwnershipManifest(
+          "system-context.manifest.json",
+          invalidManifest,
+          ["audit", "auth"],
+          ["accounts", "auditLogs"],
+        ),
+      ).not.toEqual([])
+    }
+  })
+
+  test("System root の直下 production file による manifest 迂回を拒否する", () => {
+    expect(
+      inspectSystemCapabilityRootEntries("src/domain/system", [
+        { name: "auth", isDirectory: true },
+        { name: "feature.ts", isDirectory: false },
+        { name: "feature.test.ts", isDirectory: false },
+        { name: "README.md", isDirectory: false },
+      ]),
+    ).toEqual([
+      {
+        file: "src/domain/system/feature.ts",
+        reason: "System production source は宣言済み capability namespace 配下へ置いてください",
+      },
+    ])
+  })
+
+  test("exported sqliteTable だけを schema ownership として抽出する", () => {
+    const source = [
+      'import { sqliteTable as defineTable } from "drizzle-orm/sqlite-core"',
+      'import * as sqlite from "drizzle-orm/sqlite-core"',
+      'export const accounts = defineTable("accounts", {})',
+      'const hidden = defineTable("hidden", {})',
+      "export const relation = relations(accounts, () => ({}))",
+      'export const auditLogs = sqlite.sqliteTable("audit_logs", {})',
+    ].join("\n")
+
+    expect(collectSystemSchemaTableNames("src/schema/system.ts", source)).toEqual([
+      "accounts",
+      "auditLogs",
+    ])
+  })
+})
 
 describe("selectDownstreamContextNames", () => {
   test("将来追加された sibling context を固定リストなしで検査対象にする", () => {
