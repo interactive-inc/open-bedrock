@@ -12,7 +12,9 @@ const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const
-const SYSTEM_SCHEMA_PATH = resolve(SOURCE_ROOT, "schema/system.ts")
+const SYSTEM_SCHEMA_PATHS = ["system.ts", "system-core.ts"]
+  .map((file) => resolve(SOURCE_ROOT, "schema", file))
+  .filter(existsSync)
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
   API_SOURCE_ROOT,
@@ -20,7 +22,7 @@ const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
 )
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
-  SYSTEM_SCHEMA_PATH,
+  ...SYSTEM_SCHEMA_PATHS,
 ] as const
 const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
   PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
@@ -774,9 +776,9 @@ function inspectSystemOwnership(): SystemBoundaryViolation[] {
     return [{ file, reason: "System ownership manifest を解析できません" }]
   }
 
-  const schemaSource = existsSync(SYSTEM_SCHEMA_PATH)
-    ? readFileSync(SYSTEM_SCHEMA_PATH, "utf8")
-    : ""
+  const schemaTables = SYSTEM_SCHEMA_PATHS.flatMap((path) =>
+    collectSystemSchemaTableNames(relative(PROJECT_ROOT, path), readFileSync(path, "utf8")),
+  )
   const catalogFile = relative(PROJECT_ROOT, SYSTEM_CAPABILITY_CATALOG_PATH)
   const catalog = existsSync(SYSTEM_CAPABILITY_CATALOG_PATH)
     ? inspectSystemCapabilityCatalog(
@@ -794,7 +796,7 @@ function inspectSystemOwnership(): SystemBoundaryViolation[] {
       file,
       manifest,
       discoverSystemCapabilityNames(),
-      collectSystemSchemaTableNames(relative(PROJECT_ROOT, SYSTEM_SCHEMA_PATH), schemaSource),
+      schemaTables,
       catalog.capabilities,
     ),
   ]
