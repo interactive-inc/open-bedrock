@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-const zPermissionKey = z
+export const permissionKeySchema = z
   .string()
   .min(3)
   .max(100)
@@ -18,7 +18,7 @@ export class PermissionValue {
   readonly key: string
 
   constructor(key: string) {
-    this.key = zPermissionKey.parse(key)
+    this.key = permissionKeySchema.parse(key)
     Object.freeze(this)
   }
 
@@ -37,7 +37,7 @@ export class PermissionValue {
   }
 
   static from(key: string): PermissionValue | null {
-    const parsed = zPermissionKey.safeParse(key)
+    const parsed = permissionKeySchema.safeParse(key)
     if (!parsed.success) return null
 
     const cached = PermissionValue.CACHE.get(parsed.data)
