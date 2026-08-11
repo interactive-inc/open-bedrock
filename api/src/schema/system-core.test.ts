@@ -2,7 +2,14 @@ import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { systemCoreSchema } from "@/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
+import { readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
+
+const migrationSql = readFileSync(
+  fileURLToPath(new URL("../../migrations/0126_system_core.sql", import.meta.url)),
+  "utf8",
+)
 
 function createDatabase(): Database {
   const database = new Database(":memory:")
@@ -29,6 +36,16 @@ function insertRole(database: Database): void {
 }
 
 describe("0126 canonical System core schema", () => {
+  test("D1 remote parserがcommentを空statementに分割しない", () => {
+    const comments = migrationSql.match(/\/\*[\s\S]*?\*\/|--[^\n]*/g) ?? []
+    const triggerMarkers = comments.filter((comment) =>
+      comment.includes("DDL-only test harnesses skip compound triggers"),
+    )
+
+    expect(triggerMarkers).toHaveLength(17)
+    expect(comments.filter((comment) => comment.includes(";"))).toEqual([])
+  })
+
   test("Drizzle declarationとmigrationのtable・columnを一致させ、System外FKを持たない", () => {
     const database = createDatabase()
     const declaredTables = Object.values(systemCoreSchema)
