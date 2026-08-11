@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import type { IdentityProvider } from "@/domain/system/auth/identity-provider"
-import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
+import type { IdentityProvider } from "@/domain/system/identity/identity-provider"
+import { identitySubjectSchema } from "@/domain/system/identity/identity-subject"
 import { accountEmployeeLinks, accountRoles, accounts, identities, roles } from "@/schema"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
