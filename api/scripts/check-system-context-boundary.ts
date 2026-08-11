@@ -1,19 +1,34 @@
 import { Glob } from "bun"
-import { readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { relative, resolve } from "node:path"
+import process from "node:process"
 import ts from "typescript"
 
-const API_ROOT = resolve(import.meta.dir, "..")
-const SYSTEM_ROOTS = [
-  resolve(API_ROOT, "src/domain/system"),
-  resolve(API_ROOT, "src/application/system"),
-  resolve(API_ROOT, "src/infrastructure/system"),
-  resolve(API_ROOT, "src/schema"),
+const PROJECT_ROOT = resolve(import.meta.dir, "..")
+const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
+const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
+  ? resolve(SOURCE_ROOT, "api")
+  : SOURCE_ROOT
+const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
+const SYSTEM_SOURCE_PATHS = [
+  ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
+  resolve(SOURCE_ROOT, "schema/system.ts"),
 ] as const
-
+const NON_CONTEXT_DIRECTORIES = new Set([
+  "core",
+  "database",
+  "seed",
+  "shared",
+  "system",
+  "test",
+  "test-helpers",
+])
 const FORBIDDEN_VOCABULARY =
-  /\b(employees?|employments?|organizations?|departments?|company|companies|facility|facilities|personnel|workforces?|human\s+resources?|thanks|shifts?|expenses?|leaves?|ringi|announcements?|twit|chats?|care)\b/i
-const CONTEXT_MODULE = /^@\/(domain|application|infrastructure|schema)(?:\/(.*))?$/
+  /\b(announcements?|billing|care|chats?|company|companies|departments?|employees?|employments?|expenses?|facilities|facility|human\s+resources?|leaves?|org|organizations?|personnel|residents?|ringi|shifts?|staff|thanks|tweets?|twit|workforces?)\b/i
+const LAYER_MODULE =
+  /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
+const SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
+const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
@@ -22,6 +37,36 @@ export type SystemBoundaryViolation = Readonly<{
 
 function normalizeVocabularyBoundaries(value: string): string {
   return value.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll(/[_./:-]+/g, " ")
+}
+
+export function selectDownstreamContextNames(
+  directoryNames: Iterable<string>,
+): ReadonlySet<string> {
+  return new Set(
+    [...directoryNames].filter(
+      (directoryName) => directoryName.length > 0 && !NON_CONTEXT_DIRECTORIES.has(directoryName),
+    ),
+  )
+}
+
+export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): ReadonlySet<string> {
+  const directoryNames: string[] = []
+
+  for (const layer of CONTEXT_LAYERS) {
+    const layerRoot = resolve(apiSourceRoot, layer)
+
+    if (!existsSync(layerRoot)) {
+      continue
+    }
+
+    for (const entry of readdirSync(layerRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        directoryNames.push(entry.name)
+      }
+    }
+  }
+
+  return selectDownstreamContextNames(directoryNames)
 }
 
 function getModuleSpecifier(node: ts.Node): string | null | Error {
@@ -46,7 +91,7 @@ function getModuleSpecifier(node: ts.Node): string | null | Error {
   if (ts.isImportTypeNode(node)) {
     return ts.isLiteralTypeNode(node.argument) && ts.isStringLiteralLike(node.argument.literal)
       ? node.argument.literal.text
-      : new Error("System の型import先を静的に確認できません")
+      : new Error("System の型 import 先を静的に確認できません")
   }
 
   if (!ts.isCallExpression(node)) {
@@ -67,39 +112,59 @@ function getModuleSpecifier(node: ts.Node): string | null | Error {
     : new Error("System の動的依存先を静的に確認できません")
 }
 
-function inspectModuleSpecifier(file: string, moduleSpecifier: string): SystemBoundaryViolation[] {
+function inspectModuleSpecifier(
+  file: string,
+  moduleSpecifier: string,
+  downstreamContexts: ReadonlySet<string>,
+): SystemBoundaryViolation[] {
   if (moduleSpecifier.startsWith("./") || moduleSpecifier.startsWith("../")) {
     return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
   }
 
-  const contextModule = moduleSpecifier.match(CONTEXT_MODULE)
+  if (COMPOSITION_MODULE.test(moduleSpecifier)) {
+    return [{ file, reason: `System から composition へ依存しています: ${moduleSpecifier}` }]
+  }
 
-  if (contextModule === null) {
+  const schemaModule = moduleSpecifier.match(SCHEMA_MODULE)
+
+  if (schemaModule !== null) {
+    const importedPath = schemaModule[1] ?? ""
+    const isSystemSchema = importedPath === "system" || importedPath.startsWith("system/")
+
+    return isSystemSchema
+      ? []
+      : [{ file, reason: `System から専用 schema 以外へ依存しています: ${moduleSpecifier}` }]
+  }
+
+  const layerModule = moduleSpecifier.match(LAYER_MODULE)
+
+  if (layerModule === null) {
     return []
   }
 
-  const importedPath = contextModule[2] ?? ""
-  const isAllowed =
-    importedPath === "system" ||
-    importedPath.startsWith("system/") ||
-    importedPath.startsWith("shared/")
+  const importedPath = layerModule[2] ?? ""
+  const contextName = importedPath.split("/")[0] ?? ""
 
-  return isAllowed
-    ? []
-    : [{ file, reason: `System から上位コンテキストへ依存しています: ${moduleSpecifier}` }]
+  return downstreamContexts.has(contextName)
+    ? [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
+    : []
 }
 
-/** System 実装1ファイルに、上位コンテキストの語彙または依存が混入していないか調べる。 */
-export function inspectSystemSource(file: string, source: string): SystemBoundaryViolation[] {
+/** System 実装1ファイルに、下位コンテキストの語彙または依存が混入していないか調べる。 */
+export function inspectSystemSource(
+  file: string,
+  source: string,
+  downstreamContexts: ReadonlySet<string> = discoverDownstreamContexts(),
+): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
   const sourceFile = ts.createSourceFile(
     file,
     source,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TS,
+    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   )
-  const forbiddenVocabularies: string[] = []
+  let forbiddenVocabulary: string | undefined
 
   function visit(node: ts.Node): void {
     const vocabularySource =
@@ -111,8 +176,8 @@ export function inspectSystemSource(file: string, source: string): SystemBoundar
         ? undefined
         : normalizeVocabularyBoundaries(vocabularySource).match(FORBIDDEN_VOCABULARY)?.[0]
 
-    if (forbiddenVocabularies.length === 0 && matchedVocabulary !== undefined) {
-      forbiddenVocabularies.push(matchedVocabulary)
+    if (forbiddenVocabulary === undefined && matchedVocabulary !== undefined) {
+      forbiddenVocabulary = matchedVocabulary
     }
 
     const moduleSpecifier = getModuleSpecifier(node)
@@ -120,42 +185,59 @@ export function inspectSystemSource(file: string, source: string): SystemBoundar
     if (moduleSpecifier instanceof Error) {
       violations.push({ file, reason: moduleSpecifier.message })
     } else if (moduleSpecifier !== null) {
-      violations.push(...inspectModuleSpecifier(file, moduleSpecifier))
+      violations.push(...inspectModuleSpecifier(file, moduleSpecifier, downstreamContexts))
     }
 
     ts.forEachChild(node, visit)
   }
 
   visit(sourceFile)
-  const forbiddenVocabulary = forbiddenVocabularies[0]
 
   if (forbiddenVocabulary !== undefined) {
     violations.unshift({
       file,
-      reason: `System に上位コンテキストの語彙 "${forbiddenVocabulary}" があります`,
+      reason: `System に下位コンテキストの語彙 "${forbiddenVocabulary}" があります`,
     })
   }
 
   return violations
 }
 
+async function inspectSystemPath(
+  path: string,
+  downstreamContexts: ReadonlySet<string>,
+): Promise<SystemBoundaryViolation[]> {
+  if (!existsSync(path)) {
+    return []
+  }
+
+  const files: string[] = []
+
+  if (statSync(path).isDirectory()) {
+    for await (const file of new Glob("**/*.{ts,tsx}").scan(path)) {
+      if (!/\.(?:test|spec)\.tsx?$/.test(file)) {
+        files.push(resolve(path, file))
+      }
+    }
+  } else {
+    files.push(path)
+  }
+
+  return files.flatMap((file) =>
+    inspectSystemSource(
+      relative(PROJECT_ROOT, file),
+      readFileSync(file, "utf8"),
+      downstreamContexts,
+    ),
+  )
+}
+
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
+  const downstreamContexts = discoverDownstreamContexts()
   const violations: SystemBoundaryViolation[] = []
 
-  for (const root of SYSTEM_ROOTS) {
-    for await (const file of new Glob("**/*.ts").scan(root)) {
-      if (file.endsWith(".test.ts")) {
-        continue
-      }
-
-      const absoluteFile = resolve(root, file)
-      violations.push(
-        ...inspectSystemSource(
-          relative(API_ROOT, absoluteFile),
-          readFileSync(absoluteFile, "utf8"),
-        ),
-      )
-    }
+  for (const path of SYSTEM_SOURCE_PATHS) {
+    violations.push(...(await inspectSystemPath(path, downstreamContexts)))
   }
 
   return violations

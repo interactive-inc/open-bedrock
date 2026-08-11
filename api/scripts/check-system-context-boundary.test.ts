@@ -1,44 +1,79 @@
-import { checkSystemContextBoundary, inspectSystemSource } from "./check-system-context-boundary"
+import {
+  checkSystemContextBoundary,
+  inspectSystemSource,
+  selectDownstreamContextNames,
+} from "./check-system-context-boundary"
 import { describe, expect, test } from "bun:test"
 
+const downstreamContexts = new Set(["care", "company", "warehouse"])
+
+describe("selectDownstreamContextNames", () => {
+  test("将来追加された sibling context を固定リストなしで検査対象にする", () => {
+    expect(
+      selectDownstreamContextNames([
+        "system",
+        "core",
+        "shared",
+        "database",
+        "company",
+        "warehouse",
+      ]),
+    ).toEqual(new Set(["company", "warehouse"]))
+  })
+})
+
 describe("inspectSystemSource", () => {
-  test("accepts System and shared dependencies", () => {
+  test("両プロジェクトの System・共通部品・専用 schema への依存を許可する", () => {
     const violations = inspectSystemSource(
       "src/application/system/example.ts",
       [
         'import { Token } from "@/domain/system/auth/token"',
+        'import { Account } from "@/api/domain/system/account"',
+        'import { Id } from "@/api/domain/core/identity/id"',
         'import { parse } from "@/infrastructure/shared/parse"',
+        'import { users } from "@/schema/system"',
         'import { z } from "zod"',
       ].join("\n"),
+      downstreamContexts,
     )
 
     expect(violations).toEqual([])
   })
 
-  test("rejects an upward context dependency", () => {
-    const violations = inspectSystemSource(
-      "src/application/system/example.ts",
+  test("既存および新規の下位 context と composition への依存を拒否する", () => {
+    const sources = [
       'import { Worker } from "@/domain/company/workforce/worker"',
-    )
+      'import { Stock } from "@/api/infrastructure/warehouse/stock"',
+      'import { compose } from "@/composition/iam/compose"',
+      'import { compose } from "@/api/composition/iam/compose"',
+    ]
 
-    expect(violations.length).toBe(2)
+    for (const source of sources) {
+      const violations = inspectSystemSource(
+        "src/application/system/example.ts",
+        source,
+        downstreamContexts,
+      )
+
+      expect(violations.some((violation) => violation.reason.includes("依存しています"))).toBe(true)
+    }
   })
 
-  test("rejects the mixed schema and relative import escape hatches", () => {
-    const mixedSchema = inspectSystemSource(
-      "src/infrastructure/system/example.ts",
+  test("schema barrel・他 context schema・相対 import を拒否する", () => {
+    const sources = [
       'import { accounts } from "@/schema"',
-    )
-    const relativeImport = inspectSystemSource(
-      "src/infrastructure/system/example.ts",
+      'import { employees } from "@/schema/company"',
       'import { Token } from "../../../domain/system/auth/token"',
-    )
+    ]
 
-    expect(mixedSchema.length).toBe(1)
-    expect(relativeImport.length).toBe(1)
+    for (const source of sources) {
+      expect(
+        inspectSystemSource("src/infrastructure/system/example.ts", source, downstreamContexts),
+      ).not.toEqual([])
+    }
   })
 
-  test("rejects every TypeScript module dependency syntax", () => {
+  test("TypeScript の全依存構文を検査する", () => {
     const sources = [
       'import "@/domain/company/setup"',
       'export { Employee } from "@/domain/company/employees"',
@@ -49,15 +84,17 @@ describe("inspectSystemSource", () => {
     ]
 
     for (const source of sources) {
-      const violations = inspectSystemSource("src/application/system/example.ts", source)
-
-      expect(violations.some((violation) => violation.reason.includes("上位コンテキスト"))).toBe(
-        true,
+      const violations = inspectSystemSource(
+        "src/application/system/example.ts",
+        source,
+        downstreamContexts,
       )
+
+      expect(violations.some((violation) => violation.reason.includes("依存しています"))).toBe(true)
     }
   })
 
-  test("ignores forbidden vocabulary and fake imports inside comments", () => {
+  test("コメント内の語彙と偽 import は無視する", () => {
     const violations = inspectSystemSource(
       "src/application/system/example.ts",
       [
@@ -65,38 +102,43 @@ describe("inspectSystemSource", () => {
         "/* Company や workforce へ依存しない。 */",
         'const accountKind = "system"',
       ].join("\n"),
+      downstreamContexts,
     )
 
     expect(violations).toEqual([])
   })
 
-  test("rejects forbidden vocabulary in identifiers and runtime strings", () => {
+  test("識別子と実行時文字列に埋め込まれた下位 context の語彙を拒否する", () => {
     const identifierViolations = inspectSystemSource(
       "src/domain/system/example.ts",
       'const employeeId = "account-1"',
+      downstreamContexts,
     )
     const stringViolations = inspectSystemSource(
       "src/domain/system/example.ts",
       'const eventType = "company.updated"',
+      downstreamContexts,
     )
 
     expect(identifierViolations[0]?.reason).toContain('語彙 "employee"')
     expect(stringViolations[0]?.reason).toContain('語彙 "company"')
   })
 
-  test("accepts longer identifiers that only contain a forbidden spelling", () => {
+  test("禁止語彙の綴りを一部に含むだけの識別子は許可する", () => {
     const violations = inspectSystemSource(
       "src/domain/system/example.ts",
       'const serialized = JSON.stringify({ value: "stringify" })',
+      downstreamContexts,
     )
 
     expect(violations).toEqual([])
   })
 
-  test("rejects a dynamic dependency whose destination cannot be inspected", () => {
+  test("依存先を静的に確認できない動的 import を拒否する", () => {
     const violations = inspectSystemSource(
       "src/application/system/example.ts",
       "const load = (moduleName: string) => import(moduleName)",
+      downstreamContexts,
     )
 
     expect(violations).toEqual([
@@ -109,7 +151,7 @@ describe("inspectSystemSource", () => {
 })
 
 describe("checkSystemContextBoundary", () => {
-  test("keeps current System production sources independent", async () => {
+  test("現在の System production source が独立している", async () => {
     expect(await checkSystemContextBoundary()).toEqual([])
   })
 })
