@@ -47,10 +47,11 @@ CREATE TABLE system_identity_bindings (
         revoked_at >= created_at
         AND (activated_at IS NULL OR revoked_at >= activated_at)
       )
-    ),
-  UNIQUE (provider, subject)
+    )
 );
 
+CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
+  ON system_identity_bindings (provider, subject);
 CREATE INDEX system_identity_bindings_account_idx
   ON system_identity_bindings (account_id);
 
@@ -123,7 +124,7 @@ CREATE TABLE system_sessions (
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   family_id TEXT NOT NULL
     CHECK (length(family_id) BETWEEN 1 AND 255),
-  token_hash TEXT NOT NULL UNIQUE
+  token_hash TEXT NOT NULL
     CHECK (length(token_hash) BETWEEN 32 AND 512),
   token_version INTEGER NOT NULL
     CHECK (token_version >= 0),
@@ -145,6 +146,8 @@ CREATE TABLE system_sessions (
     )
 );
 
+CREATE UNIQUE INDEX system_sessions_token_hash_uniq
+  ON system_sessions (token_hash);
 CREATE INDEX system_sessions_account_idx
   ON system_sessions (account_id, created_at);
 CREATE INDEX system_sessions_active_family_idx
@@ -170,7 +173,7 @@ END;
 CREATE TABLE system_iam_roles (
   id TEXT PRIMARY KEY NOT NULL
     CHECK (length(id) BETWEEN 1 AND 255),
-  key TEXT NOT NULL UNIQUE
+  key TEXT NOT NULL
     CHECK (length(key) BETWEEN 3 AND 100),
   kind TEXT NOT NULL
     CHECK (kind IN ('managed', 'custom')),
@@ -180,6 +183,9 @@ CREATE TABLE system_iam_roles (
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at)
 );
+
+CREATE UNIQUE INDEX system_iam_roles_key_uniq
+  ON system_iam_roles (key);
 
 CREATE TABLE system_iam_role_permissions (
   role_id TEXT NOT NULL
@@ -294,10 +300,11 @@ CREATE TABLE system_notification_deliveries (
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   delivered_at INTEGER NOT NULL,
   read_at INTEGER
-    CHECK (read_at IS NULL OR read_at >= delivered_at),
-  UNIQUE (message_id, recipient_account_id)
+    CHECK (read_at IS NULL OR read_at >= delivered_at)
 );
 
+CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq
+  ON system_notification_deliveries (message_id, recipient_account_id);
 CREATE INDEX system_notification_deliveries_account_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at);
 CREATE INDEX system_notification_deliveries_unread_idx
