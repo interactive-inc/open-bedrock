@@ -63,6 +63,23 @@ describe("0126 canonical System core schema", () => {
       expect(foreignTables.every((foreignTable) => foreignTable.startsWith("system_"))).toBe(true)
     }
 
+    const liveIndexes = new Set(
+      database
+        .query<{ name: string }, []>(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
+        )
+        .all()
+        .map((index) => index.name),
+    )
+    const missingIndexes = declaredTables.flatMap((table) =>
+      table.indexes
+        .map((index) => index.config.name)
+        .filter((name): name is string => typeof name === "string" && !liveIndexes.has(name))
+        .map((name) => `${table.name}.${name}`),
+    )
+
+    expect(missingIndexes).toEqual([])
+
     const passwordColumns = database
       .query<{ name: string }, []>("PRAGMA table_info(system_password_credentials)")
       .all()
