@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { LegacySecretRepository } from "@/infrastructure/system/auth/legacy-secret-repository"
+import { LegacySecretRepository } from "@system/infrastructure/auth/legacy-secret-repository"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
 

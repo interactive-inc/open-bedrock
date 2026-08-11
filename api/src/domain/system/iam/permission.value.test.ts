@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { PermissionValue } from "@/domain/system/iam/permission.value"
+import { PermissionValue } from "@system/domain/iam/permission.value"
 
 describe("PermissionValue", () => {
   test("accepts a namespaced permission and caches parsed values", () => {

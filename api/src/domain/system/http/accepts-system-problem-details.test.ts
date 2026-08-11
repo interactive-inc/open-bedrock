@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { acceptsSystemProblemDetails } from "@/domain/system/http/accepts-system-problem-details"
+import { acceptsSystemProblemDetails } from "@system/domain/http/accepts-system-problem-details"
 
 describe("acceptsSystemProblemDetails", () => {
   test("requires an explicit Problem Details media range", () => {

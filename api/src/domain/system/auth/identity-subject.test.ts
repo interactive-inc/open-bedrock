@@ -1,4 +1,4 @@
-import { identitySubjectSchema } from "@/domain/system/auth/identity-subject"
+import { identitySubjectSchema } from "@system/domain/auth/identity-subject"
 import { describe, expect, test } from "bun:test"
 
 describe("identitySubjectSchema", () => {

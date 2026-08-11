@@ -1,4 +1,4 @@
-import { toPkceS256Challenge } from "@/infrastructure/system/auth/pkce-s256"
+import { toPkceS256Challenge } from "@system/infrastructure/auth/pkce-s256"
 import { base64url } from "jose"
 
 export type Pkce = {

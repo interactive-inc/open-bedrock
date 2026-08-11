@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { SystemAuditJsonError } from "@/domain/system/audit/system-audit-json-error"
-import type { SystemAuditJsonValue } from "@/domain/system/audit/system-audit-json-value"
-import { toStableSystemAuditJson } from "@/domain/system/audit/to-stable-system-audit-json"
+import { SystemAuditJsonError } from "@system/domain/audit/system-audit-json-error"
+import type { SystemAuditJsonValue } from "@system/domain/audit/system-audit-json-value"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 
 function expectInvalidJson(value: unknown): void {
   const serialized = Reflect.apply(toStableSystemAuditJson, undefined, [value])

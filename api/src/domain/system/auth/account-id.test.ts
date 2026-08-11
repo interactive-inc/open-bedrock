@@ -1,4 +1,4 @@
-import { zAccountId } from "@/domain/system/auth/account-id"
+import { zAccountId } from "@system/domain/auth/account-id"
 import { describe, expect, test } from "bun:test"
 
 describe("zAccountId", () => {

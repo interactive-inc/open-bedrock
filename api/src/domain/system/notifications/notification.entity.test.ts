@@ -1,4 +1,4 @@
-import { Notification } from "@/domain/system/notifications/notification.entity"
+import { Notification } from "@system/domain/notifications/notification.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("Notification.create", () => {

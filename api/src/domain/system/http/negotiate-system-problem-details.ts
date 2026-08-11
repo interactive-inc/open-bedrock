@@ -1,10 +1,10 @@
 import {
   createSystemProblemDetails,
   type SystemProblemDetails,
-} from "@/domain/system/http/create-system-problem-details"
-import { acceptsSystemProblemDetails } from "@/domain/system/http/accepts-system-problem-details"
-import { getSystemProblemExtensions } from "@/domain/system/http/get-system-problem-extensions"
-import { isSystemProblemStatus } from "@/domain/system/http/is-system-problem-status"
+} from "@system/domain/http/create-system-problem-details"
+import { acceptsSystemProblemDetails } from "@system/domain/http/accepts-system-problem-details"
+import { getSystemProblemExtensions } from "@system/domain/http/get-system-problem-extensions"
+import { isSystemProblemStatus } from "@system/domain/http/is-system-problem-status"
 
 type Props = Readonly<{
   accept: string | null

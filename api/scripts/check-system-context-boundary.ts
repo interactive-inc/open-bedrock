@@ -10,10 +10,14 @@ const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
   ? resolve(SOURCE_ROOT, "api")
   : SOURCE_ROOT
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
+const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
   resolve(SOURCE_ROOT, "schema/system.ts"),
 ] as const
+const TYPESCRIPT_CONFIG_PATHS = ["tsconfig.json", "tsconfig.app.json", "tsconfig.seed.json"]
+  .map((file) => resolve(PROJECT_ROOT, file))
+  .filter(existsSync)
 const NON_CONTEXT_DIRECTORIES = new Set([
   "core",
   "database",
@@ -29,6 +33,7 @@ const LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
 const SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
+const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure)\/.+$/
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
@@ -37,6 +42,42 @@ export type SystemBoundaryViolation = Readonly<{
 
 function normalizeVocabularyBoundaries(value: string): string {
   return value.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2").replaceAll(/[_./:-]+/g, " ")
+}
+
+function isUnknownRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+export function inspectSystemSelfReferencePathMappings(
+  file: string,
+  pathMappings: unknown,
+  apiSourceRoot: string,
+): SystemBoundaryViolation[] {
+  if (!isUnknownRecord(pathMappings)) {
+    return [{ file, reason: "System self-reference の path mapping がありません" }]
+  }
+
+  const normalizedSourceRoot = apiSourceRoot.replaceAll("\\", "/")
+  const violations: SystemBoundaryViolation[] = []
+
+  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+    const alias = `@system/${layer}/*`
+    const expectedPath = `./${normalizedSourceRoot}/${layer}/system/*`
+    const configuredPaths = pathMappings[alias]
+    const isExpectedMapping =
+      Array.isArray(configuredPaths) &&
+      configuredPaths.length === 1 &&
+      configuredPaths[0] === expectedPath
+
+    if (!isExpectedMapping) {
+      violations.push({
+        file,
+        reason: `${alias} を System 所有 path ${expectedPath} だけへ対応づけてください`,
+      })
+    }
+  }
+
+  return violations
 }
 
 export function selectDownstreamContextNames(
@@ -123,6 +164,12 @@ function inspectModuleSpecifier(
 
   if (COMPOSITION_MODULE.test(moduleSpecifier)) {
     return [{ file, reason: `System から composition へ依存しています: ${moduleSpecifier}` }]
+  }
+
+  if (moduleSpecifier.startsWith("@system/")) {
+    return SYSTEM_SELF_REFERENCE_MODULE.test(moduleSpecifier)
+      ? []
+      : [{ file, reason: `未定義の System self-reference です: ${moduleSpecifier}` }]
   }
 
   const schemaModule = moduleSpecifier.match(SCHEMA_MODULE)
@@ -232,12 +279,36 @@ async function inspectSystemPath(
   )
 }
 
+function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
+  const file = relative(PROJECT_ROOT, path)
+  let configuration: unknown
+
+  try {
+    configuration = JSON.parse(readFileSync(path, "utf8"))
+  } catch {
+    return [{ file, reason: "TypeScript 設定を解析できません" }]
+  }
+
+  const compilerOptions = isUnknownRecord(configuration) ? configuration.compilerOptions : null
+  const pathMappings = isUnknownRecord(compilerOptions) ? compilerOptions.paths : null
+
+  return inspectSystemSelfReferencePathMappings(
+    file,
+    pathMappings,
+    relative(PROJECT_ROOT, API_SOURCE_ROOT),
+  )
+}
+
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
   const downstreamContexts = discoverDownstreamContexts()
   const violations: SystemBoundaryViolation[] = []
 
   for (const path of SYSTEM_SOURCE_PATHS) {
     violations.push(...(await inspectSystemPath(path, downstreamContexts)))
+  }
+
+  for (const path of TYPESCRIPT_CONFIG_PATHS) {
+    violations.push(...inspectTypeScriptConfig(path))
   }
 
   return violations

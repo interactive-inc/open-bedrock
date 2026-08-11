@@ -1,5 +1,5 @@
-import { isValidSystemAuditJson } from "@/domain/system/audit/is-valid-system-audit-json"
-import type { SystemAuditEventInput } from "@/domain/system/audit/system-audit-event"
+import { isValidSystemAuditJson } from "@system/domain/audit/is-valid-system-audit-json"
+import type { SystemAuditEventInput } from "@system/domain/audit/system-audit-event"
 
 const vocabularyPattern = /^[a-z][a-z0-9_-]*(?:[.:][a-z][a-z0-9_-]*)*$/u
 

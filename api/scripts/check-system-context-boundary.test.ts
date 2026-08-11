@@ -1,5 +1,6 @@
 import {
   checkSystemContextBoundary,
+  inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
   selectDownstreamContextNames,
 } from "./check-system-context-boundary"
@@ -29,6 +30,7 @@ describe("inspectSystemSource", () => {
       [
         'import { Token } from "@/domain/system/auth/token"',
         'import { Account } from "@/api/domain/system/account"',
+        'import { Session } from "@system/domain/auth/session"',
         'import { Id } from "@/api/domain/core/identity/id"',
         'import { parse } from "@/infrastructure/shared/parse"',
         'import { users } from "@/schema/system"',
@@ -57,6 +59,16 @@ describe("inspectSystemSource", () => {
 
       expect(violations.some((violation) => violation.reason.includes("依存しています"))).toBe(true)
     }
+  })
+
+  test("未定義の System self-reference を拒否する", () => {
+    const violations = inspectSystemSource(
+      "src/application/system/example.ts",
+      'import { Employee } from "@system/company/employees"',
+      downstreamContexts,
+    )
+
+    expect(violations.some((violation) => violation.reason.includes("self-reference"))).toBe(true)
   })
 
   test("schema barrel・他 context schema・相対 import を拒否する", () => {
@@ -147,6 +159,37 @@ describe("inspectSystemSource", () => {
         reason: "System の動的依存先を静的に確認できません",
       },
     ])
+  })
+})
+
+describe("inspectSystemSelfReferencePathMappings", () => {
+  test("src と src/api の配置差を System 所有 mapping だけへ閉じ込める", () => {
+    for (const sourceRoot of ["src", "src/api"]) {
+      expect(
+        inspectSystemSelfReferencePathMappings(
+          "tsconfig.json",
+          {
+            "@system/application/*": [`./${sourceRoot}/application/system/*`],
+            "@system/domain/*": [`./${sourceRoot}/domain/system/*`],
+            "@system/infrastructure/*": [`./${sourceRoot}/infrastructure/system/*`],
+          },
+          sourceRoot,
+        ),
+      ).toEqual([])
+    }
+  })
+
+  test("欠落・複数・下位 context 向けの mapping を拒否する", () => {
+    const violations = inspectSystemSelfReferencePathMappings(
+      "tsconfig.json",
+      {
+        "@system/application/*": ["./src/application/company/*"],
+        "@system/domain/*": ["./src/domain/system/*", "./src/domain/company/*"],
+      },
+      "src",
+    )
+
+    expect(violations).toHaveLength(3)
   })
 })
 

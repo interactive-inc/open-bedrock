@@ -1,4 +1,4 @@
-import { parseBearerAuthorization } from "@/domain/system/auth/parse-bearer-authorization"
+import { parseBearerAuthorization } from "@system/domain/auth/parse-bearer-authorization"
 import { describe, expect, test } from "bun:test"
 
 describe("parseBearerAuthorization", () => {
