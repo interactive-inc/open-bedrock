@@ -11,9 +11,11 @@ const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
   : SOURCE_ROOT
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
+const SYSTEM_SCHEMA_PATH = resolve(SOURCE_ROOT, "schema/system.ts")
+const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_SOURCE_PATHS = [
   ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
-  resolve(SOURCE_ROOT, "schema/system.ts"),
+  SYSTEM_SCHEMA_PATH,
 ] as const
 const TYPESCRIPT_CONFIG_PATHS = [
   "tsconfig.json",
@@ -51,6 +53,250 @@ function normalizeVocabularyBoundaries(value: string): string {
 
 function isUnknownRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function hasExportModifier(node: ts.Node & { modifiers?: ts.NodeArray<ts.ModifierLike> }): boolean {
+  return node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
+}
+
+/** System schema が所有する exported sqliteTable のシンボル名を構文木から集める。 */
+export function collectSystemSchemaTableNames(file: string, source: string): string[] {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  )
+  const tableNames: string[] = []
+  const sqliteTableIdentifiers = new Set<string>()
+  const sqliteCoreNamespaces = new Set<string>()
+
+  for (const statement of sourceFile.statements) {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteralLike(statement.moduleSpecifier) ||
+      statement.moduleSpecifier.text !== "drizzle-orm/sqlite-core"
+    ) {
+      continue
+    }
+
+    const bindings = statement.importClause?.namedBindings
+
+    if (bindings !== undefined && ts.isNamespaceImport(bindings)) {
+      sqliteCoreNamespaces.add(bindings.name.text)
+      continue
+    }
+
+    if (bindings === undefined || !ts.isNamedImports(bindings)) continue
+
+    for (const element of bindings.elements) {
+      const importedName = element.propertyName?.text ?? element.name.text
+
+      if (importedName === "sqliteTable") sqliteTableIdentifiers.add(element.name.text)
+    }
+  }
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isVariableStatement(statement) || !hasExportModifier(statement)) continue
+
+    for (const declaration of statement.declarationList.declarations) {
+      const initializer = declaration.initializer
+
+      if (
+        !ts.isIdentifier(declaration.name) ||
+        initializer === undefined ||
+        !ts.isCallExpression(initializer) ||
+        !(
+          (ts.isIdentifier(initializer.expression) &&
+            sqliteTableIdentifiers.has(initializer.expression.text)) ||
+          (ts.isPropertyAccessExpression(initializer.expression) &&
+            ts.isIdentifier(initializer.expression.expression) &&
+            sqliteCoreNamespaces.has(initializer.expression.expression.text) &&
+            initializer.expression.name.text === "sqliteTable")
+        )
+      ) {
+        continue
+      }
+
+      tableNames.push(declaration.name.text)
+    }
+  }
+
+  return tableNames.toSorted()
+}
+
+/** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
+export function discoverSystemCapabilityNames(
+  apiSourceRoot = API_SOURCE_ROOT,
+): ReadonlySet<string> {
+  const capabilities = new Set<string>()
+
+  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+    const systemRoot = resolve(apiSourceRoot, layer, "system")
+
+    if (!existsSync(systemRoot)) continue
+
+    for (const entry of readdirSync(systemRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) capabilities.add(entry.name)
+    }
+  }
+
+  return capabilities
+}
+
+export function inspectSystemCapabilityRootEntries(
+  file: string,
+  entries: Iterable<Readonly<{ name: string; isDirectory: boolean }>>,
+): SystemBoundaryViolation[] {
+  return [...entries]
+    .filter(
+      (entry) =>
+        !entry.isDirectory &&
+        /\.tsx?$/.test(entry.name) &&
+        !/\.(?:test|spec)\.tsx?$/.test(entry.name),
+    )
+    .map((entry) => ({
+      file: `${file}/${entry.name}`,
+      reason: "System production source は宣言済み capability namespace 配下へ置いてください",
+    }))
+}
+
+function inspectSystemCapabilityLayout(apiSourceRoot = API_SOURCE_ROOT): SystemBoundaryViolation[] {
+  const violations: SystemBoundaryViolation[] = []
+
+  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+    const systemRoot = resolve(apiSourceRoot, layer, "system")
+
+    if (!existsSync(systemRoot)) continue
+
+    violations.push(
+      ...inspectSystemCapabilityRootEntries(
+        relative(PROJECT_ROOT, systemRoot),
+        readdirSync(systemRoot, { withFileTypes: true }).map((entry) => ({
+          name: entry.name,
+          isDirectory: entry.isDirectory(),
+        })),
+      ),
+    )
+  }
+
+  return violations
+}
+
+function inspectSortedUniqueStringList(
+  file: string,
+  field: string,
+  value: unknown,
+  pattern: RegExp,
+): { values: string[]; violations: SystemBoundaryViolation[] } {
+  if (!Array.isArray(value) || value.some((entry) => typeof entry !== "string")) {
+    return {
+      values: [],
+      violations: [{ file, reason: `${field} は文字列配列で宣言してください` }],
+    }
+  }
+
+  const values = value as string[]
+
+  if (values.some((entry) => !pattern.test(entry))) {
+    return {
+      values,
+      violations: [{ file, reason: `${field} に不正な名前があります` }],
+    }
+  }
+
+  if (new Set(values).size !== values.length) {
+    return {
+      values,
+      violations: [{ file, reason: `${field} に重複があります` }],
+    }
+  }
+
+  if (values.some((entry, index) => index > 0 && (values[index - 1] ?? "") > entry)) {
+    return {
+      values,
+      violations: [{ file, reason: `${field} は昇順で宣言してください` }],
+    }
+  }
+
+  return { values, violations: [] }
+}
+
+/**
+ * System の拡張責務を明示した manifest と実装を完全一致で検査する。
+ * 正当な拡張は manifest と実装を同じ変更で更新し、暗黙の責務追加だけを fail closed にする。
+ */
+export function inspectSystemOwnershipManifest(
+  file: string,
+  manifest: unknown,
+  actualCapabilities: Iterable<string>,
+  actualSchemaTables: Iterable<string>,
+): SystemBoundaryViolation[] {
+  if (!isUnknownRecord(manifest)) {
+    return [{ file, reason: "System ownership manifest は object で宣言してください" }]
+  }
+
+  const expectedFields = ["capabilities", "schemaTables", "version"]
+  const actualFields = Object.keys(manifest).toSorted()
+
+  if (
+    actualFields.length !== expectedFields.length ||
+    actualFields.some((field, index) => field !== expectedFields[index])
+  ) {
+    return [{ file, reason: `manifest field は ${expectedFields.join(", ")} だけを許可します` }]
+  }
+
+  if (manifest.version !== 1) {
+    return [{ file, reason: "System ownership manifest の version は 1 だけを許可します" }]
+  }
+
+  const capabilities = inspectSortedUniqueStringList(
+    file,
+    "capabilities",
+    manifest.capabilities,
+    /^[a-z][a-z0-9-]*$/,
+  )
+  const schemaTables = inspectSortedUniqueStringList(
+    file,
+    "schemaTables",
+    manifest.schemaTables,
+    /^[a-z][A-Za-z0-9]*$/,
+  )
+  const violations = [...capabilities.violations, ...schemaTables.violations]
+
+  if (violations.length > 0) return violations
+
+  const declaredCapabilities = new Set(capabilities.values)
+  const implementedCapabilities = new Set(actualCapabilities)
+  const declaredSchemaTables = new Set(schemaTables.values)
+  const implementedSchemaTables = new Set(actualSchemaTables)
+
+  for (const capability of [...implementedCapabilities].toSorted()) {
+    if (!declaredCapabilities.has(capability)) {
+      violations.push({ file, reason: `未宣言の System capability です: ${capability}` })
+    }
+  }
+
+  for (const capability of capabilities.values) {
+    if (!implementedCapabilities.has(capability)) {
+      violations.push({ file, reason: `実装がない System capability 宣言です: ${capability}` })
+    }
+  }
+
+  for (const table of [...implementedSchemaTables].toSorted()) {
+    if (!declaredSchemaTables.has(table)) {
+      violations.push({ file, reason: `未宣言の System schema table です: ${table}` })
+    }
+  }
+
+  for (const table of schemaTables.values) {
+    if (!implementedSchemaTables.has(table)) {
+      violations.push({ file, reason: `実装がない System schema table 宣言です: ${table}` })
+    }
+  }
+
+  return violations
 }
 
 export function inspectSystemSelfReferencePathMappings(
@@ -304,9 +550,34 @@ function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
   )
 }
 
+function inspectSystemOwnership(): SystemBoundaryViolation[] {
+  const file = relative(PROJECT_ROOT, SYSTEM_OWNERSHIP_MANIFEST_PATH)
+  let manifest: unknown
+
+  try {
+    manifest = JSON.parse(readFileSync(SYSTEM_OWNERSHIP_MANIFEST_PATH, "utf8"))
+  } catch {
+    return [{ file, reason: "System ownership manifest を解析できません" }]
+  }
+
+  const schemaSource = existsSync(SYSTEM_SCHEMA_PATH)
+    ? readFileSync(SYSTEM_SCHEMA_PATH, "utf8")
+    : ""
+
+  return inspectSystemOwnershipManifest(
+    file,
+    manifest,
+    discoverSystemCapabilityNames(),
+    collectSystemSchemaTableNames(relative(PROJECT_ROOT, SYSTEM_SCHEMA_PATH), schemaSource),
+  )
+}
+
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
   const downstreamContexts = discoverDownstreamContexts()
-  const violations: SystemBoundaryViolation[] = []
+  const violations: SystemBoundaryViolation[] = [
+    ...inspectSystemOwnership(),
+    ...inspectSystemCapabilityLayout(),
+  ]
 
   for (const path of SYSTEM_SOURCE_PATHS) {
     violations.push(...(await inspectSystemPath(path, downstreamContexts)))
