@@ -1,6 +1,7 @@
 import {
   checkSystemContextBoundary,
   collectSystemSchemaTableNames,
+  inspectSystemCapabilityCatalog,
   inspectSystemCapabilityRootEntries,
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
@@ -13,10 +14,11 @@ const downstreamContexts = new Set(["care", "company", "warehouse"])
 
 describe("System ownership manifest", () => {
   const manifest = {
-    version: 1,
-    capabilities: ["audit", "auth"],
+    version: 2,
+    implementedCapabilities: ["audit", "auth"],
     forbiddenProductMarkers: ["productx", "vendorx"],
     schemaTables: ["accounts", "auditLogs"],
+    targetCapabilities: ["audit", "auth", "events"],
   }
 
   test("宣言と実装が完全一致すれば拡張可能な System として受理する", () => {
@@ -26,6 +28,7 @@ describe("System ownership manifest", () => {
         manifest,
         ["auth", "audit"],
         ["auditLogs", "accounts"],
+        ["events", "auth", "audit"],
       ),
     ).toEqual([])
   })
@@ -36,6 +39,7 @@ describe("System ownership manifest", () => {
       manifest,
       ["auth", "features"],
       ["accounts", "settings"],
+      ["audit", "auth", "events"],
     )
 
     expect(violations.map((violation) => violation.reason)).toEqual([
@@ -50,11 +54,11 @@ describe("System ownership manifest", () => {
     const invalidManifests: unknown[] = [
       null,
       { ...manifest, extra: true },
-      { ...manifest, version: 2 },
-      { ...manifest, capabilities: "auth" },
-      { ...manifest, capabilities: ["Auth"] },
-      { ...manifest, capabilities: ["auth", "auth"] },
-      { ...manifest, capabilities: ["auth", "audit"] },
+      { ...manifest, version: 1 },
+      { ...manifest, implementedCapabilities: "auth" },
+      { ...manifest, implementedCapabilities: ["Auth"] },
+      { ...manifest, implementedCapabilities: ["auth", "auth"] },
+      { ...manifest, implementedCapabilities: ["auth", "audit"] },
       { ...manifest, forbiddenProductMarkers: "productx" },
       { ...manifest, forbiddenProductMarkers: ["ProductX"] },
       { ...manifest, forbiddenProductMarkers: ["product-x"] },
@@ -64,6 +68,10 @@ describe("System ownership manifest", () => {
       { ...manifest, schemaTables: ["Accounts"] },
       { ...manifest, schemaTables: ["accounts", "accounts"] },
       { ...manifest, schemaTables: ["auditLogs", "accounts"] },
+      { ...manifest, targetCapabilities: "auth" },
+      { ...manifest, targetCapabilities: ["Auth"] },
+      { ...manifest, targetCapabilities: ["audit", "audit"] },
+      { ...manifest, targetCapabilities: ["auth", "audit"] },
     ]
 
     for (const invalidManifest of invalidManifests) {
@@ -73,9 +81,34 @@ describe("System ownership manifest", () => {
           invalidManifest,
           ["audit", "auth"],
           ["accounts", "auditLogs"],
+          ["audit", "auth", "events"],
         ),
       ).not.toEqual([])
     }
+  })
+
+  test("共通capability catalogとtarget manifestの乖離を拒否する", () => {
+    const missingTarget = inspectSystemOwnershipManifest(
+      "system-context.manifest.json",
+      { ...manifest, targetCapabilities: ["audit", "auth"] },
+      ["audit", "auth"],
+      ["accounts", "auditLogs"],
+      ["audit", "auth", "events"],
+    )
+    const unknownTarget = inspectSystemOwnershipManifest(
+      "system-context.manifest.json",
+      { ...manifest, targetCapabilities: ["audit", "auth", "events", "unknown"] },
+      ["audit", "auth"],
+      ["accounts", "auditLogs"],
+      ["audit", "auth", "events"],
+    )
+
+    expect(missingTarget.map((violation) => violation.reason)).toContain(
+      "targetCapabilities に共通 capability がありません: events",
+    )
+    expect(unknownTarget.map((violation) => violation.reason)).toContain(
+      "targetCapabilities にcatalog外の capability があります: unknown",
+    )
   })
 
   test("System root の直下 production file による manifest 迂回を拒否する", () => {
@@ -108,6 +141,39 @@ describe("System ownership manifest", () => {
       "accounts",
       "auditLogs",
     ])
+  })
+})
+
+describe("System capability catalog", () => {
+  test("export constの昇順・一意な文字列arrayから共通targetを読む", () => {
+    const inspected = inspectSystemCapabilityCatalog(
+      "system-capability.catalog.ts",
+      [
+        'export const SYSTEM_CAPABILITY_NAMES = ["audit", "auth", "events"] as const',
+        "Object.freeze(SYSTEM_CAPABILITY_NAMES)",
+      ].join("\n"),
+    )
+
+    expect(inspected).toEqual({ capabilities: ["audit", "auth", "events"], violations: [] })
+  })
+
+  test("欠落・複数宣言・非literal・不正名・重複・未整列を拒否する", () => {
+    const invalidSources = [
+      "export const OTHER = [] as const",
+      'export const SYSTEM_CAPABILITY_NAMES = ["audit"] as const\nexport const SYSTEM_CAPABILITY_NAMES = ["auth"] as const',
+      'export let SYSTEM_CAPABILITY_NAMES = ["audit"] as const',
+      'export const SYSTEM_CAPABILITY_NAMES = ["audit"]',
+      "export const SYSTEM_CAPABILITY_NAMES = capabilities",
+      'export const SYSTEM_CAPABILITY_NAMES = ["Audit"] as const',
+      'export const SYSTEM_CAPABILITY_NAMES = ["audit", "audit"] as const',
+      'export const SYSTEM_CAPABILITY_NAMES = ["auth", "audit"] as const',
+    ]
+
+    for (const source of invalidSources) {
+      expect(
+        inspectSystemCapabilityCatalog("system-capability.catalog.ts", source).violations,
+      ).not.toEqual([])
+    }
   })
 })
 
