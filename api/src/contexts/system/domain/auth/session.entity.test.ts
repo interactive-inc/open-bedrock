@@ -53,9 +53,9 @@ describe("Session", () => {
   })
 
   test("opaque IDとlowercase SHA-256 hashだけを受理する", () => {
-    expect(zSessionId.parse("001")).toBe("001")
-    expect(zSessionFamilyId.parse("Family-A")).toBe("Family-A")
-    expect(zSessionTokenHash.parse(TOKEN_HASH)).toBe(TOKEN_HASH)
+    expect(String(zSessionId.parse("001"))).toBe("001")
+    expect(String(zSessionFamilyId.parse("Family-A"))).toBe("Family-A")
+    expect(String(zSessionTokenHash.parse(TOKEN_HASH))).toBe(TOKEN_HASH)
 
     for (const value of ["", "raw-refresh-token", "A".repeat(64), "a".repeat(63)]) {
       expect(zSessionTokenHash.safeParse(value).success).toBe(false)
