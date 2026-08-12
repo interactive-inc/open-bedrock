@@ -110,6 +110,16 @@ async function insertRefreshToken(
     .run()
 }
 
+async function insertCanonicalAccount(db: D1Database, tokenVersion: number): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
+       VALUES ('1', 'active', ?1, ?2, ?2)`,
+    )
+    .bind(tokenVersion, (nowEpoch - 100) * 1_000)
+    .run()
+}
+
 function rotateProps(newTokenHash = "new-token-hash") {
   return {
     tokenId: 1,
@@ -174,6 +184,7 @@ async function auditActions(
 describe("RefreshTokenRepository audited writes", () => {
   test("creates a refresh token and its audit event in one batch", async () => {
     const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 3)
     const repository = new RefreshTokenRepository(context)
     const audit = new AuditEventRepository(context).prepareAppend(auditRecord("login-created"))
 
@@ -215,6 +226,7 @@ describe("RefreshTokenRepository audited writes", () => {
 
   test("rolls a created refresh token back when its audit insert fails", async () => {
     const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 0)
     const repository = new RefreshTokenRepository(context)
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert

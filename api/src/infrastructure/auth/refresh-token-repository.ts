@@ -60,7 +60,14 @@ export class RefreshTokenRepository {
             `INSERT INTO refresh_tokens
                (account_id, token_hash, family_id, token_version, expires_at,
                 revoked_at, user_agent, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)
+             SELECT ?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7
+             WHERE EXISTS (
+               SELECT 1
+               FROM system_accounts AS canonical_account
+               WHERE canonical_account.id = CAST(?1 AS TEXT)
+                 AND canonical_account.status = 'active'
+                 AND canonical_account.token_version = ?4
+             )
              RETURNING id`,
           )
           .bind(
@@ -151,6 +158,10 @@ export class RefreshTokenRepository {
                  SELECT CASE
                    WHEN rt.revoked_at IS NOT NULL THEN 'reused'
                    WHEN a.id IS NULL
+                     OR canonical_account.id IS NULL
+                     OR canonical_account.status <> 'active'
+                     OR canonical_account.token_version <> rt.token_version
+                     OR canonical_account.token_version <> ?8
                      OR a.status <> 'active'
                      OR link.employee_id IS NULL
                      OR link.employee_id <> ?7
@@ -181,6 +192,8 @@ export class RefreshTokenRepository {
                  END
                  FROM refresh_tokens AS rt
                  LEFT JOIN accounts AS a ON a.id = rt.account_id
+                 LEFT JOIN system_accounts AS canonical_account
+                   ON canonical_account.id = CAST(rt.account_id AS TEXT)
                  LEFT JOIN account_employee_links AS link ON link.account_id = a.id
                  LEFT JOIN employees AS e ON e.id = link.employee_id
                  WHERE rt.id = ?2
