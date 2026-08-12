@@ -11,7 +11,7 @@ import type {
   RingiStatus,
   WorkStyle,
 } from "@/lib/schemas"
-import type { PersonnelActionKind } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import {
   accountEmployeeLinks,
   departments,

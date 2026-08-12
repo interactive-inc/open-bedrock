@@ -2,7 +2,7 @@ import type { Context } from "@/env"
 import {
   EmployeeLifecycleReadRepository,
   type EmployeeLifecycleState,
-} from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+} from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"

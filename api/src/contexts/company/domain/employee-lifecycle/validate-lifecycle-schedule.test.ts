@@ -4,8 +4,8 @@ import type {
   LifecycleSchedule,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
-import { validateLifecycleSchedules } from "@/domain/employee-lifecycle/validate-lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+import { validateLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/validate-lifecycle-schedule"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

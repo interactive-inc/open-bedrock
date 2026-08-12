@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import { Application } from "@/domain/application/application.entity"
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
