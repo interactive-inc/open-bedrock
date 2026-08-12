@@ -65,6 +65,10 @@ export const POST = factory.createHandlers(
       throw toHttpException(issued)
     }
 
+    if ("reason" in issued) {
+      throw new UnauthorizedError("invalid or expired code")
+    }
+
     const responseBody = zAppAuthToken.parse({
       access_token: issued.accessToken,
       refresh_token: issued.refreshToken,

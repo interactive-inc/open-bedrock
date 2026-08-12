@@ -62,7 +62,7 @@ export class AuthenticateIdentity {
       return { reason: "account_inactive" }
     }
 
-    return new IssueEmployeeSession(this.c).run({
+    const issued = await new IssueEmployeeSession(this.c).run({
       accountId: identity.accountId,
       employeeId: identity.employeeId,
       tokenVersion: identity.tokenVersion,
@@ -71,5 +71,9 @@ export class AuthenticateIdentity {
       now: command.now,
       successAction: "auth.session.identity_login_succeeded",
     })
+
+    return !(issued instanceof Error) && "reason" in issued
+      ? { reason: "account_inactive" }
+      : issued
   }
 }

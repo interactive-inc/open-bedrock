@@ -393,6 +393,47 @@ describe("RefreshAccessToken", () => {
     ])
   })
 
+  test.each([
+    ["missing", "DELETE FROM system_accounts WHERE id = '1'"],
+    [
+      "suspended",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
+    ],
+    ["locked", "UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'"],
+    ["token version drift", "UPDATE system_accounts SET token_version = 1 WHERE id = '1'"],
+  ])("revokes the family when the canonical account is %s", async (_, sql) => {
+    const rawToken = `canonical-${String(_).replaceAll(" ", "-")}`
+    const { context, db } = await setupRefreshToken(rawToken)
+    await db.exec(sql)
+
+    const result = await new RefreshAccessToken(context).run(command(rawToken))
+
+    expect(result).toEqual({ reason: "invalid_token" })
+    expect(await activeFamilyCount(db)).toBe(0)
+    expect(
+      (await auditRows(db)).map(({ action, outcome, reason_code }) => ({
+        action,
+        outcome,
+        reason_code,
+      })),
+    ).toEqual([
+      { action: "auth.session.refreshed", outcome: "denied", reason_code: "invalid_token" },
+    ])
+  })
+
+  test("fails closed without rotating when the canonical account cannot be read", async () => {
+    const rawToken = "canonical-read-error"
+    const { context, db } = await setupRefreshToken(rawToken)
+    await db.exec("DROP TABLE system_accounts")
+
+    const result = await new RefreshAccessToken(context).run(command(rawToken))
+
+    expect(result).toBeInstanceOf(Error)
+    expect(result).toMatchObject({ code: "unexpected" })
+    expect(await activeFamilyCount(db)).toBe(1)
+    expect(await auditRows(db)).toEqual([])
+  })
+
   test("revokes and records reuse when the token was already revoked", async () => {
     const rawToken = "revoked-refresh-token"
     const { context, db } = await setupRefreshToken(rawToken, { revokedAt: nowEpoch - 10 })
@@ -426,6 +467,14 @@ describe("RefreshAccessToken", () => {
     ],
     ["token version bump", "UPDATE accounts SET token_version = token_version + 1 WHERE id = 1"],
     ["employee retirement", "UPDATE employees SET status = 'retired' WHERE id = 1"],
+    [
+      "canonical account suspension",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
+    ],
+    [
+      "canonical token version bump",
+      "UPDATE system_accounts SET token_version = token_version + 1 WHERE id = '1'",
+    ],
   ])("records invalid and returns no token after a live %s race", async (_, mutationSql) => {
     const rawToken = `race-${String(_).replaceAll(" ", "-")}`
     const { context, db } = await setupRefreshToken(rawToken)
