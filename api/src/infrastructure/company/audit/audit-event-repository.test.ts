@@ -12,6 +12,8 @@ import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/e
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
 
+const LARGE_STRESS_TEST_TIMEOUT_MS = 30_000
+
 function record(overrides: Partial<AuditEventRecord> = {}): AuditEventRecord {
   return {
     eventId: "event-1",
@@ -954,7 +956,7 @@ describe("AuditEventRepository search contract", () => {
         }),
       ),
     ).toBeInstanceOf(ValidationError)
-  }, 15_000)
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("returns an empty stable page", async () => {
     const { context } = createTestContext()
@@ -1769,7 +1771,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(
       await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
     ).toBeInstanceOf(PayloadTooLargeError)
-  })
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("remote-compatible multi-row export accepts exactly sixteen MiB and rejects one byte more", async () => {
     const rowCount = 9
@@ -1868,7 +1870,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     )
     expect(Math.max(...segmentReads.map((read) => read.maxRowPayloadBytes))).toBeLessThan(2_000_000)
     expect(segmentReads.every((read) => read.sql.includes("FROM json_each(?1)"))).toBe(true)
-  })
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test.each([
     "failure",
@@ -1946,7 +1948,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
     expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
     expect(queryCount() - before).toBe(11)
-  })
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("exports eight remote-valid near-two-megabyte metadata rows within twenty-five queries", async () => {
     const { context, db, queryCount } = createCountingContext()
@@ -1969,7 +1971,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
     expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
     expect(queryCount() - before).toBe(11)
-  })
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("globally batches mixed segmented and forty-six-thousand tiny rows within twenty-five queries", async () => {
     const { context, db, queryCount } = createCountingContext()
@@ -2028,7 +2030,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(8)
     expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
     expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
-  })
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("local-only >2 MB stress bounds detail reads before rejecting a multi-row export", async () => {
     const { context, db } = createTestContext()
