@@ -9,6 +9,7 @@ import { zValidator } from "@hono/zod-validator"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { LoginRateLimiter } from "@/interface/utils/login-rate-limiter"
+import { isProductionEnvironment } from "@/lib/config/is-production-environment"
 import { z } from "zod"
 
 let loginRateLimitWarned = false
@@ -38,7 +39,13 @@ export const POST = factory.createHandlers(
     const email = json.email
 
     // KV が設定されている環境のみレート制限を適用する（ローカル dev 等はスキップ）。
-    // 本番では wrangler.jsonc の kv_namespaces で RATE_LIMIT を必ずバインドすること。
+    // 本番相当（CORS_ORIGIN 設定済み）では fail-open にせず 503 で拒否する。
+    if (kv === undefined && isProductionEnvironment(c.env)) {
+      console.error("[SECURITY] RATE_LIMIT KV binding is missing in production — failing closed")
+
+      return c.json({ error: "rate limiter is not configured" }, 503)
+    }
+
     if (kv === undefined) {
       loginRateLimitWarn()
     }
