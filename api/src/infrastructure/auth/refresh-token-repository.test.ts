@@ -376,7 +376,12 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
   })
 
   test.each([
-    ["account suspension", "UPDATE accounts SET status = 'suspended' WHERE id = 1"],
+    [
+      "account suspension",
+      `UPDATE accounts
+       SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+       WHERE id = 1`,
+    ],
     ["token version bump", "UPDATE accounts SET token_version = token_version + 1 WHERE id = 1"],
     ["employee retirement", "UPDATE employees SET status = 'retired' WHERE id = 1"],
   ])("chooses invalid after a live %s race", async (_, mutationSql) => {

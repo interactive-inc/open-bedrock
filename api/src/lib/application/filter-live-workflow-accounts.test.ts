@@ -12,7 +12,7 @@ describe("filterLiveWorkflowAccounts", () => {
         (3, 'E003', 'Inactive Account', 'active');
       INSERT INTO accounts (id, status, created_at, updated_at) VALUES
         (11, 'active', 0, 0), (12, 'active', 0, 0),
-        (13, 'disabled', 0, 0);
+        (13, 'locked', 0, 0);
       INSERT INTO account_employee_links (account_id, employee_id) VALUES
         (11, 1), (12, 2), (13, 3);
       INSERT INTO employment_period_versions

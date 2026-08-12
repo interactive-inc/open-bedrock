@@ -251,7 +251,13 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a suspended account", async () => {
     const db = await createTestDb()
-    await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 1").run()
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 1`,
+      )
+      .run()
     const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "login-jti-suspended",

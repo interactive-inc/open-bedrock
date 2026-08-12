@@ -154,7 +154,13 @@ describe("workflow delegation inbox security", () => {
 
   test("hides delegated work when the frozen candidate account is inactive", async () => {
     const db = await setup()
-    await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 2`,
+      )
+      .run()
 
     expect(await inboxIds(db, 6)).not.toContain(500)
   })
