@@ -42,6 +42,36 @@ function toRepositoryError(caught: unknown, message: string): Error {
   return caught instanceof Error ? caught : new Error(message)
 }
 
+function classifyPersistenceFailure(caught: unknown): string {
+  const message = caught instanceof Error ? caught.message : ""
+
+  if (/no such table|no such column/iu.test(message)) return "missing_schema"
+  if (/unique constraint/iu.test(message)) return "unique_constraint"
+  if (/foreign key constraint/iu.test(message)) return "foreign_key_constraint"
+  if (/check constraint/iu.test(message)) return "check_constraint"
+  if (/json(?:_extract)?|malformed json/iu.test(message)) return "invariant_guard"
+  if (/audit.+(?:immutable|append-only)|audit employee context/iu.test(message)) {
+    return "audit_invariant"
+  }
+
+  return "database_error"
+}
+
+/**
+ * 認証永続化の失敗を、token・account・利用者情報を含めず運用ログへ残す。
+ * D1の詳細messageはbinding値を含む可能性があるため出さず、安全な分類だけを記録する。
+ */
+function logAuthPersistenceFailure(operation: string, caught: unknown): void {
+  console.error(
+    JSON.stringify({
+      event: "auth.persistence.failed",
+      operation,
+      errorType: caught instanceof Error ? caught.name : typeof caught,
+      reason: classifyPersistenceFailure(caught),
+    }),
+  )
+}
+
 export class RefreshTokenRepository {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -86,6 +116,7 @@ export class RefreshTokenRepository {
         throw new Error("audited refresh token creation did not succeed")
       }
     } catch (caught) {
+      logAuthPersistenceFailure("refresh_token.create_with_audit", caught)
       return toRepositoryError(caught, "failed to create refresh token with audit")
     }
   }
