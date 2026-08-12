@@ -954,7 +954,8 @@ describe("AuditEventRepository search contract", () => {
         }),
       ),
     ).toBeInstanceOf(ValidationError)
-  }, 15_000)
+    // GitHub Actions ランナーはローカルの数倍遅く、15 秒では足りない（実測 17.5 秒）
+  }, 60_000)
 
   test("returns an empty stable page", async () => {
     const { context } = createTestContext()

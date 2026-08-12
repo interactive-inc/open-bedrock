@@ -24,8 +24,10 @@ jobs:
         run: bun run check
         working-directory: api
 
+      # 大容量ストレステスト（audit の >2MB/16MiB 系）が GitHub ランナーの速度では
+      # 既定 5 秒を超えるため、CI ではタイムアウトを引き上げる
       - name: api test
-        run: bun test
+        run: bun test --timeout 60000
         working-directory: api
 
       - name: cli test
