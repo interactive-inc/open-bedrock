@@ -84,7 +84,9 @@ describe("verifyBearer lifecycle status", () => {
       await db
         .prepare(
           `UPDATE accounts
-           SET status = ?1
+           SET status = ?1,
+               token_version = token_version + 1,
+               updated_at = updated_at + 1
            WHERE id = (
              SELECT account_id FROM account_employee_links WHERE employee_id = 1
            )`,

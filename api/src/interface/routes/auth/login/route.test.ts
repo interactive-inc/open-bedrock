@@ -179,7 +179,13 @@ describe("POST /auth/login", () => {
     for (const login of cases) {
       const db = await createTestDb()
       if (login.inactive === true) {
-        await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+        await db
+          .prepare(
+            `UPDATE accounts
+             SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+             WHERE id = 2`,
+          )
+          .run()
       }
       const response = await postLogin(db, login)
       responses.push({ status: response.status, body: await json(response) })
@@ -270,7 +276,13 @@ describe("POST /auth/login", () => {
     for (const login of cases) {
       const db = await createTestDb()
       if (login.inactive === true) {
-        await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+        await db
+          .prepare(
+            `UPDATE accounts
+             SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+             WHERE id = 2`,
+          )
+          .run()
       }
       await db.exec(`
         CREATE TRIGGER reject_test_audit_insert
