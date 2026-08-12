@@ -76,7 +76,7 @@ export class AuthenticateEmployee {
       await identityRepository.updateSecret(identity.identityId, newHash)
     }
 
-    return new IssueEmployeeSession(this.c).run({
+    const issued = await new IssueEmployeeSession(this.c).run({
       accountId: identity.accountId,
       employeeId: identity.employeeId,
       tokenVersion: identity.tokenVersion,
@@ -85,5 +85,9 @@ export class AuthenticateEmployee {
       now: command.now,
       successAction: "auth.session.login_succeeded",
     })
+
+    return !(issued instanceof Error) && "reason" in issued
+      ? { reason: "invalid_credentials" }
+      : issued
   }
 }

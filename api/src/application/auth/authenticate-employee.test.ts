@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { AuthenticateEmployee } from "@/application/auth/authenticate-employee"
+import { accessTokenService } from "@/infrastructure/auth/jose-token-signer"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
@@ -10,9 +11,30 @@ import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { seedIamForEmployees } from "@/interface/test-helpers/seed-iam-for-employees"
 import { UnavailableError } from "@/lib/errors"
+import type { Context } from "@/env"
 
 const jwtSecret = "authenticate-employee-test-secret"
 const now = new Date("2026-01-01T00:00:00.000Z")
+
+function mutateBeforeNextBatch(context: Context, mutation: () => Promise<unknown>): void {
+  const source = context.env.DB
+  let pending = true
+  context.env.DB = new Proxy(source, {
+    get(target, property, receiver) {
+      if (property === "batch") {
+        return async (statements: Array<D1PreparedStatement>) => {
+          if (pending) {
+            pending = false
+            await mutation()
+          }
+          return target.batch(statements)
+        }
+      }
+
+      return Reflect.get(target, property, receiver)
+    },
+  })
+}
 
 async function insertEmployee(
   db: D1Database,
@@ -70,6 +92,7 @@ describe("AuthenticateEmployee", () => {
     expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     expect(result.accountId).toBe(1)
     expect(result.employeeId).toBe(1)
+    expect((await accessTokenService.verify(result.accessToken, jwtSecret)).ver).toBe(0)
     expect(
       await db
         .prepare(
@@ -113,6 +136,101 @@ describe("AuthenticateEmployee", () => {
     expect(persistedAudit).not.toContain("supersecret")
     expect(persistedAudit).not.toContain(result.accessToken)
     expect(persistedAudit).not.toContain(result.refreshToken)
+  })
+
+  test.each([
+    ["missing", "DELETE FROM system_accounts WHERE id = '1'"],
+    [
+      "suspended",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
+    ],
+    ["locked", "UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'"],
+    ["token version drift", "UPDATE system_accounts SET token_version = 1 WHERE id = '1'"],
+  ])("fails closed without session material when the canonical account is %s", async (_, sql) => {
+    const { context, db } = createTestContext()
+    const hash = await toPasswordHash("supersecret")
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+canonical-rejected@example.com",
+      passwordHash: hash,
+    })
+    await db.exec(sql)
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+canonical-rejected@example.com",
+      password: "supersecret",
+      jwtSecret,
+      userAgent: null,
+      now,
+    })
+
+    expect(result).toEqual({ reason: "invalid_credentials" })
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+    ).toBe(0)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(0)
+  })
+
+  test("fails closed without session material when the canonical account cannot be read", async () => {
+    const { context, db } = createTestContext()
+    const hash = await toPasswordHash("supersecret")
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+canonical-error@example.com",
+      passwordHash: hash,
+    })
+    await db.exec("DROP TABLE system_accounts")
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+canonical-error@example.com",
+      password: "supersecret",
+      jwtSecret,
+      userAgent: null,
+      now,
+    })
+
+    expect(result).toBeInstanceOf(Error)
+    expect(result).toMatchObject({ code: "unexpected" })
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+    ).toBe(0)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(0)
+  })
+
+  test("does not persist or return a session after a canonical Account race", async () => {
+    const { context, db } = createTestContext()
+    const hash = await toPasswordHash("supersecret")
+    await insertEmployee(db, {
+      id: 1,
+      email: "you+canonical-race@example.com",
+      passwordHash: hash,
+    })
+    mutateBeforeNextBatch(context, () =>
+      db
+        .prepare("UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'")
+        .run(),
+    )
+
+    const result = await new AuthenticateEmployee(context).run({
+      email: "you+canonical-race@example.com",
+      password: "supersecret",
+      jwtSecret,
+      userAgent: null,
+      now,
+    })
+
+    expect(result).toBeInstanceOf(UnavailableError)
+    expect(result).toMatchObject({ code: "audit_unavailable" })
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
+    ).toBe(0)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(0)
   })
 
   test("rejects the wrong password with invalid_credentials", async () => {

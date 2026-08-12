@@ -1,4 +1,6 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
+import { zAccountId } from "@system/domain/auth/account-id"
 import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
 import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
 import { createAuditEvent } from "@/composition/audit/audit-event"
@@ -8,6 +10,7 @@ import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
@@ -140,11 +143,30 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    const account = await new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
+    const canonicalAccountId = zAccountId.safeParse(String(existing.accountId))
+    if (canonicalAccountId.success === false) {
+      return new UnexpectedError("failed to authorize account session")
+    }
+
+    const accountPromise = new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
       existing.accountId,
     )
+    const canonicalSessionPromise = resolveAccountSession({
+      accountRepository: new SystemAccountRepository({ database: this.c.env.DB }),
+      accountId: canonicalAccountId.data,
+      sessionTokenVersion: existing.tokenVersion,
+    })
+    const account = await accountPromise
+    const canonicalSession = await canonicalSessionPromise
+
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })
+    }
+
+    if (canonicalSession instanceof Error) {
+      return new UnexpectedError("failed to authorize account session", {
+        cause: canonicalSession,
+      })
     }
 
     const revokeInvalidFamily = async (): Promise<InvalidToken | UnavailableError> => {
@@ -180,7 +202,12 @@ export class RefreshAccessToken {
             sessionTokenVersion: existing.tokenVersion,
           })
 
-    if (account === null || accountSessionRejection !== null || account.employeeId === null) {
+    if (
+      account === null ||
+      accountSessionRejection !== null ||
+      canonicalSession.kind === "rejected" ||
+      account.employeeId === null
+    ) {
       return revokeInvalidFamily()
     }
 
@@ -191,7 +218,7 @@ export class RefreshAccessToken {
     const accessToken = await new JoseTokenSigner().sign(
       {
         accountId: existing.accountId,
-        tokenVersion: account.tokenVersion,
+        tokenVersion: canonicalSession.account.tokenVersion,
       },
       command.jwtSecret,
     )
@@ -272,7 +299,7 @@ export class RefreshAccessToken {
         accountId: existing.accountId,
         employeeId: account.employeeId,
         familyId: existing.familyId,
-        tokenVersion: existing.tokenVersion,
+        tokenVersion: canonicalSession.account.tokenVersion,
         userAgent: command.userAgent,
         nowEpoch,
         lifecycleAccess: employeeAccess,
