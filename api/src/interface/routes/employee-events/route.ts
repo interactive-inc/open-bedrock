@@ -1,6 +1,6 @@
 import { CreateEmployeeEvent } from "@/application/employee-event/create-employee-event"
 import { canReadEmployeeEventsOf } from "@/interface/routes/employee-events/can-read-employee-events-of"
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
 import { resolveEmployeeIdFromBody } from "@/interface/utils/resolve-employee-id-from-body"
 import { factory } from "@/interface/utils/factory"

@@ -3,7 +3,7 @@ import { resolveGovernanceOrgRole } from "@/application/governance/resolve-gover
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
 import { PERMISSION_KEYS } from "@/composition/iam/permission-key.catalog"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import { employees, governanceDocuments, trainingCourses } from "@/schema"

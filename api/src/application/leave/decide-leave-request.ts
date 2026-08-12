@@ -13,7 +13,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 
 export type Command = {
   session: Session

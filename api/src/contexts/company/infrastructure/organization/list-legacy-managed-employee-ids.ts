@@ -1,20 +1,16 @@
 import type { Context } from "@/env"
-import { employees, orgDepartments, orgMemberships } from "@/schema"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { isInManagementChain } from "@/lib/org/is-in-management-chain"
-import { listLifecycleManagedEmployeeIds } from "@/lib/org/list-lifecycle-managed-employee-ids"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
+import { isInManagementChain } from "@/contexts/company/domain/organization/is-in-management-chain"
 
-/** actor が管理できる社員IDを返す。受信箱の絞り込みに使う。 */
-export async function listManagedEmployeeIds(
+/** legacy組織投影で actor が管理できる社員IDを返す。 */
+export async function listLegacyManagedEmployeeIds(
   c: Context,
   actorEmployeeId: number,
 ): Promise<ReadonlyArray<number> | Error> {
-  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-  if (migrationStatus instanceof Error) return migrationStatus
-  if (migrationStatus === "verified") {
-    return listLifecycleManagedEmployeeIds(c, actorEmployeeId)
-  }
-
   try {
     const employeeRows = await c.var.database
       .select({ id: employees.id, code: employees.code })

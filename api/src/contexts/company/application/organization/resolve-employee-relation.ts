@@ -1,8 +1,8 @@
 import type { Context } from "@/env"
-import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import { buildEmployeeCodeMap } from "@/lib/org/build-employee-code-map"
-import { buildMembershipMap } from "@/lib/org/build-membership-map"
-import { toEmployeeRelation } from "@/lib/org/to-employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import { buildEmployeeCodeMap } from "@/contexts/company/infrastructure/organization/build-employee-code-map"
+import { buildMembershipMap } from "@/contexts/company/infrastructure/organization/build-membership-map"
+import { toEmployeeRelation } from "@/contexts/company/domain/organization/to-employee-relation"
 
 export type Props = {
   c: Context

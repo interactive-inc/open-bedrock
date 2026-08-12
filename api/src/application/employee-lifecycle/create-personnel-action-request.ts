@@ -17,8 +17,8 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
 import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
 import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"

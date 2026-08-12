@@ -1,6 +1,6 @@
-import type { EmployeeRelation } from "@/lib/org/employee-relation"
-import type { MembershipEntry } from "@/lib/org/is-report-of"
-import { isReportOf } from "@/lib/org/is-report-of"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
+import type { MembershipEntry } from "@/contexts/company/domain/organization/is-report-of"
+import { isReportOf } from "@/contexts/company/domain/organization/is-report-of"
 
 export type Props = {
   memberships: ReadonlyMap<string, MembershipEntry>

@@ -4,7 +4,7 @@ import { InternalError, NotFoundError, UnauthorizedError } from "@/interface/lib
 import { validateCodeParam } from "@/interface/utils/validate-code-param"
 import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"
 import { zAppOrgDepartmentMemberList } from "@/lib/app-schemas"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
