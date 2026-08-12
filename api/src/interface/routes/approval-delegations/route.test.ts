@@ -1,4 +1,4 @@
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"

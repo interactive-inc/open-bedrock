@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { z } from "zod"

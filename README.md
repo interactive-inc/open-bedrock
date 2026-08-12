@@ -65,7 +65,7 @@ bun run dev        # wrangler dev
 npm run build      # Cloudflare Workers 向けビルド
 ```
 
-URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。ルート一覧は `api/src/app.ts` を参照。
+URL は「資源は複数形名詞、状態遷移は資源配下の動詞 POST」で統一している。ルート一覧は `api/src/api/app.ts` を参照。
 
 シードデータ（`api/seeds/`）は開発専用。全ユーザーが同一の既知パスワードのため、本番には投入しないこと。詳細は [`api/seeds/README.md`](api/seeds/README.md) を参照。
 

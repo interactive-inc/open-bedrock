@@ -50,7 +50,7 @@ Bun Workspaces のモノレポ。3つのワークスペースで構成する。
 - `api/src/` … domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
-- `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
+- `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/api/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
 
 ## API の URL 規約
 
@@ -78,7 +78,7 @@ wrangler dev は「Network connection lost.」で稀にプロセスごと落ち�
 web↔api クライアントの約束:
 
 - web/cli は `api/app` から `AppType` / `ApiClient` を type-only で import し、`hc<AppType>()` を自前で生成する（`web/lib/api/hc-client.ts`、`cli/lib/http/hc-client.ts` 参照）
-- `api/app` の `exports.default` は `./src/app.ts`。ここから実行時の値（旧 `hcWithType` 等）を import すると、bundler が app.ts 経由で全ルートと api の `@/` を取り込もうとして `Module not found: @/interface/...` で dev ビルドが落ちる。クライアント側は必ず型のみ参照にすること
+- `api/app` の `exports.default` は `./src/api/app.ts`。ここから実行時の値（旧 `hcWithType` 等）を import すると、bundler が app.ts 経由で全ルートと api の `@/` を取り込もうとして `Module not found: @/interface/...` で dev ビルドが落ちる。クライアント側は必ず型のみ参照にすること
 
 ## 変更時の確認
 
@@ -89,7 +89,7 @@ web↔api クライアントの約束:
 
 ## ルート登録と認可の機械検査
 
-`api/src/app.ts` は生成物であり、手で編集しない。ルートを足すときは `interface/routes/<URL パス>/route.ts` を作り、`cd api && bun run gen:app` を実行する。生成器は `routes/` を走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラ・`/health` は手書きの `app-base.ts` が持つ。
+`api/src/api/app.ts` は生成物であり、手で編集しない。ルートを足すときは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置き、`cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラ・`/health` は手書きの `src/api/app-base.ts` が持つ。
 
 `bun run gen:app:check` が生成物と `routes/` のズレを検出する。登録漏れ＝ルート消失は、実装があるのに到達できず、テストも「そのルートを呼ばない」だけで緑のまま通るため、規約ではなく検査で防ぐ。
 

@@ -1,4 +1,4 @@
-import { app } from "@/app"
+import { app } from "@/api/app"
 import type { Bindings } from "@/env"
 
 export type Props = {
