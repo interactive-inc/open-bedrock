@@ -1,5 +1,4 @@
 import type { Context } from "@/env"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 
 export type SystemAuditEventRecord = Readonly<{
   eventId: string
@@ -18,6 +17,51 @@ export type SystemAuditEventRecord = Readonly<{
   clientName: "web" | "cli" | "api" | "system"
   createdAt: number
 }>
+
+function prepareAppendInvariant(
+  db: D1Database,
+  record: SystemAuditEventRecord,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      `SELECT CASE WHEN EXISTS (
+         SELECT 1
+         FROM audit_events
+         WHERE event_id = ?1
+           AND request_id = ?2
+           AND actor_account_id IS ?3
+           AND action = ?4
+           AND target_type = ?5
+           AND target_id IS ?6
+           AND outcome = ?7
+           AND reason_code IS ?8
+           AND authorization_json IS ?9
+           AND before_json IS ?10
+           AND after_json IS ?11
+           AND metadata_json IS ?12
+           AND client_ip IS ?13
+           AND client_name = ?14
+           AND created_at = ?15
+       ) THEN 1 ELSE json_extract('', '$') END AS ok`,
+    )
+    .bind(
+      record.eventId,
+      record.requestId,
+      record.actorAccountId,
+      record.action,
+      record.targetType,
+      record.targetId,
+      record.outcome,
+      record.reasonCode,
+      record.authorizationJson,
+      record.beforeJson,
+      record.afterJson,
+      record.metadataJson,
+      record.clientIp,
+      record.clientName,
+      record.createdAt,
+    )
+}
 
 /** 上位コンテキストを持たない System 監査イベントの append 専用 repository。 */
 export class SystemAuditEventRepository {
@@ -52,7 +96,7 @@ export class SystemAuditEventRepository {
 
     const statements: [D1PreparedStatement, D1PreparedStatement] = [
       insert,
-      abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+      prepareAppendInvariant(this.c.env.DB, record),
     ]
 
     return Object.freeze(statements)

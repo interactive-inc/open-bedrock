@@ -138,7 +138,7 @@ describe("POST /auth/login", () => {
         .first<Record<string, unknown>>(),
     ).toEqual({
       actor_account_id: 1,
-      actor_employee_id: 1,
+      actor_employee_id: null,
       action: "auth.session.login_succeeded",
       target_type: "account",
       target_id: "1",

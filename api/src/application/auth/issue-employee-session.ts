@@ -1,13 +1,12 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { zAccountId } from "@system/domain/auth/account-id"
-import type { AuditAction } from "@/composition/audit/audit-event"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createSystemAuditEvent } from "@/composition/audit/system-audit-event"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
-import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
@@ -20,7 +19,11 @@ export type IssueSessionCommand = {
   userAgent: string | null
   now: Date
   /** 成功時に記録する監査アクション（password ログインと外部 identity ログインで異なる）。 */
-  successAction: AuditAction
+  successAction:
+    | "auth.session.login_succeeded"
+    | "auth.session.identity_login_succeeded"
+    | "auth.session.cli_login_succeeded"
+    | "auth.session.browser_login_succeeded"
 }
 
 export type IssuedSession = AccessTokenView & {
@@ -88,12 +91,11 @@ export class IssueEmployeeSession {
 
     const nowEpoch = Math.floor(command.now.getTime() / 1_000)
 
-    let auditStatements: ReturnType<AuditEventRepository["prepareAppend"]>
+    let auditStatements: ReturnType<SystemAuditEventRepository["prepareAppend"]>
     try {
-      const auditRecord = createAuditEvent(
+      const auditRecord = createSystemAuditEvent(
         {
           actorAccountId: command.accountId,
-          actorEmployeeId: command.employeeId,
           action: command.successAction,
           target: { type: "account", id: String(command.accountId) },
           outcome: "succeeded",
@@ -102,7 +104,7 @@ export class IssueEmployeeSession {
         },
         this.c.var.auditContext,
       )
-      auditStatements = new AuditEventRepository(this.c).prepareAppend(auditRecord)
+      auditStatements = new SystemAuditEventRepository(this.c).prepareAppend(auditRecord)
     } catch (cause) {
       return auditUnavailable(cause)
     }
