@@ -176,12 +176,17 @@ describe("inspectRouteFile", () => {
 })
 
 describe("checkRouteAuthorization", () => {
-  test("明示登録されたSystem contextのrouteも検査する", async () => {
+  test("明示登録されたcontextのrouteも検査する", async () => {
     const routeFiles = await collectRouteFiles()
 
     expect(
       routeFiles.some((routeFile) =>
         routeFile.file.endsWith("system/interface/routes/health/route.ts"),
+      ),
+    ).toBe(true)
+    expect(
+      routeFiles.some((routeFile) =>
+        routeFile.file.endsWith("company/interface/routes/departments/route.ts"),
       ),
     ).toBe(true)
   })

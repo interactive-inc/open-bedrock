@@ -1,4 +1,4 @@
-import type { DepartmentTreeNode } from "@/interface/routes/departments/tree/department-tree-node"
+import type { DepartmentTreeNode } from "@/contexts/company/interface/routes/departments/tree/department-tree-node"
 import type { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 
 export type Props = {

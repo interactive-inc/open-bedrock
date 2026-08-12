@@ -1,4 +1,4 @@
-import { CreateOrgDepartment } from "@/application/org/create-org-department"
+import { CreateOrgDepartment } from "@/contexts/company/application/organization/create-org-department"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"

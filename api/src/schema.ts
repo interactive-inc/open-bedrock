@@ -12,11 +12,12 @@ import type {
   WorkStyle,
 } from "@/lib/schemas"
 import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 import {
-  accountEmployeeLinks,
   departments,
-  employees,
-} from "@/contexts/company/infrastructure/schema/employee"
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
 import {
   accounts,
   accountRoles,
@@ -84,42 +85,21 @@ export type {
   RoleRow,
 } from "@/contexts/system/infrastructure/schema/system"
 export * from "@/contexts/system/infrastructure/schema/system-core"
-export {
-  accountEmployeeLinks,
-  departments,
-  employees,
-} from "@/contexts/company/infrastructure/schema/employee"
+export { accountEmployeeLinks, employees } from "@/contexts/company/infrastructure/schema/employee"
 export type {
   AccountEmployeeLinkRow,
-  DepartmentRow,
   EmployeeRow,
 } from "@/contexts/company/infrastructure/schema/employee"
-
-/** 組織図上の部署ノード */
-export const orgDepartments = sqliteTable("org_departments", {
-  code: text("code").primaryKey(),
-  departmentId: integer("department_id").notNull(),
-  parentCode: text("parent_code"),
-  managerEmployeeCode: text("manager_employee_code"),
-  sortOrder: integer("sort_order").notNull(),
-  archivedAt: integer("archived_at"),
-  archivedByAccountId: integer("archived_by_account_id"),
-})
-
-export type OrgDepartmentRow = InferSelectModel<typeof orgDepartments>
-
-/** 部署への所属 */
-export const orgMemberships = sqliteTable(
-  "org_memberships",
-  {
-    departmentCode: text("department_code").notNull(),
-    employeeCode: text("employee_code").notNull(),
-    managerEmployeeCode: text("manager_employee_code"),
-  },
-  (table) => [primaryKey({ columns: [table.departmentCode, table.employeeCode] })],
-)
-
-export type OrgMembershipRow = InferSelectModel<typeof orgMemberships>
+export {
+  departments,
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
+export type {
+  DepartmentRow,
+  OrgDepartmentRow,
+  OrgMembershipRow,
+} from "@/contexts/company/infrastructure/schema/organization"
 
 /** 研修コース（コード・タイトル・カテゴリ・必須フラグ・状態）。is_required は 0/1 を boolean で持つ。 */
 export const trainingCourses = sqliteTable("training_courses", {

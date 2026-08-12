@@ -32,11 +32,3 @@ export const accountEmployeeLinks = sqliteTable(
 )
 
 export type AccountEmployeeLinkRow = InferSelectModel<typeof accountEmployeeLinks>
-
-/** Companyが所有する部署マスタ。 */
-export const departments = sqliteTable("departments", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-})
-
-export type DepartmentRow = InferSelectModel<typeof departments>

@@ -2,7 +2,7 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
+import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
 
 export type Command = {
   code: string

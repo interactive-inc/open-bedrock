@@ -9,6 +9,14 @@ const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
 const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
+const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
+  "lib",
+  "middlewares",
+  "routes",
+  "shared",
+  "test-helpers",
+  "utils",
+])
 
 export type ContextLayer = (typeof CONTEXT_LAYERS)[number]
 
@@ -51,7 +59,10 @@ export function classifyContextSource(file: string): ContextSource | null {
   const layer = layerFirst[1]
   const context = layerFirst[2]
 
-  return context !== undefined && layer !== undefined && isContextLayer(layer)
+  return context !== undefined &&
+    layer !== undefined &&
+    isContextLayer(layer) &&
+    !LAYER_FIRST_PLATFORM_DIRECTORIES.has(context)
     ? { context, layer }
     : null
 }
@@ -90,7 +101,10 @@ export function classifyContextModule(moduleSpecifier: string): ContextSource | 
   const layer = layerFirst[1]
   const context = layerFirst[2]
 
-  return context !== undefined && layer !== undefined && isContextLayer(layer)
+  return context !== undefined &&
+    layer !== undefined &&
+    isContextLayer(layer) &&
+    !LAYER_FIRST_PLATFORM_DIRECTORIES.has(context)
     ? { context, layer }
     : null
 }
@@ -175,6 +189,13 @@ function inspectModuleDependency(
       !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
   ) {
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
+  }
+
+  if (
+    moduleSpecifier === "@/interface/routes" ||
+    moduleSpecifier.startsWith("@/interface/routes/")
+  ) {
+    return [{ file, reason: `context外の route composition へ依存しています: ${moduleSpecifier}` }]
   }
 
   return []

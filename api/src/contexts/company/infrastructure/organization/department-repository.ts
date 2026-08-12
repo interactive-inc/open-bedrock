@@ -2,7 +2,7 @@ import type { Department } from "@/contexts/company/domain/organization/departme
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { departments } from "@/schema"
+import { departments } from "@/contexts/company/infrastructure/schema/organization"
 import { asc } from "drizzle-orm"
 
 export class DepartmentRepository {
