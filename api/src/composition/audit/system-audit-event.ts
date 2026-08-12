@@ -1,5 +1,4 @@
 import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/domain/system/audit/create-system-audit-event"
-import type { SystemAuditEventRecord } from "@/infrastructure/system/audit/system-audit-event-repository"
 import type { AuditJsonValue } from "@/lib/audit/stable-json"
 import { toStableAuditJson } from "@/lib/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
@@ -36,6 +35,25 @@ export type AuditOutcome = z.infer<typeof auditOutcomeSchema>
 export type AuditClientName = z.infer<typeof auditClientNameSchema>
 export type AuditRequestContext = z.infer<typeof auditRequestContextSchema>
 
+/** Company監査表へ投影するrequest文脈付きrecord。System永続化モデルとは共有しない。 */
+export type SystemAuditEventRecord = Readonly<{
+  eventId: string
+  requestId: string
+  actorAccountId: number | null
+  action: string
+  targetType: string
+  targetId: string | null
+  outcome: AuditOutcome
+  reasonCode: string | null
+  authorizationJson: string | null
+  beforeJson: string | null
+  afterJson: string | null
+  metadataJson: string | null
+  clientIp: string | null
+  clientName: AuditClientName
+  createdAt: number
+}>
+
 export type SystemAuditEventInput = Readonly<{
   actorAccountId: number | null
   action: string
@@ -48,8 +66,6 @@ export type SystemAuditEventInput = Readonly<{
   metadata?: AuditJsonValue
   now: Date
 }>
-
-export type { SystemAuditEventRecord }
 
 export type SystemAuditEventSummary = Readonly<{
   eventId: string
