@@ -4,9 +4,13 @@ import type {
   EmploymentStatusPeriod,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
+  WorkforceLifecycleSchedule,
   WorkforceSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
-import { validateWorkforceSchedules } from "@/contexts/company/domain/workforce/validate-workforce-schedules"
+import {
+  validateWorkforceLifecycleSchedules,
+  validateWorkforceSchedules,
+} from "@/contexts/company/domain/workforce/validate-workforce-schedules"
 import { restoreWorkforceId } from "@/contexts/company/domain/workforce/workforce-id"
 import { describe, expect, test } from "bun:test"
 
@@ -118,9 +122,29 @@ function validate(schedules: ReadonlyArray<WorkforceSchedule>) {
   })
 }
 
+function lifecycle(schedule: WorkforceSchedule): WorkforceLifecycleSchedule {
+  return {
+    employeeId: schedule.employee.id,
+    employments: schedule.employments,
+    statuses: schedule.statuses,
+    assignments: schedule.assignments,
+    responsibilities: schedule.responsibilities,
+  }
+}
+
 describe("validateWorkforceSchedules", () => {
   test("accepts a contiguous, revisioned workforce schedule", () => {
     expect(validate(fixture())).toBeNull()
+  })
+
+  test("validates lifecycle schedules without Employee profile or System Account", () => {
+    const schedules = fixture().map(lifecycle)
+    expect(
+      validateWorkforceLifecycleSchedules({
+        schedules,
+        activeOrganizationUnitIds: new Set([rootUnitId, branchUnitId]),
+      }),
+    ).toBeNull()
   })
 
   test("rejects a status gap", () => {

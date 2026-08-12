@@ -73,6 +73,15 @@ export type AccountEmployeeLink = Readonly<{
   employeeId: EmployeeId
 }>
 
+/** Employee profileやSystem Accountに依存しない、雇用ライフサイクルの正規化済みschedule。 */
+export type WorkforceLifecycleSchedule = Readonly<{
+  employeeId: EmployeeId
+  employments: ReadonlyArray<EmploymentPeriod>
+  statuses: ReadonlyArray<EmploymentStatusPeriod>
+  assignments: ReadonlyArray<OrgAssignmentPeriod>
+  responsibilities: ReadonlyArray<OrgResponsibilityPeriod>
+}>
+
 /** 1 Employeeの最新revisionだけを並べた正規化済みschedule。 */
 export type WorkforceSchedule = Readonly<{
   employee: Employee
