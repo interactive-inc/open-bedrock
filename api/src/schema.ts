@@ -11,8 +11,12 @@ import type {
   RingiStatus,
   WorkStyle,
 } from "@/lib/schemas"
-import type { EmployeeStatus } from "@/contexts/company/domain/employee/employee-status"
 import type { PersonnelActionKind } from "@/domain/employee-lifecycle/lifecycle-types"
+import {
+  accountEmployeeLinks,
+  departments,
+  employees,
+} from "@/contexts/company/infrastructure/schema/employee"
 import {
   accounts,
   accountRoles,
@@ -80,53 +84,16 @@ export type {
   RoleRow,
 } from "@/contexts/system/infrastructure/schema/system"
 export * from "@/contexts/system/infrastructure/schema/system-core"
-
-/**
- * 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。
- *
- * DB 上の code は null 許容（0029_identity_provisioning.sql）。外部 identity provider からの
- * プロビジョニングで社員コードを持たない従業員を作れるようにするため。UNIQUE は維持する
- * （SQLite は複数 NULL を互いに異なる値として扱う）。
- *
- * Drizzle 表現でも code を null 許容として型付けする。認証（identity ログイン）などの読取経路が
- * code=null の行を Employee として読み戻すため、非 null narrowing は実行時の zod parse で破綻する。
- * 型は DB の正（migration）に合わせて誠実に string | null とし、code を必須とする経路は入力側
- * スキーマや find 引数の非 null 性で担保する。
- */
-export const employees = sqliteTable("employees", {
-  id: integer("id").primaryKey(),
-  code: text("code").unique(),
-  name: text("name").notNull(),
-  deptId: integer("dept_id"),
-  deptName: text("dept_name"),
-  position: text("position"),
-  status: text("status").notNull().$type<EmployeeStatus>(),
-  phone: text("phone"),
-  archivedAt: integer("archived_at"),
-  archivedByAccountId: integer("archived_by_account_id"),
-})
-
-export type EmployeeRow = InferSelectModel<typeof employees>
-
-/** Company: System Account と従業員台帳の対応。System の accounts は Employee を知らない。 */
-export const accountEmployeeLinks = sqliteTable(
-  "account_employee_links",
-  {
-    accountId: integer("account_id").primaryKey(),
-    employeeId: integer("employee_id").notNull().unique(),
-  },
-  (table) => [index("idx_account_employee_links_employee").on(table.employeeId)],
-)
-
-export type AccountEmployeeLinkRow = InferSelectModel<typeof accountEmployeeLinks>
-
-/** 部署マスタ（id と表示名） */
-export const departments = sqliteTable("departments", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull(),
-})
-
-export type DepartmentRow = InferSelectModel<typeof departments>
+export {
+  accountEmployeeLinks,
+  departments,
+  employees,
+} from "@/contexts/company/infrastructure/schema/employee"
+export type {
+  AccountEmployeeLinkRow,
+  DepartmentRow,
+  EmployeeRow,
+} from "@/contexts/company/infrastructure/schema/employee"
 
 /** 組織図上の部署ノード */
 export const orgDepartments = sqliteTable("org_departments", {

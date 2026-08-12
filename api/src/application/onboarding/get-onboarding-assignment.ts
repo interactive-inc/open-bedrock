@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { Employee } from "@/domain/employee/employee.entity"
+import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/domain/onboarding/onboarding-assignment.entity"

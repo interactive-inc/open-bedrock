@@ -1,6 +1,6 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
-import type { Employee } from "@/domain/employee/employee.entity"
+import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { IdentityRepository } from "@/infrastructure/auth/identity-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"

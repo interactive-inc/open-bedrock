@@ -1,9 +1,9 @@
-import { Employee } from "@/domain/employee/employee.entity"
+import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { describe, expect, test } from "bun:test"
 
-describe("Employee.fromRow", () => {
-  test("builds an Employee from a row with active status", () => {
-    const employee = Employee.fromRow({
+describe("Employee.restore", () => {
+  test("builds an Employee with active status", () => {
+    const employee = Employee.restore({
       id: 1,
       code: "E001",
       name: "Taro Yamada",
@@ -25,7 +25,7 @@ describe("Employee.fromRow", () => {
   })
 
   test("builds an Employee with leave status", () => {
-    const employee = Employee.fromRow({
+    const employee = Employee.restore({
       id: 2,
       code: "E002",
       name: "Hanako Suzuki",
@@ -43,7 +43,7 @@ describe("Employee.fromRow", () => {
   })
 
   test("builds an Employee with retired status", () => {
-    const employee = Employee.fromRow({
+    const employee = Employee.restore({
       id: 3,
       code: "E003",
       name: "Jiro Tanaka",
@@ -60,7 +60,7 @@ describe("Employee.fromRow", () => {
 
 describe("Employee.withStatus", () => {
   test("returns a new Employee with the changed status", () => {
-    const employee = Employee.fromRow({
+    const employee = Employee.restore({
       id: 1,
       code: "E001",
       name: "Taro Yamada",
@@ -82,7 +82,7 @@ describe("Employee.withStatus", () => {
 
 describe("Employee.withProfile", () => {
   test("returns a new Employee with the changed profile fields", () => {
-    const employee = Employee.fromRow({
+    const employee = Employee.restore({
       id: 1,
       code: "E001",
       name: "Taro Yamada",

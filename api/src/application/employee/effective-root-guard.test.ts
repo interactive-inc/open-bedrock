@@ -1,7 +1,7 @@
 import { ArchiveEmployee } from "@/application/employee-lifecycle/archive-employee"
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
-import { Employee } from "@/domain/employee/employee.entity"
+import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
