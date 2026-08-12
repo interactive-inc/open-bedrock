@@ -22,6 +22,8 @@ describe("context path classification", () => {
       context: "care",
       layer: "infrastructure",
     })
+    expect(classifyContextSource("src/infrastructure/shared/parse-d1-row.ts")).toBeNull()
+    expect(classifyContextSource("src/interface/routes/health/route.ts")).toBeNull()
     expect(classifyContextSource("src/api/app.ts")).toBeNull()
   })
 
@@ -38,6 +40,8 @@ describe("context path classification", () => {
       context: "system",
       layer: "application",
     })
+    expect(classifyContextModule("@/infrastructure/shared/parse-d1-row")).toBeNull()
+    expect(classifyContextModule("@/interface/utils/factory")).toBeNull()
     expect(classifyContextModule("zod")).toBeNull()
   })
 })
@@ -83,10 +87,11 @@ describe("context dependency matrix", () => {
     expect(violations).toEqual([])
   })
 
-  test("context外schema・API root・相対importを拒否する", () => {
+  test("context外schema・API root・route composition・相対importを拒否する", () => {
     const sources = [
       'import { users } from "@/schema"',
       'import { factory } from "@/api/factory"',
+      'import { GET } from "@/interface/routes/health/route"',
       'import { Account } from "../../../system/domain/account"',
     ]
 

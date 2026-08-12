@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
-import { CreateOrgDepartment } from "@/application/org/create-org-department"
-import { GetOrgDepartment } from "@/application/org/get-org-department"
-import { UpdateOrgDepartment } from "@/application/org/update-org-department"
-import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
-import { ListOrgDepartments } from "@/application/org/list-org-departments"
+import { CreateOrgDepartment } from "@/contexts/company/application/organization/create-org-department"
+import { GetOrgDepartment } from "@/contexts/company/application/organization/get-org-department"
+import { UpdateOrgDepartment } from "@/contexts/company/application/organization/update-org-department"
+import { DeleteOrgDepartment } from "@/contexts/company/application/organization/delete-org-department"
+import { ListOrgDepartments } from "@/contexts/company/application/organization/list-org-departments"
 import {
   ApplicationError,
   ConflictError,

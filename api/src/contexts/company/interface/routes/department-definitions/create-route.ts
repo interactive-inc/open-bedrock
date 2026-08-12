@@ -1,4 +1,4 @@
-import { CreateDepartment } from "@/application/org/create-department"
+import { CreateDepartment } from "@/contexts/company/application/organization/create-department"
 import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppDepartmentDefinition } from "@/lib/app-schemas"

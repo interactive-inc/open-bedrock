@@ -4,7 +4,10 @@ import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-const
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
-import { orgDepartments, orgMemberships } from "@/schema"
+import {
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
 import { asc, eq } from "drizzle-orm"
 
 export type ParentNotFound = { reason: "parent_not_found" }

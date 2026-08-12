@@ -12,6 +12,11 @@ export const ROUTE_MODULE_REGISTRY = [
     importPrefix: "@/contexts/system/interface/routes",
   },
   {
+    context: "company",
+    routesDirectory: "contexts/company/interface/routes",
+    importPrefix: "@/contexts/company/interface/routes",
+  },
+  {
     context: "legacy",
     routesDirectory: "interface/routes",
     importPrefix: "@/interface/routes",

@@ -139,7 +139,7 @@ describe("renderApp の安全確認", () => {
 })
 
 describe("collectRegistrations", () => {
-  test("明示登録されたSystem contextのrouteを公開する", async () => {
+  test("明示登録されたcontextのrouteを公開する", async () => {
     const registrations = await collectRegistrations()
 
     expect(registrations).toContainEqual({
@@ -147,6 +147,12 @@ describe("collectRegistrations", () => {
       url: "/health",
       method: "GET",
       alias: "healthRoute",
+    })
+    expect(registrations).toContainEqual({
+      module: "@/contexts/company/interface/routes/departments/route",
+      url: "/departments",
+      method: "GET",
+      alias: "departmentsRoute",
     })
   })
 

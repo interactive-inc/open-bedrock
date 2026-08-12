@@ -3,7 +3,7 @@ import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { DepartmentRepository } from "@/infrastructure/org/department-repository"
+import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {
