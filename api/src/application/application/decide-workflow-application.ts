@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
 import type { Context } from "@/env"
 import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"

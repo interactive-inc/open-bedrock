@@ -1,4 +1,4 @@
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
 import type { ApiClient } from "@/api/app"
 import { AuditExportRange } from "@/interface/utils/audit-export-range"

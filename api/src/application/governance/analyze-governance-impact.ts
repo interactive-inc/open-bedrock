@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"

@@ -1,4 +1,4 @@
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { RegisterEmployee } from "@/application/employee/register-employee"
 import type { Context } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"

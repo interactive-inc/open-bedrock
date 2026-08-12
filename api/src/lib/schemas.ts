@@ -42,11 +42,6 @@ export const employeeRoleSchema = z.enum(["member", "manager", "hr", "root"])
 
 export type EmployeeRole = z.infer<typeof employeeRoleSchema>
 
-/** 従業員ステータス */
-export const employeeStatusSchema = z.enum(["active", "leave", "retired"])
-
-export type EmployeeStatus = z.infer<typeof employeeStatusSchema>
-
 /** 休暇種別 */
 export const leaveTypeSchema = z.enum([
   "annual",

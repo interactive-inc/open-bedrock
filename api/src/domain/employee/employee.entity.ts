@@ -1,4 +1,4 @@
-import { employeeStatusSchema } from "@/lib/schemas"
+import { employeeStatusSchema } from "@/contexts/company/domain/employee/employee-status"
 import type { EmployeeRow } from "@/schema"
 import { z } from "zod"
 

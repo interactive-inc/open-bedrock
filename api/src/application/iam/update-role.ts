@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { permissionKeySchema } from "@/composition/iam/permission-key.catalog"
 import {
   ConflictError,
