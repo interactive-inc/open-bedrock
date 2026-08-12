@@ -3,8 +3,8 @@
   "type": "module",
   "exports": {
     "./app": {
-      "types": "./dist/app.d.ts",
-      "default": "./src/app.ts"
+      "types": "./dist/api/app.d.ts",
+      "default": "./src/api/app.ts"
     }
   },
   "scripts": {
@@ -31,7 +31,7 @@
     "deploy:preview": "wrangler versions upload",
     "db:seed:local": "bash scripts/seed.sh --local",
     "db:seed": "bash scripts/seed.sh --remote",
-    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
+    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/api/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",

@@ -8,5 +8,5 @@
     "rootDir": "src",
     "allowImportingTsExtensions": false
   },
-  "include": ["src/app.ts"]
+  "include": ["src/api/app.ts"]
 }

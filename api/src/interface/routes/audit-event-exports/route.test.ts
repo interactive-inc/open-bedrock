@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
+import { app } from "@/api/app"
 import type { AuditEventDetail } from "@/composition/audit/audit-event"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"

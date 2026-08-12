@@ -1,5 +1,5 @@
 /**
- * src/app.ts を interface/routes/ のディレクトリ構造から生成する。
+ * src/api/app.ts を明示登録された route source のディレクトリ構造から生成する。
  *
  *   bun run gen:app         # 生成して書き込む
  *   bun run gen:app --check # 生成結果と現在の app.ts を比較する（差分があれば非ゼロ終了）
@@ -10,7 +10,7 @@
  *
  * ## 対応づけの規則
  *
- * - `interface/routes/<パス>/route.ts` の `export const GET|POST|PUT|PATCH|DELETE` を登録する
+ * - registry内のroute sourceにある `export const GET|POST|PUT|PATCH|DELETE` を登録する
  * - URL はファイルを除いたディレクトリのパス。`[param]` は `:param` にする
  * - `*.test.ts` と、HTTP メソッドを export しない同居ヘルパは対象外
  * - middleware・エラーハンドラ・`/health` は手書きの `app-base.ts` が持つ。生成器は触らない
@@ -20,11 +20,12 @@
  * 後に登録すると `me` が id として食われる。この順序は規約ではなく生成器が保証する。
  */
 import { Glob } from "bun"
-import { readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { ROUTE_MODULE_REGISTRY, type RouteModuleRegistration } from "@/api/route-module.registry"
 
-const ROUTES_ROOT = resolve(import.meta.dir, "../src/interface/routes")
-const APP_PATH = resolve(import.meta.dir, "../src/app.ts")
+const SOURCE_ROOT = resolve(import.meta.dir, "../src")
+const APP_PATH = resolve(SOURCE_ROOT, "api/app.ts")
 
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const
 type Method = (typeof METHODS)[number]
@@ -86,40 +87,89 @@ export function exportedMethods(source: string): Method[] {
   return found
 }
 
-/** interface/routes/ を走査して登録対象を集める。 */
-export async function collectRegistrations(): Promise<RouteRegistration[]> {
+/** 明示registryを検査し、同じsourceの二重登録や消失をfail closedにする。 */
+export function assertRouteModuleRegistry(
+  routeModules: ReadonlyArray<RouteModuleRegistration>,
+): void {
+  const contexts = new Set<string>()
+  const routesDirectories = new Set<string>()
+  const importPrefixes = new Set<string>()
+
+  for (const routeModule of routeModules) {
+    if (contexts.has(routeModule.context)) {
+      throw new Error(`contextが重複しています: ${routeModule.context}`)
+    }
+    if (routesDirectories.has(routeModule.routesDirectory)) {
+      throw new Error(`routes directoryが重複しています: ${routeModule.routesDirectory}`)
+    }
+    if (importPrefixes.has(routeModule.importPrefix)) {
+      throw new Error(`import prefixが重複しています: ${routeModule.importPrefix}`)
+    }
+
+    const routesRoot = resolve(SOURCE_ROOT, routeModule.routesDirectory)
+    if (!existsSync(routesRoot)) {
+      throw new Error(`登録されたroutes directoryが存在しません: ${routeModule.routesDirectory}`)
+    }
+
+    contexts.add(routeModule.context)
+    routesDirectories.add(routeModule.routesDirectory)
+    importPrefixes.add(routeModule.importPrefix)
+  }
+
+  const contextsRoot = resolve(SOURCE_ROOT, "contexts")
+  const contextDirectories = readdirSync(contextsRoot, { withFileTypes: true }).filter((entry) =>
+    entry.isDirectory(),
+  )
+  for (const contextDirectory of contextDirectories) {
+    const routesDirectory = `contexts/${contextDirectory.name}/interface/routes`
+    if (!existsSync(resolve(SOURCE_ROOT, routesDirectory))) continue
+    if (routesDirectories.has(routesDirectory)) continue
+
+    throw new Error(`contextのroutes directoryが未登録です: ${routesDirectory}`)
+  }
+}
+
+/** 明示登録されたroute sourceだけを走査して登録対象を集める。 */
+export async function collectRegistrations(
+  routeModules: ReadonlyArray<RouteModuleRegistration> = ROUTE_MODULE_REGISTRY,
+): Promise<RouteRegistration[]> {
+  assertRouteModuleRegistry(routeModules)
+
   const registrations: RouteRegistration[] = []
   const seenAlias = new Map<string, string>()
 
-  const files: string[] = []
-  for await (const file of new Glob("**/*.ts").scan(ROUTES_ROOT)) {
-    if (file.endsWith(".test.ts")) continue
-    files.push(file)
-  }
-  files.sort()
-
-  for (const file of files) {
-    const source = readFileSync(`${ROUTES_ROOT}/${file}`, "utf8")
-    const methods = exportedMethods(source)
-    // HTTP メソッドを export しない同居ヘルパ（to-*.ts、can-read-*.ts 等）はここで落ちる。
-    // ファイル名では判別できない（balance/route.ts は GET を持ち、
-    // attendance-list-query.ts は持たない）ので export を見る。
-    if (methods.length === 0) continue
-
-    const alias = toAlias(file)
-    const previous = seenAlias.get(alias)
-    if (previous !== undefined) {
-      throw new Error(
-        `import 別名が衝突しました: ${alias}\n  ${previous}\n  ${file}\n` +
-          "ディレクトリ名を変えて解消してください。",
-      )
+  for (const routeModule of routeModules) {
+    const routesRoot = resolve(SOURCE_ROOT, routeModule.routesDirectory)
+    const files: string[] = []
+    for await (const file of new Glob("**/*.ts").scan(routesRoot)) {
+      if (file.endsWith(".test.ts")) continue
+      files.push(file)
     }
-    seenAlias.set(alias, file)
+    files.sort()
 
-    const module = `@/interface/routes/${file.replace(/\.ts$/, "")}`
-    const url = toUrl(file)
-    for (const method of methods) {
-      registrations.push({ module, url, method, alias })
+    for (const file of files) {
+      const source = readFileSync(`${routesRoot}/${file}`, "utf8")
+      const methods = exportedMethods(source)
+      // HTTP メソッドを export しない同居ヘルパ（to-*.ts、can-read-*.ts 等）はここで落ちる。
+      // ファイル名では判別できない（balance/route.ts は GET を持ち、
+      // attendance-list-query.ts は持たない）ので export を見る。
+      if (methods.length === 0) continue
+
+      const alias = toAlias(file)
+      const previous = seenAlias.get(alias)
+      if (previous !== undefined) {
+        throw new Error(
+          `import 別名が衝突しました: ${alias}\n  ${previous}\n  ${file}\n` +
+            "ディレクトリ名を変えて解消してください。",
+        )
+      }
+      seenAlias.set(alias, file)
+
+      const module = `${routeModule.importPrefix}/${file.replace(/\.ts$/, "")}`
+      const url = toUrl(file)
+      for (const method of methods) {
+        registrations.push({ module, url, method, alias })
+      }
     }
   }
 
@@ -256,8 +306,8 @@ export function renderRegistration(registration: RouteRegistration): string {
 }
 
 const HEADER = `// このファイルは \`bun run gen:app\` が生成する。手で編集しない。
-// ルートを足すときは interface/routes/<URL パス>/route.ts を作り、生成器を再実行する。
-// middleware・エラーハンドラ・/health は手書きの app-base.ts が持つ。
+// ルートを足すときは登録済みcontextのinterface/routesへ置き、生成器を再実行する。
+// middleware・エラーハンドラ・/health は手書きの api/app-base.ts が持つ。
 `
 
 export function renderApp(registrations: readonly RouteRegistration[]): string {
@@ -277,7 +327,7 @@ export function renderApp(registrations: readonly RouteRegistration[]): string {
 
   return `${HEADER}
 import { hc } from "hono/client"
-import { appBase } from "@/app-base"
+import { appBase } from "@/api/app-base"
 ${imports}
 
 export const app = appBase

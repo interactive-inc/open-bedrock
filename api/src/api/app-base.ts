@@ -63,7 +63,7 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
 
 /**
  * 全ルート共通の土台。middleware・エラーハンドラ・/health だけを持ち、業務ルートは載せない。
- * 業務ルートの登録は生成物である app.ts が行う（`bun run gen:app`）。
+ * context routeの登録は生成物である app.ts が行う（`bun run gen:app`）。
  *
  * このファイルは手で編集する。app.ts と分けているのは、生成器が
  * middleware 定義やエラーハンドラの本文を文字列として抱え込まないようにするため。

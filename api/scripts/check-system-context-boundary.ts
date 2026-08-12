@@ -6,9 +6,9 @@ import ts from "typescript"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
-const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "api"))
-  ? resolve(SOURCE_ROOT, "api")
-  : SOURCE_ROOT
+const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "domain/system"))
+  ? SOURCE_ROOT
+  : resolve(SOURCE_ROOT, "api")
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const

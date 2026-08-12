@@ -1,6 +1,6 @@
 import { Session } from "@/domain/company/iam/session"
 import { describe, expect, test } from "bun:test"
-import type { ApiClient } from "@/app"
+import type { ApiClient } from "@/api/app"
 import { AuditExportRange } from "@/interface/utils/audit-export-range"
 import { AuditListQuery } from "@/interface/utils/audit-list-query"
 import { hashAuditFilters } from "@/interface/utils/hash-audit-filters"
