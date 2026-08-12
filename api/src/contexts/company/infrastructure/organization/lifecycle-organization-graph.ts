@@ -6,7 +6,7 @@ import {
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import type { OrganizationAuthority } from "@/lib/org/organization-authority"
+import type { OrganizationAuthority } from "@/contexts/company/domain/organization/organization-authority"
 
 const MAX_MANAGEMENT_DEPTH = 64
 

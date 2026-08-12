@@ -1,4 +1,4 @@
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 

@@ -5,7 +5,7 @@ import type { Context } from "@/env"
 import { ExpenseRepository } from "@/infrastructure/expense/expense-repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 
 export type Command = {
   session: Session
