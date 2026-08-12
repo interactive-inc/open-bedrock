@@ -12,7 +12,7 @@ src/contexts/<context>/
 
 - `system` は他のコンテキストへ依存しない。
 - `company` は `system` だけを利用できる。
-- 業務コンテキストは `system` と `company` だけを利用でき、業務同士では依存しない。
+- `company-standard` と `company-optional` の各機能は独立した業務コンテキストにし、`system` と `company` だけを利用できる。業務同士では依存しない。
 - 全コンテキストの合成と route 登録は `src/api` が担い、コンテキストから API root へ逆依存しない。
 - `src/lib` はコンテキスト、API、DBに依存しない中立な共通処理だけを持つ。
 - Interface は Hono、Infrastructure は Drizzle・D1などの実装技術を利用してよい。

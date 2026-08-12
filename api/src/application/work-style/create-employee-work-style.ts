@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { EmployeeWorkStyle } from "@/domain/work-style/employee-work-style.entity"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

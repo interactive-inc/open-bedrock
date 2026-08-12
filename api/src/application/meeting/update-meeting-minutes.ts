@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { MeetingMinutes } from "@/domain/meeting/meeting-minutes.entity"

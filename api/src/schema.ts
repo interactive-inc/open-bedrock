@@ -1,6 +1,5 @@
 import type {
   CalendarDayKind,
-  EmployeeStatus,
   ExpenseApprovalAction,
   ExpenseCategory,
   ExpenseStatus,
@@ -12,6 +11,7 @@ import type {
   RingiStatus,
   WorkStyle,
 } from "@/lib/schemas"
+import type { EmployeeStatus } from "@/contexts/company/domain/employee/employee-status"
 import type { PersonnelActionKind } from "@/domain/employee-lifecycle/lifecycle-types"
 import {
   accounts,

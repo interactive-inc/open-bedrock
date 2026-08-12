@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { Survey } from "@/domain/survey/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/infrastructure/survey/survey-repository"

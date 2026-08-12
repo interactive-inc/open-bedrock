@@ -1,5 +1,6 @@
-import { COMPANY_PERMISSION_KEYS } from "@/domain/company/iam/company-permission-key.catalog"
+import { COMPANY_PERMISSION_KEYS } from "@/contexts/company/domain/iam/company-permission-key.catalog"
 import { SYSTEM_PERMISSION_KEYS } from "@/contexts/system/domain/iam/system-permission-key.catalog"
+import { LEGACY_BUSINESS_PERMISSION_KEYS } from "@/composition/iam/legacy-business-permission-key.catalog"
 import { SYSTEM_CAPABILITY_PERMISSION_KEYS } from "@/composition/iam/system-capability-permission-key.catalog"
 import { z } from "zod"
 
@@ -8,11 +9,13 @@ export const PERMISSION_KEYS = [
   ...SYSTEM_PERMISSION_KEYS,
   ...SYSTEM_CAPABILITY_PERMISSION_KEYS,
   ...COMPANY_PERMISSION_KEYS,
+  ...LEGACY_BUSINESS_PERMISSION_KEYS,
 ] as const
 
 export const PERMISSION_KEYS_BY_CONTEXT = {
   system: [...SYSTEM_PERMISSION_KEYS, ...SYSTEM_CAPABILITY_PERMISSION_KEYS],
   company: COMPANY_PERMISSION_KEYS,
+  "business-legacy": LEGACY_BUSINESS_PERMISSION_KEYS,
 } as const
 
 export type PermissionContext = keyof typeof PERMISSION_KEYS_BY_CONTEXT

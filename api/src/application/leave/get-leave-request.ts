@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import type { Context } from "@/env"

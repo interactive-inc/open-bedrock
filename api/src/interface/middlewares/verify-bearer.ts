@@ -1,5 +1,5 @@
 import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-account-session-rejection"
 import { parseBearerAuthorization } from "@/contexts/system/domain/auth/parse-bearer-authorization"
