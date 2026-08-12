@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
 import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"

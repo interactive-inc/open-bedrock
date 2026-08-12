@@ -1,6 +1,6 @@
 import { DeleteOrgDepartment } from "@/application/org/delete-org-department"
 import { UpdateOrgDepartment } from "@/application/org/update-org-department"
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"

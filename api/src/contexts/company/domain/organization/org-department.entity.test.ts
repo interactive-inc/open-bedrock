@@ -1,4 +1,4 @@
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("OrgDepartment.create", () => {

@@ -1,4 +1,4 @@
-import { OrgMembership } from "@/domain/org/org-membership.entity"
+import { OrgMembership } from "@/contexts/company/domain/organization/org-membership.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("OrgMembership", () => {
