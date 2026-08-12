@@ -1,4 +1,4 @@
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import { lifecycleSha256 } from "@/application/employee-lifecycle/lifecycle-sha256"
 import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
 

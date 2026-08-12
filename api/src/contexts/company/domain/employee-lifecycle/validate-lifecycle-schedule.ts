@@ -1,13 +1,13 @@
-import { containsDate } from "@/domain/employee-lifecycle/contains-date"
-import { lifecycleBoundaryDates } from "@/domain/employee-lifecycle/lifecycle-boundary-dates"
+import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
+import { lifecycleBoundaryDates } from "@/contexts/company/domain/employee-lifecycle/lifecycle-boundary-dates"
 import type {
   LifecyclePeriodBase,
   LifecycleSchedule,
   OrgAssignmentPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
-import { normalizeLifecycleSchedule } from "@/domain/employee-lifecycle/normalize-lifecycle-schedule"
-import { periodContainsPeriod } from "@/domain/employee-lifecycle/period-contains-period"
-import { periodsOverlap } from "@/domain/employee-lifecycle/periods-overlap"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+import { normalizeLifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/normalize-lifecycle-schedule"
+import { periodContainsPeriod } from "@/contexts/company/domain/employee-lifecycle/period-contains-period"
+import { periodsOverlap } from "@/contexts/company/domain/employee-lifecycle/periods-overlap"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 
 type ValidateLifecycleSchedulesProps = {

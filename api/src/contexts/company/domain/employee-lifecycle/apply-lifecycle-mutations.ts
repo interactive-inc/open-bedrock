@@ -1,10 +1,10 @@
-import { latestVisiblePeriods } from "@/domain/employee-lifecycle/latest-visible-periods"
+import { latestVisiblePeriods } from "@/contexts/company/domain/employee-lifecycle/latest-visible-periods"
 import type {
   LifecyclePeriodBase,
   LifecycleSchedule,
   LifecycleVersionMutation,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
-import { normalizeLifecycleSchedule } from "@/domain/employee-lifecycle/normalize-lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+import { normalizeLifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/normalize-lifecycle-schedule"
 
 function applyPeriodMutation<T extends LifecyclePeriodBase>(
   periods: ReadonlyArray<T>,

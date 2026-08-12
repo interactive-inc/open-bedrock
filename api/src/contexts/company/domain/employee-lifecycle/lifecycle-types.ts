@@ -1,6 +1,7 @@
 import { codeSchema, isoDate } from "@/lib/schemas"
 import { z } from "zod"
 
+/** Company内の雇用期間に対して有効日で評価する在籍状態。 */
 export const lifecycleEmployeeStatusSchema = z.enum(["prehire", "active", "leave", "retired"])
 
 export type LifecycleEmployeeStatus = z.infer<typeof lifecycleEmployeeStatusSchema>

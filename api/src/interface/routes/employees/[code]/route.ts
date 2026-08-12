@@ -16,9 +16,9 @@ import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
-import type { EmployeeLifecycleState } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import type { EmployeeLifecycleState } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
 import { isoDate } from "@/lib/schemas"
 
 /** 従業員をレスポンス用の snake_case に整形する。email/role は IAM(identities/account_roles)から解決する。 */

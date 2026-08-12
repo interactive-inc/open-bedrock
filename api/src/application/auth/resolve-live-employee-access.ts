@@ -1,6 +1,6 @@
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import type { Context } from "@/env"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 

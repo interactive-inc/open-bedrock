@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
 import { inArray } from "drizzle-orm"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { isInManagementChain } from "@/lib/org/is-in-management-chain"
 import type { OrganizationAuthority } from "@/lib/org/organization-authority"
 import { resolveLifecycleOrganizationAuthority } from "@/lib/org/resolve-lifecycle-organization-authority"

@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type {
   NonCorrectionWirePersonnelActionInput,
   WirePersonnelActionInput,

@@ -1,3 +1,4 @@
+/** 有効日と訂正revisionを持つCompany従業員ライフサイクルの共通期間。 */
 export type LifecyclePeriodBase = {
   periodId: string
   revision: number

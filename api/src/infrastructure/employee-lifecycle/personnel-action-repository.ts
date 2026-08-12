@@ -4,12 +4,12 @@ import type {
   LifecycleVersionMutation,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import {
   personnelActionSummarySchema,
   type PersonnelActionSummary,
-} from "@/domain/employee-lifecycle/project-personnel-action"
-import type { PersonnelActionKind } from "@/domain/employee-lifecycle/lifecycle-types"
+} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
+import type { PersonnelActionKind } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 

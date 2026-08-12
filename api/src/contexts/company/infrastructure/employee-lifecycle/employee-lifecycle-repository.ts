@@ -4,12 +4,12 @@ import type {
   LifecycleSchedule,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import type { Context } from "@/env"
 import type {
   LifecycleDepartmentReference,
   LifecycleEmployeeReference,
-} from "@/domain/employee-lifecycle/project-personnel-action"
+} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 
 type EmploymentRow = {

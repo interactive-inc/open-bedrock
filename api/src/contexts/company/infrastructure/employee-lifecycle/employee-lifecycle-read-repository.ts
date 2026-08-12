@@ -1,4 +1,4 @@
-import type { LifecycleEmployeeStatus } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { LifecycleEmployeeStatus } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 

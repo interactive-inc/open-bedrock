@@ -3,7 +3,7 @@ import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycl
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"

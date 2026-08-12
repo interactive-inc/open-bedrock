@@ -1,20 +1,20 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { createAuditEvent } from "@/composition/audit/audit-event"
-import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import {
   projectPersonnelAction,
   type PersonnelActionProjection,
-} from "@/domain/employee-lifecycle/project-personnel-action"
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
 import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import {
   PersonnelActionRepository,
   type PersonnelActionRecord,

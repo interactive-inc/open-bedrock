@@ -1,4 +1,4 @@
-import type { LifecyclePeriodBase } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import type { LifecyclePeriodBase } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 
 /**
  * periodId ごとに最新リビジョンだけを残し、void を除いて開始日・periodId 順に並べる。

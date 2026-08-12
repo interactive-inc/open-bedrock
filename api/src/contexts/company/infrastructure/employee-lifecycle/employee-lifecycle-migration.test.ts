@@ -21,7 +21,7 @@ import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationsDirectory = join(import.meta.dir, "../../../migrations")
+const migrationsDirectory = join(import.meta.dir, "../../../../../migrations")
 const migrationFile = "0019_employee_lifecycle.sql"
 const migrationPath = join(migrationsDirectory, migrationFile)
 const applicationBindingMigrationFile = "0036_application_lifecycle_binding.sql"

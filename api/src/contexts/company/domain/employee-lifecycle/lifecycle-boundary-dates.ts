@@ -1,4 +1,4 @@
-import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import type { LifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 
 /**
  * 全スケジュールの区間境界日（開始日・終了日）を重複なく昇順で返す。

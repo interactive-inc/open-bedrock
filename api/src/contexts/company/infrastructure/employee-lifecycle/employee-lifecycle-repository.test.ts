@@ -1,4 +1,4 @@
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 

@@ -3,7 +3,7 @@ import {
   lifecycleEmployeeStatusSchema,
   personnelActionInputSchema,
   personnelActionKindSchema,
-} from "@/domain/employee-lifecycle/lifecycle-types"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import { describe, expect, test } from "bun:test"
 
 const actionInputs: ReadonlyArray<unknown> = [

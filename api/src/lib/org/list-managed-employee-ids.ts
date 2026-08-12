@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { employees, orgDepartments, orgMemberships } from "@/schema"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { isInManagementChain } from "@/lib/org/is-in-management-chain"
 import { listLifecycleManagedEmployeeIds } from "@/lib/org/list-lifecycle-managed-employee-ids"
 

@@ -5,7 +5,7 @@ import {
 } from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
 import { stableLifecycleJson } from "@/application/employee-lifecycle/stable-lifecycle-json"
 import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
-import { personnelActionSummarySchema } from "@/domain/employee-lifecycle/project-personnel-action"
+import { personnelActionSummarySchema } from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import type { Context } from "@/env"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 

@@ -1,9 +1,9 @@
 import { createAuditEvent } from "@/composition/audit/audit-event"
-import { containsDate } from "@/domain/employee-lifecycle/contains-date"
-import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
+import type { LifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 

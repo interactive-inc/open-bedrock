@@ -1,13 +1,13 @@
 import {
   projectPersonnelAction,
   type PersonnelActionProjection,
-} from "@/domain/employee-lifecycle/project-personnel-action"
+} from "@/contexts/company/domain/employee-lifecycle/project-personnel-action"
 import type {
   EmployeeStatusPeriod,
   EmploymentPeriod,
   LifecycleSchedule,
   OrgAssignmentPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
