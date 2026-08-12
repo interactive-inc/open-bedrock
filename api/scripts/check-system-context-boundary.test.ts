@@ -203,6 +203,7 @@ describe("inspectSystemSource", () => {
         'import { Id } from "@/api/domain/core/identity/id"',
         'import { parse } from "@/infrastructure/shared/parse"',
         'import { users } from "@/schema/system"',
+        'import { systemAccounts } from "@/schema/system-core"',
         'import { z } from "zod"',
       ].join("\n"),
       downstreamContexts,
