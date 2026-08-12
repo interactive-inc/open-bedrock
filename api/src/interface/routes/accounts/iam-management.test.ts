@@ -193,17 +193,17 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
 
     const audit = await db
       .prepare(
-        "SELECT actor_account_id, action, target_type, target_id, outcome FROM audit_events WHERE action = 'iam.account.password_reset'",
+        "SELECT actor_account_id, action, target_type, target_id, outcome FROM system_audit_events WHERE action = 'iam.account.password_reset'",
       )
       .first<{
-        actor_account_id: number
+        actor_account_id: string
         action: string
         target_type: string
         target_id: string
         outcome: string
       }>()
     expect(audit).toEqual({
-      actor_account_id: 1,
+      actor_account_id: "1",
       action: "iam.account.password_reset",
       target_type: "account",
       target_id: "5",
@@ -221,7 +221,7 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
     await db
       .prepare(
         `CREATE TRIGGER force_password_reset_audit_failure
-       BEFORE INSERT ON audit_events
+       BEFORE INSERT ON system_audit_events
        BEGIN
          SELECT RAISE(ABORT, 'forced audit failure');
        END`,
@@ -245,7 +245,7 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
       .first<{ secret: string; token_version: number }>()
     expect(after).toEqual(before)
     expect(
-      await db.prepare("SELECT count(*) AS total FROM audit_events").first<number>("total"),
+      await db.prepare("SELECT count(*) AS total FROM system_audit_events").first<number>("total"),
     ).toBe(0)
   })
 

@@ -69,7 +69,7 @@ async function auditRows(
 ): Promise<Array<{ action: string; reason_code: string | null }>> {
   return (
     await db
-      .prepare("SELECT action, reason_code FROM audit_events ORDER BY id")
+      .prepare("SELECT action, reason_code FROM system_audit_events ORDER BY occurred_at, event_id")
       .all<{ action: string; reason_code: string | null }>()
   ).results
 }

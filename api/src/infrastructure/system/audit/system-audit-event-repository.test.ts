@@ -1,4 +1,4 @@
-import { createSystemAuditEvent } from "@/composition/audit/system-audit-event"
+import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
@@ -22,25 +22,28 @@ function isolateChangesPerBatchStatement(context: ReturnType<typeof createTestCo
 describe("SystemAuditEventRepository", () => {
   test("appends an Account-scoped event to the standalone System table", async () => {
     const { context, db } = createTestContext()
-    const record = createSystemAuditEvent(
-      {
-        actorAccountId: 7,
-        action: "auth.session.logout",
-        target: { type: "account", id: "7" },
-        outcome: "succeeded",
-        reasonCode: null,
-        now: new Date("2026-01-01T00:00:00.000Z"),
-      },
-      context.var.auditContext,
-    )
+    const record = createSystemAuditEvent({
+      actorAccountId: "7",
+      action: "auth.session.logout",
+      targetType: "account",
+      targetId: "7",
+      outcome: "succeeded",
+      reasonCode: null,
+      authorizationJson: null,
+      beforeJson: null,
+      afterJson: null,
+      metadataJson: null,
+      occurredAt: new Date("2026-01-01T00:00:00.123Z"),
+    })
+    if (record instanceof Error) throw record
     isolateChangesPerBatchStatement(context)
 
     expect(await new SystemAuditEventRepository(context).append(record)).toBeUndefined()
 
     const stored = await db
       .prepare(
-        `SELECT event_id, actor_account_id
-         FROM audit_events
+        `SELECT event_id, actor_account_id, occurred_at
+         FROM system_audit_events
          WHERE event_id = ?1`,
       )
       .bind(record.eventId)
@@ -48,30 +51,34 @@ describe("SystemAuditEventRepository", () => {
 
     expect(stored).toEqual({
       event_id: record.eventId,
-      actor_account_id: 7,
+      actor_account_id: "7",
+      occurred_at: Date.parse("2026-01-01T00:00:00.123Z"),
     })
 
-    const columns = await db.prepare("PRAGMA table_info(audit_events)").all<{ name: string }>()
-
-    expect(columns.results.map((column) => column.name)).not.toContain("actor_employee_id")
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(0)
   })
 
   test("fails closed when the audit insert is silently ignored", async () => {
     const { context, db } = createTestContext()
-    const record = createSystemAuditEvent(
-      {
-        actorAccountId: 7,
-        action: "auth.session.logout",
-        target: { type: "account", id: "7" },
-        outcome: "succeeded",
-        reasonCode: null,
-        now: new Date("2026-01-01T00:00:00.000Z"),
-      },
-      context.var.auditContext,
-    )
+    const record = createSystemAuditEvent({
+      actorAccountId: "7",
+      action: "auth.session.logout",
+      targetType: "account",
+      targetId: "7",
+      outcome: "succeeded",
+      reasonCode: null,
+      authorizationJson: null,
+      beforeJson: null,
+      afterJson: null,
+      metadataJson: null,
+      occurredAt: new Date("2026-01-01T00:00:00.000Z"),
+    })
+    if (record instanceof Error) throw record
     await db.exec(`
       CREATE TRIGGER ignore_system_audit_insert
-      BEFORE INSERT ON audit_events
+      BEFORE INSERT ON system_audit_events
       WHEN NEW.event_id = '${record.eventId}'
       BEGIN
         SELECT RAISE(IGNORE);
@@ -81,7 +88,7 @@ describe("SystemAuditEventRepository", () => {
     expect(await new SystemAuditEventRepository(context).append(record)).toBeInstanceOf(Error)
     expect(
       await db
-        .prepare("SELECT COUNT(*) AS count FROM audit_events WHERE event_id = ?1")
+        .prepare("SELECT COUNT(*) AS count FROM system_audit_events WHERE event_id = ?1")
         .bind(record.eventId)
         .first<number>("count"),
     ).toBe(0)

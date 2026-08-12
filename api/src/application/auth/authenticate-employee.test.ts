@@ -96,15 +96,13 @@ describe("AuthenticateEmployee", () => {
     expect(
       await db
         .prepare(
-          `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
-                  outcome, reason_code, authorization_json, before_json, after_json,
-                  metadata_json, client_ip, client_name, request_id, created_at
-           FROM company_audit_events`,
+          `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                  authorization_json, before_json, after_json, metadata_json, occurred_at
+           FROM system_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
-      actor_account_id: 1,
-      actor_employee_id: null,
+      actor_account_id: "1",
       action: "auth.session.login_succeeded",
       target_type: "account",
       target_id: "1",
@@ -113,11 +111,9 @@ describe("AuthenticateEmployee", () => {
       authorization_json: null,
       before_json: null,
       after_json: null,
-      metadata_json: null,
-      client_ip: null,
-      client_name: "api",
-      request_id: "00000000-0000-4000-8000-000000000000",
-      created_at: 1_767_225_600,
+      metadata_json:
+        '{"client_ip":null,"client_name":"api","request_id":"00000000-0000-4000-8000-000000000000"}',
+      occurred_at: 1_767_225_600_000,
     })
     expect(
       await db
@@ -130,7 +126,7 @@ describe("AuthenticateEmployee", () => {
     })
 
     const persistedAudit = JSON.stringify(
-      await db.prepare("SELECT * FROM audit_events").first<Record<string, unknown>>(),
+      await db.prepare("SELECT * FROM system_audit_events").first<Record<string, unknown>>(),
     )
     expect(persistedAudit).not.toContain("you+new@example.com")
     expect(persistedAudit).not.toContain("supersecret")
@@ -169,7 +165,7 @@ describe("AuthenticateEmployee", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
     ).toBe(0)
   })
 
@@ -197,7 +193,7 @@ describe("AuthenticateEmployee", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
     ).toBe(0)
   })
 
@@ -229,7 +225,7 @@ describe("AuthenticateEmployee", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
     ).toBe(0)
   })
 
@@ -422,7 +418,7 @@ describe("AuthenticateEmployee", () => {
     await insertEmployee(db, { id: 1, email: "you+audit@example.com", passwordHash: hash })
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_events
+      BEFORE INSERT ON system_audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;
@@ -443,7 +439,7 @@ describe("AuthenticateEmployee", () => {
       await db.prepare("SELECT COUNT(*) AS count FROM refresh_tokens").first<number>("count"),
     ).toBe(0)
     expect(
-      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+      await db.prepare("SELECT COUNT(*) AS count FROM system_audit_events").first<number>("count"),
     ).toBe(0)
   })
 })

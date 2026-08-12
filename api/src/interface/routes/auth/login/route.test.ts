@@ -130,15 +130,13 @@ describe("POST /auth/login", () => {
     expect(
       await db
         .prepare(
-          `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
-                  outcome, reason_code, authorization_json, before_json, after_json,
-                  metadata_json, client_ip, client_name, request_id, created_at
-           FROM company_audit_events`,
+          `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                  authorization_json, before_json, after_json, metadata_json, occurred_at
+           FROM system_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
-      actor_account_id: 1,
-      actor_employee_id: null,
+      actor_account_id: "1",
       action: "auth.session.login_succeeded",
       target_type: "account",
       target_id: "1",
@@ -147,14 +145,11 @@ describe("POST /auth/login", () => {
       authorization_json: null,
       before_json: null,
       after_json: null,
-      metadata_json: null,
-      client_ip: "198.51.100.41",
-      client_name: "cli",
-      request_id: internalRequestId,
-      created_at: nowEpoch,
+      metadata_json: `{"client_ip":"198.51.100.41","client_name":"cli","request_id":"${internalRequestId}"}`,
+      occurred_at: nowEpoch * 1_000,
     })
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM company_audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM system_audit_events").all())
     for (const secret of [
       "you+e001@example.com",
       "password",
@@ -308,7 +303,7 @@ describe("POST /auth/login", () => {
     const db = await createTestDb()
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_events
+      BEFORE INSERT ON system_audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;

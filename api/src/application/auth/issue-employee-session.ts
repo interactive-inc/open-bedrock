@@ -1,7 +1,8 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { createSystemAuditEvent } from "@/composition/audit/system-audit-event"
+import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import type { Context } from "@/env"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
@@ -93,17 +94,27 @@ export class IssueEmployeeSession {
 
     let auditStatements: ReturnType<SystemAuditEventRepository["prepareAppend"]>
     try {
-      const auditRecord = createSystemAuditEvent(
-        {
-          actorAccountId: command.accountId,
-          action: command.successAction,
-          target: { type: "account", id: String(command.accountId) },
-          outcome: "succeeded",
-          reasonCode: null,
-          now: command.now,
-        },
-        this.c.var.auditContext,
-      )
+      const metadataJson = toStableSystemAuditJson({
+        client_ip: this.c.var.auditContext.clientIp,
+        client_name: this.c.var.auditContext.clientName,
+        request_id: this.c.var.auditContext.requestId,
+      })
+      if (metadataJson instanceof Error) return auditUnavailable(metadataJson)
+
+      const auditRecord = createSystemAuditEvent({
+        actorAccountId: String(command.accountId),
+        action: command.successAction,
+        targetType: "account",
+        targetId: String(command.accountId),
+        outcome: "succeeded",
+        reasonCode: null,
+        authorizationJson: null,
+        beforeJson: null,
+        afterJson: null,
+        metadataJson,
+        occurredAt: command.now,
+      })
+      if (auditRecord instanceof Error) return auditUnavailable(auditRecord)
       auditStatements = new SystemAuditEventRepository(this.c).prepareAppend(auditRecord)
     } catch (cause) {
       return auditUnavailable(cause)

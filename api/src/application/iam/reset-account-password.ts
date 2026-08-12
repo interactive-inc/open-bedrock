@@ -7,7 +7,8 @@ import type { Context } from "@/env"
 import { PasswordIdentityRepository } from "@/infrastructure/system/auth/password-identity-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
-import { createSystemAuditEvent } from "@/composition/audit/system-audit-event"
+import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { SystemAuditEventRepository } from "@/infrastructure/system/audit/system-audit-event-repository"
 
 export type Command = {
@@ -64,17 +65,33 @@ export class ResetAccountPassword {
 
     let auditStatements: ReturnType<SystemAuditEventRepository["prepareAppend"]>
     try {
-      const audit = createSystemAuditEvent(
-        {
-          actorAccountId: command.session.accountId,
-          action: "iam.account.password_reset",
-          target: { type: "account", id: String(command.accountId) },
-          outcome: "succeeded",
-          reasonCode: null,
-          now: new Date(command.now),
-        },
-        this.c.var.auditContext,
-      )
+      const metadataJson = toStableSystemAuditJson({
+        client_ip: this.c.var.auditContext.clientIp,
+        client_name: this.c.var.auditContext.clientName,
+        request_id: this.c.var.auditContext.requestId,
+      })
+      if (metadataJson instanceof Error) {
+        return new UnexpectedError("failed to prepare password reset audit", {
+          cause: metadataJson,
+        })
+      }
+
+      const audit = createSystemAuditEvent({
+        actorAccountId: String(command.session.accountId),
+        action: "iam.account.password_reset",
+        targetType: "account",
+        targetId: String(command.accountId),
+        outcome: "succeeded",
+        reasonCode: null,
+        authorizationJson: null,
+        beforeJson: null,
+        afterJson: null,
+        metadataJson,
+        occurredAt: new Date(command.now),
+      })
+      if (audit instanceof Error) {
+        return new UnexpectedError("failed to prepare password reset audit", { cause: audit })
+      }
       auditStatements = new SystemAuditEventRepository(this.c).prepareAppend(audit)
     } catch (cause) {
       return new UnexpectedError("failed to prepare password reset audit", { cause })
