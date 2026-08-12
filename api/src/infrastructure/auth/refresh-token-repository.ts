@@ -5,7 +5,6 @@ import {
 } from "@/domain/system/auth/refresh-token-rotation-decision"
 import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
 import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -37,6 +36,36 @@ export type RotateRefreshTokenProps = Readonly<{
 }>
 
 type AuditAppendStatements = readonly [D1PreparedStatement, D1PreparedStatement]
+
+function prepareRefreshTokenCreateInvariant(
+  db: D1Database,
+  props: CreateRefreshTokenProps,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      `SELECT CASE WHEN EXISTS (
+         SELECT 1
+         FROM refresh_tokens
+         WHERE account_id = ?1
+           AND token_hash = ?2
+           AND family_id = ?3
+           AND token_version = ?4
+           AND expires_at = ?5
+           AND revoked_at IS NULL
+           AND user_agent IS ?6
+           AND created_at = ?7
+       ) THEN 1 ELSE json_extract('', '$') END AS ok`,
+    )
+    .bind(
+      props.accountId,
+      props.tokenHash,
+      props.familyId,
+      props.tokenVersion,
+      props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
+      props.userAgent,
+      props.nowEpoch,
+    )
+}
 
 function toRepositoryError(caught: unknown, message: string): Error {
   return caught instanceof Error ? caught : new Error(message)
@@ -109,7 +138,7 @@ export class RefreshTokenRepository {
             props.userAgent,
             props.nowEpoch,
           ),
-        abortWhenPreviousStatementChangedNoRows(db),
+        prepareRefreshTokenCreateInvariant(db, props),
         ...auditStatements,
       ])
       if (results.length !== 4 || results.some((result) => !result.success)) {
