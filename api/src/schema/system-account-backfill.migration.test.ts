@@ -205,6 +205,33 @@ describe("0127 canonical System Account backfill", () => {
     ).toEqual({ count: 0 })
   })
 
+  test("legacy integer IDはdigit-only opaque IDへ写せる値だけを受理する", () => {
+    const existing = createLegacyDatabase()
+    insertLegacyAccount(existing, {
+      id: -1,
+      status: "active",
+      tokenVersion: 0,
+      createdAt: 100,
+      updatedAt: 100,
+    })
+
+    expect(() => applyBackfill(existing)).toThrow()
+    expect(canonicalAccounts(existing)).toEqual([])
+
+    const inserted = createLegacyDatabase()
+    applyBackfill(inserted)
+    expect(() =>
+      insertLegacyAccount(inserted, {
+        id: -1,
+        status: "active",
+        tokenVersion: 0,
+        createdAt: 100,
+        updatedAt: 100,
+      }),
+    ).toThrow()
+    expect(canonicalAccounts(inserted)).toEqual([])
+  })
+
   test("legacy insert・status transition・token invalidation・deleteを同一transactionで同期する", () => {
     const database = createLegacyDatabase()
     applyBackfill(database)

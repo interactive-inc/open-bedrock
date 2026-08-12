@@ -44,7 +44,8 @@ SELECT
     LEFT JOIN system_accounts canonical
       ON canonical.id = CAST(legacy.id AS TEXT)
     WHERE
-      canonical.id IS NULL
+      CAST(legacy.id AS TEXT) GLOB '*[^0-9]*'
+      OR canonical.id IS NULL
       OR canonical.status IS NOT legacy.status
       OR canonical.token_version IS NOT legacy.token_version
       OR canonical.created_at IS NOT legacy.created_at
@@ -67,6 +68,9 @@ END;--> statement-breakpoint
 CREATE TRIGGER system_accounts_legacy_accounts_insert
 AFTER INSERT ON accounts
 BEGIN
+  SELECT RAISE(ABORT, 'legacy account ID must map to a digit-only opaque ID')
+  WHERE CAST(NEW.id AS TEXT) GLOB '*[^0-9]*';
+
   INSERT INTO system_accounts (
     id,
     status,
