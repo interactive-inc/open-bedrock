@@ -3,11 +3,11 @@ import {
   type LegacyLifecycleSnapshot,
 } from "@/application/employee-lifecycle/load-legacy-lifecycle-snapshot"
 import { validateMigrationInput } from "@/application/employee-lifecycle/validate-migration-input"
-import { containsDate } from "@/domain/employee-lifecycle/contains-date"
-import type { LifecycleSchedule } from "@/domain/employee-lifecycle/lifecycle-schedule"
-import { validateLifecycleSchedules } from "@/domain/employee-lifecycle/validate-lifecycle-schedule"
+import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
+import type { LifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+import { validateLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/validate-lifecycle-schedule"
 import type { Context } from "@/env"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError, ConflictError, UnexpectedError } from "@/lib/errors"
 
 type MigrationCommand = {

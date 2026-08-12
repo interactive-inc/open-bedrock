@@ -1,5 +1,5 @@
-import { applyLifecycleMutations } from "@/domain/employee-lifecycle/apply-lifecycle-mutations"
-import { containsDate } from "@/domain/employee-lifecycle/contains-date"
+import { applyLifecycleMutations } from "@/contexts/company/domain/employee-lifecycle/apply-lifecycle-mutations"
+import { containsDate } from "@/contexts/company/domain/employee-lifecycle/contains-date"
 import type {
   EmployeeStatusPeriod,
   EmploymentPeriod,
@@ -7,14 +7,14 @@ import type {
   LifecycleVersionMutation,
   OrgAssignmentPeriod,
   OrgResponsibilityPeriod,
-} from "@/domain/employee-lifecycle/lifecycle-schedule"
-import { normalizeLifecycleSchedule } from "@/domain/employee-lifecycle/normalize-lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
+import { normalizeLifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/normalize-lifecycle-schedule"
 import {
   personnelActionInputSchema,
   personnelActionKindSchema,
   type PersonnelActionInput,
-} from "@/domain/employee-lifecycle/lifecycle-types"
-import { validateLifecycleSchedules } from "@/domain/employee-lifecycle/validate-lifecycle-schedule"
+} from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import { validateLifecycleSchedules } from "@/contexts/company/domain/employee-lifecycle/validate-lifecycle-schedule"
 import { nextCalendarDate } from "@/lib/time/next-calendar-date"
 import { ApplicationError, ConflictError, ValidationError } from "@/lib/errors"
 import { z } from "zod"

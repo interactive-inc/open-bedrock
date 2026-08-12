@@ -1,4 +1,4 @@
-import type { LifecyclePeriodBase } from "@/domain/employee-lifecycle/lifecycle-schedule"
+import type { LifecyclePeriodBase } from "@/contexts/company/domain/employee-lifecycle/lifecycle-schedule"
 
 /**
  * 2つの半開区間が重なるか判定する。境界の共有は重なりとみなさない。
