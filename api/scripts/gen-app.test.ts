@@ -139,6 +139,17 @@ describe("renderApp の安全確認", () => {
 })
 
 describe("collectRegistrations", () => {
+  test("明示登録されたSystem contextのrouteを公開する", async () => {
+    const registrations = await collectRegistrations()
+
+    expect(registrations).toContainEqual({
+      module: "@/contexts/system/interface/routes/health/route",
+      url: "/health",
+      method: "GET",
+      alias: "healthRoute",
+    })
+  })
+
   test("interface/routes/ から全ルートを集める", async () => {
     const registrations = await collectRegistrations()
     expect(registrations.length).toBeGreaterThan(400)

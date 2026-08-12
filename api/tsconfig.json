@@ -11,9 +11,9 @@
     "jsxImportSource": "hono/jsx",
     "paths": {
       "@/*": ["./src/*"],
-      "@system/application/*": ["./src/application/system/*"],
-      "@system/domain/*": ["./src/domain/system/*"],
-      "@system/infrastructure/*": ["./src/infrastructure/system/*"]
+      "@system/application/*": ["./src/contexts/system/application/*"],
+      "@system/domain/*": ["./src/contexts/system/domain/*"],
+      "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"]
     }
   }
 }

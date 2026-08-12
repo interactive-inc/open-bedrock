@@ -1,9 +1,10 @@
 // このファイルは `bun run gen:app` が生成する。手で編集しない。
 // ルートを足すときは登録済みcontextのinterface/routesへ置き、生成器を再実行する。
-// middleware・エラーハンドラ・/health は手書きの api/app-base.ts が持つ。
+// middleware・エラーハンドラは手書きの api/app-base.ts が持つ。
 
 import { hc } from "hono/client"
 import { appBase } from "@/api/app-base"
+import * as healthRoute from "@/contexts/system/interface/routes/health/route"
 import * as accountsIdResetPasswordRoute from "@/interface/routes/accounts/[id]/reset-password/route"
 import * as accountsIdRolesRoleKeyRoute from "@/interface/routes/accounts/[id]/roles/[roleKey]/route"
 import * as accountsIdRolesRoute from "@/interface/routes/accounts/[id]/roles/route"
@@ -546,6 +547,7 @@ export const app = appBase
   .get("/headcount-plans", ...headcountPlansRoute.GET)
   .post("/headcount-plans", ...headcountPlansRoute.POST)
   .put("/headcount-plans/:id", ...headcountPlansIdRoute.PUT)
+  .get("/health", ...healthRoute.GET)
   .get("/health-checkups", ...healthCheckupsRoute.GET)
   .post("/health-checkups", ...healthCheckupsRoute.POST)
   .post("/health-checkups/:id/complete", ...healthCheckupsIdCompleteRoute.POST)

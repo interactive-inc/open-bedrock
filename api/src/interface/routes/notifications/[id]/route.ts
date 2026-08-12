@@ -1,5 +1,5 @@
-import { DeleteNotification } from "@/application/system/notifications/delete-notification"
-import { GetNotification } from "@/application/system/notifications/get-notification"
+import { DeleteNotification } from "@/contexts/system/application/notifications/delete-notification"
+import { GetNotification } from "@/contexts/system/application/notifications/get-notification"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"

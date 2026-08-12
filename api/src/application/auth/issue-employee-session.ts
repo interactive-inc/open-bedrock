@@ -10,7 +10,7 @@ import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repo
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
-import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
+import { generateOpaqueToken } from "@/contexts/system/infrastructure/auth/generate-opaque-token"
 
 export type IssueSessionCommand = {
   accountId: number

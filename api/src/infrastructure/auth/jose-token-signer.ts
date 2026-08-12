@@ -1,7 +1,7 @@
 import {
   createAccessTokenService,
   type AccessTokenProfile,
-} from "@/infrastructure/system/auth/access-token.service"
+} from "@/contexts/system/infrastructure/auth/access-token.service"
 import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
 import type { TokenPayload } from "@/lib/auth/token-payload"
 

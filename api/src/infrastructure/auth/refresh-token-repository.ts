@@ -2,8 +2,8 @@ import type { Context } from "@/env"
 import {
   hasExactRefreshTokenRotationDecisions,
   parseRefreshTokenRotationDecision,
-} from "@/domain/system/auth/refresh-token-rotation-decision"
-import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
+} from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
+import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
 import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"

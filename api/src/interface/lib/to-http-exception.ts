@@ -1,5 +1,5 @@
 import { HTTPException } from "hono/http-exception"
-import { createSystemProblemDetails } from "@/domain/system/http/create-system-problem-details"
+import { createSystemProblemDetails } from "@/contexts/system/domain/http/create-system-problem-details"
 import {
   ConflictError,
   ForbiddenError,

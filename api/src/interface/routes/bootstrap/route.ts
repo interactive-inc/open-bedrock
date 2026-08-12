@@ -1,5 +1,5 @@
 import { BootstrapInitialAccount } from "@/application/iam/bootstrap-initial-account"
-import { timingSafeStringEqual } from "@/infrastructure/system/auth/timing-safe-string-equal"
+import { timingSafeStringEqual } from "@/contexts/system/infrastructure/auth/timing-safe-string-equal"
 import { factory } from "@/interface/utils/factory"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { zAppBootstrapResult } from "@/lib/app-schemas"

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { HTTPException } from "hono/http-exception"
 import { NotFoundError } from "@/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
-import { toNegotiatedProblemResponse } from "@/interface/lib/to-negotiated-problem-response"
+import { toNegotiatedProblemResponse } from "@/contexts/system/interface/lib/to-negotiated-problem-response"
 
 describe("toNegotiatedProblemResponse", () => {
   test("returns Problem Details only for an explicit opt-in", async () => {

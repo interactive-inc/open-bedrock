@@ -48,8 +48,9 @@
 import { Glob } from "bun"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { ROUTE_MODULE_REGISTRY } from "@/api/route-module.registry"
 
-const ROUTES_ROOT = resolve(import.meta.dir, "../src/interface/routes")
+const SOURCE_ROOT = resolve(import.meta.dir, "../src")
 
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const
 
@@ -178,13 +179,23 @@ export function inspectRouteFile(file: string, source: string): RouteViolation[]
   return violations
 }
 
-export async function collectRouteFiles(): Promise<string[]> {
-  const files: string[] = []
-  for await (const file of new Glob("**/*.ts").scan(ROUTES_ROOT)) {
-    if (file.endsWith(".test.ts")) continue
-    files.push(file)
+type RouteFile = Readonly<{ file: string; absolutePath: string }>
+
+export async function collectRouteFiles(): Promise<RouteFile[]> {
+  const routeFiles: RouteFile[] = []
+
+  for (const routeModule of ROUTE_MODULE_REGISTRY) {
+    const routesRoot = resolve(SOURCE_ROOT, routeModule.routesDirectory)
+    for await (const file of new Glob("**/*.ts").scan(routesRoot)) {
+      if (file.endsWith(".test.ts")) continue
+      routeFiles.push({
+        file: `${routeModule.routesDirectory}/${file}`,
+        absolutePath: `${routesRoot}/${file}`,
+      })
+    }
   }
-  return files.sort()
+
+  return routeFiles.sort((left, right) => left.file.localeCompare(right.file))
 }
 
 export async function checkRouteAuthorization(): Promise<{
@@ -196,12 +207,12 @@ export async function checkRouteAuthorization(): Promise<{
   const summary = new Map<AuthorizationKind, number>()
   let checked = 0
 
-  for (const file of await collectRouteFiles()) {
-    const source = readFileSync(`${ROUTES_ROOT}/${file}`, "utf8")
+  for (const routeFile of await collectRouteFiles()) {
+    const source = readFileSync(routeFile.absolutePath, "utf8")
     const declarations = parseMethodDeclarations(source)
     if (declarations.length === 0) continue
 
-    violations.push(...inspectRouteFile(file, source))
+    violations.push(...inspectRouteFile(routeFile.file, source))
 
     // 集計は handler 単位。ファイル単位だと GET と POST で方針が違う場合に数が合わない。
     for (const entry of declarations) {

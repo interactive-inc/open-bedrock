@@ -1,8 +1,8 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { zAccountId } from "@system/domain/auth/account-id"
-import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
-import type { RefreshTokenRotationDecision } from "@/domain/system/auth/refresh-token-rotation-decision"
+import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-account-session-rejection"
+import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
@@ -15,7 +15,7 @@ import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-emplo
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
-import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
+import { generateOpaqueToken } from "@/contexts/system/infrastructure/auth/generate-opaque-token"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 
 export type Command = {

@@ -89,7 +89,7 @@ web↔api クライアントの約束:
 
 ## ルート登録と認可の機械検査
 
-`api/src/api/app.ts` は生成物であり、手で編集しない。ルートを足すときは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置き、`cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラ・`/health` は手書きの `src/api/app-base.ts` が持つ。
+`api/src/api/app.ts` は生成物であり、手で編集しない。ルートを足すときは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置き、`cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラは手書きの `src/api/app-base.ts` が持つ。`/health` はSystem contextのrouteとして明示登録する。
 
 `bun run gen:app:check` が生成物と `routes/` のズレを検出する。登録漏れ＝ルート消失は、実装があるのに到達できず、テストも「そのルートを呼ばない」だけで緑のまま通るため、規約ではなく検査で防ぐ。
 

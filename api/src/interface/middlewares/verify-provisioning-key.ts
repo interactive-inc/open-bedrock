@@ -1,4 +1,4 @@
-import { timingSafeStringEqual } from "@/infrastructure/system/auth/timing-safe-string-equal"
+import { timingSafeStringEqual } from "@/contexts/system/infrastructure/auth/timing-safe-string-equal"
 import { isPlaceholderSecret } from "@/lib/config/is-placeholder-secret"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { factory } from "@/interface/utils/factory"

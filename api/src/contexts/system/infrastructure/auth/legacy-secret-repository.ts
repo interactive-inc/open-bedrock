@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { identities } from "@/schema/system"
+import { identities } from "@/contexts/system/infrastructure/schema/system"
 import { and, eq, isNotNull, like, not } from "drizzle-orm"
 
 export type LegacySecretIdentity = Readonly<{

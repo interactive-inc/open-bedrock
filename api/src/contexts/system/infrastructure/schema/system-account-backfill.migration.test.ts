@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
-const migrationsDirectory = join(import.meta.dir, "../../migrations")
+const migrationsDirectory = join(import.meta.dir, "../../../../../migrations")
 const backfillMigration = readFileSync(
   join(migrationsDirectory, "0127_system_account_backfill.sql"),
   "utf8",

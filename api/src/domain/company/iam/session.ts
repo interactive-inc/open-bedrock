@@ -1,4 +1,4 @@
-import { PermissionValue } from "@/domain/system/iam/permission.value"
+import { PermissionValue } from "@/contexts/system/domain/iam/permission.value"
 import type { EmployeeStatus } from "@/lib/schemas"
 
 type Props = {

@@ -216,6 +216,8 @@ describe("inspectSystemSource", () => {
     const sources = [
       'import { Worker } from "@/domain/company/workforce/worker"',
       'import { Stock } from "@/api/infrastructure/warehouse/stock"',
+      'import { Worker } from "@/contexts/company/domain/workforce/worker"',
+      'import { Stock } from "@/contexts/warehouse/infrastructure/stock"',
       'import { compose } from "@/composition/iam/compose"',
       'import { compose } from "@/api/composition/iam/compose"',
     ]
