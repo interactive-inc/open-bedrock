@@ -1,6 +1,6 @@
 import { factory } from "@/interface/utils/factory"
 import { zAppDepartmentDefinitionList } from "@/lib/app-schemas"
-import { DepartmentRepository } from "@/infrastructure/org/department-repository"
+import { DepartmentRepository } from "@/contexts/company/infrastructure/organization/department-repository"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,

@@ -3,7 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import type { Context } from "@/env"
-import { OrgDepartmentRepository } from "@/infrastructure/org/org-department-repository"
+import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
 
 export type Command = {

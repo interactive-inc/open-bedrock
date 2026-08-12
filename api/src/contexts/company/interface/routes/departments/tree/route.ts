@@ -1,5 +1,5 @@
-import { buildDepartmentTree } from "@/interface/routes/departments/tree/build-department-tree"
-import type { DepartmentTreeNode } from "@/interface/routes/departments/tree/department-tree-node"
+import { buildDepartmentTree } from "@/contexts/company/interface/routes/departments/tree/build-department-tree"
+import type { DepartmentTreeNode } from "@/contexts/company/interface/routes/departments/tree/department-tree-node"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
