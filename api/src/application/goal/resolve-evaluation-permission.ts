@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { canEvaluateGoalOf } from "@/application/goal/can-evaluate-goal-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import type { GoalEvaluationKind } from "@/domain/goal/goal-evaluation.entity"

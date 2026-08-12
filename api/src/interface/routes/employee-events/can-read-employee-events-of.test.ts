@@ -1,4 +1,4 @@
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadEmployeeEventsOf } from "@/interface/routes/employee-events/can-read-employee-events-of"
 import type { EmployeeRelation } from "@/lib/org/employee-relation"
 import { describe, expect, test } from "bun:test"

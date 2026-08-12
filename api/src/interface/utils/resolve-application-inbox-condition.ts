@@ -1,4 +1,4 @@
-import type { Session } from "@/domain/company/iam/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
 import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"

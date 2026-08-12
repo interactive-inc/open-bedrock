@@ -1,4 +1,4 @@
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { GetEmployee } from "@/application/employee/get-employee"
 import { RegisterEmployee } from "@/application/employee/register-employee"

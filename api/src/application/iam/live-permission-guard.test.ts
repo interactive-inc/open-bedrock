@@ -1,4 +1,4 @@
-import { Session } from "@/domain/company/iam/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { GrantAccountRole } from "@/application/iam/grant-account-role"
 import { RevokeAccountRole } from "@/application/iam/revoke-account-role"
 import { SetAccountStatus } from "@/application/iam/set-account-status"
