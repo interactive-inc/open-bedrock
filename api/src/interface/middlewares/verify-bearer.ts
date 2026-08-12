@@ -1,10 +1,13 @@
 import { assertJwtSecret } from "@/lib/auth/assert-jwt-secret"
 import { Session } from "@/domain/company/iam/session"
+import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
 import { getAccountSessionRejection } from "@/domain/system/auth/get-account-session-rejection"
 import { parseBearerAuthorization } from "@/domain/system/auth/parse-bearer-authorization"
+import { zAccountId } from "@system/domain/auth/account-id"
 import type { HonoEnv } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { accessTokenService } from "@/infrastructure/auth/jose-token-signer"
 import { legacyTokenPayloadSchema } from "@/lib/auth/token-payload"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
@@ -33,10 +36,39 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
     throw new UnauthorizedError("invalid token")
   }
 
-  const account = await new AccountEmployeeLinkRepository(c).findLinkedAccount(payload.accountId)
+  const canonicalAccountId = zAccountId.safeParse(String(payload.accountId))
+
+  if (canonicalAccountId.success === false) {
+    throw new UnauthorizedError("invalid token")
+  }
+
+  const accountPromise = new AccountEmployeeLinkRepository(c).findLinkedAccount(payload.accountId)
+  const canonicalSessionPromise = resolveAccountSession({
+    accountRepository: new SystemAccountRepository({ database: c.env.DB }),
+    accountId: canonicalAccountId.data,
+    sessionTokenVersion: payload.tokenVersion,
+  })
+  const account = await accountPromise
+  const canonicalSession = await canonicalSessionPromise
 
   if (account === null || account instanceof Error) {
     throw new UnauthorizedError("account not found")
+  }
+
+  if (canonicalSession instanceof Error) {
+    throw new UnauthorizedError("account authentication is unavailable")
+  }
+
+  if (canonicalSession.kind === "rejected") {
+    if (canonicalSession.reason === "account_not_found") {
+      throw new UnauthorizedError("account not found")
+    }
+
+    if (canonicalSession.reason === "account_inactive") {
+      throw new UnauthorizedError("account is not active")
+    }
+
+    throw new UnauthorizedError("token has been revoked")
   }
 
   const accountSessionRejection = getAccountSessionRejection({

@@ -449,7 +449,7 @@ describe("POST /audit-event-exports", () => {
       reason_code: "audit_export_too_large",
     })
     expect(JSON.parse(String(audit.metadata_json))).toMatchObject({ format: "csv" })
-    expect(requestQueries).toBe(19)
+    expect(requestQueries).toBe(20)
     expect(requestQueries).toBeLessThanOrEqual(28)
     expect(requestQueries).toBeLessThanOrEqual(33)
   }, 20_000)
@@ -492,7 +492,7 @@ describe("POST /audit-event-exports", () => {
     fiftyThousand.resetQueries()
     const success = await request(fiftyThousand.db, await token(3))
     expect(success.status).toBe(200)
-    expect(fiftyThousand.queries()).toBe(19)
+    expect(fiftyThousand.queries()).toBe(20)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(28)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(33)
 
@@ -504,7 +504,7 @@ describe("POST /audit-event-exports", () => {
       to: "1970-02-01T00:00:00Z",
     })
     expect(worst.status).toBe(200)
-    expect(formalWorst.queries()).toBe(27)
+    expect(formalWorst.queries()).toBe(28)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
   }, 20_000)
 
