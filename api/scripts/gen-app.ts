@@ -13,7 +13,7 @@
  * - registry内のroute sourceにある `export const GET|POST|PUT|PATCH|DELETE` を登録する
  * - URL はファイルを除いたディレクトリのパス。`[param]` は `:param` にする
  * - `*.test.ts` と、HTTP メソッドを export しない同居ヘルパは対象外
- * - middleware・エラーハンドラ・`/health` は手書きの `app-base.ts` が持つ。生成器は触らない
+ * - middleware・エラーハンドラは手書きの `app-base.ts` が持つ。生成器は触らない
  *
  * 生成順は「同じメソッドで、同じセグメント数のとき、静的パスを動的パスより先に」出す。
  * Hono は同じ形の候補を登録順で解決するため、`/expenses/me` を `/expenses/:id` より
@@ -307,7 +307,7 @@ export function renderRegistration(registration: RouteRegistration): string {
 
 const HEADER = `// このファイルは \`bun run gen:app\` が生成する。手で編集しない。
 // ルートを足すときは登録済みcontextのinterface/routesへ置き、生成器を再実行する。
-// middleware・エラーハンドラ・/health は手書きの api/app-base.ts が持つ。
+// middleware・エラーハンドラは手書きの api/app-base.ts が持つ。
 `
 
 export function renderApp(registrations: readonly RouteRegistration[]): string {

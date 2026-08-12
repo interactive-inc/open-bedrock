@@ -1,6 +1,6 @@
 import { Notification } from "@system/domain/notifications/notification.entity"
 import type { Context } from "@/env"
-import { notifications } from "@/schema/system"
+import { notifications } from "@/contexts/system/infrastructure/schema/system"
 import { and, eq } from "drizzle-orm"
 
 export class NotificationRepository {

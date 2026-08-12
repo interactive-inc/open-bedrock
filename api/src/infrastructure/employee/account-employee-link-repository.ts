@@ -1,4 +1,4 @@
-import type { AccountStatus } from "@/domain/system/auth/account-status"
+import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import type { Context } from "@/env"
 import { accountEmployeeLinks, accounts } from "@/schema"
 import { eq } from "drizzle-orm"

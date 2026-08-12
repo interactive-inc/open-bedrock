@@ -6,7 +6,7 @@ import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
 import { validateIntParam } from "@/interface/utils/validate-int-param"
-import { accountStatusSchema } from "@/domain/system/auth/account-status"
+import { accountStatusSchema } from "@/contexts/system/domain/auth/account-status"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する

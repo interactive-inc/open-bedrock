@@ -29,8 +29,8 @@ import {
   refreshTokens,
   rolePermissions,
   roles,
-} from "@/schema/system"
-import { systemCoreSchema } from "@/schema/system-core"
+} from "@/contexts/system/infrastructure/schema/system"
+import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
 import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import {
@@ -61,7 +61,7 @@ export {
   rolePermissions,
   roles,
   systemSchema,
-} from "@/schema/system"
+} from "@/contexts/system/infrastructure/schema/system"
 export type {
   AccountRoleRow,
   AccountRow,
@@ -78,8 +78,8 @@ export type {
   RefreshTokenRow,
   RolePermissionRow,
   RoleRow,
-} from "@/schema/system"
-export * from "@/schema/system-core"
+} from "@/contexts/system/infrastructure/schema/system"
+export * from "@/contexts/system/infrastructure/schema/system-core"
 
 /**
  * 従業員台帳(純台帳)。認証(email/password)は identities、認可(role)は account_roles が正。

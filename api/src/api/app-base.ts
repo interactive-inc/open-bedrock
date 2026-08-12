@@ -9,7 +9,7 @@ import { rateLimitMiddleware } from "@/interface/middlewares/rate-limit-middlewa
 import { requestContextMiddleware } from "@/interface/middlewares/request-context-middleware"
 import { factory } from "@/interface/utils/factory"
 import { auditNoStore } from "@/interface/middlewares/audit-no-store"
-import { toNegotiatedProblemResponse } from "@/interface/lib/to-negotiated-problem-response"
+import { toNegotiatedProblemResponse } from "@/contexts/system/interface/lib/to-negotiated-problem-response"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = ["http://localhost:3000", "http://localhost:5173"]
@@ -62,7 +62,7 @@ const globalBodyLimitExceptAuditExport = factory.createMiddleware(async (c, next
 })
 
 /**
- * 全ルート共通の土台。middleware・エラーハンドラ・/health だけを持ち、業務ルートは載せない。
+ * 全ルート共通の土台。middleware・エラーハンドラだけを持ち、context routeは載せない。
  * context routeの登録は生成物である app.ts が行う（`bun run gen:app`）。
  *
  * このファイルは手で編集する。app.ts と分けているのは、生成器が
@@ -111,4 +111,3 @@ export const appBase = factory
 
     return c.json({ error: "internal server error" }, 500)
   })
-  .get("/health", (c) => c.json({ status: "ok" }, 200))

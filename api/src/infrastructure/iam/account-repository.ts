@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import type { AccountStatus } from "@/domain/system/auth/account-status"
+import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
 import { LivePermissionGuard } from "@/infrastructure/iam/live-permission-guard"
