@@ -1,10 +1,12 @@
 import type { Context } from "@/env"
-import { employees, orgDepartments, orgMemberships } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
 import { inArray } from "drizzle-orm"
-import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
-import { isInManagementChain } from "@/lib/org/is-in-management-chain"
-import type { OrganizationAuthority } from "@/lib/org/organization-authority"
-import { resolveLifecycleOrganizationAuthority } from "@/lib/org/resolve-lifecycle-organization-authority"
+import { isInManagementChain } from "@/contexts/company/domain/organization/is-in-management-chain"
+import type { OrganizationAuthority } from "@/contexts/company/domain/organization/organization-authority"
 
 const noAuthority: OrganizationAuthority = {
   directManager: false,
@@ -13,20 +15,13 @@ const noAuthority: OrganizationAuthority = {
 }
 
 /**
- * 組織図上で actor が target に対して持つ管理関係を解決する。
- * IAM permission は「操作能力」、本関数は「対象範囲」だけを扱う。
+ * legacy組織投影で actor が target に対して持つ管理関係を解決する。
  */
-export async function resolveOrganizationAuthority(
+export async function resolveLegacyOrganizationAuthority(
   c: Context,
   actorEmployeeId: number,
   targetEmployeeId: number,
 ): Promise<OrganizationAuthority | Error> {
-  const migrationStatus = await new EmployeeLifecycleRepository(c).migrationStatus()
-  if (migrationStatus instanceof Error) return migrationStatus
-  if (migrationStatus === "verified") {
-    return resolveLifecycleOrganizationAuthority(c, actorEmployeeId, targetEmployeeId)
-  }
-
   if (actorEmployeeId === targetEmployeeId) {
     return noAuthority
   }

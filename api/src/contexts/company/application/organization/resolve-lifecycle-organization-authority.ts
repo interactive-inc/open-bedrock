@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
-import { LifecycleOrganizationGraph } from "@/lib/org/lifecycle-organization-graph"
-import type { OrganizationAuthority } from "@/lib/org/organization-authority"
+import { LifecycleOrganizationGraph } from "@/contexts/company/infrastructure/organization/lifecycle-organization-graph"
+import type { OrganizationAuthority } from "@/contexts/company/domain/organization/organization-authority"
 
 /**
  * ライフサイクル投影ベースで actor が target に対して持つ管理関係を解決する。

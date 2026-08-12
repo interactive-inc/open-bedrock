@@ -1,6 +1,6 @@
 import { DeleteExpense } from "@/application/expense/delete-expense"
 import { UpdateExpense } from "@/application/expense/update-expense"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 import type { Expense } from "@/domain/expense/expense.entity"
 import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"

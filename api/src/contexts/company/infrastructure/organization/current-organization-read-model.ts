@@ -3,45 +3,19 @@ import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructu
 import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
-import { departments, employees, orgDepartments, orgMemberships } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import {
+  departments,
+  orgDepartments,
+  orgMemberships,
+} from "@/contexts/company/infrastructure/schema/organization"
+import type {
+  CurrentOrganizationEmployee,
+  CurrentOrganizationReadModel,
+} from "@/contexts/company/application/organization/current-organization-read-model"
 import { asc, eq, isNull } from "drizzle-orm"
 
-export type CurrentOrganizationAssignment = {
-  departmentCode: string
-  position: string | null
-  managerEmployeeCode: string | null
-  assignmentType: "primary" | "concurrent"
-}
-
-export type CurrentOrganizationEmployee = {
-  id: number
-  code: string
-  name: string
-  status: "active" | "leave"
-  position: string | null
-  primaryDepartmentCode: string | null
-  managerEmployeeCode: string | null
-  departmentCodes: ReadonlyArray<string>
-  assignments: ReadonlyArray<CurrentOrganizationAssignment>
-}
-
-export type CurrentOrganizationDepartment = {
-  code: string
-  departmentId: number
-  name: string
-  parentCode: string | null
-  order: number
-}
-
-export type CurrentOrganizationReadModel = {
-  source: "lifecycle" | "legacy"
-  asOf: string | null
-  departments: ReadonlyArray<CurrentOrganizationDepartment>
-  employeesByCode: ReadonlyMap<string, CurrentOrganizationEmployee>
-  managerByDepartmentCode: ReadonlyMap<string, string>
-}
-
-export async function loadCurrentOrganization(
+export async function loadCurrentOrganizationReadModel(
   c: Context,
 ): Promise<CurrentOrganizationReadModel | Error> {
   try {

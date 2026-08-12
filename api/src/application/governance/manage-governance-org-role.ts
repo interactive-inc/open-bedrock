@@ -1,7 +1,7 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import {
   ConflictError,
   ForbiddenError,

@@ -1,4 +1,4 @@
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { describe, expect, test } from "bun:test"

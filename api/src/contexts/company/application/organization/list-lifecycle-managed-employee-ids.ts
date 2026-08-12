@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
-import { LifecycleOrganizationGraph } from "@/lib/org/lifecycle-organization-graph"
+import { LifecycleOrganizationGraph } from "@/contexts/company/infrastructure/organization/lifecycle-organization-graph"
 
 /**
  * ライフサイクル投影ベースで actor が管理できる社員IDを返す。受信箱の絞り込みに使う。

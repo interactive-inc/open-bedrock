@@ -1,5 +1,5 @@
-import { listLifecycleManagedEmployeeIds } from "@/lib/org/list-lifecycle-managed-employee-ids"
-import { resolveLifecycleOrganizationAuthority } from "@/lib/org/resolve-lifecycle-organization-authority"
+import { listLifecycleManagedEmployeeIds } from "@/contexts/company/application/organization/list-lifecycle-managed-employee-ids"
+import { resolveLifecycleOrganizationAuthority } from "@/contexts/company/application/organization/resolve-lifecycle-organization-authority"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"

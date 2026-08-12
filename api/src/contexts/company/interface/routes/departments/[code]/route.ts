@@ -11,7 +11,7 @@ import { zAppOrgDepartment } from "@/lib/app-schemas"
 import { codeSchema } from "@/lib/schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { InternalError, NotFoundError } from "@/interface/lib/errors"
 
 /** 部署ノードをレスポンス用の snake_case に整形する。 */

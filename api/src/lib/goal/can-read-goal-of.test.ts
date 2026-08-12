@@ -1,6 +1,6 @@
 import { Session } from "@/contexts/company/domain/iam/session"
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
-import type { EmployeeRelation } from "@/lib/org/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { describe, expect, test } from "bun:test"
 

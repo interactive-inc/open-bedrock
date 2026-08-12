@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import type { EmployeeRelation } from "@/lib/org/employee-relation"
+import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"
 
 /**
  * 対象従業員の等級履歴を閲覧できるか、スコープ(self/reports/all)で判定する。

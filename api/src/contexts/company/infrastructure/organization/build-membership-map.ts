@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import type { MembershipEntry } from "@/lib/org/is-report-of"
-import { orgMemberships } from "@/schema"
+import type { MembershipEntry } from "@/contexts/company/domain/organization/is-report-of"
+import { orgMemberships } from "@/contexts/company/infrastructure/schema/organization"
 
 /**
  * org_memberships を全件読み、employeeCode → 最初の membership の対応を作る。

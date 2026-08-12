@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { employees } from "@/schema"
+import { employees } from "@/contexts/company/infrastructure/schema/employee"
 
 /**
  * employees を全件読み、id → code の対応を作る。id 解決に失敗した従業員、および

@@ -1,7 +1,7 @@
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import { listDepartmentEmployeeIds } from "@/interface/utils/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/interface/utils/list-report-employee-ids"
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { factory } from "@/interface/utils/factory"
 import { zAppGoalList } from "@/lib/app-schemas"
 import { goals } from "@/schema"

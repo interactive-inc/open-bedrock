@@ -1,6 +1,6 @@
 import { toFiscalYear } from "@/lib/leave/to-fiscal-year"
 import { canReadLeaveOf } from "@/interface/routes/leave-requests/can-read-leave-of"
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/lib/errors"

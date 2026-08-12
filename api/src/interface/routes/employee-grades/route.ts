@@ -1,6 +1,6 @@
 import { CreateEmployeeGrade } from "@/application/grade/create-employee-grade"
 import { canReadGradeOf } from "@/interface/routes/employee-grades/can-read-grade-of"
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import { resolveTargetEmployeeId } from "@/interface/utils/resolve-target-employee-id"
 import { factory } from "@/interface/utils/factory"
 import { ApplicationError } from "@/lib/errors"
