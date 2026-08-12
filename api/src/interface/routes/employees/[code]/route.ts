@@ -1,7 +1,7 @@
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { GetEmployee } from "@/application/employee/get-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
-import type { Employee } from "@/domain/employee/employee.entity"
+import type { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
