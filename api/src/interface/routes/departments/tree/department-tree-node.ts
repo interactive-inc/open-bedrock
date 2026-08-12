@@ -1,4 +1,4 @@
-import type { OrgDepartment } from "@/domain/org/org-department.entity"
+import type { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 
 /** 部署ツリーのドメイン内部表現。HTTP のレスポンス形（snake_case）とは分ける。 */
 export type DepartmentTreeNode = {

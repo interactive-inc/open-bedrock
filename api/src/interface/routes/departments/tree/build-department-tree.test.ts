@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { buildDepartmentTree } from "@/interface/routes/departments/tree/build-department-tree"
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 
 function makeDepartment(code: string, parentCode: string | null, order = 1): OrgDepartment {
   return new OrgDepartment({

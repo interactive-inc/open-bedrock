@@ -1,4 +1,4 @@
-import type { Department } from "@/domain/org/department.value"
+import type { Department } from "@/contexts/company/domain/organization/department.value"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/infrastructure/shared/is-unique-constraint-error"
 import { UniqueConstraintError } from "@/infrastructure/shared/unique-constraint-error"
