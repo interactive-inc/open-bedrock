@@ -5,7 +5,13 @@ import { systemAccounts } from "@/schema/system-core"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
 
-type Props = Readonly<{ database: D1Database }>
+function createDatabase(database: D1Database) {
+  return drizzle(database, { schema: { systemAccounts } })
+}
+
+type Props = Readonly<{
+  database: D1Database | Pick<ReturnType<typeof createDatabase>, "select">
+}>
 
 /** canonical System Account tableだけを読むD1 repository。 */
 export class SystemAccountRepository implements AccountRepository {
@@ -15,7 +21,9 @@ export class SystemAccountRepository implements AccountRepository {
 
   async findById(accountId: AccountId): Promise<Account | null | Error> {
     try {
-      const rows = await drizzle(this.props.database, { schema: { systemAccounts } })
+      const database =
+        "select" in this.props.database ? this.props.database : createDatabase(this.props.database)
+      const rows = await database
         .select()
         .from(systemAccounts)
         .where(eq(systemAccounts.id, accountId))

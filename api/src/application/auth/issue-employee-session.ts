@@ -1,4 +1,6 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
+import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
+import { zAccountId } from "@system/domain/auth/account-id"
 import type { AuditAction } from "@/composition/audit/audit-event"
 import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
@@ -6,6 +8,7 @@ import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/error
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
 import { generateOpaqueToken } from "@/infrastructure/system/auth/generate-opaque-token"
 
@@ -25,6 +28,8 @@ export type IssuedSession = AccessTokenView & {
   employeeId: number
 }
 
+export type SessionIssuanceRejected = { reason: "account_session_rejected" }
+
 function auditUnavailable(cause: unknown): UnavailableError {
   return new UnavailableError("invalid email or password", "audit_unavailable", { cause })
 }
@@ -37,13 +42,38 @@ function auditUnavailable(cause: unknown): UnavailableError {
 export class IssueEmployeeSession {
   constructor(private readonly c: Context) {}
 
-  async run(command: IssueSessionCommand): Promise<IssuedSession | ApplicationError> {
+  async run(
+    command: IssueSessionCommand,
+  ): Promise<IssuedSession | SessionIssuanceRejected | ApplicationError> {
+    const accountId = zAccountId.safeParse(String(command.accountId))
+
+    if (accountId.success === false) {
+      return new UnexpectedError("failed to authorize account session")
+    }
+
+    const canonicalSession = await resolveAccountSession({
+      accountRepository: new SystemAccountRepository({ database: this.c.env.DB }),
+      accountId: accountId.data,
+      sessionTokenVersion: command.tokenVersion,
+    })
+
+    if (canonicalSession instanceof Error) {
+      return new UnexpectedError("failed to authorize account session", {
+        cause: canonicalSession,
+      })
+    }
+
+    if (canonicalSession.kind === "rejected") {
+      return { reason: "account_session_rejected" }
+    }
+
+    const canonicalTokenVersion = canonicalSession.account.tokenVersion
     const tokenSigner = new JoseTokenSigner()
 
     const accessToken = await tokenSigner.sign(
       {
         accountId: command.accountId,
-        tokenVersion: command.tokenVersion,
+        tokenVersion: canonicalTokenVersion,
       },
       command.jwtSecret,
     )
@@ -82,7 +112,7 @@ export class IssueEmployeeSession {
         accountId: command.accountId,
         tokenHash: hashedToken,
         familyId: crypto.randomUUID(),
-        tokenVersion: command.tokenVersion,
+        tokenVersion: canonicalTokenVersion,
         userAgent: command.userAgent,
         nowEpoch,
       },

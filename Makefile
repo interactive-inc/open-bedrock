@@ -10,7 +10,8 @@ help:
 
 dependencies:
 	bun install
-	@if [ ! -d node_modules ] || [ ! -d api/node_modules ] || [ ! -d cli/node_modules ] || [ ! -d web/node_modules ]; then \
+	@if [ ! -d node_modules ] || [ ! -d api/node_modules ] || [ ! -d cli/node_modules ] || [ ! -d web/node_modules ] || \
+	  ! (cd api && bun -e 'await import("drizzle-orm")' >/dev/null 2>&1); then \
 	  echo "node_modules missing after bun install; retrying with --force"; \
 	  bun install --force; \
 	fi
