@@ -104,6 +104,80 @@ describe("verifyBearer lifecycle status", () => {
     ])
   })
 
+  test("denies a locked canonical Account when the legacy Account remains active", async () => {
+    const db = await database()
+    await db.exec(`
+      UPDATE system_accounts
+      SET status = 'locked', token_version = token_version + 1, updated_at = updated_at + 1
+      WHERE id = (
+        SELECT CAST(account_id AS TEXT) FROM account_employee_links WHERE employee_id = 1
+      );
+    `)
+
+    const response = await me({ db, employeeId: 1 })
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"error":"account is not active"}')
+  })
+
+  test("denies a missing canonical Account instead of falling back to legacy", async () => {
+    const db = await database()
+    await db.exec(`
+      DELETE FROM system_accounts
+      WHERE id = (
+        SELECT CAST(account_id AS TEXT) FROM account_employee_links WHERE employee_id = 1
+      );
+    `)
+
+    const response = await me({ db, employeeId: 1 })
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"error":"account not found"}')
+  })
+
+  test("denies a corrupt canonical Account", async () => {
+    const db = await database()
+    await db.exec(`
+      PRAGMA ignore_check_constraints = ON;
+      UPDATE system_accounts
+      SET status = 'invalid', token_version = token_version + 1, updated_at = updated_at + 1
+      WHERE id = (
+        SELECT CAST(account_id AS TEXT) FROM account_employee_links WHERE employee_id = 1
+      );
+    `)
+
+    const response = await me({ db, employeeId: 1 })
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"error":"account authentication is unavailable"}')
+  })
+
+  test("denies a canonical Account query failure", async () => {
+    const db = await database()
+    await db.exec("DROP TABLE system_accounts")
+
+    const response = await me({ db, employeeId: 1 })
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"error":"account authentication is unavailable"}')
+  })
+
+  test("denies a canonical token version mismatch when legacy still permits the token", async () => {
+    const db = await database()
+    await db.exec(`
+      UPDATE system_accounts
+      SET token_version = token_version + 1, updated_at = updated_at + 1
+      WHERE id = (
+        SELECT CAST(account_id AS TEXT) FROM account_employee_links WHERE employee_id = 1
+      );
+    `)
+
+    const response = await me({ db, employeeId: 1 })
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toBe('{"error":"token has been revoked"}')
+  })
+
   test("switches at the company date boundary and fails closed for an unknown time zone", async () => {
     const db = await database()
     expect((await me({ db, employeeId: 4, now: "2026-06-01T14:59:59.000Z" })).status).toBe(200)
