@@ -16,7 +16,7 @@ import type {
 import { normalizeLifecycleSchedule } from "@/contexts/company/domain/employee-lifecycle/normalize-lifecycle-schedule"
 import { periodContainsPeriod } from "@/contexts/company/domain/employee-lifecycle/period-contains-period"
 
-function employeeId(value: number): EmployeeId {
+export function toWorkforceEmployeeId(value: number): EmployeeId {
   return restoreWorkforceId("employee", `employee:${value}`)
 }
 
@@ -62,7 +62,7 @@ export function toWorkforceLifecycleSchedules(
     return [...employeeIds]
       .sort((left, right) => left - right)
       .map((sourceEmployeeId) => {
-        const workforceEmployeeId = employeeId(sourceEmployeeId)
+        const workforceEmployeeId = toWorkforceEmployeeId(sourceEmployeeId)
         const employments = schedule.employments.filter(
           (period) => period.employeeId === sourceEmployeeId,
         )
@@ -95,7 +95,9 @@ export function toWorkforceLifecycleSchedules(
                   : ("CONCURRENT" as const),
               positionTitle: period.positionTitle,
               managerEmployeeId:
-                period.managerEmployeeId === null ? null : employeeId(period.managerEmployeeId),
+                period.managerEmployeeId === null
+                  ? null
+                  : toWorkforceEmployeeId(period.managerEmployeeId),
             })),
           responsibilities: schedule.responsibilities
             .filter((period) => period.employeeId === sourceEmployeeId)
