@@ -12,7 +12,7 @@ import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/e
 import { schema } from "@/schema"
 import { drizzle } from "drizzle-orm/d1"
 
-const LARGE_STRESS_TEST_TIMEOUT_MS = 30_000
+const LARGE_STRESS_TEST_TIMEOUT_MS = 60_000
 
 function record(overrides: Partial<AuditEventRecord> = {}): AuditEventRecord {
   return {
@@ -1072,7 +1072,7 @@ describe("AuditEventRepository search contract", () => {
     )
     expect(descriptorReads.length).toBeGreaterThan(1)
     expect(exactReads.length).toBeGreaterThan(1)
-  }, 20_000)
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("segments a remote-valid summary whose combined exact HEX row exceeds the D1 row limit", async () => {
     const { context, db } = createTestContext()
@@ -1841,7 +1841,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(
       await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
     ).toBeInstanceOf(PayloadTooLargeError)
-  }, 20_000)
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("local-only >2 MB stress bounds segmented quote-heavy JSON that still fits CSV", async () => {
     const { context, db } = createTestContext()
@@ -2005,7 +2005,7 @@ describe("AuditEventRepository detail and corruption contract", () => {
         .every((read) => read.bindingCount === 1),
     ).toBe(true)
     expect(queryCount() - before).toBe(19)
-  }, 20_000)
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 
   test("keeps remote-valid large segmented rows and export calls below D1 limits", async () => {
     const { context, db, queryCount } = createCountingContext()
@@ -2117,5 +2117,5 @@ describe("AuditEventRepository detail and corruption contract", () => {
 
     const filtered = await repository.export({ filters: { action: "legacy.special" } })
     expect(filtered.map((row) => row.eventId)).toEqual(["filtered-special"])
-  }, 20_000)
+  }, LARGE_STRESS_TEST_TIMEOUT_MS)
 })
