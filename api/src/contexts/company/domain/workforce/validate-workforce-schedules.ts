@@ -6,6 +6,7 @@ import {
 } from "@/contexts/company/domain/workforce/effective-period"
 import type {
   EmploymentPeriod,
+  WorkforceLifecycleSchedule,
   WorkforcePeriodVersion,
   WorkforceSchedule,
 } from "@/contexts/company/domain/workforce/workforce-schedule"
@@ -49,6 +50,11 @@ export type ValidateWorkforceSchedulesProps = Readonly<{
   activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>
 }>
 
+export type ValidateWorkforceLifecycleSchedulesProps = Readonly<{
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>
+  activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>
+}>
+
 function violation(code: WorkforceInvariantCode, message: string): WorkforceInvariantViolation {
   return { code, message }
 }
@@ -68,12 +74,12 @@ function hasOverlap<TPeriod extends WorkforcePeriodVersion>(
 }
 
 function findEmployment(
-  schedule: WorkforceSchedule,
+  schedule: WorkforceLifecycleSchedule,
   employmentId: string,
 ): EmploymentPeriod | undefined {
   return active(schedule.employments).find(
     (employment) =>
-      employment.employmentId === employmentId && employment.employeeId === schedule.employee.id,
+      employment.employmentId === employmentId && employment.employeeId === schedule.employeeId,
   )
 }
 
@@ -91,22 +97,30 @@ function validateEmployee(schedule: WorkforceSchedule): WorkforceInvariantViolat
     return violation("invalid_employee", "employee profile is not canonical")
   }
 
-  const ownedPeriods = [
-    ...schedule.employments,
-    ...schedule.statuses,
-    ...schedule.assignments,
-    ...schedule.responsibilities,
-  ]
-  if (ownedPeriods.some((period) => period.employeeId !== employee.id)) {
-    return violation("employee_mismatch", "period belongs to another employee")
-  }
   if (schedule.accountLink !== null && schedule.accountLink.employeeId !== employee.id) {
     return violation("account_link_mismatch", "account link belongs to another employee")
   }
   return null
 }
 
-function validatePeriodVersions(schedule: WorkforceSchedule): WorkforceInvariantViolation | null {
+function validateLifecycleOwner(
+  schedule: WorkforceLifecycleSchedule,
+): WorkforceInvariantViolation | null {
+  const ownedPeriods = [
+    ...schedule.employments,
+    ...schedule.statuses,
+    ...schedule.assignments,
+    ...schedule.responsibilities,
+  ]
+  if (ownedPeriods.some((period) => period.employeeId !== schedule.employeeId)) {
+    return violation("employee_mismatch", "period belongs to another employee")
+  }
+  return null
+}
+
+function validatePeriodVersions(
+  schedule: WorkforceLifecycleSchedule,
+): WorkforceInvariantViolation | null {
   const periods = [
     ...schedule.employments,
     ...schedule.statuses,
@@ -136,7 +150,7 @@ function validatePeriodVersions(schedule: WorkforceSchedule): WorkforceInvariant
 }
 
 function validateEmploymentAndStatuses(
-  schedule: WorkforceSchedule,
+  schedule: WorkforceLifecycleSchedule,
 ): WorkforceInvariantViolation | null {
   const employments = active(schedule.employments)
   if (hasOverlap(employments)) {
@@ -172,7 +186,7 @@ function validateEmploymentAndStatuses(
 }
 
 function validateAssignments(
-  schedule: WorkforceSchedule,
+  schedule: WorkforceLifecycleSchedule,
   activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>,
 ): WorkforceInvariantViolation | null {
   const assignments = active(schedule.assignments)
@@ -213,7 +227,7 @@ function validateAssignments(
 }
 
 function validateResponsibilities(
-  schedules: ReadonlyArray<WorkforceSchedule>,
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
   activeOrganizationUnitIds: ReadonlySet<OrganizationUnitId>,
 ): WorkforceInvariantViolation | null {
   const responsibilities = schedules.flatMap((schedule) => active(schedule.responsibilities))
@@ -224,7 +238,7 @@ function validateResponsibilities(
         "responsibility uses an inactive organization unit",
       )
     }
-    const holder = schedules.find((schedule) => schedule.employee.id === responsibility.employeeId)
+    const holder = schedules.find((schedule) => schedule.employeeId === responsibility.employeeId)
     const employment = holder?.employments.find(
       (period) =>
         !period.isVoid &&
@@ -268,7 +282,7 @@ function validateResponsibilities(
   return null
 }
 
-function activeAt(schedule: WorkforceSchedule, date: CalendarDate): boolean {
+function activeAt(schedule: WorkforceLifecycleSchedule, date: CalendarDate): boolean {
   return active(schedule.statuses).some(
     (status) =>
       (status.status === "ACTIVE" || status.status === "ON_LEAVE") &&
@@ -276,7 +290,9 @@ function activeAt(schedule: WorkforceSchedule, date: CalendarDate): boolean {
   )
 }
 
-function boundaryDates(schedules: ReadonlyArray<WorkforceSchedule>): ReadonlyArray<CalendarDate> {
+function boundaryDates(
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
+): ReadonlyArray<CalendarDate> {
   const dates = schedules.flatMap((schedule) =>
     [
       ...schedule.employments,
@@ -289,7 +305,7 @@ function boundaryDates(schedules: ReadonlyArray<WorkforceSchedule>): ReadonlyArr
 }
 
 function activeManagerRelations(
-  schedules: ReadonlyArray<WorkforceSchedule>,
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
   date: CalendarDate,
 ): ReadonlyArray<Readonly<{ employeeId: EmployeeId; managerEmployeeId: EmployeeId }>> {
   return schedules.flatMap((schedule) =>
@@ -328,13 +344,13 @@ function hasManagerCycle(
 }
 
 function validateManagers(
-  schedules: ReadonlyArray<WorkforceSchedule>,
+  schedules: ReadonlyArray<WorkforceLifecycleSchedule>,
 ): WorkforceInvariantViolation | null {
   for (const date of boundaryDates(schedules)) {
     const relations = activeManagerRelations(schedules, date)
     for (const relation of relations) {
       const manager = schedules.find(
-        (schedule) => schedule.employee.id === relation.managerEmployeeId,
+        (schedule) => schedule.employeeId === relation.managerEmployeeId,
       )
       if (manager === undefined || !activeAt(manager, date)) {
         return violation("manager_not_active", "manager is not active on assignment date")
@@ -347,27 +363,20 @@ function validateManagers(
   return null
 }
 
-/** Company workforce全体の有効期間・配属・責任・管理系列をfail closedで検証する。 */
-export function validateWorkforceSchedules(
-  props: ValidateWorkforceSchedulesProps,
+/** Employee profileから独立した雇用ライフサイクル全体をfail closedで検証する。 */
+export function validateWorkforceLifecycleSchedules(
+  props: ValidateWorkforceLifecycleSchedulesProps,
 ): WorkforceInvariantViolation | null {
   const employeeIds = new Set<EmployeeId>()
-  const accountIds = new Set<string>()
 
   for (const schedule of props.schedules) {
-    if (employeeIds.has(schedule.employee.id)) {
+    if (employeeIds.has(schedule.employeeId)) {
       return violation("invalid_employee", "employee appears more than once")
     }
-    employeeIds.add(schedule.employee.id)
-    if (schedule.accountLink !== null) {
-      if (accountIds.has(schedule.accountLink.accountId)) {
-        return violation("duplicate_account_link", "system account is linked more than once")
-      }
-      accountIds.add(schedule.accountLink.accountId)
-    }
+    employeeIds.add(schedule.employeeId)
 
     const result =
-      validateEmployee(schedule) ??
+      validateLifecycleOwner(schedule) ??
       validatePeriodVersions(schedule) ??
       validateEmploymentAndStatuses(schedule) ??
       validateAssignments(schedule, props.activeOrganizationUnitIds)
@@ -378,4 +387,34 @@ export function validateWorkforceSchedules(
     validateResponsibilities(props.schedules, props.activeOrganizationUnitIds) ??
     validateManagers(props.schedules)
   )
+}
+
+/** Company workforce全体をEmployee profile・System Account対応も含めて検証する。 */
+export function validateWorkforceSchedules(
+  props: ValidateWorkforceSchedulesProps,
+): WorkforceInvariantViolation | null {
+  const accountIds = new Set<string>()
+
+  for (const schedule of props.schedules) {
+    if (schedule.accountLink !== null) {
+      if (accountIds.has(schedule.accountLink.accountId)) {
+        return violation("duplicate_account_link", "system account is linked more than once")
+      }
+      accountIds.add(schedule.accountLink.accountId)
+    }
+
+    const employeeError = validateEmployee(schedule)
+    if (employeeError !== null) return employeeError
+  }
+
+  return validateWorkforceLifecycleSchedules({
+    schedules: props.schedules.map((schedule) => ({
+      employeeId: schedule.employee.id,
+      employments: schedule.employments,
+      statuses: schedule.statuses,
+      assignments: schedule.assignments,
+      responsibilities: schedule.responsibilities,
+    })),
+    activeOrganizationUnitIds: props.activeOrganizationUnitIds,
+  })
 }
