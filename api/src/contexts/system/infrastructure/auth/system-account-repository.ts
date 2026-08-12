@@ -1,7 +1,7 @@
 import type { AccountRepository } from "@system/application/auth/account-repository"
 import type { AccountId } from "@system/domain/auth/account-id"
 import { Account } from "@system/domain/auth/account.entity"
-import { systemAccounts } from "@/schema/system-core"
+import { systemAccounts } from "@/contexts/system/infrastructure/schema/system-core"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
 

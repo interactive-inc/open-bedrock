@@ -1,15 +1,15 @@
-import type { SystemAuthorization } from "@/application/system/iam/system-authorization"
+import type { SystemAuthorization } from "@/contexts/system/application/iam/system-authorization"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { validatePasswordComplexity } from "@/application/auth/password-policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { PasswordIdentityRepository } from "@/infrastructure/system/auth/password-identity-repository"
+import { PasswordIdentityRepository } from "@/contexts/system/infrastructure/auth/password-identity-repository"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
 import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { SystemAuditEventRepository } from "@/infrastructure/system/audit/system-audit-event-repository"
+import { SystemAuditEventRepository } from "@/contexts/system/infrastructure/audit/system-audit-event-repository"
 
 export type Command = {
   session: SystemAuthorization<number>

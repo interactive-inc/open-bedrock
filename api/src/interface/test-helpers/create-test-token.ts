@@ -3,7 +3,7 @@ import {
   ACCESS_TOKEN_ISSUER,
   JoseTokenSigner,
 } from "@/infrastructure/auth/jose-token-signer"
-import { ACCESS_TOKEN_TYPE } from "@/domain/system/auth/access-token-claims"
+import { ACCESS_TOKEN_TYPE } from "@/contexts/system/domain/auth/access-token-claims"
 import { SignJWT } from "jose"
 
 /**

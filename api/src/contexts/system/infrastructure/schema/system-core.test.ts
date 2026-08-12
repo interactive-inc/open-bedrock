@@ -1,5 +1,5 @@
 import { loadSchema } from "@/interface/test-helpers/load-schema"
-import { systemCoreSchema } from "@/schema/system-core"
+import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 
 const migrationSql = readFileSync(
-  fileURLToPath(new URL("../../migrations/0126_system_core.sql", import.meta.url)),
+  fileURLToPath(new URL("../../../../../migrations/0126_system_core.sql", import.meta.url)),
   "utf8",
 )
 

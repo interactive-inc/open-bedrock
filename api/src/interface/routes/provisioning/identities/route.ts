@@ -1,5 +1,5 @@
 import { SyncExternalIdentities } from "@/application/iam/sync-external-identities"
-import { identitySubjectSchema } from "@/domain/system/identity/identity-subject"
+import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/interface/utils/factory"
 import { verifyProvisioningKey } from "@/interface/middlewares/verify-provisioning-key"

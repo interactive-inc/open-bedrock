@@ -6,26 +6,45 @@ import ts from "typescript"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
-const API_SOURCE_ROOT = existsSync(resolve(SOURCE_ROOT, "domain/system"))
-  ? SOURCE_ROOT
-  : resolve(SOURCE_ROOT, "api")
+const API_SOURCE_ROOT =
+  existsSync(resolve(SOURCE_ROOT, "contexts/system")) ||
+  existsSync(resolve(SOURCE_ROOT, "domain/system"))
+    ? SOURCE_ROOT
+    : resolve(SOURCE_ROOT, "api")
+const SYSTEM_CONTEXT_ROOT = existsSync(resolve(SOURCE_ROOT, "contexts/system"))
+  ? resolve(SOURCE_ROOT, "contexts/system")
+  : API_SOURCE_ROOT
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
 const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const
 const SYSTEM_SCHEMA_PATHS = ["system.ts", "system-core.ts"]
-  .map((file) => resolve(SOURCE_ROOT, "schema", file))
+  .map((file) =>
+    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
+      ? resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema", file)
+      : resolve(SOURCE_ROOT, "schema", file),
+  )
   .filter(existsSync)
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
-  API_SOURCE_ROOT,
-  "domain/system/configuration/system-capability.catalog.ts",
+  SYSTEM_CONTEXT_ROOT,
+  SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
+    ? "domain/configuration/system-capability.catalog.ts"
+    : "domain/system/configuration/system-capability.catalog.ts",
 )
 const SYSTEM_SOURCE_PATHS = [
-  ...CONTEXT_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
+  ...CONTEXT_LAYERS.map((layer) =>
+    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
+      ? resolve(SYSTEM_CONTEXT_ROOT, layer)
+      : resolve(API_SOURCE_ROOT, layer, "system"),
+  ),
   ...SYSTEM_SCHEMA_PATHS,
 ] as const
 const PRODUCT_NEUTRAL_SYSTEM_SOURCE_PATHS = new Set(
-  PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) => resolve(API_SOURCE_ROOT, layer, "system")),
+  PRODUCT_NEUTRAL_SYSTEM_LAYERS.map((layer) =>
+    SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
+      ? resolve(SYSTEM_CONTEXT_ROOT, layer)
+      : resolve(API_SOURCE_ROOT, layer, "system"),
+  ),
 )
 const TYPESCRIPT_CONFIG_PATHS = [
   "tsconfig.json",
@@ -50,6 +69,8 @@ const LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
 const SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
+const CONTEXT_MODULE =
+  /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
 const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure)\/.+$/
 
 export type SystemBoundaryViolation = Readonly<{
@@ -152,16 +173,19 @@ export function collectSystemSchemaTableNames(file: string, source: string): str
 
 /** application/domain/infrastructure の System 直下にある capability namespace を集める。 */
 export function discoverSystemCapabilityNames(
-  apiSourceRoot = API_SOURCE_ROOT,
+  apiSourceRoot = SYSTEM_CONTEXT_ROOT,
 ): ReadonlySet<string> {
   const capabilities = new Set<string>()
 
   for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
-    const systemRoot = resolve(apiSourceRoot, layer, "system")
+    const systemRoot = apiSourceRoot.endsWith("contexts/system")
+      ? resolve(apiSourceRoot, layer)
+      : resolve(apiSourceRoot, layer, "system")
 
     if (!existsSync(systemRoot)) continue
 
     for (const entry of readdirSync(systemRoot, { withFileTypes: true })) {
+      if (layer === "infrastructure" && entry.name === "schema") continue
       if (entry.isDirectory()) capabilities.add(entry.name)
     }
   }
@@ -186,11 +210,15 @@ export function inspectSystemCapabilityRootEntries(
     }))
 }
 
-function inspectSystemCapabilityLayout(apiSourceRoot = API_SOURCE_ROOT): SystemBoundaryViolation[] {
+function inspectSystemCapabilityLayout(
+  apiSourceRoot = SYSTEM_CONTEXT_ROOT,
+): SystemBoundaryViolation[] {
   const violations: SystemBoundaryViolation[] = []
 
   for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
-    const systemRoot = resolve(apiSourceRoot, layer, "system")
+    const systemRoot = apiSourceRoot.endsWith("contexts/system")
+      ? resolve(apiSourceRoot, layer)
+      : resolve(apiSourceRoot, layer, "system")
 
     if (!existsSync(systemRoot)) continue
 
@@ -496,7 +524,9 @@ export function inspectSystemSelfReferencePathMappings(
 
   for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
     const alias = `@system/${layer}/*`
-    const expectedPath = `./${normalizedSourceRoot}/${layer}/system/*`
+    const expectedPath = normalizedSourceRoot.endsWith("contexts/system")
+      ? `./${normalizedSourceRoot}/${layer}/*`
+      : `./${normalizedSourceRoot}/${layer}/system/*`
     const configuredPaths = pathMappings[alias]
     const isExpectedMapping =
       Array.isArray(configuredPaths) &&
@@ -526,6 +556,15 @@ export function selectDownstreamContextNames(
 
 export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): ReadonlySet<string> {
   const directoryNames: string[] = []
+
+  const contextsRoot = resolve(apiSourceRoot, "contexts")
+  if (existsSync(contextsRoot)) {
+    for (const entry of readdirSync(contextsRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        directoryNames.push(entry.name)
+      }
+    }
+  }
 
   for (const layer of CONTEXT_LAYERS) {
     const layerRoot = resolve(apiSourceRoot, layer)
@@ -604,6 +643,16 @@ function inspectModuleSpecifier(
     return SYSTEM_SELF_REFERENCE_MODULE.test(moduleSpecifier)
       ? []
       : [{ file, reason: `未定義の System self-reference です: ${moduleSpecifier}` }]
+  }
+
+  const contextModule = moduleSpecifier.match(CONTEXT_MODULE)
+
+  if (contextModule !== null) {
+    const contextName = contextModule[1] ?? ""
+
+    return contextName === "system"
+      ? []
+      : [{ file, reason: `System から下位コンテキストへ依存しています: ${moduleSpecifier}` }]
   }
 
   const schemaModule = moduleSpecifier.match(SCHEMA_MODULE)
@@ -765,7 +814,7 @@ function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
   return inspectSystemSelfReferencePathMappings(
     file,
     pathMappings,
-    relative(PROJECT_ROOT, API_SOURCE_ROOT),
+    relative(PROJECT_ROOT, SYSTEM_CONTEXT_ROOT),
   )
 }
 

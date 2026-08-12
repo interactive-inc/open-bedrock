@@ -1,5 +1,5 @@
 import type { Context } from "@/env"
-import { identities } from "@/schema/system"
+import { identities } from "@/contexts/system/infrastructure/schema/system"
 import { and, eq } from "drizzle-orm"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 

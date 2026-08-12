@@ -1,6 +1,6 @@
 import type { Session } from "@/domain/company/iam/session"
 import type { CompanyNotificationKind } from "@/domain/company/notifications/notification-kind"
-import type { Notification } from "@/domain/system/notifications/notification.entity"
+import type { Notification } from "@/contexts/system/domain/notifications/notification.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
