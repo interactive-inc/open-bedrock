@@ -131,3 +131,46 @@ describe("rate limiting", () => {
     expect(response.status).toBe(200)
   })
 })
+
+describe("rate limiting fail-closed (#1035)", () => {
+  test("本番相当（CORS_ORIGIN 設定済み）で binding 未設定なら 503 で拒否する", async () => {
+    const bindings = makeBindings("https://app.example.com")
+
+    const response = await app.request("/employees", { method: "GET" }, bindings)
+
+    expect(response.status).toBe(503)
+  })
+
+  test("本番相当でも /health は binding 未設定のまま通す（監視用）", async () => {
+    const bindings = makeBindings("https://app.example.com")
+
+    const response = await app.request("/health", { method: "GET" }, bindings)
+
+    expect(response.status).toBe(200)
+  })
+
+  test("本番相当で RATE_LIMIT KV 未設定なら /auth/login は 503 で拒否する", async () => {
+    const bindings = {
+      ...makeBindings("https://app.example.com"),
+      API_RATE_LIMITER: makeLimiter(true),
+    }
+
+    const response = await app.request(
+      "/auth/login",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: "you@example.com", password: "password" }),
+      },
+      bindings,
+    )
+
+    expect(response.status).toBe(503)
+  })
+
+  test("ローカル相当（CORS_ORIGIN 未設定）は binding 未設定でもスキップして通す", async () => {
+    const response = await app.request("/employees", { method: "GET" }, makeBindings())
+
+    expect(response.status).toBe(401)
+  })
+})
