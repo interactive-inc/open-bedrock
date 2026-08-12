@@ -1,4 +1,4 @@
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { seedApplicationTemplates } from "@/infrastructure/seed/seed-application-templates"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"

@@ -1,9 +1,9 @@
 // このファイルは `bun run gen:app` が生成する。手で編集しない。
-// ルートを足すときは interface/routes/<URL パス>/route.ts を作り、生成器を再実行する。
-// middleware・エラーハンドラ・/health は手書きの app-base.ts が持つ。
+// ルートを足すときは登録済みcontextのinterface/routesへ置き、生成器を再実行する。
+// middleware・エラーハンドラ・/health は手書きの api/app-base.ts が持つ。
 
 import { hc } from "hono/client"
-import { appBase } from "@/app-base"
+import { appBase } from "@/api/app-base"
 import * as accountsIdResetPasswordRoute from "@/interface/routes/accounts/[id]/reset-password/route"
 import * as accountsIdRolesRoleKeyRoute from "@/interface/routes/accounts/[id]/roles/[roleKey]/route"
 import * as accountsIdRolesRoute from "@/interface/routes/accounts/[id]/roles/route"
