@@ -610,7 +610,10 @@ function inspectModuleSpecifier(
 
   if (schemaModule !== null) {
     const importedPath = schemaModule[1] ?? ""
-    const isSystemSchema = importedPath === "system" || importedPath.startsWith("system/")
+    const isSystemSchema =
+      importedPath === "system" ||
+      importedPath.startsWith("system/") ||
+      importedPath === "system-core"
 
     return isSystemSchema
       ? []
