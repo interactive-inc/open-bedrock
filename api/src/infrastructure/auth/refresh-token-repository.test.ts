@@ -158,6 +158,22 @@ function mutateBeforeNextBatch(context: Context, mutation: () => Promise<unknown
   return () => batchCalls
 }
 
+function isolateChangesPerBatchStatement(context: Context): void {
+  const source = context.env.DB
+  context.env.DB = new Proxy(source, {
+    get(target, property, receiver) {
+      if (property === "prepare") {
+        return (query: string) =>
+          query.includes("changes()")
+            ? source.prepare("SELECT json_extract('', '$') AS ok")
+            : source.prepare(query)
+      }
+
+      return Reflect.get(target, property, receiver)
+    },
+  })
+}
+
 async function activeFamilyCount(db: D1Database): Promise<number | null> {
   return db
     .prepare(
@@ -219,6 +235,37 @@ describe("RefreshTokenRepository audited writes", () => {
       user_agent: "creation-agent",
       created_at: nowEpoch,
     })
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(1)
+  })
+
+  test("verifies the persisted row without relying on changes() from a prior batch statement", async () => {
+    const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 0)
+    isolateChangesPerBatchStatement(context)
+    const repository = new RefreshTokenRepository(context)
+
+    const result = await repository.createWithAudit(
+      {
+        accountId: 1,
+        tokenHash: "statement-local-token-hash",
+        familyId: "statement-local-family",
+        tokenVersion: 0,
+        userAgent: null,
+        nowEpoch,
+      },
+      new AuditEventRepository(context).prepareAppend(auditRecord("statement-local-login")),
+    )
+
+    expect(result).toBeUndefined()
+    expect(
+      await db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM refresh_tokens WHERE token_hash = 'statement-local-token-hash'",
+        )
+        .first<number>("count"),
+    ).toBe(1)
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(1)
