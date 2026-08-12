@@ -151,7 +151,13 @@ describe("POST /auth/browser/token", () => {
   test("returns 401 when the account was suspended after the code was issued", async () => {
     const db = await createTestDb()
     await seedBrowserLoginCode(db, "raw-code-suspended", 1)
-    await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 1").run()
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 1`,
+      )
+      .run()
 
     const response = await postBrowserToken(db, { code: "raw-code-suspended" })
 
