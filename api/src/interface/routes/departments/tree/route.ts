@@ -1,6 +1,6 @@
 import { buildDepartmentTree } from "@/interface/routes/departments/tree/build-department-tree"
 import type { DepartmentTreeNode } from "@/interface/routes/departments/tree/department-tree-node"
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { UnauthorizedError } from "@/interface/lib/errors"

@@ -1,4 +1,4 @@
-import type { Department } from "@/domain/org/department.value"
+import type { Department } from "@/contexts/company/domain/organization/department.value"
 import type { Session } from "@/contexts/company/domain/iam/session"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

@@ -1,5 +1,5 @@
 import type { DepartmentTreeNode } from "@/interface/routes/departments/tree/department-tree-node"
-import type { OrgDepartment } from "@/domain/org/org-department.entity"
+import type { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 
 export type Props = {
   departments: ReadonlyArray<OrgDepartment>

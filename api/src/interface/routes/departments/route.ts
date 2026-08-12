@@ -1,5 +1,5 @@
 import { CreateOrgDepartment } from "@/application/org/create-org-department"
-import { OrgDepartment } from "@/domain/org/org-department.entity"
+import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { factory } from "@/interface/utils/factory"
 import { verifyBearer } from "@/interface/middlewares/verify-bearer"
 import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"

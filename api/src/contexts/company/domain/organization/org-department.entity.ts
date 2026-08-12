@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+/** Companyの組織階層に配置された部署。 */
 const zProps = z.object({
   code: z.string(),
   departmentId: z.number(),

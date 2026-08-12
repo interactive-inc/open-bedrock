@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+/** Company Employeeの部署所属と直属管理者。 */
 const zProps = z.object({
   departmentCode: z.string(),
   employeeCode: z.string(),
