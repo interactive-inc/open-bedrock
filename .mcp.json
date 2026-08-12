@@ -3,6 +3,10 @@
     "funnel": {
       "command": "funnel",
       "args": ["mcp"]
+    },
+    "bedrock": {
+      "command": "bun",
+      "args": ["mcp/index.ts"]
     }
   }
 }

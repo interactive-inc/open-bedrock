@@ -39,10 +39,11 @@ Claude などの AI から CLI で呼ばれることを前提に設計。
 
 ## 構成
 
-Bun Workspaces のモノレポ。3つのワークスペースで構成する。
+Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 - `api` … HTTP API。Hono + Cloudflare Workers (wrangler)
 - `cli` … 引数を POST に変換しローカルで処理。Hono + bun
+- `mcp` … MCP server。API を MCP tools として AI エージェントに公開。Bun + @modelcontextprotocol/sdk
 - `web` … Web UI。Next.js + React + Tailwind + shadcn
 
 ディレクトリの構成は以下のとおり。

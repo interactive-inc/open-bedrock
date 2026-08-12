@@ -47,6 +47,8 @@ permission の scope は4段階で、目標の閲覧・評価と勤怠の閲覧�
 
 適用済みのキーは goal:read / goal:evaluate / attendance:read / leave:read / grade:read / application:read / oneonone:read の各スコープ。manager は :reports、hr・評価管理者・監査は :all を持つ。:department はプリセットに実務付与しておらず、部門人事のようなカスタムロール用(escalation guard を通すため root は保持する)。
 
+evaluation:administer はスコープなしの管理権限。評価シート(MBO)の作成、全社一覧閲覧、評価者の割当変更を許可する。hr と root が保持する。評価シートの状態遷移権限はロールではなく、シートに対する関係(本人・一次評価者・二次評価者・管理者)で判定する。
+
 一覧 API のスコープ絞り込みも実装済み。GET /goals・GET /attendance・GET /leave/requests・GET /applications・GET /oneonones は scope=department&department_code= で部署メンバー分を一覧する(対応する :department permission が必要)。GET /goals・GET /attendance・GET /leave/requests は scope=reports(配下全員分)や scope=all(全社)も受け付ける。
 
 ## 実装の決まりごと
