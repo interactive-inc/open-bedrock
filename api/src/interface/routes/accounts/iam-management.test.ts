@@ -281,7 +281,9 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
         .first<{ secret: string }>(),
     ).toEqual(before)
     expect(
-      await db.prepare("SELECT count(*) AS total FROM accounts WHERE id = 5").first("total"),
+      await db
+        .prepare("SELECT count(*) AS total FROM accounts WHERE id = 5")
+        .first<number>("total"),
     ).toBe(1)
   })
 

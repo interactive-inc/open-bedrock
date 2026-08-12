@@ -9,7 +9,7 @@ describe("identitySubjectSchema", () => {
   test.each(["subject-a", "Subject-A", "SUBJECT-A", "provider|subject@example.com"])(
     "表示可能ASCIIのopaque subjectを受理する",
     (subject) => {
-      expect(identitySubjectSchema.parse(subject)).toBe(subject)
+      expect(String(identitySubjectSchema.parse(subject))).toBe(subject)
     },
   )
 

@@ -88,6 +88,10 @@ describe("AuthenticateEmployee", () => {
       throw new Error("expected access token")
     }
 
+    if (result.refreshToken === null) {
+      throw new Error("expected refresh token")
+    }
+
     expect(result.accessToken.length > 0).toBe(true)
     expect(result.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     expect(result.accountId).toBe(1)

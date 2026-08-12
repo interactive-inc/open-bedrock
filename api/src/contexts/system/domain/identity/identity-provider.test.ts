@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test"
 describe("identityProviderSchema", () => {
   test("Systemが明示実装するproviderだけを受理する", () => {
     for (const provider of ["password", "google", "github", "oidc"]) {
-      expect(identityProviderSchema.parse(provider)).toBe(provider)
+      expect(String(identityProviderSchema.parse(provider))).toBe(provider)
     }
   })
 
