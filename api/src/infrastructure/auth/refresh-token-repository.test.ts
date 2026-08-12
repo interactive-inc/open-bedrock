@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect, spyOn, test } from "bun:test"
 import type { AuditEventRecord } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
@@ -228,6 +228,7 @@ describe("RefreshTokenRepository audited writes", () => {
     const { context, db } = createTestContext()
     await insertCanonicalAccount(db, 0)
     const repository = new RefreshTokenRepository(context)
+    const consoleError = spyOn(console, "error").mockImplementation(() => undefined)
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
       BEFORE INSERT ON audit_events
@@ -255,6 +256,16 @@ describe("RefreshTokenRepository audited writes", () => {
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
+    expect(consoleError).toHaveBeenCalledWith(
+      JSON.stringify({
+        event: "auth.persistence.failed",
+        operation: "refresh_token.create_with_audit",
+        errorType: "SQLiteError",
+        reason: "database_error",
+      }),
+    )
+    expect(consoleError.mock.calls.flat().join(" ")).not.toContain("rolled-back-token-hash")
+    consoleError.mockRestore()
   })
 
   test("revokes an active family and appends its audit event atomically", async () => {

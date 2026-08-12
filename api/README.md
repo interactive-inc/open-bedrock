@@ -38,6 +38,14 @@ bun run db:migrate:local
 bun run db:migrate
 ```
 
+本番Workerは必ず次の正規コマンドでdeployする。remote D1 migrationが1本でも失敗した場合は
+`wrangler deploy`へ進まない。previewはproduction DBを変更せずversion uploadだけを行う。
+
+```bash
+bun run deploy
+bun run deploy:preview
+```
+
 初期 seed（`seeds/<domain>.sql` を依存順に投入）を流す。
 
 ```sh
