@@ -127,6 +127,15 @@ import * as employeesCodeLifecycleStateRoute from "@/interface/routes/employees/
 import * as employeesCodeReportingLineRoute from "@/interface/routes/employees/[code]/reporting-line/route"
 import * as employeesCodeRoute from "@/interface/routes/employees/[code]/route"
 import * as employeesRoute from "@/interface/routes/employees/route"
+import * as evaluationSheetsSheetIdEvaluatorsRoute from "@/interface/routes/evaluation-sheets/[sheet_id]/evaluators/route"
+import * as evaluationSheetsSheetIdRoute from "@/interface/routes/evaluation-sheets/[sheet_id]/route"
+import * as evaluationSheetsSheetIdTransitionRoute from "@/interface/routes/evaluation-sheets/[sheet_id]/transition/route"
+import * as evaluationSheetsCreateRoute from "@/interface/routes/evaluation-sheets/create-route"
+import * as evaluationSheetsMeRoute from "@/interface/routes/evaluation-sheets/me/route"
+import * as evaluationSheetsRoute from "@/interface/routes/evaluation-sheets/route"
+import * as evaluationTemplatesTemplateIdRoute from "@/interface/routes/evaluation-templates/[template_id]/route"
+import * as evaluationTemplatesCreateRoute from "@/interface/routes/evaluation-templates/create-route"
+import * as evaluationTemplatesRoute from "@/interface/routes/evaluation-templates/route"
 import * as expensesIdApproveRoute from "@/interface/routes/expenses/[id]/approve/route"
 import * as expensesIdRejectRoute from "@/interface/routes/expenses/[id]/reject/route"
 import * as expensesIdRoute from "@/interface/routes/expenses/[id]/route"
@@ -501,6 +510,17 @@ export const app = appBase
   .get("/employees/:code/lifecycle-events", ...employeesCodeLifecycleEventsRoute.GET)
   .get("/employees/:code/lifecycle-state", ...employeesCodeLifecycleStateRoute.GET)
   .get("/employees/:code/reporting-line", ...employeesCodeReportingLineRoute.GET)
+  .get("/evaluation-sheets", ...evaluationSheetsRoute.GET)
+  .post("/evaluation-sheets", ...evaluationSheetsCreateRoute.POST)
+  .get("/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
+  .get("/evaluation-sheets/:sheet_id", ...evaluationSheetsSheetIdRoute.GET)
+  .put("/evaluation-sheets/:sheet_id/evaluators", ...evaluationSheetsSheetIdEvaluatorsRoute.PUT)
+  .post("/evaluation-sheets/:sheet_id/transition", ...evaluationSheetsSheetIdTransitionRoute.POST)
+  .get("/evaluation-templates", ...evaluationTemplatesRoute.GET)
+  .post("/evaluation-templates", ...evaluationTemplatesCreateRoute.POST)
+  .get("/evaluation-templates/:template_id", ...evaluationTemplatesTemplateIdRoute.GET)
+  .put("/evaluation-templates/:template_id", ...evaluationTemplatesTemplateIdRoute.PUT)
+  .patch("/evaluation-templates/:template_id", ...evaluationTemplatesTemplateIdRoute.PATCH)
   .post("/expenses", ...expensesRoute.POST)
   .get("/expenses/admin", ...expensesAdminRoute.GET)
   .get("/expenses/inbox", ...expensesInboxRoute.GET)

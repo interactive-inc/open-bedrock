@@ -115,6 +115,12 @@ commands:
   performance-goals mine                      自分の目標一覧
   performance-goals update <id>               目標を更新
   performance-goals delete <id>               目標を削除
+  evaluation-sheets list                      評価シート一覧・管理者のみ (--period --status --employee-id)
+  evaluation-sheets mine                      自分の評価シート一覧 (--period --status)
+  evaluation-sheets show                      評価シートを1件表示 (--id)
+  evaluation-sheets create                    評価シート作成 (--employee-id --period [--template-id --primary-evaluator-id --secondary-evaluator-id])
+  evaluation-sheets transition                評価シートの状態遷移 (--id --status --expected-revision [--note])
+  evaluation-sheets evaluators                評価者の割当変更 (--id --primary-evaluator-id --expected-revision [--secondary-evaluator-id])
   grade-definitions list                      等級マスタ一覧
   grade-definitions create                    等級を作成 (--code --name --rank [--description])
   grade-definitions update                    等級を更新 (--id --code --name --rank [--description])

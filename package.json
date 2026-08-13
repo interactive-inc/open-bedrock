@@ -4,6 +4,7 @@
   "workspaces": [
     "api",
     "cli",
+    "mcp",
     "web"
   ],
   "type": "module",

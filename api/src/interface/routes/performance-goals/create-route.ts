@@ -28,6 +28,7 @@ export const POST = factory.createHandlers(
       owner_type: z.enum(["individual", "department", "company"]).default("individual"),
       parent_goal_id: z.number().int().positive().nullable().optional(),
       department_code: z.string().min(1).max(100).nullable().optional(),
+      evaluation_sheet_id: z.number().int().positive().nullable().optional(),
     }),
   ),
   async (c) => {
@@ -81,6 +82,7 @@ export const POST = factory.createHandlers(
       ownerType: json.owner_type,
       parentGoalId: json.parent_goal_id ?? null,
       departmentCode: json.owner_type === "department" ? (json.department_code ?? null) : null,
+      evaluationSheetId: json.evaluation_sheet_id ?? null,
     })
 
     if (goal instanceof ApplicationError) {
@@ -98,6 +100,7 @@ export const POST = factory.createHandlers(
       owner_type: goal.ownerType,
       parent_goal_id: goal.parentGoalId,
       department_code: goal.departmentCode,
+      evaluation_sheet_id: goal.evaluationSheetId,
     })
 
     return c.json(responseBody, 201)

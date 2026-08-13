@@ -94,6 +94,17 @@ const previouslyUnregistered: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/training-enrollments/show", help: "training-enrollments show" },
 ]
 
+/** evaluation-sheets CLI ルート (#991) の到達性テスト。 */
+const evaluationSheetRoutes: ReadonlyArray<{ path: string; help: string }> = [
+  { path: "/evaluation-sheets", help: "evaluation-sheets" },
+  { path: "/evaluation-sheets/list", help: "evaluation-sheets list" },
+  { path: "/evaluation-sheets/mine", help: "evaluation-sheets mine" },
+  { path: "/evaluation-sheets/show", help: "evaluation-sheets show" },
+  { path: "/evaluation-sheets/create", help: "evaluation-sheets create" },
+  { path: "/evaluation-sheets/transition", help: "evaluation-sheets transition" },
+  { path: "/evaluation-sheets/evaluators", help: "evaluation-sheets evaluators" },
+]
+
 /** セキュリティ修正で追加されたルートの到達性テスト。 */
 const securityRoutes: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/batch/migrate-password-hashes", help: "batch migrate-password-hashes" },
@@ -101,6 +112,22 @@ const securityRoutes: ReadonlyArray<{ path: string; help: string }> = [
 
 describe("route registration (#100)", () => {
   for (const route of previouslyUnregistered) {
+    test(`POST ${route.path} is reachable and returns its help`, async () => {
+      const response = await app.request(route.path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ help: "1" }),
+      })
+
+      expect(response.status).toBe(200)
+
+      expect(await response.text()).toContain(route.help)
+    })
+  }
+})
+
+describe("route registration (evaluation-sheets #991)", () => {
+  for (const route of evaluationSheetRoutes) {
     test(`POST ${route.path} is reachable and returns its help`, async () => {
       const response = await app.request(route.path, {
         method: "POST",

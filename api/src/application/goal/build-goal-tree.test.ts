@@ -16,6 +16,7 @@ function goal(props: { id: number; ownerType: GoalOwnerType; parentGoalId: numbe
     ownerType: props.ownerType,
     parentGoalId: props.parentGoalId,
     departmentCode: null,
+    evaluationSheetId: null,
   })
 }
 

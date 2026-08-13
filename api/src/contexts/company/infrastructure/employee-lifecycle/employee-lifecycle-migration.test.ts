@@ -40,6 +40,8 @@ const postLifecycleMigrationFiles = new Set([
   "0030_identity_provisioning.sql",
   "0114_tables_rename.sql",
   "0125_audit_employee_contexts.sql",
+  "0128_mbo_evaluation.sql",
+  "0129_mbo_evaluation_fixes.sql",
 ])
 
 function migrationFiles(): string[] {

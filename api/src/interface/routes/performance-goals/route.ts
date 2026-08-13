@@ -171,6 +171,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       owner_type: row.ownerType,
       parent_goal_id: row.parentGoalId,
       department_code: row.departmentCode,
+      evaluation_sheet_id: row.evaluationSheetId,
     })),
     total: totalRows.at(0)?.total ?? 0,
   })

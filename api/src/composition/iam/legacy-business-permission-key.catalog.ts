@@ -28,6 +28,7 @@ export const LEGACY_BUSINESS_PERMISSION_KEYS = [
   "goal:read:department",
   "goal:evaluate",
   "goal:evaluate:reports",
+  "evaluation:administer",
   "attendance:read:all",
   "attendance:read:reports",
   "attendance:read:department",

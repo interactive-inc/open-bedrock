@@ -924,6 +924,7 @@ export const zAppGoal = z.object({
   owner_type: zAppGoalOwnerType.default("individual"),
   parent_goal_id: z.number().nullable().default(null),
   department_code: z.string().nullable().default(null),
+  evaluation_sheet_id: z.number().nullable().default(null),
 })
 
 export type AppGoal = z.infer<typeof zAppGoal>
@@ -985,6 +986,62 @@ export const zAppGoalTree = z.object({
 })
 
 export type AppGoalTree = z.infer<typeof zAppGoalTree>
+
+/** 評価テンプレートの項目。 */
+export const zAppEvaluationTemplateItem = z.object({
+  title: z.string(),
+  default_weight: z.number(),
+  kpi_example: z.string().nullable().optional(),
+})
+
+/** 評価テンプレート 1 件のレスポンス。 */
+export const zAppEvaluationTemplate = z.object({
+  id: z.number(),
+  title: z.string(),
+  period: z.string(),
+  items: z.array(zAppEvaluationTemplateItem),
+  status: z.string(),
+  created_by: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type AppEvaluationTemplate = z.infer<typeof zAppEvaluationTemplate>
+
+/** 評価テンプレート一覧のレスポンス。 */
+export const zAppEvaluationTemplateList = z.object({
+  data: z.array(zAppEvaluationTemplate),
+  total: z.number(),
+})
+
+export type AppEvaluationTemplateList = z.infer<typeof zAppEvaluationTemplateList>
+
+/** 評価シート 1 件のレスポンス。 */
+export const zAppEvaluationSheet = z.object({
+  id: z.number(),
+  employee_id: z.number(),
+  template_id: z.number().nullable(),
+  period: z.string(),
+  status: z.string(),
+  primary_evaluator_id: z.number(),
+  secondary_evaluator_id: z.number().nullable(),
+  submitted_at: z.string().nullable(),
+  approved_at: z.string().nullable(),
+  finalized_at: z.string().nullable(),
+  revision: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type AppEvaluationSheet = z.infer<typeof zAppEvaluationSheet>
+
+/** 評価シート一覧のレスポンス。 */
+export const zAppEvaluationSheetList = z.object({
+  data: z.array(zAppEvaluationSheet),
+  total: z.number(),
+})
+
+export type AppEvaluationSheetList = z.infer<typeof zAppEvaluationSheetList>
 
 /** 等級マスタ 1 件のレスポンス。 */
 export const zAppGrade = z.object({
