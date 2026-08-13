@@ -45,6 +45,7 @@ const MANAGER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
 const HR_EXTRA_PERMISSIONS: ReadonlyArray<PermissionKey> = [
   "application_template:manage",
   "review:administer",
+  "evaluation:administer",
   "org:manage",
   "employee:delete",
   "employee:lifecycle:apply",

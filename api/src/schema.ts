@@ -1104,6 +1104,7 @@ export const goals = sqliteTable("performance_goals", {
   ownerType: text("owner_type").notNull().default("individual"),
   parentGoalId: integer("parent_goal_id"),
   departmentCode: text("department_code"),
+  evaluationSheetId: integer("evaluation_sheet_id"),
 })
 
 export type GoalRow = InferSelectModel<typeof goals>
@@ -1133,6 +1134,80 @@ export const goalEvaluations = sqliteTable(
 )
 
 export type GoalEvaluationRow = InferSelectModel<typeof goalEvaluations>
+
+/**
+ * 評価テンプレート（期間ごとの評価項目雛形）。items は JSON 配列で保存する。
+ * status は draft（下書き）→ active（運用中）→ archived（廃止）の遷移をとる。
+ */
+export const evaluationTemplates = sqliteTable(
+  "evaluation_templates",
+  {
+    id: integer("id").primaryKey(),
+    title: text("title").notNull(),
+    period: text("period").notNull(),
+    items: text("items").notNull(),
+    status: text("status").notNull().default("draft"),
+    createdBy: integer("created_by").notNull(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    index("idx_evaluation_templates_period").on(table.period),
+    index("idx_evaluation_templates_status").on(table.status),
+  ],
+)
+
+export type EvaluationTemplateRow = InferSelectModel<typeof evaluationTemplates>
+
+/**
+ * 評価シート（評価期 × 社員。MBO の中心エンティティ）。
+ * primary/secondary_evaluator_id はシート作成時に org_memberships から解決して固定する。
+ * 異動後も評価期間中は変わらない。HR/admin のみ手動変更可（audit_log 記録）。
+ */
+export const evaluationSheets = sqliteTable(
+  "evaluation_sheets",
+  {
+    id: integer("id").primaryKey(),
+    employeeId: integer("employee_id").notNull(),
+    templateId: integer("template_id"),
+    period: text("period").notNull(),
+    status: text("status").notNull().default("draft"),
+    primaryEvaluatorId: integer("primary_evaluator_id").notNull(),
+    secondaryEvaluatorId: integer("secondary_evaluator_id"),
+    submittedAt: text("submitted_at"),
+    approvedAt: text("approved_at"),
+    finalizedAt: text("finalized_at"),
+    revision: integer("revision").notNull().default(1),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    index("idx_evaluation_sheets_employee").on(table.employeeId),
+    index("idx_evaluation_sheets_period").on(table.period),
+    index("idx_evaluation_sheets_status").on(table.status),
+    uniqueIndex("uq_evaluation_sheets_employee_period").on(table.employeeId, table.period),
+  ],
+)
+
+export type EvaluationSheetRow = InferSelectModel<typeof evaluationSheets>
+
+/** 評価シートの監査ログ（操作の事実記録）。 */
+export const evaluationSheetAuditLogs = sqliteTable(
+  "evaluation_sheet_audit_logs",
+  {
+    id: integer("id").primaryKey(),
+    sheetId: integer("sheet_id").notNull(),
+    actorId: integer("actor_id").notNull(),
+    action: text("action").notNull(),
+    fromValue: text("from_value"),
+    toValue: text("to_value"),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [index("idx_evaluation_sheet_audit_logs_sheet").on(table.sheetId)],
+)
+
+export type EvaluationSheetAuditLogRow = InferSelectModel<typeof evaluationSheetAuditLogs>
 
 /** ナレッジ記事（社内手続き・規程などの記事） */
 export const knowledgeArticles = sqliteTable("knowledge_articles", {
@@ -1312,6 +1387,7 @@ export const oneOnOnes = sqliteTable("one_on_ones", {
   topics: text("topics"),
   managerNote: text("manager_note"),
   nextAction: text("next_action"),
+  evaluationSheetId: integer("evaluation_sheet_id"),
 })
 
 export type OneOnOneRow = InferSelectModel<typeof oneOnOnes>

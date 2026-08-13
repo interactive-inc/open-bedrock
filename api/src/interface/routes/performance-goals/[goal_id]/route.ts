@@ -25,6 +25,7 @@ function toResponseBody(goal: Goal) {
     owner_type: goal.ownerType,
     parent_goal_id: goal.parentGoalId,
     department_code: goal.departmentCode,
+    evaluation_sheet_id: goal.evaluationSheetId,
   })
 }
 

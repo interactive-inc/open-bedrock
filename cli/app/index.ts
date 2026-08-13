@@ -356,6 +356,13 @@ import goalDeleteHandler from "@/app/performance-goals/delete/route"
 import goalMineHandler from "@/app/performance-goals/mine/route"
 import goalShowHandler from "@/app/performance-goals/show/route"
 import goalUpdateHandler from "@/app/performance-goals/update/route"
+import evalSheetHandler from "@/app/evaluation-sheets/route"
+import evalSheetListHandler from "@/app/evaluation-sheets/list/route"
+import evalSheetMineHandler from "@/app/evaluation-sheets/mine/route"
+import evalSheetShowHandler from "@/app/evaluation-sheets/show/route"
+import evalSheetCreateHandler from "@/app/evaluation-sheets/create/route"
+import evalSheetTransitionHandler from "@/app/evaluation-sheets/transition/route"
+import evalSheetEvaluatorsHandler from "@/app/evaluation-sheets/evaluators/route"
 import kbAddHandler from "@/app/knowledge-articles/add/route"
 import kbDeleteHandler from "@/app/knowledge-articles/delete/route"
 import kbEditHandler from "@/app/knowledge-articles/edit/route"
@@ -897,6 +904,13 @@ routes.post("/performance-goals/delete", ...goalDeleteHandler)
 routes.post("/performance-goals/mine", ...goalMineHandler)
 routes.post("/performance-goals/show", ...goalShowHandler)
 routes.post("/performance-goals/update", ...goalUpdateHandler)
+routes.post("/evaluation-sheets", ...evalSheetHandler)
+routes.post("/evaluation-sheets/list", ...evalSheetListHandler)
+routes.post("/evaluation-sheets/mine", ...evalSheetMineHandler)
+routes.post("/evaluation-sheets/show", ...evalSheetShowHandler)
+routes.post("/evaluation-sheets/create", ...evalSheetCreateHandler)
+routes.post("/evaluation-sheets/transition", ...evalSheetTransitionHandler)
+routes.post("/evaluation-sheets/evaluators", ...evalSheetEvaluatorsHandler)
 routes.post("/knowledge-articles/add", ...kbAddHandler)
 routes.post("/knowledge-articles/delete", ...kbDeleteHandler)
 routes.post("/knowledge-articles/edit", ...kbEditHandler)
