@@ -34,6 +34,7 @@ async function insertPasswordIdentity(
   ])
 }
 
+/** Applicationと実D1 adapterを組み合わせたcredential migration統合テスト。 */
 describe("MigrateLegacyHashes", () => {
   test("migrates legacy hash to pbkdf2-wrapped-legacy format", async () => {
     const { context, db } = createTestContext()
