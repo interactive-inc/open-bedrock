@@ -1,4 +1,4 @@
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
 import { NotificationRepository } from "@system/infrastructure/notifications/notification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -12,7 +12,7 @@ export type Deleted = { reason: "deleted" }
 
 /** Account 本人宛ての通知を削除する。所有権ガードは DB レベルで行う。 */
 export class DeleteNotification {
-  constructor(private readonly c: SystemContext) {}
+  constructor(private readonly c: SystemDatabaseContext) {}
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
     const repository = new NotificationRepository(this.c)

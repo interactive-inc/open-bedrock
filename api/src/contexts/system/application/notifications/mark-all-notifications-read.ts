@@ -1,4 +1,4 @@
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
 import { NotificationRepository } from "@system/infrastructure/notifications/notification-repository"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -9,7 +9,7 @@ export type Command = {
 
 /** Account 本人宛ての未読通知をすべて既読にし、更新件数を返す。 */
 export class MarkAllNotificationsRead {
-  constructor(private readonly c: SystemContext) {}
+  constructor(private readonly c: SystemDatabaseContext) {}
 
   async run(command: Command): Promise<number | ApplicationError> {
     const repository = new NotificationRepository(this.c)

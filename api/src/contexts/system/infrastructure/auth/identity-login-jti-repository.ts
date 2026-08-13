@@ -1,4 +1,4 @@
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
 
 export type MarkJtiResult = "recorded" | "replayed"
 
@@ -7,7 +7,7 @@ export type MarkJtiResult = "recorded" | "replayed"
  * jti は主キーのため、同一 jti の 2 回目の挿入は一意制約違反になる。これを "replayed" として扱う。
  */
 export class IdentityLoginJtiRepository {
-  constructor(private readonly c: SystemContext) {
+  constructor(private readonly c: SystemD1Context) {
     Object.freeze(this)
   }
 

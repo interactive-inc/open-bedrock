@@ -1,10 +1,10 @@
 import { Notification } from "@system/domain/notifications/notification.entity"
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
 import { notifications } from "@system/infrastructure/schema/system"
 import { and, eq } from "drizzle-orm"
 
 export class NotificationRepository {
-  constructor(private readonly c: SystemContext) {}
+  constructor(private readonly c: SystemDatabaseContext) {}
 
   async findById(notificationId: number): Promise<Notification | null | Error> {
     try {

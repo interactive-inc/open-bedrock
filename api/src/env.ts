@@ -1,7 +1,9 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
 import type { schema } from "@/schema"
 import type {
-  SystemContext,
+  SystemD1Context,
+  SystemDatabaseContext,
+  SystemRequestAudit,
   SystemRequestAuditContext,
 } from "@system/infrastructure/configuration/system-context"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
@@ -52,7 +54,7 @@ export type Bindings = {
   API_ORIGIN?: string
 }
 
-export type RequestAuditContext = SystemRequestAuditContext
+export type RequestAuditContext = SystemRequestAudit
 
 /** リクエストスコープの変数。database に Drizzle、session に本人（Session。認可判定は session.hasPermission）を載せる。 */
 export type Variables = {
@@ -68,7 +70,9 @@ export type HonoEnv = {
 }
 
 /** リポジトリ・ユースケースが受け取る Context の最小型。 */
-export type Context = SystemContext & {
-  var: Variables
-  env: Bindings
-}
+export type Context = SystemDatabaseContext &
+  SystemD1Context &
+  SystemRequestAuditContext & {
+    var: Variables
+    env: Bindings
+  }

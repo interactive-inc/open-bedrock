@@ -1,5 +1,5 @@
 import type { AccountStatus } from "@system/domain/auth/account-status"
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemDatabaseContext } from "@system/infrastructure/configuration/system-context"
 import {
   accountRoles,
   accounts,
@@ -24,7 +24,7 @@ export type ResolvedAccountAuthorization = Pick<ResolvedAccount, "roleKeys" | "p
  * permission は accountRoles ⋈ roles ⋈ rolePermissions ⋈ permissions の和集合。
  */
 export class AccountAuthRepository {
-  constructor(private readonly c: SystemContext) {
+  constructor(private readonly c: SystemDatabaseContext) {
     Object.freeze(this)
   }
 
