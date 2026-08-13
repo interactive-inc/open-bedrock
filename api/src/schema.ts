@@ -420,7 +420,6 @@ export type {
   ApprovalDelegationRow,
 } from "@/contexts/company/infrastructure/schema/application"
 
-
 export {
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
