@@ -1,4 +1,4 @@
-import type { AccessTokenView } from "@/application/auth/access-token-view"
+import type { AccessTokenView } from "@system/application/auth/access-token-view"
 import { IssueEmployeeSession } from "@/application/auth/issue-employee-session"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import type { Context } from "@/env"

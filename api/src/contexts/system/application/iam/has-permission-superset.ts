@@ -1,4 +1,4 @@
-import type { SystemAuthorization } from "@/contexts/system/application/iam/system-authorization"
+import type { SystemAuthorization } from "@system/application/iam/system-authorization"
 
 /**
  * 対象の実効権限をすべて実行者も持つか判定する。

@@ -1,4 +1,4 @@
-import type { Context } from "@/env"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
 import { LegacySecretRepository } from "@system/infrastructure/auth/legacy-secret-repository"
 import { isLegacyPasswordHash } from "@/lib/auth/is-legacy-password-hash"
 import { wrapLegacyHash } from "@/lib/auth/wrap-legacy-hash"
@@ -12,7 +12,7 @@ export type MigrationResult = {
 
 /** System Identity の旧形式 password secret を PBKDF2 ラップ形式に一括移行する。 */
 export class MigrateLegacyHashes {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: SystemContext) {}
 
   async run(): Promise<MigrationResult | Error> {
     const repository = new LegacySecretRepository(this.c)

@@ -5,7 +5,7 @@ import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-ac
 import { parseBearerAuthorization } from "@/contexts/system/domain/auth/parse-bearer-authorization"
 import { zAccountId } from "@system/domain/auth/account-id"
 import type { HonoEnv } from "@/env"
-import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
 import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { accessTokenService } from "@/infrastructure/auth/jose-token-signer"

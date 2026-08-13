@@ -1,5 +1,5 @@
 import type { Notification } from "@system/domain/notifications/notification.entity"
-import type { Context } from "@/env"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
 import { NotificationRepository } from "@system/infrastructure/notifications/notification-repository"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -11,7 +11,7 @@ export type Command = {
 
 /** Account 本人宛ての通知を1件取得する。他の Account 宛ての閲覧を拒否する。 */
 export class GetNotification {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: SystemContext) {}
 
   async run(command: Command): Promise<Notification | ApplicationError> {
     const repository = new NotificationRepository(this.c)

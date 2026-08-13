@@ -13,7 +13,8 @@
       "@/*": ["./src/*"],
       "@system/application/*": ["./src/contexts/system/application/*"],
       "@system/domain/*": ["./src/contexts/system/domain/*"],
-      "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"]
+      "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"],
+      "@system/interface/*": ["./src/contexts/system/interface/*"]
     }
   }
 }
