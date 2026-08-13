@@ -12,7 +12,7 @@ import type {
   SystemAuditEventRecord,
   SystemAuditEventSummary,
 } from "@/composition/audit/system-audit-event"
-import type { AuditJsonValue } from "@/lib/audit/stable-json"
+import type { AuditJsonValue } from "@/contexts/system/application/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 

@@ -1,6 +1,6 @@
 import { createSystemAuditEvent as createSystemAuditEventEnvelope } from "@/contexts/system/domain/audit/create-system-audit-event"
-import type { AuditJsonValue } from "@/lib/audit/stable-json"
-import { toStableAuditJson } from "@/lib/audit/stable-json"
+import type { AuditJsonValue } from "@/contexts/system/application/audit/stable-json"
+import { toStableAuditJson } from "@/contexts/system/application/audit/stable-json"
 import { ValidationError } from "@/lib/errors"
 import { z } from "zod"
 
