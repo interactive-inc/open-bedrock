@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { toStableAuditJson } from "@/lib/audit/stable-json"
+import { toStableAuditJson } from "@/contexts/system/application/audit/stable-json"
 import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
 
 describe("toStableAuditJson compatibility adapter", () => {
