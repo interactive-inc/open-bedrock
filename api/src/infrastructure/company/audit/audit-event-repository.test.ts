@@ -879,84 +879,90 @@ describe("AuditEventRepository write contract", () => {
 })
 
 describe("AuditEventRepository search contract", () => {
-  test("binds a snapshot and restores the exact mixed-width source page after next then previous", async () => {
-    const { context, db } = createTestContext()
-    await insertMixedWidthSameSecondRows(db, 400)
-    const repository = new AuditEventRepository(context)
-    const pages: Array<Awaited<ReturnType<AuditEventRepository["search"]>>> = []
+  test(
+    "binds a snapshot and restores the exact mixed-width source page after next then previous",
+    async () => {
+      const { context, db } = createTestContext()
+      await insertMixedWidthSameSecondRows(db, 400)
+      const repository = new AuditEventRepository(context)
+      const pages: Array<Awaited<ReturnType<AuditEventRepository["search"]>>> = []
 
-    let cursor: string | null = null
-    for (let index = 0; index < 5; index += 1) {
-      const page = await repository.search({ limit: 100, cursor, filters: {} })
-      pages.push(page)
-      expect(page.items.length).toBeGreaterThan(0)
-      cursor = page.nextCursor
-      expect(cursor).not.toBeNull()
-    }
+      let cursor: string | null = null
+      for (let index = 0; index < 5; index += 1) {
+        const page = await repository.search({ limit: 100, cursor, filters: {} })
+        pages.push(page)
+        expect(page.items.length).toBeGreaterThan(0)
+        cursor = page.nextCursor
+        expect(cursor).not.toBeNull()
+      }
 
-    const source = pages[3]
-    const target = pages[4]
-    const restored = await repository.search({
-      limit: 100,
-      cursor: target?.previousCursor ?? null,
-      filters: {},
-    })
-    expect(restored.items.map((item) => item.eventId)).toEqual(
-      source?.items.map((item) => item.eventId),
-    )
-
-    await repository.append(record({ eventId: "backdated-new", createdAt: 99 }))
-    const remainingIds: string[] = []
-    let page = target
-    let lastPage = target
-    while (page !== undefined) {
-      remainingIds.push(...page.items.map((item) => item.eventId))
-      lastPage = page
-      if (page.nextCursor === null) break
-      page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
-    }
-    expect(remainingIds).not.toContain("backdated-new")
-    const allForwardIds = [
-      ...pages.slice(0, 4).flatMap((item) => item.items.map((event) => event.eventId)),
-      ...remainingIds,
-    ]
-    expect(allForwardIds).toEqual(Array.from({ length: 400 }, (_, index) => `mixed-${400 - index}`))
-    expect(new Set(allForwardIds).size).toBe(400)
-
-    let backwardPage = lastPage
-    for (let index = 0; index < 3; index += 1) {
-      expect(backwardPage?.previousCursor).not.toBeNull()
-      const newer = await repository.search({
+      const source = pages[3]
+      const target = pages[4]
+      const restored = await repository.search({
         limit: 100,
-        cursor: backwardPage?.previousCursor ?? null,
+        cursor: target?.previousCursor ?? null,
         filters: {},
       })
-      const immediateForward = await repository.search({
-        limit: 100,
-        cursor: newer.nextCursor,
-        filters: {},
-      })
-      expect(immediateForward.items.map((item) => item.eventId)).toEqual(
-        backwardPage?.items.map((item) => item.eventId),
+      expect(restored.items.map((item) => item.eventId)).toEqual(
+        source?.items.map((item) => item.eventId),
       )
-      backwardPage = newer
-    }
 
-    expect(
-      await rejectionOf(
-        repository.search({ limit: 99, cursor: target?.previousCursor ?? null, filters: {} }),
-      ),
-    ).toBeInstanceOf(ValidationError)
-    expect(
-      await rejectionOf(
-        repository.search({
+      await repository.append(record({ eventId: "backdated-new", createdAt: 99 }))
+      const remainingIds: string[] = []
+      let page = target
+      let lastPage = target
+      while (page !== undefined) {
+        remainingIds.push(...page.items.map((item) => item.eventId))
+        lastPage = page
+        if (page.nextCursor === null) break
+        page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
+      }
+      expect(remainingIds).not.toContain("backdated-new")
+      const allForwardIds = [
+        ...pages.slice(0, 4).flatMap((item) => item.items.map((event) => event.eventId)),
+        ...remainingIds,
+      ]
+      expect(allForwardIds).toEqual(
+        Array.from({ length: 400 }, (_, index) => `mixed-${400 - index}`),
+      )
+      expect(new Set(allForwardIds).size).toBe(400)
+
+      let backwardPage = lastPage
+      for (let index = 0; index < 3; index += 1) {
+        expect(backwardPage?.previousCursor).not.toBeNull()
+        const newer = await repository.search({
           limit: 100,
-          cursor: target?.previousCursor ?? null,
-          filters: { action: "legacy.mixed" },
-        }),
-      ),
-    ).toBeInstanceOf(ValidationError)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+          cursor: backwardPage?.previousCursor ?? null,
+          filters: {},
+        })
+        const immediateForward = await repository.search({
+          limit: 100,
+          cursor: newer.nextCursor,
+          filters: {},
+        })
+        expect(immediateForward.items.map((item) => item.eventId)).toEqual(
+          backwardPage?.items.map((item) => item.eventId),
+        )
+        backwardPage = newer
+      }
+
+      expect(
+        await rejectionOf(
+          repository.search({ limit: 99, cursor: target?.previousCursor ?? null, filters: {} }),
+        ),
+      ).toBeInstanceOf(ValidationError)
+      expect(
+        await rejectionOf(
+          repository.search({
+            limit: 100,
+            cursor: target?.previousCursor ?? null,
+            filters: { action: "legacy.mixed" },
+          }),
+        ),
+      ).toBeInstanceOf(ValidationError)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
   test("returns an empty stable page", async () => {
     const { context } = createTestContext()
@@ -1030,49 +1036,53 @@ describe("AuditEventRepository search contract", () => {
     expect(preparedSql.some((sql) => sql.includes("json_each"))).toBe(true)
   })
 
-  test("bounds wide summary reads and traverses every shortened same-second page once", async () => {
-    const { context, db } = createTestContext()
-    await insertWideSummaryRows(db, 101, 200_000)
-    const reads = observeAllReads(context)
-    const repository = new AuditEventRepository(context)
+  test(
+    "bounds wide summary reads and traverses every shortened same-second page once",
+    async () => {
+      const { context, db } = createTestContext()
+      await insertWideSummaryRows(db, 101, 200_000)
+      const reads = observeAllReads(context)
+      const repository = new AuditEventRepository(context)
 
-    const first = await repository.search({ limit: 100, cursor: null, filters: {} })
-    expect(reads[0]?.payloadBytes).toBeLessThan(16 * 1024 * 1024)
-    expect(first.items.length).toBeGreaterThan(0)
-    expect(first.items.length).toBeLessThan(100)
-    expect(first.nextCursor).not.toBeNull()
+      const first = await repository.search({ limit: 100, cursor: null, filters: {} })
+      expect(reads[0]?.payloadBytes).toBeLessThan(16 * 1024 * 1024)
+      expect(first.items.length).toBeGreaterThan(0)
+      expect(first.items.length).toBeLessThan(100)
+      expect(first.nextCursor).not.toBeNull()
 
-    const second = await repository.search({ limit: 100, cursor: first.nextCursor, filters: {} })
-    expect(second.previousCursor).not.toBeNull()
-    const backToFirst = await repository.search({
-      limit: 100,
-      cursor: second.previousCursor,
-      filters: {},
-    })
-    expect(backToFirst.items.map((item) => item.eventId)).toEqual(
-      first.items.map((item) => item.eventId),
-    )
+      const second = await repository.search({ limit: 100, cursor: first.nextCursor, filters: {} })
+      expect(second.previousCursor).not.toBeNull()
+      const backToFirst = await repository.search({
+        limit: 100,
+        cursor: second.previousCursor,
+        filters: {},
+      })
+      expect(backToFirst.items.map((item) => item.eventId)).toEqual(
+        first.items.map((item) => item.eventId),
+      )
 
-    const eventIds = first.items.map((item) => item.eventId)
-    let page = second
-    while (true) {
-      eventIds.push(...page.items.map((item) => item.eventId))
-      if (page.nextCursor === null) break
-      page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
-    }
+      const eventIds = first.items.map((item) => item.eventId)
+      let page = second
+      while (true) {
+        eventIds.push(...page.items.map((item) => item.eventId))
+        if (page.nextCursor === null) break
+        page = await repository.search({ limit: 100, cursor: page.nextCursor, filters: {} })
+      }
 
-    expect(eventIds).toEqual(Array.from({ length: 101 }, (_, index) => `wide-${101 - index}`))
-    expect(new Set(eventIds).size).toBe(101)
-    const descriptorReads = reads.filter((read) => read.sql.includes("wire_bytes"))
-    const exactReads = reads.filter((read) => read.sql.includes("json_each"))
-    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(16 * 1024 * 1024)
-    expect(Math.max(...descriptorReads.map((read) => read.payloadBytes))).toBeLessThan(64 * 1024)
-    expect(Math.max(...exactReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
-      4 * 1024 * 1024,
-    )
-    expect(descriptorReads.length).toBeGreaterThan(1)
-    expect(exactReads.length).toBeGreaterThan(1)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+      expect(eventIds).toEqual(Array.from({ length: 101 }, (_, index) => `wide-${101 - index}`))
+      expect(new Set(eventIds).size).toBe(101)
+      const descriptorReads = reads.filter((read) => read.sql.includes("wire_bytes"))
+      const exactReads = reads.filter((read) => read.sql.includes("json_each"))
+      expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(16 * 1024 * 1024)
+      expect(Math.max(...descriptorReads.map((read) => read.payloadBytes))).toBeLessThan(64 * 1024)
+      expect(Math.max(...exactReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
+        4 * 1024 * 1024,
+      )
+      expect(descriptorReads.length).toBeGreaterThan(1)
+      expect(exactReads.length).toBeGreaterThan(1)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
   test("segments a remote-valid summary whose combined exact HEX row exceeds the D1 row limit", async () => {
     const { context, db } = createTestContext()
@@ -1735,142 +1745,157 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(await repository.export({ filters: {} })).toEqual([])
   })
 
-  test("local-only >2 MB stress accepts exactly sixteen MiB and rejects one-byte overflow", async () => {
-    const boundaryDetail: AuditEventDetail = {
-      eventId: "legacy--1",
-      requestId: "legacy-request--1",
-      actorAccountId: 7,
-      actorEmployeeId: 11,
-      action: "legacy.unknown.action",
-      targetType: "legacy_target",
-      targetId: "legacy--1",
-      outcome: "succeeded",
-      reasonCode: "legacy_reason",
-      authorizationJson: '{"scope":"legacy"}',
-      beforeJson: '{"state":"before"}',
-      afterJson: '{"state":"after"}',
-      metadataJson: '""',
-      clientIp: "198.51.100.7",
-      clientName: "api",
-      createdAt: 1_700_000_000,
-    }
-    const baseBytes = new TextEncoder().encode(toAuditCsv([boundaryDetail])).byteLength
-    const exactMetadataLength = AUDIT_CSV_MAX_BYTES - baseBytes
-
-    const exact = createTestContext()
-    await insertLegacyRow(exact.db, {
-      metadataJson: JSON.stringify("x".repeat(exactMetadataLength)),
-    })
-    const exactRows = await new AuditEventRepository(exact.context).export({ filters: {} })
-    expect(new TextEncoder().encode(toAuditCsv(exactRows)).byteLength).toBe(AUDIT_CSV_MAX_BYTES)
-
-    const overflow = createTestContext()
-    await insertLegacyRow(overflow.db, {
-      metadataJson: JSON.stringify("x".repeat(exactMetadataLength + 1)),
-    })
-    expect(
-      await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
-    ).toBeInstanceOf(PayloadTooLargeError)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
-
-  test("remote-compatible multi-row export accepts exactly sixteen MiB and rejects one byte more", async () => {
-    const rowCount = 9
-    const emptyRows: AuditEventDetail[] = Array.from({ length: rowCount }, (_, index) => {
-      const id = index + 1
-      return {
-        eventId: `l${id}`,
-        requestId: "r",
-        actorAccountId: null,
-        actorEmployeeId: null,
-        action: "a",
-        targetType: null,
-        targetId: null,
+  test(
+    "local-only >2 MB stress accepts exactly sixteen MiB and rejects one-byte overflow",
+    async () => {
+      const boundaryDetail: AuditEventDetail = {
+        eventId: "legacy--1",
+        requestId: "legacy-request--1",
+        actorAccountId: 7,
+        actorEmployeeId: 11,
+        action: "legacy.unknown.action",
+        targetType: "legacy_target",
+        targetId: "legacy--1",
         outcome: "succeeded",
-        reasonCode: null,
-        authorizationJson: null,
-        beforeJson: null,
-        afterJson: null,
-        metadataJson: JSON.stringify(""),
-        clientIp: null,
+        reasonCode: "legacy_reason",
+        authorizationJson: '{"scope":"legacy"}',
+        beforeJson: '{"state":"before"}',
+        afterJson: '{"state":"after"}',
+        metadataJson: '""',
+        clientIp: "198.51.100.7",
         clientName: "api",
-        createdAt: id,
+        createdAt: 1_700_000_000,
       }
-    })
-    const baseBytes = new TextEncoder().encode(toAuditCsv(emptyRows)).byteLength
-    const contentBytes = AUDIT_CSV_MAX_BYTES - baseBytes
-    const contentLengths = Array.from(
-      { length: rowCount },
-      (_, index) => Math.floor(contentBytes / rowCount) + (index < contentBytes % rowCount ? 1 : 0),
-    )
-    const metadataValues = contentLengths.map((length) => JSON.stringify("x".repeat(length)))
-    expect(
-      Math.max(...metadataValues.map((value) => new TextEncoder().encode(value).byteLength)),
-    ).toBeLessThan(2_000_000)
+      const baseBytes = new TextEncoder().encode(toAuditCsv([boundaryDetail])).byteLength
+      const exactMetadataLength = AUDIT_CSV_MAX_BYTES - baseBytes
 
-    const exact = createTestContext()
-    for (const [index, metadataJson] of metadataValues.entries()) {
-      await insertMinimalRemoteMetadataRows(exact.db, {
-        firstId: index + 1,
-        count: 1,
-        metadataJson,
+      const exact = createTestContext()
+      await insertLegacyRow(exact.db, {
+        metadataJson: JSON.stringify("x".repeat(exactMetadataLength)),
       })
-    }
-    Bun.gc(true)
-    const exactMemoryBefore = process.memoryUsage()
-    const exactRows = await new AuditEventRepository(exact.context).export({ filters: {} })
-    Bun.gc(true)
-    const exactMemoryAfter = process.memoryUsage()
-    expect(
-      exactMemoryAfter.heapUsed +
-        exactMemoryAfter.arrayBuffers -
-        (exactMemoryBefore.heapUsed + exactMemoryBefore.arrayBuffers),
-    ).toBeLessThan(64 * 1024 * 1024)
-    expect(new TextEncoder().encode(toAuditCsv(exactRows)).byteLength).toBe(AUDIT_CSV_MAX_BYTES)
+      const exactRows = await new AuditEventRepository(exact.context).export({ filters: {} })
+      expect(new TextEncoder().encode(toAuditCsv(exactRows)).byteLength).toBe(AUDIT_CSV_MAX_BYTES)
 
-    const overflow = createTestContext()
-    for (const [index, metadataJson] of metadataValues.entries()) {
-      await insertMinimalRemoteMetadataRows(overflow.db, {
-        firstId: index + 1,
-        count: 1,
-        metadataJson:
-          index === metadataValues.length - 1
-            ? JSON.stringify("x".repeat((contentLengths[index] as number) + 1))
-            : metadataJson,
+      const overflow = createTestContext()
+      await insertLegacyRow(overflow.db, {
+        metadataJson: JSON.stringify("x".repeat(exactMetadataLength + 1)),
       })
-    }
-    expect(
-      await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
-    ).toBeInstanceOf(PayloadTooLargeError)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+      expect(
+        await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
+      ).toBeInstanceOf(PayloadTooLargeError)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
-  test("local-only >2 MB stress bounds segmented quote-heavy JSON that still fits CSV", async () => {
-    const { context, db } = createTestContext()
-    const metadataJson = JSON.stringify('"'.repeat(5_500_000))
-    await insertLegacyRow(db, { eventId: "quote-heavy", metadataJson })
-    const reads = observeAllReads(context)
-    const repository = new AuditEventRepository(context)
+  test(
+    "remote-compatible multi-row export accepts exactly sixteen MiB and rejects one byte more",
+    async () => {
+      const rowCount = 9
+      const emptyRows: AuditEventDetail[] = Array.from({ length: rowCount }, (_, index) => {
+        const id = index + 1
+        return {
+          eventId: `l${id}`,
+          requestId: "r",
+          actorAccountId: null,
+          actorEmployeeId: null,
+          action: "a",
+          targetType: null,
+          targetId: null,
+          outcome: "succeeded",
+          reasonCode: null,
+          authorizationJson: null,
+          beforeJson: null,
+          afterJson: null,
+          metadataJson: JSON.stringify(""),
+          clientIp: null,
+          clientName: "api",
+          createdAt: id,
+        }
+      })
+      const baseBytes = new TextEncoder().encode(toAuditCsv(emptyRows)).byteLength
+      const contentBytes = AUDIT_CSV_MAX_BYTES - baseBytes
+      const contentLengths = Array.from(
+        { length: rowCount },
+        (_, index) =>
+          Math.floor(contentBytes / rowCount) + (index < contentBytes % rowCount ? 1 : 0),
+      )
+      const metadataValues = contentLengths.map((length) => JSON.stringify("x".repeat(length)))
+      expect(
+        Math.max(...metadataValues.map((value) => new TextEncoder().encode(value).byteLength)),
+      ).toBeLessThan(2_000_000)
 
-    const detail = await repository.findByEventId("quote-heavy")
-    expect(detail?.metadataJson).toBe(metadataJson)
-    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
-    expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
-    reads.length = 0
+      const exact = createTestContext()
+      for (const [index, metadataJson] of metadataValues.entries()) {
+        await insertMinimalRemoteMetadataRows(exact.db, {
+          firstId: index + 1,
+          count: 1,
+          metadataJson,
+        })
+      }
+      Bun.gc(true)
+      const exactMemoryBefore = process.memoryUsage()
+      const exactRows = await new AuditEventRepository(exact.context).export({ filters: {} })
+      Bun.gc(true)
+      const exactMemoryAfter = process.memoryUsage()
+      expect(
+        exactMemoryAfter.heapUsed +
+          exactMemoryAfter.arrayBuffers -
+          (exactMemoryBefore.heapUsed + exactMemoryBefore.arrayBuffers),
+      ).toBeLessThan(64 * 1024 * 1024)
+      expect(new TextEncoder().encode(toAuditCsv(exactRows)).byteLength).toBe(AUDIT_CSV_MAX_BYTES)
 
-    const rows = await repository.export({ filters: {} })
-    const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
-    const segmentReads = reads.filter((read) => read.sql.includes("hex(substr"))
+      const overflow = createTestContext()
+      for (const [index, metadataJson] of metadataValues.entries()) {
+        await insertMinimalRemoteMetadataRows(overflow.db, {
+          firstId: index + 1,
+          count: 1,
+          metadataJson:
+            index === metadataValues.length - 1
+              ? JSON.stringify("x".repeat((contentLengths[index] as number) + 1))
+              : metadataJson,
+        })
+      }
+      expect(
+        await rejectionOf(new AuditEventRepository(overflow.context).export({ filters: {} })),
+      ).toBeInstanceOf(PayloadTooLargeError)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
-    expect(rows[0]?.metadataJson).toBe(metadataJson)
-    expect(csvBytes).toBeGreaterThan(16_500_000)
-    expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
-    expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
-    expect(segmentReads).toHaveLength(6)
-    expect(Math.max(...segmentReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
-      4 * 1024 * 1024,
-    )
-    expect(Math.max(...segmentReads.map((read) => read.maxRowPayloadBytes))).toBeLessThan(2_000_000)
-    expect(segmentReads.every((read) => read.sql.includes("FROM json_each(?1)"))).toBe(true)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+  test(
+    "local-only >2 MB stress bounds segmented quote-heavy JSON that still fits CSV",
+    async () => {
+      const { context, db } = createTestContext()
+      const metadataJson = JSON.stringify('"'.repeat(5_500_000))
+      await insertLegacyRow(db, { eventId: "quote-heavy", metadataJson })
+      const reads = observeAllReads(context)
+      const repository = new AuditEventRepository(context)
+
+      const detail = await repository.findByEventId("quote-heavy")
+      expect(detail?.metadataJson).toBe(metadataJson)
+      expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
+      expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(true)
+      reads.length = 0
+
+      const rows = await repository.export({ filters: {} })
+      const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
+      const segmentReads = reads.filter((read) => read.sql.includes("hex(substr"))
+
+      expect(rows[0]?.metadataJson).toBe(metadataJson)
+      expect(csvBytes).toBeGreaterThan(16_500_000)
+      expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
+      expect(Math.max(...reads.map((read) => read.payloadBytes))).toBeLessThan(AUDIT_CSV_MAX_BYTES)
+      expect(segmentReads).toHaveLength(6)
+      expect(Math.max(...segmentReads.map((read) => read.payloadBytes))).toBeLessThanOrEqual(
+        4 * 1024 * 1024,
+      )
+      expect(Math.max(...segmentReads.map((read) => read.maxRowPayloadBytes))).toBeLessThan(
+        2_000_000,
+      )
+      expect(segmentReads.every((read) => read.sql.includes("FROM json_each(?1)"))).toBe(true)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
   test.each([
     "failure",
@@ -1927,110 +1952,126 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(reads.some((read) => read.sql.includes("hex(substr"))).toBe(false)
   })
 
-  test("exports sixteen remote-valid one-megabyte metadata rows within twenty-five queries", async () => {
-    const { context, db, queryCount } = createCountingContext()
-    const metadataJson = JSON.stringify("x".repeat(1_000_000))
-    expect(new TextEncoder().encode(metadataJson).byteLength).toBe(1_000_002)
-    await insertMinimalRemoteMetadataRows(db, {
-      firstId: 1,
-      count: 16,
-      metadataJson,
-    })
-    const reads = observeAllReads(context)
-    const before = queryCount()
-
-    const rows = await new AuditEventRepository(context).export({ filters: {} })
-    const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
-
-    expect(rows).toHaveLength(16)
-    expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
-    expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
-    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
-    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
-    expect(queryCount() - before).toBe(11)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
-
-  test("exports eight remote-valid near-two-megabyte metadata rows within twenty-five queries", async () => {
-    const { context, db, queryCount } = createCountingContext()
-    const metadataJson = JSON.stringify("x".repeat(1_998_000))
-    expect(new TextEncoder().encode(metadataJson).byteLength).toBe(1_998_002)
-    await insertMinimalRemoteMetadataRows(db, {
-      firstId: 1,
-      count: 8,
-      metadataJson,
-    })
-    const reads = observeAllReads(context)
-    const before = queryCount()
-
-    const rows = await new AuditEventRepository(context).export({ filters: {} })
-    const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
-
-    expect(rows).toHaveLength(8)
-    expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
-    expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
-    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
-    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
-    expect(queryCount() - before).toBe(11)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
-
-  test("globally batches mixed segmented and forty-six-thousand tiny rows within twenty-five queries", async () => {
-    const { context, db, queryCount } = createCountingContext()
-    const metadataJson = JSON.stringify("x".repeat(1_000_000))
-    await insertMinimalRemoteMetadataRows(db, {
-      firstId: 1,
-      count: 14,
-      metadataJson,
-      createdAtOffset: 100_000,
-    })
-    await insertMinimalTinyRows(db, { firstId: 100, count: 46_000 })
-    const reads = observeAllReads(context)
-    const before = queryCount()
-
-    const rows = await new AuditEventRepository(context).export({ filters: {} })
-    const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
-
-    expect(rows).toHaveLength(46_014)
-    expect(rows.slice(0, 14).every((row) => row.metadataJson === metadataJson)).toBe(true)
-    expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
-    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
-    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
-    expect(reads.every((read) => read.bindingCount <= 100)).toBe(true)
-    expect(reads.every((read) => read.maxBindingBytes < 2_000_000)).toBe(true)
-    expect(reads.every((read) => new TextEncoder().encode(read.sql).byteLength < 100_000)).toBe(
-      true,
-    )
-    expect(
-      reads
-        .filter((read) => read.sql.includes("hex(substr"))
-        .every((read) => read.bindingCount === 1),
-    ).toBe(true)
-    expect(queryCount() - before).toBe(19)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
-
-  test("keeps remote-valid large segmented rows and export calls below D1 limits", async () => {
-    const { context, db, queryCount } = createCountingContext()
-    const metadataJson = JSON.stringify("値".repeat(600_000))
-    expect(new TextEncoder().encode(metadataJson).byteLength).toBeLessThan(2_000_000)
-    for (let id = 1; id <= 8; id += 1) {
-      await insertLegacyRow(db, {
-        id,
-        eventId: `remote-large-${id}`,
+  test(
+    "exports sixteen remote-valid one-megabyte metadata rows within twenty-five queries",
+    async () => {
+      const { context, db, queryCount } = createCountingContext()
+      const metadataJson = JSON.stringify("x".repeat(1_000_000))
+      expect(new TextEncoder().encode(metadataJson).byteLength).toBe(1_000_002)
+      await insertMinimalRemoteMetadataRows(db, {
+        firstId: 1,
+        count: 16,
         metadataJson,
-        createdAt: id,
       })
-    }
-    const reads = observeAllReads(context)
-    const before = queryCount()
+      const reads = observeAllReads(context)
+      const before = queryCount()
 
-    const rows = await new AuditEventRepository(context).export({ filters: {} })
+      const rows = await new AuditEventRepository(context).export({ filters: {} })
+      const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
 
-    expect(rows).toHaveLength(8)
-    expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
-    expect(queryCount() - before).toBe(10)
-    expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(8)
-    expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
-    expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+      expect(rows).toHaveLength(16)
+      expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
+      expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
+      expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+      expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+      expect(queryCount() - before).toBe(11)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
+
+  test(
+    "exports eight remote-valid near-two-megabyte metadata rows within twenty-five queries",
+    async () => {
+      const { context, db, queryCount } = createCountingContext()
+      const metadataJson = JSON.stringify("x".repeat(1_998_000))
+      expect(new TextEncoder().encode(metadataJson).byteLength).toBe(1_998_002)
+      await insertMinimalRemoteMetadataRows(db, {
+        firstId: 1,
+        count: 8,
+        metadataJson,
+      })
+      const reads = observeAllReads(context)
+      const before = queryCount()
+
+      const rows = await new AuditEventRepository(context).export({ filters: {} })
+      const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
+
+      expect(rows).toHaveLength(8)
+      expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
+      expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
+      expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+      expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+      expect(queryCount() - before).toBe(11)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
+
+  test(
+    "globally batches mixed segmented and forty-six-thousand tiny rows within twenty-five queries",
+    async () => {
+      const { context, db, queryCount } = createCountingContext()
+      const metadataJson = JSON.stringify("x".repeat(1_000_000))
+      await insertMinimalRemoteMetadataRows(db, {
+        firstId: 1,
+        count: 14,
+        metadataJson,
+        createdAtOffset: 100_000,
+      })
+      await insertMinimalTinyRows(db, { firstId: 100, count: 46_000 })
+      const reads = observeAllReads(context)
+      const before = queryCount()
+
+      const rows = await new AuditEventRepository(context).export({ filters: {} })
+      const csvBytes = new TextEncoder().encode(toAuditCsv(rows)).byteLength
+
+      expect(rows).toHaveLength(46_014)
+      expect(rows.slice(0, 14).every((row) => row.metadataJson === metadataJson)).toBe(true)
+      expect(csvBytes).toBeLessThanOrEqual(AUDIT_CSV_MAX_BYTES)
+      expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+      expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+      expect(reads.every((read) => read.bindingCount <= 100)).toBe(true)
+      expect(reads.every((read) => read.maxBindingBytes < 2_000_000)).toBe(true)
+      expect(reads.every((read) => new TextEncoder().encode(read.sql).byteLength < 100_000)).toBe(
+        true,
+      )
+      expect(
+        reads
+          .filter((read) => read.sql.includes("hex(substr"))
+          .every((read) => read.bindingCount === 1),
+      ).toBe(true)
+      expect(queryCount() - before).toBe(19)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
+
+  test(
+    "keeps remote-valid large segmented rows and export calls below D1 limits",
+    async () => {
+      const { context, db, queryCount } = createCountingContext()
+      const metadataJson = JSON.stringify("値".repeat(600_000))
+      expect(new TextEncoder().encode(metadataJson).byteLength).toBeLessThan(2_000_000)
+      for (let id = 1; id <= 8; id += 1) {
+        await insertLegacyRow(db, {
+          id,
+          eventId: `remote-large-${id}`,
+          metadataJson,
+          createdAt: id,
+        })
+      }
+      const reads = observeAllReads(context)
+      const before = queryCount()
+
+      const rows = await new AuditEventRepository(context).export({ filters: {} })
+
+      expect(rows).toHaveLength(8)
+      expect(rows.every((row) => row.metadataJson === metadataJson)).toBe(true)
+      expect(queryCount() - before).toBe(10)
+      expect(reads.filter((read) => read.sql.includes("hex(substr"))).toHaveLength(8)
+      expect(reads.every((read) => read.payloadBytes <= 4 * 1024 * 1024)).toBe(true)
+      expect(reads.every((read) => read.maxRowPayloadBytes < 2_000_000)).toBe(true)
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 
   test("local-only >2 MB stress bounds detail reads before rejecting a multi-row export", async () => {
     const { context, db } = createTestContext()
@@ -2063,59 +2104,63 @@ describe("AuditEventRepository detail and corruption contract", () => {
     expect(queryCount() - before).toBeGreaterThan(1)
   })
 
-  test("allows fifty thousand filtered rows within the D1 Free query budget, rejects the next, and counts after filtering", async () => {
-    const { context, db, queryCount } = createCountingContext()
-    const repository = new AuditEventRepository(context)
-    await insertBulkRows(db, 50_000)
+  test(
+    "allows fifty thousand filtered rows within the D1 Free query budget, rejects the next, and counts after filtering",
+    async () => {
+      const { context, db, queryCount } = createCountingContext()
+      const repository = new AuditEventRepository(context)
+      await insertBulkRows(db, 50_000)
 
-    Bun.gc(true)
-    const memoryBefore = process.memoryUsage()
-    const beforeSuccess = queryCount()
-    let successRows = await repository.export({ filters: {} })
-    expect(successRows).toHaveLength(50_000)
-    expect(queryCount() - beforeSuccess).toBe(11)
-    Bun.gc(true)
-    const memoryAfter = process.memoryUsage()
-    const retainedExportBytes =
-      memoryAfter.heapUsed +
-      memoryAfter.arrayBuffers -
-      (memoryBefore.heapUsed + memoryBefore.arrayBuffers)
-    expect(retainedExportBytes).toBeLessThan(64 * 1024 * 1024)
-    successRows = []
-    Bun.gc(true)
+      Bun.gc(true)
+      const memoryBefore = process.memoryUsage()
+      const beforeSuccess = queryCount()
+      let successRows = await repository.export({ filters: {} })
+      expect(successRows).toHaveLength(50_000)
+      expect(queryCount() - beforeSuccess).toBe(11)
+      Bun.gc(true)
+      const memoryAfter = process.memoryUsage()
+      const retainedExportBytes =
+        memoryAfter.heapUsed +
+        memoryAfter.arrayBuffers -
+        (memoryBefore.heapUsed + memoryBefore.arrayBuffers)
+      expect(retainedExportBytes).toBeLessThan(64 * 1024 * 1024)
+      successRows = []
+      Bun.gc(true)
 
-    await db
-      .prepare(
-        `INSERT INTO audit_events
+      await db
+        .prepare(
+          `INSERT INTO audit_events
            (id, event_id, request_id, action, outcome, client_name, created_at)
          VALUES (50001, 'bulk-50001', 'bulk-request-50001',
                  'legacy.bulk', 'succeeded', 'api', 50001)`,
+        )
+        .run()
+      const beforeOverflow = queryCount()
+      const observedReads = observeAllReads(context)
+      expect(await rejectionOf(repository.export({ filters: {} }))).toBeInstanceOf(
+        PayloadTooLargeError,
       )
-      .run()
-    const beforeOverflow = queryCount()
-    const observedReads = observeAllReads(context)
-    expect(await rejectionOf(repository.export({ filters: {} }))).toBeInstanceOf(
-      PayloadTooLargeError,
-    )
-    const descriptorReads = observedReads.filter((read) =>
-      read.sql.includes("cumulative_wire_bytes"),
-    )
-    expect(descriptorReads.reduce((total, read) => total + read.rowCount, 0)).toBe(50_001)
-    expect(descriptorReads.at(-1)?.rowCount).toBeGreaterThan(0)
-    expect(queryCount() - beforeOverflow).toBe(11)
-    expect(observedReads.length).toBeLessThanOrEqual(25)
-    expect(observedReads.at(-1)).toBe(descriptorReads.at(-1))
+      const descriptorReads = observedReads.filter((read) =>
+        read.sql.includes("cumulative_wire_bytes"),
+      )
+      expect(descriptorReads.reduce((total, read) => total + read.rowCount, 0)).toBe(50_001)
+      expect(descriptorReads.at(-1)?.rowCount).toBeGreaterThan(0)
+      expect(queryCount() - beforeOverflow).toBe(11)
+      expect(observedReads.length).toBeLessThanOrEqual(25)
+      expect(observedReads.at(-1)).toBe(descriptorReads.at(-1))
 
-    await db
-      .prepare(
-        `INSERT INTO audit_events
+      await db
+        .prepare(
+          `INSERT INTO audit_events
            (id, event_id, request_id, action, outcome, client_name, created_at)
          VALUES (50002, 'filtered-special', 'filtered-special-request',
                  'legacy.special', 'succeeded', 'api', 50002)`,
-      )
-      .run()
+        )
+        .run()
 
-    const filtered = await repository.export({ filters: { action: "legacy.special" } })
-    expect(filtered.map((row) => row.eventId)).toEqual(["filtered-special"])
-  }, LARGE_STRESS_TEST_TIMEOUT_MS)
+      const filtered = await repository.export({ filters: { action: "legacy.special" } })
+      expect(filtered.map((row) => row.eventId)).toEqual(["filtered-special"])
+    },
+    LARGE_STRESS_TEST_TIMEOUT_MS,
+  )
 })
