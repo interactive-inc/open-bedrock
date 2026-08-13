@@ -3,36 +3,82 @@ import type { DrizzleD1Database } from "drizzle-orm/d1"
 
 type SystemDrizzleDatabase = DrizzleD1Database<typeof systemSchema>
 
-/**
- * System の永続化実装が利用できる Drizzle 操作。
- *
- * `query` は統合 schema の relation 型を System に漏らすため公開しない。必要な JOIN は
- * Infrastructure 内で明示し、System 単独 schema と製品の統合 schema のどちらも受け取れるようにする。
- */
+/** System Infrastructureが利用できる、relation queryを除いたDrizzle操作。 */
 export type SystemDatabase = Pick<
   SystemDrizzleDatabase,
   "batch" | "delete" | "insert" | "select" | "update"
 >
 
-export type SystemRequestAuditContext = Readonly<{
+export type SystemDatabaseContext = Readonly<{
+  var: Readonly<{ database: SystemDatabase }>
+}>
+
+export type SystemD1Context = Readonly<{
+  env: Readonly<{ DB: D1Database }>
+}>
+
+export type SystemClockContext = Readonly<{
+  var: Readonly<{ now: () => Date }>
+}>
+
+export type SystemAuthorizationContext = Readonly<{
+  var: Readonly<{
+    accountTokenVersion: number
+    permissions: ReadonlySet<string>
+    role: string
+    userId: string
+  }>
+}>
+
+export type SystemRequestAudit = Readonly<{
   requestId: string
   clientName: "web" | "cli" | "api" | "system"
   clientIp: string | null
   externalRequestId: string | null
 }>
 
-/**
- * System がリクエスト単位で必要とする最小の実行時依存。
- *
- * API 全体の Context や下位コンテキストの型を参照せず、System 自身の Drizzle schema、
- * D1 binding、監査用メタデータだけを公開する。製品側の Context は構造的部分型としてこの契約を満たす。
- */
-export type SystemContext = Readonly<{
-  var: Readonly<{
-    database: SystemDatabase
-    auditContext: SystemRequestAuditContext
-  }>
+export type SystemRequestAuditContext = Readonly<{
+  var: Readonly<{ auditContext: SystemRequestAudit }>
+}>
+
+export type SystemJwtSecretContext = Readonly<{
+  env: Readonly<{ JWT_SECRET?: string }>
+}>
+
+export type SystemOidcSigningContext = Readonly<{
+  env: Readonly<{ OIDC_SIGNING_KEYS?: string }>
+}>
+
+export type SystemPasswordHashContext = Readonly<{
+  env: Readonly<{ PEPPER_SECRET?: string }>
+}>
+
+type SystemEmailAddress = Readonly<{
+  name: string
+  email: string
+}>
+
+type SystemEmailMessage = Readonly<{
+  from: string | SystemEmailAddress
+  to: string | SystemEmailAddress | ReadonlyArray<string | SystemEmailAddress>
+  subject: string
+  replyTo?: string | SystemEmailAddress
+  cc?: string | SystemEmailAddress | ReadonlyArray<string | SystemEmailAddress>
+  bcc?: string | SystemEmailAddress | ReadonlyArray<string | SystemEmailAddress>
+  headers?: Readonly<Record<string, string>>
+  text?: string
+  html?: string
+}>
+
+export type SystemEmailSender = Readonly<{
+  send(message: SystemEmailMessage): Promise<unknown>
+}>
+
+export type SystemEmailContext = Readonly<{
   env: Readonly<{
-    DB: D1Database
+    EMAIL: SystemEmailSender
+    EMAIL_SENDER_NAME?: string
+    INVITE_EMAIL_FROM: string
+    INVITE_EMAIL_SEND_ENABLED?: string
   }>
 }>
