@@ -1,5 +1,7 @@
 import type { SystemSessionMaterialService as SystemSessionMaterialServicePort } from "@system/application/auth/system-session-material-service"
+import { AuthenticateSystemSession } from "@system/application/auth/authenticate-system-session"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
+import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
 import { zAccountId } from "@system/domain/auth/account-id"
 import { zSessionFamilyId } from "@system/domain/auth/session-family-id"
@@ -93,6 +95,27 @@ function createRotateSystemSession(
   })
 }
 
+function createAuthenticateSystemSession(
+  fixture: SystemSessionTestContext,
+  materialService: SystemSessionMaterialServicePort,
+): AuthenticateSystemSession {
+  return new AuthenticateSystemSession({
+    accountRepository: new SystemAccountRepository({ database: fixture.context.env.DB }),
+    sessionRepository: new SystemSessionRepository({ context: fixture.context }),
+    materialService,
+  })
+}
+
+function createRevokeSystemSession(
+  fixture: SystemSessionTestContext,
+  materialService: SystemSessionMaterialServicePort,
+): RevokeSystemSession {
+  return new RevokeSystemSession({
+    sessionRepository: new SystemSessionRepository({ context: fixture.context }),
+    materialService,
+  })
+}
+
 async function issueInitialSession(
   fixture: SystemSessionTestContext,
   materialService: SystemSessionMaterialServicePort,
@@ -149,6 +172,8 @@ describe("IssueSystemSession", () => {
 
     expect(result).toEqual({
       kind: "issued",
+      accountId,
+      tokenVersion: 0,
       rawToken: firstRawToken,
       sessionId: zSessionId.parse("session-1"),
       expiresAt: new Date(now.getTime() + sessionTtlMilliseconds),
@@ -225,6 +250,8 @@ describe("RotateSystemSession", () => {
 
     expect(await rotate.execute({ rawToken: firstRawToken, now: rotateAt, auditContext })).toEqual({
       kind: "rotated",
+      accountId,
+      tokenVersion: 0,
       rawToken: secondRawToken,
       sessionId: zSessionId.parse("session-2"),
       expiresAt: new Date(rotateAt.getTime() + sessionTtlMilliseconds),
@@ -373,6 +400,193 @@ describe("RotateSystemSession", () => {
       }),
     ).toBeInstanceOf(Error)
     expect(auditRows(fixture)).toEqual([])
+  })
+})
+
+describe("AuthenticateSystemSession", () => {
+  test("active Sessionをcanonical Accountと同じidentity・versionで認証する", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken],
+      tokenHashes: { [firstRawToken]: firstTokenHash },
+    })
+    await issueInitialSession(fixture, materialService)
+
+    expect(
+      await createAuthenticateSystemSession(fixture, materialService).execute({
+        rawToken: firstRawToken,
+        now,
+      }),
+    ).toEqual({
+      kind: "authenticated",
+      accountId,
+      tokenVersion: 0,
+      sessionId: zSessionId.parse("session-1"),
+      expiresAt: new Date(now.getTime() + sessionTtlMilliseconds),
+    })
+  })
+
+  test("未知・期限切れ・rotation済みtokenを同じinvalidへ畳む", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken, secondRawToken],
+      tokenHashes: {
+        [firstRawToken]: firstTokenHash,
+        [secondRawToken]: secondTokenHash,
+        unknown: thirdTokenHash,
+      },
+    })
+    await issueInitialSession(fixture, materialService)
+    const authenticate = createAuthenticateSystemSession(fixture, materialService)
+
+    expect(await authenticate.execute({ rawToken: "unknown", now })).toEqual({
+      kind: "rejected",
+      reason: "invalid",
+    })
+    expect(
+      await authenticate.execute({
+        rawToken: firstRawToken,
+        now: new Date(now.getTime() + sessionTtlMilliseconds),
+      }),
+    ).toEqual({ kind: "rejected", reason: "invalid" })
+
+    expect(
+      await createRotateSystemSession(fixture, materialService).execute({
+        rawToken: firstRawToken,
+        now: rotateAt,
+        auditContext,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "rotated",
+        rawToken: secondRawToken,
+      }),
+    )
+    expect(await authenticate.execute({ rawToken: firstRawToken, now: rotateAt })).toEqual({
+      kind: "rejected",
+      reason: "invalid",
+    })
+    expect(await authenticate.execute({ rawToken: secondRawToken, now: rotateAt })).toEqual(
+      expect.objectContaining({ kind: "authenticated", accountId, tokenVersion: 0 }),
+    )
+  })
+
+  test("canonical Account停止とversion driftを同じinvalidへ畳む", async () => {
+    for (const scenario of ["locked", "version_drift"] as const) {
+      const fixture = new SystemSessionTestContext()
+      insertAccount(fixture)
+      const materialService = createMaterialService({
+        rawTokens: [firstRawToken],
+        tokenHashes: { [firstRawToken]: firstTokenHash },
+      })
+      await issueInitialSession(fixture, materialService)
+      fixture.sqlite.run(
+        `UPDATE system_accounts
+         SET status = ?1, token_version = ?2, updated_at = ?3
+         WHERE id = ?4`,
+        [scenario === "locked" ? "locked" : "active", 1, rotateAt.getTime(), accountId],
+      )
+
+      expect(
+        await createAuthenticateSystemSession(fixture, materialService).execute({
+          rawToken: firstRawToken,
+          now: rotateAt,
+        }),
+      ).toEqual({ kind: "rejected", reason: "invalid" })
+    }
+  })
+})
+
+describe("RevokeSystemSession", () => {
+  test("既知tokenのfamilyを監査と同時に冪等失効する", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken, secondRawToken],
+      tokenHashes: {
+        [firstRawToken]: firstTokenHash,
+        [secondRawToken]: secondTokenHash,
+      },
+    })
+    await issueInitialSession(fixture, materialService)
+    await createRotateSystemSession(fixture, materialService).execute({
+      rawToken: firstRawToken,
+      now: rotateAt,
+      auditContext,
+    })
+    const revoke = createRevokeSystemSession(fixture, materialService)
+    const revokedAt = new Date(rotateAt.getTime() + 1)
+
+    expect(
+      await revoke.execute({ rawToken: secondRawToken, now: revokedAt, auditContext }),
+    ).toEqual({ kind: "completed" })
+    expect(sessionRows(fixture).every((row) => row.revoked_at === revokedAt.getTime())).toBe(true)
+    expect(auditRows(fixture).at(-1)).toEqual(
+      expect.objectContaining({
+        action: "auth.session.revoke",
+        outcome: "succeeded",
+        target_id: "session-2",
+      }),
+    )
+    const auditCount = auditRows(fixture).length
+
+    expect(
+      await revoke.execute({ rawToken: secondRawToken, now: revokedAt, auditContext }),
+    ).toEqual({ kind: "completed" })
+    expect(auditRows(fixture)).toHaveLength(auditCount)
+    expect(
+      await createAuthenticateSystemSession(fixture, materialService).execute({
+        rawToken: secondRawToken,
+        now: revokedAt,
+      }),
+    ).toEqual({ kind: "rejected", reason: "invalid" })
+  })
+
+  test("未知tokenを実在するtokenと区別できない完了へ畳む", async () => {
+    const fixture = new SystemSessionTestContext()
+    const materialService = createMaterialService({
+      rawTokens: [],
+      tokenHashes: { unknown: thirdTokenHash },
+    })
+
+    expect(
+      await createRevokeSystemSession(fixture, materialService).execute({
+        rawToken: "unknown",
+        now,
+        auditContext,
+      }),
+    ).toEqual({ kind: "completed" })
+    expect(auditRows(fixture)).toEqual([])
+  })
+
+  test("失効監査を保存できない場合はfamily mutationもrollbackする", async () => {
+    const fixture = new SystemSessionTestContext()
+    insertAccount(fixture)
+    const materialService = createMaterialService({
+      rawTokens: [firstRawToken],
+      tokenHashes: { [firstRawToken]: firstTokenHash },
+    })
+    await issueInitialSession(fixture, materialService)
+    fixture.sqlite.exec(`
+      CREATE TRIGGER ignore_system_session_revocation_audit
+      BEFORE INSERT ON system_audit_events
+      WHEN NEW.action = 'auth.session.revoke'
+      BEGIN
+        SELECT RAISE(IGNORE);
+      END;
+    `)
+
+    expect(
+      await createRevokeSystemSession(fixture, materialService).execute({
+        rawToken: firstRawToken,
+        now: rotateAt,
+        auditContext,
+      }),
+    ).toBeInstanceOf(Error)
+    expect(sessionRows(fixture)[0]?.revoked_at).toBeNull()
+    expect(auditRows(fixture).map((row) => row.action)).toEqual(["auth.session.create"])
   })
 })
 
