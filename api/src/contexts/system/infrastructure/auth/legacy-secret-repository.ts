@@ -1,5 +1,5 @@
-import type { Context } from "@/env"
-import { identities } from "@/contexts/system/infrastructure/schema/system"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import { identities } from "@system/infrastructure/schema/system"
 import { and, eq, isNotNull, like, not } from "drizzle-orm"
 
 export type LegacySecretIdentity = Readonly<{
@@ -9,7 +9,7 @@ export type LegacySecretIdentity = Readonly<{
 
 /** System Identity の旧 secret 形式だけを扱う、移行バッチ用の狭い repository。 */
 export class LegacySecretRepository {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: SystemContext) {}
 
   async findPasswordIdentitiesWithNonPbkdf2Secret(): Promise<
     ReadonlyArray<LegacySecretIdentity> | Error

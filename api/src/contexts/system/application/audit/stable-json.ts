@@ -1,6 +1,6 @@
-import { SystemAuditJsonError } from "@/contexts/system/domain/audit/system-audit-json-error"
-import type { SystemAuditJsonValue } from "@/contexts/system/domain/audit/system-audit-json-value"
-import { toStableSystemAuditJson } from "@/contexts/system/domain/audit/to-stable-system-audit-json"
+import { SystemAuditJsonError } from "@system/domain/audit/system-audit-json-error"
+import type { SystemAuditJsonValue } from "@system/domain/audit/system-audit-json-value"
+import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
 import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
 
 export type AuditJsonValue = SystemAuditJsonValue

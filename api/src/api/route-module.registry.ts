@@ -1,3 +1,5 @@
+import { systemContextModule } from "@system/interface/module"
+
 export type RouteModuleRegistration = Readonly<{
   context: string
   routesDirectory: string
@@ -6,11 +8,7 @@ export type RouteModuleRegistration = Readonly<{
 
 /** APIへ公開するコンテキストのroute sourceを明示する。 */
 export const ROUTE_MODULE_REGISTRY = [
-  {
-    context: "system",
-    routesDirectory: "contexts/system/interface/routes",
-    importPrefix: "@/contexts/system/interface/routes",
-  },
+  systemContextModule,
   {
     context: "company",
     routesDirectory: "contexts/company/interface/routes",

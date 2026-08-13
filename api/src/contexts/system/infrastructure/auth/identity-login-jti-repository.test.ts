@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { IdentityLoginJtiRepository } from "@/infrastructure/auth/identity-login-jti-repository"
+import { IdentityLoginJtiRepository } from "@system/infrastructure/auth/identity-login-jti-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 describe("IdentityLoginJtiRepository", () => {

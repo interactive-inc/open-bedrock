@@ -14,9 +14,16 @@ const API_SOURCE_ROOT =
 const SYSTEM_CONTEXT_ROOT = existsSync(resolve(SOURCE_ROOT, "contexts/system"))
   ? resolve(SOURCE_ROOT, "contexts/system")
   : API_SOURCE_ROOT
-const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface/converters"] as const
+const LEGACY_CONTEXT_LAYERS = [
+  "domain",
+  "application",
+  "infrastructure",
+  "interface/converters",
+] as const
+const CONTEXT_FIRST_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const SYSTEM_SELF_REFERENCE_LAYERS = ["application", "domain", "infrastructure"] as const
-const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain"] as const
+const SYSTEM_PATH_MAPPING_LAYERS = [...SYSTEM_SELF_REFERENCE_LAYERS, "interface"] as const
+const PRODUCT_NEUTRAL_SYSTEM_LAYERS = ["application", "domain", "interface"] as const
 const SYSTEM_SCHEMA_PATHS = ["system.ts", "system-core.ts"]
   .map((file) =>
     SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
@@ -32,7 +39,7 @@ const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
     : "domain/system/configuration/system-capability.catalog.ts",
 )
 const SYSTEM_SOURCE_PATHS = [
-  ...CONTEXT_LAYERS.map((layer) =>
+  ...CONTEXT_FIRST_LAYERS.map((layer) =>
     SYSTEM_CONTEXT_ROOT.endsWith("contexts/system")
       ? resolve(SYSTEM_CONTEXT_ROOT, layer)
       : resolve(API_SOURCE_ROOT, layer, "system"),
@@ -71,7 +78,7 @@ const SCHEMA_MODULE = /^@\/schema(?:\/(.*))?$/
 const COMPOSITION_MODULE = /^@\/(?:api\/)?composition(?:\/|$)/
 const CONTEXT_MODULE =
   /^@\/contexts\/([^/]+)\/(?:domain|application|infrastructure|interface)(?:\/|$)/
-const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure)\/.+$/
+const SYSTEM_SELF_REFERENCE_MODULE = /^@system\/(application|domain|infrastructure|interface)\/.+$/
 
 export type SystemBoundaryViolation = Readonly<{
   file: string
@@ -522,7 +529,7 @@ export function inspectSystemSelfReferencePathMappings(
   const normalizedSourceRoot = apiSourceRoot.replaceAll("\\", "/")
   const violations: SystemBoundaryViolation[] = []
 
-  for (const layer of SYSTEM_SELF_REFERENCE_LAYERS) {
+  for (const layer of SYSTEM_PATH_MAPPING_LAYERS) {
     const alias = `@system/${layer}/*`
     const expectedPath = normalizedSourceRoot.endsWith("contexts/system")
       ? `./${normalizedSourceRoot}/${layer}/*`
@@ -566,7 +573,7 @@ export function discoverDownstreamContexts(apiSourceRoot = API_SOURCE_ROOT): Rea
     }
   }
 
-  for (const layer of CONTEXT_LAYERS) {
+  for (const layer of LEGACY_CONTEXT_LAYERS) {
     const layerRoot = resolve(apiSourceRoot, layer)
 
     if (!existsSync(layerRoot)) {
@@ -633,6 +640,10 @@ function inspectModuleSpecifier(
 ): SystemBoundaryViolation[] {
   if (moduleSpecifier.startsWith("./") || moduleSpecifier.startsWith("../")) {
     return [{ file, reason: "System の依存境界を迂回する相対 import があります" }]
+  }
+
+  if (moduleSpecifier === "@/env") {
+    return [{ file, reason: "System から製品全体の実行時 Context へ依存しています: @/env" }]
   }
 
   if (COMPOSITION_MODULE.test(moduleSpecifier)) {

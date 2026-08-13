@@ -4,8 +4,8 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import type { AccountSummary } from "@/infrastructure/iam/account-repository"
 import { AccountRepository } from "@/infrastructure/iam/account-repository"
-import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
+import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@system/application/iam/has-permission-superset"
 
 export type AccountAccessSummary = AccountSummary & {
   canManage: boolean
