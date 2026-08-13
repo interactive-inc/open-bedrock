@@ -3,7 +3,11 @@ import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { validatePasswordComplexity } from "@system/application/auth/password-policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type {
+  SystemD1Context,
+  SystemDatabaseContext,
+  SystemRequestAuditContext,
+} from "@system/infrastructure/configuration/system-context"
 import { PasswordIdentityRepository } from "@system/infrastructure/auth/password-identity-repository"
 import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
 import { hasPermissionSuperset } from "@system/application/iam/has-permission-superset"
@@ -25,7 +29,9 @@ export type Reset = { reason: "reset" }
  * 再設定後は tokenVersion を増やして既存トークンを失効させる。
  */
 export class ResetAccountPassword {
-  constructor(private readonly c: SystemContext) {}
+  constructor(
+    private readonly c: SystemDatabaseContext & SystemD1Context & SystemRequestAuditContext,
+  ) {}
 
   async run(command: Command): Promise<Reset | ApplicationError> {
     if (command.session.hasPermission("account:manage") === false) {

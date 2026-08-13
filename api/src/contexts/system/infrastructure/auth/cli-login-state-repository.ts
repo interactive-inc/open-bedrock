@@ -1,4 +1,4 @@
-import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
 
 export type CliLoginState = {
   port: number
@@ -12,7 +12,7 @@ export type CliLoginState = {
  * CLI 側 state を保存する。GET /auth/cli/callback は 1 回だけ引いて即座に削除する（再利用不可）。
  */
 export class CliLoginStateRepository {
-  constructor(private readonly c: SystemContext) {
+  constructor(private readonly c: SystemD1Context) {
     Object.freeze(this)
   }
 
