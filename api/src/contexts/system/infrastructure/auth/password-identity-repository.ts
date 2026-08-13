@@ -1,11 +1,11 @@
-import type { Context } from "@/env"
-import { identities } from "@/contexts/system/infrastructure/schema/system"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import { identities } from "@system/infrastructure/schema/system"
 import { and, eq } from "drizzle-orm"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 
 /** 上位contextを知らずにpassword identityの検索とcredential変更を行う。 */
 export class PasswordIdentityRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: SystemContext) {
     Object.freeze(this)
   }
 

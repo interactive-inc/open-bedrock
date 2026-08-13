@@ -1,15 +1,15 @@
-import type { SystemAuthorization } from "@/contexts/system/application/iam/system-authorization"
+import type { SystemAuthorization } from "@system/application/iam/system-authorization"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
-import { validatePasswordComplexity } from "@/application/auth/password-policy"
+import { validatePasswordComplexity } from "@system/application/auth/password-policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { PasswordIdentityRepository } from "@/contexts/system/infrastructure/auth/password-identity-repository"
-import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
-import { hasPermissionSuperset } from "@/application/iam/has-permission-superset"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import { PasswordIdentityRepository } from "@system/infrastructure/auth/password-identity-repository"
+import { AccountAuthRepository } from "@system/infrastructure/auth/account-auth-repository"
+import { hasPermissionSuperset } from "@system/application/iam/has-permission-superset"
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { toStableSystemAuditJson } from "@system/domain/audit/to-stable-system-audit-json"
-import { SystemAuditEventRepository } from "@/contexts/system/infrastructure/audit/system-audit-event-repository"
+import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
 
 export type Command = {
   session: SystemAuthorization<number>
@@ -25,7 +25,7 @@ export type Reset = { reason: "reset" }
  * 再設定後は tokenVersion を増やして既存トークンを失効させる。
  */
 export class ResetAccountPassword {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: SystemContext) {}
 
   async run(command: Command): Promise<Reset | ApplicationError> {
     if (command.session.hasPermission("account:manage") === false) {

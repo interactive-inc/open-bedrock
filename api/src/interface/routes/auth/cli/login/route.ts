@@ -1,4 +1,4 @@
-import { CliLoginStateRepository } from "@/infrastructure/auth/cli-login-state-repository"
+import { CliLoginStateRepository } from "@system/infrastructure/auth/cli-login-state-repository"
 import { factory } from "@/interface/utils/factory"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { UnavailableError } from "@/lib/errors"

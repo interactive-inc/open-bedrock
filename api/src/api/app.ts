@@ -11,7 +11,6 @@ import * as departmentsCodeRoute from "@/contexts/company/interface/routes/depar
 import * as departmentsRoute from "@/contexts/company/interface/routes/departments/route"
 import * as departmentsTreeRoute from "@/contexts/company/interface/routes/departments/tree/route"
 import * as directoryEmployeesRoute from "@/contexts/company/interface/routes/directory/employees/route"
-import * as healthRoute from "@/contexts/system/interface/routes/health/route"
 import * as accountsIdResetPasswordRoute from "@/interface/routes/accounts/[id]/reset-password/route"
 import * as accountsIdRolesRoleKeyRoute from "@/interface/routes/accounts/[id]/roles/[roleKey]/route"
 import * as accountsIdRolesRoute from "@/interface/routes/accounts/[id]/roles/route"
@@ -335,6 +334,7 @@ import * as trainingEnrollmentsMeRoute from "@/interface/routes/training-enrollm
 import * as trainingEnrollmentsRoute from "@/interface/routes/training-enrollments/route"
 import * as workAccidentsIdCloseRoute from "@/interface/routes/work-accidents/[id]/close/route"
 import * as workAccidentsRoute from "@/interface/routes/work-accidents/route"
+import * as healthRoute from "@system/interface/routes/health/route"
 
 export const app = appBase
   .get("/accounts", ...accountsRoute.GET)

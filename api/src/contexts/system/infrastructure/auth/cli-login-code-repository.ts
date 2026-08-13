@@ -1,4 +1,4 @@
-import type { Context } from "@/env"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
 
 export type CliLoginCodeAccount = {
   accountId: number
@@ -12,7 +12,7 @@ export type CliLoginCodeAccount = {
  * 解決済みの account id のみを保持し、code 自体は保存せずハッシュ（code_hash）のみを主キーにする。
  */
 export class CliLoginCodeRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: SystemContext) {
     Object.freeze(this)
   }
 

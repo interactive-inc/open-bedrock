@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { CliLoginCodeRepository } from "@/infrastructure/auth/cli-login-code-repository"
+import { CliLoginCodeRepository } from "@system/infrastructure/auth/cli-login-code-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
 describe("CliLoginCodeRepository", () => {

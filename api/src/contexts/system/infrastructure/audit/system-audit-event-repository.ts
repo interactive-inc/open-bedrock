@@ -1,4 +1,4 @@
-import type { Context } from "@/env"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
 import type { SystemAuditEvent } from "@system/domain/audit/system-audit-event"
 
 function prepareAppendInvariant(db: D1Database, record: SystemAuditEvent): D1PreparedStatement {
@@ -39,7 +39,7 @@ function prepareAppendInvariant(db: D1Database, record: SystemAuditEvent): D1Pre
 
 /** 上位コンテキストを持たない System 監査イベントの append 専用 repository。 */
 export class SystemAuditEventRepository {
-  constructor(private readonly c: Context) {}
+  constructor(private readonly c: SystemContext) {}
 
   prepareAppend(record: SystemAuditEvent): readonly [D1PreparedStatement, D1PreparedStatement] {
     const insert = this.c.env.DB.prepare(

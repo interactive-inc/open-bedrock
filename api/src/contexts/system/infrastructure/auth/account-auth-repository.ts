@@ -1,6 +1,12 @@
-import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
-import type { Context } from "@/env"
-import { accountRoles, accounts, permissions, rolePermissions, roles } from "@/schema"
+import type { AccountStatus } from "@system/domain/auth/account-status"
+import type { SystemContext } from "@system/infrastructure/configuration/system-context"
+import {
+  accountRoles,
+  accounts,
+  permissions,
+  rolePermissions,
+  roles,
+} from "@system/infrastructure/schema/system"
 import { eq, inArray } from "drizzle-orm"
 
 export type ResolvedAccount = {
@@ -18,7 +24,7 @@ export type ResolvedAccountAuthorization = Pick<ResolvedAccount, "roleKeys" | "p
  * permission は accountRoles ⋈ roles ⋈ rolePermissions ⋈ permissions の和集合。
  */
 export class AccountAuthRepository {
-  constructor(private readonly c: Context) {
+  constructor(private readonly c: SystemContext) {
     Object.freeze(this)
   }
 

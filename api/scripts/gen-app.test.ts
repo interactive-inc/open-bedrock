@@ -143,7 +143,7 @@ describe("collectRegistrations", () => {
     const registrations = await collectRegistrations()
 
     expect(registrations).toContainEqual({
-      module: "@/contexts/system/interface/routes/health/route",
+      module: "@system/interface/routes/health/route",
       url: "/health",
       method: "GET",
       alias: "healthRoute",

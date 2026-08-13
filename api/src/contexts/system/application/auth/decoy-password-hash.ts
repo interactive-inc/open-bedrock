@@ -10,4 +10,4 @@
  * 実在ユーザー経路と一致させることだけが目的（反復回数は to-password-hash と同じ 100k）。
  */
 export const decoyPasswordHash =
-  "pbkdf2:100000:b3Blbi1rYXJ0ZS1kZWNveQ==:ohQQzW7G8wDud6ur2+5pFaeFhv1yElXmqGs4qFb0sFU="
+  "pbkdf2:100000:c3lzdGVtLWRlY295LWtleQ==:/dqnFVKB+Tkzk5pz/JL3Cc2wzWZnJ5QsNS6hBXCJc50="

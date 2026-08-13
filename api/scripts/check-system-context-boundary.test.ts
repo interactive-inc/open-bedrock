@@ -247,6 +247,7 @@ describe("inspectSystemSource", () => {
     const sources = [
       'import { accounts } from "@/schema"',
       'import { employees } from "@/schema/company"',
+      'import type { Context } from "@/env"',
       'import { Token } from "../../../domain/system/auth/token"',
     ]
 
@@ -392,11 +393,25 @@ describe("inspectSystemSelfReferencePathMappings", () => {
             "@system/application/*": [`./${sourceRoot}/application/system/*`],
             "@system/domain/*": [`./${sourceRoot}/domain/system/*`],
             "@system/infrastructure/*": [`./${sourceRoot}/infrastructure/system/*`],
+            "@system/interface/*": [`./${sourceRoot}/interface/system/*`],
           },
           sourceRoot,
         ),
       ).toEqual([])
     }
+
+    expect(
+      inspectSystemSelfReferencePathMappings(
+        "tsconfig.json",
+        {
+          "@system/application/*": ["./src/contexts/system/application/*"],
+          "@system/domain/*": ["./src/contexts/system/domain/*"],
+          "@system/infrastructure/*": ["./src/contexts/system/infrastructure/*"],
+          "@system/interface/*": ["./src/contexts/system/interface/*"],
+        },
+        "src/contexts/system",
+      ),
+    ).toEqual([])
   })
 
   test("欠落・複数・下位 context 向けの mapping を拒否する", () => {
@@ -409,7 +424,7 @@ describe("inspectSystemSelfReferencePathMappings", () => {
       "src",
     )
 
-    expect(violations).toHaveLength(3)
+    expect(violations).toHaveLength(4)
   })
 })
 
