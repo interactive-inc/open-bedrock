@@ -32,8 +32,10 @@ jobs:
         run: bun test
         working-directory: cli
 
-      # mcp の tsc --noEmit は MCP SDK と zod の型展開が深すぎて OOM するため
-      # 実行しない（追跡 Issue あり）。テストのみ回す
+      - name: mcp check
+        run: bun run check
+        working-directory: mcp
+
       - name: mcp test
         run: bun test
         working-directory: mcp
