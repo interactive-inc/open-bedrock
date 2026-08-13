@@ -16,6 +16,9 @@ import {
   employeeLifecycleRevisions,
   employeeStatusPeriodVersions,
   employmentPeriodVersions,
+  lifecycleEffectTemplateBindings,
+  lifecycleMigrationState,
+  lifecycleOutbox,
   organizationLifecycleState,
   orgAssignmentPeriodVersions,
   orgResponsibilityPeriodVersions,
@@ -484,50 +487,16 @@ export const applicationCompletionBindings = sqliteTable("application_completion
 
 export type ApplicationCompletionBindingRow = InferSelectModel<typeof applicationCompletionBindings>
 
-export const lifecycleMigrationState = sqliteTable("lifecycle_migration_states", {
-  id: integer("id").primaryKey(),
-  status: text("status").notNull().$type<"pending" | "backfilled" | "verified">(),
-  baselineOn: text("baseline_on"),
-  companyTimeZone: text("company_time_zone"),
-  legacySourceFingerprint: text("legacy_source_fingerprint"),
-  employeeCount: integer("employee_count").notNull().default(0),
-  departmentCount: integer("department_count").notNull().default(0),
-  backfilledAt: integer("backfilled_at"),
-  verifiedAt: integer("verified_at"),
-})
-
-export type LifecycleMigrationStateRow = InferSelectModel<typeof lifecycleMigrationState>
-
-export const lifecycleOutbox = sqliteTable(
-  "lifecycle_outbox_entries",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    personnelActionId: text("personnel_action_id").notNull(),
-    effectType: text("effect_type").notNull().$type<"hire" | "retired">(),
-    payloadJson: text("payload_json").notNull(),
-    attemptCount: integer("attempt_count").notNull().default(0),
-    nextAttemptAt: integer("next_attempt_at").notNull(),
-    processedAt: integer("processed_at"),
-    lastErrorCode: text("last_error_code"),
-    createdAt: integer("created_at").notNull(),
-  },
-  (table) => [
-    uniqueIndex("uq_lifecycle_outbox_action_effect").on(table.personnelActionId, table.effectType),
-  ],
-)
-
-export type LifecycleOutboxRow = InferSelectModel<typeof lifecycleOutbox>
-
-export const lifecycleEffectTemplateBindings = sqliteTable("lifecycle_effect_template_bindings", {
-  effectType: text("effect_type").primaryKey().$type<"hire" | "retired">(),
-  templateCode: text("template_code").notNull(),
-  updatedAt: integer("updated_at").notNull(),
-  updatedByAccountId: integer("updated_by_account_id"),
-})
-
-export type LifecycleEffectTemplateBindingRow = InferSelectModel<
-  typeof lifecycleEffectTemplateBindings
->
+export {
+  lifecycleEffectTemplateBindings,
+  lifecycleMigrationState,
+  lifecycleOutbox,
+} from "@/contexts/company/infrastructure/schema/employee-lifecycle"
+export type {
+  LifecycleEffectTemplateBindingRow,
+  LifecycleMigrationStateRow,
+  LifecycleOutboxRow,
+} from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 
 export const applicationWorkflows = sqliteTable("application_workflows", {
   templateId: integer("template_id").primaryKey(),
