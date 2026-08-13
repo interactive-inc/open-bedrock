@@ -1,4 +1,4 @@
-import { MarkAllNotificationsRead } from "@/application/notification/mark-all-notifications-read"
+import { MarkAllNotificationsRead } from "@/contexts/system/application/notifications/mark-all-notifications-read"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -15,7 +15,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const updated = await new MarkAllNotificationsRead(c).run({
-    recipientEmployeeId: session.employeeId,
+    recipientAccountId: session.accountId,
   })
 
   if (updated instanceof ApplicationError) {

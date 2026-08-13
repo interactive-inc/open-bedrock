@@ -1,6 +1,6 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { ApplyPersonnelAction } from "@/application/employee-lifecycle/apply-personnel-action"
-import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
+import { personnelActionInputSchema } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { ApplicationError, ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"

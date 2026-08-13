@@ -3,8 +3,8 @@
   "type": "module",
   "exports": {
     "./app": {
-      "types": "./dist/app.d.ts",
-      "default": "./src/app.ts"
+      "types": "./dist/api/app.d.ts",
+      "default": "./src/api/app.ts"
     }
   },
   "scripts": {
@@ -13,7 +13,12 @@
     "gen:app": "bun run scripts/gen-app.ts",
     "gen:app:check": "bun run scripts/gen-app.ts --check",
     "lint:route-authorization": "bun run scripts/check-route-authorization.ts",
-    "check": "bun run gen:app:check && bun run lint:route-authorization && bun run build:types && tsc --noEmit",
+    "lint:system-boundary": "bun run scripts/check-system-context-boundary.ts",
+    "lint:context-boundaries": "bun run scripts/check-context-boundaries.ts",
+    "lint:deploy-safety": "bun run scripts/check-deploy-safety.ts",
+    "verify-seed": "bun run scripts/verify-seed.ts",
+    "check": "bun run gen:app:check && bun run lint:route-authorization && bun run lint:system-boundary && bun run lint:context-boundaries && bun run lint:deploy-safety && bun run verify-seed && bun run build:types && tsc --noEmit",
+    "setup:dev-vars": "bash scripts/init-dev-vars.sh",
     "dev": "bash scripts/dev-restart.sh",
     "dev:no-restart": "wrangler dev",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
@@ -22,9 +27,11 @@
     "db:repair-migration-history": "bunx wrangler d1 execute bedrock --remote --file=./scripts/repair-migration-history.sql",
     "db:migrate:local": "bun run db:repair-migration-history:local && wrangler d1 migrations apply bedrock --local",
     "db:migrate": "bun run db:repair-migration-history && wrangler d1 migrations apply bedrock --remote",
+    "deploy": "bun run db:migrate && wrangler deploy",
+    "deploy:preview": "wrangler versions upload",
     "db:seed:local": "bash scripts/seed.sh --local",
     "db:seed": "bash scripts/seed.sh --remote",
-    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
+    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/api/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",

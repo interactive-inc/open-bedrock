@@ -2,8 +2,8 @@ import type { Context } from "@/env"
 import {
   EmployeeLifecycleReadRepository,
   type EmployeeLifecycleState,
-} from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+} from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError, NotFoundError, UnavailableError, ValidationError } from "@/lib/errors"
 import { isoDate } from "@/lib/schemas"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"

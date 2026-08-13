@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { FamilyCareLeave } from "@/domain/family-care-leave/family-care-leave.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"

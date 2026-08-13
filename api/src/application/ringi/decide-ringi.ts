@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import type { Context } from "@/env"
 import { RingiRequestRepository } from "@/infrastructure/ringi/ringi-request-repository"

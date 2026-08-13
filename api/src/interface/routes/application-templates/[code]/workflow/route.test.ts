@@ -1,4 +1,4 @@
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { seedApplicationTemplates } from "@/infrastructure/seed/seed-application-templates"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
@@ -24,7 +24,15 @@ async function setup() {
     })),
   )
   await seedIamForEmployees(db)
-  await db.prepare("UPDATE accounts SET id = 20 WHERE id = 2").run()
+  await db
+    .prepare(
+      `INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+       SELECT 20, status, token_version, created_at, updated_at
+       FROM accounts
+       WHERE id = 2`,
+    )
+    .run()
+  await db.prepare("UPDATE account_employee_links SET account_id = 20 WHERE account_id = 2").run()
   await db.prepare("UPDATE identities SET account_id = 20 WHERE account_id = 2").run()
   await db.prepare("UPDATE account_roles SET account_id = 20 WHERE account_id = 2").run()
   await db

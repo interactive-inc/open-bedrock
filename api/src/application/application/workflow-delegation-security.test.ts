@@ -32,10 +32,16 @@ async function setup(workflow: ApplicationWorkflow) {
     { id: 6, code: "E006", name: "Delegate B", status: "active" },
   ])
   await seedD1(db, "accounts", [
-    { id: 2, employee_id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
-    { id: 3, employee_id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
-    { id: 4, employee_id: 4, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
-    { id: 6, employee_id: 6, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    { id: 2, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    { id: 3, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    { id: 4, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+    { id: 6, status: "active", token_version: 0, created_at: 0, updated_at: 0 },
+  ])
+  await seedD1(db, "account_employee_links", [
+    { account_id: 2, employee_id: 2 },
+    { account_id: 3, employee_id: 3 },
+    { account_id: 4, employee_id: 4 },
+    { account_id: 6, employee_id: 6 },
   ])
 
   const template = await new ApplicationTemplateRepository(context).create(
@@ -310,7 +316,13 @@ describe("workflow delegation security", () => {
   test("does not accept a delegated vote when the frozen candidate account is inactive", async () => {
     const setupResult = await setup({ version: 1, steps: [approvalStep] })
     await seedDelegation(setupResult.db, { id: 41 })
-    await setupResult.db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+    await setupResult.db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 2`,
+      )
+      .run()
 
     const result = await decide(setupResult.context, setupResult.applicationId, 4)
 
@@ -321,7 +333,13 @@ describe("workflow delegation security", () => {
     const setupResult = await setup({ version: 1, steps: [approvalStep] })
     await seedDelegation(setupResult.db, { id: 42 })
     setupResult.context.env.DB = beforeNextBatch(setupResult.context.env.DB, () =>
-      setupResult.db.prepare("UPDATE accounts SET status = 'locked' WHERE id = 2").run(),
+      setupResult.db
+        .prepare(
+          `UPDATE accounts
+           SET status = 'locked', token_version = token_version + 1, updated_at = updated_at + 1
+           WHERE id = 2`,
+        )
+        .run(),
     )
 
     const result = await decide(setupResult.context, setupResult.applicationId, 4)
@@ -396,7 +414,13 @@ describe("workflow delegation security", () => {
       },
     ])
     setupResult.context.env.DB = beforeNextBatch(setupResult.context.env.DB, () =>
-      setupResult.db.prepare("UPDATE accounts SET status = 'locked' WHERE id = 4").run(),
+      setupResult.db
+        .prepare(
+          `UPDATE accounts
+           SET status = 'locked', token_version = token_version + 1, updated_at = updated_at + 1
+           WHERE id = 4`,
+        )
+        .run(),
     )
 
     const result = await decide(setupResult.context, setupResult.applicationId, 4)

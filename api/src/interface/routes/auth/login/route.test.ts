@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { seedEmployees } from "@/infrastructure/seed/seed-employees"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
@@ -130,15 +130,13 @@ describe("POST /auth/login", () => {
     expect(
       await db
         .prepare(
-          `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
-                  outcome, reason_code, authorization_json, before_json, after_json,
-                  metadata_json, client_ip, client_name, request_id, created_at
-           FROM audit_events`,
+          `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                  authorization_json, before_json, after_json, metadata_json, occurred_at
+           FROM system_audit_events`,
         )
         .first<Record<string, unknown>>(),
     ).toEqual({
-      actor_account_id: 1,
-      actor_employee_id: 1,
+      actor_account_id: "1",
       action: "auth.session.login_succeeded",
       target_type: "account",
       target_id: "1",
@@ -147,14 +145,11 @@ describe("POST /auth/login", () => {
       authorization_json: null,
       before_json: null,
       after_json: null,
-      metadata_json: null,
-      client_ip: "198.51.100.41",
-      client_name: "cli",
-      request_id: internalRequestId,
-      created_at: nowEpoch,
+      metadata_json: `{"client_ip":"198.51.100.41","client_name":"cli","request_id":"${internalRequestId}"}`,
+      occurred_at: nowEpoch * 1_000,
     })
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM system_audit_events").all())
     for (const secret of [
       "you+e001@example.com",
       "password",
@@ -179,7 +174,13 @@ describe("POST /auth/login", () => {
     for (const login of cases) {
       const db = await createTestDb()
       if (login.inactive === true) {
-        await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+        await db
+          .prepare(
+            `UPDATE accounts
+             SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+             WHERE id = 2`,
+          )
+          .run()
       }
       const response = await postLogin(db, login)
       responses.push({ status: response.status, body: await json(response) })
@@ -220,7 +221,7 @@ describe("POST /auth/login", () => {
     }
 
     const rows = (
-      await db.prepare("SELECT * FROM audit_events ORDER BY id").all<AuditDatabaseRow>()
+      await db.prepare("SELECT * FROM company_audit_events ORDER BY id").all<AuditDatabaseRow>()
     ).results
     const expectedHash = await hashAuditIdentifier(variants[0], auditHmacSecret)
     expect(expectedHash).toMatch(/^[0-9a-f]{64}$/)
@@ -251,7 +252,7 @@ describe("POST /auth/login", () => {
       })),
     )
 
-    const persisted = JSON.stringify(await db.prepare("SELECT * FROM audit_events").all())
+    const persisted = JSON.stringify(await db.prepare("SELECT * FROM company_audit_events").all())
     expect(persisted).not.toContain("you+e001@example.com")
     expect(persisted).not.toContain("wrong-password")
     expect(persisted).not.toContain("denied-private-agent")
@@ -270,7 +271,13 @@ describe("POST /auth/login", () => {
     for (const login of cases) {
       const db = await createTestDb()
       if (login.inactive === true) {
-        await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 2").run()
+        await db
+          .prepare(
+            `UPDATE accounts
+             SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+             WHERE id = 2`,
+          )
+          .run()
       }
       await db.exec(`
         CREATE TRIGGER reject_test_audit_insert
@@ -296,7 +303,7 @@ describe("POST /auth/login", () => {
     const db = await createTestDb()
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
-      BEFORE INSERT ON audit_events
+      BEFORE INSERT ON system_audit_events
       BEGIN
         SELECT RAISE(ABORT, 'forced audit insert failure');
       END;

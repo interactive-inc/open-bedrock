@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
 import { canWriteDepartmentGoal } from "@/interface/routes/performance-goals/can-write-department-goal"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"

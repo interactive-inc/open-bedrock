@@ -51,7 +51,7 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 - `api/src/` … domain / application / infrastructure / interface の4層。interface は `routes/` 配下に Next.js App Router 記法でルートを定義し（`routes/<URLパス>/route.ts`、URL とディレクトリを一致させる。動的セグメント `[param]`）、`app.ts` が `:param` に対応づけて登録する。`app.ts` は `bun run gen:app` の生成物なので手で編集しない（後述）。同一 URL に別メソッドを足す場合は `create-route.ts` のような `<動詞>-route.ts` を同ディレクトリに並置する。ルート横断のコードは内容を表す名前のディレクトリに置く（`middlewares/`、`utils/`、`test-helpers/` など。`shared/` のような中身のわからない名前は禁止）。API レスポンスは `lib/app-schemas.ts` の zApp スキーマで parse してから返す（1 ファイル 1 スキーマ規約の例外として集約）
 - `cli/app/` … コマンド群。`<command>/.../route.ts` で定義し、`cli/app/index.ts` が POST ルートとして集約する。ルート追加時は index.ts への登録を忘れない（未登録だと catch-all に落ちて使用不可）。共通処理は `cli/lib/`
 - `web/app/(app|auth)/` … ルートグループ。ルート直下は `page.tsx` / `actions.ts` などの規約ファイルのみ。画面コンポーネントは各ルートの `_components/`、表示用純関数は `_lib/` に collocation する。`components/ui` は shadcn 生成物（直接編集しない）、独自コンポーネントは別ファイルでラップする
-- `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
+- `web/lib/api/` … API クライアント関数（1 関数 1 ファイル）。`api/app` の型（`api/dist/api/app.d.ts`）で型付けされる。レスポンスの手書き型は `web/lib/api/types/` に置く（api と疎結合に保つため z.infer を参照せず同形を手書きする）
 
 ## API の URL 規約
 
@@ -67,7 +67,8 @@ Bun Workspaces のモノレポ。4つのワークスペースで構成する。
 
 - まず `bun install` を必ず実行する（飛ばすと web が `Module not found: 'zod'` 等の依存解決エラーになる）
 - 初回は `cd api && bun run db:migrate:local` でローカル D1 を作成し、`bun run db:seed:local` で seed を投入する
-- `cp api/.dev.vars.example api/.dev.vars` で `JWT_SECRET` を用意する（無いとログインが 500 になる。`.dev.vars` は gitignore 済み）
+- `cd api && bun run setup:dev-vars` で `.dev.vars` を生成する（`JWT_SECRET` と `AUDIT_HMAC_SECRET` をランダムに作る。既存ファイルは上書きしない。`.dev.vars` は gitignore 済み）。api は未設定・16 文字未満・`-change-me` で終わる秘密値を実行時に拒否するので、`.dev.vars.example` をそのままコピーしても動かない
+- `.dev.vars` には `ENABLED_OPTIONAL_FEATURES="all"` も必要（無いと 1on1・サンクス・目標などの company-optional 機能が既定で無効になり API が 404 を返す。正本は `.docs/feature-tiers.md`）
 - リポジトリ root で `portless` を実行すると web/api が同時に立つ。web は `https://bedrock.localhost`、api は `https://api.bedrock.localhost`（実体は `localhost:18787`）。ホスト名の正本は `portless.json`。`.localhost` は Chrome 等がそのまま解決し、portless の CA はシステムに信頼登録済み
 - ログインは seed の `you+e001@example.com` / `password`（`E001` が admin）。ダッシュボード・従業員一覧まで表示されれば web→api→D1 の通し動作 OK
 
@@ -78,7 +79,7 @@ wrangler dev は「Network connection lost.」で稀にプロセスごと落ち�
 web↔api クライアントの約束:
 
 - web/cli は `api/app` から `AppType` / `ApiClient` を type-only で import し、`hc<AppType>()` を自前で生成する（`web/lib/api/hc-client.ts`、`cli/lib/http/hc-client.ts` 参照）
-- `api/app` の `exports.default` は `./src/app.ts`。ここから実行時の値（旧 `hcWithType` 等）を import すると、bundler が app.ts 経由で全ルートと api の `@/` を取り込もうとして `Module not found: @/interface/...` で dev ビルドが落ちる。クライアント側は必ず型のみ参照にすること
+- `api/app` の `exports.default` は `./src/api/app.ts`。ここから実行時の値（旧 `hcWithType` 等）を import すると、bundler が app.ts 経由で全ルートと api の `@/` を取り込もうとして `Module not found: @/interface/...` で dev ビルドが落ちる。クライアント側は必ず型のみ参照にすること
 
 ## 変更時の確認
 
@@ -89,7 +90,7 @@ web↔api クライアントの約束:
 
 ## ルート登録と認可の機械検査
 
-`api/src/app.ts` は生成物であり、手で編集しない。ルートを足すときは `interface/routes/<URL パス>/route.ts` を作り、`cd api && bun run gen:app` を実行する。生成器は `routes/` を走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラ・`/health` は手書きの `app-base.ts` が持つ。
+`api/src/api/app.ts` は生成物であり、手で編集しない。ルートを足すときは `src/api/route-module.registry.ts` に登録済みのcontext配下へ置き、`cd api && bun run gen:app` を実行する。生成器は登録された `routes/` だけを走査して `export const GET|POST|PUT|PATCH|DELETE` を登録し、静的パスを動的パスより先に並べる（Hono は同じ形の候補を登録順で解決するため、`/expenses/me` が `/expenses/:id` より後ろにあると食われる）。middleware・エラーハンドラは手書きの `src/api/app-base.ts` が持つ。`/health` はSystem contextのrouteとして明示登録する。
 
 `bun run gen:app:check` が生成物と `routes/` のズレを検出する。登録漏れ＝ルート消失は、実装があるのに到達できず、テストも「そのルートを呼ばない」だけで緑のまま通るため、規約ではなく検査で防ぐ。
 
@@ -108,7 +109,7 @@ web↔api クライアントの約束:
 
 **この検査が保証するのは「認可の方針を書き忘れていない」ことだけである。** 宣言が実態と合っているかは検査しない（`permission` と書いて中身が素通しでも通る）。つまり棚卸しであって認可の強制ではない。認可の正本は各 handler と application service のコードで、その正しさはレビューとテストで見る。「検査が緑だから安全」とは読まないこと。`authenticated` と `public` は意図的に緩いという表明なので、付けるときは理由を確認する。
 
-両検査は `bun run check`（api）に組み込んである。
+これらの検査（gen:app:check、lint:route-authorization、lint:system-boundary、verify-seed）は `bun run check`（api）に組み込んである。`lint:system-boundary` はシステム層（`src/domain/system` ほか）が、自動検出した下位 context の語彙・モジュールや混在 schema へ依存していないことを TypeScript AST で検査する。`verify-seed` は migration と `seeds/*.sql` を in-memory SQLite に適用し、schema 変更への seed の追従漏れを検出する。
 
 ## ドキュメント
 

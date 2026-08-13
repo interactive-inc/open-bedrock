@@ -1,6 +1,6 @@
-import type { Session } from "@/lib/auth/session"
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
-import { personnelActionInputSchema } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { Session } from "@/contexts/company/domain/iam/session"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
+import { personnelActionInputSchema } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 

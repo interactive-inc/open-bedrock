@@ -1,4 +1,4 @@
-import { MarkNotificationRead } from "@/application/notification/mark-notification-read"
+import { MarkNotificationRead } from "@/contexts/system/application/notifications/mark-notification-read"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/interface/lib/errors"
 import { toHttpException } from "@/interface/lib/to-http-exception"
@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const result = await new MarkNotificationRead(c).run({
     notificationId,
-    viewerEmployeeId: session.employeeId,
+    viewerAccountId: session.accountId,
   })
 
   if (result instanceof ApplicationError) {
@@ -29,7 +29,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const responseBody = zAppNotification.parse({
     id: result.id,
-    recipient_employee_id: result.recipientEmployeeId,
+    recipient_employee_id: session.employeeId,
     source_domain: result.sourceDomain,
     source_id: result.sourceId,
     kind: result.kind,

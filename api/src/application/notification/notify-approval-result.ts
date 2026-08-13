@@ -1,6 +1,6 @@
-import { Notification } from "@/domain/notification/notification.entity"
+import type { Notification } from "@/contexts/system/domain/notifications/notification.entity"
 import type { Context } from "@/env"
-import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
 
 export type Command = {
   recipientEmployeeId: number
@@ -24,7 +24,7 @@ export class NotifyApprovalResult {
         ? `${command.subjectLabel}が承認されました`
         : `${command.subjectLabel}が却下されました`
 
-    const notification = Notification.create({
+    return await new EmployeeNotificationGateway(this.c).create({
       recipientEmployeeId: command.recipientEmployeeId,
       kind: "approval_result",
       title,
@@ -33,9 +33,5 @@ export class NotifyApprovalResult {
       sourceId: command.sourceId,
       createdAt: command.createdAt,
     })
-
-    const notificationRepository = new NotificationRepository(this.c)
-
-    return await notificationRepository.create(notification)
   }
 }

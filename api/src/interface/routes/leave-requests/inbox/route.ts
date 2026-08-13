@@ -10,7 +10,7 @@ import { ForbiddenError, InternalError, UnauthorizedError } from "@/interface/li
 import { zAppLeaveRequestInboxList } from "@/lib/app-schemas"
 import { employees, leaveRequests } from "@/schema"
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"
+import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
 
 /** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
 const SORT_OPTIONS = {
@@ -69,7 +69,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const sortQuery = c.req.query("sort") ?? ""
 
-  const sortKey: SortKey = sortQuery in SORT_OPTIONS ? (sortQuery as SortKey) : "created_at_desc"
+  const sortKey: SortKey = Object.hasOwn(SORT_OPTIONS, sortQuery)
+    ? (sortQuery as SortKey)
+    : "created_at_desc"
 
   const rows = await c.var.database
     .select({ leaveRequest: leaveRequests, applicantName: employees.name })

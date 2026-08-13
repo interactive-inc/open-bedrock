@@ -56,7 +56,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const sortQuery = c.req.query("sort") ?? ""
 
-  const sortKey: SortKey = sortQuery in SORT_OPTIONS ? (sortQuery as SortKey) : "created_at_desc"
+  const sortKey: SortKey = Object.hasOwn(SORT_OPTIONS, sortQuery)
+    ? (sortQuery as SortKey)
+    : "created_at_desc"
 
   // 一覧では payload（大きい JSON 文字列）を返さないため、必要な列だけを取得する。
   const rows = await c.var.database

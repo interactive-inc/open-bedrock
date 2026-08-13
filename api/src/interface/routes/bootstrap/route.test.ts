@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
+import { app } from "@/api/app"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { loadSchema } from "@/interface/test-helpers/load-schema"
 import { z } from "zod"
@@ -127,7 +127,7 @@ describe("POST /bootstrap", () => {
     const db = createTestDb()
     await db
       .prepare(
-        "INSERT INTO accounts (employee_id, status, token_version, created_at, updated_at) VALUES (NULL, 'active', 0, 0, 0)",
+        "INSERT INTO accounts (status, token_version, created_at, updated_at) VALUES ('active', 0, 0, 0)",
       )
       .run()
 
@@ -155,7 +155,12 @@ describe("POST /bootstrap", () => {
     expect(employee).toEqual({ code: "E001", name: "Root Admin", status: "active" })
 
     const account = await db
-      .prepare("SELECT employee_id, status, token_version FROM accounts WHERE id = ?1")
+      .prepare(
+        `SELECT link.employee_id, account.status, account.token_version
+         FROM accounts account
+         JOIN account_employee_links link ON link.account_id = account.id
+         WHERE account.id = ?1`,
+      )
       .bind(body.account_id)
       .first<{ employee_id: number; status: string; token_version: number }>()
     expect(account).toEqual({

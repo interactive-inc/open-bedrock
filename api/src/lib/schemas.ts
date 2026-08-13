@@ -42,21 +42,6 @@ export const employeeRoleSchema = z.enum(["member", "manager", "hr", "root"])
 
 export type EmployeeRole = z.infer<typeof employeeRoleSchema>
 
-/** 従業員ステータス */
-export const employeeStatusSchema = z.enum(["active", "leave", "retired"])
-
-/** アカウントのステータス。suspended/locked は認証を拒否する。 */
-export const accountStatusSchema = z.enum(["active", "suspended", "locked"])
-
-export type AccountStatus = z.infer<typeof accountStatusSchema>
-
-/** 認証 identity の方式。password 以外は OAuth/OIDC の拡張点。 */
-export const identityProviderSchema = z.enum(["password", "google", "github", "oidc"])
-
-export type IdentityProvider = z.infer<typeof identityProviderSchema>
-
-export type EmployeeStatus = z.infer<typeof employeeStatusSchema>
-
 /** 休暇種別 */
 export const leaveTypeSchema = z.enum([
   "annual",
@@ -92,11 +77,6 @@ export const lifeEventTypeSchema = z.enum([
 ])
 
 export type LifeEventType = z.infer<typeof lifeEventTypeSchema>
-
-/** バッチジョブステータス */
-export const batchJobStatusSchema = z.enum(["running", "completed", "failed"])
-
-export type BatchJobStatus = z.infer<typeof batchJobStatusSchema>
 
 /** 経費カテゴリ */
 export const expenseCategorySchema = z.enum([

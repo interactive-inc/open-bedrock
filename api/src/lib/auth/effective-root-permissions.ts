@@ -1,4 +1,4 @@
-import type { PermissionKey } from "@/lib/auth/permission-keys"
+import type { PermissionKey } from "@/composition/iam/permission-key.catalog"
 
 /**
  * ロールやアカウントを復旧・再付与できる「実効管理者」に必須の権限集合。

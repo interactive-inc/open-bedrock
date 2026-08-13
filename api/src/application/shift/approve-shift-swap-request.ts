@@ -1,12 +1,11 @@
-import type { Session } from "@/lib/auth/session"
-import { Notification } from "@/domain/notification/notification.entity"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/domain/shift/shift-swap-request.entity"
 import type { Context } from "@/env"
-import { NotificationRepository } from "@/infrastructure/notification/notification-repository"
+import { EmployeeNotificationGateway } from "@/infrastructure/company/notifications/employee-notification.gateway"
 import { ShiftAssignmentRepository } from "@/infrastructure/shift/shift-assignment-repository"
 import { ShiftSwapRequestRepository } from "@/infrastructure/shift/shift-swap-request-repository"
 
@@ -131,9 +130,9 @@ export class ApproveShiftSwapRequest {
   }
 
   private async notifySwap(swapRequest: ShiftSwapRequest, createdAt: string): Promise<void> {
-    const notificationRepository = new NotificationRepository(this.c)
+    const notificationGateway = new EmployeeNotificationGateway(this.c)
 
-    const requesterNotification = Notification.create({
+    const requesterNotified = await notificationGateway.create({
       recipientEmployeeId: swapRequest.requesterEmployeeId,
       kind: "approval_result",
       title: `${swapRequest.date} のシフト交代申請が承認されました`,
@@ -143,13 +142,11 @@ export class ApproveShiftSwapRequest {
       createdAt,
     })
 
-    const requesterNotified = await notificationRepository.create(requesterNotification)
-
     if (requesterNotified instanceof Error) {
       console.error("failed to create swap notification for requester", requesterNotified)
     }
 
-    const targetNotification = Notification.create({
+    const targetNotified = await notificationGateway.create({
       recipientEmployeeId: swapRequest.targetEmployeeId,
       kind: "approval_result",
       title: `${swapRequest.date} のシフト交代が承認されました`,
@@ -158,8 +155,6 @@ export class ApproveShiftSwapRequest {
       sourceId: swapRequest.id,
       createdAt,
     })
-
-    const targetNotified = await notificationRepository.create(targetNotification)
 
     if (targetNotified instanceof Error) {
       console.error("failed to create swap notification for target", targetNotified)

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
-import type { AuditEventDetail } from "@/domain/audit/audit-event"
+import { app } from "@/api/app"
+import type { AuditEventDetail } from "@/composition/audit/audit-event"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
@@ -71,10 +71,10 @@ async function seedExportRow(db: D1Database): Promise<void> {
   await db
     .prepare(
       `INSERT INTO audit_events
-       (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
+       (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES ('legacy-41', 'legacy-request', -41, NULL, 'legacy.action', 'legacy_target',
+       VALUES ('legacy-41', 'legacy-request', -41, 'legacy.action', 'legacy_target',
                '=formula', 'succeeded', 'legacy_reason', '7', '"before"', '[1,2]',
                '{"legacy_text":"value"}', '192.0.2.41', 'cli', 1767225600)`,
     )
@@ -449,7 +449,7 @@ describe("POST /audit-event-exports", () => {
       reason_code: "audit_export_too_large",
     })
     expect(JSON.parse(String(audit.metadata_json))).toMatchObject({ format: "csv" })
-    expect(requestQueries).toBe(19)
+    expect(requestQueries).toBe(20)
     expect(requestQueries).toBeLessThanOrEqual(28)
     expect(requestQueries).toBeLessThanOrEqual(33)
   }, 20_000)
@@ -492,7 +492,7 @@ describe("POST /audit-event-exports", () => {
     fiftyThousand.resetQueries()
     const success = await request(fiftyThousand.db, await token(3))
     expect(success.status).toBe(200)
-    expect(fiftyThousand.queries()).toBe(19)
+    expect(fiftyThousand.queries()).toBe(20)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(28)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(33)
 
@@ -504,7 +504,7 @@ describe("POST /audit-event-exports", () => {
       to: "1970-02-01T00:00:00Z",
     })
     expect(worst.status).toBe(200)
-    expect(formalWorst.queries()).toBe(27)
+    expect(formalWorst.queries()).toBe(28)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
   }, 20_000)
 

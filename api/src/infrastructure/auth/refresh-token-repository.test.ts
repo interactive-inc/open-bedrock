@@ -1,7 +1,7 @@
-import { describe, expect, test } from "bun:test"
-import type { AuditEventRecord } from "@/domain/audit/audit-event"
+import { describe, expect, spyOn, test } from "bun:test"
+import type { AuditEventRecord } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 
@@ -66,8 +66,9 @@ async function setup() {
   await db.exec(`
     INSERT INTO employees (id, code, name, status)
     VALUES (1, 'E001', 'Test Worker', 'active');
-    INSERT INTO accounts (id, employee_id, status, token_version, created_at, updated_at)
-    VALUES (1, 1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO accounts (id, status, token_version, created_at, updated_at)
+    VALUES (1, 'active', 0, ${nowEpoch - 100}, ${nowEpoch - 100});
+    INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1);
   `)
   await insertRefreshToken(db)
 
@@ -109,6 +110,16 @@ async function insertRefreshToken(
     .run()
 }
 
+async function insertCanonicalAccount(db: D1Database, tokenVersion: number): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
+       VALUES ('1', 'active', ?1, ?2, ?2)`,
+    )
+    .bind(tokenVersion, (nowEpoch - 100) * 1_000)
+    .run()
+}
+
 function rotateProps(newTokenHash = "new-token-hash") {
   return {
     tokenId: 1,
@@ -147,6 +158,22 @@ function mutateBeforeNextBatch(context: Context, mutation: () => Promise<unknown
   return () => batchCalls
 }
 
+function isolateChangesPerBatchStatement(context: Context): void {
+  const source = context.env.DB
+  context.env.DB = new Proxy(source, {
+    get(target, property, receiver) {
+      if (property === "prepare") {
+        return (query: string) =>
+          query.includes("changes()")
+            ? source.prepare("SELECT json_extract('', '$') AS ok")
+            : source.prepare(query)
+      }
+
+      return Reflect.get(target, property, receiver)
+    },
+  })
+}
+
 async function activeFamilyCount(db: D1Database): Promise<number | null> {
   return db
     .prepare(
@@ -173,6 +200,7 @@ async function auditActions(
 describe("RefreshTokenRepository audited writes", () => {
   test("creates a refresh token and its audit event in one batch", async () => {
     const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 3)
     const repository = new RefreshTokenRepository(context)
     const audit = new AuditEventRepository(context).prepareAppend(auditRecord("login-created"))
 
@@ -212,9 +240,42 @@ describe("RefreshTokenRepository audited writes", () => {
     ).toBe(1)
   })
 
+  test("verifies the persisted row without relying on changes() from a prior batch statement", async () => {
+    const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 0)
+    isolateChangesPerBatchStatement(context)
+    const repository = new RefreshTokenRepository(context)
+
+    const result = await repository.createWithAudit(
+      {
+        accountId: 1,
+        tokenHash: "statement-local-token-hash",
+        familyId: "statement-local-family",
+        tokenVersion: 0,
+        userAgent: null,
+        nowEpoch,
+      },
+      new AuditEventRepository(context).prepareAppend(auditRecord("statement-local-login")),
+    )
+
+    expect(result).toBeUndefined()
+    expect(
+      await db
+        .prepare(
+          "SELECT COUNT(*) AS count FROM refresh_tokens WHERE token_hash = 'statement-local-token-hash'",
+        )
+        .first<number>("count"),
+    ).toBe(1)
+    expect(
+      await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
+    ).toBe(1)
+  })
+
   test("rolls a created refresh token back when its audit insert fails", async () => {
     const { context, db } = createTestContext()
+    await insertCanonicalAccount(db, 0)
     const repository = new RefreshTokenRepository(context)
+    const consoleError = spyOn(console, "error").mockImplementation(() => undefined)
     await db.exec(`
       CREATE TRIGGER reject_test_audit_insert
       BEFORE INSERT ON audit_events
@@ -242,6 +303,16 @@ describe("RefreshTokenRepository audited writes", () => {
     expect(
       await db.prepare("SELECT COUNT(*) AS count FROM audit_events").first<number>("count"),
     ).toBe(0)
+    expect(consoleError).toHaveBeenCalledWith(
+      JSON.stringify({
+        event: "auth.persistence.failed",
+        operation: "refresh_token.create_with_audit",
+        errorType: "SQLiteError",
+        reason: "database_error",
+      }),
+    )
+    expect(consoleError.mock.calls.flat().join(" ")).not.toContain("rolled-back-token-hash")
+    consoleError.mockRestore()
   })
 
   test("revokes an active family and appends its audit event atomically", async () => {
@@ -375,7 +446,12 @@ describe("RefreshTokenRepository atomic rotation decision", () => {
   })
 
   test.each([
-    ["account suspension", "UPDATE accounts SET status = 'suspended' WHERE id = 1"],
+    [
+      "account suspension",
+      `UPDATE accounts
+       SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+       WHERE id = 1`,
+    ],
     ["token version bump", "UPDATE accounts SET token_version = token_version + 1 WHERE id = 1"],
     ["employee retirement", "UPDATE employees SET status = 'retired' WHERE id = 1"],
   ])("chooses invalid after a live %s race", async (_, mutationSql) => {

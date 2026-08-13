@@ -1,7 +1,8 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { RegisterEmployee } from "@/application/employee/register-employee"
 import type { Context } from "@/env"
 import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { RoleRepository } from "@/infrastructure/iam/role-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
@@ -136,13 +137,23 @@ async function createRole(context: Context, key: string, permissionKeys: Readonl
 async function sessionFor(context: Context, accountId: number): Promise<Session> {
   const account = await new AccountAuthRepository(context).resolveById(accountId)
 
-  if (account === null || account instanceof Error || account.employeeId === null) {
+  const linkedAccount = await new AccountEmployeeLinkRepository(context).findLinkedAccount(
+    accountId,
+  )
+
+  if (
+    account === null ||
+    account instanceof Error ||
+    linkedAccount === null ||
+    linkedAccount instanceof Error ||
+    linkedAccount.employeeId === null
+  ) {
     throw new Error("account setup failed")
   }
 
   return new Session({
     accountId: account.accountId,
-    employeeId: account.employeeId,
+    employeeId: linkedAccount.employeeId,
     employeeStatus: "active",
     permissions: account.permissions,
     roleKeys: account.roleKeys,

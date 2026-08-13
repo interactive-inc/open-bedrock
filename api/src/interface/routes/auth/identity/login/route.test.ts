@@ -108,6 +108,16 @@ async function auditRows(
   ).results
 }
 
+async function systemAuditRows(
+  db: D1Database,
+): Promise<Array<{ action: string; reason_code: string | null }>> {
+  return (
+    await db
+      .prepare("SELECT action, reason_code FROM system_audit_events ORDER BY occurred_at, event_id")
+      .all<{ action: string; reason_code: string | null }>()
+  ).results
+}
+
 describe("POST /auth/identity/login", () => {
   test("issues tokens for a provisioned external identity", async () => {
     const db = await createTestDb()
@@ -123,7 +133,7 @@ describe("POST /auth/identity/login", () => {
     expect(body.access_token.length > 0).toBe(true)
     expect(body.refresh_token.length > 0).toBe(true)
 
-    const rows = await auditRows(db)
+    const rows = await systemAuditRows(db)
     expect(rows).toEqual([{ action: "auth.session.identity_login_succeeded", reason_code: null }])
 
     // jti が使用済みとして記録されている。
@@ -251,7 +261,13 @@ describe("POST /auth/identity/login", () => {
 
   test("rejects a suspended account", async () => {
     const db = await createTestDb()
-    await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 1").run()
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 1`,
+      )
+      .run()
     const token = await createIdentityToken(identityKey.signingKey, nowEpoch, {
       sub: "external-subject-1",
       jti: "login-jti-suspended",
@@ -276,9 +292,10 @@ describe("POST /auth/identity/login", () => {
     const second = await postIdentityLogin(db, token)
     expect(second.status).toBe(401)
 
-    const rows = await auditRows(db)
-    expect(rows).toEqual([
+    expect(await systemAuditRows(db)).toEqual([
       { action: "auth.session.identity_login_succeeded", reason_code: null },
+    ])
+    expect(await auditRows(db)).toEqual([
       { action: "auth.session.identity_login_denied", reason_code: "token_replayed" },
     ])
   })

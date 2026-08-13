@@ -1,7 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { CommandPalette } from "@/components/command-palette"
+import { FeatureDisabledScreen } from "@/components/feature-disabled-screen"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarUserMenu } from "@/components/sidebar-user-menu"
 import {
@@ -17,6 +19,7 @@ import type { InboxCounts } from "@/lib/api/types/inbox-types"
 import type { FlatDepartment } from "@/lib/org/flatten-org-tree"
 import type { MyDepartment } from "@/components/sidebar-nav"
 import type { Locale } from "@/lib/i18n/locale"
+import { isPathOfDisabledFeature } from "@/lib/feature/is-path-of-disabled-feature"
 
 type Props = {
   children: React.ReactNode
@@ -27,6 +30,8 @@ type Props = {
   allDepartments: ReadonlyArray<FlatDepartment>
   onLogout: () => void
   unreadNotificationCount: number
+  // 機能ゲートで無効化されている機能キー。ナビから隠し、該当画面は案内に差し替える。
+  disabledFeatures: ReadonlyArray<string>
 }
 
 /**
@@ -34,6 +39,11 @@ type Props = {
  */
 export function AppShell(props: Props) {
   const deptLabel = props.currentUser.dept_name ?? "所属未設定"
+
+  const pathname = usePathname()
+
+  // 表示の出し分けのみ。強制は api 側の feature gate（無効ルートは 404）が担う。
+  const isFeatureDisabledPath = isPathOfDisabledFeature(pathname, props.disabledFeatures)
 
   return (
     <SidebarProvider>
@@ -65,6 +75,7 @@ export function AppShell(props: Props) {
             permissions={props.currentUser.permissions}
             myDepartments={props.myDepartments}
             allDepartments={props.allDepartments}
+            disabledFeatures={props.disabledFeatures}
           />
         </SidebarContent>
 
@@ -93,7 +104,7 @@ export function AppShell(props: Props) {
 
       <SidebarInset>
         <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-6" tabIndex={-1}>
-          {props.children}
+          {isFeatureDisabledPath ? <FeatureDisabledScreen /> : props.children}
         </main>
       </SidebarInset>
 

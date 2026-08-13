@@ -1,16 +1,21 @@
 import type { AccessTokenView } from "@/application/auth/access-token-view"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import { resolveAccountSession } from "@system/application/auth/resolve-account-session"
+import { zAccountId } from "@system/domain/auth/account-id"
+import { getAccountSessionRejection } from "@/contexts/system/domain/auth/get-account-session-rejection"
+import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { Context } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
-import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
-import { AccountAuthRepository } from "@/infrastructure/auth/account-auth-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
+import { AccountEmployeeLinkRepository } from "@/infrastructure/employee/account-employee-link-repository"
 import { JoseTokenSigner } from "@/infrastructure/auth/jose-token-signer"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
-import type { RotationDecision } from "@/infrastructure/auth/refresh-token-repository"
+import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
 import { resolveLiveEmployeeAccess } from "@/application/auth/resolve-live-employee-access"
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
 import { refreshTokenHash } from "@/lib/auth/refresh-token-hash"
+import { generateOpaqueToken } from "@/contexts/system/infrastructure/auth/generate-opaque-token"
 import { ApplicationError, UnavailableError, UnexpectedError } from "@/lib/errors"
 
 export type Command = {
@@ -138,9 +143,30 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
-    const account = await new AccountAuthRepository(this.c).findById(existing.accountId)
+    const canonicalAccountId = zAccountId.safeParse(String(existing.accountId))
+    if (canonicalAccountId.success === false) {
+      return new UnexpectedError("failed to authorize account session")
+    }
+
+    const accountPromise = new AccountEmployeeLinkRepository(this.c).findLinkedAccount(
+      existing.accountId,
+    )
+    const canonicalSessionPromise = resolveAccountSession({
+      accountRepository: new SystemAccountRepository({ database: this.c.env.DB }),
+      accountId: canonicalAccountId.data,
+      sessionTokenVersion: existing.tokenVersion,
+    })
+    const account = await accountPromise
+    const canonicalSession = await canonicalSessionPromise
+
     if (account instanceof Error) {
       return new UnexpectedError("failed to find account", { cause: account })
+    }
+
+    if (canonicalSession instanceof Error) {
+      return new UnexpectedError("failed to authorize account session", {
+        cause: canonicalSession,
+      })
     }
 
     const revokeInvalidFamily = async (): Promise<InvalidToken | UnavailableError> => {
@@ -167,11 +193,20 @@ export class RefreshAccessToken {
       return { reason: "invalid_token" }
     }
 
+    const accountSessionRejection =
+      account === null
+        ? null
+        : getAccountSessionRejection({
+            accountStatus: account.status,
+            accountTokenVersion: account.tokenVersion,
+            sessionTokenVersion: existing.tokenVersion,
+          })
+
     if (
       account === null ||
-      account.status !== "active" ||
-      account.employeeId === null ||
-      account.tokenVersion !== existing.tokenVersion
+      accountSessionRejection !== null ||
+      canonicalSession.kind === "rejected" ||
+      account.employeeId === null
     ) {
       return revokeInvalidFamily()
     }
@@ -183,8 +218,7 @@ export class RefreshAccessToken {
     const accessToken = await new JoseTokenSigner().sign(
       {
         accountId: existing.accountId,
-        employeeId: account.employeeId,
-        tokenVersion: account.tokenVersion,
+        tokenVersion: canonicalSession.account.tokenVersion,
       },
       command.jwtSecret,
     )
@@ -192,9 +226,9 @@ export class RefreshAccessToken {
       return new UnexpectedError("failed to sign access token", { cause: accessToken })
     }
 
-    const newRawRefreshToken = crypto.randomUUID()
+    const newRawRefreshToken = generateOpaqueToken()
     const newHashedToken = await refreshTokenHash(newRawRefreshToken)
-    let audit: AuditDecisionAppendFragment<RotationDecision>
+    let audit: AuditDecisionAppendFragment<RefreshTokenRotationDecision>
     try {
       const familyHash = await hashAuditIdentifier(
         `refresh-family:${existing.familyId}`,
@@ -265,7 +299,7 @@ export class RefreshAccessToken {
         accountId: existing.accountId,
         employeeId: account.employeeId,
         familyId: existing.familyId,
-        tokenVersion: existing.tokenVersion,
+        tokenVersion: canonicalSession.account.tokenVersion,
         userAgent: command.userAgent,
         nowEpoch,
         lifecycleAccess: employeeAccess,

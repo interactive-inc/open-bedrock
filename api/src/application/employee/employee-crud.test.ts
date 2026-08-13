@@ -1,9 +1,9 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { GetEmployee } from "@/application/employee/get-employee"
 import { RegisterEmployee } from "@/application/employee/register-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
-import { Employee } from "@/domain/employee/employee.entity"
+import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import type { Context } from "@/env"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
@@ -73,7 +73,7 @@ describe("RegisterEmployee", () => {
     expect(
       await db
         .prepare(
-          `SELECT COUNT(*) FROM accounts
+          `SELECT COUNT(*) FROM account_employee_links
            WHERE employee_id = (SELECT id FROM employees WHERE code = 'E900')`,
         )
         .first<number>("COUNT(*)"),
@@ -226,7 +226,7 @@ describe("DeleteEmployee", () => {
     ).toBe(1)
     expect(
       await db
-        .prepare("SELECT COUNT(*) FROM accounts WHERE employee_id = ?1")
+        .prepare("SELECT COUNT(*) FROM account_employee_links WHERE employee_id = ?1")
         .bind(id)
         .first<number>("COUNT(*)"),
     ).toBe(1)

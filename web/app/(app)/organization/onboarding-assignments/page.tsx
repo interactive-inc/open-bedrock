@@ -13,7 +13,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
-import { getMe } from "@/lib/api/get-me"
 import { requirePermission } from "@/lib/auth/require-permission"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 

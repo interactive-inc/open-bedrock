@@ -165,8 +165,17 @@ describe("DELETE /accounts/:id/roles/:roleKey (ロール剥奪)", () => {
 })
 
 describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
-  test("admin が member アカウントのパスワードを再設定できる", async () => {
-    const response = await request({
+  test("admin の再設定はcredential・token失効・System監査を同時に永続化する", async () => {
+    const db = await createTestDb()
+    const before = await db
+      .prepare(
+        "SELECT secret, token_version FROM identities JOIN accounts ON accounts.id = identities.account_id WHERE accounts.id = 5 AND identities.provider = 'password'",
+      )
+      .first<{ secret: string; token_version: number }>()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
       path: "/accounts/5/reset-password",
       method: "POST",
       token: await adminToken(),
@@ -174,6 +183,108 @@ describe("POST /accounts/:id/reset-password (パスワード再設定)", () => {
     })
 
     expect(response.status).toBe(204)
+    const after = await db
+      .prepare(
+        "SELECT secret, token_version FROM identities JOIN accounts ON accounts.id = identities.account_id WHERE accounts.id = 5 AND identities.provider = 'password'",
+      )
+      .first<{ secret: string; token_version: number }>()
+    expect(after?.secret).not.toBe(before?.secret)
+    expect(after?.token_version).toBe((before?.token_version ?? 0) + 1)
+
+    const audit = await db
+      .prepare(
+        "SELECT actor_account_id, action, target_type, target_id, outcome FROM system_audit_events WHERE action = 'iam.account.password_reset'",
+      )
+      .first<{
+        actor_account_id: string
+        action: string
+        target_type: string
+        target_id: string
+        outcome: string
+      }>()
+    expect(audit).toEqual({
+      actor_account_id: "1",
+      action: "iam.account.password_reset",
+      target_type: "account",
+      target_id: "5",
+      outcome: "succeeded",
+    })
+  })
+
+  test("監査append失敗時はcredentialとtoken versionをrollbackする", async () => {
+    const db = await createTestDb()
+    const before = await db
+      .prepare(
+        "SELECT secret, token_version FROM identities JOIN accounts ON accounts.id = identities.account_id WHERE accounts.id = 5 AND identities.provider = 'password'",
+      )
+      .first<{ secret: string; token_version: number }>()
+    await db
+      .prepare(
+        `CREATE TRIGGER force_password_reset_audit_failure
+       BEFORE INSERT ON system_audit_events
+       BEGIN
+         SELECT RAISE(ABORT, 'forced audit failure');
+       END`,
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/5/reset-password",
+      method: "POST",
+      token: await adminToken(),
+      body: { new_password: "Newsecret123" },
+    })
+
+    expect(response.status).toBe(500)
+    const after = await db
+      .prepare(
+        "SELECT secret, token_version FROM identities JOIN accounts ON accounts.id = identities.account_id WHERE accounts.id = 5 AND identities.provider = 'password'",
+      )
+      .first<{ secret: string; token_version: number }>()
+    expect(after).toEqual(before)
+    expect(
+      await db.prepare("SELECT count(*) AS total FROM system_audit_events").first<number>("total"),
+    ).toBe(0)
+  })
+
+  test("mutation途中でAccountが消える競合も部分更新を残さない", async () => {
+    const db = await createTestDb()
+    const before = await db
+      .prepare("SELECT secret FROM identities WHERE account_id = 5 AND provider = 'password'")
+      .first<{ secret: string }>()
+    await db
+      .prepare(
+        `CREATE TRIGGER delete_account_during_password_reset
+       BEFORE UPDATE OF secret ON identities
+       WHEN OLD.account_id = 5
+       BEGIN
+         DELETE FROM accounts WHERE id = OLD.account_id;
+       END`,
+      )
+      .run()
+
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/accounts/5/reset-password",
+      method: "POST",
+      token: await adminToken(),
+      body: { new_password: "Newsecret123" },
+    })
+
+    expect(response.status).toBe(500)
+    expect(
+      await db
+        .prepare("SELECT secret FROM identities WHERE account_id = 5 AND provider = 'password'")
+        .first<{ secret: string }>(),
+    ).toEqual(before)
+    expect(
+      await db
+        .prepare("SELECT count(*) AS total FROM accounts WHERE id = 5")
+        .first<number>("total"),
+    ).toBe(1)
   })
 
   test("短すぎるパスワードは弾く (weak_password)", async () => {

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { ApplicationWorkflowStep } from "@/domain/application/application-workflow"
 import type { Context } from "@/env"
 import { prepareApplicationCompletion } from "@/application/application/application-completion-registry"
@@ -703,7 +703,9 @@ function approvalInsert(
           AND candidate.resolution_id = snapshot.resolution_id
          INNER JOIN accounts candidate_account
            ON candidate_account.id = candidate.candidate_account_id
-          AND candidate_account.employee_id = candidate.candidate_employee_id
+         INNER JOIN account_employee_links candidate_link
+           ON candidate_link.account_id = candidate_account.id
+          AND candidate_link.employee_id = candidate.candidate_employee_id
          INNER JOIN employees candidate_employee
            ON candidate_employee.id = candidate.candidate_employee_id
          WHERE snapshot.application_id = ?1

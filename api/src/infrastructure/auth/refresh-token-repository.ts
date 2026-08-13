@@ -1,6 +1,10 @@
 import type { Context } from "@/env"
-import type { AuditDecisionAppendFragment } from "@/infrastructure/audit/audit-event-repository"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import {
+  hasExactRefreshTokenRotationDecisions,
+  parseRefreshTokenRotationDecision,
+} from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
+import type { RefreshTokenRotationDecision } from "@/contexts/system/domain/auth/refresh-token-rotation-decision"
+import type { AuditDecisionAppendFragment } from "@/infrastructure/company/audit/audit-event-repository"
 import { refreshTokens } from "@/schema"
 import { eq } from "drizzle-orm"
 
@@ -14,8 +18,6 @@ export type CreateRefreshTokenProps = Readonly<{
   userAgent: string | null
   nowEpoch: number
 }>
-
-export type RotationDecision = "rotated" | "reused" | "invalid"
 
 export type RotateRefreshTokenProps = Readonly<{
   tokenId: number
@@ -35,25 +37,68 @@ export type RotateRefreshTokenProps = Readonly<{
 
 type AuditAppendStatements = readonly [D1PreparedStatement, D1PreparedStatement]
 
+function prepareRefreshTokenCreateInvariant(
+  db: D1Database,
+  props: CreateRefreshTokenProps,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      `SELECT CASE WHEN EXISTS (
+         SELECT 1
+         FROM refresh_tokens
+         WHERE account_id = ?1
+           AND token_hash = ?2
+           AND family_id = ?3
+           AND token_version = ?4
+           AND expires_at = ?5
+           AND revoked_at IS NULL
+           AND user_agent IS ?6
+           AND created_at = ?7
+       ) THEN 1 ELSE json_extract('', '$') END AS ok`,
+    )
+    .bind(
+      props.accountId,
+      props.tokenHash,
+      props.familyId,
+      props.tokenVersion,
+      props.nowEpoch + REFRESH_TOKEN_TTL_SECONDS,
+      props.userAgent,
+      props.nowEpoch,
+    )
+}
+
 function toRepositoryError(caught: unknown, message: string): Error {
   return caught instanceof Error ? caught : new Error(message)
 }
 
-function hasExactRotationDecisions(
-  decisions: readonly string[],
-): decisions is readonly RotationDecision[] {
-  return (
-    decisions.length === 3 &&
-    new Set(decisions).size === 3 &&
-    decisions.includes("rotated") &&
-    decisions.includes("reused") &&
-    decisions.includes("invalid")
-  )
+function classifyPersistenceFailure(caught: unknown): string {
+  const message = caught instanceof Error ? caught.message : ""
+
+  if (/no such table|no such column/iu.test(message)) return "missing_schema"
+  if (/unique constraint/iu.test(message)) return "unique_constraint"
+  if (/foreign key constraint/iu.test(message)) return "foreign_key_constraint"
+  if (/check constraint/iu.test(message)) return "check_constraint"
+  if (/json(?:_extract)?|malformed json/iu.test(message)) return "invariant_guard"
+  if (/audit.+(?:immutable|append-only)|audit employee context/iu.test(message)) {
+    return "audit_invariant"
+  }
+
+  return "database_error"
 }
 
-function parseRotationDecision(value: unknown): RotationDecision | null {
-  if (value === "rotated" || value === "reused" || value === "invalid") return value
-  return null
+/**
+ * 認証永続化の失敗を、token・account・利用者情報を含めず運用ログへ残す。
+ * D1の詳細messageはbinding値を含む可能性があるため出さず、安全な分類だけを記録する。
+ */
+function logAuthPersistenceFailure(operation: string, caught: unknown): void {
+  console.error(
+    JSON.stringify({
+      event: "auth.persistence.failed",
+      operation,
+      errorType: caught instanceof Error ? caught.name : typeof caught,
+      reason: classifyPersistenceFailure(caught),
+    }),
+  )
 }
 
 export class RefreshTokenRepository {
@@ -74,7 +119,14 @@ export class RefreshTokenRepository {
             `INSERT INTO refresh_tokens
                (account_id, token_hash, family_id, token_version, expires_at,
                 revoked_at, user_agent, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7)
+             SELECT ?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7
+             WHERE EXISTS (
+               SELECT 1
+               FROM system_accounts AS canonical_account
+               WHERE canonical_account.id = CAST(?1 AS TEXT)
+                 AND canonical_account.status = 'active'
+                 AND canonical_account.token_version = ?4
+             )
              RETURNING id`,
           )
           .bind(
@@ -86,13 +138,14 @@ export class RefreshTokenRepository {
             props.userAgent,
             props.nowEpoch,
           ),
-        abortWhenPreviousStatementChangedNoRows(db),
+        prepareRefreshTokenCreateInvariant(db, props),
         ...auditStatements,
       ])
       if (results.length !== 4 || results.some((result) => !result.success)) {
         throw new Error("audited refresh token creation did not succeed")
       }
     } catch (caught) {
+      logAuthPersistenceFailure("refresh_token.create_with_audit", caught)
       return toRepositoryError(caught, "failed to create refresh token with audit")
     }
   }
@@ -146,10 +199,10 @@ export class RefreshTokenRepository {
 
   async rotateWithAudit(
     props: RotateRefreshTokenProps,
-    audit: AuditDecisionAppendFragment<RotationDecision>,
-  ): Promise<RotationDecision | Error> {
+    audit: AuditDecisionAppendFragment<RefreshTokenRotationDecision>,
+  ): Promise<RefreshTokenRotationDecision | Error> {
     try {
-      if (!hasExactRotationDecisions(audit.decisions)) {
+      if (!hasExactRefreshTokenRotationDecisions(audit.decisions)) {
         throw new Error("rotation audit decisions are invalid")
       }
 
@@ -165,9 +218,13 @@ export class RefreshTokenRepository {
                  SELECT CASE
                    WHEN rt.revoked_at IS NOT NULL THEN 'reused'
                    WHEN a.id IS NULL
+                     OR canonical_account.id IS NULL
+                     OR canonical_account.status <> 'active'
+                     OR canonical_account.token_version <> rt.token_version
+                     OR canonical_account.token_version <> ?8
                      OR a.status <> 'active'
-                     OR a.employee_id IS NULL
-                     OR a.employee_id <> ?7
+                     OR link.employee_id IS NULL
+                     OR link.employee_id <> ?7
                      OR a.token_version <> rt.token_version
                      OR a.token_version <> ?8
                      OR e.id IS NULL
@@ -195,7 +252,10 @@ export class RefreshTokenRepository {
                  END
                  FROM refresh_tokens AS rt
                  LEFT JOIN accounts AS a ON a.id = rt.account_id
-                 LEFT JOIN employees AS e ON e.id = a.employee_id
+                 LEFT JOIN system_accounts AS canonical_account
+                   ON canonical_account.id = CAST(rt.account_id AS TEXT)
+                 LEFT JOIN account_employee_links AS link ON link.account_id = a.id
+                 LEFT JOIN employees AS e ON e.id = link.employee_id
                  WHERE rt.id = ?2
                    AND rt.token_hash = ?3
                    AND rt.account_id = ?4
@@ -318,7 +378,9 @@ export class RefreshTokenRepository {
       if (typeof row !== "object" || row === null || Array.isArray(row)) {
         throw new Error("rotation decision row is invalid")
       }
-      const decision = parseRotationDecision((row as Record<string, unknown>).decision_value)
+      const decision = parseRefreshTokenRotationDecision(
+        (row as Record<string, unknown>).decision_value,
+      )
       if (decision === null) throw new Error("rotation decision value is invalid")
 
       return decision

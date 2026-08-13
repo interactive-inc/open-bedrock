@@ -607,6 +607,13 @@ export const zAppEmployeeDirectoryList = z.object({
 
 export type AppEmployeeDirectoryList = z.infer<typeof zAppEmployeeDirectoryList>
 
+/** 機能ゲートの現在の状態。無効化されている機能キーの一覧を返す。 */
+export const zAppFeatureAvailability = z.object({
+  disabled_features: z.array(z.string()),
+})
+
+export type AppFeatureAvailability = z.infer<typeof zAppFeatureAvailability>
+
 /** 経費 1 件のレスポンス（申請・更新の戻り）。 */
 const expenseCategory = z.enum(["transport", "supplies", "entertainment", "books", "other"])
 

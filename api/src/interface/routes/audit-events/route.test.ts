@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { app } from "@/app"
+import { app } from "@/api/app"
 import type { Bindings } from "@/env"
 import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
 import { createTestToken } from "@/interface/test-helpers/create-test-token"
@@ -99,10 +99,10 @@ async function seedAuditEvent(
   await db
     .prepare(
       `INSERT INTO audit_events
-       (event_id, request_id, actor_account_id, actor_employee_id, action, target_type,
+       (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6, ?7, 'legacy_reason',
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'legacy_reason',
                '{"legacy":true}', '{"before":1}', '{"after":2}',
                '{"private":"value"}', '192.0.2.10', 'api', ?8)`,
     )
@@ -232,7 +232,7 @@ describe("GET /audit-events", () => {
 
     expect(response.status).toBe(400)
     expect(await response.json()).toMatchObject({ code: "audit_invalid_query" })
-    expect(state.queries()).toBe(6)
+    expect(state.queries()).toBe(7)
     const after = await state.db
       .prepare("SELECT count(*) AS count FROM audit_events")
       .first("count")
@@ -253,7 +253,7 @@ describe("GET /audit-events", () => {
 
       expect(response.status).toBe(400)
       expect(await response.json()).toMatchObject({ code: "invalid_audit_cursor" })
-      expect(state.queries()).toBe(6)
+      expect(state.queries()).toBe(7)
     },
   )
 

@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import { buildEmployeeCodeMap } from "@/lib/org/build-employee-code-map"
-import { buildMembershipMap } from "@/lib/org/build-membership-map"
+import { buildEmployeeCodeMap } from "@/contexts/company/infrastructure/organization/build-employee-code-map"
+import { buildMembershipMap } from "@/contexts/company/infrastructure/organization/build-membership-map"
 
 export type Props = {
   c: Context

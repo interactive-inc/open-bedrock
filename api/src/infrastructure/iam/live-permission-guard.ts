@@ -125,7 +125,9 @@ export class LivePermissionGuard {
   private actorPermissionsSql(): string {
     return `SELECT DISTINCT permission.key
             FROM accounts actor_account
-            INNER JOIN employees actor_employee ON actor_employee.id = actor_account.employee_id
+            INNER JOIN account_employee_links actor_link
+              ON actor_link.account_id = actor_account.id
+            INNER JOIN employees actor_employee ON actor_employee.id = actor_link.employee_id
             INNER JOIN account_roles assignment ON assignment.account_id = actor_account.id
             INNER JOIN role_permissions role_permission ON role_permission.role_id = assignment.role_id
             INNER JOIN permissions permission ON permission.id = role_permission.permission_id

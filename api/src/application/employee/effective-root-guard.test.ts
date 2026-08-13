@@ -1,7 +1,7 @@
 import { ArchiveEmployee } from "@/application/employee-lifecycle/archive-employee"
 import { DeleteEmployee } from "@/application/employee/delete-employee"
 import { UpdateEmployee } from "@/application/employee/update-employee"
-import { Employee } from "@/domain/employee/employee.entity"
+import { Employee } from "@/contexts/company/domain/employee/employee.entity"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import { ConflictError } from "@/lib/errors"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
@@ -58,12 +58,12 @@ describe("employee mutations preserve an effective administrator", () => {
 
     const employee = await new EmployeeRepository(context).findByCode("E978")
     const accountCount = await db
-      .prepare("SELECT COUNT(*) AS count FROM accounts WHERE employee_id = ?1")
+      .prepare("SELECT COUNT(*) AS count FROM account_employee_links WHERE employee_id = ?1")
       .bind(employeeId)
       .first<number>("count")
     const assignmentCount = await db
       .prepare(
-        "SELECT COUNT(*) AS count FROM account_roles WHERE account_id IN (SELECT id FROM accounts WHERE employee_id = ?1)",
+        "SELECT COUNT(*) AS count FROM account_roles WHERE account_id IN (SELECT account_id FROM account_employee_links WHERE employee_id = ?1)",
       )
       .bind(employeeId)
       .first<number>("count")
@@ -109,7 +109,9 @@ describe("employee mutations preserve an effective administrator", () => {
     ).toBeNull()
     expect(
       await db
-        .prepare("SELECT status FROM accounts WHERE employee_id = ?1")
+        .prepare(
+          "SELECT account.status FROM accounts account JOIN account_employee_links link ON link.account_id = account.id WHERE link.employee_id = ?1",
+        )
         .bind(employeeId)
         .first<string>("status"),
     ).toBe("active")

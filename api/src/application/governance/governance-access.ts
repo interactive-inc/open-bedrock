@@ -1,7 +1,7 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { GovernanceMetadata } from "@/domain/governance/governance-document"
 import type { Context } from "@/env"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 
 type Props = {

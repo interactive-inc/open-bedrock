@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { describe, expect, test } from "bun:test"
 
 function makeSession(permissions: ReadonlyArray<string>): Session {

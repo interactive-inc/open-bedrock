@@ -1,6 +1,6 @@
 import type { Context } from "@/env"
-import { EmployeeLifecycleReadRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { EmployeeLifecycleRepository } from "@/infrastructure/employee-lifecycle/employee-lifecycle-repository"
+import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
+import { EmployeeLifecycleRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-repository"
 import { ApplicationError } from "@/lib/errors"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 
@@ -15,13 +15,15 @@ export async function filterLiveWorkflowAccounts(
 
   try {
     const rows = await c.env.DB.prepare(
-      `SELECT DISTINCT account.employee_id AS employee_id, account.id AS account_id,
+      `SELECT DISTINCT link.employee_id AS employee_id, account.id AS account_id,
                        employee.status AS legacy_status
          FROM json_each(?1) AS candidate_json
          INNER JOIN accounts AS account
            ON account.id = json_extract(candidate_json.value, '$.accountId')
-          AND account.employee_id = json_extract(candidate_json.value, '$.employeeId')
-         INNER JOIN employees AS employee ON employee.id = account.employee_id
+         INNER JOIN account_employee_links AS link
+           ON link.account_id = account.id
+          AND link.employee_id = json_extract(candidate_json.value, '$.employeeId')
+         INNER JOIN employees AS employee ON employee.id = link.employee_id
          WHERE account.status = 'active'`,
     )
       .bind(JSON.stringify(candidates))

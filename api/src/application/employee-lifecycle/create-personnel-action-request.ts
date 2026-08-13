@@ -1,13 +1,13 @@
-import type { Session } from "@/lib/auth/session"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import type { Session } from "@/contexts/company/domain/iam/session"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import { Application } from "@/domain/application/application.entity"
-import type { PersonnelActionInput } from "@/domain/employee-lifecycle/lifecycle-types"
+import type { PersonnelActionInput } from "@/contexts/company/domain/employee-lifecycle/lifecycle-types"
 import type { Context } from "@/env"
 import { fingerprintPersonnelAction } from "@/application/employee-lifecycle/fingerprint-personnel-action"
 import { GetLifecycleState } from "@/application/employee-lifecycle/get-lifecycle-state"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
 import { ApplicationTemplateRepository } from "@/infrastructure/application/application-template-repository"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { EmployeeRepository } from "@/infrastructure/employee/employee-repository"
 import {
   ApplicationError,
@@ -17,8 +17,8 @@ import {
   UnprocessableError,
   ValidationError,
 } from "@/lib/errors"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { applicableWorkflowSteps } from "@/lib/application/applicable-workflow-steps"
 import { resolveWorkflowStepSnapshot } from "@/lib/application/resolve-workflow-step-snapshot"
 import { UnresolvableWorkflowStepError } from "@/lib/application/unresolvable-workflow-step-error"

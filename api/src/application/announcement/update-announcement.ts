@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Announcement } from "@/domain/announcement/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/infrastructure/announcement/announcement-repository"

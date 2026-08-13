@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { canDecideLegacyApplication } from "@/lib/application/can-decide-legacy-application"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import { ApplicationApproval } from "@/domain/application/application-approval.entity"

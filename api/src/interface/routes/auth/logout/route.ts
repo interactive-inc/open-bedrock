@@ -1,5 +1,5 @@
-import { createAuditEvent } from "@/domain/audit/audit-event"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { createAuditEvent } from "@/composition/audit/audit-event"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { RefreshTokenRepository } from "@/infrastructure/auth/refresh-token-repository"
 import { assertAuditHmacSecret } from "@/lib/audit/assert-audit-hmac-secret"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"

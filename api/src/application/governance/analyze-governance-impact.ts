@@ -1,9 +1,9 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { resolveGovernanceOrgRole } from "@/application/governance/resolve-governance-org-role"
 import type { Context } from "@/env"
 import { GovernanceRepository } from "@/infrastructure/governance/governance-repository"
-import { PERMISSION_KEYS } from "@/lib/auth/permission-keys"
-import { loadCurrentOrganization } from "@/lib/org/current-organization-read-model"
+import { PERMISSION_KEYS } from "@/composition/iam/permission-key.catalog"
+import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import { employees, governanceDocuments, trainingCourses } from "@/schema"
@@ -73,7 +73,7 @@ export class AnalyzeGovernanceImpact {
     const known = {
       capability: new Set(capabilities.map((item) => item.code)),
       org_role: new Set(roles.map((item) => item.code)),
-      permission: new Set(PERMISSION_KEYS),
+      permission: new Set<string>(PERMISSION_KEYS),
       training: new Set(trainingRows.map((item) => item.code)),
       policy: new Set(documents.filter((item) => item.kind === "policy").map((item) => item.code)),
       procedure: new Set(

@@ -1,10 +1,10 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Announcement } from "@/domain/announcement/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/infrastructure/announcement/announcement-repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { employees, notifications } from "@/schema"
+import { accountEmployeeLinks, employees, notifications } from "@/schema"
 import { eq } from "drizzle-orm"
 
 export type Command = {
@@ -62,8 +62,9 @@ export class PublishAnnouncement {
   private async notifyAllEmployees(announcement: Announcement): Promise<null | Error> {
     try {
       const recipients = await this.c.var.database
-        .select({ id: employees.id })
+        .select({ accountId: accountEmployeeLinks.accountId })
         .from(employees)
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.employeeId, employees.id))
         .where(eq(employees.status, "active"))
 
       if (recipients.length === 0) {
@@ -72,7 +73,7 @@ export class PublishAnnouncement {
 
       await this.c.var.database.insert(notifications).values(
         recipients.map((recipient) => ({
-          recipientEmployeeId: recipient.id,
+          recipientAccountId: recipient.accountId,
           sourceDomain: "announcement",
           sourceId: announcement.id,
           kind: "announcement",

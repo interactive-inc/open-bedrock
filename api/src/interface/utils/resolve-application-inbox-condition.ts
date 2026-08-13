@@ -1,7 +1,7 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"
-import { listManagedEmployeeIds } from "@/lib/org/list-managed-employee-ids"
+import { listManagedEmployeeIds } from "@/contexts/company/application/organization/list-managed-employee-ids"
 import { applications, applicationTemplates } from "@/schema"
 import { and, eq, inArray, ne, or, sql, type SQL } from "drizzle-orm"
 
@@ -73,8 +73,10 @@ export async function resolveApplicationInboxCondition(props: {
       AND EXISTS (
         SELECT 1
         FROM employees candidate_employee
+        INNER JOIN account_employee_links candidate_link
+          ON candidate_link.employee_id = candidate_employee.id
         INNER JOIN accounts candidate_account
-          ON candidate_account.employee_id = candidate_employee.id
+          ON candidate_account.id = candidate_link.account_id
         WHERE candidate_employee.id = candidate.candidate_employee_id
           AND candidate_employee.status <> 'retired'
           AND candidate_account.id = candidate.candidate_account_id

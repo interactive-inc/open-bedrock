@@ -7,8 +7,8 @@ import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import {
   resolveDepartmentManagerId,
   resolveDirectManagerId,
-} from "@/lib/org/resolve-direct-manager-id"
-import { validateEmployeeActive } from "@/lib/org/validate-employee-active"
+} from "@/contexts/company/infrastructure/organization/resolve-direct-manager-id"
+import { validateEmployeeActive } from "@/contexts/company/infrastructure/organization/validate-employee-active"
 import { resolveCompanyBusinessDate } from "@/lib/time/resolve-company-business-date"
 import { employees, evaluationTemplates } from "@/schema"
 

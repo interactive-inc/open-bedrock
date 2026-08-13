@@ -1,4 +1,5 @@
-import { Employee } from "@/domain/employee/employee.entity"
+import { Employee } from "@/contexts/company/domain/employee/employee.entity"
+import { restoreEmployee } from "@/contexts/company/infrastructure/employee/employee.mapper"
 import type { Context } from "@/env"
 import { LastRootError } from "@/infrastructure/iam/last-root-error"
 import { LastRootGuard } from "@/infrastructure/iam/last-root-guard"
@@ -38,7 +39,7 @@ export class EmployeeRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : Employee.fromRow(row)
+      return row === undefined ? null : restoreEmployee(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to load employee")
     }
@@ -61,7 +62,7 @@ export class EmployeeRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? new Error("failed to insert employee") : Employee.fromRow(row)
+      return row === undefined ? new Error("failed to insert employee") : restoreEmployee(row)
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         return new UniqueConstraintError("employee unique constraint violated", {
@@ -90,7 +91,7 @@ export class EmployeeRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : Employee.fromRow(row)
+      return row === undefined ? null : restoreEmployee(row)
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         return new UniqueConstraintError("employee unique constraint violated", {
@@ -160,7 +161,7 @@ export class EmployeeRepository {
 
       const row = rows.at(0)
 
-      return row === undefined ? null : Employee.fromRow(row)
+      return row === undefined ? null : restoreEmployee(row)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update employee phone")
     }

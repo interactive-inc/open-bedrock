@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
   collectRegistrations,
+  assertRouteModuleRegistry,
   exportedMethods,
   renderApp,
   renderRegistration,
@@ -13,7 +14,7 @@ import {
   type RouteRegistration,
 } from "@/../scripts/gen-app"
 
-const APP_PATH = resolve(import.meta.dir, "../src/app.ts")
+const APP_PATH = resolve(import.meta.dir, "../src/api/app.ts")
 
 describe("toUrl", () => {
   test("ディレクトリのパスがそのまま URL になる", () => {
@@ -138,6 +139,23 @@ describe("renderApp の安全確認", () => {
 })
 
 describe("collectRegistrations", () => {
+  test("明示登録されたcontextのrouteを公開する", async () => {
+    const registrations = await collectRegistrations()
+
+    expect(registrations).toContainEqual({
+      module: "@/contexts/system/interface/routes/health/route",
+      url: "/health",
+      method: "GET",
+      alias: "healthRoute",
+    })
+    expect(registrations).toContainEqual({
+      module: "@/contexts/company/interface/routes/departments/route",
+      url: "/departments",
+      method: "GET",
+      alias: "departmentsRoute",
+    })
+  })
+
   test("interface/routes/ から全ルートを集める", async () => {
     const registrations = await collectRegistrations()
     expect(registrations.length).toBeGreaterThan(400)
@@ -181,6 +199,29 @@ describe("collectRegistrations", () => {
     }
 
     expect(shadowed).toEqual([])
+  })
+})
+
+describe("route module registry", () => {
+  test("同じcontextの二重登録を拒否する", () => {
+    expect(() =>
+      assertRouteModuleRegistry([
+        { context: "system", routesDirectory: "interface/routes", importPrefix: "@/one" },
+        { context: "system", routesDirectory: "interface/routes-2", importPrefix: "@/two" },
+      ]),
+    ).toThrow("contextが重複しています: system")
+  })
+
+  test("存在しないroutes directoryを拒否する", () => {
+    expect(() =>
+      assertRouteModuleRegistry([
+        {
+          context: "missing",
+          routesDirectory: "contexts/missing/interface/routes",
+          importPrefix: "@/contexts/missing/interface/routes",
+        },
+      ]),
+    ).toThrow("登録されたroutes directoryが存在しません")
   })
 })
 
@@ -232,7 +273,7 @@ describe("renderApp", () => {
 
   test("middleware は app-base.ts から引き継ぐ", async () => {
     const rendered = renderApp(await collectRegistrations())
-    expect(rendered).toContain('import { appBase } from "@/app-base"')
+    expect(rendered).toContain('import { appBase } from "@/api/app-base"')
     expect(rendered).toContain("export const app = appBase")
   })
 

@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test"
-import { Notification } from "@/domain/notification/notification.entity"
+import { Notification } from "@/contexts/system/domain/notifications/notification.entity"
 import { SendNotification } from "@/application/notification/send-notification"
-import { GetNotification } from "@/application/notification/get-notification"
-import { MarkNotificationRead } from "@/application/notification/mark-notification-read"
-import { MarkAllNotificationsRead } from "@/application/notification/mark-all-notifications-read"
-import { DeleteNotification } from "@/application/notification/delete-notification"
+import { GetNotification } from "@/contexts/system/application/notifications/get-notification"
+import { MarkNotificationRead } from "@/contexts/system/application/notifications/mark-notification-read"
+import { MarkAllNotificationsRead } from "@/contexts/system/application/notifications/mark-all-notifications-read"
+import { DeleteNotification } from "@/contexts/system/application/notifications/delete-notification"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { makeTestSession } from "@/interface/test-helpers/make-test-session"
 import { seedD1 } from "@/interface/test-helpers/seed-d1"
 import { expectApplicationError } from "@/interface/test-helpers/expect-application-error"
-import { ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { Context } from "@/env"
 
 async function seedEmployee(db: D1Database, code: string, id: number) {
@@ -24,6 +24,19 @@ async function seedEmployee(db: D1Database, code: string, id: number) {
       status: "active",
     },
   ])
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO accounts (id, status, token_version, created_at, updated_at)
+       VALUES (?1, 'active', 0, 0, 0)`,
+    )
+    .bind(id)
+    .run()
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO account_employee_links (account_id, employee_id) VALUES (?1, ?1)`,
+    )
+    .bind(id)
+    .run()
 }
 
 async function createNotification(
@@ -49,7 +62,7 @@ async function createNotification(
     throw new Error("seed notification failed")
   }
 
-  return result
+  return result.notification
 }
 
 describe("SendNotification", () => {
@@ -69,14 +82,14 @@ describe("SendNotification", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toBeInstanceOf(Notification)
-
     if (result instanceof Error) {
       throw new Error("send failed")
     }
 
-    expect(result.title).toBe("Welcome")
-    expect(result.isRead).toBe(false)
+    expect(result.notification).toBeInstanceOf(Notification)
+    expect(result.notification.title).toBe("Welcome")
+    expect(result.notification.isRead).toBe(false)
+    expect(result.recipientEmployeeId).toBe(1)
   })
 
   test("sends a notification as manager", async () => {
@@ -95,7 +108,7 @@ describe("SendNotification", () => {
       createdAt: "2026-01-01T00:00:00.000Z",
     })
 
-    expect(result).toBeInstanceOf(Notification)
+    expect(result instanceof Error ? result : result.notification).toBeInstanceOf(Notification)
   })
 
   test("rejects member role with notification_forbidden", async () => {
@@ -131,6 +144,35 @@ describe("SendNotification", () => {
 
     expectApplicationError(result, NotFoundError, "recipient_not_found")
   })
+
+  test("fails safely when the Company recipient has no linked System Account", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "employees", [
+      {
+        id: 7,
+        code: "E007",
+        name: "Unlinked Employee",
+        dept_id: 1,
+        dept_name: "Engineering",
+        position: "Engineer",
+        status: "active",
+      },
+    ])
+
+    const result = await new SendNotification(context).run({
+      session: makeTestSession("root"),
+      recipientEmployeeCode: "E007",
+      kind: "announcement",
+      title: "Test",
+      body: null,
+      sourceDomain: "test",
+      sourceId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    })
+
+    expectApplicationError(result, UnexpectedError, "unexpected")
+  })
 })
 
 describe("GetNotification", () => {
@@ -144,7 +186,7 @@ describe("GetNotification", () => {
 
     const result = await new GetNotification(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 1,
+      viewerAccountId: 1,
     })
 
     expect(result).toBeInstanceOf(Notification)
@@ -160,7 +202,7 @@ describe("GetNotification", () => {
 
     const result = await new GetNotification(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 999,
+      viewerAccountId: 999,
     })
 
     expectApplicationError(result, NotFoundError, "notification_forbidden")
@@ -171,7 +213,7 @@ describe("GetNotification", () => {
 
     const result = await new GetNotification(context).run({
       notificationId: 9999,
-      viewerEmployeeId: 1,
+      viewerAccountId: 1,
     })
 
     expectApplicationError(result, NotFoundError, "notification_not_found")
@@ -189,7 +231,7 @@ describe("MarkNotificationRead", () => {
 
     const result = await new MarkNotificationRead(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 1,
+      viewerAccountId: 1,
     })
 
     expect(result).toBeInstanceOf(Notification)
@@ -211,7 +253,7 @@ describe("MarkNotificationRead", () => {
 
     const result = await new MarkNotificationRead(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 999,
+      viewerAccountId: 999,
     })
 
     expectApplicationError(result, NotFoundError, "notification_forbidden")
@@ -246,7 +288,7 @@ describe("MarkAllNotificationsRead", () => {
     })
 
     const result = await new MarkAllNotificationsRead(context).run({
-      recipientEmployeeId: 1,
+      recipientAccountId: 1,
     })
 
     if (result instanceof Error) {
@@ -260,7 +302,7 @@ describe("MarkAllNotificationsRead", () => {
     const { context } = createTestContext()
 
     const result = await new MarkAllNotificationsRead(context).run({
-      recipientEmployeeId: 1,
+      recipientAccountId: 1,
     })
 
     if (result instanceof Error) {
@@ -282,7 +324,7 @@ describe("DeleteNotification", () => {
 
     const result = await new DeleteNotification(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 1,
+      viewerAccountId: 1,
     })
 
     expect(result).toEqual({ reason: "deleted" })
@@ -298,7 +340,7 @@ describe("DeleteNotification", () => {
 
     const result = await new DeleteNotification(context).run({
       notificationId: notification.id,
-      viewerEmployeeId: 999,
+      viewerAccountId: 999,
     })
 
     expectApplicationError(result, NotFoundError, "not_found")

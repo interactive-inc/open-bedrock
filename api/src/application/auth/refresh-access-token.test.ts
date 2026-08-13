@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { AccessTokenView } from "@/application/auth/access-token-view"
 import { RefreshAccessToken } from "@/application/auth/refresh-access-token"
+import type { AccountStatus } from "@/contexts/system/domain/auth/account-status"
 import type { Context } from "@/env"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
 import { hashAuditIdentifier } from "@/lib/audit/hash-audit-identifier"
@@ -15,7 +16,7 @@ const familyId = "test-family"
 type SetupOptions = {
   expiresAt?: number
   revokedAt?: number | null
-  accountStatus?: "active" | "suspended"
+  accountStatus?: AccountStatus
   accountTokenVersion?: number
   tokenVersion?: number
   employeeStatus?: "active" | "leave" | "retired"
@@ -40,10 +41,15 @@ async function setupRefreshToken(rawToken: string, options: SetupOptions = {}) {
     await db
       .prepare(
         `INSERT INTO accounts
-           (id, employee_id, status, token_version, created_at, updated_at)
-         VALUES (1, 1, ?1, ?2, ?3, ?3)`,
+           (id, status, token_version, created_at, updated_at)
+         VALUES (1, ?1, ?2, ?3, ?3)`,
       )
       .bind(options.accountStatus ?? "active", options.accountTokenVersion ?? 0, nowEpoch - 100)
+      .run()
+  }
+  if (options.includeAccount !== false && options.includeEmployee !== false) {
+    await db
+      .prepare("INSERT INTO account_employee_links (account_id, employee_id) VALUES (1, 1)")
       .run()
   }
   if (options.includeToken !== false) {
@@ -142,7 +148,7 @@ async function auditRows(db: D1Database) {
         `SELECT actor_account_id, actor_employee_id, action, target_type, target_id,
                 outcome, reason_code, metadata_json, client_ip, client_name,
                 request_id, created_at
-         FROM audit_events ORDER BY id`,
+         FROM company_audit_events ORDER BY id`,
       )
       .all<{
         actor_account_id: number | null
@@ -251,6 +257,7 @@ describe("RefreshAccessToken", () => {
     if (!isIssued(first) || first.refreshToken === null) {
       throw new Error("expected the first rotation to succeed")
     }
+    expect(first.refreshToken).toMatch(/^[0-9a-f]{64}$/)
     const reused = await service.run(command(rawToken, "second-client"))
 
     expect(reused).toEqual({ reason: "invalid_token" })
@@ -363,6 +370,7 @@ describe("RefreshAccessToken", () => {
 
   test.each([
     ["suspended account", { accountStatus: "suspended" as const }],
+    ["locked account", { accountStatus: "locked" as const }],
     ["token version mismatch", { accountTokenVersion: 1 }],
     ["missing employee", { includeEmployee: false }],
     ["retired employee", { employeeStatus: "retired" as const }],
@@ -383,6 +391,47 @@ describe("RefreshAccessToken", () => {
     ).toEqual([
       { action: "auth.session.refreshed", outcome: "denied", reason_code: "invalid_token" },
     ])
+  })
+
+  test.each([
+    ["missing", "DELETE FROM system_accounts WHERE id = '1'"],
+    [
+      "suspended",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
+    ],
+    ["locked", "UPDATE system_accounts SET status = 'locked', token_version = 1 WHERE id = '1'"],
+    ["token version drift", "UPDATE system_accounts SET token_version = 1 WHERE id = '1'"],
+  ])("revokes the family when the canonical account is %s", async (_, sql) => {
+    const rawToken = `canonical-${String(_).replaceAll(" ", "-")}`
+    const { context, db } = await setupRefreshToken(rawToken)
+    await db.exec(sql)
+
+    const result = await new RefreshAccessToken(context).run(command(rawToken))
+
+    expect(result).toEqual({ reason: "invalid_token" })
+    expect(await activeFamilyCount(db)).toBe(0)
+    expect(
+      (await auditRows(db)).map(({ action, outcome, reason_code }) => ({
+        action,
+        outcome,
+        reason_code,
+      })),
+    ).toEqual([
+      { action: "auth.session.refreshed", outcome: "denied", reason_code: "invalid_token" },
+    ])
+  })
+
+  test("fails closed without rotating when the canonical account cannot be read", async () => {
+    const rawToken = "canonical-read-error"
+    const { context, db } = await setupRefreshToken(rawToken)
+    await db.exec("DROP TABLE system_accounts")
+
+    const result = await new RefreshAccessToken(context).run(command(rawToken))
+
+    expect(result).toBeInstanceOf(Error)
+    expect(result).toMatchObject({ code: "unexpected" })
+    expect(await activeFamilyCount(db)).toBe(1)
+    expect(await auditRows(db)).toEqual([])
   })
 
   test("revokes and records reuse when the token was already revoked", async () => {
@@ -410,9 +459,22 @@ describe("RefreshAccessToken", () => {
   })
 
   test.each([
-    ["account suspension", "UPDATE accounts SET status = 'suspended' WHERE id = 1"],
+    [
+      "account suspension",
+      `UPDATE accounts
+       SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+       WHERE id = 1`,
+    ],
     ["token version bump", "UPDATE accounts SET token_version = token_version + 1 WHERE id = 1"],
     ["employee retirement", "UPDATE employees SET status = 'retired' WHERE id = 1"],
+    [
+      "canonical account suspension",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1 WHERE id = '1'",
+    ],
+    [
+      "canonical token version bump",
+      "UPDATE system_accounts SET token_version = token_version + 1 WHERE id = '1'",
+    ],
   ])("records invalid and returns no token after a live %s race", async (_, mutationSql) => {
     const rawToken = `race-${String(_).replaceAll(" ", "-")}`
     const { context, db } = await setupRefreshToken(rawToken)

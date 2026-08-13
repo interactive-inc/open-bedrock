@@ -1,6 +1,7 @@
 import type { Context } from "@/env"
-import type { IdentityProvider } from "@/lib/schemas"
-import { accounts, employees, identities } from "@/schema"
+import type { IdentityProvider } from "@/contexts/system/domain/identity/identity-provider"
+import { identitySubjectSchema } from "@/contexts/system/domain/identity/identity-subject"
+import { accountEmployeeLinks, accounts, employees, identities } from "@/schema"
 import { and, asc, eq, inArray, isNotNull, like, not, sql } from "drizzle-orm"
 
 export type PasswordIdentity = {
@@ -53,12 +54,13 @@ export class IdentityRepository {
     try {
       const db = this.c.var.database
 
-      const subject = email.toLowerCase()
+      const parsedSubject = identitySubjectSchema.safeParse(email.toLowerCase())
+      if (!parsedSubject.success) return null
 
       const identityRows = await db
         .select()
         .from(identities)
-        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject)))
+        .where(and(eq(identities.provider, "password"), eq(identities.subject, parsedSubject.data)))
         .limit(1)
 
       const identity = identityRows.at(0)
@@ -68,8 +70,14 @@ export class IdentityRepository {
       }
 
       const accountRows = await db
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, identity.accountId))
         .limit(1)
 
@@ -102,11 +110,13 @@ export class IdentityRepository {
   ): Promise<ProviderIdentity | null | Error> {
     try {
       const db = this.c.var.database
+      const parsedSubject = identitySubjectSchema.safeParse(subject)
+      if (!parsedSubject.success) return null
 
       const identityRows = await db
         .select()
         .from(identities)
-        .where(and(eq(identities.provider, provider), eq(identities.subject, subject)))
+        .where(and(eq(identities.provider, provider), eq(identities.subject, parsedSubject.data)))
         .limit(1)
 
       const identity = identityRows.at(0)
@@ -116,8 +126,14 @@ export class IdentityRepository {
       }
 
       const accountRows = await db
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, identity.accountId))
         .limit(1)
 
@@ -178,8 +194,14 @@ export class IdentityRepository {
   async findAccountById(accountId: number): Promise<AccountAuthState | null | Error> {
     try {
       const rows = await this.c.var.database
-        .select()
+        .select({
+          id: accounts.id,
+          status: accounts.status,
+          tokenVersion: accounts.tokenVersion,
+          employeeId: accountEmployeeLinks.employeeId,
+        })
         .from(accounts)
+        .leftJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
         .where(eq(accounts.id, accountId))
         .limit(1)
 
@@ -242,13 +264,15 @@ export class IdentityRepository {
     try {
       const db = this.c.var.database
 
-      const subject = email.toLowerCase()
+      const subject = identitySubjectSchema.safeParse(email.toLowerCase())
+      if (!subject.success) return null
 
       const rows = await db
-        .select({ employeeId: accounts.employeeId })
+        .select({ employeeId: accountEmployeeLinks.employeeId })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
-        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject)))
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
+        .where(and(eq(identities.provider, "password"), eq(identities.subject, subject.data)))
         .limit(1)
 
       const row = rows.at(0)
@@ -277,14 +301,15 @@ export class IdentityRepository {
 
       const rows = await this.c.var.database
         .select({
-          employeeId: accounts.employeeId,
+          employeeId: accountEmployeeLinks.employeeId,
           email: identities.email,
           identityId: identities.id,
           provider: identities.provider,
         })
         .from(identities)
         .innerJoin(accounts, eq(accounts.id, identities.accountId))
-        .where(inArray(accounts.employeeId, [...employeeIds]))
+        .innerJoin(accountEmployeeLinks, eq(accountEmployeeLinks.accountId, accounts.id))
+        .where(inArray(accountEmployeeLinks.employeeId, [...employeeIds]))
         .orderBy(
           // password を先に、次に作成順(id 昇順)。同一従業員の複数 identity で結果を揺らさない。
           sql`CASE WHEN ${identities.provider} = 'password' THEN 0 ELSE 1 END`,
@@ -313,23 +338,6 @@ export class IdentityRepository {
   }
 
   /**
-   * account の password identity の id を返す。不在は null。
-   */
-  async findPasswordIdentityIdByAccount(accountId: number): Promise<number | null | Error> {
-    try {
-      const rows = await this.c.var.database
-        .select({ id: identities.id })
-        .from(identities)
-        .where(and(eq(identities.accountId, accountId), eq(identities.provider, "password")))
-        .limit(1)
-
-      return rows.at(0)?.id ?? null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to find identity")
-    }
-  }
-
-  /**
    * password identity の secret(PBKDF2)を書き戻す(レガシーハッシュ昇格・パスワード再設定)。
    */
   async updateSecret(identityId: number, secret: string): Promise<null | Error> {
@@ -342,33 +350,6 @@ export class IdentityRepository {
       return null
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to update identity secret")
-    }
-  }
-
-  /**
-   * パスワード更新と対象アカウントの tokenVersion bump を原子的に行う。
-   * 途中失敗で旧トークンが有効なまま残ることを防ぐ。
-   */
-  async updateSecretAndBumpTokenVersion(
-    identityId: number,
-    secret: string,
-    accountId: number,
-    now: number,
-  ): Promise<null | Error> {
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare("UPDATE identities SET secret = ?2 WHERE id = ?1").bind(
-          identityId,
-          secret,
-        ),
-        this.c.env.DB.prepare(
-          "UPDATE accounts SET token_version = token_version + 1, updated_at = ?2 WHERE id = ?1",
-        ).bind(accountId, now),
-      ])
-
-      return null
-    } catch (caught) {
-      return caught instanceof Error ? caught : new Error("failed to reset password")
     }
   }
 

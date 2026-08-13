@@ -1,7 +1,7 @@
 import { ResolveCliIdentity } from "@/application/auth/resolve-cli-identity"
-import { createAuditEvent } from "@/domain/audit/audit-event"
+import { createAuditEvent } from "@/composition/audit/audit-event"
 import type { HonoEnv } from "@/env"
-import { AuditEventRepository } from "@/infrastructure/audit/audit-event-repository"
+import { AuditEventRepository } from "@/infrastructure/company/audit/audit-event-repository"
 import { CliLoginCodeRepository } from "@/infrastructure/auth/cli-login-code-repository"
 import { CliLoginStateRepository } from "@/infrastructure/auth/cli-login-state-repository"
 import { IdentityLoginJtiRepository } from "@/infrastructure/auth/identity-login-jti-repository"
@@ -157,7 +157,7 @@ export const GET = factory.createHandlers(zValidator("query", querySchema), asyn
 
   const codeCreated = await new CliLoginCodeRepository(c).create(
     codeHash,
-    { accountId: result.accountId, employeeId: result.employeeId },
+    { accountId: result.accountId },
     nowEpoch + CODE_TTL_SECONDS,
   )
   if (codeCreated instanceof Error) {

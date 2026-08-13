@@ -1,4 +1,4 @@
-import { app } from "@/app"
+import { app } from "@/api/app"
 import type { Bindings } from "@/env"
 
 export type Props = {
@@ -17,6 +17,8 @@ export type Props = {
   identityAudience?: string
   identityLoginUrl?: string
   apiOrigin?: string
+  enabledOptionalFeatures?: string
+  disabledStandardFeatures?: string
 }
 
 /**
@@ -53,6 +55,10 @@ export function requestWithContext(props: Props): Promise<Response> {
     IDENTITY_AUDIENCE: props.identityAudience,
     IDENTITY_LOGIN_URL: props.identityLoginUrl,
     API_ORIGIN: props.apiOrigin,
+    // 既存の route テストは全機能有効を前提に書かれているため、テストの既定は "all" にする。
+    // feature gate のテストだけが明示的に上書きする。
+    ENABLED_OPTIONAL_FEATURES: props.enabledOptionalFeatures ?? "all",
+    DISABLED_STANDARD_FEATURES: props.disabledStandardFeatures,
   }
 
   return Promise.resolve(

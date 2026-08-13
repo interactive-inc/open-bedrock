@@ -141,8 +141,8 @@ describe("POST /provisioning/identities", () => {
     const employee = await db
       .prepare(
         `SELECT e.name FROM employees e
-         JOIN accounts a ON a.employee_id = e.id
-         JOIN identities i ON i.account_id = a.id
+         JOIN account_employee_links link ON link.employee_id = e.id
+         JOIN identities i ON i.account_id = link.account_id
          WHERE i.subject = 'ext-300'`,
       )
       .first<{ name: string }>()
@@ -198,6 +198,23 @@ describe("POST /provisioning/identities", () => {
 
     expect(response.status).toBe(400)
   })
+
+  test.each(["line\nbreak", "ユーザー", "a".repeat(256)])(
+    "rejects an invalid subject before persistence",
+    async (subject) => {
+      const db = createTestDb()
+
+      const response = await postProvisioning(db, {
+        subject,
+        email: "invalid-subject@example.com",
+        name: "Invalid Subject",
+      })
+
+      expect(response.status).toBe(400)
+      expect(await count(db, "identities")).toBe(0)
+      expect(await count(db, "accounts")).toBe(0)
+    },
+  )
 
   test("rejects with 401 when PROVISIONING_API_KEY is not configured", async () => {
     const db = createTestDb()

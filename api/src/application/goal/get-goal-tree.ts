@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Goal } from "@/domain/goal/goal.entity"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
@@ -7,7 +7,7 @@ import { GoalRepository } from "@/infrastructure/goal/goal-repository"
 import { buildGoalTree } from "@/application/goal/build-goal-tree"
 import { canReadGoalOf } from "@/lib/goal/can-read-goal-of"
 import type { AppGoalTreeNode } from "@/lib/app-schemas"
-import { resolveEmployeeRelation } from "@/lib/org/resolve-employee-relation"
+import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 
 export type Command = {
   period: string | null

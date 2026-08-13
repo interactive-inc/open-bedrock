@@ -46,16 +46,15 @@ async function seedBrowserLoginCode(
   db: D1Database,
   code: string,
   accountId: number,
-  employeeId: number,
   expiresAt: number = nowEpoch + 60,
 ): Promise<void> {
   const codeHash = await loginCodeHash(code)
   await db
     .prepare(
-      `INSERT INTO browser_login_codes (code_hash, account_id, employee_id, expires_at)
-       VALUES (?1, ?2, ?3, ?4)`,
+      `INSERT INTO browser_login_codes (code_hash, account_id, expires_at)
+       VALUES (?1, ?2, ?3)`,
     )
-    .bind(codeHash, accountId, employeeId, expiresAt)
+    .bind(codeHash, accountId, expiresAt)
     .run()
 }
 
@@ -76,7 +75,7 @@ async function auditRows(
 ): Promise<Array<{ action: string; reason_code: string | null }>> {
   return (
     await db
-      .prepare("SELECT action, reason_code FROM audit_events ORDER BY id")
+      .prepare("SELECT action, reason_code FROM system_audit_events ORDER BY occurred_at, event_id")
       .all<{ action: string; reason_code: string | null }>()
   ).results
 }
@@ -118,7 +117,7 @@ describe("POST /auth/browser/token", () => {
 
   test("consumes the code so it cannot be exchanged twice", async () => {
     const db = await createTestDb()
-    await seedBrowserLoginCode(db, "raw-code-2", 1, 1)
+    await seedBrowserLoginCode(db, "raw-code-2", 1)
 
     const first = await postBrowserToken(db, { code: "raw-code-2" })
     expect(first.status).toBe(200)
@@ -142,7 +141,7 @@ describe("POST /auth/browser/token", () => {
 
   test("returns 401 for an expired code", async () => {
     const db = await createTestDb()
-    await seedBrowserLoginCode(db, "raw-code-expired", 1, 1, nowEpoch - 1)
+    await seedBrowserLoginCode(db, "raw-code-expired", 1, nowEpoch - 1)
 
     const response = await postBrowserToken(db, { code: "raw-code-expired" })
 
@@ -151,8 +150,14 @@ describe("POST /auth/browser/token", () => {
 
   test("returns 401 when the account was suspended after the code was issued", async () => {
     const db = await createTestDb()
-    await seedBrowserLoginCode(db, "raw-code-suspended", 1, 1)
-    await db.prepare("UPDATE accounts SET status = 'suspended' WHERE id = 1").run()
+    await seedBrowserLoginCode(db, "raw-code-suspended", 1)
+    await db
+      .prepare(
+        `UPDATE accounts
+         SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
+         WHERE id = 1`,
+      )
+      .run()
 
     const response = await postBrowserToken(db, { code: "raw-code-suspended" })
 

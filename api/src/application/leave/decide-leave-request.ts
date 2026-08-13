@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { NotifyApprovalResult } from "@/application/notification/notify-approval-result"
 import type { LeaveRequest } from "@/domain/leave/leave-request.entity"
 import { hasLeaveBalanceTracking } from "@/lib/leave/has-balance-tracking"
@@ -13,7 +13,7 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LeaveRequestRepository } from "@/infrastructure/leave/leave-request-repository"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 
 export type Command = {
   session: Session

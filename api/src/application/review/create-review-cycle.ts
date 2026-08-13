@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import { ReviewCycle } from "@/domain/review/review-cycle.entity"
 import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"

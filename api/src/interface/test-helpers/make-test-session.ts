@@ -1,4 +1,4 @@
-import { Session } from "@/lib/auth/session"
+import { Session } from "@/contexts/company/domain/iam/session"
 import { SYSTEM_ROLE_PERMISSIONS } from "@/interface/test-helpers/system-roles"
 
 /**

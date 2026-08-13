@@ -1,6 +1,6 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
-import { resolveOrganizationAuthority } from "@/lib/org/resolve-organization-authority"
+import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"
 
 export async function canDecideLegacyApplication(props: {
   c: Context

@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/auth/session"
+import type { Session } from "@/contexts/company/domain/iam/session"
 import type { Context } from "@/env"
 import { ApplicationRepository } from "@/infrastructure/application/application-repository"
 import { ApplicationWorkflowRepository } from "@/infrastructure/application/application-workflow-repository"
@@ -159,7 +159,8 @@ export class ReassignWorkflowStep {
       accounts = await this.c.env.DB.prepare(
         `SELECT account.id, employee.id AS employee_id
          FROM accounts account
-         INNER JOIN employees employee ON employee.id = account.employee_id
+         INNER JOIN account_employee_links link ON link.account_id = account.id
+         INNER JOIN employees employee ON employee.id = link.employee_id
          WHERE employee.id IN (${placeholders}) AND employee.status <> 'retired'
            AND account.status = 'active'
          ORDER BY employee.id, account.id`,
@@ -367,8 +368,9 @@ function repairCandidatesStillActiveGuard(props: {
       `SELECT CASE WHEN (
          SELECT COUNT(DISTINCT employee.id)
          FROM employees employee
+         INNER JOIN account_employee_links link ON link.employee_id = employee.id
          INNER JOIN accounts account
-           ON account.employee_id = employee.id AND account.status = 'active'
+           ON account.id = link.account_id AND account.status = 'active'
          WHERE employee.status <> 'retired' AND employee.id IN (${placeholders})
        ) = ?${expectedParameter} THEN 1 ELSE json_extract('', '$') END AS ok`,
     )

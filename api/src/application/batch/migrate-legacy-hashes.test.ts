@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { MigrateLegacyHashes } from "@/application/batch/migrate-legacy-hashes"
+import { MigrateLegacyHashes } from "@/contexts/system/application/batch/migrate-legacy-hashes"
 import { toLegacyPasswordHash } from "@/lib/auth/to-legacy-password-hash"
 import { toPasswordHash } from "@/lib/auth/to-password-hash"
 import { createTestContext } from "@/interface/test-helpers/create-test-context"
@@ -13,7 +13,6 @@ async function insertPasswordIdentity(
   await seedD1(db, "accounts", [
     {
       id: props.id,
-      employee_id: props.id,
       status: "active",
       token_version: 0,
       created_at: 0,
