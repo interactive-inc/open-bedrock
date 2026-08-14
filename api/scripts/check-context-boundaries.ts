@@ -3,10 +3,12 @@ import { existsSync, readFileSync } from "node:fs"
 import { relative, resolve } from "node:path"
 import process from "node:process"
 import ts from "typescript"
+import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
 const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
+const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
 const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
@@ -302,24 +304,60 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
   return violations
 }
 
-/** 移行済みのcontext-first production sourceを自動検査する。 */
-export async function checkContextBoundaries(): Promise<ContextBoundaryViolation[]> {
-  if (!existsSync(CONTEXTS_ROOT)) return []
-
+/** 移行済みのcontext-first sourceと中立libを自動検査する。 */
+export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
   const violations: ContextBoundaryViolation[] = []
 
-  for await (const file of new Glob("**/*.{ts,tsx}").scan(CONTEXTS_ROOT)) {
-    const path = resolve(CONTEXTS_ROOT, file)
-    const projectRelativePath = relative(PROJECT_ROOT, path)
+  if (existsSync(CONTEXTS_ROOT)) {
+    for await (const file of new Glob("**/*.{ts,tsx}").scan(CONTEXTS_ROOT)) {
+      const path = resolve(CONTEXTS_ROOT, file)
+      const projectRelativePath = relative(PROJECT_ROOT, path)
 
-    violations.push(...inspectContextTestDirectory(projectRelativePath))
+      violations.push(...inspectContextTestDirectory(projectRelativePath))
 
-    if (/\.(?:test|spec)\.tsx?$/.test(file)) continue
+      if (/\.(?:test|spec)\.tsx?$/.test(file)) continue
 
-    violations.push(...inspectContextSource(projectRelativePath, readFileSync(path, "utf8")))
+      violations.push(...inspectContextSource(projectRelativePath, readFileSync(path, "utf8")))
+    }
+  }
+
+  if (existsSync(LIB_ROOT)) {
+    for await (const file of new Glob("**/*.{ts,tsx}").scan(LIB_ROOT)) {
+      const path = resolve(LIB_ROOT, file)
+      const projectRelativePath = relative(PROJECT_ROOT, path)
+
+      violations.push(...inspectLibSource(projectRelativePath, readFileSync(path, "utf8")))
+    }
   }
 
   return violations
+}
+
+function violationKey(violation: ContextBoundaryViolation): string {
+  return JSON.stringify([violation.file, violation.reason])
+}
+
+/** 既存lib違反の完全一致だけを許可し、新規違反と解消済みbaselineを拒否する。 */
+export function inspectBoundaryBaseline(
+  current: ReadonlyArray<ContextBoundaryViolation>,
+  baseline: ReadonlyArray<ContextBoundaryViolation>,
+): ReadonlyArray<ContextBoundaryViolation> {
+  const currentKeys = new Set(current.map(violationKey))
+  const baselineKeys = new Set(baseline.map(violationKey))
+  const unexpected = current.filter((violation) => !baselineKeys.has(violationKey(violation)))
+  const stale = baseline
+    .filter((violation) => !currentKeys.has(violationKey(violation)))
+    .map((violation) => ({
+      file: violation.file,
+      reason: `解消済みのlib境界baselineを削除してください: ${violation.reason}`,
+    }))
+
+  return [...unexpected, ...stale]
+}
+
+/** 現在の境界違反を縮小専用baselineと照合する。 */
+export async function checkContextBoundaries(): Promise<ReadonlyArray<ContextBoundaryViolation>> {
+  return inspectBoundaryBaseline(await collectContextBoundaryViolations(), LIB_BOUNDARY_BASELINE)
 }
 
 if (import.meta.main) {
