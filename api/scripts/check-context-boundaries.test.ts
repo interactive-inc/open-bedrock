@@ -110,9 +110,30 @@ describe("context dependency matrix", () => {
 
     for (const source of sources) {
       expect(
-        inspectContextSource("src/contexts/company/infrastructure/example.ts", source),
+        inspectContextSource("src/contexts/care/infrastructure/example.ts", source),
       ).not.toEqual([])
     }
+  })
+
+  test("経過措置: #1178 の一括移動が済むまで company の @/schema 依存だけを許容する", () => {
+    expect(
+      inspectContextSource(
+        "src/contexts/company/infrastructure/example.ts",
+        'import { users } from "@/schema"',
+      ),
+    ).toEqual([])
+    expect(
+      inspectContextSource(
+        "src/contexts/company/interface/test-helpers/request-with-context.ts",
+        'import { app } from "@/api/app"',
+      ),
+    ).toEqual([])
+    expect(
+      inspectContextSource(
+        "src/contexts/company/infrastructure/example.ts",
+        'import { app } from "@/api/app"',
+      ),
+    ).not.toEqual([])
   })
 })
 
