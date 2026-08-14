@@ -14,9 +14,4 @@ export const ROUTE_MODULE_REGISTRY = [
     routesDirectory: "contexts/company/interface/routes",
     importPrefix: "@/contexts/company/interface/routes",
   },
-  {
-    context: "legacy",
-    routesDirectory: "interface/routes",
-    importPrefix: "@/interface/routes",
-  },
 ] as const satisfies ReadonlyArray<RouteModuleRegistration>

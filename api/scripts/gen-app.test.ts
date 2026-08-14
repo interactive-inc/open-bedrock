@@ -206,8 +206,16 @@ describe("route module registry", () => {
   test("同じcontextの二重登録を拒否する", () => {
     expect(() =>
       assertRouteModuleRegistry([
-        { context: "system", routesDirectory: "interface/routes", importPrefix: "@/one" },
-        { context: "system", routesDirectory: "interface/routes-2", importPrefix: "@/two" },
+        {
+          context: "system",
+          routesDirectory: "contexts/system/interface/routes",
+          importPrefix: "@/one",
+        },
+        {
+          context: "system",
+          routesDirectory: "contexts/company/interface/routes",
+          importPrefix: "@/two",
+        },
       ]),
     ).toThrow("contextが重複しています: system")
   })

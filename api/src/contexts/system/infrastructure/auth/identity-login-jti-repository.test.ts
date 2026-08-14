@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { IdentityLoginJtiRepository } from "@system/infrastructure/auth/identity-login-jti-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 describe("IdentityLoginJtiRepository", () => {
   test("records a jti on first use and detects a replay on the second", async () => {

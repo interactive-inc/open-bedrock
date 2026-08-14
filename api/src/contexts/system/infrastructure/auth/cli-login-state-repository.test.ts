@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { CliLoginStateRepository } from "@system/infrastructure/auth/cli-login-state-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 describe("CliLoginStateRepository", () => {
   test("consumes a recorded state exactly once", async () => {

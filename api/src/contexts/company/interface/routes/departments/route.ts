@@ -1,17 +1,17 @@
 import { CreateOrgDepartment } from "@/contexts/company/application/organization/create-org-department"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
-import { factory } from "@/interface/utils/factory"
-import { verifyBearer } from "@/interface/middlewares/verify-bearer"
-import { MAX_ORG_NODES } from "@/interface/utils/to-bounded-int"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { MAX_ORG_NODES } from "@/contexts/company/interface/utils/to-bounded-int"
 import { ApplicationError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
-import { UnauthorizedError } from "@/interface/lib/errors"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
+import { UnauthorizedError } from "@/contexts/company/interface/lib/errors"
 import { zAppOrgDepartment, zAppOrgDepartmentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/schemas"
 import { loadCurrentOrganization } from "@/contexts/company/application/organization/current-organization-read-model"
-import { InternalError } from "@/interface/lib/errors"
+import { InternalError } from "@/contexts/company/interface/lib/errors"
 
 /** 部署ノードをレスポンス用の snake_case に整形する。 */
 function toResponseBody(department: OrgDepartment) {

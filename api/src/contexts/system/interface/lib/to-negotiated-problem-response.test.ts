@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { HTTPException } from "hono/http-exception"
 import { NotFoundError } from "@/lib/errors"
-import { toHttpException } from "@/interface/lib/to-http-exception"
+import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { toNegotiatedProblemResponse } from "@/contexts/system/interface/lib/to-negotiated-problem-response"
 
 describe("toNegotiatedProblemResponse", () => {

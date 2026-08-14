@@ -1,0 +1,221 @@
+import { Application } from "@/contexts/company/domain/application/application.entity"
+import { GetApplication } from "@/contexts/company/application/application/get-application"
+import { ListMyApplications } from "@/contexts/company/application/application/list-my-applications"
+import { UpdateApplication } from "@/contexts/company/application/application/update-application"
+import { WithdrawApplication } from "@/contexts/company/application/application/withdraw-application"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
+import { ApplicationRepository } from "@/contexts/company/infrastructure/application/application-repository"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
+import { expectApplicationError } from "@/contexts/company/interface/test-helpers/expect-application-error"
+import { describe, expect, test } from "bun:test"
+import { seedD1 } from "@/contexts/company/interface/test-helpers/seed-d1"
+
+async function seedPending(
+  repository: ApplicationRepository,
+  applicantId: number,
+): Promise<Application> {
+  const created = await repository.create(
+    Application.create({
+      templateId: 1,
+      applicantId: applicantId,
+      currentStep: "manager_approval",
+      payload: { reason: "initial" },
+      createdAt: "2026-01-01T00:00:00.000Z",
+    }),
+  )
+
+  if (created instanceof Error) {
+    throw created
+  }
+
+  return created
+}
+
+describe("GetApplication", () => {
+  test("returns the application for the applicant", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new GetApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 5,
+    })
+
+    expect(result).toBeInstanceOf(Application)
+  })
+
+  test("returns not_applicant for another employee", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new GetApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 9,
+    })
+
+    expectApplicationError(result, ForbiddenError, "not_applicant")
+  })
+
+  test("returns application_not_found for an unknown id", async () => {
+    const { context } = createTestContext()
+
+    const result = await new GetApplication(context).run({
+      applicationId: 9999,
+      applicantId: 5,
+    })
+
+    expectApplicationError(result, NotFoundError, "application_not_found")
+  })
+})
+
+describe("ListMyApplications", () => {
+  test("returns only the applicant's applications", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    await seedPending(repository, 5)
+
+    await seedPending(repository, 5)
+
+    await seedPending(repository, 9)
+
+    const result = await new ListMyApplications(context).run({ applicantId: 5 })
+
+    if (result instanceof Error) {
+      throw result
+    }
+
+    expect(result.length).toBe(2)
+  })
+})
+
+describe("UpdateApplication", () => {
+  test("updates the payload of a pending application for the applicant", async () => {
+    const { context, db } = createTestContext()
+
+    await seedD1(db, "application_templates", [
+      {
+        id: 1,
+        code: "test",
+        name: "Test",
+        category: "general",
+        schema_json: "{}",
+        approver_roles: "[]",
+      },
+    ])
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new UpdateApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 5,
+      payload: { reason: "updated" },
+    })
+
+    if (result instanceof Error || !(result instanceof Application)) {
+      throw new Error("expected the updated application")
+    }
+
+    expect(result.payload).toEqual({ reason: "updated" })
+  })
+
+  test("returns not_applicant for another employee", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new UpdateApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 9,
+      payload: {},
+    })
+
+    expectApplicationError(result, ForbiddenError, "not_applicant")
+  })
+
+  test("returns not_pending once the application is decided", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    await repository.decideFromPending({ applicationId: created.id ?? 0, status: "approved" })
+
+    const result = await new UpdateApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 5,
+      payload: {},
+    })
+
+    expectApplicationError(result, ConflictError, "not_pending")
+  })
+})
+
+describe("WithdrawApplication", () => {
+  test("withdraws a pending application for the applicant", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new WithdrawApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 5,
+    })
+
+    if (result instanceof Error) {
+      throw result
+    }
+
+    expect(result.reason).toBe("withdrawn")
+
+    const found = await repository.findById(created.id ?? 0)
+
+    expect(found).toBeNull()
+  })
+
+  test("returns not_applicant for another employee", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    const result = await new WithdrawApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 9,
+    })
+
+    expectApplicationError(result, ForbiddenError, "not_applicant")
+  })
+
+  test("returns not_pending once the application is decided", async () => {
+    const { context } = createTestContext()
+
+    const repository = new ApplicationRepository(context)
+
+    const created = await seedPending(repository, 5)
+
+    await repository.decideFromPending({ applicationId: created.id ?? 0, status: "rejected" })
+
+    const result = await new WithdrawApplication(context).run({
+      applicationId: created.id ?? 0,
+      applicantId: 5,
+    })
+
+    expectApplicationError(result, ConflictError, "not_pending")
+  })
+})
