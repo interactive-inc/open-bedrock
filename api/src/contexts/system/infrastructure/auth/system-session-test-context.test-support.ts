@@ -1,4 +1,5 @@
 import type { SystemD1Context } from "@system/infrastructure/configuration/system-context"
+import { wrapSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 
 const schema = `
@@ -83,113 +84,16 @@ const schema = `
   END;
 `
 
-type SqliteBinding = string | number | bigint | boolean | null | Uint8Array
-
 /** canonical System SessionのD1 transactionをBun SQLiteで検証するtest context。 */
 export class SystemSessionTestContext {
   readonly sqlite = new Database(":memory:")
   readonly context: SystemD1Context
-  private readonly statementExecutors = new WeakMap<object, () => D1Result<unknown>>()
 
   constructor() {
     this.sqlite.exec(schema)
-    this.context = Object.freeze({ env: Object.freeze({ DB: this.toD1Database() }) })
+    this.context = Object.freeze({
+      env: Object.freeze({ DB: wrapSystemD1TestDatabase(this.sqlite) }),
+    })
     Object.freeze(this)
-  }
-
-  private toD1Database(): D1Database {
-    const database = {
-      prepare: (query: string) => this.toPreparedStatement(query, []),
-      batch: async (statements: Array<D1PreparedStatement>) => {
-        const transaction = this.sqlite.transaction(
-          (transactionStatements: Array<D1PreparedStatement>) => {
-            const databaseResults: Array<D1Result<unknown>> = []
-
-            for (const statement of transactionStatements) {
-              const execute = this.statementExecutors.get(statement)
-
-              if (execute === undefined) {
-                this.sqlite.query("SELECT json_extract('', '$')").all()
-              } else {
-                databaseResults.push(execute())
-              }
-            }
-
-            return databaseResults
-          },
-        )
-
-        return transaction(statements)
-      },
-      exec: async (query: string) => {
-        this.sqlite.exec(query)
-
-        return { count: 0, duration: 0 }
-      },
-    }
-
-    // D1Databaseはabstract classのため、test adapter境界でのみ構造型を接続する。
-    return database as unknown as D1Database
-  }
-
-  private toPreparedStatement(query: string, values: ReadonlyArray<unknown>): D1PreparedStatement {
-    const bindings = values.map((value) => this.toSqliteBinding(value))
-    const execute = () => this.toResult(this.sqlite.query(query).all(...bindings))
-    const statement = {
-      bind: (...nextValues: Array<unknown>) => this.toPreparedStatement(query, nextValues),
-      first: async (column?: string) => {
-        const row = this.sqlite
-          .query<Record<string, unknown>, Array<SqliteBinding>>(query)
-          .get(...bindings)
-
-        if (row === null) return null
-
-        return column === undefined ? row : (row[column] ?? null)
-      },
-      run: async () => {
-        const databaseResult = this.sqlite.query(query).run(...bindings)
-
-        return this.toResult([], Number(databaseResult.lastInsertRowid), databaseResult.changes)
-      },
-      all: async () => execute(),
-      raw: async () => this.sqlite.query(query).values(...bindings),
-    }
-
-    // D1PreparedStatementもabstract classのため、test adapter境界でのみ構造型を接続する。
-    const preparedStatement = statement as unknown as D1PreparedStatement
-    this.statementExecutors.set(preparedStatement, execute)
-
-    return preparedStatement
-  }
-
-  private toResult(rows: Array<unknown>, lastRowId = 0, changes = 0): D1Result<unknown> {
-    return {
-      results: rows,
-      success: true,
-      meta: {
-        duration: 0,
-        size_after: 0,
-        rows_read: 0,
-        rows_written: changes,
-        last_row_id: lastRowId,
-        changed_db: changes > 0,
-        changes,
-      },
-    }
-  }
-
-  private toSqliteBinding(value: unknown): SqliteBinding {
-    if (
-      value === null ||
-      typeof value === "string" ||
-      typeof value === "number" ||
-      typeof value === "bigint" ||
-      typeof value === "boolean" ||
-      value instanceof Uint8Array
-    ) {
-      return value
-    }
-
-    return JSON.stringify(value)
   }
 }
