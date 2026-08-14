@@ -3,7 +3,7 @@ import { zAccountId } from "@system/domain/auth/account-id"
 import { Account } from "@system/domain/auth/account.entity"
 import { InvalidAccountError } from "@system/domain/auth/invalid-account.error"
 import { SystemAccountRepository } from "@system/infrastructure/auth/system-account-repository"
-import { createD1TestDatabase } from "@/interface/test-helpers/d1-test-database"
+import { createSystemD1TestDatabase } from "@system/infrastructure/auth/system-d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 
 const schema = `
@@ -22,7 +22,7 @@ function createRepository(database: D1Database): AccountRepository {
 
 describe("SystemAccountRepository", () => {
   test("canonical rowを共通Accountへ復元する", async () => {
-    const database = createD1TestDatabase(schema)
+    const database = createSystemD1TestDatabase(schema)
     await database
       .prepare(
         `INSERT INTO system_accounts
@@ -34,13 +34,17 @@ describe("SystemAccountRepository", () => {
     const account = await createRepository(database).findById(zAccountId.parse("account-1"))
 
     expect(account).toBeInstanceOf(Account)
-    expect(account).toMatchObject({ id: "account-1", status: "suspended", tokenVersion: 3 })
-    expect(account instanceof Account ? account.createdAt : null).toEqual(new Date(100))
-    expect(account instanceof Account ? account.updatedAt : null).toEqual(new Date(200))
+    expect(account).toMatchObject({
+      id: "account-1",
+      status: "suspended",
+      tokenVersion: 3,
+      createdAt: new Date(100),
+      updatedAt: new Date(200),
+    })
   })
 
   test("存在しないAccountはnullを返す", async () => {
-    const database = createD1TestDatabase(schema)
+    const database = createSystemD1TestDatabase(schema)
 
     expect(await createRepository(database).findById(zAccountId.parse("missing"))).toBeNull()
   })
@@ -52,7 +56,7 @@ describe("SystemAccountRepository", () => {
   ] as const)(
     "壊れたcanonical rowをfail closedにする",
     async (status, tokenVersion, createdAt, updatedAt) => {
-      const database = createD1TestDatabase(schema)
+      const database = createSystemD1TestDatabase(schema)
       await database
         .prepare(
           `INSERT INTO system_accounts
@@ -69,7 +73,7 @@ describe("SystemAccountRepository", () => {
   )
 
   test("D1 query失敗をthrowせずErrorへ閉じる", async () => {
-    const database = createD1TestDatabase(schema)
+    const database = createSystemD1TestDatabase(schema)
     await database.exec("DROP TABLE system_accounts")
 
     const account = await createRepository(database).findById(zAccountId.parse("account-1"))
