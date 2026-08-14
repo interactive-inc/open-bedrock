@@ -3,7 +3,11 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zAppOnboardingTemplate, zAppOnboardingTemplateList } from "@/lib/app-schemas"
 import {
   DEFAULT_LIST_LIMIT,

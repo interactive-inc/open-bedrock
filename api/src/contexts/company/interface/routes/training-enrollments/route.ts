@@ -11,7 +11,11 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { employees, trainingEnrollments } from "@/schema"
 import { zValidator } from "@hono/zod-validator"
 import { asc, count, eq } from "drizzle-orm"
-import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zAppTrainingEnrollmentList } from "@/lib/app-schemas"
 import { z } from "zod"
 

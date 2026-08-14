@@ -1,5 +1,9 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { workflowReachableApprovalCountSql } from "@/contexts/company/infrastructure/application/workflow-reachable-approval-count-sql"
 import { activateDueWorkflowEscalations } from "@/lib/application/activate-due-workflow-escalations"

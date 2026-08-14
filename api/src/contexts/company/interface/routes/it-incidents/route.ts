@@ -9,7 +9,11 @@ import {
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ItIncidentRepository } from "@/contexts/company/infrastructure/it-incident/it-incident-repository"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppItIncident, zAppItIncidentList } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"

@@ -1,7 +1,11 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { RegulationRepository } from "@/contexts/company/infrastructure/regulation/regulation-repository"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zAppRegulationDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import type { RegulationVersion } from "@/contexts/company/domain/regulation/regulation-version.entity"

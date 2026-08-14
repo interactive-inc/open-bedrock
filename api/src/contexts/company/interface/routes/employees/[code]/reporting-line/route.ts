@@ -1,6 +1,10 @@
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zAppOrgReportingLineList } from "@/lib/app-schemas"
 import type { AppOrgReportingLineNode } from "@/lib/app-schemas"

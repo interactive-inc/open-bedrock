@@ -1,5 +1,8 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { GoalEvaluation, type GoalEvaluationKind } from "@/contexts/company/domain/goal/goal-evaluation.entity"
+import {
+  GoalEvaluation,
+  type GoalEvaluationKind,
+} from "@/contexts/company/domain/goal/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/company/application/goal/resolve-evaluation-permission"
 import { resolveEmployeeRelation } from "@/contexts/company/application/organization/resolve-employee-relation"
 import type { EmployeeRelation } from "@/contexts/company/domain/organization/employee-relation"

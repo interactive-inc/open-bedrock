@@ -1,7 +1,11 @@
 import { GovernanceAccess } from "@/contexts/company/application/governance/governance-access"
 import { GovernanceRepository } from "@/contexts/company/infrastructure/governance/governance-repository"
 import { factory } from "@/contexts/company/interface/utils/factory"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { toGovernanceDocumentResponse } from "@/contexts/company/interface/utils/to-governance-document-response"
 

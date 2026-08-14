@@ -2,7 +2,11 @@ import { ListLifecycleEvents } from "@/contexts/company/application/employee-lif
 import { GetEmployee } from "@/contexts/company/application/employee/get-employee"
 import { LifecycleAccess } from "@/contexts/company/interface/utils/lifecycle-access"
 import { lifecycleNoStore } from "@/contexts/company/interface/middlewares/lifecycle-no-store"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"

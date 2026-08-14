@@ -1,5 +1,9 @@
 import { MigrateLegacyHashes } from "@/contexts/system/application/batch/migrate-legacy-hashes"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company/interface/utils/factory"
 

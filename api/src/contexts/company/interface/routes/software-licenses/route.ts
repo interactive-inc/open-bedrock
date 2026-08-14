@@ -9,7 +9,11 @@ import {
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { LicenseRepository } from "@/contexts/company/infrastructure/license/license-repository"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppLicense, zAppLicenseList } from "@/lib/app-schemas"
 import { isoDate } from "@/lib/schemas"

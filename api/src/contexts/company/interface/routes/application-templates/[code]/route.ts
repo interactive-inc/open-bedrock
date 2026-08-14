@@ -7,7 +7,11 @@ import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-be
 import { eq } from "drizzle-orm"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zAppApplicationTemplate, zAppApplicationTemplateDetail } from "@/lib/app-schemas"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zValidator } from "@hono/zod-validator"

@@ -8,7 +8,11 @@ import {
   toBoundedInt,
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { BadRequestError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  BadRequestError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 
 /** year クエリ（YYYY）を年始〜年末の日付範囲に変換する。未指定・不正は null。 */
 function toYearRange(raw: string | undefined): { from: string; to: string } | null {

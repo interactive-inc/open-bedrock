@@ -4,7 +4,11 @@ import { rewardPointCostSchema } from "@/contexts/company/domain/thanks-points/t
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksReward } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company/interface/utils/factory"
 import { zValidator } from "@hono/zod-validator"

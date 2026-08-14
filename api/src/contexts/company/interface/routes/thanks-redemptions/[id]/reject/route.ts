@@ -3,7 +3,11 @@ import { toPositiveInt } from "@/contexts/company/interface/utils/to-positive-in
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { BadRequestError, ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { factory } from "@/contexts/company/interface/utils/factory"
 

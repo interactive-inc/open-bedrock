@@ -9,7 +9,11 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { employees } from "@/schema"
 import { eq } from "drizzle-orm"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /me — 認証済みの本人の社員情報 */

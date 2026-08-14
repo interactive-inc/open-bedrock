@@ -8,7 +8,11 @@ import {
 } from "@/contexts/company/interface/utils/to-bounded-int"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { zAppDisciplinaryAction, zAppDisciplinaryActionList } from "@/lib/app-schemas"
 import { DisciplinaryActionRepository } from "@/contexts/company/infrastructure/disciplinary-action/disciplinary-action-repository"

@@ -10,7 +10,11 @@ import { AccountRepository } from "@/contexts/company/infrastructure/iam/account
 import { toPrimaryRole } from "@/contexts/company/interface/utils/to-primary-role"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { InternalError, NotFoundError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { validateCodeParam } from "@/contexts/company/interface/utils/validate-code-param"
 import { zAppEmployee } from "@/lib/app-schemas"
 import { zValidator } from "@hono/zod-validator"

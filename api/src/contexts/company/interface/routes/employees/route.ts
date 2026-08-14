@@ -13,7 +13,11 @@ import { positionRequiresDepartment } from "@/contexts/company/interface/utils/p
 import { IdentityRepository } from "@/contexts/company/infrastructure/auth/identity-repository"
 import { ApplicationError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zAppEmployee, zAppEmployeeList } from "@/lib/app-schemas"
 import { employees, employeeStatusPeriodVersions } from "@/schema"
 import { zValidator } from "@hono/zod-validator"

@@ -1,5 +1,8 @@
 import type { Goal } from "@/contexts/company/domain/goal/goal.entity"
-import { GoalEvaluation, goalEvaluationKindSchema } from "@/contexts/company/domain/goal/goal-evaluation.entity"
+import {
+  GoalEvaluation,
+  goalEvaluationKindSchema,
+} from "@/contexts/company/domain/goal/goal-evaluation.entity"
 import type { Context } from "@/env"
 import { isUniqueConstraintError } from "@/contexts/company/infrastructure/shared/is-unique-constraint-error"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"

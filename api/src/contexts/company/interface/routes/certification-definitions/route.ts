@@ -4,7 +4,11 @@ import { factory } from "@/contexts/company/interface/utils/factory"
 import { zAppCertification, zAppCertificationList } from "@/lib/app-schemas"
 import { toHttpException } from "@/contexts/company/interface/lib/to-http-exception"
 import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import {
+  ForbiddenError,
+  InternalError,
+  UnauthorizedError,
+} from "@/contexts/company/interface/lib/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
