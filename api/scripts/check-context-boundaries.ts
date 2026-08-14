@@ -20,6 +20,21 @@ const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
 
 export type ContextLayer = (typeof CONTEXT_LAYERS)[number]
 
+/**
+ * #1178 で legacy 4層を contexts/company へ一括移動した経過措置。
+ * company の schema 分割（後続 Issue）が完了し、contexts/company から
+ * @/schema への import が無くなった時点でこの許容を削除する。
+ */
+const TRANSITIONAL_MIXED_SCHEMA_CONTEXTS = new Set(["company"])
+
+/**
+ * 同じく #1178 の経過措置。API root を組み立てる test-helper を
+ * context に閉じた合成へ置き換えた時点でこの許容を削除する。
+ */
+const TRANSITIONAL_API_ROOT_IMPORTERS = new Set([
+  "src/contexts/company/interface/test-helpers/request-with-context.ts",
+])
+
 export type ContextSource = Readonly<{
   context: string
   layer: ContextLayer
@@ -194,6 +209,8 @@ function inspectModuleDependency(
   }
 
   if (moduleSpecifier === "@/schema" || moduleSpecifier.startsWith("@/schema/")) {
+    if (TRANSITIONAL_MIXED_SCHEMA_CONTEXTS.has(source.context)) return []
+
     return [{ file, reason: `context外の schema へ依存しています: ${moduleSpecifier}` }]
   }
 
@@ -202,6 +219,8 @@ function inspectModuleDependency(
     (moduleSpecifier.startsWith("@/api/") &&
       !/^@\/api\/(?:domain|application|infrastructure|interface)\//.test(moduleSpecifier))
   ) {
+    if (TRANSITIONAL_API_ROOT_IMPORTERS.has(file.replaceAll("\\", "/"))) return []
+
     return [{ file, reason: `contextから API root へ依存しています: ${moduleSpecifier}` }]
   }
 

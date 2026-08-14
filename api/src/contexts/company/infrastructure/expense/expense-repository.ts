@@ -1,0 +1,198 @@
+import { Expense, expenseRowSchema } from "@/contexts/company/domain/expense/expense.entity"
+import { ExpenseApproval } from "@/contexts/company/domain/expense/expense-approval.entity"
+import type { Context } from "@/env"
+import { parseD1Row } from "@/contexts/company/infrastructure/shared/parse-d1-row"
+import { abortWhenPreviousStatementChangedNoRows } from "@/lib/d1/abort-when-previous-statement-changed-no-rows"
+import { isAbortedByGuard } from "@/lib/d1/is-aborted-by-guard"
+import { expenseApprovals, expenses } from "@/schema"
+import { and, eq } from "drizzle-orm"
+
+export class ExpenseRepository {
+  constructor(private readonly c: Context) {}
+
+  async findById(expenseId: number): Promise<Expense | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .select()
+        .from(expenses)
+        .where(eq(expenses.id, expenseId))
+        .limit(1)
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Expense.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to load expense")
+    }
+  }
+
+  async create(expense: Expense): Promise<Expense | Error> {
+    try {
+      const rows = await this.c.var.database
+        .insert(expenses)
+        .values({
+          employeeId: expense.employeeId,
+          category: expense.category,
+          amount: expense.amount,
+          spentAt: expense.spentAt,
+          note: expense.note,
+          status: expense.status,
+          createdAt: expense.createdAt,
+        })
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? new Error("failed to insert expense") : Expense.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to insert expense")
+    }
+  }
+
+  async update(expense: Expense): Promise<Expense | null | Error> {
+    try {
+      if (expense.id === null) {
+        return new Error("cannot update unsaved expense")
+      }
+
+      const rows = await this.c.var.database
+        .update(expenses)
+        .set({
+          category: expense.category,
+          amount: expense.amount,
+          spentAt: expense.spentAt,
+          note: expense.note,
+          status: expense.status,
+        })
+        .where(and(eq(expenses.id, expense.id), eq(expenses.status, "pending")))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Expense.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to update expense")
+    }
+  }
+
+  /**
+   * 承認/却下を pending からの条件付き UPDATE で確定する。決定済みは 0 行更新となり null を返す。
+   * 二重決定を防ぐ冪等性ガード（TOCTOU 競合にも強い）。
+   */
+  async decideFromPending(props: {
+    expenseId: number
+    status: "approved" | "rejected"
+  }): Promise<Expense | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .update(expenses)
+        .set({ status: props.status })
+        .where(and(eq(expenses.id, props.expenseId), eq(expenses.status, "pending")))
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined ? null : Expense.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to decide expense")
+    }
+  }
+
+  /**
+   * 経費申請を削除する。
+   * pending 状態のみ削除可。承認済み・却下済み・精算済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
+   */
+  async delete(expenseId: number): Promise<true | null | Error> {
+    try {
+      const rows = await this.c.var.database
+        .delete(expenses)
+        .where(and(eq(expenses.id, expenseId), eq(expenses.status, "pending")))
+        .returning({ id: expenses.id })
+
+      return rows.length > 0 ? true : null
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to delete expense")
+    }
+  }
+
+  /** 承認/却下の記録は経費集約に属するため、経費リポジトリが永続化する。 */
+  async addApproval(approval: ExpenseApproval): Promise<ExpenseApproval | Error> {
+    try {
+      const rows = await this.c.var.database
+        .insert(expenseApprovals)
+        .values({
+          expenseId: approval.expenseId,
+          approverId: approval.approverId,
+          action: approval.action,
+          comment: approval.comment,
+          createdAt: approval.createdAt,
+        })
+        .returning()
+
+      const row = rows.at(0)
+
+      return row === undefined
+        ? new Error("failed to insert expense approval")
+        : ExpenseApproval.fromRow(row)
+    } catch (error) {
+      return error instanceof Error ? error : new Error("failed to insert expense approval")
+    }
+  }
+
+  /**
+   * status の条件付き UPDATE と承認記録 INSERT を D1 batch でアトミックに行う。
+   * 決定済み（0 行更新）は null を返す。batch 全体が失敗すると rollback される。
+   */
+  async decideFromPendingWithApproval(props: {
+    expenseId: number
+    status: "approved" | "rejected"
+    approval: ExpenseApproval
+  }): Promise<Expense | null | Error> {
+    try {
+      const results = await this.c.env.DB.batch([
+        this.c.env.DB.prepare(
+          `
+          UPDATE expenses
+          SET status = ?2
+          WHERE id = ?1
+            AND status = 'pending'
+          RETURNING
+            id, employee_id AS employeeId, category, amount, spent_at AS spentAt,
+            note, status, created_at AS createdAt
+          `,
+        ).bind(props.expenseId, props.status),
+        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+        this.c.env.DB.prepare(
+          `
+          INSERT INTO expense_approvals (expense_id, approver_id, action, comment, created_at)
+          VALUES (?1, ?2, ?3, ?4, ?5)
+          `,
+        ).bind(
+          props.approval.expenseId,
+          props.approval.approverId,
+          props.approval.action,
+          props.approval.comment,
+          props.approval.createdAt,
+        ),
+      ])
+
+      const decideResult = results.at(0)
+      const row = parseD1Row(decideResult, expenseRowSchema)
+
+      if (row instanceof Error) {
+        return row
+      }
+
+      if (row === undefined) {
+        return null
+      }
+
+      return Expense.fromRow(row)
+    } catch (error) {
+      if (isAbortedByGuard(error)) {
+        return null
+      }
+      return error instanceof Error ? error : new Error("failed to decide expense")
+    }
+  }
+}

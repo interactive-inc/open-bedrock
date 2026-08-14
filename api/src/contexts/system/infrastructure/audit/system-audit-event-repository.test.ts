@@ -1,6 +1,6 @@
 import { createSystemAuditEvent } from "@system/domain/audit/create-system-audit-event"
 import { SystemAuditEventRepository } from "@system/infrastructure/audit/system-audit-event-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { describe, expect, test } from "bun:test"
 
 function isolateChangesPerBatchStatement(context: ReturnType<typeof createTestContext>["context"]) {

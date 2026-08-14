@@ -1,5 +1,5 @@
 import { EmployeeLifecycleReadRepository } from "@/contexts/company/infrastructure/employee-lifecycle/employee-lifecycle-read-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 import { ApplicationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 

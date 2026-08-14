@@ -1,0 +1,33 @@
+import { PERMISSION_CATALOG } from "@/composition/iam/permission.catalog"
+import { factory } from "@/contexts/company/interface/utils/factory"
+import { verifyBearer } from "@/contexts/company/interface/middlewares/verify-bearer"
+import { ForbiddenError, UnauthorizedError } from "@/contexts/company/interface/lib/errors"
+import { zAppPermissionList } from "@/lib/app-schemas"
+
+// @authorization permission - 権限キーで判定する
+/**
+ * GET /permission-definitions — 権限カタログ全件（iam:manage_roles が必要）。
+ * ロール編集 UI の checkbox とカテゴリ表示に使う。正はコードの PERMISSION_CATALOG。
+ */
+export const GET = factory.createHandlers(verifyBearer, async (c) => {
+  const session = c.var.session
+
+  if (session === null) {
+    throw new UnauthorizedError()
+  }
+
+  if (session.hasPermission("iam:manage_roles") === false) {
+    throw new ForbiddenError("cannot manage roles")
+  }
+
+  const responseBody = zAppPermissionList.parse({
+    data: PERMISSION_CATALOG.map((entry) => ({
+      key: entry.key,
+      description: entry.description,
+      category: entry.category,
+    })),
+    total: PERMISSION_CATALOG.length,
+  })
+
+  return c.json(responseBody, 200)
+})

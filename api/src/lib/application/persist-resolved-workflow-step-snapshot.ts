@@ -2,8 +2,8 @@ import type { Context } from "@/env"
 import {
   ApplicationWorkflowRepository,
   type WorkflowStepSnapshot,
-} from "@/infrastructure/application/application-workflow-repository"
-import { WorkflowSql } from "@/infrastructure/application/workflow-sql"
+} from "@/contexts/company/infrastructure/application/application-workflow-repository"
+import { WorkflowSql } from "@/contexts/company/infrastructure/application/workflow-sql"
 
 /**
  * legacy_backfill で解決したスナップショットを INSERT OR IGNORE で永続化し、

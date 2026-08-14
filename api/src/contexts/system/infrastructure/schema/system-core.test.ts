@@ -1,4 +1,4 @@
-import { loadSchema } from "@/interface/test-helpers/load-schema"
+import { loadSchema } from "@/contexts/company/interface/test-helpers/load-schema"
 import { systemCoreSchema } from "@/contexts/system/infrastructure/schema/system-core"
 import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"

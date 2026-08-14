@@ -2,7 +2,7 @@ import type { Context } from "@/env"
 import {
   ApplicationWorkflowRepository,
   type WorkflowStepSnapshot,
-} from "@/infrastructure/application/application-workflow-repository"
+} from "@/contexts/company/infrastructure/application/application-workflow-repository"
 
 /**
  * 対象ステップの期限が過ぎていればエスカレーションを有効化し、更新後のスナップショットを返す。

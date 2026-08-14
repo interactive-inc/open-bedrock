@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { OrgDepartment } from "@/contexts/company/domain/organization/org-department.entity"
 import { OrgDepartmentRepository } from "@/contexts/company/infrastructure/organization/org-department-repository"
-import { createTestContext } from "@/interface/test-helpers/create-test-context"
+import { createTestContext } from "@/contexts/company/interface/test-helpers/create-test-context"
 
 function makeDepartment(code: string, parentCode: string | null): OrgDepartment {
   return OrgDepartment.create({
