@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { createAuditEvent } from "@/composition/audit/audit-event"
+import { createAuditEvent } from "@/contexts/company/application/audit/company-audit-event"
 import type { Context } from "@/env"
 import { AuditEventRepository } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { resolveOrganizationAuthority } from "@/contexts/company/application/organization/resolve-organization-authority"

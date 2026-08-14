@@ -7,10 +7,13 @@ import { LIB_BOUNDARY_BASELINE } from "./lib-boundary-baseline"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..")
 const SOURCE_ROOT = resolve(PROJECT_ROOT, "src")
+const API_ROOT = resolve(SOURCE_ROOT, "api")
 const CONTEXTS_ROOT = resolve(SOURCE_ROOT, "contexts")
 const LIB_ROOT = resolve(SOURCE_ROOT, "lib")
 
 const CONTEXT_LAYERS = ["domain", "application", "infrastructure", "interface"] as const
+const API_ROOT_DIRECTORIES = new Set(["test"])
+const API_ROOT_FILES = new Set(["app-base.ts", "app.ts", "route-module.registry.ts"])
 const LAYER_FIRST_PLATFORM_DIRECTORIES = new Set([
   "lib",
   "middlewares",
@@ -46,6 +49,58 @@ export type ContextBoundaryViolation = Readonly<{
   file: string
   reason: string
 }>
+
+/** API rootをHTTP runtimeの合成責務に限定する。 */
+export function inspectApiRootPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(/(?:^|\/)src\/api\/(.+)$/)
+
+  if (match === null) return []
+
+  const relativePath = match[1]
+  if (relativePath === undefined) return []
+
+  const segments = relativePath.split("/")
+  const rootEntry = segments[0]
+
+  if (segments.length === 1) {
+    return rootEntry !== undefined && API_ROOT_FILES.has(rootEntry)
+      ? []
+      : [{ file, reason: `API root直下に配置できないファイルです: ${relativePath}` }]
+  }
+
+  if (rootEntry === undefined || !API_ROOT_DIRECTORIES.has(rootEntry)) {
+    return [{ file, reason: `API rootの責務外ディレクトリです: ${rootEntry ?? relativePath}` }]
+  }
+
+  const dddLayer = segments
+    .slice(1, -1)
+    .find((segment) => CONTEXT_LAYERS.some((layer) => layer === segment))
+
+  return dddLayer === undefined
+    ? []
+    : [
+        {
+          file,
+          reason: `API rootにDDD layer ${dddLayer} を作らず、所有contextへ配置してください`,
+        },
+      ]
+}
+
+/** 所有者を隠すcomposition・platform rootの再導入を拒否する。 */
+export function inspectLegacyRuntimeRootPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(/(?:^|\/)src\/(composition|platform)(?:\/|$)/)
+
+  return match === null
+    ? []
+    : [
+        {
+          file,
+          reason: `${match[1]} rootではなくAPI root、所有context、または中立libへ配置してください`,
+        },
+      ]
+}
 
 /** context横断テストの配置を単数形testへ統一する。 */
 export function inspectContextTestDirectory(file: string): ContextBoundaryViolation[] {
@@ -307,6 +362,23 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
 /** 移行済みのcontext-first sourceと中立libを自動検査する。 */
 export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
   const violations: ContextBoundaryViolation[] = []
+
+  if (existsSync(API_ROOT)) {
+    for await (const file of new Glob("**/*.{ts,tsx}").scan(API_ROOT)) {
+      violations.push(...inspectApiRootPath(relative(PROJECT_ROOT, resolve(API_ROOT, file))))
+    }
+  }
+
+  for (const legacyRootName of ["composition", "platform"]) {
+    const legacyRoot = resolve(SOURCE_ROOT, legacyRootName)
+    if (!existsSync(legacyRoot)) continue
+
+    for await (const file of new Glob("**/*.{ts,tsx}").scan(legacyRoot)) {
+      violations.push(
+        ...inspectLegacyRuntimeRootPath(relative(PROJECT_ROOT, resolve(legacyRoot, file))),
+      )
+    }
+  }
 
   if (existsSync(CONTEXTS_ROOT)) {
     for await (const file of new Glob("**/*.{ts,tsx}").scan(CONTEXTS_ROOT)) {

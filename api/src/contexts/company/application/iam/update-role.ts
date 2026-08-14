@@ -1,5 +1,5 @@
 import type { Session } from "@/contexts/company/domain/iam/session"
-import { permissionKeySchema } from "@/composition/iam/permission-key.catalog"
+import { permissionKeySchema } from "@/contexts/company/domain/iam/permission-key.catalog"
 import {
   ConflictError,
   ForbiddenError,

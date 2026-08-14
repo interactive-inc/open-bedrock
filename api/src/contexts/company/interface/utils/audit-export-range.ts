@@ -1,4 +1,4 @@
-import { auditOutcomeSchema } from "@/composition/audit/audit-event"
+import { auditOutcomeSchema } from "@/contexts/company/application/audit/company-audit-event"
 import type { AuditEventFilters } from "@/contexts/company/infrastructure/company/audit/audit-event-repository"
 import { parseExactSecond } from "@/contexts/company/interface/utils/parse-exact-second"
 import { ValidationError } from "@/lib/errors"
