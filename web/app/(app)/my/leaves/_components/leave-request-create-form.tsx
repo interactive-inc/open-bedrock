@@ -25,7 +25,9 @@ export function LeaveRequestCreateForm() {
 
   const [unit, setUnit] = useState("full_day")
 
-  const [singleDate, setSingleDate] = useState("")
+  const [startDate, setStartDate] = useState("")
+
+  const [endDate, setEndDate] = useState("")
 
   const isSingleDateUnit =
     leaveType === "annual" &&
@@ -90,43 +92,6 @@ export function LeaveRequestCreateForm() {
           </NativeSelect>
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="leave-reason">理由</FieldLabel>
-
-          <Input id="leave-reason" name="reason" placeholder="任意" />
-        </Field>
-
-        {isSingleDateUnit ? (
-          <Field>
-            <FieldLabel htmlFor="leave-date">対象日</FieldLabel>
-
-            <Input
-              id="leave-date"
-              name="start_date"
-              type="date"
-              required
-              value={singleDate}
-              onChange={(event) => setSingleDate(event.target.value)}
-            />
-
-            <input type="hidden" name="end_date" value={singleDate} />
-          </Field>
-        ) : (
-          <>
-            <Field>
-              <FieldLabel htmlFor="leave-start">開始日</FieldLabel>
-
-              <Input id="leave-start" name="start_date" type="date" required />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="leave-end">終了日</FieldLabel>
-
-              <Input id="leave-end" name="end_date" type="date" required />
-            </Field>
-          </>
-        )}
-
         {leaveType === "annual" ? (
           <Field>
             <FieldLabel htmlFor="leave-unit">取得単位</FieldLabel>
@@ -158,6 +123,57 @@ export function LeaveRequestCreateForm() {
             <Input id="leave-hours" name="hours" type="number" min="1" step="1" required />
           </Field>
         ) : null}
+
+        {isSingleDateUnit ? (
+          <Field>
+            <FieldLabel htmlFor="leave-date">対象日</FieldLabel>
+
+            <Input
+              id="leave-date"
+              name="start_date"
+              type="date"
+              required
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+            />
+
+            <input type="hidden" name="end_date" value={startDate} />
+          </Field>
+        ) : (
+          <>
+            <Field>
+              <FieldLabel htmlFor="leave-start">開始日</FieldLabel>
+
+              <Input
+                id="leave-start"
+                name="start_date"
+                type="date"
+                required
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="leave-end">終了日</FieldLabel>
+
+              <Input
+                id="leave-end"
+                name="end_date"
+                type="date"
+                required
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </Field>
+          </>
+        )}
+
+        <Field>
+          <FieldLabel htmlFor="leave-reason">理由</FieldLabel>
+
+          <Input id="leave-reason" name="reason" placeholder="任意" />
+        </Field>
       </div>
 
       <FieldDescription>
