@@ -30,6 +30,20 @@ export type ContextBoundaryViolation = Readonly<{
   reason: string
 }>
 
+/** context横断テストの配置を単数形testへ統一する。 */
+export function inspectContextTestDirectory(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+
+  return /(?:^|\/)src\/contexts\/[^/]+\/tests(?:\/|$)/.test(normalized)
+    ? [
+        {
+          file,
+          reason: "context横断テストは複数形 tests ではなく単数形 test に配置してください",
+        },
+      ]
+    : []
+}
+
 function isContextLayer(value: string): value is ContextLayer {
   return CONTEXT_LAYERS.some((layer) => layer === value)
 }
@@ -276,12 +290,14 @@ export async function checkContextBoundaries(): Promise<ContextBoundaryViolation
   const violations: ContextBoundaryViolation[] = []
 
   for await (const file of new Glob("**/*.{ts,tsx}").scan(CONTEXTS_ROOT)) {
+    const path = resolve(CONTEXTS_ROOT, file)
+    const projectRelativePath = relative(PROJECT_ROOT, path)
+
+    violations.push(...inspectContextTestDirectory(projectRelativePath))
+
     if (/\.(?:test|spec)\.tsx?$/.test(file)) continue
 
-    const path = resolve(CONTEXTS_ROOT, file)
-    violations.push(
-      ...inspectContextSource(relative(PROJECT_ROOT, path), readFileSync(path, "utf8")),
-    )
+    violations.push(...inspectContextSource(projectRelativePath, readFileSync(path, "utf8")))
   }
 
   return violations

@@ -4,9 +4,22 @@ import {
   classifyContextModule,
   classifyContextSource,
   inspectContextSource,
+  inspectContextTestDirectory,
   inspectLibSource,
 } from "./check-context-boundaries"
 import { describe, expect, test } from "bun:test"
+
+test("context横断テストを単数形testへ配置する", () => {
+  expect(
+    inspectContextTestDirectory("src/contexts/system/tests/example.integration.test.ts"),
+  ).not.toEqual([])
+  expect(
+    inspectContextTestDirectory("src/contexts/system/test/example.integration.test.ts"),
+  ).toEqual([])
+  expect(inspectContextTestDirectory("src/contexts/system/infrastructure/example.test.ts")).toEqual(
+    [],
+  )
+})
 
 describe("context path classification", () => {
   test("context-first と両製品の layer-first path を同じ所有情報へ正規化する", () => {
